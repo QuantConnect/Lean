@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Python.Runtime;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -34,6 +33,9 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityPortfolioManager : IDictionary<Symbol, SecurityHolding>, ISecurityProvider
     {
+        // flips to true when the user called SetCash(), if true, SetAccountCurrency will throw
+        private bool _setCashWasCalled;
+
         /// <summary>
         /// Local access to the securities collection for the portfolio summation.
         /// </summary>
@@ -63,8 +65,8 @@ namespace QuantConnect.Securities
         private readonly object _unsettledCashAmountsLocker = new object();
 
         // Record keeping variables
-        private readonly Cash _baseCurrencyCash;
-        private readonly Cash _baseCurrencyUnsettledCash;
+        private Cash _baseCurrencyCash;
+        private Cash _baseCurrencyUnsettledCash;
 
         /// <summary>
         /// Initialise security portfolio manager.
@@ -475,11 +477,45 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Set the base currrency cash this algorithm is to manage.
+        /// Sets the account currency cash symbol this algorithm is to manage.
+        /// </summary>
+        /// <remarks>Has to be called before calling <see cref="SetCash(decimal)"/>
+        /// or adding any <see cref="Security"/></remarks>
+        /// <param name="accountCurrency">The account currency cash symbol to set</param>
+        public void SetAccountCurrency(string accountCurrency)
+        {
+            if (Securities.Count > 0)
+            {
+                throw new InvalidOperationException("SecurityPortfolioManager.SetAccountCurrency(): " +
+                    "Cannot change AccountCurrency after adding a Security. " +
+                    "Please move SetAccountCurrency() before AddSecurity().");
+            }
+
+            if (_setCashWasCalled)
+            {
+                throw new InvalidOperationException("SecurityPortfolioManager.SetAccountCurrency(): " +
+                    "Cannot change AccountCurrency after setting cash. " +
+                    "Please move SetAccountCurrency() before SetCash().");
+            }
+            accountCurrency = accountCurrency.ToUpper();
+
+            Log.Trace("SecurityPortfolioManager.SetAccountCurrency():" +
+                $" setting account currency to {accountCurrency}");
+
+            UnsettledCashBook.AccountCurrency = accountCurrency;
+            CashBook.AccountCurrency = accountCurrency;
+
+            _baseCurrencyCash = CashBook[accountCurrency];
+            _baseCurrencyUnsettledCash = UnsettledCashBook[accountCurrency];
+        }
+
+        /// <summary>
+        /// Set the account currency cash this algorithm is to manage.
         /// </summary>
         /// <param name="cash">Decimal cash value of portfolio</param>
         public void SetCash(decimal cash)
         {
+            _setCashWasCalled = true;
             _baseCurrencyCash.SetAmount(cash);
         }
 
@@ -491,6 +527,7 @@ namespace QuantConnect.Securities
         /// <param name="conversionRate">The current conversion rate for the</param>
         public void SetCash(string symbol, decimal cash, decimal conversionRate)
         {
+            _setCashWasCalled = true;
             Cash item;
             if (CashBook.TryGetValue(symbol, out item))
             {

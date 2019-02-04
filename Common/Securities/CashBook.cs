@@ -24,6 +24,7 @@ using System.Collections.Concurrent;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -32,10 +33,31 @@ namespace QuantConnect.Securities
     /// </summary>
     public class CashBook : IDictionary<string, Cash>, ICurrencyConverter
     {
+        private string _accountCurrency;
+
         /// <summary>
         /// Gets the base currency used
         /// </summary>
-        public string AccountCurrency { get; }
+        public string AccountCurrency
+        {
+            get { return _accountCurrency; }
+            set
+            {
+                var amount = 0m;
+                Cash accountCurrency;
+                // remove previous account currency if any
+                if (!_accountCurrency.IsNullOrEmpty()
+                    && TryGetValue(_accountCurrency, out accountCurrency))
+                {
+                    amount = accountCurrency.Amount;
+                    Remove(_accountCurrency);
+                }
+
+                // add new account currency using same amount as previous
+                _accountCurrency = value.ToUpper();
+                Add(_accountCurrency, new Cash(_accountCurrency, amount, 1.0m));
+            }
+        }
 
         private readonly ConcurrentDictionary<string, Cash> _currencies;
 
@@ -57,9 +79,8 @@ namespace QuantConnect.Securities
         /// </summary>
         public CashBook()
         {
-            AccountCurrency = Currencies.USD;
             _currencies = new ConcurrentDictionary<string, Cash>();
-            Add(AccountCurrency, new Cash(AccountCurrency, 0, 1.0m));
+            AccountCurrency = Currencies.USD;
         }
 
         /// <summary>

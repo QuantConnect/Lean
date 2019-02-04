@@ -170,6 +170,7 @@
     <Compile Include="Algorithm\Framework\Alphas\MacdAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\BasePairsTradingAlphaModelTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\RsiAlphaModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Serialization\AlphaRuntimeStatisticsTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Serialization\InsightJsonConverterTests.cs" />
     <Compile Include="Algorithm\Framework\Execution\VolumeWeightedAveragePriceExecutionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Execution\ImmediateExecutionModelTests.cs" />
@@ -184,6 +185,7 @@
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\DowngradeErrorCodeToWarningBrokerageMessageHandlerTests.cs" />
     <Compile Include="Brokerages\Paper\PaperBrokerageTests.cs" />
+    <Compile Include="Common\Benchmarks\SecurityBenchmarkTests.cs" />
     <Compile Include="Common\Brokerages\BitfinexBrokerageModelTests.cs" />
     <Compile Include="Common\Brokerages\FxcmBrokerageModelTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileRowTests.cs" />

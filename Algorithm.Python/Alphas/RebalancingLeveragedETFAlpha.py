@@ -95,7 +95,7 @@ class RebalancingLeveragedETFAlphaModel(AlphaModel):
         if algorithm.Time.hour == 14 and algorithm.Time.minute == 15:
             for group in self.ETFgroups:
                 if group.yesterdayClose == 0 or group.yesterdayClose is None: continue
-                returns = (algorithm.Portfolio[group.underlying].Price - group.yesterdayClose)/group.yesterdayClose
+                returns = round((algorithm.Portfolio[group.underlying].Price - group.yesterdayClose) / group.yesterdayClose, 10)
                 if returns > 0.01:
                     insights.append(Insight.Price(group.ultraLong, period, InsightDirection.Up, magnitude))
                 elif returns < -0.01:

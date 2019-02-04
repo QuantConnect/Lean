@@ -633,6 +633,179 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
         }
 
+        [Test]
+        public void NonAccountCurrency_NoQuoteCurrencyCash()
+        {
+            _algorithm.Portfolio.CashBook.Clear();
+            _algorithm.Portfolio.SetAccountCurrency("EUR");
+            _algorithm.Portfolio.SetCash(10000);
+            Assert.AreEqual(10000m, _portfolio.TotalPortfolioValue);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
+            _algorithm.SetFinishedWarmingUp();
+
+            _algorithm.Portfolio.CashBook[Currencies.USD].ConversionRate = 0.88m;
+
+            // we don't have any USD ! cash model shouldn't let us trade
+            var res = _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_portfolio, _btcusd, 1m);
+            Assert.AreEqual(0m, res.Quantity);
+            Assert.IsTrue(res.Reason.Contains("does not hold any USD"));
+            Assert.IsTrue(res.IsError);
+        }
+
+        [TestCase("EUR")]
+        [TestCase("ARG")]
+        public void ZeroNonAccountCurrency_GetMaximumOrderQuantityForTargetValue(string accountCurrency)
+        {
+            _algorithm.Portfolio.CashBook.Clear();
+            _algorithm.Portfolio.SetAccountCurrency(accountCurrency);
+            _algorithm.Portfolio.SetCash(0);
+            _algorithm.Portfolio.SetCash(Currencies.USD, 10000, 0.88m);
+            Assert.AreEqual(8800m, _portfolio.TotalPortfolioValue);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
+            _algorithm.SetFinishedWarmingUp();
+
+            // Maximum we can market buy at ask price with 10000 USD is 0.99204872m BTC => Account currency should not matter
+            var quantity = _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_portfolio, _btcusd, 1m).Quantity;
+            Assert.AreEqual(0.99204872m, quantity);
+
+            var order = new MarketOrder(_btcusd.Symbol, quantity, DateTime.UtcNow);
+            var fee = _btcusd.FeeModel.GetOrderFee(new OrderFeeParameters(_btcusd, order));
+            var feeAsAccountCurrency = _algorithm.Portfolio.CashBook.ConvertToAccountCurrency(fee.Value);
+            var expectedQuantity = (8800 - feeAsAccountCurrency.Amount) / (_btcusd.AskPrice * 0.88m);
+            expectedQuantity -= expectedQuantity % _btcusd.SymbolProperties.LotSize;
+            Assert.AreEqual(expectedQuantity, quantity);
+
+            // the maximum order quantity can be executed
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
+        }
+
+        [Test]
+        public void ZeroNonAccountCurrency_GetBuyingPower()
+        {
+            _algorithm.Portfolio.CashBook.Clear();
+            _algorithm.Portfolio.SetAccountCurrency("EUR");
+            _algorithm.Portfolio.SetCash(0);
+            _algorithm.Portfolio.SetCash(Currencies.USD, 10000, 0.88m);
+            Assert.AreEqual(8800m, _portfolio.TotalPortfolioValue);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
+            _algorithm.SetFinishedWarmingUp();
+
+            var quantity = _buyingPowerModel.GetBuyingPower(new BuyingPowerParameters(_portfolio, _btcusd, OrderDirection.Buy)).Value;
+
+            Assert.AreEqual(1m, quantity);
+        }
+
+        [Test]
+        public void ZeroNonAccountCurrency_GetReservedBuyingPowerForPosition()
+        {
+            _algorithm.Portfolio.CashBook.Clear();
+            _algorithm.Portfolio.SetAccountCurrency("EUR");
+            _algorithm.Portfolio.SetCash(0);
+            _algorithm.Portfolio.SetCash(Currencies.USD, 10000, 0.88m);
+            Assert.AreEqual(8800m, _portfolio.TotalPortfolioValue);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
+            _algorithm.SetFinishedWarmingUp();
+            _btcusd.Holdings.SetHoldings(_btcusd.Price, 100);
+
+            var res = _buyingPowerModel.GetReservedBuyingPowerForPosition(
+                new ReservedBuyingPowerForPositionParameters(_btcusd));
+
+            // Always returns 0. Since we're purchasing currencies outright, the position doesn't consume buying power
+            Assert.AreEqual(0m, res.Value);
+        }
+
+        [Test]
+        public void NonAccountCurrency_GetBuyingPower()
+        {
+            _algorithm.Portfolio.CashBook.Clear();
+            _algorithm.Portfolio.SetAccountCurrency("EUR");
+            _algorithm.Portfolio.SetCash(10000);
+            _algorithm.Portfolio.SetCash(Currencies.USD, 10000, 0.88m);
+            Assert.AreEqual(18800m, _portfolio.TotalPortfolioValue);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
+            _algorithm.SetFinishedWarmingUp();
+
+            var quantity = _buyingPowerModel.GetBuyingPower(new BuyingPowerParameters(_portfolio, _btcusd, OrderDirection.Buy)).Value;
+
+            Assert.AreEqual(1m, quantity);
+        }
+
+        [Test]
+        public void NonAccountCurrency_ZeroQuoteCurrency_GetBuyingPower()
+        {
+            _algorithm.Portfolio.CashBook.Clear();
+            _algorithm.Portfolio.SetAccountCurrency("EUR");
+            _algorithm.Portfolio.SetCash(10000);
+            _algorithm.Portfolio.SetCash(Currencies.USD, 0, 0.88m);
+            Assert.AreEqual(10000, _portfolio.TotalPortfolioValue);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
+            _algorithm.SetFinishedWarmingUp();
+
+            var quantity = _buyingPowerModel.GetBuyingPower(new BuyingPowerParameters(_portfolio, _btcusd, OrderDirection.Buy)).Value;
+
+            Assert.AreEqual(0m, quantity);
+        }
+
+        [TestCase("EUR")]
+        [TestCase("ARG")]
+        public void NonZeroNonAccountCurrency_UnReachableTarget(string accountCurrency)
+        {
+            _algorithm.Portfolio.CashBook.Clear();
+            _algorithm.Portfolio.SetAccountCurrency("EUR");
+            _algorithm.Portfolio.SetCash(10000);
+            _algorithm.Portfolio.SetCash(Currencies.USD, 10000, 0.88m);
+            Assert.AreEqual(18800m, _portfolio.TotalPortfolioValue);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
+            _algorithm.SetFinishedWarmingUp();
+
+            // Maximum we can market buy at ask price with 10000 USD + (10000 EUR / 0.88 rate) is 2.1193768m BTC
+            var quantity = _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_portfolio, _btcusd, 1m).Quantity;
+            Assert.AreEqual(2.11937683m, quantity);
+
+            // the maximum order quantity can be executed
+            var order = new MarketOrder(_btcusd.Symbol, quantity, DateTime.UtcNow);
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
+        }
+
+        [TestCase("EUR")]
+        [TestCase("ARG")]
+        public void NonZeroNonAccountCurrency_ReachableTarget(string accountCurrency)
+        {
+            _algorithm.Portfolio.CashBook.Clear();
+            _algorithm.Portfolio.SetAccountCurrency(accountCurrency);
+            _algorithm.Portfolio.SetCash(10000);
+            _algorithm.Portfolio.SetCash(Currencies.USD, 10000, 0.88m);
+            Assert.AreEqual(18800m, _portfolio.TotalPortfolioValue);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
+            _algorithm.SetFinishedWarmingUp();
+
+            // only use the USD for determining the target
+            var reachableTarget = 8800m / 18800m;
+            // Maximum we can market buy at ask price with 10000 USD is 0.99204872m BTC => Account currency should not matter
+            var quantity = _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_portfolio, _btcusd, reachableTarget).Quantity;
+            Assert.AreEqual(0.99204872m, quantity);
+
+            // the maximum order quantity can be executed
+            var order = new MarketOrder(_btcusd.Symbol, quantity, DateTime.UtcNow);
+            Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order).IsSufficient);
+        }
+
         private void SubmitLimitOrder(Symbol symbol, decimal quantity, decimal limitPrice)
         {
             using (var resetEvent = new ManualResetEvent(false))

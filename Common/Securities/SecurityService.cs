@@ -110,11 +110,11 @@ namespace QuantConnect.Securities
 
                 case SecurityType.Option:
                     if (addToSymbolCache) SymbolCache.Set(symbol.Underlying.Value, symbol.Underlying);
-                    security = new Option.Option(symbol, exchangeHours, _cashBook[_cashBook.AccountCurrency], new Option.OptionSymbolProperties(symbolProperties), _cashBook);
+                    security = new Option.Option(symbol, exchangeHours, quoteCash, new Option.OptionSymbolProperties(symbolProperties), _cashBook);
                     break;
 
                 case SecurityType.Future:
-                    security = new Future.Future(symbol, exchangeHours, _cashBook[_cashBook.AccountCurrency], symbolProperties, _cashBook);
+                    security = new Future.Future(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook);
                     break;
 
                 case SecurityType.Forex:

@@ -1136,17 +1136,17 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Keeps track of split warnings so we can later liquidate option contracts
         /// </summary>
-        private static void HandleSplitSymbols(Splits newSplits, List<Split> splitWarnings)
+        private void HandleSplitSymbols(Splits newSplits, List<Split> splitWarnings)
         {
             foreach (var split in newSplits.Values)
             {
                 if (split.Type != SplitType.Warning)
                 {
-                    Log.Trace($"AlgorithmManager.Run() Security split occurred: Split Factor: {split} Reference Price: {split.ReferencePrice}");
+                    Log.Trace($"AlgorithmManager.HandleSplitSymbols(): {_algorithm.Time} - Security split occurred: Split Factor: {split} Reference Price: {split.ReferencePrice}");
                     continue;
                 }
 
-                Log.Trace($"AlgorithmManager.Run() Security split warning: {split}");
+                Log.Trace($"AlgorithmManager.HandleSplitSymbols(): {_algorithm.Time} - Security split warning: {split}");
 
                 if (!splitWarnings.Any(x => x.Symbol == split.Symbol && x.Type == SplitType.Warning))
                 {
@@ -1158,7 +1158,7 @@ namespace QuantConnect.Lean.Engine
         /// <summary>
         /// Liquidate option contact holdings who's underlying security has split
         /// </summary>
-        private static void ProcessSplitSymbols(IAlgorithm algorithm, List<Split> splitWarnings)
+        private void ProcessSplitSymbols(IAlgorithm algorithm, List<Split> splitWarnings)
         {
             // NOTE: This method assumes option contracts have the same core trading hours as their underlying contract
             //       This is a small performance optimization to prevent scanning every contract on every time step,
@@ -1169,11 +1169,34 @@ namespace QuantConnect.Lean.Engine
                 var split = splitWarnings[i];
                 var security = algorithm.Securities[split.Symbol];
 
+                if (!security.IsTradable
+                    && !algorithm.UniverseManager.ActiveSecurities.Keys.Contains(split.Symbol))
+                {
+                    Log.Debug($"AlgorithmManager.ProcessSplitSymbols(): {_algorithm.Time} - Removing split warning for {security.Symbol}");
+
+                    // remove the warning from out list
+                    splitWarnings.RemoveAt(i);
+                    // Since we are storing the split warnings for a loop
+                    // we need to check if the security was removed.
+                    // When removed, it will be marked as non tradable but just in case
+                    // we expect it not to be an active security either
+                    continue;
+                }
+
                 var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
 
                 // determine the latest possible time we can submit a MOC order
                 var configs = algorithm.SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(security.Symbol);
+
+                if (configs.Count == 0)
+                {
+                    // should never happen at this point, if it does let's give some extra info
+                    throw new Exception(
+                        $"AlgorithmManager.ProcessSplitSymbols(): {_algorithm.Time} - No subscriptions found for {security.Symbol}" +
+                        $", IsTradable: {security.IsTradable}" +
+                        $", Active: {algorithm.UniverseManager.ActiveSecurities.Keys.Contains(split.Symbol)}");
+                }
 
                 var latestMarketOnCloseTimeRoundedDownByResolution = nextMarketClose.Subtract(MarketOnCloseOrder.DefaultSubmissionTimeBuffer)
                     .RoundDownInTimeZone(configs.GetHighestResolution().ToTimeSpan(), security.Exchange.TimeZone, configs.First().DataTimeZone);

@@ -1,5 +1,5 @@
 #
-#   LEAN Foundation Docker Container 20181218
+#   LEAN Foundation Docker Container 20190104
 #   Cross platform deployment for multiple brokerages
 #   Intended to be used in conjunction with Dockerfile. This is just the foundation common OS+Dependencies required.
 #
@@ -30,23 +30,23 @@ RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true 
     rm -rf /var/lib/apt/lists/* && rm -rf /var/cache/oracle-jdk8-installer
 
 # Install IB Gateway: Installs to ~/Jts
-RUN wget http://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v968.2d.sh && \
-    chmod 777 ibgateway-latest-standalone-linux-x64-v968.2d.sh && \
-    ./ibgateway-latest-standalone-linux-x64-v968.2d.sh -q && \
-    wget -O ~/Jts/jts.ini http://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v968.2d.jts.ini && \
-    rm ibgateway-latest-standalone-linux-x64-v968.2d.sh
+RUN wget http://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v974.4g.sh && \
+    chmod 777 ibgateway-latest-standalone-linux-x64-v974.4g.sh && \
+    ./ibgateway-latest-standalone-linux-x64-v974.4g.sh -q && \
+    wget -O ~/Jts/jts.ini http://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v974.4g.jts.ini && \
+    rm ibgateway-latest-standalone-linux-x64-v974.4g.sh
 
 # Install IB Controller: Installs to ~/IBController
-RUN wget http://cdn.quantconnect.com/interactive/IBController-QuantConnect-3.2.0.4.zip && \
-    unzip IBController-QuantConnect-3.2.0.4.zip -d ~/IBController && \
+RUN wget http://cdn.quantconnect.com/interactive/IBController-QuantConnect-3.2.0.5.zip && \
+    unzip IBController-QuantConnect-3.2.0.5.zip -d ~/IBController && \
     chmod -R 777 ~/IBController && \
-    rm IBController-QuantConnect-3.2.0.4.zip
+    rm IBController-QuantConnect-3.2.0.5.zip
 
 # Mono C# for LEAN:
 # From https://github.com/mono/docker/blob/master/
 RUN apt-get update && rm -rf /var/lib/apt/lists/*
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-RUN echo "deb http://download.mono-project.com/repo/ubuntu stable-xenial/snapshots/5.16.0.179 main" > /etc/apt/sources.list.d/mono-xamarin.list && \
+RUN echo "deb http://download.mono-project.com/repo/ubuntu stable-xenial/snapshots/5.12.0.226 main" > /etc/apt/sources.list.d/mono-xamarin.list && \
     apt-get update && apt-get install -y binutils mono-complete ca-certificates-mono mono-vbnc nuget referenceassemblies-pcl && \
     apt-get install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
 
@@ -57,11 +57,11 @@ RUN wget https://cdn.quantconnect.com/miniconda/Miniconda3-4.3.31-Linux-x86_64.s
     rm -rf Miniconda3-latest-Linux-x86_64.sh && \
     ln -s /opt/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so && \
     conda update -y conda pip && \
-    conda install -y python=3.6.6 && \
+    conda install -y python=3.6.7 && \
     conda install -y numpy=1.14.5 && \
-    conda install -y cython pandas && \
+    conda install -y pandas=0.23.4 && \
     conda install -y jsonschema lxml plotly seaborn quandl && \
-    conda install -y blaze cvxopt keras nltk tensorflow theano && \
+    conda install -y blaze cython cvxopt keras nltk tensorflow theano && \
     conda install -y pytorch torchvision -c pytorch && \
     conda install -y -c conda-forge rauth && \
     pip install --upgrade pip && \
