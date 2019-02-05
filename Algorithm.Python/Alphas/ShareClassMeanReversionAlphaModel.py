@@ -24,6 +24,7 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import QCAlgorithmFrameworkBridge
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Indicators import *
+from QuantConnect.Orders.Fees import ConstantFeeModel
 
 import numpy as np
 import pandas as pd
