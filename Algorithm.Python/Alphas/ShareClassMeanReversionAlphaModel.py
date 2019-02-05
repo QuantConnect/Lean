@@ -36,17 +36,15 @@ class ShareClassMeanReversionAlphaModel(QCAlgorithmFrameworkBridge):
     def Initialize(self):
         
         ## Set testing timeframe and starting cash
-        self.SetStartDate(2018,1,1)
-        self.SetEndDate(2018,3,31)
-        self.SetCash(1000000)
+        self.SetStartDate(2019,1,1)
+        self.SetCash(100000)
         
         ## We choose a pair of stock tickers that represent different
         ## share classes of the same company -- the idea being that their
         ## prices will move almost identically but likely with slight deviations
         ## e.g., Google
         symbols = ['GOOG','GOOGL']
-        #symbols = ['VIA','VIAB']
-
+        
         self.symbols = symbols
         for symbol in symbols:
             self.AddEquity(symbol, Resolution.Minute)
