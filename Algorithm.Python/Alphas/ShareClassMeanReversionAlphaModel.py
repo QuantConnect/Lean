@@ -105,7 +105,7 @@ class ShareClassMeanReversionAlphaModel(QCAlgorithmFrameworkBridge):
             if position_value >= self.sma.Current.Value:
                 insight1 = Insight.Price(self.symbols[1], timedelta(minutes=5), InsightDirection.Up)
                 insight2 = Insight.Price(self.symbols[0], timedelta(minutes=5), InsightDirection.Down)
-                self.EmitInsights( Insight.Group ( insight1, insight2 ) )
+                self.EmitInsights( Insight.Group ( [insight1, insight2] ) )
                 
                 self.SetHoldings(self.symbols[1], 0.5)
                 self.SetHoldings(self.symbols[0], -0.5)
@@ -115,7 +115,7 @@ class ShareClassMeanReversionAlphaModel(QCAlgorithmFrameworkBridge):
             elif position_value < self.sma.Current.Value:
                 insight1 = Insight.Price(self.symbols[1], timedelta(minutes=5), InsightDirection.Down)
                 insight2 = Insight.Price(self.symbols[0], timedelta(minutes=5), InsightDirection.Up)
-                self.EmitInsights( Insight.Group ( insight1, insight2 ) )
+                self.EmitInsights( Insight.Group ( [insight1, insight2] ) )
                 
                 self.SetHoldings(self.symbols[1], -0.5)
                 self.SetHoldings(self.symbols[0], 0.5)
