@@ -64,6 +64,7 @@ class ShareClassMeanReversionAlphaModel(QCAlgorithmFrameworkBridge):
         self.period_counter = 0
         self.alpha = None
         self.beta = None
+        self.Invested = False
 
     def OnData(self, data):
         
@@ -99,30 +100,31 @@ class ShareClassMeanReversionAlphaModel(QCAlgorithmFrameworkBridge):
             torf = True
             self.period_counter += 1
         
-        if not self.Portfolio.Invested:
+        if not self.Invested:
             ## Position value greater than SMA indicates that we should 'sell our portfolio' since it will revert back to the mean value
             ## This means go long 'GOOGL' and go short 'GOOG'
             if position_value >= self.sma.Current.Value:
-                insight1 = Insight.Price(self.symbols[1], timedelta(minutes=5), InsightDirection.Up)
-                insight2 = Insight.Price(self.symbols[0], timedelta(minutes=5), InsightDirection.Down)
-                self.EmitInsights( Insight.Group ( [insight1, insight2] ) )
+                self.EmitInsights(Insight.Price(self.symbols[1], timedelta(minutes=5), InsightDirection.Up))
+                self.EmitInsights(Insight.Price(self.symbols[0], timedelta(minutes=5), InsightDirection.Down))
                 
                 self.SetHoldings(self.symbols[1], 0.5)
                 self.SetHoldings(self.symbols[0], -0.5)
+                self.Invested = True
                 
             ## Position value greater than SMA indicates that we should 'buy our portfolio' since it will revert back to the mean value
             ## This means go short 'GOOGL' and go long 'GOOG'
             elif position_value < self.sma.Current.Value:
-                insight1 = Insight.Price(self.symbols[1], timedelta(minutes=5), InsightDirection.Down)
-                insight2 = Insight.Price(self.symbols[0], timedelta(minutes=5), InsightDirection.Up)
-                self.EmitInsights( Insight.Group ( [insight1, insight2] ) )
+                self.EmitInsights(Insight.Price(self.symbols[1], timedelta(minutes=5), InsightDirection.Down))
+                self.EmitInsights(Insight.Price(self.symbols[0], timedelta(minutes=5), InsightDirection.Up))
                 
                 self.SetHoldings(self.symbols[1], -0.5)
                 self.SetHoldings(self.symbols[0], 0.5)
+                self.Invested = True
         
         ## If we are invested and the long/short position has crossed the SMA line, then we close our positions
-        elif self.Portfolio.Invested and torf:
+        elif self.Invested and torf:
             self.Liquidate()
+            self.Invested = False
     
     ## Helper function to check if the long/short position has crossed the SMA        
     def crossed_mean(self):
