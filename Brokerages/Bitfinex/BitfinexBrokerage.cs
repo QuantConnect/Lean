@@ -267,6 +267,13 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <returns>An enumerable of bars covering the span specified in the request</returns>
         public override IEnumerable<BaseData> GetHistory(Data.HistoryRequest request)
         {
+            if (request.Resolution == Resolution.Tick || request.Resolution == Resolution.Second)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidResolution",
+                    $"{request.Resolution} resolution not supported, no history returned"));
+                yield break;
+            }
+
             string resolution = ConvertResolution(request.Resolution);
             long resolutionInMS = (long)request.Resolution.ToTimeSpan().TotalMilliseconds;
             string symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
