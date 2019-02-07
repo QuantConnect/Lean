@@ -66,7 +66,7 @@ namespace QuantConnect.Brokerages
         /// <returns></returns>
         public override decimal GetLeverage(Security security)
         {
-            if (AccountType == AccountType.Cash)
+            if (AccountType == AccountType.Cash || security.IsInternalFeed())
             {
                 return 1m;
             }
@@ -77,7 +77,7 @@ namespace QuantConnect.Brokerages
                     return _maxLeverage;
 
                 default:
-                    throw new Exception($"Invalid security type: {security.Type}"); ;
+                    throw new Exception($"Invalid security type: {security.Type}");
             }
         }
 
