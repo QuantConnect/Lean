@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -82,6 +83,24 @@ namespace QuantConnect.Brokerages.Bitfinex
             "USTUSD","EUTEUR","EUTUSD","GSDUSD","UDCUSD","TSDUSD","PAXUSD","RIFUSD","RIFBTC","PASUSD",
             "PASETH","VSYUSD","VSYBTC","ZRXDAI","MKRDAI","OMGDAI"
         };
+
+        /// <summary>
+        /// The list of delisted/invalid Bitfinex symbols.
+        /// </summary>
+        public static HashSet<string> DelistedSymbolStrings = new HashSet<string>
+        {
+            "BCHUSD","BCHBTC","BCHETH",
+            "CFIUSD","CFIBTC","CFIETH",
+            "VENUSD","VENBTC","VENETH"
+        };
+
+        /// <summary>
+        /// The list of active Bitfinex symbols.
+        /// </summary>
+        public static List<string> ActiveSymbolStrings =
+            KnownSymbolStrings
+                .Where(x => !DelistedSymbolStrings.Contains(x))
+                .ToList();
 
         /// <summary>
         /// The list of known Bitfinex currencies.

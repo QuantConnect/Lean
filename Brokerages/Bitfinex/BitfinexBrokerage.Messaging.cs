@@ -118,7 +118,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 authSig
             }));
 
-            Log.Trace("BitfinexBrokerage.Subscribe: Sent subscribe.");
+            Log.Trace("BitfinexBrokerage.SubscribeAuth(): Sent authentication request.");
         }
 
         /// <summary>
@@ -149,9 +149,9 @@ namespace QuantConnect.Brokerages.Bitfinex
                     channel = "trades",
                     pair = _symbolMapper.GetBrokerageSymbol(symbol)
                 }));
-            }
 
-            Log.Trace("BitfinexBrokerage.Subscribe: Sent subscribe.");
+                Log.Trace($"BitfinexBrokerage.Subscribe: Sent subscribe for {symbol.Value}.");
+            }
         }
 
         /// <summary>
