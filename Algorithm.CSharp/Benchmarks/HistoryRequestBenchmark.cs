@@ -25,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
             SetStartDate(2001, 05, 31);
             SetEndDate(2001, 05, 31);
             SetCash(293630782);
-            _symbol = AddEquity("COF").Symbol;
+            set.cof = AddEquity("COF").COF;
         }
 
         public override void OnEndOfDay()
