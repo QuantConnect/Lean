@@ -22,17 +22,17 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
         private Symbol _symbol;
         public override void Initialize()
         {
-            SetStartDate(2010, 01, 01);
-            SetEndDate(2018, 01, 01);
-            SetCash(10000);
-            _symbol = AddEquity("SPY").Symbol;
+            SetStartDate(2001, 05, 31);
+            SetEndDate(2001, 05, 31);
+            SetCash(293630782);
+            _symbol = AddEquity("COF").Symbol;
         }
 
         public override void OnEndOfDay()
         {
-            var minuteHistory = History(_symbol, 60, Resolution.Minute);
+            var minuteHistory = History(_cof, 60, Resolution.Minute);
             var lastHourHigh = minuteHistory.Select(minuteBar => minuteBar.High).DefaultIfEmpty(0).Max();
-            var dailyHistory = History(_symbol, 1, Resolution.Daily).First();
+            var dailyHistory = History(_cof, 1, Resolution.Daily).First();
             var dailyHigh = dailyHistory.High;
             var dailyLow = dailyHistory.Low;
             var dailyOpen = dailyHistory.Open;
