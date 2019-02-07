@@ -19,7 +19,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
 {
     public class HistoryRequestBenchmark : QCAlgorithm
     {
-        private Symbol _symbol;
+        private COF _COF;
         public override void Initialize()
         {
             SetStartDate(2001, 05, 31);
