@@ -1,4 +1,4 @@
-﻿#r "/opt/miniconda3/lib/python3.6/site-packages/Python.Runtime.dll"
+﻿#r "pythonnet/Python.Runtime.dll"
 #r "QuantConnect.Algorithm.dll"
 #r "QuantConnect.Algorithm.Framework.dll"
 #r "QuantConnect.Common.dll"
