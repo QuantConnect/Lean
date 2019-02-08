@@ -28,12 +28,10 @@ class PumpAndDumpAlphaAlgorithm(QCAlgorithmFramework):
     def Initialize(self):
 
         self.SetStartDate(2018, 1, 1)
-
         self.SetCash(100000)
         
-        self.UniverseSettings.Resolution = Resolution.Daily
-
         # select stocks using PennyStockUniverseSelectionModel
+        self.UniverseSettings.Resolution = Resolution.Daily
         self.SetUniverseSelection(PennyStockUniverseSelectionModel())
 
         # Use PumpAndDumpAlphaModel to establish insights
@@ -41,9 +39,8 @@ class PumpAndDumpAlphaAlgorithm(QCAlgorithmFramework):
 
         # Equally weigh securities in portfolio, based on insights
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        
-        
 
+        
 class PumpAndDumpAlphaModel(AlphaModel):
     '''Uses ranking of intraday percentage difference between open price and close price to create magnitude and direction prediction for insights'''
 
@@ -55,14 +52,12 @@ class PumpAndDumpAlphaModel(AlphaModel):
         self.symbolDataBySymbol = {}
 
     def Update(self, algorithm, data):
-        
         insights = []
         ret = []
         symbols = []
-        
-        activeSec = [x.Key for x in algorithm.ActiveSecurities]
+        activeSecurities = [x.Key for x in algorithm.ActiveSecurities]
 
-        for symbol in activeSec:
+        for symbol in activeSecurities:
             if algorithm.ActiveSecurities[symbol].HasData:
                 open = algorithm.Securities[symbol].Open
                 close = algorithm.Securities[symbol].Close
@@ -71,22 +66,19 @@ class PumpAndDumpAlphaModel(AlphaModel):
                     ret.append(openCloseReturn)
                     symbols.append(symbol)
                     
-                    
         # Intraday price change for penny stocks
         symbolsRet = dict(zip(symbols,ret))
         
         # Rank penny stocks on one day price change and retrieve list of ten "pumped" penny stocks
         pumpedStocks = dict(sorted(symbolsRet.items(), key=lambda kv: kv[1],reverse=True)[0:self.numberOfStocks])
         
-        
         # Emit "down" insight for "pumped" penny stocks
         for key,value in pumpedStocks.items():
             insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Down, value, None))
 
-
         return insights
 
-
+    
 class PennyStockUniverseSelectionModel(FundamentalUniverseSelectionModel):
     '''Defines a universe of penny stocks, as a universe selection model for the framework algorithm.'''
 
@@ -99,7 +91,6 @@ class PennyStockUniverseSelectionModel(FundamentalUniverseSelectionModel):
         
         # Number of stocks in Coarse and Fine Universe
         self.NumberOfSymbolsCoarse = 500
-        
         self.lastMonth = -1
         self.dollarVolumeBySymbol = {}
         self.symbols = []
