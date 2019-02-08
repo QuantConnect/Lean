@@ -22,6 +22,7 @@ using System.Threading;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 using QuantConnect.Util;
 using Log = QuantConnect.Logging.Log;
 
@@ -123,7 +124,8 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                 }
 
                 var lastProcessedDate = startDate ?? GetLastProcessedDate(coarseFolder);
-                var files = ProcessDailyFolder(dailyFolder, coarseFolder, MapFileResolver.Create(mapFileFolder), exclusions, ignoreMaplessSymbols, lastProcessedDate);
+                var factorFileProvider = new LocalDiskFactorFileProvider();
+                var files = ProcessDailyFolder(dailyFolder, coarseFolder, MapFileResolver.Create(mapFileFolder), factorFileProvider, exclusions, ignoreMaplessSymbols, lastProcessedDate);
                 foreach (var file in files)
                 {
                     yield return file;
@@ -144,7 +146,8 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
         /// <param name="symbolResolver">Function used to provide symbol resolution. Default resolution uses the zip file name to resolve
         /// the symbol, specify null for this behavior.</param>
         /// <returns>A collection of the generated coarse files</returns>
-        public static ICollection<string> ProcessDailyFolder(string dailyFolder, string coarseFolder, MapFileResolver mapFileResolver, HashSet<string> exclusions, bool ignoreMapless, DateTime startDate, Func<string, string> symbolResolver = null)
+        public static ICollection<string> ProcessDailyFolder(string dailyFolder, string coarseFolder, MapFileResolver mapFileResolver, IFactorFileProvider factorFileProvider,
+            HashSet<string> exclusions, bool ignoreMapless, DateTime startDate, Func<string, string> symbolResolver = null)
         {
             const decimal scaleFactor = 10000m;
 
@@ -176,7 +179,6 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             var fineFundamentalFolder = Path.Combine(fundamentalDirectoryInfo.FullName, "fine");
 
             var mapFileProvider = new LocalDiskMapFileProvider();
-            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
 
             // open up each daily file to get the values and append to the daily coarse files
             foreach (var file in Directory.EnumerateFiles(dailyFolder, "*.zip"))
