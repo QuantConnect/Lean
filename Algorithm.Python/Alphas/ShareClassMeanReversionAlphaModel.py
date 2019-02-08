@@ -40,19 +40,20 @@ class ShareClassMeanReversionAlphaModel(QCAlgorithmFrameworkBridge):
         self.SetCash(100000)
         
         ## We choose a pair of stock tickers that represent different
-        ## share classes of the same company -- the idea being that their
+        ## share classes of the same company -- the idea being that their 
         ## prices will move almost identically but likely with slight deviations
-        ## e.g., Google
-        symbols = ['GOOG','GOOGL']
-        
+        symbols = ['GOOG','GOOGL'] 
+
         self.symbols = symbols
         for symbol in symbols:
             self.AddEquity(symbol, Resolution.Minute)
             self.Securities[symbol].FeeModel = ConstantFeeModel(0) ## Set fees to $0 for High Freq. Trading
         
-        ## Register a 20-bar SMA indicator for tracking the value of the
-        ## long/short position
+        ## Register a 20-bar SMA indicator for tracking the moving average of the
+        ## long/short position and a RollingWindow to keep track of our
+        ## most recent position values
         self.sma = SimpleMovingAverage(20)
+        self.position = RollingWindow[Decimal](2)
         
         ## Warm up our 20-bar indicator
         self.SetWarmup(20)
@@ -60,20 +61,20 @@ class ShareClassMeanReversionAlphaModel(QCAlgorithmFrameworkBridge):
         ## Initialize a list to keep track of our position value, a period counter
         ## to assist in tracking our position relative to the SMA,
         ## and alpha + beta to represent position sizes in our assets
-        self.portfolio = []
-        self.period_counter = 0
         self.alpha = None
         self.beta = None
+        self.Invested = False
 
     def OnData(self, data):
         
         ## If one or more of the symbols doesn't have a TradeBar for a given slice, then
         ## skip this slice and do nothing until both symbols have data
+        
         for symbol in self.symbols:
             if not data.Bars.ContainsKey(symbol): return
         
-        ## We want to calculate alpha and beta such that our position in each asset
-        ## is 50% of our total available cash.
+        ## We want to make and initial calculation of alpha and beta such that our position
+        ## in each asset is 50% of our total available cash.
         if (self.alpha is None) and (self.beta is None):
             self.alpha = self.CalculateOrderQuantity(self.symbols[0], 0.5)
             self.beta = self.CalculateOrderQuantity(self.symbols[1], 0.5)
@@ -83,55 +84,52 @@ class ShareClassMeanReversionAlphaModel(QCAlgorithmFrameworkBridge):
         if not self.sma.IsReady:
             position_value = (self.alpha * data[self.symbols[0]].Close) - (self.beta * data[self.symbols[1]].Close)
             self.sma.Update(data[self.symbols[0]].EndTime, position_value)
-            self.portfolio.append(position_value)
+            self.position.Add(position_value)
             return
 
         ## Calculate our position value here, which we then use to update the SMA
         position_value = (self.alpha * data[self.symbols[0]].Close) - (self.beta * data[self.symbols[1]].Close)
         self.sma.Update(data[self.symbols[0]].EndTime, position_value)
-        self.portfolio.append(position_value)
+        self.position.Add(position_value)
         
         ## Check to see if the position has crossed over the SMA before we liquidate
         ## our positions. This prevents immediate liquidation of a position after entering it
-        if self.period_counter >= 1:
-            torf = self.crossed_mean()
-        else:
-            torf = True
-            self.period_counter += 1
         
-        if not self.Portfolio.Invested:
+        if not self.Invested:
             ## Position value greater than SMA indicates that we should 'sell our portfolio' since it will revert back to the mean value
             ## This means go long 'GOOGL' and go short 'GOOG'
             if position_value >= self.sma.Current.Value:
                 insight1 = Insight.Price(self.symbols[1], timedelta(minutes=5), InsightDirection.Up)
                 insight2 = Insight.Price(self.symbols[0], timedelta(minutes=5), InsightDirection.Down)
                 self.EmitInsights( Insight.Group ( [insight1, insight2] ) )
+                self.Log('Insight Emitted')
                 
                 self.SetHoldings(self.symbols[1], 0.5)
                 self.SetHoldings(self.symbols[0], -0.5)
+                self.Invested = True
                 
             ## Position value greater than SMA indicates that we should 'buy our portfolio' since it will revert back to the mean value
             ## This means go short 'GOOGL' and go long 'GOOG'
-            elif position_value < self.sma.Current.Value:
+            if position_value < self.sma.Current.Value:
                 insight1 = Insight.Price(self.symbols[1], timedelta(minutes=5), InsightDirection.Down)
                 insight2 = Insight.Price(self.symbols[0], timedelta(minutes=5), InsightDirection.Up)
                 self.EmitInsights( Insight.Group ( [insight1, insight2] ) )
+                self.Log('Insight Emitted')
                 
                 self.SetHoldings(self.symbols[1], -0.5)
                 self.SetHoldings(self.symbols[0], 0.5)
+                self.Invested = True
         
         ## If we are invested and the long/short position has crossed the SMA line, then we close our positions
-        elif self.Portfolio.Invested and torf:
+        if self.Invested and self.crossed_sma():
             self.Liquidate()
-    
+            self.Invested = False
+            
     ## Helper function to check if the long/short position has crossed the SMA        
-    def crossed_mean(self):
-        if (self.portfolio[self.period_counter] >= self.sma.Current.Value) and (self.portfolio[self.period_counter-1] < self.sma.Current.Value):
-            self.period_counter += 1
+    def crossed_sma(self):
+        if (self.position[0] >= self.sma.Current.Value) and (self.position[1] < self.sma.Current.Value):
             return True
-        elif (self.portfolio[self.period_counter] < self.sma.Current.Value) and (self.portfolio[self.period_counter-1] >= self.sma.Current.Value):
-            self.period_counter += 1
+        elif (self.position[0] < self.sma.Current.Value) and (self.position[1] >= self.sma.Current.Value):
             return True
         else:
-            self.period_counter += 1
             return False
