@@ -9,36 +9,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     public static class FinancialCalendar
     {
         /// <summary>
-        /// Converts integer to month between 1-12.
-        /// </summary>
-        /// <param name="month">Month as integer</param>
-        /// <returns><see cref="Month"/></returns>
-        /// <remarks>
-        /// In the case that the `month` passed is greater
-        /// than 12 or less than or equal to 0, 
-        /// then we consider the months as a year
-        /// and calculate what month it would be. Example:
-        /// 
-        /// <code>
-        /// var month = 15;
-        /// month.ToMonth() == Month.March; // returns true
-        /// </code>
-        /// </remarks>
-        public static int NormalizeMonth(this int month)
-        {
-            if (month > 12 || month <= 0)
-            {
-                if (month % 12 == 0)
-                {
-                    return 12;
-                }
-                // Use a real modulo instead of C#'s remainder operator
-                return ((month % 12) + 12) % 12;
-            }
-            return month;
-        }
-
-        /// <summary>
         /// Gets the next month after the current month
         /// </summary>
         /// <param name="currentMonth">Starting month</param>

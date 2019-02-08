@@ -73,9 +73,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var hasDividends = _randomValueGenerator.NextBool(60.0);
             var dividendEveryQuarter = _randomValueGenerator.NextBool(30.0);
 
-            var previousSplitFactor = (decimal)_random.NextDouble();
-            var previousPriceFactor = (decimal)_random.NextDouble();
             var previousX = _random.NextDouble();
+            var previousSplitFactor = hasSplits ? (decimal)_random.NextDouble() : 1;
+            var previousPriceFactor = hasDividends ? (decimal)Math.Tanh(previousX) : 1;
 
             var splitDates = new List<DateTime>();
             var dividendDates = new List<DateTime>();
@@ -149,16 +149,19 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         // Every quarter, try to generate dividend events
                         if (tick.Time.Month.IsFinancialStatementMonth())
                         {
-                            // Make it so there's a 10% chance that dividends occur if there is no dividend every quarter
-                            if (dividendEveryQuarter || _randomValueGenerator.NextBool(10.0))
+                            if (hasDividends)
                             {
-                                do
+                                // Make it so there's a 10% chance that dividends occur if there is no dividend every quarter
+                                if (dividendEveryQuarter || _randomValueGenerator.NextBool(10.0))
                                 {
-                                    previousPriceFactor = (decimal)Math.Tanh(previousX);
-                                    previousX += _random.NextDouble() / 10;
-                                } while (previousPriceFactor >= 1.0m || previousPriceFactor <= 0m);
+                                    do
+                                    {
+                                        previousX += _random.NextDouble() / 10;
+                                        previousPriceFactor = (decimal)Math.Tanh(previousX);
+                                    } while (previousPriceFactor >= 1.0m || previousPriceFactor <= 0m);
 
-                                dividendDates.Add(_randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5)));
+                                    dividendDates.Add(_randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5)));
+                                }
                             }
                             // Have a 5% chance of a split every month
                             if (hasSplits && _randomValueGenerator.NextBool(5.0))

@@ -114,8 +114,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     if (!willBeDelisted)
                     {
                         dividendsSplitsMaps.DividendsSplits.Add(new FactorFileRow(new DateTime(2050, 12, 31), 1m, 1m));
-                        // Remove the last element if we're going to have a 20501231 entry
-                        dividendsSplitsMaps.MapRows.RemoveAt(dividendsSplitsMaps.MapRows.Count - 1);
+
+                        if (dividendsSplitsMaps.MapRows.Count > 1)
+                        {
+                            // Remove the last element if we're going to have a 20501231 entry
+                            dividendsSplitsMaps.MapRows.RemoveAt(dividendsSplitsMaps.MapRows.Count - 1);
+                        }
                         dividendsSplitsMaps.MapRows.Add(new MapFileRow(new DateTime(2050, 12, 31), symbol.Value));
                     }
 
