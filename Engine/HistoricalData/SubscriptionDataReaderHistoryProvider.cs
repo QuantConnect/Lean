@@ -77,11 +77,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Creates a subscription to process the request
         /// </summary>
-        private Subscription CreateSubscription(HistoryRequest request, DateTime start, DateTime end)
+        private Subscription CreateSubscription(HistoryRequest request, DateTime startTimeInUtc, DateTime endTimeInUtc)
         {
             // data reader expects these values in local times
-            start = start.ConvertFromUtc(request.ExchangeHours.TimeZone);
-            end = end.ConvertFromUtc(request.ExchangeHours.TimeZone);
+            DateTime startTimeAtExchange = startTimeInUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
+            DateTime endTimeAtExchange = endTimeInUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
 
             var config = new SubscriptionDataConfig(
                 objectType: request.DataType,
@@ -96,8 +96,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 tickType: request.TickType,
                 isFilteredSubscription: true,
                 dataNormalizationMode: request.DataNormalizationMode,
-                subscriptionDataStartDate: request.StartTimeUtc,
-                subscriptionDataEndDate: request.EndTimeUtc);
+                subscriptionDataStartDate: startTimeAtExchange,
+                subscriptionDataEndDate: endTimeAtExchange);
 
             var security = new Security(
                 request.ExchangeHours,
@@ -113,15 +113,15 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             if (config.SecurityType == SecurityType.Equity)
             {
                 var mapFile = mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
-                config.MappedSymbol = mapFile.GetMappedSymbol(start, config.MappedSymbol);
+                config.MappedSymbol = mapFile.GetMappedSymbol(startTimeAtExchange, config.MappedSymbol);
             }
 
             var dataReader = new SubscriptionDataReader(config,
-                start,
-                end,
+                startTimeAtExchange,
+                endTimeAtExchange,
                 mapFileResolver,
                 _factorFileProvider,
-                Time.EachTradeableDay(request.ExchangeHours, start, end),
+                Time.EachTradeableDay(request.ExchangeHours, startTimeAtExchange, endTimeAtExchange),
                 false,
                 _dataCacheProvider
                 );
@@ -152,7 +152,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 var readOnlyRef = Ref.CreateReadOnly(() => request.FillForwardResolution.Value.ToTimeSpan());
-                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, security.IsExtendedMarketHours, end, config.Increment, config.DataTimeZone);
+                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, security.IsExtendedMarketHours, endTimeAtExchange, config.Increment, config.DataTimeZone);
             }
 
             // since the SubscriptionDataReader performs an any overlap condition on the trade bar's entire
@@ -160,20 +160,20 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             // so to combat this we deliberately filter the results from the data reader to fix these cases
             // which only apply to non-tick data
 
-            reader = new SubscriptionFilterEnumerator(reader, security, end);
+            reader = new SubscriptionFilterEnumerator(reader, security, endTimeAtExchange);
             reader = new FilterEnumerator<BaseData>(reader, data =>
             {
                 // allow all ticks
                 if (config.Resolution == Resolution.Tick) return true;
                 // filter out future data
-                if (data.EndTime > end) return false;
+                if (data.EndTime > endTimeAtExchange) return false;
                 // filter out data before the start
-                return data.EndTime > start;
+                return data.EndTime > startTimeAtExchange;
             });
 
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, start, end);
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, startTimeAtExchange, endTimeAtExchange);
             var subscriptionDataEnumerator = SubscriptionData.Enumerator(config, security, timeZoneOffsetProvider, reader);
-            var subscriptionRequest = new SubscriptionRequest(false, null, security, config, start, end);
+            var subscriptionRequest = new SubscriptionRequest(false, null, security, config, startTimeAtExchange, endTimeAtExchange);
             return new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
         }
 
