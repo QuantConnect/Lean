@@ -26,177 +26,115 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Indicators import *
 from QuantConnect.Orders.Fees import ConstantFeeModel
 from QuantConnect.Data.Consolidators import *
-
-import numpy as np
-import pandas as pd
-import decimal as d
 from datetime import datetime, timedelta
 
+#
+# Reversal strategy that goes long when price crosses below SMA and Short when price crosses above SMA.
+# The trading strategy is implemented only between 10AM - 3PM (NY time). Research suggests this is due to 
+# institutional trades during market hours which need hedging with the USD. Source paper:
+# LeBaron, Zhao: Intraday Foreign Exchange Reversals
+# http://people.brandeis.edu/~blebaron/wps/fxnyc.pdf
+# http://www.fma.org/Reno/Papers/ForeignExchangeReversalsinNewYorkTime.pdf
+#
 class IntradayReversalCurrencyMarketsFrameworkAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
     
-        ## Set testing timeframe and starting cash
-        self.SetStartDate(2019, 1, 1)
+        self.SetStartDate(2015, 1, 1)
         self.SetCash(100000)
         
         # Select resolution
         resolution = Resolution.Hour
         
+        # Reversion on the USD.
+        symbols = [
+            Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda) 
+        ]
+        
         # Set requested data resolution
-        self.UniverseSettings.Resolution = resolution
-        
-        # Add currency pair
-        self.AddForex("EURUSD", resolution)
-
-        self.SetUniverseSelection(ManualUniverseSelectionModel())
-        
+        self.UniverseSettings.Resolution = resolution 
+        self.SetUniverseSelection(ManualUniverseSelectionModel( symbols ))
         self.SetAlpha(IntradayReversalAlphaModel(5, resolution))
-        
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
         self.SetRiskManagement(NullRiskManagementModel())
         
+        #Set WarmUp for Indicators
+        self.SetWarmUp(20) 
 
 class IntradayReversalAlphaModel(AlphaModel):
     '''Alpha model that uses a Price/SMA Crossover to create insights on Hourly Frequency.
-    Frequency: Hourly data.
-    Technical indicator: 5-hour simple moving average.
+    Frequency: Hourly data with 5-hour simple moving average.
     Strategy:
     Reversal strategy that goes Long when price crosses below SMA and Short when price crosses above SMA.
     The trading strategy is implemented only between 10AM - 3PM (NY time)'''
 
     # Initialize variables
-    def __init__(self,
-                period_sma = 5,
-                resolution = Resolution.Hour):
-                    
-        '''Initializes a new instance of the AlphaModel class
-        Args:
-            period_sma: The SMA period'''
-        
+    def __init__(self, period_sma = 5, resolution = Resolution.Hour):
         self.period_sma = period_sma
         self.resolution = resolution
-
+        self.cache = {} # Cache for SymbolData
         self.Name = 'IntradayReversalAlphaModel'
-    
-    def Update(self, algorithm, data):
-        '''Updates this alpha model with the latest data from the algorithm.
-        This is called each time the algorithm receives data for subscribed securities
-        Args:
-            algorithm: The algorithm instance
-            data: The new data available
-        Returns:
-            The new insights generated'''
         
+    def Update(self, algorithm, data): 
         # Set the time to close all positions at 3PM
         self.timeToClose = datetime(algorithm.Time.year, algorithm.Time.month, algorithm.Time.day, 15, 1, 00, tzinfo = algorithm.Time.tzinfo)
         
         insights = []
-
-        for kvp in algorithm.ActiveSecurities:
-            security = kvp.Value
+        for security in algorithm.ActiveSecurities.Values: 
             
             if self.ShouldEmitInsight(algorithm, security.Symbol):
                 
-                direction = InsightDirection.Flat
+                direction = InsightDirection.Down
                 
-                if self.calculations[security.Symbol].is_uptrend(algorithm.Securities[security.Symbol].Price):
+                if self.cache[security.Symbol].is_uptrend(algorithm.Securities[security.Symbol].Price):
                     direction = InsightDirection.Up
-                
-                else:
-                    direction = InsightDirection.Down
     
                 # Ignore signal for same direction as previous signal (when no crossover)
-                if direction == self.calculations[security.Symbol].PreviousDirection:
+                if direction == self.cache[security.Symbol].PreviousDirection:
                     continue
                  
-                # Update the Prediction Interval so insight goes Flat by timeToClose
-                self.predictionInterval = self.timeToClose - algorithm.Time
+                # Update the predictionInterval so insight goes Flat by timeToClose
+                predictionInterval = self.timeToClose - algorithm.Time
                 
                 # Generate insight
-                insight = Insight.Price(security.Symbol, self.predictionInterval, direction)
+                insight = Insight.Price(security.Symbol, predictionInterval, direction)
+                
                 # Save the current Insight Direction to check when the crossover happens
-                self.calculations[security.Symbol].PreviousDirection = insight.Direction
-                insights.append(insight)
+                self.cache[security.Symbol].PreviousDirection = insight.Direction
+                insights.append(insight) 
 
         return insights
         
         
-    def OnSecuritiesChanged(self, algorithm, changes):
-        '''
-        Event fired each time the we add/remove securities from the data feed
-        Args:
-            algorithm: The algorithm instance that experienced the change in securities
-            changes: The security additions and removals from the algorithm
-        '''
-        
-        self.calculations = {}
-        
-        pairs = []
-        
-        for kvp in algorithm.ActiveSecurities:
-            security = kvp.Value
-            pairs.append(security.Symbol)
-        
-        # Get historical data to warm-up our SMA indicator
-        history = algorithm.History(pairs, 5, self.resolution)
-        
-        for ticker in pairs:
+    # Handle creation of the new security and its cache class.
+    # Simplified in this example as there is 1 asset.
+    def OnSecuritiesChanged(self, algorithm, changes): 
+        for security in changes.AddedSecurities: 
+            self.cache[security.Symbol] = SymbolData(algorithm, security.Symbol, self.period_sma, self.resolution) 
             
-            if (str(ticker) not in history.index
-            or history.loc[str(ticker)].get('close') is None
-            or history.loc[str(ticker)].get('close').isna().any()):
-                continue
-    
-            else:
-                self.calculations[ticker] = SymbolData(ticker, self.period_sma)
-                self.calculations[ticker].RegisterIndicators(algorithm, resolution = self.resolution)
-                self.calculations[ticker].WarmUpIndicators(history)
-        
+            
+  # Time to control when to start and finish emitting (10AM to 3PM)  
     def ShouldEmitInsight(self, algorithm, symbol):
-
-        securityPrice = algorithm.Securities[symbol].Price
+        current = algorithm.Time
+        insightTimeStart = datetime(current.year, current.month, current.day, 10, 00, 00, tzinfo = current.tzinfo).time()
+        insightTimeEnd = datetime(current.year, current.month, current.day, 15, 00, 00, tzinfo = current.tzinfo).time()
+        currentTime = current.time()
         
-        # Time to control when to start and finish emitting (10AM to 3PM)
-        insightTimeStart = datetime(algorithm.Time.year, algorithm.Time.month, algorithm.Time.day, 10, 00, 00, tzinfo = algorithm.Time.tzinfo).time()
-        insightTimeEnd = datetime(algorithm.Time.year, algorithm.Time.month, algorithm.Time.day, 15, 00, 00, tzinfo = algorithm.Time.tzinfo).time()
-        
-        currentTime = algorithm.Time.time()
-        
-        if not securityPrice != 0 or currentTime < insightTimeStart or currentTime > insightTimeEnd:
+        if not algorithm.Securities[symbol].HasData or currentTime < insightTimeStart or currentTime > insightTimeEnd:
             return False
         else:
             return True
 
-class SymbolData:
-    '''Contains data specific to a symbol required by this model'''
-    
-    def __init__(self, symbol, period_sma):
-        
-        self.Symbol = symbol
-        
-        self.priceSMA = SimpleMovingAverage(period_sma)
-        self.tolerance = d.Decimal(1.001) # Tolerance level to avoid false signals with tight crossovers
 
+class SymbolData:
+    
+    def __init__(self, algorithm, symbol, period_sma, resolution): 
         self.PreviousDirection = None
-        
-        self.Consolidator = None
-        
-    def RegisterIndicators(self, algorithm, resolution):
-        # Register our SMA indicator
-        self.Consolidator = algorithm.ResolveConsolidator(self.Symbol, resolution)
-        algorithm.RegisterIndicator(self.Symbol, self.priceSMA, self.Consolidator)
-            
-    def WarmUpIndicators(self, history):
-        # Warm-up our SMA indicator
-        for index, row in history.loc[str(self.Symbol)].iterrows():
-            if "close" in row:
-                self.priceSMA.Update(index, row["close"])
+        self.priceSMA = algorithm.SMA(symbol, period_sma, resolution)
                 
-    def is_uptrend(self, price):
-        # Logic for the Price/SMA Crossover
+    def is_uptrend(self, price): 
         if self.priceSMA.IsReady:
-            return price < self.priceSMA.Current.Value * self.tolerance
+            return price < self.priceSMA.Current.Value * 1.001
         else:
             return False
