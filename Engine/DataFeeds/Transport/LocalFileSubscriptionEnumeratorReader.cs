@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <summary>
         /// The enumerator of data points
         /// </summary>
-        private DataPointEnumerator _lineEnumerator;
+        private readonly DataPointEnumerator _lineEnumerator;
 
         /// <summary>
         /// The subscription data config

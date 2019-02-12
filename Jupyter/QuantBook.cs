@@ -69,8 +69,9 @@ namespace QuantConnect.Jupyter
 
                 // Select data reader
                 _dataCacheProvider = (IDataCacheProvider)Activator.CreateInstance(
-                    Type.GetType(Config.Get("data-cache-provider", "QuantConnect.Lean.Engine.DataFeeds.ZipDataCacheProvider")),
+                    Type.GetType($"{Config.Get("data-cache-provider", "QuantConnect.Lean.Engine.DataFeeds.ZipDataCacheProvider")}, QuantConnect.Lean.Engine"),
                     algorithmHandlers.DataProvider);
+
                 var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
                 var securityService = new SecurityService(Portfolio.CashBook, MarketHoursDatabase, symbolPropertiesDataBase, this);
                 Securities.SetSecurityService(securityService);
