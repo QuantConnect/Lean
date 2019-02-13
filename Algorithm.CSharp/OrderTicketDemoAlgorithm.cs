@@ -141,7 +141,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // submit a limit order to buy 10 shares at .1% above the bar's close
                 var close = Securities[symbol].Close;
-                var newTicket = LimitOrder(symbol, 10, close * .1001m);
+                var newTicket = LimitOrder(symbol, 10, close * 1.001m);
                 _openLimitOrders.Add(newTicket);
 
                 // submit another limit order to sell 10 shares at .1% above the bar's close
