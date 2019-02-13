@@ -29,7 +29,6 @@ from QuantConnect.Orders.Fees import ConstantFeeModel
 import numpy as np
 import pandas as pd
 from datetime import timedelta, datetime
-from decimal import Decimal
 
 class ShareClassMeanReversionAlphaModel(QCAlgorithmFrameworkBridge):
 
