@@ -43,7 +43,9 @@ namespace QuantConnect.ToolBox
         /// </summary>
         /// <param name="data">The latest data observation.</param>
         public virtual void Update(BaseData data)
-        { }
+        {
+            Consolidator.Update(data);
+        }
 
         /// <summary>
         /// Return all the consolidated data as well as the
