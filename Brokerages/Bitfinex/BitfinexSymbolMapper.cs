@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -72,8 +73,34 @@ namespace QuantConnect.Brokerages.Bitfinex
             "CNDETH","CTXUSD","CTXBTC","CTXETH","PAIUSD","PAIBTC","SEEUSD","SEEBTC","SEEETH","ESSUSD",
             "ESSBTC","ESSETH","ATMUSD","ATMBTC","ATMETH","HOTUSD","HOTBTC","HOTETH","DTAUSD","DTABTC",
             "DTAETH","IQXUSD","IQXBTC","IQXEOS","WPRUSD","WPRBTC","WPRETH","ZILUSD","ZILBTC","ZILETH",
-            "BNTUSD","BNTBTC","BNTETH","ABSUSD","ABSETH","XRAUSD","XRAETH","MANUSD","MANETH"
+            "BNTUSD","BNTBTC","BNTETH","ABSUSD","ABSETH","XRAUSD","XRAETH","MANUSD","MANETH","BBNUSD",
+            "BBNETH","NIOUSD","NIOETH","DGXUSD","DGXETH","VETUSD","VETBTC","VETETH","UTNUSD","UTNETH",
+            "TKNUSD","TKNETH","GOTUSD","GOTEUR","GOTETH","XTZUSD","XTZBTC","CNNUSD","CNNETH","BOXUSD",
+            "BOXETH","TRXEUR","TRXGBP","TRXJPY","MGOUSD","MGOETH","RTEUSD","RTEETH","YGGUSD","YGGETH",
+            "MLNUSD","MLNETH","WTCUSD","WTCETH","CSXUSD","CSXETH","OMNUSD","OMNBTC","INTUSD","INTETH",
+            "DRNUSD","DRNETH","PNKUSD","PNKETH","DGBUSD","DGBBTC","BSVUSD","BSVBTC","BABUSD","BABBTC",
+            "WLOUSD","WLOXLM","VLDUSD","VLDETH","ENJUSD","ENJETH","ONLUSD","ONLETH","RBTUSD","RBTBTC",
+            "USTUSD","EUTEUR","EUTUSD","GSDUSD","UDCUSD","TSDUSD","PAXUSD","RIFUSD","RIFBTC","PASUSD",
+            "PASETH","VSYUSD","VSYBTC","ZRXDAI","MKRDAI","OMGDAI"
         };
+
+        /// <summary>
+        /// The list of delisted/invalid Bitfinex symbols.
+        /// </summary>
+        public static HashSet<string> DelistedSymbolStrings = new HashSet<string>
+        {
+            "BCHUSD","BCHBTC","BCHETH",
+            "CFIUSD","CFIBTC","CFIETH",
+            "VENUSD","VENBTC","VENETH"
+        };
+
+        /// <summary>
+        /// The list of active Bitfinex symbols.
+        /// </summary>
+        public static List<string> ActiveSymbolStrings =
+            KnownSymbolStrings
+                .Where(x => !DelistedSymbolStrings.Contains(x))
+                .ToList();
 
         /// <summary>
         /// The list of known Bitfinex currencies.
