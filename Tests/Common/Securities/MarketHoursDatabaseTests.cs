@@ -77,6 +77,13 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void InitializesFromRepository()
+        {
+            var provider = MarketHoursDatabase.FromRepository();
+            Assert.AreNotEqual(0, provider.ExchangeHoursListing.Count);
+        }
+
+        [Test]
         public void CorrectlyReadsUsEquityMarketHours()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");

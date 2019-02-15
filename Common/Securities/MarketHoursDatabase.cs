@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using Newtonsoft.Json;
 using NodaTime;
 using QuantConnect.Data;
@@ -39,7 +40,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets all the exchange hours held by this provider
         /// </summary>
-        public List<KeyValuePair<SecurityDatabaseKey,Entry>> ExchangeHoursListing => _entries.ToList();
+        public List<KeyValuePair<SecurityDatabaseKey, Entry>> ExchangeHoursListing => _entries.ToList();
 
         /// <summary>
         /// Gets a <see cref="MarketHoursDatabase"/> that always returns <see cref="SecurityExchangeHours.AlwaysOpen"/>
@@ -101,6 +102,20 @@ namespace QuantConnect.Securities
             lock (DataFolderMarketHoursDatabaseLock)
             {
                 _dataFolderMarketHoursDatabase = null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the instance of the <see cref="MarketHoursDatabase"/> class produced by reading in the market hours
+        /// data found Lean open source repository <see cref="https://github.com/QuantConnect/Lean/blob/master/Data/market-hours/market-hours-database.json"/>
+        /// </summary>
+        /// <returns>A <see cref="MarketHoursDatabase"/> class that represents the data in the market-hours folder</returns>
+        public static MarketHoursDatabase FromRepository()
+        {
+            using (var client = new WebClient())
+            {
+                var url = "https://raw.githubusercontent.com/QuantConnect/Lean/master/Data/market-hours/market-hours-database.json";
+                return JsonConvert.DeserializeObject<MarketHoursDatabase>(client.DownloadString(url));
             }
         }
 
