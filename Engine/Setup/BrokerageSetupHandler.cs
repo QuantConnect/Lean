@@ -218,7 +218,7 @@ namespace QuantConnect.Lean.Engine.Setup
                                 "is only supported in backtesting for now.");
                         }
 
-                        if (liveJob.Brokerage != "PaperBrokerage")
+                        if (liveJob.Brokerage != "PaperBrokerage" && liveJob.Brokerage != "BacktestingBrokerage")
                         {
                             //Zero the CashBook - we'll populate directly from brokerage
                             foreach (var kvp in algorithm.Portfolio.CashBook)
