@@ -58,7 +58,7 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    return (decimal)_model.Volatility;
+                    return (decimal)(double)_model.Volatility;
                 }
             }
         }
