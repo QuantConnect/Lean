@@ -43,6 +43,7 @@ namespace QuantConnect.Orders
         private readonly SubmitOrderRequest _submitRequest;
         private readonly ManualResetEvent _orderStatusClosedEvent;
         private readonly List<UpdateOrderRequest> _updateRequests;
+        private readonly ManualResetEvent _orderSetEvent;
 
         // we pull this in to provide some behavior/simplicity to the ticket API
         private readonly SecurityTransactionManager _transactionManager;
@@ -194,6 +195,16 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Returns true if the order has been set for this ticket
+        /// </summary>
+        public bool HasOrder => _order != null;
+
+        /// <summary>
+        /// Gets a wait handle that can be used to wait until the order has been set
+        /// </summary>
+        public WaitHandle OrderSet => _orderSetEvent;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OrderTicket"/> class
         /// </summary>
         /// <param name="transactionManager">The transaction manager used for submitting updates and cancels for this ticket</param>
@@ -207,6 +218,7 @@ namespace QuantConnect.Orders
             _orderEvents = new List<OrderEvent>();
             _updateRequests = new List<UpdateOrderRequest>();
             _orderStatusClosedEvent = new ManualResetEvent(false);
+            _orderSetEvent = new ManualResetEvent(false);
         }
 
         /// <summary>
@@ -356,6 +368,8 @@ namespace QuantConnect.Orders
             }
 
             _order = order;
+
+            _orderSetEvent.Set();
         }
 
         /// <summary>
