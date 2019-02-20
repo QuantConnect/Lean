@@ -243,7 +243,10 @@ namespace QuantConnect.Tests.Common.Securities
          TestCase("SGD", "JPY", "EUR", "SGDJPY", "EURSGD", SecurityType.Forex, Market.FXCM),
          TestCase("BTC", "USD", "EUR", "BTCUSD", "BTCEUR", SecurityType.Crypto, Market.Bitfinex),
          TestCase("EUR", "BTC", "ETH", "BTCEUR", "ETHEUR", SecurityType.Crypto, Market.Bitfinex),
-         TestCase("USD", "BTC", "ETH", "BTCUSD", "ETHUSD", SecurityType.Crypto, Market.Bitfinex)]
+         TestCase("USD", "BTC", "ETH", "BTCUSD", "ETHUSD", SecurityType.Crypto, Market.Bitfinex),
+         TestCase("ETH", "USD", "BTC", "ETHUSD", "ETHBTC", SecurityType.Crypto, Market.Bitfinex),
+         TestCase("LTC", "USD", "BTC", "LTCUSD", "LTCBTC", SecurityType.Crypto, Market.Bitfinex),
+         TestCase("ETH", "BTC", "EOS", "ETHBTC", "EOSETH", SecurityType.Crypto, Market.Bitfinex)]
         public void NonUsdAccountCurrencyCurrencyDataFeedsGetAdded(string accountCurrency,
             string quoteCurrency,
             string baseCurrency,
