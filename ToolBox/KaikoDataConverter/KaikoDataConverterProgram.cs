@@ -15,7 +15,6 @@
 */
 
 using QuantConnect.Logging;
-using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -36,9 +35,10 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
         /// </summary>
         /// <param name="sourceDirectory">The source directory where all Kaiko zipped files are stored..</param>
         /// <param name="date">The date to process.</param>
+        /// <param name="exchange">The exchange to process, if not defined, all exchanges will be processed.</param>
         /// <exception cref="ArgumentException">Source folder does not exists.</exception>
         /// <remarks>This converter will process automatically data for every exchange and for both tick types if the raw data files are available in the sourceDirectory</remarks>
-        public static void KaikoDataConverter(string sourceDirectory, string date)
+        public static void KaikoDataConverter(string sourceDirectory, string date, string exchange = "")
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -48,15 +48,20 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                 throw new ArgumentException($"Source folder {folderPath.FullName} not found");
             }
 
+            exchange = exchange != string.Empty && exchange.ToLower() == "gdax" ? "coinbase" : exchange;
+
             var processingDate = DateTime.ParseExact(date, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
             foreach (var filePath in folderPath.EnumerateFiles("*.zip"))
             {
+                // Do not process exchanges other than the one defined.
+                if (exchange != string.Empty && !filePath.Name.ToLower().Contains(exchange.ToLower())) continue;
+
                 Log.Trace($"KaikoDataConverter(): Starting data conversion from source {filePath.Name} for date {processingDate:yyyy_MM_dd}... ");
                 using (var zip = new ZipFile(filePath.FullName))
                 {
-                    var targetDayEntries = zip.Entries.Where(e => e.FileName.Contains($"{processingDate:yyyy_MM_dd}"));
+                    var targetDayEntries = zip.Entries.Where(e => e.FileName.Contains($"{processingDate:yyyy_MM_dd}")).ToList();
 
-                    if (targetDayEntries.Count() == 0)
+                    if (!targetDayEntries.Any())
                     {
                         Log.Error($"KaikoDataConverter(): Date {processingDate:yyyy_MM_dd} not found in source file {filePath.FullName}.");
                     }
@@ -64,10 +69,10 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                     foreach (var zipEntry in targetDayEntries)
                     {
                         var nameParts = zipEntry.FileName.Split(new char[] { '/' }).Last().Split(new char[] { '_' });
-                        var exchange = nameParts[0] == "Coinbase" ? "GDAX" : nameParts[0];
+                        var market = nameParts[0] == "Coinbase" ? "GDAX" : nameParts[0];
                         var ticker = nameParts[1];
                         var tickType = nameParts[2] == "trades" ? TickType.Trade : TickType.Quote;
-                        var symbol = Symbol.Create(ticker, SecurityType.Crypto, exchange);
+                        var symbol = Symbol.Create(ticker, SecurityType.Crypto, market);
 
                         Log.Trace($"KaikoDataConverter(): Processing {symbol.Value} {tickType}");
 
@@ -105,7 +110,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                             {
                                 foreach (var consolidator in consolidators)
                                 {
-                                    consolidator.Consolidator.Update(tick);
+                                    consolidator.Update(tick);
                                 }
                             }
 
