@@ -171,15 +171,6 @@ class SymbolData:
         if not data.Bars.ContainsKey(self.Symbol) or self.Symbol not in data.Keys:
             return False
         
-        ## Check to see if data contains a special event, which
-        ## will result in no TradeBar being passed in OnData()
-        ## and so it will skip creating any insights for that slice
-        if data.Splits.ContainsKey(self.Symbol) or \
-           data.Dividends.ContainsKey(self.Symbol) or \
-           data.Delistings.ContainsKey(self.Symbol) or \
-           data.SymbolChangedEvents.ContainsKey(self.Symbol):
-            return False
-        
         ## Update close, volume, and SMAs
         bar = data[self.Symbol]
         self.Close = bar.Close

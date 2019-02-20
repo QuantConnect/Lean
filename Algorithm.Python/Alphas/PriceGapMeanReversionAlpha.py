@@ -83,16 +83,14 @@ class PriceGapMeanReversionAlgorithm(QCAlgorithmFramework):
     
     def CoarseSelectionFunction(self, coarse):
         ## If it isn't a new month, return the same symbols
-        if self.month == self.Time.month:
+        if self.Time.day not in [1,8,15,22,29]:
             return self.symbols
             
         ## If its a new month, then re-filter stocks by Dollar Volume
-        else:
-            self.month = self.Time.month
-            sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
+        sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
 
-            self.symbols = [ x.Symbol for x in sortedByDollarVolume[:25] ]
-            return self.symbols
+        self.symbols = [ x.Symbol for x in sortedByDollarVolume[:25] ]
+        return self.symbols
 
         
         
@@ -132,10 +130,13 @@ class PriceGapMeanReversionAlphaModel:
         history_request_symbols = [ x.Symbol for x in changes.AddedSecurities ]
         history_df = algorithm.History(history_request_symbols, 100, Resolution.Minute)
         
+
         for security in changes.AddedSecurities:
             if str(security.Symbol) not in history_df.index.get_level_values(0):
                 continue
             history = history_df.loc[str(security.Symbol)]
+
+            ## Create and initialize SymbolData objects
             symbolData = SymbolData(security)
             self.symbolDataBySymbol[security.Symbol] = symbolData
             for tuple in history.itertuples():
@@ -154,16 +155,22 @@ class SymbolData:
 
     def Update(self, data, security):
 
-        if data.Splits.ContainsKey(self.Symbol) or \
-            data.Dividends.ContainsKey(self.Symbol) or \
-            data.Delistings.ContainsKey(self.Symbol) or \
-            data.SymbolChangedEvents.ContainsKey(self.Symbol):
+        ## Check for any data events that would return a NoneBar in the Alpha Model Update() method
+        if not data.Bars.ContainsKey(self.Symbol) or self.Symbol not in data.Keys:
             return False
         
-        self.Initialize(data[security.Symbol], security)
+        ## Update Rolling Window and volatility
+        self.window.Add(data[security.Symbol])
+        self.close = data[security.Symbol].Close
+        if self.window.Count > 1:
+            self.delta.append((self.window[0].Open / self.window[1].Close) - 1)
+            if len(self.delta) > 100:
+                self.delta.pop(0)
+            self.volatility = np.std(self.delta)
             
         return True
 
+    # Initialize Rolling Window and volatility
     def Initialize(self, bar, security):
         self.window.Add(bar)
         self.close = bar.Close
