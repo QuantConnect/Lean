@@ -36,6 +36,7 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Risk import *
+from QuantConnect.Orders.Fees import ConstantFeeModel
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Algorithm.Framework.Execution import *
@@ -48,7 +49,6 @@ class BasicTemplateAlgorithm(QCAlgorithmFramework):
     def Initialize(self):
         
         self.SetStartDate(2019, 1, 1)   #Set Start Date
-        self.SetEndDate(2019, 1, 21)
         self.SetCash(100000)           #Set Strategy Cash
         
         ## Select trio of currencies to trade where
@@ -62,6 +62,10 @@ class BasicTemplateAlgorithm(QCAlgorithmFramework):
         self.Universe.Resolution = Resolution.Tick
         self.SetUniverseSelection( ManualUniverseSelectionModel(symbols) )
 
+        ## Set $0 fees
+        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
+
+        ## Set custom Alpha Model
         self.SetAlpha(ForexTriangleArbitrageAlphaModel(currencies))
         
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())

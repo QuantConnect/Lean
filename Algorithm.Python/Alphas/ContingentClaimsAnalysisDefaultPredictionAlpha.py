@@ -47,6 +47,7 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Risk import *
+from QuantConnect.Orders.Fees import ConstantFeeModel
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Algorithm.Framework.Execution import *
@@ -67,7 +68,7 @@ class ContingentClaimAnalysisDefaultPredictionAlgorithm(QCAlgorithmFramework):
         self.symbols = None
         
         ## Declare single variable to be passed in multiple places -- prevents issue with conflicting start dates declared in different places
-        self.SetStartDate(2018,1,1)
+        self.SetStartDate(2019,1,1)
         self.SetCash(100000)
         
         ## SPDR Small Cap ETF is a better benchmark than the default SP500
@@ -75,7 +76,10 @@ class ContingentClaimAnalysisDefaultPredictionAlgorithm(QCAlgorithmFramework):
 
         ## Set Universe Selection Model
         self.SetUniverseSelection(FineFundamentalUniverseSelectionModel(self.CoarseSelectionFunction, self.FineSelectionFunction, None, None))
-        
+
+        ## Set $0 fees
+        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
+
         ## Set CCA Alpha Model
         if self.LiveMode:
             self.start_date = self.Time

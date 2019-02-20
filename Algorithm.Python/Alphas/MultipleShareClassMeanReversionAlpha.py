@@ -54,7 +54,7 @@ class ShareClassMeanReversionAlphaModel(QCAlgorithmFramework):
         # Set requested data resolution
         self.UniverseSettings.Resolution = Resolution.Minute
 
-        self.SetStartDate(2018, 2, 18)   #Set Start Date
+        self.SetStartDate(2019, 1, 1)   #Set Start Date
         self.SetCash(100000)           #Set Strategy Cash
         self.SetWarmUp(20)
         
@@ -67,6 +67,9 @@ class ShareClassMeanReversionAlphaModel(QCAlgorithmFramework):
         symbols = [ Symbol.Create(ticker, SecurityType.Equity, Market.USA) for ticker in tickers]
 
         self.SetUniverseSelection( ManualUniverseSelectionModel(symbols) )
+
+        ## Set $0 fees
+        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
         
         self.SetAlpha(ShareClassMeanReversionAlphaModel(ticker_pairs = ticker_pairs, number_pairs = len(ticker_pairs), ticker_list = tickers))
         
@@ -161,11 +164,7 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
         self.initialized = True
 
     def OnSecuritiesChanged(self, algorithm, changes):
-        
-        ## Set fees to $0 to mimic High-Frequency Trading
-        for security in changes.AddedSecurities:
-            security.FeeModel = ConstantFeeModel(0)
- 
+        pass
 
 class SymbolData:
     def __init__(self, indexer, symbol_pair, lookback):

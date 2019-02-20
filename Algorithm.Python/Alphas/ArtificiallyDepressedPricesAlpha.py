@@ -26,6 +26,7 @@ from QuantConnect.Indicators import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Risk import *
+from QuantConnect.Orders.Fees import ConstantFeeModel
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Selection import * 
 from QuantConnect.Algorithm.Framework.Execution import *
@@ -39,7 +40,7 @@ class VolumeValueDirectionAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
 
-        self.SetStartDate(2018, 2, 1)   #Set Start Date
+        self.SetStartDate(2019, 1, 1)   #Set Start Date
         self.SetCash(100000)            #Set Strategy Cash
 
         ## To be used later in Universe Selection
@@ -49,6 +50,9 @@ class VolumeValueDirectionAlgorithm(QCAlgorithmFramework):
         ## Coarse/Fine Universe Selection
         self.UniverseSettings.Resolution = Resolution.Hour
         self.SetUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseSelectionFunction) )
+
+        ## Set $0 fees
+        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
 
         ## Set our custom Alpha Model
         self.SetAlpha(VolumeValueAnalysisAlphaModel())

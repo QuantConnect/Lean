@@ -34,6 +34,7 @@ from QuantConnect.Indicators import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Alphas import *
+from QuantConnect.Orders.Fees import ConstantFeeModel
 from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, EqualWeightingPortfolioConstructionModel
@@ -61,6 +62,9 @@ class EnergyETFPairsTradingAlgorithm(QCAlgorithmFramework):
 
         ## Manual Universe Selection
         self.SetUniverseSelection( ManualUniverseSelectionModel(symbols) )
+
+        ## Set $0 fees
+        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
         
         ## Custom Alpha Model
         self.SetAlpha(PairsAlphaModel(pairs_tickers = self.tickers, history_days = 90))
