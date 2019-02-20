@@ -26,9 +26,11 @@
     <Compile Include="quantconnect\api.py" />
     <Compile Include="quantconnect\LeanOutputReader.py" />
     <Compile Include="quantconnect\LeanReportCreator.py" />
+    <Compile Include="quantconnect\symbol.py" />
     <Compile Include="quantconnect\__init__.py" />
     <Compile Include="setup.py" />
     <Compile Include="tests\test_api.py" />
+    <Compile Include="tests\test_symbol.py" />
     <Compile Include="tests\__init__.py">
       <SubType>Code</SubType>
     </Compile>
