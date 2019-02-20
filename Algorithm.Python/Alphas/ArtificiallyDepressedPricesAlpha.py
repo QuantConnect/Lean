@@ -18,6 +18,9 @@
     volume picks up again. Using Simple Moving Average indicators, we check
     for these conditions and generate insights acoordingly for the top 50
     assets by Dollar Volume using a Coarse Universe selection function.
+
+    This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
+    sourced so the community and client funds can see an example of an alpha.
 '''
 
 from System import *
@@ -40,7 +43,7 @@ class VolumeValueDirectionAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
 
-        self.SetStartDate(2019, 1, 1)   #Set Start Date
+        self.SetStartDate(2018, 1, 1)   #Set Start Date
         self.SetCash(100000)            #Set Strategy Cash
 
         ## To be used later in Universe Selection
@@ -112,7 +115,8 @@ class VolumeValueAnalysisAlphaModel:
             ## Check to see if both current asset price and volume are above their respective SMA values.
             ## If so, emit insights accordingly
             if symbolData.IsUpTrend():
-                insights.append(Insight(symbolData.Symbol, self.prediction_interval, InsightType.Price, InsightDirection.Up, symbolData.CloseSMA.Current.Value, None))
+                magnitude = symbolData.CloseSMA.Current.Value - data[symbol].Close
+                insights.append(Insight(symbolData.Symbol, self.prediction_interval, InsightType.Price, InsightDirection.Up, magnitude, None))
 
         return insights
         
@@ -200,5 +204,3 @@ class SymbolData:
         ## and so the projection is that the price will rebound
         return self.Close < self.CloseSMA.Current.Value and \
                self.Volume < self.VolumeSMA.Current.Value
-
-<br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. You can read the source code for this alpha on Github in  <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/ArtificiallyDepressedPricesAlpha.cs">C#</a> or  <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/ArtificiallyDepressedPricesAlpha.py">Python</a>.

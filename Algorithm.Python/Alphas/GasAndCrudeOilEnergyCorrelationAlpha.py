@@ -19,6 +19,9 @@
     Natural Gas/Crude Oil ETF pair with the highest historical price correlation and
     then create insights for Crude Oil depending on whether or not the Natural Gas ETF price change
     is above/below a certain threshold that we set (arbitrarily).
+
+    This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
+    sourced so the community and client funds can see an example of an alpha.
 '''
 
 from clr import AddReference
@@ -53,7 +56,7 @@ class EnergyETFPairsTradingAlgorithm(QCAlgorithmFramework):
         self.tickers = [["UNG","UNG","UNG",'BOIL','BOIL','BOIL','UNL','UNL','UNL'],   ## Natural gas ETFs
                         ["USO",'UCO','DBO',"USO",'UCO','DBO',"USO",'UCO','DBO']]      ## Crude oil ETFs
         tickers = ['UNG','BOIL','UNL','USO','UCO','DBO']
-        self.SetStartDate(2019, 1, 1)   #Set Start Date
+        self.SetStartDate(2018, 1, 1)   #Set Start Date
         self.SetCash(100000)           #Set Strategy Cash
         
         ## Set Universe resolution and subscribed to data
@@ -136,10 +139,10 @@ class PairsAlphaModel:
             symbolData = leading_data[i]
             if symbolData.Return > self.difference_trigger:      ## Check if Natural Gas returns are greater than the threshold we've set
                 ## If so, create and Insight with this information for Crude Oil
-                insights.append(Insight(following_symbol[i], timedelta(minutes=5), InsightType.Price, InsightDirection.Up, symbolData.Return, None))
+                insights.append(Insight(following_symbol[i], timedelta(minutes=5), InsightType.Volatility, InsightDirection.Up, symbolData.Return, None))
 
             elif symbolData.Return < -self.difference_trigger:   ## Check if UNG returns are greater than the threshold we've set
-                insights.append(Insight(following_symbol[i], timedelta(minutes=5), InsightType.Price, InsightDirection.Down, symbolData.Return, None))
+                insights.append(Insight(following_symbol[i], timedelta(minutes=5), InsightType.Volatility, InsightDirection.Down, symbolData.Return, None))
 
         return insights
     
@@ -256,5 +259,3 @@ class CustomExecutionModel(ExecutionModel):
                 algorithm.MarketOrder(target.Symbol, quantity)
                 self.previous_symbol = target.Symbol
         self.targetsCollection.ClearFulfilled(algorithm)
-
-<br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. You can read the source code for this alpha on Github in  <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/GasAndCrudeOilEnergyCorrelationAlpha.cs">C#</a> or  <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/GasAndCrudeOilEnergyCorrelationAlpha.py">Python</a>.

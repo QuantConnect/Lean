@@ -32,6 +32,11 @@
         σ (sigma) = standard deviation of firm value changes (returns in V)
         τ (tau)  = time to debt’s maturity
         µ (mu) = interest rate
+
+
+
+    This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
+    sourced so the community and client funds can see an example of an alpha.
 '''
 
 
@@ -68,7 +73,7 @@ class ContingentClaimAnalysisDefaultPredictionAlgorithm(QCAlgorithmFramework):
         self.symbols = None
         
         ## Declare single variable to be passed in multiple places -- prevents issue with conflicting start dates declared in different places
-        self.SetStartDate(2019,1,1)
+        self.SetStartDate(2018,1,1)
         self.SetCash(100000)
         
         ## SPDR Small Cap ETF is a better benchmark than the default SP500
@@ -184,11 +189,11 @@ class ContingentClaimsAnalysisAlphaModel:
             algorithm.Log('POB for ' + str(symbol) + ': ' + str(pod))
             ## If Prob. of Default is greater than our set threshold, then emit an insight indicating that this asset is trending downward
             if (pod >= self.default_threshold) and (pod != 1.0):
-                insights.append(Insight(symbol, timedelta(days = 30), InsightType.Price, InsightDirection.Down, pod, None))
+                insights.append(Insight(symbol, timedelta(days = 30), InsightType.Volatility, InsightDirection.Down, pod, None))
             
             ## If Prob. of Default is lower than the threshold and is significant enough to be above epsilon, then emit an insight indicating that this asset is trending upward
             elif (pod < self.default_threshold) and (pod > self.epsilon):
-                insights.append(Insight(symbol, timedelta(days = 30), InsightType.Price, InsightDirection.Up, min(0.75,1-pod), None))
+                insights.append(Insight(symbol, timedelta(days = 30), InsightType.Volatility, InsightDirection.Up, min(0.75,1-pod), None))
 
         return insights
     
@@ -262,5 +267,3 @@ class SymbolData:
     @property
     def TimeToMaturity(self):
         return float(self.tau)
-
-<br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. You can read the source code for this alpha on Github in  <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/ContingentClaimsAnalysisDefaultPredictionAlpha.cs">C#</a> or  <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/ContingentClaimsAnalysisDefaultPredictionAlpha.py">Python</a>.

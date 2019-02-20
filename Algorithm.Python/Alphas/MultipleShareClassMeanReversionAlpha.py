@@ -21,6 +21,10 @@
     mean-reversion. Using a Simple Moving Average indicator, we can
     compare the value of this portfolio against its SMA and generate insights
     to buy the under-valued symbol and sell the over-valued symbol.
+
+
+    This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
+    sourced so the community and client funds can see an example of an alpha.
 '''
 
 
@@ -237,5 +241,3 @@ class SymbolData:
     @property
     def PositionAboveMean(self):
         return self.position_value >= self.SMA.Current.Value
-
-<br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. You can read the source code for this alpha on Github in  <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/MultipleShareClassMeanReversionAlpha.cs">C#</a> or  <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/MultipleShareClassMeanReversionAlpha.py">Python</a>.

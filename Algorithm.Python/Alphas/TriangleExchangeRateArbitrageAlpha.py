@@ -23,6 +23,12 @@ where (A/B) is the exchange rate of A-to-B. In a perfect market, TER = 1, and so
 there is a mispricing in the market, then TER will not be 1 and there exists an arbitrage opportunity.
 
 This Alpha Model is an implementation of this theory.
+
+
+
+
+This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
+sourced so the community and client funds can see an example of an alpha.
     
 '''
 
@@ -115,5 +121,3 @@ class ForexTriangleArbitrageAlphaModel:
         ## Set fees = 0 tom better mimic HFT
         for security in changes.AddedSecurities:
             security.FeeModel = ConstantFeeModel(0)
-
-<br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. You can read the source code for this alpha on Github in  <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/TriangleExchangeRateArbitrageAlpha.cs">C#</a> or  <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/TriangleExchangeRateArbitrageAlpha.py">Python</a>.
