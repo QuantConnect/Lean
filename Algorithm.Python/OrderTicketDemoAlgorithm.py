@@ -99,11 +99,10 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
     def LimitOrders(self):
         '''LimitOrders are always processed asynchronously. Limit orders are used to
         set 'good' entry points for an order. For example, you may wish to go
-        long a stock, but want to protect yourself from buying above a certain price, 
-        so you can place a LimitOrder to buy with a limit price above the current market 
-        price. Likewise the opposite is true when selling, you can place a LimitOrder to 
-        sell with a limit price below the current market price to set a minimum price
-        that you are willing to sell at and hopefully get a better sale price.
+        long a stock, but want a good price, so can place a LimitOrder to buy with
+        a limit price below the current market price. Likewise the opposite is True
+        when selling, you can place a LimitOrder to sell with a limit price above the
+        current market price to get a better sale price.
         You can submit requests to update or cancel the LimitOrder at any time.
         The 'LimitPrice' for an order can be retrieved from the ticket using the
         OrderTicket.Get(OrderField) method, for example:
@@ -112,13 +111,13 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
         if self.TimeIs(7, 12, 0):
             self.Log("Submitting LimitOrder")
 
-            # submit a limit order to buy 10 shares at .1% above the bar's close
+            # submit a limit order to buy 10 shares at .1% below the bar's close
             close = self.Securities[self.spy.Value].Close
-            newTicket = self.LimitOrder(self.spy, 10, close * d.Decimal(1.001))
+            newTicket = self.LimitOrder(self.spy, 10, close * d.Decimal(.999))
             self.__openLimitOrders.append(newTicket)
 
-            # submit another limit order to sell 10 shares at .1% below the bar's close
-            newTicket = self.LimitOrder(self.spy, -10, close * d.Decimal(0.999))
+            # submit another limit order to sell 10 shares at .1% above the bar's close
+            newTicket = self.LimitOrder(self.spy, -10, close * d.Decimal(1.001))
             self.__openLimitOrders.append(newTicket)
 
         # when we submitted new limit orders we placed them into this list,
@@ -134,8 +133,8 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
                 return
 
             # if niether order has filled, bring in the limits by a penny
-            newLongLimit = longOrder.Get(OrderField.LimitPrice) - d.Decimal(0.01)
-            newShortLimit = shortOrder.Get(OrderField.LimitPrice) + d.Decimal(0.01)
+            newLongLimit = longOrder.Get(OrderField.LimitPrice) + d.Decimal(0.01)
+            newShortLimit = shortOrder.Get(OrderField.LimitPrice) - d.Decimal(0.01)
             self.Log("Updating limits - Long: {0:.2f} Short: {1:.2f}".format(newLongLimit, newShortLimit))
 
             updateOrderFields = UpdateOrderFields()
@@ -225,16 +224,16 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             # so make the limit price a little higher than the stop price
 
             close = self.Securities[self.spy.Value].Close
-            newTicket = self.StopLimitOrder(self.spy, 10, close * d.Decimal(1.001), close + d.Decimal(0.03))
+            newTicket = self.StopLimitOrder(self.spy, 10, close * d.Decimal(1.001), close * d.Decimal(1.0025))
             self.__openStopLimitOrders.append(newTicket)
 
             # a short stop is triggered when the price falls below the
             # value so we'll set a short stop .25% below the current bar's
             # close now we'll also be setting a limit, this means we are
             # gauranteed to get at least the limit price for our fills,
-            # so make the limit price a little lower than the stop price
+            # so make the limit price a little softer than the stop price
 
-            newTicket = self.StopLimitOrder(self.spy, -10, close * d.Decimal(.999), close - d.Decimal(0.03))
+            newTicket = self.StopLimitOrder(self.spy, -10, close * d.Decimal(.999), close * d.Decimal(0.9975))
             self.__openStopLimitOrders.append(newTicket)
 
         # when we submitted new stop limit orders we placed them into this list,
@@ -249,9 +248,9 @@ class OrderTicketDemoAlgorithm(QCAlgorithm):
             # if neither order has filled, bring in the stops/limits in by a penny
 
             newLongStop = longOrder.Get(OrderField.StopPrice) - d.Decimal(0.01)
-            newLongLimit = longOrder.Get(OrderField.LimitPrice) - d.Decimal(0.01)
+            newLongLimit = longOrder.Get(OrderField.LimitPrice) + d.Decimal(0.01)
             newShortStop = shortOrder.Get(OrderField.StopPrice) + d.Decimal(0.01)
-            newShortLimit = shortOrder.Get(OrderField.LimitPrice) + d.Decimal(0.01)
+            newShortLimit = shortOrder.Get(OrderField.LimitPrice) - d.Decimal(0.01)
             self.Log("Updating stops  - Long: {0:.2f} Short: {1:.2f}".format(newLongStop, newShortStop))
             self.Log("Updating limits - Long: {0:.2f}  Short: {1:.2f}".format(newLongLimit, newShortLimit))
 

@@ -1,5 +1,4 @@
-﻿
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -121,11 +120,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// LimitOrders are always processed asynchronously. Limit orders are used to
         /// set 'good' entry points for an order. For example, you may wish to go
-        /// long a stock,but want to protect yourself from buying above a certain price, 
-        /// so you can place a LimitOrder to buy with a limit price above the current market 
-        /// price. Likewise the opposite is true when selling, you can place a LimitOrder to 
-        /// sell with a limit price below the current market price to set a minimum price
-        /// that you are willing to sell at and hopefully get a better sale price..
+        /// long a stock, but want a good price, so can place a LimitOrder to buy with
+        /// a limit price below the current market price. Likewise the opposite is true
+        /// when selling, you can place a LimitOrder to sell with a limit price above the
+        /// current market price to get a better sale price.
         /// You can submit requests to update or cancel the LimitOrder at any time.
         /// The 'LimitPrice' for an order can be retrieved from the ticket using the
         /// OrderTicket.Get(OrderField) method, for example:
@@ -139,13 +137,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Log("Submitting LimitOrder");
 
-                // submit a limit order to buy 10 shares at .1% above the bar's close
+                // submit a limit order to buy 10 shares at .1% below the bar's close
                 var close = Securities[symbol].Close;
-                var newTicket = LimitOrder(symbol, 10, close * 1.001m);
+                var newTicket = LimitOrder(symbol, 10, close * .999m);
                 _openLimitOrders.Add(newTicket);
 
                 // submit another limit order to sell 10 shares at .1% above the bar's close
-                newTicket = LimitOrder(symbol, -10, close * 0.999m);
+                newTicket = LimitOrder(symbol, -10, close * 1.001m);
                 _openLimitOrders.Add(newTicket);
             }
 
@@ -166,8 +164,8 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // if niether order has filled, bring in the limits by a penny
 
-                var newLongLimit = longOrder.Get(OrderField.LimitPrice) - 0.01m;
-                var newShortLimit = shortOrder.Get(OrderField.LimitPrice) + 0.01m;
+                var newLongLimit = longOrder.Get(OrderField.LimitPrice) + 0.01m;
+                var newShortLimit = shortOrder.Get(OrderField.LimitPrice) - 0.01m;
                 Log("Updating limits - Long: " + newLongLimit.ToString("0.00") + " Short: " + newShortLimit.ToString("0.00"));
 
                 longOrder.Update(new UpdateOrderFields
@@ -284,7 +282,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 var close = Securities[symbol].Close;
                 var stopPrice = close * 1.001m;
-                var limitPrice = close + 0.03m;
+                var limitPrice = close - 0.03m;
                 var newTicket = StopLimitOrder(symbol, 10, stopPrice, limitPrice);
                 _openStopLimitOrders.Add(newTicket);
 
@@ -295,7 +293,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // price a little softer than the stop price
 
                 stopPrice = close * .999m;
-                limitPrice = close - 0.03m;
+                limitPrice = close + 0.03m;
                 newTicket = StopLimitOrder(symbol, -10, stopPrice, limitPrice);
                 _openStopLimitOrders.Add(newTicket);
             }
@@ -316,9 +314,9 @@ namespace QuantConnect.Algorithm.CSharp
                 // if niether order has filled, bring in the stops/limits in by a penny
 
                 var newLongStop = longOrder.Get(OrderField.StopPrice) - 0.01m;
-                var newLongLimit = longOrder.Get(OrderField.LimitPrice) - 0.01m;
+                var newLongLimit = longOrder.Get(OrderField.LimitPrice) + 0.01m;
                 var newShortStop = shortOrder.Get(OrderField.StopPrice) + 0.01m;
-                var newShortLimit = shortOrder.Get(OrderField.LimitPrice) + 0.01m;
+                var newShortLimit = shortOrder.Get(OrderField.LimitPrice) - 0.01m;
                 Log("Updating stops  - Long: " + newLongStop.ToString("0.00") + " Short: " + newShortStop.ToString("0.00"));
                 Log("Updating limits - Long: " + newLongLimit.ToString("0.00") + " Short: " + newShortLimit.ToString("0.00"));
 
