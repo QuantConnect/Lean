@@ -25,6 +25,11 @@
     sourced so the community and client funds can see an example of an alpha.
 '''
 
+from clr import AddReference
+AddReference("System")
+AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Common")
+
 from System import *
 from QuantConnect import *
 from QuantConnect.Indicators import *
@@ -75,11 +80,9 @@ class VolumeValueDirectionAlgorithm(QCAlgorithmFramework):
     def CoarseSelectionFunction(self, coarse):
     
         ## This control ensures that we only update our universe once per month
-        if self.Time.month == self.month:
+        if self.Time.day not in [1,8,15,22,29]:
             return self.symbols
-        
-        self.month = self.Time.month
-    
+
         ## Sort by dollar volume
         sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
 

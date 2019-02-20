@@ -49,7 +49,7 @@ from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, EqualWei
 
 from datetime import datetime, timedelta
 
-class BasicTemplateAlgorithm(QCAlgorithmFramework):
+class TriangleArbitrageAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
         
