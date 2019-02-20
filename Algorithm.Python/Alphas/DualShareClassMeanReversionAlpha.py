@@ -55,8 +55,7 @@ class ShareClassMeanReversionAlphaModel(QCAlgorithmFramework):
 
     def Initialize(self):
 
-        self.SetStartDate(2018, 1, 1)   #Set Start Date
-        self.SetEndDate(2018, 4, 1)    #Set End Date
+        self.SetStartDate(2019, 1, 1)   #Set Start Date
         self.SetCash(100000)           #Set Strategy Cash
         self.SetWarmUp(20)
 
@@ -87,7 +86,7 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
     ''' Initialize helper variables for the algorithm'''
 
     def __init__(self, *args, **kwargs):
-        self.SMA = SimpleMovingAverage(10)
+        self.sma = SimpleMovingAverage(10)
         self.position_window = RollingWindow[Decimal](2)
         self.alpha = None
         self.beta = None
@@ -115,7 +114,7 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
            algorithm.Log('Beta: ' + str(self.beta))
 
         ## If the SMA isn't fully warmed up, then perform an update
-        if not self.SMA.IsReady:
+        if not self.sma.IsReady:
             self.UpdateIndicators(data)
             return insights
         
@@ -124,14 +123,14 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
 
         ## Check to see if the portfolio is invested. If no, then perform value comparisons and emit insights accordingly
         if not self.invested:
-            if self.position_value >= self.SMA.Current.Value:
+            if self.position_value >= self.sma.Current.Value:
                 insights.append(Insight(self.long_symbol, timedelta(minutes=5), InsightType.Price, InsightDirection.Down, 0.01, None))
                 insights.append(Insight(self.short_symbol, timedelta(minutes=5), InsightType.Price, InsightDirection.Up, 0.01, None))
 
                 ## Reset invested boolean
                 self.invested = True
 
-            elif self.position_value < self.SMA.Current.Value:
+            elif self.position_value < self.sma.Current.Value:
                 insights.append(Insight(self.long_symbol, timedelta(minutes=5), InsightType.Price, InsightDirection.Up, 0.01, None))
                 insights.append(Insight(self.short_symbol, timedelta(minutes=5), InsightType.Price, InsightDirection.Down, 0.01, None))        
 
@@ -142,7 +141,7 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
         elif self.invested and self.CrossedMean():
             insights.append(Insight(self.short_symbol, timedelta(minutes=5), InsightType.Price, InsightDirection.Flat, 0.01, None))
             insights.append(Insight(self.short_symbol, timedelta(minutes=5), InsightType.Price, InsightDirection.Flat, 0.01, None))
-            ## Liquidate
+
             ## Reset invested boolean
             self.invested = False
 
@@ -159,14 +158,14 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
     def UpdateIndicators(self, data):
         ## Calculate position value and update the SMA indicator and Rolling Window
         self.position_value = (self.alpha * data[self.long_symbol].Close) - (self.beta * data[self.short_symbol].Close)
-        self.SMA.Update(data[self.long_symbol].EndTime, self.position_value)
+        self.sma.Update(data[self.long_symbol].EndTime, self.position_value)
         self.position_window.Add(self.position_value)
 
     def CrossedMean(self):
         ## Check to see if the position value has crossed the SMA and then return a boolean value
-        if (self.position_window[0] >= self.SMA.Current.Value) and (self.position_window[1] < self.SMA.Current.Value):
+        if (self.position_window[0] >= self.sma.Current.Value) and (self.position_window[1] < self.sma.Current.Value):
             return True
-        elif (self.position_window[0] < self.SMA.Current.Value) and (self.position_window[1] >= self.SMA.Current.Value):
+        elif (self.position_window[0] < self.sma.Current.Value) and (self.position_window[1] >= self.sma.Current.Value):
             return True
         else:
             return False

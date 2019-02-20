@@ -52,11 +52,11 @@ class PriceGapMeanReversionAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
         
-        self.SetStartDate(2019, 1, 1)   #Set Start Date
+        self.SetStartDate(2018, 1, 1)   #Set Start Date
         self.SetCash(100000)           #Set Strategy Cash
 
         ## Initialize variables to be used in controlling frequency of universe selection
-        self.month = None
+        self.week = None
         self.symbols = None
         
         
@@ -82,10 +82,11 @@ class PriceGapMeanReversionAlgorithm(QCAlgorithmFramework):
     
     
     def CoarseSelectionFunction(self, coarse):
-        ## If it isn't a new month, return the same symbols
-        if self.Time.day not in [1,8,15,22,29]:
+        ## If it isn't a new week, return the same symbols
+        current_week = self.Time.isocalendar()[1]
+        if  current_week == self.week:
             return self.symbols
-            
+        self.week = current_week
         ## If its a new month, then re-filter stocks by Dollar Volume
         sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
 
@@ -178,7 +179,9 @@ class SymbolData:
             self.delta.append((self.window[0].Open / self.window[1].Close) - 1)
             if len(self.delta) > 100:
                 self.delta.pop(0)
-            self.volatility = np.std(self.delta)
+        else:
+            self.delta.append(0)
+        self.volatility = np.std(self.delta)
 
 
 

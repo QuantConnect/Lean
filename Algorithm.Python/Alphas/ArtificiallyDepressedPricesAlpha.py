@@ -55,7 +55,7 @@ class VolumeValueDirectionAlgorithm(QCAlgorithmFramework):
 
         ## To be used later in Universe Selection
         self.symbols = None
-        self.month = None
+        self.week = None
 
         ## Coarse/Fine Universe Selection
         self.UniverseSettings.Resolution = Resolution.Hour
@@ -79,10 +79,12 @@ class VolumeValueDirectionAlgorithm(QCAlgorithmFramework):
 
     def CoarseSelectionFunction(self, coarse):
     
-        ## This control ensures that we only update our universe once per month
-        if self.Time.day not in [1,8,15,22,29]:
+        ## This control ensures that we only update our universe once per week
+        current_week = self.Time.isocalendar()[1]
+        if  current_week == self.week:
             return self.symbols
-
+        self.week = current_week
+        
         ## Sort by dollar volume
         sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
 
@@ -175,6 +177,8 @@ class SymbolData:
         bar = data[self.Symbol]
         self.Close = bar.Close
         self.Volume = bar.Volume
+        self.CloseSMA.Update(bar.EndTime, bar.Close)
+        self.VolumeSMA.Update(bar.EndTime, bar.Volume)
         return True
 
     def RegisterIndicators(self, algorithm, resolution):
