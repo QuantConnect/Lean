@@ -101,7 +101,7 @@ class PairsAlphaModel:
     
     def __init__(self, *args, **kwargs):
         
-        self.difference_trigger = kwargs['difference_trigger'] if 'difference_trigger' in kwargs else 2.5
+        self.difference_trigger = kwargs['difference_trigger'] if 'difference_trigger' in kwargs else 2.0
         self.lookback = kwargs['lookback'] if 'lookback' in kwargs else 5 ## In hours
         self.history_days = kwargs['history_days'] if 'history_days' in kwargs else 90 ## In days
         self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Hour
@@ -165,7 +165,8 @@ class PairsAlphaModel:
         tau_coef = []
         for i in range(len(tick_syl[i])):
             tik_x, tik_y= logreturn[tick_syl[0][i]], logreturn[tick_syl[1][i]]
-            tau_coef.append(kendalltau(tik_x, tik_y)[0]) 
+            min_length = min(len(tik_x), len(tik_y))
+            tau_coef.append(kendalltau(tik_x[:min_length], tik_y[:min_length])[0])
         index_max = tau_coef.index(max(tau_coef))    
         pair = [tick_syl[0][index_max],tick_syl[1][index_max]]
         
