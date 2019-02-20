@@ -19,6 +19,8 @@
     for these conditions and generate insights acoordingly for the top 50
     assets by Dollar Volume using a Coarse Universe selection function.
 
+
+
     This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     sourced so the community and client funds can see an example of an alpha.
 '''
@@ -163,7 +165,7 @@ class SymbolData:
         
     def Update(self, data):
         ## Check to see if symbol is in the data dictionary
-        if self.Symbol not in data.Keys:
+        if not data.Bars.ContainsKey(self.Symbol) or self.Symbol not in data.Keys:
             return False
         
         ## Check to see if data contains a special event, which
@@ -179,8 +181,6 @@ class SymbolData:
         bar = data[self.Symbol]
         self.Close = bar.Close
         self.Volume = bar.Volume
-        self.CloseSMA.Update(bar.EndTime, bar.Close)
-        self.VolumeSMA.Update(bar.EndTime, bar.Volume)
         return True
 
     def RegisterIndicators(self, algorithm, resolution):

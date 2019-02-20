@@ -150,7 +150,8 @@ class ContingentClaimsAnalysisAlphaModel:
         self.month = None
         self.default_threshold = kwargs['default_threshold'] if 'default_threshold' in kwargs else 0.25
         self.expiry = None
-        self.start_time = kwargs['start_time'] if 'start_time' in kwargs else None
+        self.start_time = kwargs['start_time'] if 'start_time' in kwargs else \
+                            datetime.combine(date.today(), datetime.min.time())
         self.epsilon = kwargs['epsilon'] if 'epsilon' in kwargs else 0.00001     ## This serves as a check to filter out symbols with a default probability of, e.g., 2.89e-20
         
 

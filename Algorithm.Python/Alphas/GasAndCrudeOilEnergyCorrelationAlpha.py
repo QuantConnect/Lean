@@ -20,6 +20,8 @@
     then create insights for Crude Oil depending on whether or not the Natural Gas ETF price change
     is above/below a certain threshold that we set (arbitrarily).
 
+
+
     This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     sourced so the community and client funds can see an example of an alpha.
 '''

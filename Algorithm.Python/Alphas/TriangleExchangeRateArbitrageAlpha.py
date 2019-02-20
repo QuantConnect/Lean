@@ -26,7 +26,6 @@ This Alpha Model is an implementation of this theory.
 
 
 
-
 This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
 sourced so the community and client funds can see an example of an alpha.
     
