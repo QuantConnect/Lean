@@ -199,7 +199,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
                 {
                     SevenZipExtractor.DecompressStream(inStream, outStream, (int)inStream.Length, null);
 
-                    byte[] bytes = outStream.GetBuffer();
+                    byte[] bytes = outStream.ToArray();
                     int count = bytes.Length / DukascopyTickLength;
 
                     // Numbers are big-endian

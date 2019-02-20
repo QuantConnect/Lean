@@ -252,7 +252,8 @@ namespace QuantConnect
                     entryStream.Write(bytes, 0, bytes.Length);
                 }
             }
-            return memoryStream.GetBuffer();
+
+            return memoryStream.ToArray();
         }
 
         /// <summary>

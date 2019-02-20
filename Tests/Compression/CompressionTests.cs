@@ -53,6 +53,16 @@ namespace QuantConnect.Tests.Compression
         }
 
         [Test]
+        public void ZipBytesReturnsByteArrayWithCorrectLength()
+        {
+            const string file = "../../../Data/equity/usa/tick/spy/20131007_trade.zip";
+            var fileBytes = File.ReadAllBytes(file);
+            var zippedBytes = QuantConnect.Compression.ZipBytes(fileBytes, "entry");
+
+            Assert.AreEqual(612631, zippedBytes.Length);
+        }
+
+        [Test]
         public void ExtractsZipEntryByName()
         {
             var zip = Path.Combine("TestData", "multizip.zip");
