@@ -231,6 +231,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _openOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _orderRequestQueue.Add(request);
+
+                // wait for the transaction handler to set the order reference into the new order ticket,
+                // so we can ensure the order has already been added to the open orders,
+                // before returning the ticket to the algorithm.
+
+                var orderSetTimeout = Time.OneSecond;
+                if (!ticket.OrderSet.WaitOne(orderSetTimeout))
+                {
+                    Log.Error("BrokerageTransactionHandler.ProcessRequest(): " +
+                              $"The order request (Id={ticket.OrderId}) was not processed within {orderSetTimeout.TotalSeconds} second(s).");
+                }
             }
             else
             {
