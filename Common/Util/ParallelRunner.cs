@@ -131,6 +131,10 @@ namespace QuantConnect.Util
                     }
                     else
                     {
+                        if (!_holdQueue.Any(x => x.IsReady))
+                        {
+                            Thread.Sleep(5);
+                        }
                         _holdQueue.Add(workItem, token);
                     }
                 }
