@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,26 +50,13 @@ namespace QuantConnect.Indicators
                 throw new ArgumentException("RollingWindow must have size of at least 1.", "size");
             }
             _list = new List<T>(size);
+            Size = size;
         }
 
         /// <summary>
         ///     Gets the size of this window
         /// </summary>
-        public int Size
-        {
-            get
-            { 
-                try
-                {
-                    _listLock.EnterReadLock();
-                    return _list.Capacity;
-                }
-                finally
-                {
-                    _listLock.ExitReadLock();
-                }
-            }
-        }
+        public int Size { get; }
 
         /// <summary>
         ///     Gets the current number of elements in this window
@@ -77,7 +64,7 @@ namespace QuantConnect.Indicators
         public int Count
         {
             get
-            { 
+            {
                 try
                 {
                     _listLock.EnterReadLock();
@@ -96,7 +83,7 @@ namespace QuantConnect.Indicators
         public decimal Samples
         {
             get
-            { 
+            {
                 try
                 {
                     _listLock.EnterReadLock();
@@ -187,7 +174,7 @@ namespace QuantConnect.Indicators
         public bool IsReady
         {
             get
-            { 
+            {
                 try
                 {
                     _listLock.EnterReadLock();
@@ -196,7 +183,7 @@ namespace QuantConnect.Indicators
                 finally
                 {
                     _listLock.ExitReadLock();
-                } 
+                }
             }
         }
 
@@ -209,7 +196,7 @@ namespace QuantConnect.Indicators
         /// <filterpriority>1</filterpriority>
         public IEnumerator<T> GetEnumerator()
         {
-            // we make a copy on purpose so the enumerator isn't tied 
+            // we make a copy on purpose so the enumerator isn't tied
             // to a mutable object, well it is still mutable but out of scope
             var temp = new List<T>(Count);
             try
