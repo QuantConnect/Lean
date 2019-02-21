@@ -24,6 +24,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Forex;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Order = QuantConnect.Orders.Order;
 
@@ -144,7 +145,43 @@ namespace QuantConnect.Brokerages.Oanda
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<CashAmount> GetCashBalance()
         {
-            return _api.GetCashBalance();
+            var balances = _api.GetCashBalance().ToDictionary(x => x.Currency);
+
+            // include cash balances from currency swaps for open Forex/CFD positions
+            foreach (var holding in GetAccountHoldings())
+            {
+                var securityType = holding.Symbol.SecurityType;
+
+                string quoteCurrency;
+                if (securityType == SecurityType.Forex)
+                {
+                    string baseCurrency;
+                    Forex.DecomposeCurrencyPair(holding.Symbol.Value, out baseCurrency, out quoteCurrency);
+
+                    var baseQuantity = holding.Quantity;
+                    CashAmount baseCurrencyAmount;
+                    balances[baseCurrency] = balances.TryGetValue(baseCurrency, out baseCurrencyAmount)
+                        ? new CashAmount(baseQuantity + baseCurrencyAmount.Amount, baseCurrency)
+                        : new CashAmount(baseQuantity, baseCurrency);
+                }
+                else if (securityType == SecurityType.Cfd)
+                {
+                    quoteCurrency = holding.Symbol.Value.Substring(holding.Symbol.Value.Length - 3);
+                }
+                else
+                {
+                    Log.Error($"OandaBrokerage.GetCashBalance(): invalid security type: {securityType}");
+                    continue;
+                }
+
+                var quoteQuantity = -holding.Quantity * holding.AveragePrice;
+                CashAmount quoteCurrencyAmount;
+                balances[quoteCurrency] = balances.TryGetValue(quoteCurrency, out quoteCurrencyAmount)
+                    ? new CashAmount(quoteQuantity + quoteCurrencyAmount.Amount, quoteCurrency)
+                    : new CashAmount(quoteQuantity, quoteCurrency);
+            }
+
+            return balances.Values.ToList();
         }
 
         /// <summary>
