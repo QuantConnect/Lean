@@ -40,6 +40,7 @@
     <Content Include="Alphas\GlobalEquityMeanReversionIBSAlpha.py" />
     <Content Include="Alphas\MeanReversionLunchBreakAlpha.py" />
     <Content Include="Alphas\RebalancingLeveragedETFAlpha.py" />
+    <Content Include="Alphas\TripleLeverageETFPairVolatilityDecayAlpha.py" />
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
     <Content Include="BasicTemplateFuturesFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateOptionsFrameworkAlgorithm.py" />
