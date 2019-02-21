@@ -86,8 +86,7 @@ class MeanReversionIBSAlphaModel(AlphaModel):
         self.numberOfStocks = kwargs['numberOfStocks'] if 'numberOfStocks' in kwargs else 2
         self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Daily
         self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), self.lookback)
-        self.symbolDataBySymbol = {}
-
+        
     def Update(self, algorithm, data):
         
         insights = []
