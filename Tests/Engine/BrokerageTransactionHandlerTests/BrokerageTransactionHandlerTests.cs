@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Moq;
 using NodaTime;
 using NUnit.Framework;
@@ -882,6 +883,33 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 // expect exception from ProcessSynchronousEvents when max attempts reached
                 Assert.That(exception.Message.Contains("maximum number of attempts"));
             }
+        }
+
+        [Test]
+        public void AddOrderWaitsForOrderToBeProcessed()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var security = algorithm.AddSecurity(SecurityType.Equity, "SPY");
+            security.SetMarketPrice(new Tick { Value = 150 });
+            algorithm.SetFinishedWarmingUp();
+
+            var transactionHandler = new BrokerageTransactionHandler();
+            transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new BacktestingResultHandler());
+
+            algorithm.Transactions.SetOrderProcessor(transactionHandler);
+
+            Task.Run(() => transactionHandler.Run());
+
+            var ticket = algorithm.LimitOrder(security.Symbol, 1, 100);
+
+            var openOrders = algorithm.Transactions.GetOpenOrders();
+
+            transactionHandler.Exit();
+
+            Assert.AreEqual(1, openOrders.Count);
+            Assert.IsTrue(ticket.HasOrder);
         }
 
         internal class EmptyHistoryProvider : HistoryProviderBase
