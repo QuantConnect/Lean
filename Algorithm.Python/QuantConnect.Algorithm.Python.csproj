@@ -37,6 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Alphas\ForexCalendarAlpha.py" />
+    <Content Include="Alphas\GlobalEquityMeanReversionIBSAlpha.py" />
     <Content Include="Alphas\RebalancingLeveragedETFAlpha.py" />
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
     <Content Include="BasicTemplateFuturesFrameworkAlgorithm.py" />
