@@ -32,8 +32,9 @@ from QuantConnect.Orders.Fees import ConstantFeeModel
 # Intraday trading volume is J-Shaped, where the minimum trading volume of the day is during lunch-break. Stocks become 
 # more volatile as order flow is reduced and tend to mean-revert during lunch-break.
 #
-# This alpha aims to capture the mean-reversion effect of stocks during lunch-break by ranking stocks in the QC500 universe
-# on their return between the close of the previous day to 12:00 the day after and predicting mean-reversion in price during lunch-break.
+# This alpha aims to capture the mean-reversion effect of ETFs during lunch-break by ranking 20 ETFs
+# on their return between the close of the previous day to 12:00 the day after and predicting mean-reversion 
+# in price during lunch-break.
 #
 # Source:  Lunina, V. (June 2011). The Intraday Dynamics of Stock Returns and Trading Activity: Evidence from OMXS 30 (Master's Essay, Lund University). 
 # Retrieved from http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=1973850&fileOId=1973852
@@ -77,7 +78,7 @@ class MeanReversionLunchBreakAlphaAlgorithm(QCAlgorithmFramework):
         return filtered[:20]
 
 class MeanReversionLunchBreakAlphaModel(AlphaModel):
-    '''Uses the stock price return between the close of previous day to 12:00 the day after to 
+    '''Uses the price return between the close of previous day to 12:00 the day after to 
     predict mean-reversion of stock price during lunch break and creates direction prediction 
     for insights accordingly.'''
 
