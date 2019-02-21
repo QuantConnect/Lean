@@ -72,9 +72,6 @@ class GlobalEquityMeanReversionIBSAlphaAlgorithm(QCAlgorithmFramework):
         # Equally weigh securities in portfolio, based on insights
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         
-        # Alphas can assume $0 fees;
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
-        
         ## Set immediate execution
         self.SetExecution(ImmediateExecutionModel())
 
