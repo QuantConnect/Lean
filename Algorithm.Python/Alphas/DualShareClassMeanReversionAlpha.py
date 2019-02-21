@@ -98,6 +98,9 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
         self.liquidate = 'liquidate'
         self.long_symbol = self.tickers[0]
         self.short_symbol = self.tickers[1]
+        self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Minute
+        self.prediction_interval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), 5) ## Arbitrary
+        self.insight_magnitude = 0.01
 
     def Update(self, algorithm, data):
         insights = []
@@ -124,23 +127,23 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
         ## Check to see if the portfolio is invested. If no, then perform value comparisons and emit insights accordingly
         if not self.invested:
             if self.position_value >= self.sma.Current.Value:
-                insights.append(Insight(self.long_symbol, timedelta(minutes=5), InsightType.Price, InsightDirection.Down, 0.01, None))
-                insights.append(Insight(self.short_symbol, timedelta(minutes=5), InsightType.Price, InsightDirection.Up, 0.01, None))
+                insights.append(Insight(self.long_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Down, self.insight_magnitude, None))
+                insights.append(Insight(self.short_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Up, self.insight_magnitude, None))
 
                 ## Reset invested boolean
                 self.invested = True
 
             elif self.position_value < self.sma.Current.Value:
-                insights.append(Insight(self.long_symbol, timedelta(minutes=5), InsightType.Price, InsightDirection.Up, 0.01, None))
-                insights.append(Insight(self.short_symbol, timedelta(minutes=5), InsightType.Price, InsightDirection.Down, 0.01, None))        
+                insights.append(Insight(self.long_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Up, self.insight_magnitude, None))
+                insights.append(Insight(self.short_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Down, self.insight_magnitude, None))        
 
                 ## Reset invested boolean
                 self.invested = True
                 
         ## If the portfolio is invested and crossed back over the SMA, then emit flat insights
         elif self.invested and self.CrossedMean():
-            insights.append(Insight(self.short_symbol, timedelta(minutes=5), InsightType.Price, InsightDirection.Flat, 0.01, None))
-            insights.append(Insight(self.short_symbol, timedelta(minutes=5), InsightType.Price, InsightDirection.Flat, 0.01, None))
+            insights.append(Insight(self.short_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Flat, self.insight_magnitude, None))
+            insights.append(Insight(self.short_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Flat, self.insight_magnitude, None))
 
             ## Reset invested boolean
             self.invested = False
