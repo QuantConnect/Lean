@@ -22,7 +22,6 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Orders import *
 from QuantConnect.Algorithm import QCAlgorithm
-from QuantConnect.Python import PythonQuandl
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Indicators import *
 from QuantConnect.Orders.Fees import ConstantFeeModel
@@ -39,9 +38,8 @@ from QuantConnect.Orders.Fees import ConstantFeeModel
 # Source:  Lunina, V. (June 2011). The Intraday Dynamics of Stock Returns and Trading Activity: Evidence from OMXS 30 (Master's Essay, Lund University). 
 # Retrieved from http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=1973850&fileOId=1973852
 #
-# <br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community 
-# and client funds can see an example of an alpha. You can read the source code for this alpha on Github in 
-# <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/MeanReversionLunchBreakAlpha.py">Python</a>.
+# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community 
+# and client funds can see an example of an alpha. 
 #
 
 class MeanReversionLunchBreakAlphaAlgorithm(QCAlgorithmFramework):
@@ -86,7 +84,6 @@ class MeanReversionLunchBreakAlphaModel(AlphaModel):
         self.lookback = kwargs['lookback'] if 'lookback' in kwargs else 1
         self.resolution = Resolution.Hour
         self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), self.lookback)
-        self.symbolWindow = {}
 
     def Update(self, algorithm, data):
         
