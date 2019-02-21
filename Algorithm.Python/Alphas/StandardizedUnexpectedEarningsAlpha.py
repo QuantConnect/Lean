@@ -50,10 +50,7 @@ from QuantConnect.Indicators import RollingWindow, SimpleMovingAverage
 
 from datetime import timedelta, datetime
 import numpy as np
-#import ptvsd
-#ptvsd.enable_attach()
-#print('attach process')
-#ptvsd.wait_for_attach()
+
 class StandardizedUnexpectedEarningsAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
