@@ -36,8 +36,14 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="Alphas\ArtificiallyDepressedPricesAlpha.py" />
+    <Content Include="Alphas\ContingentClaimsAnalysisDefaultPredictionAlpha.py" />
+    <Content Include="Alphas\DualShareClassMeanReversionAlpha.py" />
     <Content Include="Alphas\ForexCalendarAlpha.py" />
+    <Content Include="Alphas\GasAndCrudeOilEnergyCorrelationAlpha.py" />
+    <Content Include="Alphas\PriceGapMeanReversionAlpha.py" />
     <Content Include="Alphas\RebalancingLeveragedETFAlpha.py" />
+    <Content Include="Alphas\TriangleExchangeRateArbitrageAlpha.py" />
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
     <Content Include="BasicTemplateFuturesFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateOptionsFrameworkAlgorithm.py" />
