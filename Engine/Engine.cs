@@ -63,7 +63,7 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public LeanEngineAlgorithmHandlers AlgorithmHandlers
         {
-            get { return _algorithmHandlers;}
+            get { return _algorithmHandlers; }
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace QuantConnect.Lean.Engine
                     var securityService = new SecurityService(algorithm.Portfolio.CashBook,
                         marketHoursDatabase,
                         symbolPropertiesDatabase,
-                        (ISecurityInitializerProvider)algorithm);
+                        algorithm);
 
                     algorithm.Securities.SetSecurityService(securityService);
 
@@ -161,7 +161,7 @@ namespace QuantConnect.Lean.Engine
                         _algorithmHandlers.FactorFileProvider,
                         _algorithmHandlers.DataProvider,
                         dataManager,
-                        (IDataFeedTimeProvider) synchronizer);
+                         synchronizer);
 
                     // set the order processor on the transaction manager (needs to be done before initializing BrokerageHistoryProvider)
                     algorithm.Transactions.SetOrderProcessor(_algorithmHandlers.Transactions);
@@ -257,7 +257,10 @@ namespace QuantConnect.Lean.Engine
                 {
                     Log.Trace("         History Provider:     " + algorithm.HistoryProvider.GetType().FullName);
                 }
-                if (job is LiveNodePacket) Log.Trace("         Brokerage:      " + brokerage?.GetType().FullName);
+                if (job is LiveNodePacket)
+                {
+                    Log.Trace("         Brokerage:      " + brokerage?.GetType().FullName);
+                }
 
                 //-> Using the job + initialization: load the designated handlers:
                 if (initializeComplete)
@@ -300,7 +303,7 @@ namespace QuantConnect.Lean.Engine
                     //Launch the data, transaction and realtime handlers into dedicated threads
                     threadTransactions = new Thread(_algorithmHandlers.Transactions.Run) { IsBackground = true, Name = "Transaction Thread" };
                     threadRealTime = new Thread(_algorithmHandlers.RealTime.Run) { IsBackground = true, Name = "RealTime Thread" };
-                    threadAlphas = new Thread(() => _algorithmHandlers.Alphas.Run()) {IsBackground = true, Name = "Alpha Thread" };
+                    threadAlphas = new Thread(() => _algorithmHandlers.Alphas.Run()) { IsBackground = true, Name = "Alpha Thread" };
 
                     //Launch the data feed, result sending, and transaction models/handlers in separate threads.
                     threadTransactions.Start(); // Transaction modeller scanning new order requests
@@ -424,7 +427,7 @@ namespace QuantConnect.Lean.Engine
 
                         if (!_liveMode)
                         {
-                            var kps = dataPoints / (double) 1000 / totalSeconds;
+                            var kps = dataPoints / (double)1000 / totalSeconds;
                             _algorithmHandlers.Results.DebugMessage($"Algorithm Id:({job.AlgorithmId}) completed in {totalSeconds:F2} seconds at {kps:F0}k data points per second. Processing total of {dataPoints:N0} data points.");
                         }
 
@@ -453,16 +456,27 @@ namespace QuantConnect.Lean.Engine
                     || (_algorithmHandlers.DataFeed != null && _algorithmHandlers.DataFeed.IsActive)
                     || (_algorithmHandlers.RealTime != null && _algorithmHandlers.RealTime.IsActive)
                     || (_algorithmHandlers.Alphas != null && _algorithmHandlers.Alphas.IsActive))
-                    && ts.ElapsedMilliseconds < 30*1000)
+                    && ts.ElapsedMilliseconds < 30 * 1000)
                 {
                     Thread.Sleep(100);
                     Log.Trace("Waiting for threads to exit...");
                 }
 
                 //Terminate threads still in active state.
-                if (threadTransactions != null && threadTransactions.IsAlive) threadTransactions.Abort();
-                if (threadResults != null && threadResults.IsAlive) threadResults.Abort();
-                if (threadAlphas != null && threadAlphas.IsAlive) threadAlphas.Abort();
+                if (threadTransactions != null && threadTransactions.IsAlive)
+                {
+                    threadTransactions.Abort();
+                }
+
+                if (threadResults != null && threadResults.IsAlive)
+                {
+                    threadResults.Abort();
+                }
+
+                if (threadAlphas != null && threadAlphas.IsAlive)
+                {
+                    threadAlphas.Abort();
+                }
 
                 if (brokerage != null)
                 {
@@ -485,7 +499,9 @@ namespace QuantConnect.Lean.Engine
             {
                 //No matter what for live mode; make sure we've set algorithm status in the API for "not running" conditions:
                 if (_liveMode && algorithmManager.State != AlgorithmStatus.Running && algorithmManager.State != AlgorithmStatus.RuntimeError)
+                {
                     _systemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, algorithmManager.State);
+                }
 
                 _algorithmHandlers.Results.Exit();
                 _algorithmHandlers.DataFeed.Exit();
@@ -502,7 +518,11 @@ namespace QuantConnect.Lean.Engine
         private void HandleAlgorithmError(AlgorithmNodePacket job, Exception err)
         {
             Log.Error(err, "Breaking out of parent try catch:");
-            if (_algorithmHandlers.DataFeed != null) _algorithmHandlers.DataFeed.Exit();
+            if (_algorithmHandlers.DataFeed != null)
+            {
+                _algorithmHandlers.DataFeed.Exit();
+            }
+
             if (_algorithmHandlers.Results != null)
             {
                 // perform exception interpretation
@@ -539,7 +559,9 @@ namespace QuantConnect.Lean.Engine
 
             var path = Path.GetDirectoryName(csvFileName);
             if (path != null && !Directory.Exists(path))
+            {
                 Directory.CreateDirectory(path);
+            }
 
             using (var writer = new StreamWriter(csvFileName))
             {

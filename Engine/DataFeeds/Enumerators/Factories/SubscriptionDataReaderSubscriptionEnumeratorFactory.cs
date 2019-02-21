@@ -60,15 +60,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null
             )
         {
-            this._resultHandler = resultHandler;
-            this._mapFileProvider = mapFileProvider;
-            this._factorFileProvider = factorFileProvider;
-            this._dataCacheProvider = (IDataCacheProvider)Activator.CreateInstance(
+            _resultHandler = resultHandler;
+            _mapFileProvider = mapFileProvider;
+            _factorFileProvider = factorFileProvider;
+            _dataCacheProvider = (IDataCacheProvider)Activator.CreateInstance(
                 Type.GetType(Config.Get("data-cache-provider", "QuantConnect.Lean.Engine.DataFeeds.ZipDataCacheProvider")),
                 dataProvider);
-            this._isLiveMode = isLiveMode;
-            this._includeAuxiliaryData = includeAuxiliaryData;
-            this._tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
+            _isLiveMode = isLiveMode;
+            _includeAuxiliaryData = includeAuxiliaryData;
+            _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
         }
 
         /// <summary>
@@ -81,30 +81,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         {
             var mapFileResolver = request.Configuration.SecurityType == SecurityType.Equity ||
                                   request.Configuration.SecurityType == SecurityType.Option
-                                    ? this._mapFileProvider.Get(request.Security.Symbol.ID.Market)
+                                    ? _mapFileProvider.Get(request.Security.Symbol.ID.Market)
                                     : MapFileResolver.Empty;
 
             var dataReader = new SubscriptionDataReader(request.Configuration,
                 request.StartTimeLocal,
                 request.EndTimeLocal,
                 mapFileResolver,
-                this._factorFileProvider,
-                this._tradableDaysProvider(request),
-                this._isLiveMode,
-                 this._dataCacheProvider
+                _factorFileProvider,
+                _tradableDaysProvider(request),
+                _isLiveMode,
+                 _dataCacheProvider
                 );
 
-            dataReader.InvalidConfigurationDetected += (sender, args) => { this._resultHandler.ErrorMessage(args.Message); };
-            dataReader.NumericalPrecisionLimited += (sender, args) => { this._resultHandler.DebugMessage(args.Message); };
-            dataReader.DownloadFailed += (sender, args) => { this._resultHandler.ErrorMessage(args.Message, args.StackTrace); };
-            dataReader.ReaderErrorDetected += (sender, args) => { this._resultHandler.RuntimeError(args.Message, args.StackTrace); };
+            dataReader.InvalidConfigurationDetected += (sender, args) => { _resultHandler.ErrorMessage(args.Message); };
+            dataReader.NumericalPrecisionLimited += (sender, args) => { _resultHandler.DebugMessage(args.Message); };
+            dataReader.DownloadFailed += (sender, args) => { _resultHandler.ErrorMessage(args.Message, args.StackTrace); };
+            dataReader.ReaderErrorDetected += (sender, args) => { _resultHandler.RuntimeError(args.Message, args.StackTrace); };
 
             var enumerator = CorporateEventEnumeratorFactory.CreateEnumerators(
                 request.Configuration,
-                this._factorFileProvider,
+                _factorFileProvider,
                 dataReader,
                 mapFileResolver,
-                this._includeAuxiliaryData);
+                _includeAuxiliaryData);
 
             // has to be initialized after adding all the enumerators since it will execute a MoveNext
             dataReader.Initialize();
@@ -118,7 +118,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            this._dataCacheProvider?.DisposeSafely();
+            _dataCacheProvider?.DisposeSafely();
         }
     }
 }

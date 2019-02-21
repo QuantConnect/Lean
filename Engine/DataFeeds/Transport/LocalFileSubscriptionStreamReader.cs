@@ -14,13 +14,12 @@
  *
 */
 
-using System.IO;
-using Ionic.Zip;
-using System.IO.Compression;
-using QuantConnect.Interfaces;
-using System.Collections.Generic;
-using System.Linq;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Ionic.Zip;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 {

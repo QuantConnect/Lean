@@ -77,8 +77,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="dataProvider">The data provider</param>
         public DataPointCacheProvider(IDataProvider dataProvider)
         {
-            this._dataProvider = dataProvider;
-            this._dataPointCache = new MemoryCache(this.GetType().Name, new NameValueCollection()
+            _dataProvider = dataProvider;
+            _dataPointCache = new MemoryCache(GetType().Name, new NameValueCollection()
             {
                 { "CacheMemoryLimit", Config.Get("history-data-cache-size", DefaultCacheMemorySizeInMb.ToString()) },
                 { "PollingInterval", Config.Get("history-data-cache-polling-interval", DefaultCachePollingIntervalInSecond.ToString())},
@@ -101,28 +101,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             try
             {
-                this.TryExtractEntryName(key, out fileName, out entryName);
+                TryExtractEntryName(key, out fileName, out entryName);
                 if (!string.Equals(fileName.GetExtension(), ".zip", StringComparison.OrdinalIgnoreCase))
                 {
                     throw new InvalidOperationException($"Invalid file type. Only .zip is supported. Provided {fileName}");
                 }
 
                 // Create data point cache entry if not exists
-                if (!this._dataPointCache.Contains(fileName))
+                if (!_dataPointCache.Contains(fileName))
                 {
                     // handles zip files
-                    using (Stream fileStream = this.CreateStream(this._dataProvider.Fetch(fileName), entryName, fileName))
+                    using (Stream fileStream = CreateStream(_dataProvider.Fetch(fileName), entryName, fileName))
                     {
                         if (fileStream != null)
                         {
                             DataPointDictionary newItem = new DataPointDictionary(fileStream, fileName, config.Resolution);
-                            this._dataPointCache.Add(fileName, newItem, CachePolicy);
+                            _dataPointCache.Add(fileName, newItem, CachePolicy);
                         }
                     }
                 }
 
                 dataPointEnumerator = new DataPointEnumerator(
-                    this._dataPointCache.Get(fileName) as DataPointDictionary,
+                    _dataPointCache.Get(fileName) as DataPointDictionary,
                     config,
                     startDate,
                     endDate);
@@ -158,7 +158,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            this._dataPointCache.DisposeSafely();
+            _dataPointCache.DisposeSafely();
         }
 
         /// <summary>

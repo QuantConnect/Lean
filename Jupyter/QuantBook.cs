@@ -13,6 +13,11 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
@@ -28,11 +33,6 @@ using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
 
 namespace QuantConnect.Jupyter
 {
@@ -136,14 +136,20 @@ namespace QuantConnect.Jupyter
                 {
                     var symbol = QuantConnect.Symbol.Create(ticker.ToString(), SecurityType.Equity, Market.USA);
                     var dir = new DirectoryInfo(Path.Combine(Globals.DataFolder, "equity", symbol.ID.Market, "fundamental", "fine", symbol.Value.ToLower()));
-                    if (!dir.Exists) continue;
+                    if (!dir.Exists)
+                    {
+                        continue;
+                    }
 
                     var config = new SubscriptionDataConfig(typeof(FineFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
 
                     foreach (var fileName in dir.EnumerateFiles())
                     {
                         var date = DateTime.ParseExact(fileName.Name.Substring(0, 8), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
-                        if (date < start || date > end) continue;
+                        if (date < start || date > end)
+                        {
+                            continue;
+                        }
 
                         var factory = new TextSubscriptionDataSourceReader(_dataCacheProvider, config, date, false);
                         var source = new SubscriptionDataSource(fileName.FullName, SubscriptionTransportMedium.LocalFile);
@@ -575,7 +581,10 @@ namespace QuantConnect.Jupyter
         {
             foreach (var name in fullName.Split('.'))
             {
-                if (baseData == null) return null;
+                if (baseData == null)
+                {
+                    return null;
+                }
 
                 var info = baseData.GetType().GetProperty(name);
 

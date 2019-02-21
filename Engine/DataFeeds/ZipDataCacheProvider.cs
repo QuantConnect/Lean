@@ -44,7 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public ZipDataCacheProvider(IDataProvider dataProvider)
         {
-            this._dataProvider = dataProvider;
+            _dataProvider = dataProvider;
         }
 
         /// <summary>
@@ -67,26 +67,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 Stream stream = null;
 
                 // scan the cache once every 3 seconds
-                if (this._lastCacheScan == DateTime.MinValue || this._lastCacheScan < DateTime.Now.AddSeconds(-3))
+                if (_lastCacheScan == DateTime.MinValue || _lastCacheScan < DateTime.Now.AddSeconds(-3))
                 {
-                    this.CleanCache();
+                    CleanCache();
                 }
 
                 try
                 {
                     CachedZipFile existingEntry;
-                    if (!this._zipFileCache.TryGetValue(filename, out existingEntry))
+                    if (!_zipFileCache.TryGetValue(filename, out existingEntry))
                     {
-                        var dataStream = this._dataProvider.Fetch(filename);
+                        var dataStream = _dataProvider.Fetch(filename);
 
                         if (dataStream != null)
                         {
                             try
                             {
                                 var newItem = new CachedZipFile(dataStream, filename);
-                                stream = this.CreateStream(newItem, entryName, filename);
+                                stream = CreateStream(newItem, entryName, filename);
 
-                                if (!this._zipFileCache.TryAdd(filename, newItem))
+                                if (!_zipFileCache.TryAdd(filename, newItem))
                                 {
                                     newItem.Dispose();
                                 }
@@ -110,7 +110,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             lock (existingEntry)
                             {
-                                stream = this.CreateStream(existingEntry, entryName, filename);
+                                stream = CreateStream(existingEntry, entryName, filename);
                             }
                         }
                         catch (Exception exception)
@@ -138,7 +138,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // handles text files
-                return this._dataProvider.Fetch(filename);
+                return _dataProvider.Fetch(filename);
             }
         }
 
@@ -159,9 +159,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public void Dispose()
         {
             CachedZipFile zip;
-            foreach (var zipFile in this._zipFileCache)
+            foreach (var zipFile in _zipFileCache)
             {
-                if (this._zipFileCache.TryRemove(zipFile.Key, out zip))
+                if (_zipFileCache.TryRemove(zipFile.Key, out zip))
                 {
                     zip.Dispose();
                 }
@@ -176,13 +176,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var clearCacheIfOlderThan = DateTime.Now.AddSeconds(-CacheSeconds);
 
             // clean all items that that are older than CacheSeconds than the current date
-            foreach (var zip in this._zipFileCache)
+            foreach (var zip in _zipFileCache)
             {
                 if (zip.Value.Uncache(clearCacheIfOlderThan))
                 {
                     // removing it from the cache
                     CachedZipFile removed;
-                    if (this._zipFileCache.TryRemove(zip.Key, out removed))
+                    if (_zipFileCache.TryRemove(zip.Key, out removed))
                     {
                         // disposing zip archive
                         removed.Dispose();
@@ -190,7 +190,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            this._lastCacheScan = DateTime.Now;
+            _lastCacheScan = DateTime.Now;
         }
 
         /// <summary>
@@ -310,14 +310,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="key">Key that represents the path to the data</param>
         public CachedZipFile(Stream dataStream, string key)
         {
-            this._dataStream = dataStream;
-            this._zipFile = ZipFile.Read(dataStream);
-            foreach (var entry in this._zipFile.Entries)
+            _dataStream = dataStream;
+            _zipFile = ZipFile.Read(dataStream);
+            foreach (var entry in _zipFile.Entries)
             {
-                this.EntryCache[entry.FileName] = entry;
+                EntryCache[entry.FileName] = entry;
             }
-            this.Key = key;
-            this._dateCached = DateTime.Now;
+            Key = key;
+            _dateCached = DateTime.Now;
         }
 
         /// <summary>
@@ -327,7 +327,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>Bool indicating whether this object is older than the specified time</returns>
         public bool Uncache(DateTime date)
         {
-            return this._dateCached < date;
+            return _dateCached < date;
         }
 
         /// <summary>
@@ -335,11 +335,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Dispose()
         {
-            this.EntryCache.Clear();
-            this._zipFile?.DisposeSafely();
-            this._dataStream?.DisposeSafely();
+            EntryCache.Clear();
+            _zipFile?.DisposeSafely();
+            _dataStream?.DisposeSafely();
 
-            this.Key = null;
+            Key = null;
         }
     }
 }

@@ -40,7 +40,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public SingleEntryDataCacheProvider(IDataProvider dataProvider)
         {
-            this._dataProvider = dataProvider;
+            _dataProvider = dataProvider;
         }
 
         /// <summary>
@@ -50,17 +50,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>An <see cref="Stream"/> of the cached data</returns>
         public Stream FetchStream(string key)
         {
-            var stream = this._dataProvider.Fetch(key);
+            var stream = _dataProvider.Fetch(key);
 
             if (key.EndsWith(".zip") && stream != null)
             {
                 // get the first entry from the zip file
                 try
                 {
-                    var entryStream = Compression.UnzipStream(stream, out this._zipFile);
+                    var entryStream = Compression.UnzipStream(stream, out _zipFile);
 
                     // save the file stream so it can be disposed later
-                    this._zipFileStream = stream;
+                    _zipFileStream = stream;
 
                     return entryStream;
                 }
@@ -90,8 +90,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void Dispose()
         {
-            this._zipFile?.DisposeSafely();
-            this._zipFileStream?.DisposeSafely();
+            _zipFile?.DisposeSafely();
+            _zipFileStream?.DisposeSafely();
         }
 
         /// <summary>

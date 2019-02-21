@@ -164,9 +164,15 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             reader = new FilterEnumerator<BaseData>(reader, data =>
             {
                 // allow all ticks
-                if (config.Resolution == Resolution.Tick) return true;
+                if (config.Resolution == Resolution.Tick)
+                {
+                    return true;
+                }
                 // filter out future data
-                if (data.EndTime > endTimeAtExchange) return false;
+                if (data.EndTime > endTimeAtExchange)
+                {
+                    return false;
+                }
                 // filter out data before the start
                 return data.EndTime > startTimeAtExchange;
             });

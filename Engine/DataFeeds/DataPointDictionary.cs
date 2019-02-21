@@ -61,14 +61,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="resolution">The resolution of data</param>
         public DataPointDictionary(Stream fileStream, string fileName, Resolution resolution)
         {
-            this._fileName = fileName;
-            this._resolution = resolution;
-            this._dataPoints = this.BuildDataPointDictionary(fileStream);
-            this._referenceArray = this.GetReferenceArray(this._dataPoints);
-            if (this._resolution != Resolution.Daily && this._resolution != Resolution.Hour)
+            _fileName = fileName;
+            _resolution = resolution;
+            _dataPoints = BuildDataPointDictionary(fileStream);
+            _referenceArray = GetReferenceArray(_dataPoints);
+            if (_resolution != Resolution.Daily && _resolution != Resolution.Hour)
             {
-                this._dateOfFileIfAny = DateTime.ParseExact(
-                    Path.GetFileNameWithoutExtension(this._fileName)
+                _dateOfFileIfAny = DateTime.ParseExact(
+                    Path.GetFileNameWithoutExtension(_fileName)
                         .Substring(0, DateFormat.EightCharacter.Length),
                     DateFormat.EightCharacter,
                     CultureInfo.InvariantCulture);
@@ -80,7 +80,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public int Count
         {
-            get { return this._dataPoints.Count; }
+            get { return _dataPoints.Count; }
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         continue;
                     }
 
-                    result[this.GetDateTime(line)] = line;
+                    result[GetDateTime(line)] = line;
                 }
                 catch (Exception ex)
                 {
@@ -131,7 +131,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new ArgumentNullException(nameof(line), "Input cannot be null or empty.");
             }
 
-            switch (this._resolution)
+            switch (_resolution)
             {
                 case Resolution.Daily:
                 case Resolution.Hour:
@@ -140,7 +140,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         DateFormat.TwelveCharacter,
                         CultureInfo.InvariantCulture);
                 default:
-                    return this._dateOfFileIfAny +
+                    return _dateOfFileIfAny +
                         TimeSpan.FromMilliseconds(long.Parse(line.Split(new char[] { ',' })[0]));
             }
         }
@@ -175,7 +175,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             get
             {
-                return this._referenceArray[index];
+                return _referenceArray[index];
             }
         }
 
@@ -188,7 +188,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             get
             {
-                return this._dataPoints[key];
+                return _dataPoints[key];
             }
         }
 
@@ -198,7 +198,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if empty; False otherwise</returns>
         public bool IsEmpty()
         {
-            return this._dataPoints == null || this._dataPoints.Count == 0;
+            return _dataPoints == null || _dataPoints.Count == 0;
         }
 
         /// <summary>
@@ -208,7 +208,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A KV pair of data point</returns>
         public KeyValuePair<DateTime, string> First(Func<KeyValuePair<DateTime, string>, bool> predicate)
         {
-            return this._dataPoints.FirstOrDefault(predicate);
+            return _dataPoints.FirstOrDefault(predicate);
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A KV pair of data point</returns>
         public KeyValuePair<DateTime, string> Last(Func<KeyValuePair<DateTime, string>, bool> predicate)
         {
-            return this._dataPoints.LastOrDefault(predicate);
+            return _dataPoints.LastOrDefault(predicate);
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns></returns>
         public int IndexOfKey(DateTime key)
         {
-            return this._dataPoints.IndexOfKey(key);
+            return _dataPoints.IndexOfKey(key);
         }
     }
 }

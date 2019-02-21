@@ -54,9 +54,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             DateTime? startDate = null,
             DateTime? endDate = null)
         {
-            this._config = config;
-            this._lineEnumerator = dataCacheProvider
-                .FetchEnumerator(source, this._config, startDate, endDate) as DataPointEnumerator;
+            _config = config;
+            _lineEnumerator = dataCacheProvider
+                .FetchEnumerator(source, _config, startDate, endDate) as DataPointEnumerator;
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         {
             get
             {
-                return this._lineEnumerator == null || this._lineEnumerator.EndOfStream;
+                return _lineEnumerator == null || _lineEnumerator.EndOfStream;
             }
         }
 
@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// </summary>
         public void Dispose()
         {
-            this._lineEnumerator?.Dispose();
+            _lineEnumerator?.Dispose();
         }
 
         /// <summary>
@@ -92,13 +92,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <returns>A line of data point</returns>
         public string ReadLine()
         {
-            if (this.EndOfStream)
+            if (EndOfStream)
             {
                 throw new EndOfStreamException("Line enumerator is exhausted.");
             }
 
-            this._lineEnumerator.MoveNext();
-            return this._lineEnumerator.Current;
+            _lineEnumerator.MoveNext();
+            return _lineEnumerator.Current;
         }
     }
 }

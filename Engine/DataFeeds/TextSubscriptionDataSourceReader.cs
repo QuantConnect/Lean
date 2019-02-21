@@ -64,11 +64,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
         public TextSubscriptionDataSourceReader(IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            this._dataCacheProvider = dataCacheProvider;
-            this._date = date;
-            this._config = config;
-            this._isLiveMode = isLiveMode;
-            this._factory = (BaseData)ObjectActivator.GetActivator(config.Type).Invoke(new object[] { config.Type });
+            _dataCacheProvider = dataCacheProvider;
+            _date = date;
+            _config = config;
+            _isLiveMode = isLiveMode;
+            _factory = (BaseData)ObjectActivator.GetActivator(config.Type).Invoke(new object[] { config.Type });
         }
 
         /// <summary>
@@ -79,12 +79,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public IEnumerable<BaseData> Read(SubscriptionDataSource source)
         {
             string content = string.Empty;
-            using (var reader = this.CreateStreamReader(source))
+            using (var reader = CreateStreamReader(source))
             {
                 // if the reader doesn't have data then we're done with this subscription
                 if (reader == null || reader.EndOfStream)
                 {
-                    this.OnCreateStreamReaderError(this._date, source);
+                    OnCreateStreamReaderError(_date, source);
                     yield break;
                 }
 
@@ -96,11 +96,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     BaseData instance = null;
                     try
                     {
-                        instance = this._factory.Reader(this._config, line, this._date, this._isLiveMode);
+                        instance = _factory.Reader(_config, line, _date, _isLiveMode);
                     }
                     catch (Exception err)
                     {
-                        this.OnReaderError(line, err);
+                        OnReaderError(line, err);
                     }
 
                     if (instance != null && instance.EndTime != default(DateTime))
@@ -122,15 +122,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             switch (subscriptionDataSource.TransportMedium)
             {
                 case SubscriptionTransportMedium.LocalFile:
-                    reader = this.HandleLocalFileSource(subscriptionDataSource);
+                    reader = HandleLocalFileSource(subscriptionDataSource);
                     break;
 
                 case SubscriptionTransportMedium.RemoteFile:
-                    reader = this.HandleRemoteSourceFile(subscriptionDataSource);
+                    reader = HandleRemoteSourceFile(subscriptionDataSource);
                     break;
 
                 case SubscriptionTransportMedium.Rest:
-                    reader = new RestSubscriptionStreamReader(subscriptionDataSource.Source, subscriptionDataSource.Headers, this._isLiveMode);
+                    reader = new RestSubscriptionStreamReader(subscriptionDataSource.Source, subscriptionDataSource.Headers, _isLiveMode);
                     break;
 
                 default:
@@ -187,19 +187,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IStreamReader HandleLocalFileSource(SubscriptionDataSource source)
         {
             // handles zip or text files
-            if (this._dataCacheProvider is DataPointCacheProvider)
+            if (_dataCacheProvider is DataPointCacheProvider)
             {
                 return new LocalFileSubscriptionEnumeratorReader(
-                    this._dataCacheProvider,
-                    this._config,
+                    _dataCacheProvider,
+                    _config,
                     source.Source,
                     null,
-                    this._config.DataStartTime,
-                    this._config.DataEndTime);
+                    _config.DataStartTime,
+                    _config.DataEndTime);
             }
 
             return new LocalFileSubscriptionStreamReader(
-                this._dataCacheProvider,
+                _dataCacheProvider,
                 source.Source,
                 null);
         }
@@ -214,11 +214,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 // this will fire up a web client in order to download the 'source' file to the cache
-                return new RemoteFileSubscriptionStreamReader(this._dataCacheProvider, source.Source, Globals.Cache, source.Headers);
+                return new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache, source.Headers);
             }
             catch (Exception err)
             {
-                this.OnInvalidSource(source, err);
+                OnInvalidSource(source, err);
                 return null;
             }
         }

@@ -80,10 +80,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     $"data point to enumerate.");
             }
 
-            this._dataPointCache = dataPointDictionary;
-            this._config = config;
-            this.FindStartEndDateIndex(out this._startIndex, out this._endIndex, startDate, endDate);
-            this._position = this._startIndex - 1;
+            _dataPointCache = dataPointDictionary;
+            _config = config;
+            FindStartEndDateIndex(out _startIndex, out _endIndex, startDate, endDate);
+            _position = _startIndex - 1;
         }
 
         /// <summary>
@@ -93,12 +93,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             get
             {
-                if (this._position < this._startIndex || this._position > this._endIndex)
+                if (_position < _startIndex || _position > _endIndex)
                 {
                     return null;
                 }
 
-                return this._dataPointCache[this._position].Value;
+                return _dataPointCache[_position].Value;
             }
         }
 
@@ -110,14 +110,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             get
             {
-                return this._position > this._endIndex;
+                return _position > _endIndex;
             }
         }
 
         /// <summary>
         /// Return current value
         /// </summary>
-        object IEnumerator.Current => this.Current;
+        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Dispose method for this enumerator
@@ -133,8 +133,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>True if next element exists; Otherwise False.</returns>
         public bool MoveNext()
         {
-            this._position++;
-            if (this._position < this._startIndex || this._position > this._endIndex)
+            _position++;
+            if (_position < _startIndex || _position > _endIndex)
             {
                 return false;
             }
@@ -147,7 +147,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public void Reset()
         {
-            this._position = this._startIndex - 1;
+            _position = _startIndex - 1;
         }
 
         /// <summary>
@@ -164,19 +164,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             DateTime? endDate = null)
         {
             startIndex = 0;
-            endIndex = this._dataPointCache.Count - 1;
+            endIndex = _dataPointCache.Count - 1;
 
-            if (this._config.Resolution == Resolution.Daily || this._config.Resolution == Resolution.Hour)
+            if (_config.Resolution == Resolution.Daily || _config.Resolution == Resolution.Hour)
             {
-                DateTime startKey = startDate.HasValue && (startDate >= this._dataPointCache[0].Key) ?
-                this._dataPointCache.First(k => k.Key >= startDate.Value).Key :  // Handle if start date is not trade day
-                this._dataPointCache[0].Key;
-                startIndex = this._dataPointCache.IndexOfKey(startKey);
+                DateTime startKey = startDate.HasValue && (startDate >= _dataPointCache[0].Key) ?
+                _dataPointCache.First(k => k.Key >= startDate.Value).Key :  // Handle if start date is not trade day
+                _dataPointCache[0].Key;
+                startIndex = _dataPointCache.IndexOfKey(startKey);
 
-                DateTime endKey = endDate.HasValue && (endDate > this._dataPointCache[this._dataPointCache.Count - 1].Key) ?
-                    this._dataPointCache.Last(k => k.Key <= endDate.Value).Key : // Handle if end date is not trade day
-                    this._dataPointCache[this._dataPointCache.Count - 1].Key;
-                endIndex = this._dataPointCache.IndexOfKey(endKey);
+                DateTime endKey = endDate.HasValue && (endDate > _dataPointCache[_dataPointCache.Count - 1].Key) ?
+                    _dataPointCache.Last(k => k.Key <= endDate.Value).Key : // Handle if end date is not trade day
+                    _dataPointCache[_dataPointCache.Count - 1].Key;
+                endIndex = _dataPointCache.IndexOfKey(endKey);
             }
         }
     }

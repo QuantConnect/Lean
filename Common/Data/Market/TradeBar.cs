@@ -266,7 +266,7 @@ namespace QuantConnect.Data.Market
                 Period = config.Increment
             };
 
-            string[] csv = line.Split(',');
+            var csv = line.ToCsv(6);
             if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
             {
                 // hourly and daily have different time format, and can use slow, robust c# parser.
