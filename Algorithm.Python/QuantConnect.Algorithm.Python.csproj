@@ -104,6 +104,7 @@
     <None Include="FinancialAdvisorDemoAlgorithm.py" />
     <None Include="FractionalQuantityRegressionAlgorithm.py" />
     <None Include="FuturesMomentumAlgorithm.py" />
+    <None Include="GlobalEquityMeanReversionIBSAlpha.py" /> 
     <None Include="HistoryAlgorithm.py" />
     <None Include="IndicatorWarmupAlgorithm.py" />
     <None Include="HourReverseSplitRegressionAlgorithm.py" />
