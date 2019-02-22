@@ -147,46 +147,43 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     if (tick.Time.Month != previousMonth)
                     {
                         // Every quarter, try to generate dividend events
-                        if (tick.Time.Month.IsFinancialStatementMonth())
+                        if (hasDividends && (tick.Time.Month - 1) % 3 == 0)
                         {
-                            if (hasDividends)
-                            {
-                                // Make it so there's a 10% chance that dividends occur if there is no dividend every quarter
-                                if (dividendEveryQuarter || _randomValueGenerator.NextBool(10.0))
-                                {
-                                    do
-                                    {
-                                        previousX += _random.NextDouble() / 10;
-                                        previousPriceFactor = (decimal)Math.Tanh(previousX);
-                                    } while (previousPriceFactor >= 1.0m || previousPriceFactor <= 0m);
-
-                                    dividendDates.Add(_randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5)));
-                                }
-                            }
-                            // Have a 5% chance of a split every month
-                            if (hasSplits && _randomValueGenerator.NextBool(5.0))
+                            // Make it so there's a 10% chance that dividends occur if there is no dividend every quarter
+                            if (dividendEveryQuarter || _randomValueGenerator.NextBool(10.0))
                             {
                                 do
                                 {
-                                    if (previousSplitFactor < 1)
-                                    {
-                                        previousSplitFactor += (decimal)(_random.NextDouble() - _random.NextDouble());
-                                    }
-                                    else
-                                    {
-                                        previousSplitFactor *= (decimal)_random.NextDouble() * _random.Next(1, 5);
-                                    }
-                                } while (previousSplitFactor < 0);
+                                    previousX += _random.NextDouble() / 10;
+                                    previousPriceFactor = (decimal)Math.Tanh(previousX);
+                                } while (previousPriceFactor >= 1.0m || previousPriceFactor <= 0m);
 
-                                splitDates.Add(_randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5)));
+                                dividendDates.Add(_randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5)));
                             }
-                            // 10% chance of being renamed every month
-                            if (hasRename && _randomValueGenerator.NextBool(10.0))
+                        }
+                        // Have a 5% chance of a split every month
+                        if (hasSplits && _randomValueGenerator.NextBool(5.0))
+                        {
+                            do
                             {
-                                CurrentSymbol = _randomValueGenerator.NextSymbol(_settings.SecurityType, _settings.Market);
-                                var randomDate = _randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5));
-                                MapRows.Add(new MapFileRow(randomDate, CurrentSymbol.Value));
-                            }
+                                if (previousSplitFactor < 1)
+                                {
+                                    previousSplitFactor += (decimal)(_random.NextDouble() - _random.NextDouble());
+                                }
+                                else
+                                {
+                                    previousSplitFactor *= (decimal)_random.NextDouble() * _random.Next(1, 5);
+                                }
+                            } while (previousSplitFactor < 0);
+
+                            splitDates.Add(_randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5)));
+                        }
+                        // 10% chance of being renamed every month
+                        if (hasRename && _randomValueGenerator.NextBool(10.0))
+                        {
+                            CurrentSymbol = _randomValueGenerator.NextSymbol(_settings.SecurityType, _settings.Market);
+                            var randomDate = _randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5));
+                            MapRows.Add(new MapFileRow(randomDate, CurrentSymbol.Value));
                         }
 
                         previousMonth = tick.Time.Month;
