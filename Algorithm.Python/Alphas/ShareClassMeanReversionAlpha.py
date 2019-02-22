@@ -12,20 +12,18 @@
 # limitations under the License.
 
 '''
-A number of companies publicly trade two different classes of shares
-in US equity markets. If both assets trade with reasonable volume, then
-the underlying driving forces of each should be similar or the same. Given
-this, we can create a relatively dollar-netural long/short portfolio using
-the dual share classes. Theoretically, any deviation of this portfolio from
-its mean-value should be corrected, and so the motivating idea is based on
-mean-reversion. Using a Simple Moving Average indicator, we can
-compare the value of this portfolio against its SMA and generate insights
-to buy the under-valued symbol and sell the over-valued symbol.
+    A number of companies publicly trade two different classes of shares
+    in US equity markets. If both assets trade with reasonable volume, then
+    the underlying driving forces of each should be similar or the same. Given
+    this, we can create a relatively dollar-netural long/short portfolio using
+    the dual share classes. Theoretically, any deviation of this portfolio from
+    its mean-value should be corrected, and so the motivating idea is based on
+    mean-reversion. Using a Simple Moving Average indicator, we can
+    compare the value of this portfolio against its SMA and generate insights
+    to buy the under-valued symbol and sell the over-valued symbol.
 
-
-
-This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
-sourced so the community and client funds can see an example of an alpha.
+    This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
+    sourced so the community and client funds can see an example of an alpha.
 '''
 
 
@@ -51,7 +49,9 @@ from QuantConnect.Indicators import RollingWindow, SimpleMovingAverage
 
 from datetime import timedelta, datetime
 import numpy as np
-class ShareClassMeanReversionAlphaModel(QCAlgorithmFramework):
+
+
+class ShareClassMeanReversionAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
 
@@ -60,8 +60,8 @@ class ShareClassMeanReversionAlphaModel(QCAlgorithmFramework):
         self.SetWarmUp(20)
 
         ## Setup Universe settings and tickers to be used
-        self.UniverseSettings.Resolution = Resolution.Minute
         tickers = ['VIA','VIAB']
+        self.UniverseSettings.Resolution = Resolution.Minute
         symbols = [ Symbol.Create(ticker, SecurityType.Equity, Market.USA) for ticker in tickers]
         self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))  ## Set $0 fees to mimic High-Frequency Trading
 
@@ -100,7 +100,7 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
         self.short_symbol = self.tickers[1]
         self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Minute
         self.prediction_interval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), 5) ## Arbitrary
-        self.insight_magnitude = 0.01
+        self.insight_magnitude = 0.001
 
     def Update(self, algorithm, data):
         insights = []
@@ -136,19 +136,16 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
             elif self.position_value < self.sma.Current.Value:
                 insights.append(Insight(self.long_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Up, self.insight_magnitude, None))
                 insights.append(Insight(self.short_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Down, self.insight_magnitude, None))        
-
+                
                 ## Reset invested boolean
                 self.invested = True
                 
         ## If the portfolio is invested and crossed back over the SMA, then emit flat insights
-        elif self.invested and self.CrossedMean():
-            insights.append(Insight(self.short_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Flat, self.insight_magnitude, None))
-            insights.append(Insight(self.short_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Flat, self.insight_magnitude, None))
-
+        elif self.invested and self.CrossedMean(): 
             ## Reset invested boolean
             self.invested = False
 
-        return insights
+        return Insight.Group(insights)
         
     def DataEventOccured(self, data, symbol):
         ## Helper function to check to see if data slice will contain a symbol

@@ -36,11 +36,11 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="Alphas\DualShareClassMeanReversionAlpha.py" />
     <Content Include="Alphas\ForexCalendarAlpha.py" />
     <Content Include="Alphas\GlobalEquityMeanReversionIBSAlpha.py" />
     <Content Include="Alphas\MeanReversionLunchBreakAlpha.py" />
     <Content Include="Alphas\RebalancingLeveragedETFAlpha.py" />
+    <Content Include="Alphas\ShareClassMeanReversionAlpha.py" />
     <Content Include="Alphas\TripleLeverageETFPairVolatilityDecayAlpha.py" />
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
     <Content Include="BasicTemplateFuturesFrameworkAlgorithm.py" />
