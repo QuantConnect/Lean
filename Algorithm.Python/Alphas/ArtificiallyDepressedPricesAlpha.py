@@ -19,14 +19,8 @@
     for these conditions and generate insights acoordingly for the top 50
     assets by Dollar Volume using a Coarse Universe selection function.
 
-
-
     This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
-    sourced so the community and client funds can see an example of an alpha. You can read the source code for this
-    alpha on Github in:
-    
-    https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/ArtificiallyDepressedPricesAlpha.cs
-    https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/ArtificiallyDepressedPricesAlpha.py
+    sourced so the community and client funds can see an example of an alpha.
 '''
 
 from clr import AddReference
@@ -50,7 +44,7 @@ import numpy as np
 from datetime import timedelta, datetime
 
 
-class VolumeValueDirectionAlgorithm(QCAlgorithmFramework):
+class ArtificiallyDepressedPricesAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
 
@@ -125,9 +119,8 @@ class VolumeValueAnalysisAlphaModel:
 
             ## Check to see if both current asset price and volume are above their respective SMA values.
             ## If so, emit insights accordingly
-            if symbolData.IsUpTrend():
-                magnitude = symbolData.Magnitude
-                insights.append(Insight(symbolData.Symbol, self.prediction_interval, InsightType.Price, InsightDirection.Up, magnitude, None))
+            if symbolData.IsUpTrend:
+                insights.append(Insight(symbolData.Symbol, self.prediction_interval, InsightType.Price, InsightDirection.Up, symbolData.Magnitude, None))
 
         return insights
         
@@ -138,10 +131,8 @@ class VolumeValueAnalysisAlphaModel:
             changes: The security additions and removals from the algorithm'''
         for removed in changes.RemovedSecurities:
             algorithm.Log('Removed: ' + str(removed.Symbol))
-            symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
-            if symbolData is not None:
-                symbolData.RemoveConsolidators(algorithm)
-
+            self.symbolDataBySymbol.pop(removed.Symbol, None)
+            
 
         # initialize data for added securities
         symbols = [ x.Symbol for x in changes.AddedSecurities ]
@@ -153,7 +144,6 @@ class VolumeValueAnalysisAlphaModel:
         tickers = history.index.levels[0]
         for ticker in tickers:
             symbol = SymbolCache.GetSymbol(ticker)
-
             if symbol not in self.symbolDataBySymbol:
                 
                 ## Create SymbolData objects for any new assets
@@ -167,11 +157,10 @@ class SymbolData:
         self.Symbol = symbol
         self.Close = 0
         self.Volume = 0
-        self.CloseSMA = SimpleMovingAverage(f'{symbol}.CloseSMA({lookback})', lookback)
-        self.VolumeSMA = SimpleMovingAverage(f'{symbol}.VolumeSMA({lookback})', lookback)
-        self.Consolidator = algorithm.ResolveConsolidator(self.Symbol, resolution)
-        algorithm.RegisterIndicator(symbol, self.CloseSMA, self.Consolidator)
-        algorithm.RegisterIndicator(symbol, self.VolumeSMA, self.Consolidator)
+        self.CloseSMA = algorithm.SMA(self.Symbol, lookback)
+        self.VolumeSMA = algorithm.SMA(self.Symbol, lookback)
+        algorithm.RegisterIndicator(self.Symbol, self.CloseSMA)
+        algorithm.RegisterIndicator(self.Symbol, self.VolumeSMA)
 
     def Update(self, data):
         ## Check to see if symbol is in the data dictionary
@@ -184,21 +173,20 @@ class SymbolData:
         self.Volume = bar.Volume
         return True
 
-    def RemoveConsolidators(self, algorithm):
-        algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.Consolidator)
-
     def WarmUpIndicators(self, history):
         for tuple in history.itertuples():
             self.Close = tuple.close
             self.Volume = tuple.volume
             self.CloseSMA.Update(tuple.Index, self.Close)
             self.VolumeSMA.Update(tuple.Index, self.Volume)
-            
+    
+    @property        
     def IsUpTrend(self):
         ## UpTrend is when the close and volume are below their respective means,
         ## and so the projection is that the price will rebound
         return self.Close < self.CloseSMA.Current.Value and \
                self.Volume < self.VolumeSMA.Current.Value
-               
+    
+    @property
     def Magnitude(self):
         return self.CloseSMA.Current.Value - self.Close
