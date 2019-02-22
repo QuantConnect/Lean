@@ -12,48 +12,42 @@
 # limitations under the License.
 
 '''
+    In a perfect market, you could buy 100 EUR worth of USD, sell 100 EUR worth of GBP,
+    and then use the GBP to buy USD and wind up with the same amount in USD as you received when
+    you bought them with EUR. This relationship is expressed by the Triangle Exchange Rate, which is
+
+        Triangle Exchange Rate = (A/B) * (B/C) * (C/A)
     
-In a perfect market, you could buy 100 EUR worth of USD, sell 100 EUR worth of GBP,
-and then use the GBP to buy USD and wind up with the same amount in USD as you received when
-you bought them with EUR. This relationship is expressed by the Triangle Exchange Rate, which is
+    where (A/B) is the exchange rate of A-to-B. In a perfect market, TER = 1, and so when
+    there is a mispricing in the market, then TER will not be 1 and there exists an arbitrage opportunity.
 
-    Triangle Exchange Rate = (A/B) * (B/C) * (C/A)
-    
-where (A/B) is the exchange rate of A-to-B. In a perfect market, TER = 1, and so when
-there is a mispricing in the market, then TER will not be 1 and there exists an arbitrage opportunity.
-
-This Alpha Model is an implementation of this theory.
-
-
-
-This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
-sourced so the community and client funds can see an example of an alpha.
-    
+    This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
+    sourced so the community and client funds can see an example of an alpha. You can read the source code for this
+    alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/TriangleExchangeRateArbitrageAlpha.cs" target="_BLANK">C#</a> or
+    <a target="_BLANK" href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/TriangleExchangeRateArbitrageAlpha.py">Python</a>.
 '''
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
+from QuantConnect.Data.Market import TradeBar
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Risk import *
-from QuantConnect.Orders.Fees import ConstantFeeModel
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, EqualWeightingPortfolioConstructionModel
+from QuantConnect.Orders.Fees import ConstantFeeModel
+from QuantConnect.Orders.Slippage import ConstantSlippageModel
 
 from datetime import datetime, timedelta
 
-class TriangleArbitrageAlgorithm(QCAlgorithmFramework):
+class TriangleExchangeRateArbitrageAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
         
-        self.SetStartDate(2019, 1, 1)   #Set Start Date
+        self.SetStartDate(2019, 2, 1)   #Set Start Date 
         self.SetCash(100000)           #Set Strategy Cash
         
         ## Select trio of currencies to trade where
@@ -64,13 +58,11 @@ class TriangleArbitrageAlgorithm(QCAlgorithmFramework):
         symbols = [ Symbol.Create(currency, SecurityType.Forex, Market.Oanda) for currency in currencies]
 
         ## Manual universe selection with tick-resolution data
-        self.Universe.Resolution = Resolution.Tick
+        self.Universe.Resolution = Resolution.Second
         self.SetUniverseSelection( ManualUniverseSelectionModel(symbols) )
+        
+        self.SetSecurityInitializer(self.InitializeSecurities)
 
-        ## Set $0 fees
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
-
-        ## Set custom Alpha Model
         self.SetAlpha(ForexTriangleArbitrageAlphaModel(currencies, Resolution.Second))
         
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
@@ -79,7 +71,9 @@ class TriangleArbitrageAlgorithm(QCAlgorithmFramework):
         
         self.SetRiskManagement(NullRiskManagementModel())
         
-    
+    # Set our securities to fill a the midpoint of the price.
+    def InitializeSecurities(self, security):
+        security.SetFeeModel( ConstantFeeModel(0) )
     
 class ForexTriangleArbitrageAlphaModel:
     
@@ -104,21 +98,18 @@ class ForexTriangleArbitrageAlphaModel:
         algorithm.Log(str(self.TriangleRate))
         
         ## If the triangle rate is significantly different than 1, then emit insights
-        if self.TriangleRate > 1.00015:
+        if self.TriangleRate > 1.0005:
             insights.append(Insight(self.currency_a, self.insight_period, InsightType.Price, InsightDirection.Up, 0.0001, None))
             insights.append(Insight(self.currency_b, self.insight_period, InsightType.Price, InsightDirection.Down, 0.0001, None))
             insights.append(Insight(self.currency_c, self.insight_period, InsightType.Price, InsightDirection.Up, 0.0001, None))
         
-        return insights
+        return Insight.Group(insights)
 
     def CalculateTriangleRate(self, bar_a, bar_b, bar_c):
         
         ## Bid(Currency A -> Currency B) * Bid(Currency B -> Currency C) * Bid(Currency C -> Currency A)
         ## If exchange rates are priced perfectly, then this yield 1. If it is different than 1, then an arbitrage opportunity exists
-        return bar_a.Bid.Close * (1/bar_b.Bid.Close) * (1/bar_c.Bid.Close)
+        return bar_a.Ask.Close * (1/bar_b.Bid.Close) * (1/bar_c.Ask.Close) 
         
     def OnSecuritiesChanged(self, algorithm, changes):
-        
-        ## Set fees = 0 tom better mimic HFT
-        for security in changes.AddedSecurities:
-            security.FeeModel = ConstantFeeModel(0)
+        pass
