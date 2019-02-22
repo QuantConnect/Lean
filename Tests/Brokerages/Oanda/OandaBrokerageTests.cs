@@ -293,9 +293,7 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             }
             else if (securityType == SecurityType.Cfd)
             {
-                // quote currency
-                var quoteCurrencyCash = balances.Single(x => x.Currency == ticker.Substring(ticker.Length-3));
-                Assert.AreEqual(-Math.Sign(quantity), Math.Sign(quoteCurrencyCash.Amount));
+                Assert.AreEqual(1, balances.Count);
             }
         }
 

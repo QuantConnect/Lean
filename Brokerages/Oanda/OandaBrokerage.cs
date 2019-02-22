@@ -147,32 +147,18 @@ namespace QuantConnect.Brokerages.Oanda
         {
             var balances = _api.GetCashBalance().ToDictionary(x => x.Currency);
 
-            // include cash balances from currency swaps for open Forex/CFD positions
-            foreach (var holding in GetAccountHoldings())
+            // include cash balances from currency swaps for open Forex positions
+            foreach (var holding in GetAccountHoldings().Where(x => x.Symbol.SecurityType == SecurityType.Forex))
             {
-                var securityType = holding.Symbol.SecurityType;
-
+                string baseCurrency;
                 string quoteCurrency;
-                if (securityType == SecurityType.Forex)
-                {
-                    string baseCurrency;
-                    Forex.DecomposeCurrencyPair(holding.Symbol.Value, out baseCurrency, out quoteCurrency);
+                Forex.DecomposeCurrencyPair(holding.Symbol.Value, out baseCurrency, out quoteCurrency);
 
-                    var baseQuantity = holding.Quantity;
-                    CashAmount baseCurrencyAmount;
-                    balances[baseCurrency] = balances.TryGetValue(baseCurrency, out baseCurrencyAmount)
-                        ? new CashAmount(baseQuantity + baseCurrencyAmount.Amount, baseCurrency)
-                        : new CashAmount(baseQuantity, baseCurrency);
-                }
-                else if (securityType == SecurityType.Cfd)
-                {
-                    quoteCurrency = holding.Symbol.Value.Substring(holding.Symbol.Value.Length - 3);
-                }
-                else
-                {
-                    Log.Error($"OandaBrokerage.GetCashBalance(): invalid security type: {securityType}");
-                    continue;
-                }
+                var baseQuantity = holding.Quantity;
+                CashAmount baseCurrencyAmount;
+                balances[baseCurrency] = balances.TryGetValue(baseCurrency, out baseCurrencyAmount)
+                    ? new CashAmount(baseQuantity + baseCurrencyAmount.Amount, baseCurrency)
+                    : new CashAmount(baseQuantity, baseCurrency);
 
                 var quoteQuantity = -holding.Quantity * holding.AveragePrice;
                 CashAmount quoteCurrencyAmount;
