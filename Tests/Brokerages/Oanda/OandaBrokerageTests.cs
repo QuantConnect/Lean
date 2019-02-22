@@ -258,5 +258,46 @@ namespace QuantConnect.Tests.Brokerages.Oanda
             Assert.IsTrue(brokerage.IsConnected);
         }
 
+        [TestCase("EURUSD", SecurityType.Forex, Market.Oanda, 50000)]
+        [TestCase("EURUSD", SecurityType.Forex, Market.Oanda, -50000)]
+        [TestCase("WTICOUSD", SecurityType.Cfd, Market.Oanda, 500)]
+        [TestCase("WTICOUSD", SecurityType.Cfd, Market.Oanda, -500)]
+        public void GetCashBalanceIncludesCurrencySwapsForOpenPositions(string ticker, SecurityType securityType, string market, decimal quantity)
+        {
+            // This test requires a practice account with GBP account currency
+
+            var brokerage = Brokerage;
+            Assert.IsTrue(brokerage.IsConnected);
+
+            var symbol = Symbol.Create(ticker, securityType, market);
+            var order = new MarketOrder(symbol, quantity, DateTime.UtcNow);
+            PlaceOrderWaitForStatus(order);
+
+            var holdings = brokerage.GetAccountHoldings();
+            var balances = brokerage.GetCashBalance();
+
+            Assert.IsTrue(holdings.Count == 1);
+
+            // account currency
+            Assert.IsTrue(balances.Any(x => x.Currency == "GBP"));
+
+            if (securityType == SecurityType.Forex)
+            {
+                // base currency
+                var baseCurrencyCash = balances.Single(x => x.Currency == ticker.Substring(0, 3));
+                Assert.AreEqual(quantity, baseCurrencyCash.Amount);
+
+                // quote currency
+                var quoteCurrencyCash = balances.Single(x => x.Currency == ticker.Substring(3));
+                Assert.AreEqual(-Math.Sign(quantity), Math.Sign(quoteCurrencyCash.Amount));
+            }
+            else if (securityType == SecurityType.Cfd)
+            {
+                // quote currency
+                var quoteCurrencyCash = balances.Single(x => x.Currency == ticker.Substring(ticker.Length-3));
+                Assert.AreEqual(-Math.Sign(quantity), Math.Sign(quoteCurrencyCash.Amount));
+            }
+        }
+
     }
 }

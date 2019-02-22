@@ -649,7 +649,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     else
                     {
                         //Set the cash amount to zero if cash entry not found in the balances
-                        Log.LogHandler.Trace($"BrokerageTransactionHandler.PerformCashSync(): {cash.Symbol} was not found" +
+                        Log.LogHandler.Trace($"BrokerageTransactionHandler.PerformCashSync(): {cash.Symbol} was not found " +
                             "in brokerage cash balance, setting the amount to 0");
                         _algorithm.Portfolio.CashBook[cash.Symbol].SetAmount(0);
                     }

@@ -36,7 +36,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             Log.LogHandler = new CompositeLogHandler(new ILogHandler[] { new ConsoleLogHandler(), new FileLogHandler("log.txt") });
 
             // Directory for the data, output and processed cache:
-            var remoteMask = Config.Get("futures-remote-file-mask", "*.bz2").Replace("{0}", date);
             var remoteDirectory = Config.Get("futures-remote-directory").Replace("{0}", date);
             var sourceDirectory = Config.Get("futures-source-directory").Replace("{0}", date);
             var dataDirectory = Config.Get("data-directory").Replace("{0}", date);
@@ -77,7 +76,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
             // Convert the date:
             var timer = Stopwatch.StartNew();
-            var converter = new AlgoSeekFuturesConverter(resolutionList.ToList() , referenceDate, remoteDirectory, remoteMask, sourceDirectory, dataDirectory);
+            var converter = new AlgoSeekFuturesConverter(resolutionList.ToList() , referenceDate, remoteDirectory, sourceDirectory, dataDirectory);
             converter.Convert();
             Log.Trace(string.Format("AlgoSeekFuturesConverter.Main(): {0} Conversion finished in time: {1}", referenceDate, timer.Elapsed));
 

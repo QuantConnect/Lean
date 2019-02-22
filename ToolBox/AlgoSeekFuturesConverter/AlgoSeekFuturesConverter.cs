@@ -36,7 +36,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         private const int ExecTimeout = 60;// sec
         private readonly string _source;
         private readonly string _remote;
-        private readonly string _remoteMask;
         private readonly string _destination;
         private readonly List<Resolution> _resolutions;
         private readonly DateTime _referenceDate;
@@ -49,11 +48,10 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <param name="remote">Remote directory of the .bz algoseek files</param>
         /// <param name="source">Source directory of the .csv algoseek files</param>
         /// <param name="destination">Destination directory of the processed future files</param>
-        public AlgoSeekFuturesConverter(List<Resolution> resolutions, DateTime referenceDate, string remote, string remoteMask, string source, string destination)
+        public AlgoSeekFuturesConverter(List<Resolution> resolutions, DateTime referenceDate, string remote, string source, string destination)
         {
             _source = source;
             _remote = remote;
-            _remoteMask = remoteMask;
             _referenceDate = referenceDate;
             _destination = destination;
             _resolutions = resolutions;
@@ -65,8 +63,10 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         public void Convert()
         {
             //Get the list of all the files, then for each file open a separate streamer.
-            var files = Directory.EnumerateFiles(_remote, _remoteMask);
-            files = files.Where(x => Path.GetFileNameWithoutExtension(x).ToLower().IndexOf("option") == -1);
+            var files = Directory.EnumerateFiles(_remote);
+
+            files = files.Where(x => (Path.GetExtension(x) == ".gz" || Path.GetExtension(x) == ".bz2") &&
+                !Path.GetFileNameWithoutExtension(x).ToLower().Contains("option"));
 
             Log.Trace("AlgoSeekFuturesConverter.Convert(): Loading {0} AlgoSeekFuturesReader for {1} ", files.Count(), _referenceDate);
 
