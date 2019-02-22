@@ -26,7 +26,10 @@
     alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/TriangleExchangeRateArbitrageAlpha.cs" target="_BLANK">C#</a> or
     <a target="_BLANK" href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/TriangleExchangeRateArbitrageAlpha.py">Python</a>.
 '''
-
+from clr import AddReference
+AddReference("System")
+AddReference("QuantConnect.Common")
+AddReference("QuantConnect.Algorithm")
 
 from System import *
 from QuantConnect import *
@@ -47,7 +50,7 @@ class TriangleExchangeRateArbitrageAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
         
-        self.SetStartDate(2019, 2, 1)   #Set Start Date 
+        self.SetStartDate(2019, 2, 1)   #Set Start Date
         self.SetCash(100000)           #Set Strategy Cash
         
         ## Select trio of currencies to trade where
@@ -58,12 +61,12 @@ class TriangleExchangeRateArbitrageAlgorithm(QCAlgorithmFramework):
         symbols = [ Symbol.Create(currency, SecurityType.Forex, Market.Oanda) for currency in currencies]
 
         ## Manual universe selection with tick-resolution data
-        self.Universe.Resolution = Resolution.Second
+        self.UniverseSettings.Resolution = Resolution.Minute
         self.SetUniverseSelection( ManualUniverseSelectionModel(symbols) )
         
         self.SetSecurityInitializer(self.InitializeSecurities)
 
-        self.SetAlpha(ForexTriangleArbitrageAlphaModel(currencies, Resolution.Second))
+        self.SetAlpha(ForexTriangleArbitrageAlphaModel(Resolution.Minute, symbols))
         
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         
@@ -77,21 +80,24 @@ class TriangleExchangeRateArbitrageAlgorithm(QCAlgorithmFramework):
     
 class ForexTriangleArbitrageAlphaModel:
     
-    def __init__(self, currencies, insight_resolution):
+    def __init__(self, insight_resolution, symbols):
         self.TriangleRate = 0
-        self.currency_a = currencies[0]
-        self.currency_b = currencies[1]
-        self.currency_c = currencies[2]
         self.insight_resolution = insight_resolution
         self.insight_period = Time.Multiply(Extensions.ToTimeSpan(self.insight_resolution), 5)
+        self.symbols = symbols
 
     def Update(self, algorithm, data):
         insights = []
         
+        ## Check to make sure all currency symbols are present
+        for symbol in self.symbols:
+            if not data.Bars.ContainsKey(symbol) or symbol not in data.Keys:
+                return insights
+        
         ## Extract QuoteBars for all three Forex securities
-        bar_a = data[self.currency_a]
-        bar_b = data[self.currency_b]
-        bar_c = data[self.currency_c]
+        bar_a = data[self.symbols[0]]
+        bar_b = data[self.symbols[1]]
+        bar_c = data[self.symbols[2]]
 
         ## Calculate the triangle exchange rate
         self.TriangleRate = self.CalculateTriangleRate(bar_a, bar_b, bar_c)
@@ -99,9 +105,9 @@ class ForexTriangleArbitrageAlphaModel:
         
         ## If the triangle rate is significantly different than 1, then emit insights
         if self.TriangleRate > 1.0005:
-            insights.append(Insight(self.currency_a, self.insight_period, InsightType.Price, InsightDirection.Up, 0.0001, None))
-            insights.append(Insight(self.currency_b, self.insight_period, InsightType.Price, InsightDirection.Down, 0.0001, None))
-            insights.append(Insight(self.currency_c, self.insight_period, InsightType.Price, InsightDirection.Up, 0.0001, None))
+            insights.append(Insight(self.symbols[0], self.insight_period, InsightType.Price, InsightDirection.Up, 0.0001, None))
+            insights.append(Insight(self.symbols[1], self.insight_period, InsightType.Price, InsightDirection.Down, 0.0001, None))
+            insights.append(Insight(self.symbols[2], self.insight_period, InsightType.Price, InsightDirection.Up, 0.0001, None))
         
         return Insight.Group(insights)
 
