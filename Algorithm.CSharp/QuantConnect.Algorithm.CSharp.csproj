@@ -259,7 +259,7 @@
     <Compile Include="OptionChainProviderAlgorithm.cs" />
     <Compile Include="ConstituentsQC500GeneratorAlgorithm.cs" />
     <Compile Include="CustomDataIndicatorExtensionsAlgorithm.cs" />
-    <Compile Include="Benchmarks\ScheduleEventsBenchmark.cs" />
+    <Compile Include="Benchmarks\ScheduledEventsBenchmark.cs" />
     <Compile Include="Benchmarks\HistoryRequestBenchmark.cs" />
     <Compile Include="Benchmarks\CoarseFineUniverseSelectionBenchmark.cs" />
     <Compile Include="Benchmarks\IndicatorRibbonBenchmark.cs" />
