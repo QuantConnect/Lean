@@ -1,18 +1,5 @@
-# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
-# Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 ''' Contingent Claim Analysis is put forth by Robert Merton, recepient of the Noble Prize in Economics in 1997 for his work in contributing to
-    Black-Scholes option pricing theory, which says that the equity valuemarket value of stockholders’ equity is given by the Black-Scholes solution
+    Black-Scholes option pricing theory, which says that the equity market value of stockholders’ equity is given by the Black-Scholes solution
     for a European call option. This equation takes into account Debt, which in CCA is the equivalent to a strike price in the BS solution. The probability
     of default on corporate debt can be calculated as the N(-d2) term, where d2 is a function of the interest rate on debt(µ), face value of the debt (B), value of the firm's assets (V),
     standard deviation of the change in a firm's asset value (σ), the dividend and interest payouts due (D), and the time to maturity of the firm's debt(τ). N(*) is the cumulative
@@ -32,36 +19,24 @@
         σ (sigma) = standard deviation of firm value changes (returns in V)
         τ (tau)  = time to debt’s maturity
         µ (mu) = interest rate
-
-
-
+        
+        
+    
     This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     sourced so the community and client funds can see an example of an alpha.
 '''
 
 
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Indicators")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Indicators import *
-from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Risk import *
-from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework.Alphas import *
-from QuantConnect.Algorithm.Framework.Selection import *
-from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, EqualWeightingPortfolioConstructionModel
 
 import scipy.stats as sp
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
+
+from Risk.NullRiskManagementModel import NullRiskManagementModel
+from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from Execution.ImmediateExecutionModel import ImmediateExecutionModel
+
 
 class ContingentClaimAnalysisDefaultPredictionAlgorithm(QCAlgorithmFramework):
 
@@ -81,16 +56,9 @@ class ContingentClaimAnalysisDefaultPredictionAlgorithm(QCAlgorithmFramework):
 
         ## Set Universe Selection Model
         self.SetUniverseSelection(FineFundamentalUniverseSelectionModel(self.CoarseSelectionFunction, self.FineSelectionFunction, None, None))
-
-        ## Set $0 fees
-        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
-
+        
         ## Set CCA Alpha Model
-        if self.LiveMode:
-            self.start_date = self.Time
-        else:
-            self.start_date = self.StartDate
-        self.SetAlpha(ContingentClaimsAnalysisAlphaModel(start_time = self.start_date))
+        self.SetAlpha(ContingentClaimsAnalysisAlphaModel())
         
         ## Set Portfolio Construction Model
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
@@ -109,13 +77,13 @@ class ContingentClaimAnalysisDefaultPredictionAlgorithm(QCAlgorithmFramework):
         else:
             self.month = self.Time.month
 
-        ## Sort by dollar volume, lowest to highest
+            ## Sort by dollar volume, lowest to highest
             sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
 
-        ## Filter for assets with fundamental data
+            ## Filter for assets with fundamental data
             filtered = [ x.Symbol for x in sortedByDollarVolume ]
         
-        ## Return smallest 750 -- idea is that smaller companies are most likely to go bankrupt than blue-chip companies
+            ## Return smallest 750 -- idea is that smaller companies are most likely to go bankrupt than blue-chip companies
             self.symbols = filtered[:750]
 
             return self.symbols
@@ -150,8 +118,6 @@ class ContingentClaimsAnalysisAlphaModel:
         self.month = None
         self.default_threshold = kwargs['default_threshold'] if 'default_threshold' in kwargs else 0.25
         self.expiry = None
-        self.start_time = kwargs['start_time'] if 'start_time' in kwargs else \
-                            datetime.combine(date.today(), datetime.min.time())
         self.epsilon = kwargs['epsilon'] if 'epsilon' in kwargs else 0.00001     ## This serves as a check to filter out symbols with a default probability of, e.g., 2.89e-20
         
 
@@ -163,7 +129,7 @@ class ContingentClaimsAnalysisAlphaModel:
         V = symbolData.AssetValue
         D = symbolData.DividendAndInterest
         sigma = symbolData.ValuationChangeVolatility
-        tau = symbolData.TimeToMaturity - ((self.start_time - algorithm.Time).days)
+        tau = symbolData.TimeToMaturity
         mu = symbolData.ROA
         
         d2 = ((np.log(V) - np.log(B)) + ((mu - D) - 0.5*sigma**2.0)*tau)/ (sigma*np.sqrt(tau))
@@ -187,22 +153,15 @@ class ContingentClaimsAnalysisAlphaModel:
         
         for symbol, symbolData in self.symbolDataBySymbol.items():
             pod = self.CCADefaultProbability(algorithm, symbolData)
-            algorithm.Log('POB for ' + str(symbol) + ': ' + str(pod))
+            algorithm.Log('P.O.D. for ' + str(symbol) + ': ' + str(pod))
             ## If Prob. of Default is greater than our set threshold, then emit an insight indicating that this asset is trending downward
             if (pod >= self.default_threshold) and (pod != 1.0):
-                insights.append(Insight(symbol, timedelta(days = 30), InsightType.Volatility, InsightDirection.Down, pod, None))
-            
-            ## If Prob. of Default is lower than the threshold and is significant enough to be above epsilon, then emit an insight indicating that this asset is trending upward
-            elif (pod < self.default_threshold) and (pod > self.epsilon):
-                insights.append(Insight(symbol, timedelta(days = 30), InsightType.Volatility, InsightDirection.Up, min(0.75,1-pod), None))
+                insights.append(Insight(symbol, timedelta(days = 30), InsightType.Price, InsightDirection.Down, pod, None))
 
         return insights
     
-    def OnSecuritiesChanged(self, algorithm, changes):
-        '''Event fired each time the we add/remove securities from the data feed
-        Args:
-            algorithm: The algorithm instance that experienced the change in securities
-            changes: The security additions and removals from the algorithm'''
+    def OnSecuritiesChanged(self, algorithm, changes): 
+        
         for removed in changes.RemovedSecurities:
             algorithm.Log('Removed: ' + str(removed.Symbol))
             symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
@@ -231,7 +190,7 @@ class ContingentClaimsAnalysisAlphaModel:
                     self.symbolDataBySymbol[symbol] = symbolData
 
 class SymbolData:
-    '''Contains data specific to a symbol required by this model'''
+    
     def __init__(self, symbol):
         self.Symbol = symbol
         self.V = 0
