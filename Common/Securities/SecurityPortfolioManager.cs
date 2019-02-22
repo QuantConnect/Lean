@@ -369,19 +369,26 @@ namespace QuantConnect.Securities
             get
             {
                 // we can't include forex in this calculation since we would be double accounting with respect to the cash book
-                // we exclude futures as they are calculated separately
-                decimal totalHoldingsValueWithoutForexAndCrypto = 0;
+                // we also exclude futures and CFD as they are calculated separately
+                decimal totalHoldingsValueWithoutForexCryptoFutureCfd = 0;
                 foreach (var kvp in Securities)
                 {
                     var position = kvp.Value;
                     if (position.Type != SecurityType.Forex && position.Type != SecurityType.Crypto &&
-                        position.Type != SecurityType.Future) totalHoldingsValueWithoutForexAndCrypto += position.Holdings.HoldingsValue;
+                        position.Type != SecurityType.Future && position.Type != SecurityType.Cfd)
+                    {
+                        totalHoldingsValueWithoutForexCryptoFutureCfd += position.Holdings.HoldingsValue;
+                    }
                 }
 
-                var totalFuturesHoldingsValue = Securities.Where(x => x.Value.Type == SecurityType.Future)
-                                                           .Sum(x => x.Value.Holdings.UnrealizedProfit);
+                var totalFuturesAndCfdHoldingsValue = Securities
+                    .Where(x => x.Value.Type == SecurityType.Future || x.Value.Type == SecurityType.Cfd)
+                    .Sum(x => x.Value.Holdings.UnrealizedProfit);
 
-                return CashBook.TotalValueInAccountCurrency + UnsettledCashBook.TotalValueInAccountCurrency + totalHoldingsValueWithoutForexAndCrypto + totalFuturesHoldingsValue;
+                return CashBook.TotalValueInAccountCurrency +
+                       UnsettledCashBook.TotalValueInAccountCurrency +
+                       totalHoldingsValueWithoutForexCryptoFutureCfd +
+                       totalFuturesAndCfdHoldingsValue;
             }
         }
 
