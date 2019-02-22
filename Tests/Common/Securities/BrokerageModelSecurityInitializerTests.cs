@@ -51,8 +51,8 @@ namespace QuantConnect.Tests.Common.Securities
         private readonly SubscriptionDataConfig _quoteBarConfig = new SubscriptionDataConfig(typeof(QuoteBar),
                                                                                      Symbols.EURUSD,
                                                                                      Resolution.Second,
-                                                                                     TimeZones.NewYork,
-                                                                                     TimeZones.NewYork,
+                                                                                     DateTimeZone.ForOffset(Offset.FromHours(-5)),
+                                                                                     DateTimeZone.ForOffset(Offset.FromHours(-5)),
                                                                                      false,
                                                                                      false,
                                                                                      false,
@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Common.Securities
             _algo.HistoryProvider = historyProvider;
             _algo.SubscriptionManager.SetDataManager(new DataManagerStub(_algo));
             _tradeBarSecurity = new Security(
-                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 _tradeBarConfig,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Common.Securities
             );
 
             _quoteBarSecurity = new Security(
-                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.ForOffset(Offset.FromHours(-5))),
                 _quoteBarConfig,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
