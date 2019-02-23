@@ -15,14 +15,17 @@ from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Orders import *
-from QuantConnect.Algorithm import QCAlgorithm
+from QuantConnect.Data.UniverseSelection import *
+from QuantConnect.Orders.Fees import ConstantFeeModel
 from QuantConnect.Algorithm.Framework import QCAlgorithmFramework
-
-from datetime import timedelta, datetime
+from QuantConnect.Algorithm.Framework.Alphas import *
+from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
+from QuantConnect.Algorithm.Framework.Selection import ManualUniverseSelectionModel
+from datetime import timedelta
 
 #
 # Leveraged ETFs (LETF) promise a fixed leverage ratio with respect to an underlying asset or an index.
@@ -33,57 +36,56 @@ from datetime import timedelta, datetime
 # This alpha emits short-biased insight to capitalize on volatility decay for each listed pair of TL-ETFs, by rebalancing the
 # ETFs with equal weights each day.
 #
-# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and 
-# client funds can see an example of an alpha. 
-#
+# <br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
+# You can read the source code for this alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/TripleLeverageETFPairVolatilityDecayAlpha.cs">C#</a>
+# or <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/TripleLeverageETFPairVolatilityDecayAlpha.py">Python</a>.
+# 
 
-class TripleLeveragedETFPairVolatilityDecayAlphaAlgorithm(QCAlgorithmFramework):
+class TripleLeverageETFPairVolatilityDecayAlpha(QCAlgorithmFramework):
 
     def Initialize(self):
 
         self.SetStartDate(2018, 1, 1)
-        
+
         self.SetCash(100000)
-        
+
         # Set zero transaction fees
         self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
-        
+
         # 3X ETF pair tickers            
         ultraLong = Symbol.Create("UGLD", SecurityType.Equity, Market.USA) 
         ultraShort = Symbol.Create("DGLD", SecurityType.Equity, Market.USA) 
-            
+
         # Manually curated universe
         self.UniverseSettings.Resolution = Resolution.Daily
         self.SetUniverseSelection(ManualUniverseSelectionModel([ultraLong, ultraShort]))
-        
+
         # Select the demonstration alpha model
         self.SetAlpha(RebalancingTripleLeveragedETFAlphaModel(ultraLong, ultraShort))
-        
+
         # Select our default model types
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        self.SetExecution(ImmediateExecutionModel())
-        self.SetRiskManagement(NullRiskManagementModel())
 
 
 class RebalancingTripleLeveragedETFAlphaModel(AlphaModel):
     '''
         Rebalance a pair of 3x leveraged ETFs and predict that the value of both ETFs in each pair will decrease.
     '''
-    
-    def __init__(self, ultraLong, ultraShort): 
-        self.Name = "RebalancingTripleLeveragedETFAlphaModel"
+
+    def __init__(self, ultraLong, ultraShort):
+        # Giving an insight period 1 days.
+        self.period = timedelta(1)
+
+        self.magnitude = 0.001
         self.ultraLong = ultraLong
         self.ultraShort = ultraShort
 
+        self.Name = "RebalancingTripleLeveragedETFAlphaModel"
+
     def Update(self, algorithm, data):
-        '''Emit an insight each day.'''
-        insights = []
-        magnitude = 0.001
 
-        # Giving an insight period 1 days.
-        period = timedelta(days=1) 
-        
-        insights.append(Insight.Price(self.ultraLong, period, InsightDirection.Down, magnitude))
-        insights.append(Insight.Price(self.ultraShort, period, InsightDirection.Down, magnitude))
-
-        return Insight.Group( insights )
+        return Insight.Group(
+            [
+                Insight.Price(self.ultraLong, self.period, InsightDirection.Down, self.magnitude),
+                Insight.Price(self.ultraShort, self.period, InsightDirection.Down, self.magnitude)
+            ] )
