@@ -100,13 +100,10 @@ class VolumeValueAnalysisAlphaModel:
         '''
             Initialize variables and Symbol Data dictionary to use in our Alpha Model
         '''
-        self.lookback = kwargs['lookback'] if 'lookback' in kwargs else 10          ## This will set the SMA period, so the default is a 5-day SMA
+        self.lookback = kwargs['lookback'] if 'lookback' in kwargs else 5          ## This will set the SMA period, so the default is a 5-period SMA
         self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Daily
         self.prediction_interval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), 3) ## Arbitrary
         self.symbolDataBySymbol = {}
-        self.close = {}
-        self.volume = {}
-        
         
     def Update(self, algorithm, data):
         insights = []
@@ -116,7 +113,7 @@ class VolumeValueAnalysisAlphaModel:
 
             # Update the symbolData with new data 
             if not symbolData.Update(data): return insights
-
+            
             ## Check to see if both current asset price and volume are above their respective SMA values.
             ## If so, emit insights accordingly
             if symbolData.IsUpTrend:
@@ -131,8 +128,7 @@ class VolumeValueAnalysisAlphaModel:
             changes: The security additions and removals from the algorithm'''
         for removed in changes.RemovedSecurities:
             algorithm.Log('Removed: ' + str(removed.Symbol))
-            self.symbolDataBySymbol.pop(removed.Symbol, None)
-            
+            symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
 
         # initialize data for added securities
         symbols = [ x.Symbol for x in changes.AddedSecurities ]
@@ -157,10 +153,10 @@ class SymbolData:
         self.Symbol = symbol
         self.Close = 0
         self.Volume = 0
-        self.CloseSMA = algorithm.SMA(self.Symbol, lookback)
-        self.VolumeSMA = algorithm.SMA(self.Symbol, lookback)
-        algorithm.RegisterIndicator(self.Symbol, self.CloseSMA)
-        algorithm.RegisterIndicator(self.Symbol, self.VolumeSMA)
+        self.CloseSMA = SimpleMovingAverage(f'{symbol}.CloseSMA({lookback})', lookback)
+        self.VolumeSMA = SimpleMovingAverage(f'{symbol}.VolumeSMA({lookback})', lookback)
+        algorithm.RegisterIndicator(symbol, self.CloseSMA)
+        algorithm.RegisterIndicator(symbol, self.VolumeSMA)
 
     def Update(self, data):
         ## Check to see if symbol is in the data dictionary
@@ -171,6 +167,8 @@ class SymbolData:
         bar = data[self.Symbol]
         self.Close = bar.Close
         self.Volume = bar.Volume
+        self.CloseSMA.Update(bar.EndTime, bar.Close)
+        self.VolumeSMA.Update(bar.EndTime, bar.Volume)
         return True
 
     def WarmUpIndicators(self, history):
