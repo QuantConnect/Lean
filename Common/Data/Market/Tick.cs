@@ -229,7 +229,7 @@ namespace QuantConnect.Data.Market
                         var csv = line.ToCsv(6);
                         Symbol = config.Symbol;
                         Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
-                        Value = config.GetNormalizedPrice(csv[1].ToDecimal() / scaleFactor);
+                        Value = csv[1].ToDecimal() / scaleFactor;
                         TickType = TickType.Trade;
                         Quantity = csv[2].ToDecimal();
                         if (csv.Count > 3)
@@ -295,7 +295,7 @@ namespace QuantConnect.Data.Market
 
                         if (TickType == TickType.Trade)
                         {
-                            Value = config.GetNormalizedPrice(csv[1].ToDecimal()/scaleFactor);
+                            Value = csv[1].ToDecimal()/scaleFactor;
                             Quantity = csv[2].ToDecimal();
                             Exchange = csv[3];
                             SaleCondition = csv[4];
@@ -309,12 +309,12 @@ namespace QuantConnect.Data.Market
                         {
                             if (csv[1].Length != 0)
                             {
-                                BidPrice = config.GetNormalizedPrice(csv[1].ToDecimal()/scaleFactor);
+                                BidPrice = csv[1].ToDecimal()/scaleFactor;
                                 BidSize = csv[2].ToDecimal();
                             }
                             if (csv[3].Length != 0)
                             {
-                                AskPrice = config.GetNormalizedPrice(csv[3].ToDecimal()/scaleFactor);
+                                AskPrice = csv[3].ToDecimal()/scaleFactor;
                                 AskSize = csv[4].ToDecimal();
                             }
                             Exchange = csv[5];
