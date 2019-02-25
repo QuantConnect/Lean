@@ -20,8 +20,6 @@
     to trade with, and then uses the Standard Deviation of the 100 most-recent closing prices to determine
     which price movements are outliers that warrant emitting insights.
 
-
-
     This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     sourced so the community and client funds can see an example of an alpha.
 '''
@@ -57,11 +55,11 @@ class PriceGapMeanReversionAlgorithm(QCAlgorithmFramework):
 
         ## Initialize variables to be used in controlling frequency of universe selection
         self.week = None
-        self.symbols = None
+        self.symbols = None 
         
+        self.SetWarmUp(100)
         
-        ## Manual Universe Selection
-        self.UniverseSettings.Resolution = Resolution.Minute
+        ## Manual Universe Selection 
         self.SetUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseSelectionFunction))
         
         ## Set trading fees to $0
@@ -79,7 +77,6 @@ class PriceGapMeanReversionAlgorithm(QCAlgorithmFramework):
         ## Set Risk Management Model
         self.SetRiskManagement(NullRiskManagementModel())
         
-    
     
     def CoarseSelectionFunction(self, coarse):
         ## If it isn't a new week, return the same symbols
@@ -118,87 +115,70 @@ class PriceGapMeanReversionAlphaModel:
             
             ## Evaluate whether or not the price jump is expected to rebound up or return down, and emit insights accordingly
             if symbolData.DownTrend:
-                insights.append(Insight(symbol, self.prediction_interval, InsightType.Volatility, InsightDirection.Down, -symbolData.PriceJump, None))
+                insights.append(Insight(symbol, self.prediction_interval, InsightType.Price, InsightDirection.Down, symbolData.PriceJump, None))
             elif symbolData.UpTrend:
-                insights.append(Insight(symbol, self.prediction_interval, InsightType.Volatility, InsightDirection.Up, abs(symbolData.PriceJump), None))
+                insights.append(Insight(symbol, self.prediction_interval, InsightType.Price, InsightDirection.Up, symbolData.PriceJump, None))
             
         return insights
 
-
     def OnSecuritiesChanged(self, algorithm, changes):
-        
-        ## Make a history request for all securities that have been added
         history_request_symbols = [ x.Symbol for x in changes.AddedSecurities ]
-        history_df = algorithm.History(history_request_symbols, 100, Resolution.Minute)
-        
+        history_df = algorithm.History(history_request_symbols, 100, self.resolution)
 
         for security in changes.AddedSecurities:
             if str(security.Symbol) not in history_df.index.get_level_values(0):
                 continue
             history = history_df.loc[str(security.Symbol)]
 
-            ## Create and initialize SymbolData objects
-            symbolData = SymbolData(security)
+             ## Create and initialize SymbolData objects
+            symbolData = SymbolData(algorithm, security)
             self.symbolDataBySymbol[security.Symbol] = symbolData
             for tuple in history.itertuples():
                 bar = TradeBar(tuple.Index, security.Symbol, tuple.open, tuple.high, tuple.low, tuple.close, tuple.volume)
                 symbolData.Initialize(bar, security)
-                
-    
 
 class SymbolData:
-    def __init__(self, security):
-        self.Symbol = security.Symbol
+    def __init__(self, algorithm, security):
+        self.symbol = security.Symbol
         self.volatility = 0
         self.close = 0
-        self.window = RollingWindow[TradeBar](2)
-        self.delta = []
+        self.last_price = 0
+        self.volatility = algorithm.STD(self.symbol, 100)
+        self.price_jump = 0
 
     def Update(self, data, security):
 
         ## Check for any data events that would return a NoneBar in the Alpha Model Update() method
-        if not data.Bars.ContainsKey(self.Symbol) or self.Symbol not in data.Keys:
-            return False
-        
-        ## Update Rolling Window and volatility
-        self.window.Add(data[security.Symbol])
-        self.close = data[security.Symbol].Close
-        if self.window.Count > 1:
-            self.delta.append((self.window[0].Open / self.window[1].Close) - 1)
-            if len(self.delta) > 100:
-                self.delta.pop(0)
-            self.volatility = np.std(self.delta)
+        if not data.Bars.ContainsKey(self.symbol) or data.Bars[self.symbol].Close == 0:
+            return False 
             
+        price = data.Bars[self.symbol].Close
+        self.last_price = self.close
+        self.close = price
+        self.price_jump = (self.close / self.last_price) - 1
+        
         return True
-
-    # Initialize Rolling Window and volatility
-    def Initialize(self, bar, security):
-        self.window.Add(bar)
-        self.close = bar.Close
-        if self.window.Count > 1:
-            self.delta.append((self.window[0].Open / self.window[1].Close) - 1)
-            if len(self.delta) > 100:
-                self.delta.pop(0)
+        
+    def Initialize(self, data, security):
+        
+        self.volatility.Update(data.Time, data.Close)
+        price = data.Close
+        if self.last_price == 0:
+            self.last_price = price
+            self.close = price
         else:
-            self.delta.append(0)
-        self.volatility = np.std(self.delta)
-
-
-
-    @property
-    def Volatility(self):
-        return self.volatility
+            self.last_price = self.close
+            self.close = price
+        
 
     @property
     def PriceJump(self):
-        return (self.window[0].Open / self.window[1].Close) - 1
+        return (self.close / self.last_price) - 1
 
     @property
     def DownTrend(self):
-        price_jump = (self.window[0].Open / self.window[1].Close) - 1
-        return (abs(price_jump) > 3*self.volatility) and (price_jump > 0)
+        return (abs(100*self.price_jump) > 3*self.volatility.Current.Value) and (self.price_jump > 0)
 
     @property
     def UpTrend(self):
-        price_jump = (self.window[0].Open / self.window[1].Close) - 1
-        return (abs(price_jump) > 3*self.volatility) and (price_jump < 0)
+        return (abs(100*self.price_jump) > 3*self.volatility.Current.Value) and (self.price_jump < 0)
