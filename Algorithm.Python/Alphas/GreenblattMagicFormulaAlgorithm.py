@@ -1,10 +1,22 @@
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Algorithm.Framework")
-
 
 from System import *
 from QuantConnect import *
@@ -15,20 +27,28 @@ from QuantConnect.Python import PythonQuandl
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Indicators import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
-from itertools import chain
-from math import ceil
 
 from datetime import timedelta, datetime
-from decimal import Decimal
-from collections import deque
 
-### Pick stocks according to Joel Greenblatt's Magic Formula
+# 
+# This alpha picks stocks according to Joel Greenblatt's Magic Formula.
+# First, each stock is ranked depending on the relative value of the ratio EV/EBITDA. For example, a stock
+# that has the lowest EV/EBITDA ratio in the security universe receives a score of one while a stock that has 
+# the tenth lowest EV/EBITDA score would be assigned 10 points.
+#
+# Then, each stock is ranked and given a score for the second valuation ratio, Return on Capital (ROC).
+# Similarly, a stock that has the highest ROC value in the universe gets one score point.
+# The stocks that receive the lowest combined score are chosen for insights.
+#
+# Source: Greenblatt, J. (2010) The Little Book That Beats the Market
+#
+
 class MagicFormulaAlpha(QCAlgorithmFramework):
     ''' Alpha Streams: Benchmark Alpha: Pick stocks according to Joel Greenblatt's Magic Formula'''
 
     def Initialize(self):
 
-        self.SetStartDate(2016, 1, 1)
+        self.SetStartDate(2018, 1, 1)
         self.SetCash(100000)
 
         # select stocks using MagicFormulaUniverseSelectionModel
@@ -39,6 +59,11 @@ class MagicFormulaAlpha(QCAlgorithmFramework):
 
         # Equally weigh securities in portfolio, based on insights
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        
+        # Select our default model types
+        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+        self.SetExecution(ImmediateExecutionModel())
+        self.SetRiskManagement(NullRiskManagementModel())
         
 
 class MagicFormulaAlphaModel(AlphaModel):
