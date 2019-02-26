@@ -46,7 +46,7 @@ from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, EqualWei
 import numpy as np
 from datetime import timedelta, datetime
 
-class PriceGapMeanReversionAlgorithm(QCAlgorithmFramework):
+class PriceGapMeanReversionAlpha(QCAlgorithmFramework):
 
     def Initialize(self):
         
