@@ -143,6 +143,22 @@ namespace QuantConnect.Tests.Indicators
             TestComparisonOperators<double>();
         }
 
+        [Test]
+        public void EqualsMethodShouldNotThrowExceptions()
+        {
+            var indicator = new TestIndicator();
+            var res = true;
+            try
+            {
+                res = indicator.Equals(new Exception(""));
+            }
+            catch (InvalidCastException)
+            {
+                Assert.Fail();
+            }
+            Assert.IsFalse(res);
+        }
+
         private static void TestComparisonOperators<TValue>()
         {
             var indicator = new TestIndicator();
