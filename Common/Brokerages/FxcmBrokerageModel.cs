@@ -191,6 +191,18 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Gets a new settlement model for the security
+        /// </summary>
+        /// <param name="security">The security to get a settlement model for</param>
+        /// <returns>The settlement model for this brokerage</returns>
+        public override ISettlementModel GetSettlementModel(Security security)
+        {
+            return security.Type == SecurityType.Cfd
+                ? new AccountCurrencyImmediateSettlementModel() :
+                (ISettlementModel)new ImmediateSettlementModel();
+        }
+
+        /// <summary>
         /// Validates limit/stopmarket order prices, pass security.Price for limit/stop if n/a
         /// </summary>
         private static bool IsValidOrderPrices(Security security, OrderType orderType, OrderDirection orderDirection, decimal stopPrice, decimal limitPrice, ref BrokerageMessageEvent message)
