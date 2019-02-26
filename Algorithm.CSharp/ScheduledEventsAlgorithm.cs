@@ -61,6 +61,12 @@ namespace QuantConnect.Algorithm.CSharp
                 Log("EveryDay.SPY 10 min before close: Fired at: " + Time);
             });
 
+            // schedule an event to fire on a single day of the week
+            Schedule.On(DateRules.Every(DayOfWeek.Wednesday), TimeRules.At(12, 0), () =>
+            {
+                Log("Wed at 12pm: Fired at: " + Time);
+            });
+
             // schedule an event to fire on certain days of the week
             Schedule.On(DateRules.Every(DayOfWeek.Monday, DayOfWeek.Friday), TimeRules.At(12, 0), () =>
             {
