@@ -44,7 +44,7 @@ import numpy as np
 from datetime import timedelta, datetime
 
 
-class ArtificiallyDepressedPricesAlgorithm(QCAlgorithmFramework):
+class ArtificiallyDepressedPricesAlpha(QCAlgorithmFramework):
 
     def Initialize(self):
 
