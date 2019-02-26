@@ -34,7 +34,7 @@ from scipy import stats
 from scipy.stats import kendalltau 
 from datetime import timedelta, datetime
 
-class EnergyETFPairsTradingAlgorithm(QCAlgorithmFramework):
+class EnergyETFPairsTradingAlpha(QCAlgorithmFramework):
 
     def Initialize(self):
         
