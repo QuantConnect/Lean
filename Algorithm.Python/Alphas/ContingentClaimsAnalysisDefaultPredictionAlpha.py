@@ -38,7 +38,7 @@ from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPor
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 
 
-class ContingentClaimAnalysisDefaultPredictionAlgorithm(QCAlgorithmFramework):
+class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithmFramework):
 
     def Initialize(self):
 
