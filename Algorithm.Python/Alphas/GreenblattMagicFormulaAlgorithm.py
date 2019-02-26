@@ -20,15 +20,14 @@ AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Orders import *
-from QuantConnect.Algorithm import QCAlgorithm
-from QuantConnect.Python import PythonQuandl
-
+from QuantConnect.Orders.Fees import ConstantFeeModel
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Indicators import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
 from datetime import timedelta, datetime
+from math import ceil
+from itertools import chain
 
 # 
 # This alpha picks stocks according to Joel Greenblatt's Magic Formula.
@@ -42,6 +41,8 @@ from datetime import timedelta, datetime
 #
 # Source: Greenblatt, J. (2010) The Little Book That Beats the Market
 #
+# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
+# 
 
 class MagicFormulaAlpha(QCAlgorithmFramework):
     ''' Alpha Streams: Benchmark Alpha: Pick stocks according to Joel Greenblatt's Magic Formula'''
@@ -50,23 +51,21 @@ class MagicFormulaAlpha(QCAlgorithmFramework):
 
         self.SetStartDate(2018, 1, 1)
         self.SetCash(100000)
+        
+        #Set zero transaction fees
+        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
 
         # select stocks using MagicFormulaUniverseSelectionModel
-        self.SetUniverseSelection(MagicFormulaUniverseSelectionModel())
+        self.SetUniverseSelection(GreenBlattMagicFormulaUniverseSelectionModel())
 
         # Use MagicFormulaAlphaModel to establish insights
-        self.SetAlpha(MagicFormulaAlphaModel())
+        self.SetAlpha(RateOfChangeAlphaModel())
 
         # Equally weigh securities in portfolio, based on insights
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         
-        # Select our default model types
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        self.SetExecution(ImmediateExecutionModel())
-        self.SetRiskManagement(NullRiskManagementModel())
-        
 
-class MagicFormulaAlphaModel(AlphaModel):
+class RateOfChangeAlphaModel(AlphaModel):
     '''Uses Rate of Change (ROC) to create magnitude prediction for insights.'''
 
     def __init__(self, *args, **kwargs): 
@@ -142,7 +141,7 @@ class SymbolData:
         return '{}: {:.2%}'.format(self.ROC.Name, (1 + self.Return)**252 - 1)
         
 
-class MagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionModel):
+class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionModel):
     '''Defines a universe according to Joel Greenblatt's Magic Formula, as a universe selection model for the framework algorithm. 
        From the universe QC500, stocks are ranked using the valuation ratios, Enterprise Value to EBITDA (EV/EBITDA) and Return on Assets (ROA).
     '''
@@ -170,12 +169,8 @@ class MagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionModel):
         The stocks must have fundamental data
         The stock must have positive previous-day close price
         The stock must have positive volume on the previous trading day'''
-        coarse = list(coarse)
-
-        if len(coarse) == 0:
-            return self.symbols
-
-        month = coarse[0].EndTime.month
+        
+        month = algorithm.Time.month
         if month == self.lastMonth:
             return self.symbols
 
