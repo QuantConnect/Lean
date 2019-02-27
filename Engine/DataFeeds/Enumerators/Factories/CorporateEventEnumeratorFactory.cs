@@ -35,6 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// Creates a new <see cref="AuxiliaryDataEnumerator"/> that will hold the
         /// corporate event providers
         /// </summary>
+        /// <param name="rawDataEnumerator">The underlying raw data enumerator</param>
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
         /// <param name="factorFileProvider">Used for getting factor files</param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
@@ -42,6 +43,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         /// <returns>The new auxiliary data enumerator</returns>
         public static IEnumerator<BaseData> CreateEnumerators(
+            IEnumerator<BaseData> rawDataEnumerator,
             SubscriptionDataConfig config,
             IFactorFileProvider factorFileProvider,
             ITradableDatesNotifier tradableDayNotifier,
@@ -65,7 +67,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 tradableDayNotifier,
                 includeAuxiliaryData);
 
-            return enumerator;
+            var priceScaleFactorEnumerator = new PriceScaleFactorEnumerator(
+                rawDataEnumerator,
+                config,
+                factorFile);
+
+            return new SynchronizingEnumerator(priceScaleFactorEnumerator, enumerator);
         }
 
         private static MapFile GetMapFileToUse(
