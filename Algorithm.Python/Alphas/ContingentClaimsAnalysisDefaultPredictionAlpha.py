@@ -25,17 +25,25 @@
     This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     sourced so the community and client funds can see an example of an alpha.
 '''
+from clr import AddReference
+AddReference("System")
+AddReference("QuantConnect.Common")
+AddReference("QuantConnect.Algorithm")
 
-
+from System import *
+from QuantConnect import *
+from QuantConnect.Orders import *
+from QuantConnect.Algorithm import QCAlgorithm
+from Risk.NullRiskManagementModel import NullRiskManagementModel
+from Execution.ImmediateExecutionModel import ImmediateExecutionModel
+from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
 
 import scipy.stats as sp
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-from Risk.NullRiskManagementModel import NullRiskManagementModel
-from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
-from Execution.ImmediateExecutionModel import ImmediateExecutionModel
+
 
 
 class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithmFramework):
@@ -116,27 +124,7 @@ class ContingentClaimsAnalysisAlphaModel:
     def __init__(self, *args, **kwargs):
         self.symbolDataBySymbol = {}
         self.month = None
-        self.default_threshold = kwargs['default_threshold'] if 'default_threshold' in kwargs else 0.25
-        self.expiry = None
-        self.epsilon = kwargs['epsilon'] if 'epsilon' in kwargs else 0.00001     ## This serves as a check to filter out symbols with a default probability of, e.g., 2.89e-20
-        
-
-    ## This model applies options pricing theory, Black-Scholes specifically, to fundamental data
-    ## to give the probability of a default
-    def CCADefaultProbability(self, algorithm, symbolData):
-        
-        B = symbolData.DebtValue
-        V = symbolData.AssetValue
-        D = symbolData.DividendAndInterest
-        sigma = symbolData.ValuationChangeVolatility
-        tau = symbolData.TimeToMaturity
-        mu = symbolData.ROA
-        
-        d2 = ((np.log(V) - np.log(B)) + ((mu - D) - 0.5*sigma**2.0)*tau)/ (sigma*np.sqrt(tau))
-        probability_of_default = sp.norm.cdf(-d2)
-            
-        return probability_of_default
-
+        self.default_threshold = kwargs['default_threshold'] if 'default_threshold' in kwargs else 0.25        
 
     def Update(self, algorithm, data):
         
@@ -152,8 +140,8 @@ class ContingentClaimsAnalysisAlphaModel:
         insights = []
         
         for symbol, symbolData in self.symbolDataBySymbol.items():
-            pod = self.CCADefaultProbability(algorithm, symbolData)
-            algorithm.Log('P.O.D. for ' + str(symbol) + ': ' + str(pod))
+            pod = symbolData.ProbabilityOfDefault
+
             ## If Prob. of Default is greater than our set threshold, then emit an insight indicating that this asset is trending downward
             if (pod >= self.default_threshold) and (pod != 1.0):
                 insights.append(Insight(symbol, timedelta(days = 30), InsightType.Price, InsightDirection.Down, pod, None))
@@ -173,57 +161,40 @@ class ContingentClaimsAnalysisAlphaModel:
             if symbol not in self.symbolDataBySymbol:
                 
                 ## Retrieve fundamentals data necessary for our CCA valuation
-                if (algorithm.Securities[symbol].Fundamentals.FinancialStatements is not None) and (algorithm.Securities[symbol].Fundamentals.OperationRatios is not None):
-                    x = algorithm.Securities[symbol].Fundamentals
-                    fundamentals = [x.FinancialStatements.BalanceSheet.TotalAssets.OneMonth,
-                                    x.FinancialStatements.BalanceSheet.TotalAssets.ThreeMonths,
-                                    x.FinancialStatements.BalanceSheet.TotalAssets.SixMonths,
-                                    x.FinancialStatements.BalanceSheet.TotalAssets.TwelveMonths,
-                                    x.FinancialStatements.BalanceSheet.CurrentLiabilities.TwelveMonths,
-                                    x.FinancialStatements.BalanceSheet.InterestPayable.TwelveMonths,
-                                    x.OperationRatios.TotalAssetsGrowth.OneYear,
-                                    x.FinancialStatements.IncomeStatement.GrossDividendPayment.TwelveMonths,
-                                    x.OperationRatios.ROA.OneYear]
-                    
-                    symbolData = SymbolData(symbol)
-                    symbolData.PopulateData(algorithm, fundamentals)
-                    self.symbolDataBySymbol[symbol] = symbolData
+                security = algorithm.Securities[symbol]
+                if security.Fundamentals is None or security.Fundamentals.FinancialStatements is None or security.Fundamentals.OperationRatios is None:
+                    continue
+                symbolData = SymbolData(security)
+                self.symbolDataBySymbol[symbol] = symbolData
 
 class SymbolData:
     
-    def __init__(self, symbol):
-        self.Symbol = symbol
-        self.V = 0
-        self.B = 0
-        self.sigma = 0
-        self.D = 0
-        self.mu = 0
-        self.tau = 360                      ## Days
-        
-    def PopulateData(self, algorithm, fundamentals):
-        self.V = fundamentals[3]
-        self.B = fundamentals[4]
-        self.D = fundamentals[5] + fundamentals[7]
-        self.mu = fundamentals[8]
-        series = pd.Series(fundamentals[0:4])
+    def __init__(self, security):
+        statement = security.Fundamentals.FinancialStatements
+        sheet = statement.BalanceSheet
+        total_assets = sheet.TotalAssets
+
+        self.tau = 360   ## Days
+        self.Symbol = security.Symbol
+        self.mu = security.Fundamentals.OperationRatios.ROA.OneYear
+        self.V = total_assets.TwelveMonths
+        self.B = sheet.CurrentLiabilities.TwelveMonths
+        self.D = statement.IncomeStatement.GrossDividendPayment.TwelveMonths + sheet.InterestPayable.TwelveMonths
+
+        series = pd.Series(
+            [
+                total_assets.OneMonth,
+                total_assets.ThreeMonths,
+                total_assets.SixMonths,
+                self.V,
+                self.B
+            ])
         sigma = series.iloc[series.nonzero()[0]]
         self.sigma = np.std(sigma.pct_change()[1:len(sigma)])
-        
+
+    ## This model applies options pricing theory, Black-Scholes specifically, to fundamental data
+    ## to give the probability of a default
     @property
-    def AssetValue(self):
-        return float(self.V)
-    @property
-    def DebtValue(self):
-        return float(self.B)
-    @property
-    def ValuationChangeVolatility(self):
-        return float(self.sigma)
-    @property
-    def DividendAndInterest(self):
-        return float(self.D)
-    @property
-    def ROA(self):
-        return float(self.mu)
-    @property
-    def TimeToMaturity(self):
-        return float(self.tau)
+    def ProbabilityOfDefault(self):
+        d2 = ((np.log(self.V) - np.log(self.B)) + ((self.mu - self.D) - 0.5*self.sigma**2.0)*self.tau)/ (self.sigma*np.sqrt(self.tau))
+        return sp.norm.cdf(-d2)
