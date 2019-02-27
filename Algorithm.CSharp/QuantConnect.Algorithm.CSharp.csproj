@@ -124,6 +124,7 @@
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
     <Compile Include="Alphas\ForexCalendarAlpha.cs" />
     <Compile Include="Alphas\RebalancingLeveragedETFAlpha.cs" />
+    <Compile Include="Alphas\VixDualThrustAlphaAlgorithm.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
     <Compile Include="HistoryWithSymbolChangesRegressionAlgorithm.cs" />
     <Compile Include="FeeModelNotUsingAccountCurrency.cs" />
