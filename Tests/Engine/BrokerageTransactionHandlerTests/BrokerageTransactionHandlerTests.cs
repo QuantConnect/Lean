@@ -900,15 +900,14 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
-            var task = Task.Run(() => transactionHandler.Run());
-
-            while (task.Status != TaskStatus.Running
-                && task.Status != TaskStatus.Faulted
-                && task.Status != TaskStatus.RanToCompletion)
-            {
-                // wait for the task to start
-                Thread.Sleep(5);
-            }
+            var flag = new ManualResetEvent(false);
+            Task.Run(() =>
+                {
+                    flag.Set();
+                    transactionHandler.Run();
+                });
+            // lets wait until the task starts running
+            flag.WaitOne();
 
             var ticket = algorithm.LimitOrder(security.Symbol, 1, 100);
 
