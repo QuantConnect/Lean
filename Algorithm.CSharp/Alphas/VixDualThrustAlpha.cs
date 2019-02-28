@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework;
@@ -13,10 +28,11 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
-    class VIXDualThrustAlphaAlgorithm : QCAlgorithmFramework
+    class VIXDualThrustAlpha : QCAlgorithmFramework
     {
         // -- STRATEGY INPUT PARAMETERS --
         private decimal _k1 = 0.63m;
@@ -27,17 +43,20 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         // -- INITIALIZE --
         public override void Initialize()
         {
-            // Set Backtesting Period
+            // Settings
             SetStartDate(2016, 10, 01);
-            SetEndDate(2019, 01, 01);
-
-            // Set Brokerage
+            SetSecurityInitializer(s => s.SetFeeModel(new ConstantFeeModel(0m)));
             SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
-
+            
             // Universe Selection
-            UniverseSettings.Resolution = Resolution.Minute;
+            UniverseSettings.Resolution = Resolution.Minute;   // it's minute by default, but lets leave this param here
             var symbols = new[] { QuantConnect.Symbol.Create("UVXY", SecurityType.Equity, Market.USA) };
             SetUniverseSelection(new ManualUniverseSelectionModel(symbols));
+
+            // Warming up
+            var resolutionInTimeSpan = UniverseSettings.Resolution.ToTimeSpan();
+            var warmUpTimeSpan = resolutionInTimeSpan.Multiply(_consolidatorBars).Multiply(_rangePeriod);
+            SetWarmUp(warmUpTimeSpan);
 
             // Alpha Model
             SetAlpha(new DualThrustAlphaModel(_k1, _k2, _rangePeriod, UniverseSettings.Resolution, _consolidatorBars));
