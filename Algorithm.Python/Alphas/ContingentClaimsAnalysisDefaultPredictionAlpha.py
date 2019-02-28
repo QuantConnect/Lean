@@ -33,30 +33,20 @@
         τ (tau)  = time to debt’s maturity
         µ (mu) = interest rate
         
-        
-    
     This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     sourced so the community and client funds can see an example of an alpha.
 '''
-from clr import AddReference
-AddReference("System")
-AddReference("QuantConnect.Common")
-AddReference("QuantConnect.Algorithm")
 
-from System import *
-from QuantConnect import *
-from QuantConnect.Orders import *
-from QuantConnect.Algorithm import QCAlgorithm
-from Risk.NullRiskManagementModel import NullRiskManagementModel
-from Execution.ImmediateExecutionModel import ImmediateExecutionModel
-from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+
 
 import scipy.stats as sp
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-
+from Risk.NullRiskManagementModel import NullRiskManagementModel
+from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 
 
 class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithmFramework):
@@ -99,7 +89,7 @@ class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithmFramework):
             self.month = self.Time.month
 
             ## Sort by dollar volume, lowest to highest
-            sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
+            sortedByDollarVolume = sorted([x for x in coarse if x.HasFundamentalData], key=lambda x: x.DollarVolume, reverse=True)
 
             ## Filter for assets with fundamental data
             filtered = [ x.Symbol for x in sortedByDollarVolume ]
@@ -117,17 +107,29 @@ class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithmFramework):
         else:
             self.month = self.Time.month
             ## Select symbols with data necessary for our pricing model
-            fineFilter = sorted(fine, key=lambda x: (x.FinancialStatements.BalanceSheet.TotalAssets.OneMonth > 0) and
-                                                    (x.FinancialStatements.BalanceSheet.TotalAssets.ThreeMonths > 0) and
-                                                    (x.FinancialStatements.BalanceSheet.TotalAssets.SixMonths > 0) and
-                                                    (x.FinancialStatements.BalanceSheet.TotalAssets.TwelveMonths > 0) and
-                                                    (x.FinancialStatements.BalanceSheet.CurrentLiabilities.TwelveMonths > 0) and
-                                                    (x.FinancialStatements.BalanceSheet.InterestPayable.TwelveMonths > 0) and
-                                                    (x.OperationRatios.TotalAssetsGrowth.OneYear > 0) and
-                                                    (x.FinancialStatements.IncomeStatement.GrossDividendPayment.TwelveMonths > 0) and
-                                                    (x.OperationRatios.ROA.OneYear > 0), reverse=True)
+            
+            def IsValid(x):
+                statement = x.FinancialStatements
+                sheet = statement.BalanceSheet
+                total_assets = sheet.TotalAssets
+                ratios = x.OperationRatios
+    
+                return total_assets.OneMonth > 0 and \
+                        total_assets.ThreeMonths > 0 and \
+                        total_assets.SixMonths  > 0 and \
+                        total_assets.TwelveMonths > 0 and \
+                        sheet.CurrentLiabilities.TwelveMonths > 0 and \
+                        sheet.InterestPayable.TwelveMonths > 0 and \
+                        ratios .TotalAssetsGrowth.OneYear > 0 and \
+                        statement.IncomeStatement.GrossDividendPayment.TwelveMonths > 0 and \
+                        ratios.ROA.OneYear > 0
 
-            self.symbols = [ x.Symbol for x in fineFilter ]
+            fineFilter = sorted(fine, key=lambda x: IsValid(x))
+            
+            if len(fine) == len(fineFilter):
+                self.Debug("Did not filter")
+
+            self.symbols = [ x.Symbol for x in fineFilter]
 
             return self.symbols
 
@@ -158,6 +160,7 @@ class ContingentClaimsAnalysisAlphaModel:
             ## If Prob. of Default is greater than our set threshold, then emit an insight indicating that this asset is trending downward
             if (pod >= self.default_threshold) and (pod != 1.0):
                 insights.append(Insight(symbol, timedelta(days = 30), InsightType.Price, InsightDirection.Down, pod, None))
+                algorithm.Log(str(symbol) + 'Probability of Default: ' + str(round(pod*100,4)) + '%')
 
         return insights
     
@@ -199,8 +202,7 @@ class SymbolData:
                 total_assets.OneMonth,
                 total_assets.ThreeMonths,
                 total_assets.SixMonths,
-                self.V,
-                self.B
+                self.V
             ])
         sigma = series.iloc[series.nonzero()[0]]
         self.sigma = np.std(sigma.pct_change()[1:len(sigma)])
