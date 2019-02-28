@@ -34,27 +34,27 @@ from scipy import stats
 from scipy.stats import kendalltau 
 from datetime import timedelta, datetime
 
-class EnergyETFPairsTradingAlpha(QCAlgorithmFramework):
+class EnergyETFPairsTradingAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
         
         ## Pick 3 natural gas ETFs and 3 crude oil ETFs and use all 9 possible combinations
         ## One combination of natural gas ETF/crude oil ETF will be used
-        self.tickers = [["UNG","UNG","UNG",'BOIL','BOIL','BOIL','UNL','UNL','UNL'],   ## Natural gas ETFs
+        self.tickers = [["UNG","UNG","UNG",'BOIL','BOIL','BOIL','FCG','FCG','FCG'],   ## Natural gas ETFs
                         ["USO",'UCO','DBO',"USO",'UCO','DBO',"USO",'UCO','DBO']]      ## Crude oil ETFs
-        tickers = ['UNG','BOIL','UNL','USO','UCO','DBO']
+        tickers = ['UNG','BOIL','FCG','USO','UCO','DBO']
         self.SetStartDate(2018, 1, 1)   #Set Start Date
         self.SetCash(100000)           #Set Strategy Cash
         
         ## Set Universe resolution and subscribed to data
-        self.Universe.Resolution = Resolution.Minute
+        self.UniverseSettings.Resolution = Resolution.Minute
         symbols = [ Symbol.Create(ticker, SecurityType.Equity, Market.USA) for ticker in tickers ]
 
         ## Manual Universe Selection
         self.SetUniverseSelection( ManualUniverseSelectionModel(symbols) )
         
         ## Custom Alpha Model
-        self.SetAlpha(PairsAlphaModel(pairs_tickers = self.tickers, history_days = 90))
+        self.SetAlpha(PairsAlphaModel(pairs_tickers = self.tickers, tickers = tickers, history_days = 90, resolution = Resolution.Minute))
         
         ## Equal-weight our positions, in this case 100% in USO
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel(resolution = Resolution.Minute))
@@ -83,15 +83,16 @@ class PairsAlphaModel:
     
     def __init__(self, *args, **kwargs):
         
-        self.difference_trigger = kwargs['difference_trigger'] if 'difference_trigger' in kwargs else 2.0
-        self.lookback = kwargs['lookback'] if 'lookback' in kwargs else 5 ## In hours
+        self.difference_trigger = kwargs['difference_trigger'] if 'difference_trigger' in kwargs else 0.75
+        self.lookback = kwargs['lookback'] if 'lookback' in kwargs else 5
         self.history_days = kwargs['history_days'] if 'history_days' in kwargs else 90 ## In days
         self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Hour
         self.prediction_interval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), 5) ## Arbitrary
         self.symbolDataBySymbol = {}
         self.pairs_tickers = kwargs['pairs_tickers'] if 'pairs_tickers' in kwargs else None
         self.next_update = None
-        
+        self.tickers = kwargs['tickers'] if 'tickers' in kwargs else None
+
     def Update(self, algorithm, data):
         
         if (self.next_update is None) or (algorithm.Time > self.next_update):
@@ -123,29 +124,28 @@ class PairsAlphaModel:
             symbolData = leading_data[i]
             if symbolData.Return > self.difference_trigger:      ## Check if Natural Gas returns are greater than the threshold we've set
                 ## If so, create and Insight with this information for Crude Oil
-                insights.append(Insight(following_symbol[i], self.prediction_interval, InsightType.Price, InsightDirection.Up, symbolData.Return, None))
+                insights.append(Insight(following_symbol[i], self.prediction_interval, InsightType.Price, InsightDirection.Up, symbolData.Return/100, None))
 
             elif symbolData.Return < -self.difference_trigger:   ## Check if UNG returns are greater than the threshold we've set
-                insights.append(Insight(following_symbol[i], self.prediction_interval, InsightType.Price, InsightDirection.Down, symbolData.Return, None))
+                insights.append(Insight(following_symbol[i], self.prediction_interval, InsightType.Price, InsightDirection.Down, symbolData.Return/100, None))
 
         return insights
     
     def CorrelationPairsSelection(self, algorithm):
         tick_syl = self.pairs_tickers
+        tickers = self.tickers
         logreturn={}
         ## Get log returns for each natural gas/oil ETF pair
-        for i in range(2):
-            syl = tick_syl[i]
-            history = algorithm.History(syl, self.history_days,Resolution.Daily)
-            # generate the log return series of paired stocks
-            close = history['close'].unstack(level=0)
-            df_logreturn = (np.log(close) - np.log(close.shift(1))).dropna()
-            for j in tick_syl[i]:
-                logreturn[j] = df_logreturn[j]
+        unique = list(set([item for sublist in self.pairs_tickers for item in sublist]))
+        df = algorithm.History(unique, self.history_days, Resolution.Daily)
+        df = df['close'].unstack(level=0)
+        df = (np.log(df) - np.log(df.shift(1))).dropna()
+        for tick in tickers:
+            logreturn[tick] = df[[tick]]
         
         ## Estimate coefficients of different correlation measures 
         tau_coef = []
-        for i in range(len(tick_syl[i])):
+        for i in range(len(tick_syl[0])):
             tik_x, tik_y= logreturn[tick_syl[0][i]], logreturn[tick_syl[1][i]]
             min_length = min(len(tik_x), len(tik_y))
             tau_coef.append(kendalltau(tik_x[:min_length], tik_y[:min_length])[0])
@@ -184,9 +184,9 @@ class SymbolData:
     '''Contains data specific to a symbol required by this model'''
     def __init__(self, symbol, lookback, resolution, algorithm):
         self.Symbol = symbol
-        self.ROC = RateOfChangePercent('{}.ROC({})'.format(symbol, lookback), lookback)
+        self.ROCP = RateOfChangePercent('{}.ROCP({})'.format(symbol, lookback), lookback)
         self.Consolidator = algorithm.ResolveConsolidator(self.Symbol, resolution)
-        algorithm.RegisterIndicator(symbol, self.ROC, self.Consolidator)
+        algorithm.RegisterIndicator(symbol, self.ROCP, self.Consolidator)
         self.previous = 0
 
     def RemoveConsolidators(self, algorithm):
@@ -195,22 +195,22 @@ class SymbolData:
 
     def WarmUpIndicators(self, history):
         for tuple in history.itertuples():
-            self.ROC.Update(tuple.Index, tuple.close)
+            self.ROCP.Update(tuple.Index, tuple.close)
 
     @property
     def Return(self):
-        return float(self.ROC.Current.Value)
+        return float(self.ROCP.Current.Value)
 
     @property
     def CanEmit(self):
-        if self.previous == self.ROC.Samples:
+        if self.previous == self.ROCP.Samples:
             return False
 
-        self.previous = self.ROC.Samples
-        return self.ROC.IsReady
+        self.previous = self.ROCP.Samples
+        return self.ROCP.IsReady
 
     def __str__(self, **kwargs):
-        return '{}: {:.2%}'.format(self.ROC.Name, (1 + self.Return)**252 - 1)
+        return '{}: {:.2%}'.format(self.ROCP.Name, (1 + self.Return)**252 - 1)
         
 
 class CustomExecutionModel(ExecutionModel):
