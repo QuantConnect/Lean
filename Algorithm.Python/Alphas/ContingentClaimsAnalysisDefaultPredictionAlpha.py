@@ -67,7 +67,7 @@ class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithmFramework):
 
         ## Set Universe Selection Model
         self.SetUniverseSelection(FineFundamentalUniverseSelectionModel(self.CoarseSelectionFunction, self.FineSelectionFunction, None, None))
-        
+        self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
         ## Set CCA Alpha Model
         self.SetAlpha(ContingentClaimsAnalysisAlphaModel())
         
