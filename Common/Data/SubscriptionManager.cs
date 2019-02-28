@@ -164,7 +164,7 @@ namespace QuantConnect.Data
             foreach (var subscription in subscriptions)
             {
                 // we need to be able to pipe data directly from the data feed into the consolidator
-                if (consolidator.InputType.IsAssignableFrom(subscription.Type))
+                if (IsSubscriptionValidForConsolidator(subscription, consolidator))
                 {
                     subscription.Consolidators.Add(consolidator);
                     return;
@@ -241,6 +241,23 @@ namespace QuantConnect.Data
         public void SetDataManager(IAlgorithmSubscriptionManager subscriptionManager)
         {
             _subscriptionManager = subscriptionManager;
+        }
+
+        /// <summary>
+        /// Checks if the subscription is valid for the consolidator
+        /// </summary>
+        /// <param name="subscription">The subscription configuration</param>
+        /// <param name="consolidator">The consolidator</param>
+        /// <returns>true if the subscription is valid for the consolidator</returns>
+        public static bool IsSubscriptionValidForConsolidator(SubscriptionDataConfig subscription, IDataConsolidator consolidator)
+        {
+            if (subscription.Type == typeof(Tick))
+            {
+                var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(consolidator.OutputType, subscription.Symbol.SecurityType);
+                return subscription.TickType == tickType;
+            }
+
+            return consolidator.InputType.IsAssignableFrom(subscription.Type);
         }
     }
 }

@@ -22,6 +22,7 @@ using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -171,6 +172,59 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(TickType.OpenInterest, types[0].Item2);
             Assert.AreEqual(TickType.Quote, types[1].Item2);
             Assert.AreEqual(TickType.Trade, types[2].Item2);
+        }
+
+        [Test]
+        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(TradeBar), true)]
+        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(QuoteBar), false)]
+        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(OpenInterest), false)]
+        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(TradeBar), false)]
+        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(QuoteBar), true)]
+        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(OpenInterest), false)]
+        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(TradeBar), false)]
+        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(QuoteBar), false)]
+        [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(OpenInterest), true)]
+        public void ValidatesSubscriptionTickTypesForConsolidators(
+            SecurityType securityType,
+            Resolution subscriptionResolution,
+            Type subscriptionDataType,
+            TickType? subscriptionTickType,
+            Type consolidatorOutputType,
+            bool expected)
+        {
+            var subscription = new SubscriptionDataConfig(
+                subscriptionDataType,
+                Symbol.Create("XYZ", securityType, QuantConnect.Market.USA),
+                subscriptionResolution,
+                DateTimeZone.Utc,
+                DateTimeZone.Utc,
+                true,
+                false,
+                false,
+                false,
+                subscriptionTickType);
+
+            var consolidator = new TestConsolidator(subscriptionDataType, consolidatorOutputType);
+
+            Assert.AreEqual(expected, SubscriptionManager.IsSubscriptionValidForConsolidator(subscription, consolidator));
+        }
+
+        private class TestConsolidator : IDataConsolidator
+        {
+            public event DataConsolidatedHandler DataConsolidated;
+            public IBaseData Consolidated { get; }
+            public IBaseData WorkingData { get; }
+            public Type InputType { get; }
+            public Type OutputType { get; }
+            public void Update(IBaseData data) { }
+            public void Scan(DateTime currentLocalTime) { }
+            public void Dispose() { }
+
+            public TestConsolidator(Type inputType, Type outputType)
+            {
+                InputType = inputType;
+                OutputType = outputType;
+            }
         }
 
         private static List<Tuple<Type, TickType>> GetSubscriptionDataTypes(SecurityType securityType, Resolution resolution, bool isCanonical = false)
