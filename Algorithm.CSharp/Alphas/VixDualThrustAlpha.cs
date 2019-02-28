@@ -32,6 +32,12 @@ using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
+    /// <summary>
+    /// This is a demonstration algorithm. It trades UVXY.
+    /// Dual Thrust alpha model is used to produce insights. 
+    /// Those input parameters have been chosen that gave acceptable results on a series
+    /// of random backtests run for the period from Oct, 2016 till Feb, 2019.
+    /// </summary>
     class VIXDualThrustAlpha : QCAlgorithmFramework
     {
         // -- STRATEGY INPUT PARAMETERS --
