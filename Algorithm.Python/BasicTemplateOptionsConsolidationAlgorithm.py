@@ -46,9 +46,9 @@ class BasicTemplateOptionsConsolidationAlgorithm(QCAlgorithm):
     def OnData(self,slice):
         pass
 
-    def OnDataConsolidated(self, sender, quoteBar):
+    def OnDataConsolidated(self, sender, bar):
         self.Log("OnDataConsolidated called on " + str(self.Time))
-        self.Log(str(quoteBar))
+        self.Log(str(bar))
         
     def OnSecuritiesChanged(self, changes):
         for security in changes.AddedSecurities:
