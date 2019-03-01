@@ -41,7 +41,8 @@ from itertools import chain
 #
 # Source: Greenblatt, J. (2010) The Little Book That Beats the Market
 #
-# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
+# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
+# sourced so the community and client funds can see an example of an alpha.
 # 
 
 class GreenblattMagicFormulaAlgorithm(QCAlgorithmFramework):
