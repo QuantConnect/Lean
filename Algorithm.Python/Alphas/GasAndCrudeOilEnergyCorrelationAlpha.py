@@ -27,20 +27,23 @@
 '''
 
 
-
+from clr import AddReference
+AddReference("System")
+AddReference("QuantConnect.Common")
+AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Indicators")
+AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Indicators import *
 from QuantConnect.Algorithm import *
+from QuantConnect.Indicators import *
 from QuantConnect.Algorithm.Framework import *
+from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, EqualWeightingPortfolioConstructionModel
-from Portfolio import *
-from Execution import *
-from Risk.NullRiskManagementModel import NullRiskManagementModel
-from QuantConnect.Algorithm.Framework.Selection import * 
+from QuantConnect.Algorithm.Framework.Portfolio import *
+from QuantConnect.Algorithm.Framework.Selection import *
 
 import numpy as np
 from scipy import stats
@@ -51,26 +54,20 @@ class EnergyETFPairsTradingAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
         
-        ## Pick 3 natural gas ETFs and 3 crude oil ETFs and use all 9 possible combinations
-        ## One combination of natural gas ETF/crude oil ETF will be used
-        self.tickers = [["UNG","UNG","UNG",'BOIL','BOIL','BOIL','FCG','FCG','FCG'],   ## Natural gas ETFs
-                        ["USO",'UCO','DBO',"USO",'UCO','DBO',"USO",'UCO','DBO']]      ## Crude oil ETFs
-        tickers = ['UNG','BOIL','FCG','USO','UCO','DBO']
         self.SetStartDate(2018, 1, 1)   #Set Start Date
         self.SetCash(100000)           #Set Strategy Cash
         
-        ## Set Universe resolution and subscribed to data
-        self.UniverseSettings.Resolution = Resolution.Minute
-        symbols = [ Symbol.Create(ticker, SecurityType.Equity, Market.USA) for ticker in tickers ]
-
-        ## Manual Universe Selection
-        self.SetUniverseSelection( ManualUniverseSelectionModel(symbols) )
+        natural_gas = ['UNG','BOIL','FCG']
+        crude_oil = ['USO','UCO','DBO']
+        symbols = [ Symbol.Create(ticker, SecurityType.Equity, Market.USA) for ticker in natural_gas + crude_oil ]
         
-        ## Set Fees to $0
+        ## Set Universe Selection
+        self.UniverseSettings.Resolution = Resolution.Minute
+        self.SetUniverseSelection( ManualUniverseSelectionModel(symbols) )
         self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
-
+        
         ## Custom Alpha Model
-        self.SetAlpha(PairsAlphaModel(pairs_tickers = self.tickers, tickers = tickers, history_days = 90, resolution = Resolution.Minute))
+        self.SetAlpha(PairsAlphaModel(leading = natural_gas, following = crude_oil, history_days = 90, resolution = Resolution.Minute))
         
         ## Equal-weight our positions, in this case 100% in USO
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel(resolution = Resolution.Minute))
@@ -105,23 +102,21 @@ class PairsAlphaModel:
         self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Hour
         self.prediction_interval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), 5) ## Arbitrary
         self.symbolDataBySymbol = {}
-        self.pairs_tickers = kwargs['pairs_tickers'] if 'pairs_tickers' in kwargs else None
         self.next_update = None
-        self.tickers = kwargs['tickers'] if 'tickers' in kwargs else None
+        self.leading = kwargs['leading'] if 'leading' in kwargs else None
+        self.following = kwargs['following'] if 'following' in kwargs else None
+        self.tickers = self.leading + self.following
+        self.ticker_list_of_lists = [[],[]]
+        for i in range(len(self.leading)):
+            for j in range(len(self.following)):
+                self.ticker_list_of_lists[0].append(self.leading[i])
+        self.ticker_list_of_lists[1] = self.following * 3
 
     def Update(self, algorithm, data):
         
         if (self.next_update is None) or (algorithm.Time > self.next_update):
             self.pairs = self.CorrelationPairsSelection(algorithm)
             self.next_update = algorithm.Time + (timedelta(days = 30))
-        
-        '''Updates this alpha model with the latest data from the algorithm.
-        This is called each time the algorithm receives data for subscribed securities
-        Args:
-            algorithm: The algorithm instance
-            data: The new data available
-        Returns:
-            The new insights generated'''
             
         ## Build a list to hold our insights
         insights = []
@@ -148,11 +143,11 @@ class PairsAlphaModel:
         return insights
     
     def CorrelationPairsSelection(self, algorithm):
-        tick_syl = self.pairs_tickers
+        tick_syl = self.ticker_list_of_lists
         tickers = self.tickers
         logreturn={}
         ## Get log returns for each natural gas/oil ETF pair
-        unique = list(set([item for sublist in self.pairs_tickers for item in sublist]))
+        unique = list(set([item for sublist in self.ticker_list_of_lists for item in sublist]))
         df = algorithm.History(unique, self.history_days, Resolution.Daily)
         df = df['close'].unstack(level=0)
         df = (np.log(df) - np.log(df.shift(1))).dropna()
