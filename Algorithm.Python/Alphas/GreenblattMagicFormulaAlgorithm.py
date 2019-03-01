@@ -44,7 +44,7 @@ from itertools import chain
 # This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
 # 
 
-class MagicFormulaAlpha(QCAlgorithmFramework):
+class GreenblattMagicFormulaAlgorithm(QCAlgorithmFramework):
     ''' Alpha Streams: Benchmark Alpha: Pick stocks according to Joel Greenblatt's Magic Formula'''
 
     def Initialize(self):
