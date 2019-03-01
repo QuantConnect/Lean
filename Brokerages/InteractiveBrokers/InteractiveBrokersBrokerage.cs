@@ -2602,6 +2602,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 yield break;
             }
 
+            // tick resolution not supported for now
+            if (request.Resolution == Resolution.Tick)
+            {
+                // TODO: upgrade IB C# API DLL
+                // In IB API version 973.04, the reqHistoricalTicks function has been added,
+                // which would now enable us to support history requests at Tick resolution.
+                yield break;
+            }
+
             // preparing the data for IB request
             var contract = CreateContract(request.Symbol);
             var resolution = ConvertResolution(request.Resolution);
