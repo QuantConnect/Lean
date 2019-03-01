@@ -20,7 +20,6 @@ AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Orders.Fees import ConstantFeeModel
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Indicators import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
