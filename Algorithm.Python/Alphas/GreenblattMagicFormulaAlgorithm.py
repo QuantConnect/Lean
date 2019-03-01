@@ -64,6 +64,12 @@ class GreenblattMagicFormulaAlgorithm(QCAlgorithmFramework):
         # Equally weigh securities in portfolio, based on insights
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         
+        ## Set Immediate Execution Model
+        self.SetExecution(ImmediateExecutionModel())
+
+        ## Set Null Risk Management Model
+        self.SetRiskManagement(NullRiskManagementModel())
+        
 
 class RateOfChangeAlphaModel(AlphaModel):
     '''Uses Rate of Change (ROC) to create magnitude prediction for insights.'''
