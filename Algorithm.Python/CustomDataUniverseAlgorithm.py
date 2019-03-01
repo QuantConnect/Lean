@@ -22,7 +22,6 @@ from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
 from datetime import date, timedelta, datetime
-import decimal as d
 
 ### <summary>
 ### This algorithm shows how to grab symbols from an external api each day
