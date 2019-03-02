@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean) &nbsp;&nbsp;&nbsp; [![Google Group](https://img.shields.io/badge/debug-Google%20Group-53c82b.svg)](https://groups.google.com/forum/#!forum/lean-engine) &nbsp;&nbsp;&nbsp; [![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
 
 
-[Lean Home - https://www.quantconnect.com/lean][1] | [Documentation][2] | [Download Zip][3]
+[Lean Home - https://www.quantconnect.com/lean][1] | [Documentation][2] | [Download Zip][3] 
 
 ----------
 
@@ -40,6 +40,8 @@ The most important plugins are:
 For more information on the system design and contributing please see the Lean Website Documentation.
 
 ## Installation Instructions ##
+
+You may follow the instructions below to install lean locally or you can use it directly from browser with google colab [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ahmedengu/Lean/blob/master/Algorithm.Python/quantconnect_lean.ipynb) which is set to be used with python by default but it's not limited to python you may update the config and the sample code with your language of choice.
 
 Download the zip file with the [lastest master](https://github.com/QuantConnect/Lean/archive/master.zip) and unzip it to your favorite location.
 
