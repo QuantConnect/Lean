@@ -207,6 +207,7 @@
     <Compile Include="Common\Data\Custom\QuandlTests.cs" />
     <Compile Include="Common\Securities\ErrorCurrencyConverterTests.cs" />
     <Compile Include="Common\Securities\IdentityCurrencyConverterTests.cs" />
+    <Compile Include="Common\Securities\AccountCurrencyImmediateSettlementModelTests.cs" />
     <Compile Include="Common\Securities\Options\OptionPortfolioModelTests.cs" />
     <Compile Include="Common\Securities\ProcessVolatilityHistoryRequirementsTests.cs" />
     <Compile Include="Common\Securities\SecurityHoldingTests.cs" />
@@ -223,6 +224,7 @@
     <Compile Include="Engine\DataFeeds\Enumerators\PriceScaleFactorEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\MockDataFeed.cs" />
     <Compile Include="Engine\DataFeeds\PendingRemovalsManagerTests.cs" />
+    <Compile Include="Engine\DataFeeds\TextSubscriptionDataSourceReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\UniverseSelectionTests.cs" />
     <Compile Include="Engine\DataFeeds\SubscriptionTests.cs" />
     <Compile Include="PythonSetup.cs" />

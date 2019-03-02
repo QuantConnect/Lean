@@ -494,7 +494,7 @@ namespace QuantConnect.Algorithm
             var isExtendedMarketHours = configs.IsExtendedMarketHours();
 
             var startTime = _historyRequestFactory.GetStartTimeAlgoTz(security.Symbol, 1, resolution, security.Exchange.Hours);
-            var endTime   = Time.RoundDown(resolution.ToTimeSpan());
+            var endTime   = Time;
 
             // request QuoteBar for Options and Futures
             var dataType = typeof(BaseData);

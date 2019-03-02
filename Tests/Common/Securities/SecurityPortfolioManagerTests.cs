@@ -589,10 +589,13 @@ namespace QuantConnect.Tests.Common.Securities
                     ErrorCurrencyConverter.Instance
                 )
             );
+            securities[Symbols.DE30EUR].SettlementModel = new AccountCurrencyImmediateSettlementModel();
 
             var fillBuy = new OrderEvent(1, Symbols.DE30EUR, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 10000, 5, OrderFee.Zero);
             portfolio.ProcessFill(fillBuy);
 
+            Assert.AreEqual(0, portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(0, portfolio.CashBook["USD"].Amount);
             Assert.AreEqual(0, portfolio.Cash);
             Assert.AreEqual(5, securities[Symbols.DE30EUR].Holdings.Quantity);
 
@@ -600,6 +603,8 @@ namespace QuantConnect.Tests.Common.Securities
             portfolio.ProcessFill(fillSell);
 
             // PNL = (10100 - 10000) * 5 * 1.10 = 550 USD
+            Assert.AreEqual(0, portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(550, portfolio.CashBook["USD"].Amount);
             Assert.AreEqual(550, portfolio.Cash);
             Assert.AreEqual(0, securities[Symbols.DE30EUR].Holdings.Quantity);
         }
