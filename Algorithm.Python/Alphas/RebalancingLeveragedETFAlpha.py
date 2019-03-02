@@ -55,9 +55,14 @@ class RebalancingLeveragedETFAlpha(QCAlgorithmFramework):
         self.SetUniverseSelection(ManualUniverseSelectionModel())
         # Select the demonstration alpha model
         self.SetAlpha(RebalancingLeveragedETFAlphaModel(groups))
-        # Select our default model types
+
+        # Equally weigh securities in portfolio, based on insights
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+
+        # Set Immediate Execution Model
         self.SetExecution(ImmediateExecutionModel())
+
+        # Set Null Risk Management Model
         self.SetRiskManagement(NullRiskManagementModel())
 
 

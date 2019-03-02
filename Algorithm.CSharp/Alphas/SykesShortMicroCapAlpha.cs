@@ -15,7 +15,9 @@
 
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
@@ -28,12 +30,10 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 {
     /// <summary>
     /// Identify "pumped" penny stocks and predict that the price of a "Pumped" penny stock reverts to mean
-
-    /// <br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
-    /// You can read the source code for this alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/PumpAndDumpAlpha.cs">C#</a>
-    /// or <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/PumpAndDumpAlpha.py">Python</a>.
-    /// </summary>
-    public class PumpAndDumpAlpha : QCAlgorithmFramework
+    ///
+    /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
+    ///</summary>
+    public class SykesShortMicroCapAlpha : QCAlgorithmFramework
     {
         public override void Initialize()
         {
@@ -47,11 +47,17 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             UniverseSettings.Resolution = Resolution.Daily;
             SetUniverseSelection(new PennyStockUniverseSelectionModel());
 
-            // Use PumpAndDumpAlphaModel to establish insights
-            SetAlpha(new PumpAndDumpAlphaModel());
+            // Use SykesShortMicroCapAlphaModel to establish insights
+            SetAlpha(new SykesShortMicroCapAlphaModel());
 
             // Equally weigh securities in portfolio, based on insights
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+
+            // Set Immediate Execution Model
+            SetExecution(new ImmediateExecutionModel());
+
+            // Set Null Risk Management Model
+            SetRiskManagement(new NullRiskManagementModel());
         }
 
         /// <summary>
@@ -66,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             private const int _numberOfSymbolsCoarse = 500;
             private int _lastMonth = -1;
 
-            public PennyStockUniverseSelectionModel() : base(true, null, null)
+            public PennyStockUniverseSelectionModel() : base(false)
             {
             }
 
@@ -92,12 +98,12 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         /// <summary>
         /// Uses ranking of intraday percentage difference between open price and close price to create magnitude and direction prediction for insights
         /// </summary>
-        private class PumpAndDumpAlphaModel : AlphaModel
+        private class SykesShortMicroCapAlphaModel : AlphaModel
         {
             private readonly int _numberOfStocks;
             private readonly TimeSpan _predictionInterval;
 
-            public PumpAndDumpAlphaModel(
+            public SykesShortMicroCapAlphaModel(
                 int lookback = 1,
                 int numberOfStocks = 10,
                 Resolution resolution = Resolution.Daily)
@@ -114,15 +120,10 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     where security.HasData && security.Open > 0
                     // Rank penny stocks on one day price change
                     let Magnitude = security.Close / security.Open - 1
-                    orderby -Math.Round(Magnitude, 6), security.Symbol
-                    select CreateInsight(security.Symbol, Magnitude))
+                    orderby Math.Round(Magnitude, 6), security.Symbol descending
+                    select Insight.Price(security.Symbol, _predictionInterval, InsightDirection.Down, (double)Magnitude))
                     // Retrieve list of _numberOfStocks "pumped" penny stocks
                     .Take(_numberOfStocks);
-            }
-
-            private Insight CreateInsight(Symbol symbol, decimal magnitude)
-            {
-                return Insight.Price(symbol, _predictionInterval, InsightDirection.Down, (double)magnitude);
             }
         }
     }

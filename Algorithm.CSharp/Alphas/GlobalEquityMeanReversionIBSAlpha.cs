@@ -32,23 +32,20 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     /// Equity indices exhibit mean reversion in daily returns. The Internal Bar Strength indicator (IBS), 
     /// which relates the closing price of a security to its daily range can be used to identify overbought
     /// and oversold securities.
-
+    ///
     /// This alpha ranks 33 global equity ETFs on its IBS value the previous day and predicts for the following day
     /// that the ETF with the highest IBS value will decrease in price, and the ETF with the lowest IBS value 
     /// will increase in price.
-
+    ///
     /// Source: Kakushadze, Zura, and Juan Andrés Serur. “4. Exchange-Traded Funds (ETFs).” 151 Trading Strategies, Palgrave Macmillan, 2018, pp. 90–91.
-
-    /// <br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
-    /// You can read the source code for this alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/GlobalEquityMeanReversionIBSAlpha.cs">C#</a>
-    /// or <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/GlobalEquityMeanReversionIBSAlpha.py">Python</a>.
-    /// </summary>
+    ///
+    /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
+    ///</summary>
     public class GlobalEquityMeanReversionIBSAlpha : QCAlgorithmFramework
     {
         public override void Initialize()
         {
             SetStartDate(2018, 1, 1);
-
             SetCash(100000);
 
             // Set zero transaction fees
@@ -66,11 +63,17 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             UniverseSettings.Resolution = Resolution.Daily;
             SetUniverseSelection(new ManualUniverseSelectionModel(symbols));
 
-            // Use GlobalEquityMeanReversionAlphaModel to establish insights
+            // Use MeanReversionIBSAlphaModel to establish insights
             SetAlpha(new MeanReversionIBSAlphaModel());
 
             // Equally weigh securities in portfolio, based on insights
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+
+            // Set Immediate Execution Model
+            SetExecution(new ImmediateExecutionModel());
+
+            // Set Null Risk Management Model
+            SetRiskManagement(new NullRiskManagementModel());
         }
 
         /// <summary>
@@ -108,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                         if (security.Open * hilo != 0)
                         {
                             // Internal bar strength (IBS)
-                            symbolsIBS.Add(security.Symbol, (low - security.Close) / hilo);
+                            symbolsIBS.Add(security.Symbol, (security.Close - low) / hilo);
                             returns.Add(security.Symbol, security.Close / security.Open - 1);
                         }
                     }
@@ -125,7 +128,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
                 // Rank securities with the highest IBS value
                 var ordered = from entry in symbolsIBS
-                              orderby Math.Round(entry.Value, 6), entry.Key
+                              orderby Math.Round(entry.Value, 6) descending, entry.Key
                               select entry;
                 var highIBS = ordered.Take(numberOfStocks);            // Get highest IBS
                 var lowIBS = ordered.Reverse().Take(numberOfStocks);   // Get lowest IBS

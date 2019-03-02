@@ -15,10 +15,11 @@
 
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
-using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Orders.Fees;
@@ -35,11 +36,9 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     /// LeBaron, Zhao: Intraday Foreign Exchange Reversals
     /// http://people.brandeis.edu/~blebaron/wps/fxnyc.pdf
     /// http://www.fma.org/Reno/Papers/ForeignExchangeReversalsinNewYorkTime.pdf
-
-    /// <br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
-    /// You can read the source code for this alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/IntradayReversalCurrencyMarkets.cs">C#</a>
-    /// or <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/IntradayReversalCurrencyMarkets.py">Python</a>.
-    /// </summary>
+    ///
+    /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
+    ///</summary>
     public class IntradayReversalCurrencyMarkets : QCAlgorithmFramework
     {
         public override void Initialize()
@@ -65,6 +64,12 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
             // Equally weigh securities in portfolio, based on insights
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+
+            // Set Immediate Execution Model
+            SetExecution(new ImmediateExecutionModel());
+
+            // Set Null Risk Management Model
+            SetRiskManagement(new NullRiskManagementModel());
         }
 
         /// <summary>
@@ -147,6 +152,9 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 }
             }
 
+            /// <summary>
+            /// Contains data specific to a symbol required by this model
+            /// </summary>
             private class SymbolData
             {
                 private readonly SimpleMovingAverage _priceSMA;

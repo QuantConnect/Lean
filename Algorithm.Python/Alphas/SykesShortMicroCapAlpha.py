@@ -29,12 +29,10 @@ from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelec
 #
 # Identify "pumped" penny stocks and predict that the price of a "Pumped" penny stock reverts to mean
 #
-# <br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
-# You can read the source code for this alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/PumpAndDumpAlpha.cs">C#</a>
-# or <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/PumpAndDumpAlpha.py">Python</a>.
+# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
 #
 
-class PumpAndDumpAlpha(QCAlgorithmFramework):
+class SykesShortMicroCapAlpha(QCAlgorithmFramework):
     ''' Alpha Streams: Benchmark Alpha: Identify "pumped" penny stocks and predict that the price of a "pumped" penny stock reverts to mean'''
 
     def Initialize(self):
@@ -49,14 +47,20 @@ class PumpAndDumpAlpha(QCAlgorithmFramework):
         self.UniverseSettings.Resolution = Resolution.Daily
         self.SetUniverseSelection(PennyStockUniverseSelectionModel())
 
-        # Use PumpAndDumpAlphaModel to establish insights
-        self.SetAlpha(PumpAndDumpAlphaModel())
+        # Use SykesShortMicroCapAlphaModel to establish insights
+        self.SetAlpha(SykesShortMicroCapAlphaModel())
 
         # Equally weigh securities in portfolio, based on insights
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
 
+        # Set Immediate Execution Model
+        self.SetExecution(ImmediateExecutionModel())
 
-class PumpAndDumpAlphaModel(AlphaModel):
+        # Set Null Risk Management Model
+        self.SetRiskManagement(NullRiskManagementModel())
+
+
+class SykesShortMicroCapAlphaModel(AlphaModel):
     '''Uses ranking of intraday percentage difference between open price and close price to create magnitude and direction prediction for insights'''
 
     def __init__(self, *args, **kwargs): 
@@ -95,7 +99,7 @@ class PennyStockUniverseSelectionModel(FundamentalUniverseSelectionModel):
     The stock must cost less than $5'''
 
     def __init__(self):
-        super().__init__(False, None, None)
+        super().__init__(False)
 
         # Number of stocks in Coarse Universe
         self.numberOfSymbolsCoarse = 500

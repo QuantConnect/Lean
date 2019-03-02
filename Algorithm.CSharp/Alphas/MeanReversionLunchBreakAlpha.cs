@@ -15,7 +15,9 @@
 
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
@@ -31,20 +33,17 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     /// This alpha aims to capture the mean-reversion effect of ETFs during lunch-break by ranking 20 ETFs
     /// on their return between the close of the previous day to 12:00 the day after and predicting mean-reversion 
     /// in price during lunch-break.
-
+    ///
     /// Source:  Lunina, V. (June 2011). The Intraday Dynamics of Stock Returns and Trading Activity: Evidence from OMXS 30 (Master's Essay, Lund University). 
     /// Retrieved from http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=1973850&fileOId=1973852
-
-    /// <br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
-    /// You can read the source code for this alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/MeanReversionLunchBreakAlpha.cs">C#</a>
-    /// or <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/MeanReversionLunchBreakAlpha.py">Python</a>.
-    /// </summary>
+    ///
+    /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
+    ///</summary>
     public class MeanReversionLunchBreakAlpha : QCAlgorithmFramework
     {
         public override void Initialize()
         {
             SetStartDate(2018, 1, 1);
-
             SetCash(100000);
 
             // Set zero transaction fees
@@ -59,6 +58,12 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
             // Equally weigh securities in portfolio, based on insights
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+
+            // Set Immediate Execution Model
+            SetExecution(new ImmediateExecutionModel());
+
+            // Set Null Risk Management Model
+            SetRiskManagement(new NullRiskManagementModel());
         }
 
         /// <summary>
@@ -68,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         {
             return (from cf in coarse
                     where !cf.HasFundamentalData
-                    orderby -cf.DollarVolume
+                    orderby cf.DollarVolume descending
                     select cf.Symbol).Take(20);
         }
 
@@ -119,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 // and update the indicators in the SymbolData object
                 var symbols = changes.AddedSecurities.Select(x => x.Symbol);
                 var history = algorithm.History(symbols, 1, _resolution);
-                if (history.Count() == 0)
+                if (symbols.Count() > 0 && history.Count() == 0)
                 {
                     algorithm.Debug($"No data on {algorithm.Time}");
                 }
@@ -136,6 +141,9 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 });
             }
 
+            /// <summary>
+            /// Contains data specific to a symbol required by this model
+            /// </summary>
             private class SymbolData
             {
                 // Mean value of returns for magnitude prediction

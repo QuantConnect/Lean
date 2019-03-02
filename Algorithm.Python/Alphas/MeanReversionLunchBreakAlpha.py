@@ -40,10 +40,8 @@ from QuantConnect.Algorithm.Framework.Selection import CoarseFundamentalUniverse
 # Source:  Lunina, V. (June 2011). The Intraday Dynamics of Stock Returns and Trading Activity: Evidence from OMXS 30 (Master's Essay, Lund University). 
 # Retrieved from http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=1973850&fileOId=1973852
 #
-# <br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
-# You can read the source code for this alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/MeanReversionLunchBreakAlpha.cs">C#</a>
-# or <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/MeanReversionLunchBreakAlpha.py">Python</a>.
-# 
+# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
+#
 
 class MeanReversionLunchBreakAlpha(QCAlgorithmFramework):
 
@@ -66,11 +64,18 @@ class MeanReversionLunchBreakAlpha(QCAlgorithmFramework):
         # Equally weigh securities in portfolio, based on insights
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
 
+        # Set Immediate Execution Model
+        self.SetExecution(ImmediateExecutionModel())
+
+        # Set Null Risk Management Model
+        self.SetRiskManagement(NullRiskManagementModel())
+
     # Sort the data by daily dollar volume and take the top '20' ETFs
     def CoarseSelectionFunction(self, coarse):
         sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
         filtered = [ x.Symbol for x in sortedByDollarVolume if not x.HasFundamentalData ]
         return filtered[:20]
+
 
 class MeanReversionLunchBreakAlphaModel(AlphaModel):
     '''Uses the price return between the close of previous day to 12:00 the day after to 

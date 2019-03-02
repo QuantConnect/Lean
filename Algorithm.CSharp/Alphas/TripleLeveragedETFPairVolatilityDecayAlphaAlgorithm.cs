@@ -15,7 +15,9 @@
 
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
@@ -28,15 +30,13 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     /// <summary>
     /// Leveraged ETFs (LETF) promise a fixed leverage ratio with respect to an underlying asset or an index.
     /// A Triple-Leveraged ETF allows speculators to amplify their exposure to the daily returns of an underlying index by a factor of 3. 
-
+    ///
     /// Increased volatility generally decreases the value of a LETF over an extended period of time as daily compounding is amplified.
-
+    ///
     /// This alpha emits short-biased insight to capitalize on volatility decay for each listed pair of TL-ETFs, by rebalancing the
     /// ETFs with equal weights each day.
-
-    /// <br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
-    /// You can read the source code for this alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/TripleLeverageETFPairVolatilityDecayAlpha.cs">C#</a>
-    /// or <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/TripleLeverageETFPairVolatilityDecayAlpha.py">Python</a>
+    ///
+    /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
     /// </summary>
     public class TripleLeveragedETFPairVolatilityDecayAlphaAlgorithm : QCAlgorithmFramework
     {
@@ -60,8 +60,14 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             // Select the demonstration alpha model
             SetAlpha(new RebalancingTripleLeveragedETFAlphaModel(ultraLong, ultraShort));
 
-            // Select our default model types
+            // Equally weigh securities in portfolio, based on insights
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+
+            // Set Immediate Execution Model
+            SetExecution(new ImmediateExecutionModel());
+
+            // Set Null Risk Management Model
+            SetRiskManagement(new NullRiskManagementModel());
         }
 
         /// <summary>

@@ -36,9 +36,7 @@ from datetime import timedelta
 # This alpha emits short-biased insight to capitalize on volatility decay for each listed pair of TL-ETFs, by rebalancing the
 # ETFs with equal weights each day.
 #
-# <br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
-# You can read the source code for this alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/TripleLeverageETFPairVolatilityDecayAlpha.cs">C#</a>
-# or <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/TripleLeverageETFPairVolatilityDecayAlpha.py">Python</a>.
+# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
 # 
 
 class TripleLeverageETFPairVolatilityDecayAlpha(QCAlgorithmFramework):
@@ -52,7 +50,7 @@ class TripleLeverageETFPairVolatilityDecayAlpha(QCAlgorithmFramework):
         # Set zero transaction fees
         self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
 
-        # 3X ETF pair tickers            
+        # 3X ETF pair tickers
         ultraLong = Symbol.Create("UGLD", SecurityType.Equity, Market.USA) 
         ultraShort = Symbol.Create("DGLD", SecurityType.Equity, Market.USA) 
 
@@ -63,8 +61,14 @@ class TripleLeverageETFPairVolatilityDecayAlpha(QCAlgorithmFramework):
         # Select the demonstration alpha model
         self.SetAlpha(RebalancingTripleLeveragedETFAlphaModel(ultraLong, ultraShort))
 
-        # Select our default model types
+        ## Set Equal Weighting Portfolio Construction Model
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+
+        ## Set Immediate Execution Model
+        self.SetExecution(ImmediateExecutionModel())
+
+        ## Set Null Risk Management Model
+        self.SetRiskManagement(NullRiskManagementModel())
 
 
 class RebalancingTripleLeveragedETFAlphaModel(AlphaModel):

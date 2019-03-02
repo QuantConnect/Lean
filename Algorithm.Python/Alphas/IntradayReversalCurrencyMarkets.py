@@ -38,9 +38,7 @@ from datetime import datetime, timedelta, time
 # http://people.brandeis.edu/~blebaron/wps/fxnyc.pdf
 # http://www.fma.org/Reno/Papers/ForeignExchangeReversalsinNewYorkTime.pdf
 #
-# <br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
-# You can read the source code for this alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/IntradayReversalCurrencyMarkets.cs">C#</a>
-# or <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/IntradayReversalCurrencyMarkets.py">Python</a>.
+# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
 #
 
 class IntradayReversalCurrencyMarkets(QCAlgorithmFramework):
@@ -63,7 +61,15 @@ class IntradayReversalCurrencyMarkets(QCAlgorithmFramework):
         self.UniverseSettings.Resolution = resolution
         self.SetUniverseSelection(ManualUniverseSelectionModel(symbols))
         self.SetAlpha(IntradayReversalAlphaModel(5, resolution))
+
+        # Equally weigh securities in portfolio, based on insights
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+
+        # Set Immediate Execution Model
+        self.SetExecution(ImmediateExecutionModel())
+
+        # Set Null Risk Management Model
+        self.SetRiskManagement(NullRiskManagementModel())
 
         #Set WarmUp for Indicators
         self.SetWarmUp(20) 

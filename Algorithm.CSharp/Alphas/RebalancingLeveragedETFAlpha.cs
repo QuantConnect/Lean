@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
@@ -24,18 +21,21 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
-	///<summary>
-	/// Alpha Benchmark Strategy capitalizing on ETF rebalancing causing momentum during trending markets.
-	/// Strategy by Prof. Shum, reposted by Ernie Chan.
-	/// Source: http://epchan.blogspot.com/2012/10/a-leveraged-etfs-strategy.html
-	///</summary>
-	/// <meta name="tag" content="alphastream" />
-	/// <meta name="tag" content="algorithm framework" />
-	/// <meta name="tag" content="etf" />
-	public class RebalancingLeveragedETFAlpha : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    ///<summary>
+    /// Alpha Benchmark Strategy capitalizing on ETF rebalancing causing momentum during trending markets.
+    /// Strategy by Prof. Shum, reposted by Ernie Chan.
+    /// Source: http://epchan.blogspot.com/2012/10/a-leveraged-etfs-strategy.html
+    ///</summary>
+    /// <meta name="tag" content="alphastream" />
+    /// <meta name="tag" content="algorithm framework" />
+    /// <meta name="tag" content="etf" />
+    public class RebalancingLeveragedETFAlpha : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
 		private readonly List<ETFGroup> Groups = new List<ETFGroup>();
 
@@ -62,9 +62,16 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
 			// Select our default model types
 			SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
-			SetExecution(new ImmediateExecutionModel());
-			SetRiskManagement(new NullRiskManagementModel());
-		}
+
+            // Equally weigh securities in portfolio, based on insights
+            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+
+            // Set Immediate Execution Model
+            SetExecution(new ImmediateExecutionModel());
+
+            // Set Null Risk Management Model
+            SetRiskManagement(new NullRiskManagementModel());
+        }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.

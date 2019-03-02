@@ -123,12 +123,15 @@
     <Compile Include="AddRemoveOptionUniverseRegressionAlgorithm.cs" />
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
     <Compile Include="Alphas\IntradayReversalCurrencyMarkets.cs" />
-    <Compile Include="Alphas\PumpAndDumpAlpha.cs" />
+    <Compile Include="Alphas\ShareClassMeanReversionAlpha.cs" />
+    <Compile Include="Alphas\SykesShortMicroCapAlpha.cs" />
     <Compile Include="Alphas\GlobalEquityMeanReversionIBSAlpha.cs" />
     <Compile Include="Alphas\ForexCalendarAlpha.cs" />
     <Compile Include="Alphas\MeanReversionLunchBreakAlpha.cs" />
     <Compile Include="Alphas\RebalancingLeveragedETFAlpha.cs" />
+    <Compile Include="Alphas\TriangleExchangeRateArbitrageAlpha.cs" />
     <Compile Include="Alphas\TripleLeveragedETFPairVolatilityDecayAlphaAlgorithm.cs" />
+    <Compile Include="Alphas\VixDualThrustAlpha.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
     <Compile Include="HistoryWithSymbolChangesRegressionAlgorithm.cs" />
     <Compile Include="FeeModelNotUsingAccountCurrency.cs" />

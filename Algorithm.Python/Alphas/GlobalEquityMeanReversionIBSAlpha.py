@@ -26,7 +26,7 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
 from QuantConnect.Algorithm.Framework.Selection import ManualUniverseSelectionModel
 
-# 
+#
 # Equity indices exhibit mean reversion in daily returns. The Internal Bar Strength indicator (IBS), 
 # which relates the closing price of a security to its daily range can be used to identify overbought
 # and oversold securities.
@@ -37,10 +37,8 @@ from QuantConnect.Algorithm.Framework.Selection import ManualUniverseSelectionMo
 #
 # Source: Kakushadze, Zura, and Juan Andrés Serur. “4. Exchange-Traded Funds (ETFs).” 151 Trading Strategies, Palgrave Macmillan, 2018, pp. 90–91.
 #
-# <br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
-# You can read the source code for this alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/GlobalEquityMeanReversionIBSAlpha.cs">C#</a>
-# or <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/GlobalEquityMeanReversionIBSAlpha.py">Python</a>.
-# 
+# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
+#
 
 class GlobalEquityMeanReversionIBSAlpha(QCAlgorithmFramework):
 
@@ -71,6 +69,13 @@ class GlobalEquityMeanReversionIBSAlpha(QCAlgorithmFramework):
         # Equally weigh securities in portfolio, based on insights
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
 
+        # Set Immediate Execution Model
+        self.SetExecution(ImmediateExecutionModel())
+
+        # Set Null Risk Management Model
+        self.SetRiskManagement(NullRiskManagementModel())
+
+
 class MeanReversionIBSAlphaModel(AlphaModel):
     '''Uses ranking of Internal Bar Strength (IBS) to create direction prediction for insights'''
 
@@ -95,7 +100,7 @@ class MeanReversionIBSAlphaModel(AlphaModel):
                 # Do not consider symbol with zero open and avoid division by zero
                 if security.Open * hilo != 0:
                     # Internal bar strength (IBS)
-                    symbolsIBS[security.Symbol] = (low - security.Close)/hilo
+                    symbolsIBS[security.Symbol] = (security.Close - low)/hilo
                     returns[security.Symbol] = security.Close/security.Open-1
 
         # Number of stocks cannot be higher than half of symbolsIBS length
@@ -104,7 +109,7 @@ class MeanReversionIBSAlphaModel(AlphaModel):
             return []
 
         # Rank securities with the highest IBS value
-        ordered = sorted(symbolsIBS.items(), key=lambda kv: (round(kv[1], 6), kv[0]))
+        ordered = sorted(symbolsIBS.items(), key=lambda kv: (round(kv[1], 6), kv[0]), reverse=True)
         highIBS = dict(ordered[0:number_of_stocks])   # Get highest IBS
         lowIBS = dict(ordered[-number_of_stocks:])    # Get lowest IBS
 
