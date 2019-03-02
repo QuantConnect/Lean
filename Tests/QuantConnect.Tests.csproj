@@ -207,6 +207,7 @@
     <Compile Include="Common\Data\Custom\QuandlTests.cs" />
     <Compile Include="Common\Securities\ErrorCurrencyConverterTests.cs" />
     <Compile Include="Common\Securities\IdentityCurrencyConverterTests.cs" />
+    <Compile Include="Common\Securities\AccountCurrencyImmediateSettlementModelTests.cs" />
     <Compile Include="Common\Securities\Options\OptionPortfolioModelTests.cs" />
     <Compile Include="Common\Securities\ProcessVolatilityHistoryRequirementsTests.cs" />
     <Compile Include="Common\Securities\SecurityHoldingTests.cs" />
