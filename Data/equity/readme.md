@@ -5,6 +5,14 @@ QuantConnect hosts US Equity Data (market 'usa') provided by QuantQuote. Ticks a
 
 The US equity data is in the New York timezone. Data timezones are found in the [MarketHoursDatabase.json](https://github.com/QuantConnect/Lean/blob/master/Data/market-hours/market-hours-database.json)
 
+Equity data supports the following Resolutions:
+
+* Tick
+* Second
+* Minute
+* Hour
+* Daily
+
 ### Minute, Second Data File Format ###
 
 Minute, Second files are located in the equity / usa / resolution folders. The file name uses a 8-character length date.   `/data/equity/usa/minute/ticker/YYYYMMDD_trade.zip`.

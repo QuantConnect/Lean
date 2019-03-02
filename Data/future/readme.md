@@ -1,7 +1,7 @@
 ![alt tag](https://raw.githubusercontent.com/QuantConnect/Lean/master/Documentation/logo.white.small.png) 
 ## LEAN Data Formats / Futures
 
-QuantConnect hosts futures data provided by [AlgoSeek](https://algoseek.com/). The data contains *quotes*, *trades*, and *open interest* data. In tick level data, susupicious ticks are marked as "1" in its respective field.
+QuantConnect hosts futures data provided by [AlgoSeek](https://algoseek.com/). The data contains *quotes*, *trades*, and *open interest* data. 
 You can explore futures data on our website at https://www.quantconnect.com/data/tree/future/
 
 The data are stored as compressed ZIP files, each capable of containing a single, or multiple CSV files, depending on the resolution requested.
@@ -16,7 +16,7 @@ Futures data can be used with the following Resolutions:
 
 The markets we currently support are:
 
-* USA - Opens `Sunday 17:00:00` and closes at `Friday 16:00:00`
+* USA
 
 `tickType` in this documentation can refer to one of the following:
 
@@ -26,7 +26,7 @@ The markets we currently support are:
 
 All times are in UTC unless noted otherwise.
 
-## Second/Minute Format
+## Minute and Second File Format
 
 Second/Minute files are located in the future / market / resolution / symbol folder. The zip file contains multiple csv entries, varying by the symbol's expiration date.
 
@@ -72,7 +72,7 @@ Second/Minute open interest schema and example data is as follows:
 * Time - Milliseconds since midnight
 * Open Interest - outstanding contracts
 
-## Hour/Daily Format
+## Hour and Daily File Format
 Hour/Daily files are located in the future / market / resolution folder. The zip file contains only a single entry.
 
 The zip files have the filename format: `symbol_tickType.zip`. The CSV file contained within has the filename format: `symbol_tickType_symbolExpirationDate.csv`
@@ -105,7 +105,7 @@ Hour/Daily open interest schema and example data is as follows:
 * Time - Formatted as `YYYYMMDD HH:mm`
 * Open Interest - outstanding contracts
 
-## Tick Format
+## Tick File Format
 Tick data is stored in the future / market / tick / symbol folder. The zip file contains multiple csv entries, varying by the symbol's expiration date.
 
 The zip files have the filename format: `YYYYMMDD_tickType.zip`. The CSV files contained within have the filename format: `YYYYMMDD_symbol_tick_tickType_symbolExpirationDate.csv`
@@ -121,4 +121,4 @@ Tick trades schema and example data is as follows:
 * Quantity - Amount traded
 * Exchange - Where transaction took place
 * Sale Condition - always null, not used
-* Suspicious - Suspicious ticks will be marked as "1".
+* Suspicious - Not used, will always be "0"

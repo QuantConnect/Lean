@@ -1,10 +1,10 @@
 ![alt tag](https://raw.githubusercontent.com/QuantConnect/Lean/master/Documentation/logo.white.small.png) 
-## LEAN Data Formats / Contract for difference (cfd)
+## LEAN Data Formats / Contracts for Difference (CFD)
 
-QuantConnect hosts cfd data provided by Oanda. The data contains only *Quote* data.
-All data are stored in zip files, each containing a single CSV file. You can explore cfd data on our website at https://www.quantconnect.com/data/tree/cfd
+QuantConnect hosts CFD data provided by Oanda. The data contains only *Quote* data.
+All data are stored in zip files, each containing a single CSV file. You can explore CFD data on our website at https://www.quantconnect.com/data/tree/cfd
 
-Cfd data supports the following Resolutions:
+CFD data supports the following Resolutions:
 
 * Tick
 * Second
@@ -14,26 +14,11 @@ Cfd data supports the following Resolutions:
 
 The markets we currently support are:
 
-* Oanda - Opens `Sunday 17:00:00` Closes `Friday 17:00:00` EST / UTC-05
+* Oanda
 
-All times are in UTC unless noted otherwise.
+CFD data operates in multiple timezones, so please confirm with the market hours database for the specific timezone of your asset.
 
-## Tick Format
-Tick files are located in the cfd / market / tick / symbol folder.
-
-The ZIP files have the filename format: `YYYYMMDD_quote.zip`. The CSV file contained within has the filename format: `YYYYMMDD_symbol_resolution_quote.csv`
-
-Tick quote format and example data is as follows:
-
-| Time | Bid Price | Ask Price |
-| ---- | --------- | --------- |
-| 92000 | 10.38 | 10.40 |
-
-* Time - Milliseconds since midnight
-* Bid Price - Best bid price
-* Ask Price - Best ask price
-
-## Second/Minute Format
+## Minute and Second File Format
 Second/minute files are located in the cfd / market / resolution / symbol folder. 
 
 The ZIP files have the filename format: `YYYYMMDD_quote.zip`. The CSV file contained within has the filename format: `YYYYMMDD_symbol_resolution_quote.csv`
@@ -56,7 +41,7 @@ Second/minute quote format and example data is as follows:
 * Ask Close - Closing price for the best ask
 * Last Ask Size - Size of best ask at close
 
-## Hour/Daily Format
+## Hour and Daily File Format
 Hour/daily files are located in the cfd / market / resolution folder.
 
 The ZIP files have the filename format: `symbol.zip`. The CSV file contained within has the filename format: `symbol.csv`
@@ -78,3 +63,18 @@ Hour/daily quote format and example data is as follows:
 * Ask Low - Lowest recorded ask price
 * Ask Close - Closing price for the best ask
 * Last Ask Size - Size of best ask at close
+
+## Tick File Format
+Tick files are located in the cfd / market / tick / symbol folder.
+
+The ZIP files have the filename format: `YYYYMMDD_quote.zip`. The CSV file contained within has the filename format: `YYYYMMDD_symbol_resolution_quote.csv`
+
+Tick quote format and example data is as follows:
+
+| Time | Bid Price | Ask Price |
+| ---- | --------- | --------- |
+| 92000 | 10.38 | 10.40 |
+
+* Time - Milliseconds since midnight
+* Bid Price - Best bid price
+* Ask Price - Best ask price

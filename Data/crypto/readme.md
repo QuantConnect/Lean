@@ -17,44 +17,17 @@ Crypto data supports the following Resolutions:
 
 The markets we currently support are: 
 
-* GDAX/Coinbase Pro - 24/7 Market
-* Bitfinex (Beta) - 24/7 Market
+* GDAX/Coinbase Pro
+* Bitfinex (Beta)
 
-For crypto data, `tickType` can be:
+`tickType` in this documentation can refer to one of the following:
 
 * trade
 * quote
 
 All times are in UTC unless noted otherwise.
 
-## Tick Format
-Ticks files are located in the data / crypto / market / tick folder. 
-
-The zip files have the filename format: `YYYYMMDD_tickType.zip`. The CSV file contained within has the filename format: `YYYYMMDD_symbol_resolution_tickType.csv`
-
-Tick trade format and example data is as follows:
-
-| Time | Last Price | Quantity |
-| ---- | ---------- | -------- |
-| 86400 | 232.40 | 93.1 |
-
-* Time - Milliseconds passed since midnight
-* Last Price - Most recent trade price
-* Quantity - Amount of asset purchased or sold
-
-Tick quote format and example data is as follows:
-
-| Time | Bid Price | Bid Size | Ask Price | Ask Size |
-| ---- | --------- | -------- | --------- | -------- |
-| 86400 | 232.40 | 20392.0 | 232.42 | 8059.5 |
-
-* Time - Milliseconds passed since midnight
-* Bid Price - Best bid price
-* Bid Size - Best bid price's size/quantity
-* Ask Price - Best ask price
-* Ask Size - Best ask price's size/quantity
-
-## Second/Minute Format
+## Minute and Second File Format
 Second/Minute files are located in the crypto / market / resolution / symbol folder. 
 
 The zip files have the filename: `YYYYMMDD_tickType.zip`. The CSV file contained within has the filename: `YYYYMMDD_symbol_resolution_tickType.csv`
@@ -90,7 +63,7 @@ Second/Minute quote format and example data is as follows:
 * Ask Close - Closing price for the best ask
 * Last Ask Size - Size of best ask at close
 
-## Hour/Daily Format
+## Hour and Daily File Format
 Hour/Daily files are located in the crypto / market / resolution folder. 
 
 The zip files have the filename: `symbol_tickType.zip`. The CSV file contained within has the filename: `symbol.csv`
@@ -125,3 +98,30 @@ Hour/Daily quote format and example data is as follows:
 * Ask Low - Lowest recorded ask price
 * Ask Close - Closing price for the best ask
 * Last Ask Size - Size of best ask at close
+
+## Tick File Format
+Ticks files are located in the data / crypto / market / tick folder. 
+
+The zip files have the filename format: `YYYYMMDD_tickType.zip`. The CSV file contained within has the filename format: `YYYYMMDD_symbol_resolution_tickType.csv`
+
+Tick trade format and example data is as follows:
+
+| Time | Last Price | Quantity |
+| ---- | ---------- | -------- |
+| 86400 | 232.40 | 93.1 |
+
+* Time - Milliseconds passed since midnight
+* Last Price - Most recent trade price
+* Quantity - Amount of asset purchased or sold
+
+Tick quote format and example data is as follows:
+
+| Time | Bid Price | Bid Size | Ask Price | Ask Size |
+| ---- | --------- | -------- | --------- | -------- |
+| 86400 | 232.40 | 20392.0 | 232.42 | 8059.5 |
+
+* Time - Milliseconds passed since midnight
+* Bid Price - Best bid price
+* Bid Size - Best bid price's size/quantity
+* Ask Price - Best ask price
+* Ask Size - Best ask price's size/quantity

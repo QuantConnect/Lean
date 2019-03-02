@@ -11,7 +11,7 @@ Options data can be used with the following Resolutions:
 
 The markets we currently support are:
 
-* USA - Opens `09:30:00` and closes at `16:00:00` EST / UTC-05
+* USA
 
 `tickType` in this documentation can refer to one of the following:
 
@@ -21,7 +21,7 @@ The markets we currently support are:
 
 All times are in American Eastern Time (UTC-05 / EST)
 
-## Minute Format
+## Minute File Format
 
 Minute files are located in the option / market / resolution / symbol folder. 
 

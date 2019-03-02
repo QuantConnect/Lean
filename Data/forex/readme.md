@@ -15,27 +15,12 @@ FOREX data can be used with the following Resolutions:
 
 The markets we currently support are:
 
-* FXCM - Opens `Sunday 17:00:00` and closes on `Friday 17:00:00` EST / UTC-05
-* Oanda - Opens `Sunday 17:00:00` and closes on `Friday 17:00:00` EST / UTC-05
+* FXCM
+* Oanda
 
 In Oanda data, time is in UTC, whereas FXCM is in EST / UTC-05
 
-## Tick Format
-Tick files are located in the market / tick / symbol folder. 
-
-The ZIP files have the filename format: `YYYYMMDD_quote.zip`. The CSV file contained within has the filename format: `YYYYMMDD_symbol_resolution_quote.csv`
-
-Tick quotes format and examlpe data is as follows:
-
-| Time | Bid Price | Ask Price |
-| ---- | --------- | --------- |
-| 92000 | 10.38 | 10.40 |
-
-* Time - Milliseconds since midnight
-* Bid Price - Best bid price
-* Ask Price - Best ask price
-
-## Second/Minute Format
+## Minute and Second File Format
 Second/minute files are located in the market / resolution / symbol folder. 
 
 The ZIP files have the filename format: `YYYYMMDD_quote.zip`. The CSV file contained within has the filename format: `YYYYMMDD_symbol_resolution_quote.csv`
@@ -58,7 +43,7 @@ Second/minute quotes format and example data is as follows:
 * Ask Close - Closing price for the best ask
 * Last Ask Size - Size of best ask at close
 
-## Hour/Daily Format
+## Hour and Daily File Format
 Hour/daily files are located in the market / resolution folder.
 
 The ZIP files have the filename format: `symbol.zip`. The CSV file contained within has the filename format: `symbol.csv`
@@ -80,3 +65,18 @@ Hour/Daily quotes format and example data is as follows:
 * Ask Low - Lowest recorded ask price
 * Ask Close - Closing price for the best ask
 * Last Ask Size - Size of best ask at close
+
+## Tick File Format
+Tick files are located in the market / tick / symbol folder. 
+
+The ZIP files have the filename format: `YYYYMMDD_quote.zip`. The CSV file contained within has the filename format: `YYYYMMDD_symbol_resolution_quote.csv`
+
+Tick quotes format and examlpe data is as follows:
+
+| Time | Bid Price | Ask Price |
+| ---- | --------- | --------- |
+| 92000 | 10.38 | 10.40 |
+
+* Time - Milliseconds since midnight
+* Bid Price - Best bid price
+* Ask Price - Best ask price
