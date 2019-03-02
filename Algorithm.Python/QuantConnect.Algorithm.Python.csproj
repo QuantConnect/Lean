@@ -37,6 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Alphas\ForexCalendarAlpha.py" />
+    <Content Include="Alphas\GasAndCrudeOilEnergyCorrelationAlpha.py" />
     <Content Include="Alphas\GlobalEquityMeanReversionIBSAlpha.py" />
     <Content Include="Alphas\GreenblattMagicFormulaAlgorithm.py" />
     <Content Include="Alphas\MeanReversionLunchBreakAlpha.py" />
