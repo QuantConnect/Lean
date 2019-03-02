@@ -15,19 +15,18 @@ from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Orders import *
-from QuantConnect.Algorithm import QCAlgorithm
-from QuantConnect.Python import PythonQuandl
 from QuantConnect.Data.UniverseSelection import *
-from QuantConnect.Indicators import *
-from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
+from QuantConnect.Orders.Fees import ConstantFeeModel
+from QuantConnect.Algorithm.Framework import QCAlgorithmFramework
+from QuantConnect.Algorithm.Framework.Alphas import *
+from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
+from QuantConnect.Algorithm.Framework.Selection import ManualUniverseSelectionModel
 
-# 
+#
 # Equity indices exhibit mean reversion in daily returns. The Internal Bar Strength indicator (IBS), 
 # which relates the closing price of a security to its daily range can be used to identify overbought
 # and oversold securities.
@@ -38,90 +37,88 @@ from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelec
 #
 # Source: Kakushadze, Zura, and Juan Andrés Serur. “4. Exchange-Traded Funds (ETFs).” 151 Trading Strategies, Palgrave Macmillan, 2018, pp. 90–91.
 #
-# <br><br>This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
-# You can read the source code for this alpha on Github in <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.CSharp/Alphas/GlobalEquityMeanReversionIBSAlpha.cs">C#</a>
-# or <a href="https://github.com/QuantConnect/Lean/blob/master/Algorithm.Python/Alphas/GlobalEquityMeanReversionIBSAlpha.py">Python</a>.
-# 
+# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
+#
 
-class GlobalEquityMeanReversionIBSAlphaAlgorithm(QCAlgorithmFramework):
+class GlobalEquityMeanReversionIBSAlpha(QCAlgorithmFramework):
 
     def Initialize(self):
 
         self.SetStartDate(2018, 1, 1)
 
         self.SetCash(100000)
-        
+
         # Set zero transaction fees
         self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
-        
+
         # Global Equity ETF tickers
         tickers = ["ECH","EEM","EFA","EPHE","EPP","EWA","EWC","EWG",
                    "EWH","EWI","EWJ","EWL","EWM","EWM","EWO","EWP",
                    "EWQ","EWS","EWT","EWU","EWY","EWZ","EZA","FXI",
-                   "GXG","IDX","ILF","EWM","QQQ","RSX","SPY","THD"]           
-                   
+                   "GXG","IDX","ILF","EWM","QQQ","RSX","SPY","THD"]
+
         symbols = [Symbol.Create(ticker, SecurityType.Equity, Market.USA) for ticker in tickers]
-        
+
         # Manually curated universe
         self.UniverseSettings.Resolution = Resolution.Daily
         self.SetUniverseSelection(ManualUniverseSelectionModel(symbols))
-            
+
         # Use GlobalEquityMeanReversionAlphaModel to establish insights
         self.SetAlpha(MeanReversionIBSAlphaModel())
 
         # Equally weigh securities in portfolio, based on insights
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        
-        ## Set immediate execution
+
+        # Set Immediate Execution Model
         self.SetExecution(ImmediateExecutionModel())
 
-        ## Set null risk management
+        # Set Null Risk Management Model
         self.SetRiskManagement(NullRiskManagementModel())
+
 
 class MeanReversionIBSAlphaModel(AlphaModel):
     '''Uses ranking of Internal Bar Strength (IBS) to create direction prediction for insights'''
 
     def __init__(self, *args, **kwargs): 
-        self.lookback = kwargs['lookback'] if 'lookback' in kwargs else 1
+        lookback = kwargs['lookback'] if 'lookback' in kwargs else 1
+        resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Daily
+        self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(resolution), lookback)
         self.numberOfStocks = kwargs['numberOfStocks'] if 'numberOfStocks' in kwargs else 2
-        self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Daily
-        self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), self.lookback)
-        
+
     def Update(self, algorithm, data):
-        
+
         insights = []
         symbolsIBS = dict()
         returns = dict()
-        
+
         for security in algorithm.ActiveSecurities.Values:
             if security.HasData:
                 high = security.High
                 low = security.Low
                 hilo = high - low
-                
+
                 # Do not consider symbol with zero open and avoid division by zero
                 if security.Open * hilo != 0:
                     # Internal bar strength (IBS)
-                    symbolsIBS[security.Symbol] = (security.Close-low)/hilo
+                    symbolsIBS[security.Symbol] = (security.Close - low)/hilo
                     returns[security.Symbol] = security.Close/security.Open-1
-        
+
         # Number of stocks cannot be higher than half of symbolsIBS length
         number_of_stocks = min(int(len(symbolsIBS)/2), self.numberOfStocks)
         if number_of_stocks == 0:
             return []
 
-        # Rank and retrieve the securities with the highest IBS value
-        highIBS = dict(sorted(symbolsIBS.items(), key=lambda kv: kv[1],reverse=True)[0:number_of_stocks])
-
-        # Rank and retrieve the securities with the lowest IBS value
-        lowIBS = dict(sorted(symbolsIBS.items(), key=lambda kv: kv[1],reverse=False)[0:number_of_stocks])
+        # Rank securities with the highest IBS value
+        ordered = sorted(symbolsIBS.items(), key=lambda kv: (round(kv[1], 6), kv[0]), reverse=True)
+        highIBS = dict(ordered[0:number_of_stocks])   # Get highest IBS
+        lowIBS = dict(ordered[-number_of_stocks:])    # Get lowest IBS
 
         # Emit "down" insight for the securities with the highest IBS value
         for key,value in highIBS.items():
-            insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Down, -returns[key], None))
+            insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Down, abs(returns[key]), None))
 
         # Emit "up" insight for the securities with the lowest IBS value
         for key,value in lowIBS.items():
-            insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Up, -returns[key], None))
+            insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Up, abs(returns[key]), None))
 
         return insights

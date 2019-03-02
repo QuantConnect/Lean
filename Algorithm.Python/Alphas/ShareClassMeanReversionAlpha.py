@@ -11,23 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-'''
-    A number of companies publicly trade two different classes of shares
-    in US equity markets. If both assets trade with reasonable volume, then
-    the underlying driving forces of each should be similar or the same. Given
-    this, we can create a relatively dollar-netural long/short portfolio using
-    the dual share classes. Theoretically, any deviation of this portfolio from
-    its mean-value should be corrected, and so the motivating idea is based on
-    mean-reversion. Using a Simple Moving Average indicator, we can
-    compare the value of this portfolio against its SMA and generate insights
-    to buy the under-valued symbol and sell the over-valued symbol.
-
-    This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
-    sourced so the community and client funds can see an example of an alpha.
-'''
-
-
-
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
@@ -50,6 +33,20 @@ from QuantConnect.Indicators import RollingWindow, SimpleMovingAverage
 from datetime import timedelta, datetime
 import numpy as np
 
+#
+# A number of companies publicly trade two different classes of shares
+# in US equity markets. If both assets trade with reasonable volume, then
+# the underlying driving forces of each should be similar or the same. Given
+# this, we can create a relatively dollar-netural long/short portfolio using
+# the dual share classes. Theoretically, any deviation of this portfolio from
+# its mean-value should be corrected, and so the motivating idea is based on
+# mean-reversion. Using a Simple Moving Average indicator, we can
+# compare the value of this portfolio against its SMA and generate insights
+# to buy the under-valued symbol and sell the over-valued symbol.
+#
+# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
+# sourced so the community and client funds can see an example of an alpha.
+#
 
 class ShareClassMeanReversionAlgorithm(QCAlgorithmFramework):
 
@@ -67,19 +64,18 @@ class ShareClassMeanReversionAlgorithm(QCAlgorithmFramework):
 
         ## Set Manual Universe Selection
         self.SetUniverseSelection( ManualUniverseSelectionModel(symbols) )
-        
+
         ## Set Custom Alpha Model
         self.SetAlpha(ShareClassMeanReversionAlphaModel(tickers = tickers))
 
-        ## Set Equal Weighting Portfolio Construction Model        
+        ## Set Equal Weighting Portfolio Construction Model
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        
+
         ## Set Immediate Execution Model
         self.SetExecution(ImmediateExecutionModel())
-        
+
         ## Set Null Risk Management Model
         self.SetRiskManagement(NullRiskManagementModel())
-        
 
 
 class ShareClassMeanReversionAlphaModel(AlphaModel):
@@ -174,7 +170,3 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
         ## Calculate Alpha and Beta, the initial number of shares for each security needed to achieve a 50/50 weighting
         self.alpha = algorithm.CalculateOrderQuantity(self.long_symbol, 0.5)
         self.beta = algorithm.CalculateOrderQuantity(self.short_symbol, 0.5)
-
-    def OnSecuritiesChanged(self, algorithm, changes):
-        ## Skip this method since the Universe is fixed and nothing needs to be done when securities are first added
-        pass

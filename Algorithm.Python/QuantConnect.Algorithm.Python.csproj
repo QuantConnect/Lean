@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -39,8 +39,10 @@
     <Content Include="Alphas\ForexCalendarAlpha.py" />
     <Content Include="Alphas\GasAndCrudeOilEnergyCorrelationAlpha.py" />
     <Content Include="Alphas\GlobalEquityMeanReversionIBSAlpha.py" />
+    <Content Include="Alphas\IntradayReversalCurrencyMarketsAlpha.py" />
     <Content Include="Alphas\GreenblattMagicFormulaAlgorithm.py" />
     <Content Include="Alphas\MeanReversionLunchBreakAlpha.py" />
+    <Content Include="Alphas\SykesShortMicroCapAlpha.py" />
     <Content Include="Alphas\RebalancingLeveragedETFAlpha.py" />
     <Content Include="Alphas\TriangleExchangeRateArbitrageAlpha.py" />
     <Content Include="Alphas\ShareClassMeanReversionAlpha.py" />
