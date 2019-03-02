@@ -1,7 +1,7 @@
 QuantConnect Python Algorithm Project:
 =============
 
-Before we enable python support, follow the [installation instructions](https://github.com/QuantConnect/Lean#installation-instructions) to get LEAN running C# algorithms in your machine. 
+Before we enable python support, follow the [installation instructions](https://github.com/QuantConnect/Lean#installation-instructions) to get LEAN running C# algorithms in your machine or you can use it directly from the browser with google colab [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ahmedengu/Lean/blob/master/Algorithm.Python/quantconnect_lean.ipynb). 
 
 ### Install Python 3.6:
 #### [Windows](https://github.com/QuantConnect/Lean#windows)
