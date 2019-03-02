@@ -45,7 +45,7 @@ from itertools import chain
 # sourced so the community and client funds can see an example of an alpha.
 # 
 
-class GreenblattMagicFormulaAlgorithm(QCAlgorithmFramework):
+class GreenblattMagicFormulaAlpha(QCAlgorithmFramework):
     ''' Alpha Streams: Benchmark Alpha: Pick stocks according to Joel Greenblatt's Magic Formula'''
 
     def Initialize(self):
