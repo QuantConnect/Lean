@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     ///
     /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
     /// </summary>
-    public class TripleLeveragedETFPairVolatilityDecayAlphaAlgorithm : QCAlgorithmFramework
+    public class TripleLeveragedETFPairVolatilityDecayAlpha : QCAlgorithmFramework
     {
         public override void Initialize()
         {

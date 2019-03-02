@@ -38,7 +38,7 @@
   <ItemGroup>
     <Content Include="Alphas\ForexCalendarAlpha.py" />
     <Content Include="Alphas\GlobalEquityMeanReversionIBSAlpha.py" />
-    <Content Include="Alphas\IntradayReversalCurrencyMarkets.py" />
+    <Content Include="Alphas\IntradayReversalCurrencyMarketsAlpha.py" />
     <Content Include="Alphas\MeanReversionLunchBreakAlpha.py" />
     <Content Include="Alphas\SykesShortMicroCapAlpha.py" />
     <Content Include="Alphas\RebalancingLeveragedETFAlpha.py" />

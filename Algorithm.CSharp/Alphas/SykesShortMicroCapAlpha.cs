@@ -121,7 +121,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     // Rank penny stocks on one day price change
                     let Magnitude = security.Close / security.Open - 1
                     orderby Math.Round(Magnitude, 6), security.Symbol descending
-                    select Insight.Price(security.Symbol, _predictionInterval, InsightDirection.Down, (double)Magnitude))
+                    select Insight.Price(security.Symbol, _predictionInterval, InsightDirection.Down, Math.Abs((double)Magnitude)))
                     // Retrieve list of _numberOfStocks "pumped" penny stocks
                     .Take(_numberOfStocks);
             }

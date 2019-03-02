@@ -86,7 +86,7 @@ class SykesShortMicroCapAlphaModel(AlphaModel):
 
         # Emit "down" insight for "pumped" penny stocks
         for key,value in pumpedStocks.items():
-            insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Down, value, None))
+            insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Down, abs(value), None))
 
         return insights
 

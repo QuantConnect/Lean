@@ -115,10 +115,10 @@ class MeanReversionIBSAlphaModel(AlphaModel):
 
         # Emit "down" insight for the securities with the highest IBS value
         for key,value in highIBS.items():
-            insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Down, -returns[key], None))
+            insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Down, abs(returns[key]), None))
 
         # Emit "up" insight for the securities with the lowest IBS value
         for key,value in lowIBS.items():
-            insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Up, -returns[key], None))
+            insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Up, abs(returns[key]), None))
 
         return insights

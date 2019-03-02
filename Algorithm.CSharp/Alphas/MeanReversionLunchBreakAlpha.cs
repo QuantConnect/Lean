@@ -161,7 +161,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                         // Emit "down" insight for the securities that increased in value and
                         // emit "up" insight for securities that have decreased in value
                         var direction = _priceChange > 0 ? InsightDirection.Down : InsightDirection.Up;
-                        var magnitude = -Convert.ToDouble(_meanOfPriceChange);
+                        var magnitude = Convert.ToDouble(Math.Abs(_meanOfPriceChange));
                         return Insight.Price(_symbol, _period, direction, magnitude);
                     }
                 }

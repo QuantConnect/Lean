@@ -136,13 +136,13 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 // Emit "down" insight for the securities with the highest IBS value
                 foreach (var kvp in highIBS)
                 {
-                    insights.Add(Insight.Price(kvp.Key, _predictionInterval, InsightDirection.Down, -(double)returns[kvp.Key]));
+                    insights.Add(Insight.Price(kvp.Key, _predictionInterval, InsightDirection.Down, Math.Abs((double)returns[kvp.Key])));
                 }
 
                 // Emit "up" insight for the securities with the highest IBS value
                 foreach (var kvp in lowIBS)
                 {
-                    insights.Add(Insight.Price(kvp.Key, _predictionInterval, InsightDirection.Up, -(double)returns[kvp.Key]));
+                    insights.Add(Insight.Price(kvp.Key, _predictionInterval, InsightDirection.Up, Math.Abs((double)returns[kvp.Key])));
                 }
 
                 return insights;

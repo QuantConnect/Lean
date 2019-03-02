@@ -37,31 +37,31 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     /// <meta name="tag" content="etf" />
     public class RebalancingLeveragedETFAlpha : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
-		private readonly List<ETFGroup> Groups = new List<ETFGroup>();
+        private readonly List<ETFGroup> Groups = new List<ETFGroup>();
 
-		public override void Initialize()
-		{
-			SetStartDate(2017, 6, 1);
-			SetEndDate(2018, 8, 1);
-			SetCash(100000);
+        public override void Initialize()
+        {
+            SetStartDate(2017, 6, 1);
+            SetEndDate(2018, 8, 1);
+            SetCash(100000);
 
-			var underlying = new List<string> 	{"SPY","QLD","DIA","IJR","MDY","IWM","QQQ","IYE","EEM","IYW","EFA","GAZB","SLV","IEF","IYM","IYF","IYH","IYR","IYC","IBB","FEZ","USO","TLT"};
-			var ultraLong = new List<string> 	{"SSO","UGL","DDM","SAA","MZZ","UWM","QLD","DIG","EET","ROM","EFO","BOIL","AGQ","UST","UYM","UYG","RXL","URE","UCC","BIB","ULE","UCO","UBT"};
-			var ultraShort = new List<string> 	{"SDS","GLL","DXD","SDD","MVV","TWM","QID","DUG","EEV","REW","EFU","KOLD","ZSL","PST","SMN","SKF","RXD","SRS","SCC","BIS","EPV","SCO","TBT"};
+            var underlying = new List<string> { "SPY", "QLD", "DIA", "IJR", "MDY", "IWM", "QQQ", "IYE", "EEM", "IYW", "EFA", "GAZB", "SLV", "IEF", "IYM", "IYF", "IYH", "IYR", "IYC", "IBB", "FEZ", "USO", "TLT" };
+            var ultraLong = new List<string> { "SSO", "UGL", "DDM", "SAA", "MZZ", "UWM", "QLD", "DIG", "EET", "ROM", "EFO", "BOIL", "AGQ", "UST", "UYM", "UYG", "RXL", "URE", "UCC", "BIB", "ULE", "UCO", "UBT" };
+            var ultraShort = new List<string> { "SDS", "GLL", "DXD", "SDD", "MVV", "TWM", "QID", "DUG", "EEV", "REW", "EFU", "KOLD", "ZSL", "PST", "SMN", "SKF", "RXD", "SRS", "SCC", "BIS", "EPV", "SCO", "TBT" };
 
-			for (var i = 0; i < underlying.Count; i++)
-			{
-				Groups.Add(new ETFGroup(AddEquity(underlying[i]).Symbol, AddEquity(ultraLong[i]).Symbol, AddEquity(ultraShort[i]).Symbol));
-			}
+            for (var i = 0; i < underlying.Count; i++)
+            {
+                Groups.Add(new ETFGroup(AddEquity(underlying[i]).Symbol, AddEquity(ultraLong[i]).Symbol, AddEquity(ultraShort[i]).Symbol));
+            }
 
-			// Manually curated universe
-			SetUniverseSelection(new ManualUniverseSelectionModel());
+            // Manually curated universe
+            SetUniverseSelection(new ManualUniverseSelectionModel());
 
-			// Select the demonstration alpha model
-			SetAlpha(new RebalancingLeveragedETFAlphaModel(Groups));
+            // Select the demonstration alpha model
+            SetAlpha(new RebalancingLeveragedETFAlphaModel(Groups));
 
-			// Select our default model types
-			SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+            // Select our default model types
+            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
 
             // Equally weigh securities in portfolio, based on insights
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
@@ -110,90 +110,90 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         };
     }
 
-	/// <summary>
-	/// If the underlying ETF has experienced a return >= 1% since the previous day's close up to the current time at 14:15,
-	/// then buy it's ultra ETF right away, and exit at the close. If the return is &lt;= -1%, sell it's ultra-short ETF.
-	/// </summary>
-	class RebalancingLeveragedETFAlphaModel : AlphaModel
-	{
-		private DateTime _date;
-		private readonly List<ETFGroup> _etfGroups;
+    /// <summary>
+    /// If the underlying ETF has experienced a return >= 1% since the previous day's close up to the current time at 14:15,
+    /// then buy it's ultra ETF right away, and exit at the close. If the return is &lt;= -1%, sell it's ultra-short ETF.
+    /// </summary>
+    class RebalancingLeveragedETFAlphaModel : AlphaModel
+    {
+        private DateTime _date;
+        private readonly List<ETFGroup> _etfGroups;
 
-		/// <summary>
-		/// Create a new leveraged ETF rebalancing alpha
-		/// </summary>
-		public RebalancingLeveragedETFAlphaModel(List<ETFGroup> etfGroups)
-		{
-			_etfGroups = etfGroups;
-			_date = DateTime.MinValue;
-			Name = "RebalancingLeveragedETFAlphaModel";
-		}
+        /// <summary>
+        /// Create a new leveraged ETF rebalancing alpha
+        /// </summary>
+        public RebalancingLeveragedETFAlphaModel(List<ETFGroup> etfGroups)
+        {
+            _etfGroups = etfGroups;
+            _date = DateTime.MinValue;
+            Name = "RebalancingLeveragedETFAlphaModel";
+        }
 
-		/// <summary>
-		/// Scan to see if the returns are greater than 1% at 2.15pm to emit an insight.
-		/// </summary>
-		public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
-		{
- 			// Initialize:
- 			var insights = new List<Insight>();
- 			var magnitude = 0.0005;
+        /// <summary>
+        /// Scan to see if the returns are greater than 1% at 2.15pm to emit an insight.
+        /// </summary>
+        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        {
+            // Initialize:
+            var insights = new List<Insight>();
+            var magnitude = 0.0005;
 
- 			// Paper suggests leveraged ETF's rebalance from 2.15pm - to close
- 			// giving an insight period of 105 minutes.
- 			var period = TimeSpan.FromMinutes(105);
+            // Paper suggests leveraged ETF's rebalance from 2.15pm - to close
+            // giving an insight period of 105 minutes.
+            var period = TimeSpan.FromMinutes(105);
 
-			if (algorithm.Time.Date != _date)
-			{
-				_date = algorithm.Time.Date;
+            if (algorithm.Time.Date != _date)
+            {
+                _date = algorithm.Time.Date;
 
-				// Save yesterday's price and reset the signal.
-				foreach (var group in _etfGroups)
-				{
-					var history = algorithm.History(group.Underlying, 1, Resolution.Daily);
-					group.YesterdayClose = history.Select(x => x.Close).FirstOrDefault();
-				}
-			}
+                // Save yesterday's price and reset the signal.
+                foreach (var group in _etfGroups)
+                {
+                    var history = algorithm.History(group.Underlying, 1, Resolution.Daily);
+                    group.YesterdayClose = history.Select(x => x.Close).FirstOrDefault();
+                }
+            }
 
-		 	// Check if the returns are > 1% at 14.15
-			if (algorithm.Time.Hour == 14 && algorithm.Time.Minute == 15)
-			{
-				foreach (var group in _etfGroups)
-				{
-					if (group.YesterdayClose == 0) continue;
-					var returns = (algorithm.Portfolio[group.Underlying].Price - group.YesterdayClose) / group.YesterdayClose;
+            // Check if the returns are > 1% at 14.15
+            if (algorithm.Time.Hour == 14 && algorithm.Time.Minute == 15)
+            {
+                foreach (var group in _etfGroups)
+                {
+                    if (group.YesterdayClose == 0) continue;
+                    var returns = (algorithm.Portfolio[group.Underlying].Price - group.YesterdayClose) / group.YesterdayClose;
 
-					if (returns > 0.01m)
-					{
-						insights.Add(Insight.Price(group.UltraLong, period, InsightDirection.Up, magnitude));
-					}
-					else if (returns < -0.01m)
-					{
-						insights.Add(Insight.Price(group.UltraShort, period, InsightDirection.Down, magnitude));
-					}
-				}
-			}
-			return insights;
-		}
-	}
+                    if (returns > 0.01m)
+                    {
+                        insights.Add(Insight.Price(group.UltraLong, period, InsightDirection.Up, magnitude));
+                    }
+                    else if (returns < -0.01m)
+                    {
+                        insights.Add(Insight.Price(group.UltraShort, period, InsightDirection.Down, magnitude));
+                    }
+                }
+            }
+            return insights;
+        }
+    }
 
-	class ETFGroup
-	{
-		public Symbol Underlying;
-		public Symbol UltraLong;
-		public Symbol UltraShort;
-		public decimal YesterdayClose;
+    class ETFGroup
+    {
+        public Symbol Underlying;
+        public Symbol UltraLong;
+        public Symbol UltraShort;
+        public decimal YesterdayClose;
 
-		/// <summary>
-		/// Group the underlying ETF and it's ultra ETFs
-		/// </summary>
-		/// <param name="underlying">The underlying indexETF</param>
-		/// <param name="ultraLong">The long-leveraged version of underlying ETF</param>
-		/// <param name="ultraShort">The short-leveraged version of the underlying ETF</param>
-		public ETFGroup(Symbol underlying, Symbol ultraLong, Symbol ultraShort)
-		{
-			Underlying = underlying;
-			UltraLong = ultraLong;
-			UltraShort = ultraShort;
-		}
-	}
+        /// <summary>
+        /// Group the underlying ETF and it's ultra ETFs
+        /// </summary>
+        /// <param name="underlying">The underlying indexETF</param>
+        /// <param name="ultraLong">The long-leveraged version of underlying ETF</param>
+        /// <param name="ultraShort">The short-leveraged version of the underlying ETF</param>
+        public ETFGroup(Symbol underlying, Symbol ultraLong, Symbol ultraShort)
+        {
+            Underlying = underlying;
+            UltraLong = ultraLong;
+            UltraShort = ultraShort;
+        }
+    }
 }

@@ -41,7 +41,7 @@ from datetime import datetime, timedelta, time
 # This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
 #
 
-class IntradayReversalCurrencyMarkets(QCAlgorithmFramework):
+class IntradayReversalCurrencyMarketsAlpha(QCAlgorithmFramework):
 
     def Initialize(self):
 
