@@ -137,7 +137,7 @@ namespace QuantConnect.Data.Custom
         /// <returns>STRING API Url for Quandl.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var source = @"https://www.quantconnect.com/api/v3/proxy/quandl/api/v3/datasets/"
+            var source = @"https://www.quantconnect.com/api/v3/datasets/"
                 + config.Symbol.Value + ".csv?order=asc&api_key=" + _authCode;
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
         }
