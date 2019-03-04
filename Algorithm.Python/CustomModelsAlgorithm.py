@@ -24,7 +24,6 @@ from QuantConnect.Orders.Fees import *
 from QuantConnect.Securities import *
 from QuantConnect.Orders.Fills import *
 import numpy as np
-import decimal as d
 import random
 
 ### <summary>
@@ -102,7 +101,7 @@ class CustomFeeModel(FeeModel):
         # custom fee math
         fee = max(1, parameters.Security.Price
                   * parameters.Order.AbsoluteQuantity
-                  * d.Decimal(0.00001))
+                  * 0.00001)
         self.algorithm.Log("CustomFeeModel: " + str(fee))
         return OrderFee(CashAmount(fee, "USD"))
 
@@ -112,6 +111,6 @@ class CustomSlippageModel:
 
     def GetSlippageApproximation(self, asset, order):
         # custom slippage math
-        slippage = asset.Price * d.Decimal(0.0001 * np.log10(2*float(order.AbsoluteQuantity)))
+        slippage = asset.Price * 0.0001 * np.log10(2*float(order.AbsoluteQuantity))
         self.algorithm.Log("CustomSlippageModel: " + str(slippage))
         return slippage

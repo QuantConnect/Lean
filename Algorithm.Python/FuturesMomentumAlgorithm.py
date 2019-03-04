@@ -21,7 +21,6 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Securities import *
 from datetime import timedelta
-import decimal as d
 import numpy as np
 
 ### <summary>
@@ -43,7 +42,7 @@ class FuturesMomentumAlgorithm(QCAlgorithm):
         self.SetCash(100000)
         fastPeriod = 20
         slowPeriod = 60
-        self._tolerance = d.Decimal(1 + 0.001)
+        self._tolerance = 1 + 0.001
         self.IsUpTrend = False
         self.IsDownTrend = False
         self.SetWarmUp(max(fastPeriod, slowPeriod))
