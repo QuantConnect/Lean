@@ -1,8 +1,7 @@
 ![alt tag](https://raw.githubusercontent.com/QuantConnect/Lean/master/Documentation/logo.white.small.png) 
 ## LEAN Data Formats / Futures
 
-QuantConnect hosts futures data provided by [AlgoSeek](https://algoseek.com/). The data contains *quotes*, *trades*, and *open interest* data. 
-You can explore futures data on our website at https://www.quantconnect.com/data/tree/future/
+QuantConnect hosts futures data provided by [AlgoSeek](https://algoseek.com/). The data contains *quotes*, *trades*, and *open interest* data. You can explore futures data on our website at https://www.quantconnect.com/data/tree/future
 
 The data are stored as compressed ZIP files, each capable of containing a single, or multiple CSV files, depending on the resolution requested.
 
@@ -22,11 +21,9 @@ The markets we currently support are:
 
 * trade
 * quote
-* openinterest
+* openinterest 
 
-All times are in UTC unless noted otherwise.
-
-## Minute and Second File Format
+### Minute and Second File Format
 
 Second/Minute files are located in the future / market / resolution / symbol folder. The zip file contains multiple csv entries, varying by the symbol's expiration date.
 
@@ -72,7 +69,7 @@ Second/Minute open interest schema and example data is as follows:
 * Time - Milliseconds since midnight
 * Open Interest - outstanding contracts
 
-## Hour and Daily File Format
+### Hour and Daily File Format
 Hour/Daily files are located in the future / market / resolution folder. The zip file contains only a single entry.
 
 The zip files have the filename format: `symbol_tickType.zip`. The CSV file contained within has the filename format: `symbol_tickType_symbolExpirationDate.csv`
@@ -105,7 +102,7 @@ Hour/Daily open interest schema and example data is as follows:
 * Time - Formatted as `YYYYMMDD HH:mm`
 * Open Interest - outstanding contracts
 
-## Tick File Format
+### Tick File Format
 Tick data is stored in the future / market / tick / symbol folder. The zip file contains multiple csv entries, varying by the symbol's expiration date.
 
 The zip files have the filename format: `YYYYMMDD_tickType.zip`. The CSV files contained within have the filename format: `YYYYMMDD_symbol_tick_tickType_symbolExpirationDate.csv`
