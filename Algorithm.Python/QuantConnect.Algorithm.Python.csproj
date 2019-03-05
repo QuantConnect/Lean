@@ -47,6 +47,7 @@
     <Content Include="Alphas\TriangleExchangeRateArbitrageAlpha.py" />
     <Content Include="Alphas\ShareClassMeanReversionAlpha.py" />
     <Content Include="Alphas\TripleLeverageETFPairVolatilityDecayAlpha.py" />
+    <Content Include="Alphas\VIXDualThrustAlpha.py" />
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
     <Content Include="BasicTemplateFuturesFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateOptionsFrameworkAlgorithm.py" />
