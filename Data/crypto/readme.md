@@ -27,7 +27,7 @@ The markets we currently support are:
 
 All times are in UTC unless noted otherwise.
 
-## Minute and Second File Format
+### Minute and Second File Format
 Second/Minute files are located in the crypto / market / resolution / symbol folder. 
 
 The zip files have the filename: `YYYYMMDD_tickType.zip`. The CSV file contained within has the filename: `YYYYMMDD_symbol_resolution_tickType.csv`
@@ -63,7 +63,7 @@ Second/Minute quote format and example data is as follows:
 * Ask Close - Closing price for the best ask
 * Last Ask Size - Size of best ask at close
 
-## Hour and Daily File Format
+### Hour and Daily File Format
 Hour/Daily files are located in the crypto / market / resolution folder. 
 
 The zip files have the filename: `symbol_tickType.zip`. The CSV file contained within has the filename: `symbol.csv`
@@ -99,7 +99,7 @@ Hour/Daily quote format and example data is as follows:
 * Ask Close - Closing price for the best ask
 * Last Ask Size - Size of best ask at close
 
-## Tick File Format
+### Tick File Format
 Ticks files are located in the data / crypto / market / tick folder. 
 
 The zip files have the filename format: `YYYYMMDD_tickType.zip`. The CSV file contained within has the filename format: `YYYYMMDD_symbol_resolution_tickType.csv`
