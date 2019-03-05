@@ -18,7 +18,7 @@ The markets we currently support are:
 
 CFD data operates in multiple timezones, so please confirm with the market hours database for the specific timezone of your asset.
 
-## Minute and Second File Format
+### Minute and Second File Format
 Second/minute files are located in the cfd / market / resolution / symbol folder. 
 
 The ZIP files have the filename format: `YYYYMMDD_quote.zip`. The CSV file contained within has the filename format: `YYYYMMDD_symbol_resolution_quote.csv`
@@ -41,7 +41,7 @@ Second/minute quote format and example data is as follows:
 * Ask Close - Closing price for the best ask
 * Last Ask Size - Size of best ask at close
 
-## Hour and Daily File Format
+### Hour and Daily File Format
 Hour/daily files are located in the cfd / market / resolution folder.
 
 The ZIP files have the filename format: `symbol.zip`. The CSV file contained within has the filename format: `symbol.csv`
@@ -64,7 +64,7 @@ Hour/daily quote format and example data is as follows:
 * Ask Close - Closing price for the best ask
 * Last Ask Size - Size of best ask at close
 
-## Tick File Format
+### Tick File Format
 Tick files are located in the cfd / market / tick / symbol folder.
 
 The ZIP files have the filename format: `YYYYMMDD_quote.zip`. The CSV file contained within has the filename format: `YYYYMMDD_symbol_resolution_quote.csv`
