@@ -17,11 +17,9 @@ The markets we currently support are:
 
 * trade
 * quote
-* openinterest
+* openinterest 
 
-All times are in American Eastern Time (UTC-05 / EST)
-
-## Minute File Format
+### Minute File Format
 
 Minute files are located in the option / market / resolution / symbol folder. 
 
