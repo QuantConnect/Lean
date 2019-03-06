@@ -67,9 +67,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 return;
             }
+
             try
             {
-
 
                 _today.NiftyPrice = Convert.ToDouble(data["NIFTY"].Close);
                 if (_today.Date == data["NIFTY"].EndTime)
@@ -81,7 +81,6 @@ namespace QuantConnect.Algorithm.CSharp
                         _prices.RemoveAt(0);
                     }
                 }
-
 
                 //Strategy
                 var quantity = (int)(Portfolio.MarginRemaining * 0.9m / data["NIFTY"].Close);
