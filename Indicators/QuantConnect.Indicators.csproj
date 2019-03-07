@@ -164,7 +164,9 @@
     <Compile Include="DetrendedPriceOscillator.cs" />
     <Compile Include="DonchianChannel.cs" />
     <Compile Include="DoubleExponentialMovingAverage.cs" />
+    <Compile Include="FollowingAdaptiveMovingAverage.cs" />
     <Compile Include="IntradayVwap.cs" />
+    <Compile Include="MesaAdaptiveMovingAverage.cs" />
     <Compile Include="WilderMovingAverage.cs" />
     <Compile Include="FractalAdaptiveMovingAverage.cs" />
     <Compile Include="FilteredIdentity.cs" />
