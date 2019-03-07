@@ -416,6 +416,23 @@ namespace QuantConnect.Algorithm
             RegisterIndicator<IBaseData>(symbol, filteredIdentity, ResolveConsolidator(symbol, resolution), selector);
             return filteredIdentity;
         }
+        
+        /// <summary>
+        /// Creates a new FollowingAdaptiveMovingAverage indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose FAMA we want</param>
+        /// <param name="fastLimit">The maximum allowed value to alpha of the indicator</param>
+        /// <param name="slowLimit">The minimum allowed value to alpha of the indicator</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The FollowingAdaptiveMovingAverage indicator for the requested symbol over the specified period</returns>
+        public FollowingAdaptiveMovingAverage FAMA(Symbol symbol, decimal fastLimit = .5m, decimal slowLimit = .05m, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("FAMA({0},{1})", fastLimit, slowLimit), resolution);
+            var fama = new FollowingAdaptiveMovingAverage(name, fastLimit, slowLimit);
+            RegisterIndicator(symbol, fama, resolution, selector);
+            return fama;
+        }
 
         /// <summary>
         /// Creates an FractalAdaptiveMovingAverage (FRAMA) indicator for the symbol. The indicator will be automatically
@@ -654,6 +671,23 @@ namespace QuantConnect.Algorithm
             return mad;
         }
 
+        /// <summary>
+        /// Creates a new MesaAdaptiveMovingAverage indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose MAMA we want</param>
+        /// <param name="fastLimit">The maximum allowed value to alpha of the indicator</param>
+        /// <param name="slowLimit">The minimum allowed value to alpha of the indicator</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The MesaAdaptiveMovingAverage indicator for the requested symbol over the specified period</returns>
+        public MesaAdaptiveMovingAverage MAMA(Symbol symbol, decimal fastLimit = .5m, decimal slowLimit = .05m, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, string.Format("MAMA({0},{1})", fastLimit, slowLimit), resolution);
+            var mama = new MesaAdaptiveMovingAverage(name, fastLimit, slowLimit);
+            RegisterIndicator(symbol, mama, resolution, selector);
+            return mama;
+        }
+        
         /// <summary>
         /// Creates a new Maximum indicator to compute the maximum value
         /// </summary>
