@@ -56,24 +56,23 @@ namespace QuantConnect.Algorithm.CSharp
         /// "Nifty" type below and fired into this event handler.
         /// </summary>
         /// <param name="data">One(1) Nifty Object, streamed into our algorithm synchronised in time with our other data streams</param>
-        public void OnData(DollarRupee data)
+        public void OnData(Slice data)
         {
-            _today = new CorrelationPair(data.Time) {CurrencyPrice = Convert.ToDouble(data.Close)};
-        }
+            if (data.ContainsKey("USDINR"))
+            {
+                _today = new CorrelationPair(Time) { CurrencyPrice = Convert.ToDouble(data["USDINR"].Close) };
+            }
 
-        /// <summary>
-        /// OnData is the primary entry point for youm algorithm. New data is piped into your algorithm here
-        /// via TradeBars objects.
-        /// </summary>
-        /// <param name="data">TradeBars IDictionary object</param>
-        public void OnData(Nifty data)
-        {
+            if (!data.ContainsKey("NIFTY"))
+            {
+                return;
+            }
+
             try
             {
-                var quantity = (int)(Portfolio.TotalPortfolioValue * 0.9m / data.Close);
 
-                _today.NiftyPrice = Convert.ToDouble(data.Close);
-                if (_today.Date == data.Time)
+                _today.NiftyPrice = Convert.ToDouble(data["NIFTY"].Close);
+                if (_today.Date == data["NIFTY"].EndTime)
                 {
                     _prices.Add(_today);
 
@@ -84,8 +83,10 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 //Strategy
+                var quantity = (int)(Portfolio.MarginRemaining * 0.9m / data["NIFTY"].Close);
                 var highestNifty = (from pair in _prices select pair.NiftyPrice).Max();
                 var lowestNifty = (from pair in _prices select pair.NiftyPrice).Min();
+                
                 if (Time.DayOfWeek == DayOfWeek.Wednesday) //prices.Count >= minimumCorrelationHistory &&
                 {
                     //List<double> niftyPrices = (from pair in prices select pair.NiftyPrice).ToList();
@@ -93,15 +94,15 @@ namespace QuantConnect.Algorithm.CSharp
                     //double correlation = Correlation.Pearson(niftyPrices, currencyPrices);
                     //double niftyFraction = (correlation)/2;
 
-                    if (Convert.ToDouble(data.Open) >= highestNifty)
+                    if (Convert.ToDouble(data["NIFTY"].Open) >= highestNifty)
                     {
                         var code = Order("NIFTY", quantity - Portfolio["NIFTY"].Quantity);
-                        Debug("LONG " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + data.Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
+                        Debug("LONG " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + data["NIFTY"].Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
                     }
-                    else if (Convert.ToDouble(data.Open) <= lowestNifty)
+                    else if (Convert.ToDouble(data["NIFTY"].Open) <= lowestNifty)
                     {
                         var code = Order("NIFTY", -quantity - Portfolio["NIFTY"].Quantity);
-                        Debug("SHORT " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + data.Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
+                        Debug("SHORT " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + data["NIFTY"].Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
                     }
                 }
             }

@@ -132,5 +132,17 @@ namespace QuantConnect.Brokerages
         {
             return new ConstantSlippageModel(0);
         }
+
+        /// <summary>
+        /// Gets a new settlement model for the security
+        /// </summary>
+        /// <param name="security">The security to get a settlement model for</param>
+        /// <returns>The settlement model for this brokerage</returns>
+        public override ISettlementModel GetSettlementModel(Security security)
+        {
+            return security.Type == SecurityType.Cfd
+                ? new AccountCurrencyImmediateSettlementModel() :
+                (ISettlementModel)new ImmediateSettlementModel();
+        }
     }
 }

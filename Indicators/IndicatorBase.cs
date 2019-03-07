@@ -186,9 +186,17 @@ namespace QuantConnect.Indicators
             if (ReferenceEquals(obj, null)) return false;
             if (obj.GetType().IsSubclassOf(typeof (IndicatorBase<>))) return ReferenceEquals(this, obj);
 
-            // the obj is not an indicator, so let's check for value types, try converting to decimal
-            var converted = Convert.ToDecimal(obj);
-            return Current.Value == converted;
+            try
+            {
+                // the obj is not an indicator, so let's check for value types, try converting to decimal
+                var converted = Convert.ToDecimal(obj);
+                return Current.Value == converted;
+            }
+            catch (InvalidCastException)
+            {
+                // conversion failed, return false
+                return false;
+            }
         }
 
         /// <summary>

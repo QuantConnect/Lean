@@ -35,6 +35,6 @@
 - [ ] I have read the **CONTRIBUTING** [document](https://github.com/QuantConnect/Lean/blob/master/CONTRIBUTING.md).
 - [ ] I have added tests to cover my changes. <!--- If not applicable, please explain why -->
 - [ ] All new and existing tests passed.
-- [ ] My branch follows the naming convention `bug-<issue#>-<description` or `feature-<issue#>-<description>`
+- [ ] My branch follows the naming convention `bug-<issue#>-<description>` or `feature-<issue#>-<description>`
 
 <!--- Template inspired by https://www.talater.com/open-source-templates/#/page/99 -->

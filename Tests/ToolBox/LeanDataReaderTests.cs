@@ -353,7 +353,7 @@ namespace QuantConnect.Tests.ToolBox
             new object[] {"forex", "fxcm", "minute", "eurusd", "20140502_quote.zip", 958, 1327.638085},
             new object[] {"forex", "fxcm", "second", "nzdusd", "20140514_quote.zip", 25895, 22432.757185},
             new object[] {"forex", "fxcm", "tick", "eurusd", "20140507_quote.zip", 89504, 124613.655665},
-            new object[] {"cfd", "oanda", "hour", "xauusd", "xauusd.zip", 74920, 88476989.559 },
+            new object[] {"cfd", "oanda", "hour", "xauusd", "xauusd.zip", 76499, 90453133.772 },
             new object[] {"crypto", "gdax", "second", "btcusd", "20161008_trade.zip", 3453, 2137057.57},
             new object[] {"crypto", "gdax", "minute", "ethusd", "20170903_trade.zip", 1440, 510470.66},
             new object[] {"crypto", "gdax", "daily", "btcusd", "btcusd_trade.zip", 1276, 3429172.98},

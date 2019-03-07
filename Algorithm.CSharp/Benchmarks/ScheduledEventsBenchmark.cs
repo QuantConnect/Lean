@@ -14,7 +14,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Linq;
 using QuantConnect.Data;
 
@@ -27,13 +26,12 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
             SetStartDate(2011, 1, 1);
             SetEndDate(2018, 1, 1);
             SetCash(100000);
-            AddSecurity(SecurityType.Equity, "SPY", Resolution.Minute);
-            foreach (int period in Enumerable.Range(0, 100))
+            AddEquity("SPY");
+            foreach (int period in Enumerable.Range(0, 300))
             {
                 Schedule.On(DateRules.EveryDay("SPY"), TimeRules.AfterMarketOpen("SPY", period), Rebalance);
                 Schedule.On(DateRules.EveryDay("SPY"), TimeRules.BeforeMarketClose("SPY", period), Rebalance);
             }
-            Schedule.On(DateRules.EveryDay(), TimeRules.Every(TimeSpan.FromSeconds(5)), Rebalance);
         }
 
         public override void OnData(Slice data) { }
