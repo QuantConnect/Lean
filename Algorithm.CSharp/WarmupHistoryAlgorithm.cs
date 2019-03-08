@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // 3601 because rolling window waits for one to fall off the back to be considered ready
             var history = History<QuoteBar>("EURUSD", 3601);
-            foreach (QuoteBar bar in history)
+            foreach (var bar in history)
             {
                 fast.Update(bar.EndTime, bar.Close);
                 slow.Update(bar.EndTime, bar.Close);
