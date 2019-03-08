@@ -51,7 +51,9 @@ class ConstituentsQC500GeneratorAlgorithm(QCAlgorithm):
         # - fine selection function: accepts an IEnumerable<FineFundamental> and returns an IEnumerable<Symbol>
         self.AddUniverse(self.CoarseSelectionFunction, self.FineSelectionFunction)
 
-        self.Schedule.On(self.DateRules.MonthStart(), self.TimeRules.At(0, 0), self.monthly_rebalance)
+        self.spy = self.AddEquity("SPY", Resolution.Daily)
+        self.Schedule.On(self.DateRules.MonthStart("SPY"), self.TimeRules.At(0, 0), self.monthly_rebalance)
+
         self.num_coarse = 1000
         self.num_fine = 500
         self.dollar_volume = {}
