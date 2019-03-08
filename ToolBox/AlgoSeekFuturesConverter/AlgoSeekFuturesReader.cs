@@ -159,10 +159,42 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 var ticker = csv[_columnTicker];
 
                 // we filter out options and spreads
-                if (ticker.IndexOfAny(new [] { ' ', '-'}) != -1)
+                if (ticker.IndexOfAny(new [] { ' ', '-' }) != -1)
                 {
                     return null;
                 }
+
+                ticker = ticker.Trim(new char[] { '"' });
+
+                if (_symbolFilter != null && !_symbolFilter.Contains(ticker))
+                {
+                    return null;
+                }
+
+                if (string.IsNullOrEmpty(ticker))
+                {
+                    return null;
+                }
+
+                var parsed = SymbolRepresentation.ParseFutureTicker(ticker);
+
+                if (parsed == null || !_symbolMultipliers.ContainsKey(parsed.Underlying))
+                {
+                    return null;
+                }
+
+                // ignoring time zones completely -- this is all in the 'data-time-zone'
+                var timeString = csv[_columnTimestamp];
+                var time = DateTime.ParseExact(timeString, "yyyyMMddHHmmssFFF", CultureInfo.InvariantCulture);
+
+                var underlying = parsed.Underlying;
+                var expirationYearShort = parsed.ExpirationYearShort;
+                var expirationMonth = parsed.ExpirationMonth;
+                var expirationYear = GetExpirationYear(time, expirationYearShort);
+
+                var expiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(underlying);
+                var expiryDate = expiryFunc(new DateTime(expirationYear, expirationMonth, 1));
+                var symbol = Symbol.CreateFuture(underlying, Market.USA, expiryDate);
 
                 // detecting tick type (trade or quote)
                 TickType tickType;
@@ -200,44 +232,13 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     return null;
                 }
 
-                ticker = ticker.Trim(new char[] { '"' });
-
-                if (_symbolFilter != null && !_symbolFilter.Contains(ticker))
-                {
-                    return null;
-                }
-
-                if (string.IsNullOrEmpty(ticker))
-                {
-                    return null;
-                }
-
-                // ignoring time zones completely -- this is all in the 'data-time-zone'
-                var timeString = csv[_columnTimestamp];
-                var time = DateTime.ParseExact(timeString, "yyyyMMddHHmmssFFF", CultureInfo.InvariantCulture);
-
-                var parsed = SymbolRepresentation.ParseFutureTicker(ticker);
-
-                if (parsed == null)
-                {
-                    return null;
-                }
-
-                var underlying = parsed.Underlying;
-                var expirationYearShort = parsed.ExpirationYearShort;
-                var expirationMonth = parsed.ExpirationMonth;
-
-                var expirationYear = GetExpirationYear(time, expirationYearShort);
-                var expirationYearMonth = new DateTime(expirationYear, expirationMonth, DateTime.DaysInMonth(expirationYear, expirationMonth));
-                var symbol = Symbol.CreateFuture(underlying, Market.USA, expirationYearMonth);
-
                 // All futures but VIX are delivered with a scale factor of 10000000000.
                 var scaleFactor = symbol.ID.Symbol == "VX" ? decimal.One : 10000000000m;
 
                 var price = csv[_columnPrice].ToDecimal() / scaleFactor;
                 var quantity = csv[_columnQuantity].ToInt32();
 
-                price *= _symbolMultipliers.ContainsKey(underlying) ? _symbolMultipliers[underlying] : 1.0m;
+                price *= _symbolMultipliers[underlying];
 
                 switch (tickType)
                 {
