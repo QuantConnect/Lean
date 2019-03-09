@@ -173,7 +173,7 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"{consolidated.EndTime:o} 45 minute consolidated.");
         }
 
-        private void DailyEurUsdBarHandler(TradeBar consolidated)
+        private void DailyEurUsdBarHandler(QuoteBar consolidated)
         {
             Log($"{consolidated.EndTime:o} EURUSD Daily consolidated.");
         }

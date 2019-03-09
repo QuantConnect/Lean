@@ -25,7 +25,6 @@ from QuantConnect.Data import *
 from QuantConnect.Indicators import *
 from QuantConnect.Orders import *
 from QuantConnect.Securities import *
-import decimal as d
 
 ### <summary>
 ### Regression test for history and warm up using the data available in open source.
@@ -111,7 +110,7 @@ class IndicatorWarmupAlgorithm(QCAlgorithm):
         def Update(self):
             self.IsReady = self.Close.IsReady and self.ADX.IsReady and self.EMA.IsReady and self.MACD.IsReady
 
-            tolerance = d.Decimal(1 - self.PercentTolerance)
+            tolerance = 1 - self.PercentTolerance
             self.IsUptrend = self.MACD.Signal.Current.Value > self.MACD.Current.Value * tolerance and\
                 self.EMA.Current.Value > self.Close.Current.Value * tolerance
 
@@ -147,7 +146,7 @@ class IndicatorWarmupAlgorithm(QCAlgorithm):
 
             limit = 0
             qty = self.Security.Holdings.Quantity
-            exitTolerance = d.Decimal(1 + 2 * self.PercentTolerance)
+            exitTolerance = 1 + 2 * self.PercentTolerance
             if self.Security.Holdings.IsLong and self.Close.Current.Value * exitTolerance < self.EMA.Current.Value:
                 limit = self.Security.High
             elif self.Security.Holdings.IsShort and self.Close.Current.Value > self.EMA.Current.Value * exitTolerance:
@@ -164,8 +163,8 @@ class IndicatorWarmupAlgorithm(QCAlgorithm):
 
             # if we just finished entering, place a stop loss as well
             if self.Security.Invested:
-                stop = fill.FillPrice*d.Decimal(1 - self.PercentGlobalStopLoss) if self.Security.Holdings.IsLong \
-                    else fill.FillPrice*d.Decimal(1 + self.PercentGlobalStopLoss)
+                stop = fill.FillPrice*(1 - self.PercentGlobalStopLoss) if self.Security.Holdings.IsLong \
+                    else fill.FillPrice*(1 + self.PercentGlobalStopLoss)
 
                 self.__currentStopLoss = self.__algorithm.StopMarketOrder(self.Symbol, -qty, stop, "StopLoss at: {0}".format(stop))
 

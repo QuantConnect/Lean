@@ -46,21 +46,31 @@ class BasicTemplateOptionsConsolidationAlgorithm(QCAlgorithm):
     def OnData(self,slice):
         pass
 
-    def OnDataConsolidated(self, sender, quoteBar):
-        self.Log("OnDataConsolidated called on " + str(self.Time))
+    def OnQuoteBarConsolidated(self, sender, quoteBar):
+        self.Log("OnQuoteBarConsolidated called on " + str(self.Time))
         self.Log(str(quoteBar))
+
+    def OnTradeBarConsolidated(self, sender, tradeBar):
+        self.Log("OnTradeBarConsolidated called on " + str(self.Time))
+        self.Log(str(tradeBar))
         
     def OnSecuritiesChanged(self, changes):
         for security in changes.AddedSecurities:
             if security.Type == SecurityType.Equity:
                 consolidator = TradeBarConsolidator(timedelta(minutes=5))
+                consolidator.DataConsolidated += self.OnTradeBarConsolidated
             else:
                 consolidator = QuoteBarConsolidator(timedelta(minutes=5))
-            consolidator.DataConsolidated += self.OnDataConsolidated
+                consolidator.DataConsolidated += self.OnQuoteBarConsolidated
+                
             self.SubscriptionManager.AddConsolidator(security.Symbol, consolidator)
             self.consolidators[security.Symbol] = consolidator
             
         for security in changes.RemovedSecurities:
             consolidator = self.consolidators.pop(security.Symbol)
             self.SubscriptionManager.RemoveConsolidator(security.Symbol, consolidator)
-            consolidator.DataConsolidated -= self.OnDataConsolidated
+            
+            if security.Type == SecurityType.Equity:
+                consolidator.DataConsolidated -= self.OnTradeBarConsolidated
+            else:
+                consolidator.DataConsolidated -= self.OnQuoteBarConsolidated

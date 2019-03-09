@@ -53,6 +53,7 @@ class ConstituentsQC500GeneratorAlgorithm(QCAlgorithm):
 
         self.spy = self.AddEquity("SPY", Resolution.Daily)
         self.Schedule.On(self.DateRules.MonthStart("SPY"), self.TimeRules.At(0, 0), self.monthly_rebalance)
+
         self.num_coarse = 1000
         self.num_fine = 500
         self.dollar_volume = {}

@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class QuandlImporterAlgorithm : QCAlgorithm
     {
         private SimpleMovingAverage _sma;
-        string _quandlCode = "YAHOO/INDEX_SPY";
+        string _quandlCode = "WIKI/IBM";
 
         /// Initialize the data and resolution you require for your strategy:
         public override void Initialize()
