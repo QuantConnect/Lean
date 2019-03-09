@@ -7,8 +7,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// <summary>
     /// Defines a type capable of producing random values for use in random data generation
     /// </summary>
+    /// <remarks>
+    /// Any parameters referenced as a percentage value are always in 'percent space', meaning 1 is 1%.
+    /// </remarks>
     public interface IRandomValueGenerator
     {
+        /// <summary>
+        /// Randomly return a <see cref="bool"/> value with the specified odds of being true
+        /// </summary>
+        /// <param name="percentOddsForTrue">The percent odds of being true in percent space, so 10 => 10%</param>
+        /// <returns>True or false</returns>
+        bool NextBool(double percentOddsForTrue);
+
         /// <summary>
         /// Generates a random <see cref="string"/> within the specified lengths.
         /// </summary>
@@ -24,8 +34,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// </summary>
         /// <exception cref="ArgumentException">Throw when the <paramref name="referencePrice"/> or <paramref name="maximumPercentDeviation"/>
         /// is less than or equal to zero.</exception>
-        /// <param name="securityType"></param>
-        /// <param name="market"></param>
+        /// <param name="securityType">The security type the price is being generated for</param>
+        /// <param name="market">The market of the security the price is being generated for</param>
         /// <param name="referencePrice">The reference price used as the mean of random price generation</param>
         /// <param name="maximumPercentDeviation">The maximum percent deviation. This value is in percent space,
         ///     so a value of 1m is equal to 1%.</param>

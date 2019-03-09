@@ -20,7 +20,6 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
-import decimal as d
 import base64
 
 ### <summary>
@@ -78,7 +77,7 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
         # start fresh
         self.Liquidate()
 
-        percentage = 1 / d.Decimal(slice.Bars.Count)
+        percentage = 1 / slice.Bars.Count
         for tradeBar in slice.Bars.Values:
             self.SetHoldings(tradeBar.Symbol, percentage)
 

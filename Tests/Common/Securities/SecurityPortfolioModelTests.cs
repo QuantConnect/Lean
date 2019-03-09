@@ -148,12 +148,13 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, security.Holdings.LastTradeProfit);
         }
 
-        [Test]
-        public void LastTradeProfit_ShortToFlat()
+        [TestCase("USD")]
+        [TestCase("ARG")]
+        public void LastTradeProfit_ShortToFlat(string accountCurrency)
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             SecurityPortfolioManager portfolio;
-            var security = InitializeTest(reference, out portfolio);
+            var security = InitializeTest(reference, out portfolio, accountCurrency);
 
             security.Holdings.SetHoldings(50m, -100);
 
@@ -164,13 +165,11 @@ namespace QuantConnect.Tests.Common.Securities
             var fill = new OrderEvent(1, security.Symbol, reference, OrderStatus.Filled, orderDirection, fillPrice, fillQuantity, orderFee);
             portfolio.ProcessFill(fill);
 
-
             // sold @50 and bought @100 = (50*100)+(-100*100 - 1) = -5001
             // current implementation doesn't back out fees.
             Assert.AreEqual(-5000m, security.Holdings.LastTradeProfit);
         }
 
-        [Test]
         public void LastTradeProfit_ShortToLong()
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
@@ -193,12 +192,13 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(-5000m, security.Holdings.LastTradeProfit);
         }
 
-        [Test]
-        public void NonAccountCurrencyEquity_LongToFlat()
+        [TestCase("USD")]
+        [TestCase("ARG")]
+        public void NonAccountCurrencyEquity_LongToFlat(string accountCurrency)
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             SecurityPortfolioManager portfolio;
-            InitializeTest(reference, out portfolio);
+            InitializeTest(reference, out portfolio, accountCurrency);
 
             var cash = new Cash("EUR", 0, 10);
             portfolio.CashBook.Add("EUR", cash);
@@ -227,14 +227,18 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(9999, portfolio.CashBook["EUR"].Amount);
             Assert.AreEqual(0m, equity.Holdings.AveragePrice);
             Assert.AreEqual(0m, equity.Holdings.AbsoluteQuantity);
+            Assert.AreEqual(0m, equity.Holdings.AbsoluteHoldingsCost);
+            Assert.AreEqual(0m, equity.Holdings.AbsoluteHoldingsValue);
+            Assert.AreEqual(0m, equity.Holdings.TotalCloseProfit());
         }
 
-        [Test]
-        public void NonAccountCurrencyEquity_ShortToFlat()
+        [TestCase("USD")]
+        [TestCase("ARG")]
+        public void NonAccountCurrencyEquity_ShortToFlat(string accountCurrency)
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             SecurityPortfolioManager portfolio;
-            InitializeTest(reference, out portfolio);
+            InitializeTest(reference, out portfolio, accountCurrency);
 
             var cash = new Cash("EUR", 0, 10);
             portfolio.CashBook.Add("EUR", cash);
@@ -263,14 +267,18 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(-10001, portfolio.CashBook["EUR"].Amount);
             Assert.AreEqual(0m, equity.Holdings.AveragePrice);
             Assert.AreEqual(0m, equity.Holdings.AbsoluteQuantity);
+            Assert.AreEqual(0m, equity.Holdings.AbsoluteHoldingsCost);
+            Assert.AreEqual(0m, equity.Holdings.AbsoluteHoldingsValue);
+            Assert.AreEqual(0m, equity.Holdings.TotalCloseProfit());
         }
 
-        [Test]
-        public void NonAccountCurrencyEquity_FlatToShort()
+        [TestCase("USD")]
+        [TestCase("ARG")]
+        public void NonAccountCurrencyEquity_FlatToShort(string accountCurrency)
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             SecurityPortfolioManager portfolio;
-            InitializeTest(reference, out portfolio);
+            InitializeTest(reference, out portfolio, accountCurrency);
 
             var cash = new Cash("EUR", 0, 10);
             portfolio.CashBook.Add("EUR", cash);
@@ -292,19 +300,30 @@ namespace QuantConnect.Tests.Common.Securities
 
             // current implementation doesn't back out fees.
             Assert.AreEqual(10, equity.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            Assert.AreEqual(-10, equity.Holdings.NetProfit); // fees
             Assert.AreEqual(0m, equity.Holdings.LastTradeProfit);
             // sold @100 = (100*100) = 10000 - 1 fee
             Assert.AreEqual(9999, portfolio.CashBook["EUR"].Amount);
             Assert.AreEqual(100m, equity.Holdings.AveragePrice);
             Assert.AreEqual(100m, equity.Holdings.AbsoluteQuantity);
+
+            equity.SetMarketPrice(new Tick(DateTime.UtcNow, equity.Symbol, 90, 90));
+
+            // -100 quantity * 100 average price * 10 rate = 100000m
+            Assert.AreEqual(100000m, equity.Holdings.AbsoluteHoldingsCost);
+            // -100 quantity * 90 current price * 10 rate = 90000m
+            Assert.AreEqual(90000m, equity.Holdings.AbsoluteHoldingsValue);
+            // (90 average price - 100 current price) * -100 quantity * 10 rate - 1 fee = 9999m
+            Assert.AreEqual(9999m, equity.Holdings.TotalCloseProfit());
         }
 
-        [Test]
-        public void NonAccountCurrencyEquity_FlatToLong()
+        [TestCase("USD")]
+        [TestCase("ARG")]
+        public void NonAccountCurrencyEquity_FlatToLong(string accountCurrency)
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             SecurityPortfolioManager portfolio;
-            InitializeTest(reference, out portfolio);
+            InitializeTest(reference, out portfolio, accountCurrency);
 
             var cash = new Cash("EUR", 0, 10);
             portfolio.CashBook.Add("EUR", cash);
@@ -326,19 +345,30 @@ namespace QuantConnect.Tests.Common.Securities
 
             // current implementation doesn't back out fees.
             Assert.AreEqual(10, equity.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
+            Assert.AreEqual(-10, equity.Holdings.NetProfit); // fees
             Assert.AreEqual(0m, equity.Holdings.LastTradeProfit);
             // bought @100 = -(100*100) = -10000 - 1 fee
             Assert.AreEqual(-10001, portfolio.CashBook["EUR"].Amount);
             Assert.AreEqual(100m, equity.Holdings.AveragePrice);
             Assert.AreEqual(100m, equity.Holdings.AbsoluteQuantity);
+
+            equity.SetMarketPrice(new Tick(DateTime.UtcNow, equity.Symbol, 110, 110));
+
+            // 100 quantity * 100 average price * 10 rate = 100000m
+            Assert.AreEqual(100000m, equity.Holdings.AbsoluteHoldingsCost);
+            // 100 quantity * 110 current price * 10 rate = 110000m
+            Assert.AreEqual(110000m, equity.Holdings.AbsoluteHoldingsValue);
+            // (110 current price - 100 average price) * 100 quantity * 10 rate - 1 fee = 9999m
+            Assert.AreEqual(9999m, equity.Holdings.TotalCloseProfit());
         }
 
-        [Test]
-        public void NonAccountCurrencyFuture_LongToFlat()
+        [TestCase("USD")]
+        [TestCase("ARG")]
+        public void NonAccountCurrencyFuture_LongToFlat(string accountCurrency)
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             SecurityPortfolioManager portfolio;
-            InitializeTest(reference, out portfolio);
+            InitializeTest(reference, out portfolio, accountCurrency);
 
             var cash = new Cash("EUR", 0, 10);
             portfolio.CashBook.Add("EUR", cash);
@@ -363,18 +393,23 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(10, future.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
             // bought @50 and sold @100 = (-50*100)+(100*100) = 50000 * 10 (conversion rate to account currency)
             Assert.AreEqual(50000m, future.Holdings.LastTradeProfit);
+            Assert.AreEqual(49990m, future.Holdings.NetProfit); // LastTradeProfit - fees
             // bought @50 and sold @100 = (-50*100)+(100*100) = 5000 - 1 fee
             Assert.AreEqual(4999, portfolio.CashBook["EUR"].Amount);
             Assert.AreEqual(0m, future.Holdings.AveragePrice);
             Assert.AreEqual(0m, future.Holdings.AbsoluteQuantity);
+            Assert.AreEqual(0m, future.Holdings.AbsoluteHoldingsCost);
+            Assert.AreEqual(0m, future.Holdings.AbsoluteHoldingsValue);
+            Assert.AreEqual(0m, future.Holdings.TotalCloseProfit());
         }
 
-        [Test]
-        public void NonAccountCurrencyFuture_ShortToFlat()
+        [TestCase("USD")]
+        [TestCase("ARG")]
+        public void NonAccountCurrencyFuture_ShortToFlat(string accountCurrency)
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             SecurityPortfolioManager portfolio;
-            InitializeTest(reference, out portfolio);
+            InitializeTest(reference, out portfolio, accountCurrency);
 
             var cash = new Cash("EUR", 0, 10);
             portfolio.CashBook.Add("EUR", cash);
@@ -399,18 +434,23 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(10, future.Holdings.TotalFees); // 1 * 10 (conversion rate to account currency)
             // sold @50 and bought @100 = (50*100)+(-100*100) = -50000 * 10 (conversion rate to account currency)
             Assert.AreEqual(-50000m, future.Holdings.LastTradeProfit);
+            Assert.AreEqual(-50010m, future.Holdings.NetProfit); // LastTradeProfit - fees
             // sold @50 and bought @100  = (50*100)+(-100*100) = -5000 - 1 fee
             Assert.AreEqual(-5001, portfolio.CashBook["EUR"].Amount);
             Assert.AreEqual(0m, future.Holdings.AveragePrice);
             Assert.AreEqual(0m, future.Holdings.AbsoluteQuantity);
+            Assert.AreEqual(0m, future.Holdings.AbsoluteHoldingsCost);
+            Assert.AreEqual(0m, future.Holdings.AbsoluteHoldingsValue);
+            Assert.AreEqual(0m, future.Holdings.TotalCloseProfit());
         }
 
-        [Test]
-        public void NonAccountCurrencyFuture_FlatToLong()
+        [TestCase("USD")]
+        [TestCase("ARG")]
+        public void NonAccountCurrencyFuture_FlatToLong(string accountCurrency)
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             SecurityPortfolioManager portfolio;
-            InitializeTest(reference, out portfolio);
+            InitializeTest(reference, out portfolio, accountCurrency);
 
             var cash = new Cash("EUR", 1, 10);
             portfolio.CashBook.Add("EUR", cash);
@@ -437,14 +477,25 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(100m, future.Holdings.AveragePrice);
             // had 1 EUR - 1 fee
             Assert.AreEqual(0, portfolio.CashBook["EUR"].Amount);
+
+            // 100 quantity * 100 average price * 10 rate = 100000m
+            Assert.AreEqual(100000m, future.Holdings.AbsoluteHoldingsCost);
+
+            future.SetMarketPrice(new Tick(DateTime.UtcNow, future.Symbol, 110, 110));
+
+            // 100 quantity * 110 current price * 10 rate = 110000m
+            Assert.AreEqual(110000m, future.Holdings.AbsoluteHoldingsValue);
+            // (110 current price - 100 average price) * 100 quantity * 10 rate - 1.85 fee * 100 quantity = 9815m
+            Assert.AreEqual(9815m, future.Holdings.TotalCloseProfit());
         }
 
-        [Test]
-        public void NonAccountCurrencyFuture_FlatToShort()
+        [TestCase("USD")]
+        [TestCase("ARG")]
+        public void NonAccountCurrencyFuture_FlatToShort(string accountCurrency)
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             SecurityPortfolioManager portfolio;
-            InitializeTest(reference, out portfolio);
+            InitializeTest(reference, out portfolio, accountCurrency);
 
             var cash = new Cash("EUR", 1, 10);
             portfolio.CashBook.Add("EUR", cash);
@@ -471,14 +522,25 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(100m, future.Holdings.AveragePrice);
             // had 1 EUR - 1 fee
             Assert.AreEqual(0, portfolio.CashBook["EUR"].Amount);
+
+            // 100 quantity * 100 average price * 10 rate = 100000m
+            Assert.AreEqual(100000m, future.Holdings.AbsoluteHoldingsCost);
+
+            future.SetMarketPrice(new Tick(DateTime.UtcNow, future.Symbol, 110, 110));
+
+            // 100 quantity * 110 current price * 10 rate = 110000m
+            Assert.AreEqual(110000m, future.Holdings.AbsoluteHoldingsValue);
+            // (110 current price - 100 average price) * - 100 quantity * 10 rate - 1.85 fee * 100 quantity = 9815m
+            Assert.AreEqual(-10185, future.Holdings.TotalCloseProfit());
         }
 
-        [Test]
-        public void NonAccountCurrencyCrypto_LongToFlat()
+        [TestCase("USD")]
+        [TestCase("ARG")]
+        public void NonAccountCurrencyCrypto_LongToFlat(string accountCurrency)
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             SecurityPortfolioManager portfolio;
-            InitializeTest(reference, out portfolio);
+            InitializeTest(reference, out portfolio, accountCurrency);
 
             var cash = new Cash("EUR", 0, 10);
             portfolio.CashBook.Add("EUR", cash);
@@ -510,12 +572,13 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0m, crypto.Holdings.AbsoluteQuantity);
         }
 
-        [Test]
-        public void NonAccountCurrencyCrypto_FlatToLong()
+        [TestCase("USD")]
+        [TestCase("ARG")]
+        public void NonAccountCurrencyCrypto_FlatToLong(string accountCurrency)
         {
             var reference = new DateTime(2016, 02, 16, 11, 53, 30);
             SecurityPortfolioManager portfolio;
-            InitializeTest(reference, out portfolio);
+            InitializeTest(reference, out portfolio, accountCurrency);
 
             var cash = new Cash("EUR", 0, 10);
             portfolio.CashBook.Add("EUR", cash);
@@ -546,7 +609,9 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(100, portfolio.CashBook["BTC"].Amount);
         }
 
-        private Security InitializeTest(DateTime reference, out SecurityPortfolioManager portfolio)
+        private Security InitializeTest(DateTime reference,
+            out SecurityPortfolioManager portfolio,
+            string accountCurrency = "USD")
         {
             var security = new Security(
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
@@ -561,9 +626,11 @@ namespace QuantConnect.Tests.Common.Securities
             securityManager.Add(security);
             var transactionManager = new SecurityTransactionManager(null, securityManager);
             portfolio = new SecurityPortfolioManager(securityManager, transactionManager);
-            portfolio.SetCash(Currencies.USD, 100 * 1000m, 1m);
+            portfolio.SetCash(accountCurrency, 100 * 1000m, 1m);
             Assert.AreEqual(0, security.Holdings.Quantity);
-            Assert.AreEqual(100*1000m, portfolio.CashBook[Currencies.USD].Amount);
+            Assert.AreEqual(100*1000m, portfolio.CashBook[accountCurrency].Amount);
+
+            portfolio.SetCash(security.QuoteCurrency.Symbol, 0, 1m);
             return security;
         }
 

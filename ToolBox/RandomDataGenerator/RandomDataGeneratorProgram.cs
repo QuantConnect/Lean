@@ -18,7 +18,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string securityTypeString,
             string resolutionString,
             string dataDensityString,
-            string includeCoarseString
+            string includeCoarseString,
+            string quoteTradeRatioString
             )
         {
             var output = new ConsoleLeveledOutput();
@@ -31,6 +32,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 resolutionString,
                 dataDensityString,
                 includeCoarseString,
+                quoteTradeRatioString,
                 output
             );
 

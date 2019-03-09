@@ -9,8 +9,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
     /// </summary>
     public class TickGenerator
     {
-        private readonly RandomDataGeneratorSettings _settings;
         private readonly IRandomValueGenerator _random;
+        private readonly RandomDataGeneratorSettings _settings;
 
         public TickGenerator(RandomDataGeneratorSettings settings)
         {
@@ -34,7 +34,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             };
 
             var current = _settings.Start;
-            // create deviations like 0.025 for tick and
+
+            // creates a max deviation that scales parabolically as resolution decreases (lower frequency)
             var deviation = GetMaximumDeviation(_settings.Resolution);
             while (current <= _settings.End)
             {
@@ -55,14 +56,26 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 if (_settings.TickTypes.Contains(TickType.Trade) &&
                     _settings.TickTypes.Contains(TickType.Quote))
                 {
-                    var nextTrade = _random.NextTick(symbol, next, TickType.Trade, previousValues[TickType.Trade], deviation);
-                    previousValues[TickType.Trade] = nextTrade.Value;
-                    yield return nextTrade;
+                    // since we're generating both trades and quotes we'll only reference one previous value
+                    // to prevent the trade and quote prices from drifting away from each other
+                    var previousValue = previousValues[TickType.Trade];
 
-                    // specify 0 to bind the mean to the previous trade for consistency
-                    var nextQuote = _random.NextTick(symbol, next, TickType.Quote, nextTrade.Value, 0m);
-                    previousValues[TickType.Quote] = nextQuote.Value;
-                    yield return nextQuote;
+                    // %odds of getting a trade tick, for example, a quote:trade ratio of 2 means twice as likely
+                    // to get a quote, which means you have a 33% chance of getting a trade => 1/3
+                    var tradeChancePercent = 100 / (1 + _settings.QuoteTradeRatio);
+                    if (_random.NextBool(tradeChancePercent))
+                    {
+                        var nextTrade = _random.NextTick(symbol, next, TickType.Trade, previousValue, deviation);
+                        previousValues[TickType.Trade] = nextTrade.Value;
+                        yield return nextTrade;
+                    }
+                    else
+                    {
+                        var nextQuote = _random.NextTick(symbol, next, TickType.Quote, previousValue, deviation);
+                        previousValues[TickType.Trade] = nextQuote.Value;
+                        yield return nextQuote;
+                    }
+
                 }
                 else if(_settings.TickTypes.Contains(TickType.Trade))
                 {
@@ -72,7 +85,6 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 }
                 else if (_settings.TickTypes.Contains(TickType.Quote))
                 {
-                    // specify 0 to bind the mean to the previous trade for consistency
                     var nextQuote = _random.NextTick(symbol, next, TickType.Quote, previousValues[TickType.Quote], deviation);
                     previousValues[TickType.Quote] = nextQuote.Value;
                     yield return nextQuote;

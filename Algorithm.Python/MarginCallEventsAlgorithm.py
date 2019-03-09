@@ -21,7 +21,6 @@ from QuantConnect import *
 from QuantConnect.Orders import *
 from QuantConnect.Algorithm import QCAlgorithm
 import numpy as np
-import decimal as d 
 from datetime import datetime, timedelta
 
 ### <summary>
@@ -61,7 +60,7 @@ class MarginCallEventsAlgorithm(QCAlgorithm):
         for order in requests:
             
             # liquidate an extra 10% each time we get a margin call to give us more padding
-            newQuantity = int(np.sign(order.Quantity) * order.Quantity * d.Decimal(1.1))
+            newQuantity = int(np.sign(order.Quantity) * order.Quantity * 1.1)
             requests.remove(order)
             requests.append(SubmitOrderRequest(order.OrderType, order.SecurityType, order.Symbol, newQuantity, order.StopPrice, order.LimitPrice, self.Time, "OnMarginCall"))
         
@@ -74,6 +73,6 @@ class MarginCallEventsAlgorithm(QCAlgorithm):
         # a chance to prevent a margin call from occurring
         
         spyHoldings = self.Securities["SPY"].Holdings.Quantity
-        shares = int(-spyHoldings * d.Decimal(0.005))
+        shares = int(-spyHoldings * 0.005)
         self.Error("{0} - OnMarginCallWarning(): Liquidating {1} shares of SPY to avoid margin call.".format(self.Time, shares))
         self.MarketOrder("SPY", shares)

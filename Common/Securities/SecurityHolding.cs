@@ -154,7 +154,7 @@ namespace QuantConnect.Securities
 
 
         /// <summary>
-        /// Acquisition cost of the security total holdings.
+        /// Acquisition cost of the security total holdings in units of the account's currency.
         /// </summary>
         public virtual decimal HoldingsCost
         {
@@ -165,7 +165,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Unlevered Acquisition cost of the security total holdings.
+        /// Unlevered Acquisition cost of the security total holdings in units of the account's currency.
         /// </summary>
         public virtual decimal UnleveredHoldingsCost
         {
@@ -188,7 +188,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Absolute holdings cost for current holdings in units of the account's currency
+        /// Absolute holdings cost for current holdings in units of the account's currency.
         /// </summary>
         /// <seealso cref="HoldingsCost"/>
         public virtual decimal AbsoluteHoldingsCost
@@ -200,7 +200,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Unlevered absolute acquisition cost of the security total holdings.
+        /// Unlevered absolute acquisition cost of the security total holdings in units of the account's currency.
         /// </summary>
         public virtual decimal UnleveredAbsoluteHoldingsCost
         {
@@ -211,7 +211,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Market value of our holdings.
+        /// Market value of our holdings in units of the account's currency.
         /// </summary>
         public virtual decimal HoldingsValue
         {
@@ -219,7 +219,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Absolute of the market value of our holdings.
+        /// Absolute of the market value of our holdings in units of the account's currency.
         /// </summary>
         /// <seealso cref="HoldingsValue"/>
         public virtual decimal AbsoluteHoldingsValue
@@ -252,7 +252,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// The total transaction volume for this security since the algorithm started.
+        /// The total transaction volume for this security since the algorithm started in units of the account's currency.
         /// </summary>
         public virtual decimal TotalSaleVolume
         {
@@ -260,7 +260,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Total fees for this company since the algorithm started.
+        /// Total fees for this company since the algorithm started in units of the account's currency.
         /// </summary>
         public virtual decimal TotalFees
         {
@@ -304,7 +304,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Record of the closing profit from the last trade conducted.
+        /// Record of the closing profit from the last trade conducted in units of the account's currency.
         /// </summary>
         public virtual decimal LastTradeProfit
         {
@@ -315,7 +315,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Calculate the total profit for this security.
+        /// Calculate the total profit for this security in units of the account's currency.
         /// </summary>
         /// <seealso cref="NetProfit"/>
         public virtual decimal Profit
@@ -324,7 +324,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Return the net for this company measured by the profit less fees.
+        /// Return the net for this company measured by the profit less fees in units of the account's currency.
         /// </summary>
         /// <seealso cref="Profit"/>
         /// <seealso cref="TotalFees"/>
@@ -349,7 +349,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Unrealized profit of this security when absolute quantity held is more than zero.
+        /// Unrealized profit of this security when absolute quantity held is more than zero in units of the account's currency.
         /// </summary>
         public virtual decimal UnrealizedProfit
         {
@@ -357,7 +357,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Adds a fee to the running total of total fees.
+        /// Adds a fee to the running total of total fees in units of the account's currency.
         /// </summary>
         /// <param name="newFee"></param>
         public void AddNewFee(decimal newFee)
@@ -366,7 +366,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Adds a profit record to the running total of profit.
+        /// Adds a profit record to the running total of profit in units of the account's currency.
         /// </summary>
         /// <param name="profitLoss">The cash change in portfolio from closing a position</param>
         public void AddNewProfit(decimal profitLoss)
@@ -375,7 +375,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Adds a new sale value to the running total trading volume in terms of the account currency
+        /// Adds a new sale value to the running total trading volume in units of the account's currency.
         /// </summary>
         /// <param name="saleValue"></param>
         public void AddNewSale(decimal saleValue)
@@ -384,7 +384,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Set the last trade profit for this security from a Portfolio.ProcessFill call.
+        /// Set the last trade profit for this security from a Portfolio.ProcessFill call in units of the account's currency.
         /// </summary>
         /// <param name="lastTradeProfit">Value of the last trade profit</param>
         public void SetLastTradeProfit(decimal lastTradeProfit)
@@ -420,7 +420,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Profit if we closed the holdings right now including the approximate fees.
+        /// Profit if we closed the holdings right now including the approximate fees in units of the account's currency.
         /// </summary>
         /// <remarks>Does not use the transaction model for market fills but should.</remarks>
         public virtual decimal TotalCloseProfit()

@@ -64,9 +64,13 @@ class ForexCalendarAlgorithm(QCAlgorithmFramework):
         # Set to use our FxCalendar Alpha Model
         self.SetAlpha(FxCalendarTrigger())
 
-        # Default Models For Other Framework Settings
+        # Equally weigh securities in portfolio, based on insights
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+
+        # Set Immediate Execution Model
         self.SetExecution(ImmediateExecutionModel())
+
+        # Set Null Risk Management Model
         self.SetRiskManagement(NullRiskManagementModel())
 
 class FxCalendarTrigger(AlphaModel):

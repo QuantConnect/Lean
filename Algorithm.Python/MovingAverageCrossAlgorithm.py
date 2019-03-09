@@ -21,7 +21,6 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
-import decimal as d
 
 ### <summary>
 ### In this example we look at the canonical 15/30 day moving average cross. This algorithm
@@ -75,7 +74,7 @@ class MovingAverageCrossAlgorithm(QCAlgorithm):
         # we only want to go long if we're currently short or flat
         if holdings <= 0:
             # if the fast is greater than the slow, we'll go long
-            if self.fast.Current.Value > self.slow.Current.Value * d.Decimal(1 + tolerance):
+            if self.fast.Current.Value > self.slow.Current.Value *(1 + tolerance):
                 self.Log("BUY  >> {0}".format(self.Securities["SPY"].Price))
                 self.SetHoldings("SPY", 1.0)
 

@@ -135,6 +135,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -157,6 +158,7 @@
     <Compile Include="DataFeeds\Enumerators\ITradableDateEventProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\ITradableDatesNotifier.cs" />
     <Compile Include="DataFeeds\Enumerators\MappingEventProvider.cs" />
+    <Compile Include="DataFeeds\Enumerators\PriceScaleFactorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\SplitEventProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\LiveBaseDataSynchronizingEnumerator.cs" />

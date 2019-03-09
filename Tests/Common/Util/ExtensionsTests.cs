@@ -301,9 +301,25 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void ConvertsInt32FromStringWithDecimalTruncation()
+        {
+            const string input = "12345678.9";
+            var value = input.ToInt32();
+            Assert.AreEqual(12345678, value);
+        }
+
+        [Test]
         public void ConvertsInt64FromString()
         {
             const string input = "12345678900";
+            var value = input.ToInt64();
+            Assert.AreEqual(12345678900, value);
+        }
+
+        [Test]
+        public void ConvertsInt64FromStringWithDecimalTruncation()
+        {
+            const string input = "12345678900.12";
             var value = input.ToInt64();
             Assert.AreEqual(12345678900, value);
         }

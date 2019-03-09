@@ -40,7 +40,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class FileSystemDataFeed : IDataFeed
     {
         private IAlgorithm _algorithm;
-        private ParallelRunnerController _controller;
         private IResultHandler _resultHandler;
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
@@ -85,8 +84,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             IsActive = true;
             var threadCount = Math.Max(1, Math.Min(4, Environment.ProcessorCount - 3));
-            _controller = new ParallelRunnerController(threadCount);
-            _controller.Start(_cancellationTokenSource.Token);
         }
 
         private Subscription CreateDataSubscription(SubscriptionRequest request)
@@ -123,12 +120,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private void ScheduleEnumerator(Subscription subscription, IEnumerator<BaseData> enumerator, EnqueueableEnumerator<SubscriptionData> enqueueable,
             int lowerThreshold, int upperThreshold, SecurityExchangeHours exchangeHours, int firstLoopCount = 5)
         {
-            // schedule the work on the controller
-            var configuration = subscription.Configuration;
-
-            var firstLoop = true;
-            FuncParallelRunnerWorkItem workItem = null;
-            workItem = new FuncParallelRunnerWorkItem(() => enqueueable.Count < lowerThreshold, () =>
+            Action produce = () =>
             {
                 var count = 0;
                 while (enumerator.MoveNext())
@@ -140,36 +132,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         return;
                     }
 
-                    var subscriptionData = SubscriptionData.Create(configuration, exchangeHours, subscription.OffsetProvider, enumerator.Current);
+                    var subscriptionData = SubscriptionData.Create(subscription.Configuration, exchangeHours, subscription.OffsetProvider, enumerator.Current);
 
                     // drop the data into the back of the enqueueable
                     enqueueable.Enqueue(subscriptionData);
 
                     count++;
 
-                    // special behavior for first loop to spool up quickly
-                    if (firstLoop && count > firstLoopCount)
+                    // stop executing if we have more data than the upper threshold in the enqueueable
+                    if (count > upperThreshold)
                     {
-                        // there's more data in the enumerator, reschedule to run again
-                        firstLoop = false;
-                        _controller.Schedule(workItem);
-                        return;
-                    }
-
-                    // stop executing if we've dequeued more than the lower threshold or have
-                    // more total that upper threshold in the enqueueable's queue
-                    if (count > lowerThreshold || enqueueable.Count > upperThreshold)
-                    {
-                        // there's more data in the enumerator, reschedule to run again
-                        _controller.Schedule(workItem);
-                        return;
+                        // we use local count for the outside if, for performance, and adjust here
+                        count = enqueueable.Count;
+                        if (count > upperThreshold)
+                        {
+                            return;
+                        }
                     }
                 }
 
-                // we made it here because MoveNext returned false, stop the enqueueable and don't reschedule
+                // we made it here because MoveNext returned false, stop the enqueueable
                 enqueueable.Stop();
-            });
-            _controller.Schedule(workItem);
+            };
+
+            enqueueable.SetProducer(produce, lowerThreshold);
         }
 
         /// <summary>
@@ -284,8 +270,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 IsActive = false;
                 Log.Trace("FileSystemDataFeed.Exit(): Start. Setting cancellation token...");
                 _cancellationTokenSource.Cancel();
-                Log.Trace("FileSystemDataFeed.Exit(): Ending Thread...");
-                _controller?.DisposeSafely();
                 _subscriptionFactory?.DisposeSafely();
                 Log.Trace("FileSystemDataFeed.Exit(): Exit Finished.");
             }

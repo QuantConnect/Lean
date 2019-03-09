@@ -408,50 +408,58 @@ namespace QuantConnect.Brokerages.Fxcm
             cashBook.Add(new CashAmount(Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()),
                 _fxcmAccountCurrency));
 
+            // include cash balances from currency swaps for open Forex positions
             foreach (var trade in _openPositions.Values)
             {
-                //settlement price for the trade
-                var settlementPrice = Convert.ToDecimal(trade.getSettlPrice());
-                //direction of trade
-                var direction = trade.getPositionQty().getLongQty() > 0 ? 1 : -1;
-                //quantity of the asset
-                var quantity = Convert.ToDecimal(trade.getPositionQty().getQty());
-                //quantity of base currency
-                var baseQuantity = direction * quantity;
-                //quantity of quote currency
-                var quoteQuantity = -direction * quantity * settlementPrice;
-                //base currency
-                var baseCurrency = trade.getCurrency();
-                //quote currency
-                var quoteCurrency = FxcmSymbolMapper.ConvertFxcmSymbolToLeanSymbol(trade.getInstrument().getSymbol());
-                quoteCurrency = quoteCurrency.Substring(quoteCurrency.Length - 3);
+                var brokerageSymbol = trade.getInstrument().getSymbol();
+                var ticker = FxcmSymbolMapper.ConvertFxcmSymbolToLeanSymbol(brokerageSymbol);
+                var securityType = _symbolMapper.GetBrokerageSecurityType(brokerageSymbol);
 
-                var baseCurrencyAmount = cashBook.FirstOrDefault(x => x.Currency == baseCurrency);
-                //update the value of the base currency
-                if (baseCurrencyAmount != default(CashAmount))
+                if (securityType == SecurityType.Forex)
                 {
-                    cashBook.Remove(baseCurrencyAmount);
-                    cashBook.Add(new CashAmount(baseQuantity + baseCurrencyAmount.Amount, baseCurrency));
-                }
-                else
-                {
-                    //add the base currency if not present
-                    cashBook.Add(new CashAmount(baseQuantity, baseCurrency));
-                }
+                    //settlement price for the trade
+                    var settlementPrice = Convert.ToDecimal(trade.getSettlPrice());
+                    //direction of trade
+                    var direction = trade.getPositionQty().getLongQty() > 0 ? 1 : -1;
+                    //quantity of the asset
+                    var quantity = Convert.ToDecimal(trade.getPositionQty().getQty());
+                    //quantity of base currency
+                    var baseQuantity = direction * quantity;
+                    //quantity of quote currency
+                    var quoteQuantity = -direction * quantity * settlementPrice;
+                    //base currency
+                    var baseCurrency = trade.getCurrency();
+                    //quote currency
+                    var quoteCurrency = ticker.Substring(ticker.Length - 3);
 
-                var quoteCurrencyAmount = cashBook.Find(x => x.Currency == quoteCurrency);
-                //update the value of the quote currency
-                if (quoteCurrencyAmount != default(CashAmount))
-                {
-                    cashBook.Remove(quoteCurrencyAmount);
-                    cashBook.Add(new CashAmount(quoteQuantity + quoteCurrencyAmount.Amount, quoteCurrency));
-                }
-                else
-                {
-                    //add the quote currency if not present
-                    cashBook.Add(new CashAmount(quoteQuantity, quoteCurrency));
+                    var baseCurrencyAmount = cashBook.FirstOrDefault(x => x.Currency == baseCurrency);
+                    //update the value of the base currency
+                    if (baseCurrencyAmount != default(CashAmount))
+                    {
+                        cashBook.Remove(baseCurrencyAmount);
+                        cashBook.Add(new CashAmount(baseQuantity + baseCurrencyAmount.Amount, baseCurrency));
+                    }
+                    else
+                    {
+                        //add the base currency if not present
+                        cashBook.Add(new CashAmount(baseQuantity, baseCurrency));
+                    }
+
+                    var quoteCurrencyAmount = cashBook.Find(x => x.Currency == quoteCurrency);
+                    //update the value of the quote currency
+                    if (quoteCurrencyAmount != default(CashAmount))
+                    {
+                        cashBook.Remove(quoteCurrencyAmount);
+                        cashBook.Add(new CashAmount(quoteQuantity + quoteCurrencyAmount.Amount, quoteCurrency));
+                    }
+                    else
+                    {
+                        //add the quote currency if not present
+                        cashBook.Add(new CashAmount(quoteQuantity, quoteCurrency));
+                    }
                 }
             }
+
             return cashBook;
         }
 

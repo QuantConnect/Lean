@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.Framework.Risk
 {
@@ -60,7 +61,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
 
             // Group the securities by their sector
             var groupBySector = algorithm.UniverseManager.ActiveSecurities
-                .Where(x => x.Value.Fundamentals.HasFundamentalData)
+                .Where(x => x.Value.Fundamentals != null && x.Value.Fundamentals.HasFundamentalData)
                 .GroupBy(x => x.Value.Fundamentals.CompanyReference.IndustryTemplateCode);
 
             foreach (var securities in groupBySector)
@@ -108,6 +109,22 @@ namespace QuantConnect.Algorithm.Framework.Risk
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Event fired each time the we add/remove securities from the data feed
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
+        /// <param name="changes">The security additions and removals from the algorithm</param>
+        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        {
+            var anyFundamentalData = algorithm.ActiveSecurities
+                .Any(kvp => kvp.Value.Fundamentals != null && kvp.Value.Fundamentals.HasFundamentalData);
+
+            if (!anyFundamentalData)
+            {
+                throw new Exception("MaximumSectorExposureRiskManagementModel.OnSecuritiesChanged: Please select a portfolio selection model that selects securities with fundamental data.");
             }
         }
     }

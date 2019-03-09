@@ -145,5 +145,42 @@ namespace QuantConnect.Tests.Common.Data
 
             Assert.AreEqual(4, slice.Count());
         }
+
+        [Test]
+        public void AccessesTradeBarAndQuoteBarForSameSymbol()
+        {
+            var tradeBar = new TradeBar(DateTime.Now, Symbols.BTCUSD,
+                3000, 3000, 3000, 3000, 100, Time.OneMinute);
+
+            var quoteBar = new QuoteBar(DateTime.Now, Symbols.BTCUSD,
+                    new Bar(3100, 3100, 3100, 3100), 0,
+                    new Bar(3101, 3101, 3101, 3101), 0,
+                    Time.OneMinute);
+
+            var tradeBars = new TradeBars { { Symbols.BTCUSD, tradeBar } };
+            var quoteBars = new QuoteBars { { Symbols.BTCUSD, quoteBar } };
+
+            var slice = new Slice(DateTime.Now, new BaseData[] { tradeBar, quoteBar }, tradeBars, quoteBars, null, null, null, null, null, null, null);
+
+            var tradeBarData = slice.Get<TradeBar>();
+            Assert.AreEqual(1, tradeBarData.Count);
+            Assert.AreEqual(3000, tradeBarData[Symbols.BTCUSD].Close);
+
+            var quoteBarData = slice.Get<QuoteBar>();
+            Assert.AreEqual(1, quoteBarData.Count);
+            Assert.AreEqual(3100, quoteBarData[Symbols.BTCUSD].Bid.Close);
+            Assert.AreEqual(3101, quoteBarData[Symbols.BTCUSD].Ask.Close);
+
+            slice = new Slice(DateTime.Now, new BaseData[] { tradeBar, quoteBar });
+
+            tradeBarData = slice.Get<TradeBar>();
+            Assert.AreEqual(1, tradeBarData.Count);
+            Assert.AreEqual(3000, tradeBarData[Symbols.BTCUSD].Close);
+
+            quoteBarData = slice.Get<QuoteBar>();
+            Assert.AreEqual(1, quoteBarData.Count);
+            Assert.AreEqual(3100, quoteBarData[Symbols.BTCUSD].Bid.Close);
+            Assert.AreEqual(3101, quoteBarData[Symbols.BTCUSD].Ask.Close);
+        }
     }
 }

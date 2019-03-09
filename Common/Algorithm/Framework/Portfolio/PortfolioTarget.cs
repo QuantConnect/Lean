@@ -84,7 +84,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             if (result.IsError)
             {
-                algorithm.Error($"Unable to compute order quantity of {symbol}. Reason: {result.Reason}. Returning null.");
+                algorithm.Error($"Unable to compute order quantity of {symbol}. Reason: {result.Reason} Returning null.");
                 return null;
             }
 

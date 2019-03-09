@@ -144,7 +144,8 @@ namespace QuantConnect.ToolBox
                     case "kdc":
                     case "kaikodataconverter":
                         KaikoDataConverterProgram.KaikoDataConverter(GetParameterOrExit(optionsObject, "source-dir"),
-                                                                     GetParameterOrExit(optionsObject, "date"));
+                                                                     GetParameterOrExit(optionsObject, "date"),
+                                                                     GetParameterOrDefault(optionsObject, "exchange", string.Empty));
                         break;
                     case "nmdc":
                     case "nsemarketdataconverter":
@@ -171,7 +172,8 @@ namespace QuantConnect.ToolBox
                             GetParameterOrDefault(optionsObject, "security-type", "Equity"),
                             GetParameterOrDefault(optionsObject, "resolution", "Minute"),
                             GetParameterOrDefault(optionsObject, "data-density", "Dense"),
-                            GetParameterOrDefault(optionsObject, "include-coarse", "true")
+                            GetParameterOrDefault(optionsObject, "include-coarse", "true"),
+                            GetParameterOrDefault(optionsObject, "quote-trade-ratio", "1")
                         );
                         break;
                     default:

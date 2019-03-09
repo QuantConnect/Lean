@@ -38,7 +38,7 @@ namespace QuantConnect.Util
         {
             using (Py.GIL())
             {
-                int count = 0;
+                long count = 0;
                 if (!TryGetArgLength(pyObject, out count) || count != 1)
                 {
                     return null;
@@ -59,7 +59,7 @@ namespace QuantConnect.Util
         {
             using (Py.GIL())
             {
-                int count = 0;
+                long count = 0;
                 if (!TryGetArgLength(pyObject, out count) || count != 2)
                 {
                     return null;
@@ -80,7 +80,7 @@ namespace QuantConnect.Util
         {
             using (Py.GIL())
             {
-                int count = 0;
+                long count = 0;
                 if (!TryGetArgLength(pyObject, out count) || count != 1)
                 {
                     return null;
@@ -180,7 +180,7 @@ namespace QuantConnect.Util
         /// <param name="pyObject">Object representing a method</param>
         /// <param name="length">Lenght of arguments</param>
         /// <returns>True if pyObject is a method</returns>
-        private static bool TryGetArgLength(PyObject pyObject, out int length)
+        private static bool TryGetArgLength(PyObject pyObject, out long length)
         {
             using (Py.GIL())
             {

@@ -231,6 +231,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _openOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _completeOrderTickets.TryAdd(ticket.OrderId, ticket);
                 _orderRequestQueue.Add(request);
+
+                // wait for the transaction handler to set the order reference into the new order ticket,
+                // so we can ensure the order has already been added to the open orders,
+                // before returning the ticket to the algorithm.
+
+                var orderSetTimeout = Time.OneSecond;
+                if (!ticket.OrderSet.WaitOne(orderSetTimeout))
+                {
+                    Log.Error("BrokerageTransactionHandler.ProcessRequest(): " +
+                              $"The order request (Id={ticket.OrderId}) was not processed within {orderSetTimeout.TotalSeconds} second(s).");
+                }
             }
             else
             {
@@ -638,7 +649,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     else
                     {
                         //Set the cash amount to zero if cash entry not found in the balances
-                        Log.LogHandler.Trace($"BrokerageTransactionHandler.PerformCashSync(): {cash.Symbol} was not found" +
+                        Log.LogHandler.Trace($"BrokerageTransactionHandler.PerformCashSync(): {cash.Symbol} was not found " +
                             "in brokerage cash balance, setting the amount to 0");
                         _algorithm.Portfolio.CashBook[cash.Symbol].SetAmount(0);
                     }

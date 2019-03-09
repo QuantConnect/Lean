@@ -101,8 +101,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     throw new NotImplementedException();
                 }
 
-                Log.Trace($"AlgoSeekOptionsConverter.Convert(): Extraction successful in {DateTime.UtcNow - timer:g}, deleting {compressedRawDatafile.Name}.");
-                compressedRawDatafile.Delete();
+                Log.Trace($"AlgoSeekOptionsConverter.Convert(): Extraction successful in {DateTime.UtcNow - timer:g}.");
                 rawDatafiles.Add(rawDataFile);
             }
 

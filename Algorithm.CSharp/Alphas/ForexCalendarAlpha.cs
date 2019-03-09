@@ -13,9 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
@@ -28,56 +25,62 @@ using QuantConnect.Data.Custom;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities.Forex;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
-	// <summary>
-	// This demonstration alpha reads the DailyFx calendar and provides insights based upon
-	// the news outlook for the country associated currency pairs
-	// </summary>
-	public class ForexCalendarAlpha : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    /// <summary>
+    /// This demonstration alpha reads the DailyFx calendar and provides insights based upon
+    /// the news outlook for the country associated currency pairs
+    ///</summary>
+    public class ForexCalendarAlpha : QCAlgorithmFramework, IRegressionAlgorithmDefinition
     {
+        public override void Initialize()
+        {
+            SetStartDate(2015, 7, 12);
+            SetEndDate(2018, 7, 27);
+            SetCash(100000);
 
-		public override void Initialize()
-		{
-			SetStartDate(2015, 7, 12);
-			SetEndDate(2018, 7, 27);
-			SetCash(100000);
+            // Selects a universe of popular currency pairs with USD
+            var symbols = new[] { QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
+                                  QuantConnect.Symbol.Create("EURGBP", SecurityType.Forex, Market.Oanda),
+                                  QuantConnect.Symbol.Create("EURAUD", SecurityType.Forex, Market.Oanda),
+                                  QuantConnect.Symbol.Create("EURCHF", SecurityType.Forex, Market.Oanda),
+                                  QuantConnect.Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
+                                  QuantConnect.Symbol.Create("EURCHF", SecurityType.Forex, Market.Oanda),
+                                  QuantConnect.Symbol.Create("USDJPY", SecurityType.Forex, Market.Oanda),
+                                  QuantConnect.Symbol.Create("USDCHF", SecurityType.Forex, Market.Oanda),
+                                  QuantConnect.Symbol.Create("USDCAD", SecurityType.Forex, Market.Oanda),
+                                  QuantConnect.Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
+                                  QuantConnect.Symbol.Create("AUDJPY", SecurityType.Forex, Market.Oanda),
+                                  QuantConnect.Symbol.Create("GBPJPY", SecurityType.Forex, Market.Oanda),
+                                  QuantConnect.Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda),
+                                  QuantConnect.Symbol.Create("NZDUSD", SecurityType.Forex, Market.Oanda)};
 
-			// Selects a universe of popular currency pairs with USD
-			var symbols = new[] { QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
-		                          QuantConnect.Symbol.Create("EURGBP", SecurityType.Forex, Market.Oanda),
-		                          QuantConnect.Symbol.Create("EURAUD", SecurityType.Forex, Market.Oanda),
-		                          QuantConnect.Symbol.Create("EURCHF", SecurityType.Forex, Market.Oanda),
-		                          QuantConnect.Symbol.Create("EURJPY", SecurityType.Forex, Market.Oanda),
-		                          QuantConnect.Symbol.Create("EURCHF", SecurityType.Forex, Market.Oanda),
-		                          QuantConnect.Symbol.Create("USDJPY", SecurityType.Forex, Market.Oanda),
-		                          QuantConnect.Symbol.Create("USDCHF", SecurityType.Forex, Market.Oanda),
-		                          QuantConnect.Symbol.Create("USDCAD", SecurityType.Forex, Market.Oanda),
-		                          QuantConnect.Symbol.Create("AUDUSD", SecurityType.Forex, Market.Oanda),
-		                          QuantConnect.Symbol.Create("AUDJPY", SecurityType.Forex, Market.Oanda),
-		                          QuantConnect.Symbol.Create("GBPJPY", SecurityType.Forex, Market.Oanda),
-		                          QuantConnect.Symbol.Create("GBPUSD", SecurityType.Forex, Market.Oanda),
-		                          QuantConnect.Symbol.Create("NZDUSD", SecurityType.Forex, Market.Oanda)};
+            // Initializes the class that provides DailyFx news
+            AddData<DailyFx>("DFX", Resolution.Minute, DateTimeZone.Utc);
 
-			// Initializes the class that provides DailyFx news
-			AddData<DailyFx>("DFX", Resolution.Minute, DateTimeZone.Utc);
+            // Add a Manually Set Universe
+            UniverseSettings.Resolution = Resolution.Minute;
+            SetUniverseSelection(new ManualUniverseSelectionModel(symbols));
 
-			// Add a Manually Set Universe
-			UniverseSettings.Resolution = Resolution.Minute;
-			SetUniverseSelection(new ManualUniverseSelectionModel(symbols));
+            // Define the FX Alpha Model.
+            SetAlpha(new FxCalendarTrigger());
 
-			// Define the FX Alpha Model.
-			SetAlpha(new FxCalendarTrigger());
+            // Equally weigh securities in portfolio, based on insights
+            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
 
-			// Default Models For Other Framework Settings:
-			SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
-			SetExecution(new ImmediateExecutionModel());
-			SetRiskManagement(new NullRiskManagementModel());
-		}
+            // Set Immediate Execution Model
+            SetExecution(new ImmediateExecutionModel());
 
-		//we create a DailyFx event handler but insights will be produced in the Alpha Model
-		public void OnData(DailyFx data) { }
+            // Set Null Risk Management Model
+            SetRiskManagement(new NullRiskManagementModel());
+        }
+
+        //we create a DailyFx event handler but insights will be produced in the Alpha Model
+        public void OnData(DailyFx data) { }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
@@ -97,76 +100,74 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             {"Total Trades", "1426"},
             {"Average Win", "0.05%"},
             {"Average Loss", "-0.01%"},
-            {"Compounding Annual Return", "4.988%"},
+            {"Compounding Annual Return", "4.975%"},
             {"Drawdown", "0.700%"},
             {"Expectancy", "1.779"},
-            {"Net Profit", "15.982%"},
+            {"Net Profit", "15.939%"},
             {"Sharpe Ratio", "2.135"},
             {"Loss Rate", "49%"},
             {"Win Rate", "51%"},
             {"Profit-Loss Ratio", "4.48"},
-            {"Alpha", "0.076"},
-            {"Beta", "-2.48"},
+            {"Alpha", "0.075"},
+            {"Beta", "-2.474"},
             {"Annual Standard Deviation", "0.018"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "1.261"},
+            {"Information Ratio", "1.259"},
             {"Tracking Error", "0.018"},
             {"Treynor Ratio", "-0.015"},
             {"Total Fees", "$0.00"}
         };
     }
 
-	/// <summary>
-	/// Generate Forex Insights for High Impact Calendar Events.
-	/// </summary>
-	public class FxCalendarTrigger : AlphaModel
-	{
-		public FxCalendarTrigger()
-		{
-			Name = "FxCalendarTrigger";
-		}
+    /// <summary>
+    /// Generate Forex Insights for High Impact Calendar Events.
+    /// </summary>
+    public class FxCalendarTrigger : AlphaModel
+    {
+        public FxCalendarTrigger()
+        {
+            Name = "FxCalendarTrigger";
+        }
 
-   		public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
-		{
-			var insights = new List<Insight>();
-			var period = TimeSpan.FromMinutes(5);
-			var magnitude = 0.0005;
+        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        {
+            var insights = new List<Insight>();
+            var period = TimeSpan.FromMinutes(5);
+            var magnitude = 0.0005;
 
-	   		// We will create our insights when we recieve news
-			if (data.ContainsKey("DFX"))
-			{
-	   			var calendar = data.Get<DailyFx>("DFX");
+            // We will create our insights when we recieve news
+            if (data.ContainsKey("DFX"))
+            {
+                var calendar = data.Get<DailyFx>("DFX");
 
-	   			// Only act if this is important news.
-	   			if (calendar.Importance != FxDailyImportance.High) return insights;
-				if (calendar.Meaning == FxDailyMeaning.None) return insights;
+                // Only act if this is important news.
+                if (calendar.Importance != FxDailyImportance.High) return insights;
+                if (calendar.Meaning == FxDailyMeaning.None) return insights;
 
-				// Create insights for all active currencies in our universe when country matches currency
-				foreach (var kvp in algorithm.ActiveSecurities.Where(kvp => kvp.Value.Symbol.SecurityType == SecurityType.Forex))
-				{
-					var symbol = kvp.Key;
-					var pair = (Forex)kvp.Value;
-					var direction = InsightDirection.Flat;
+                // Create insights for all active currencies in our universe when country matches currency
+                foreach (var kvp in algorithm.ActiveSecurities.Where(kvp => kvp.Value.Symbol.SecurityType == SecurityType.Forex))
+                {
+                    var symbol = kvp.Key;
+                    var pair = (Forex)kvp.Value;
+                    var direction = InsightDirection.Flat;
 
-					if (pair.BaseCurrencySymbol == calendar.Currency.ToUpper())
-					{
-						direction = (calendar.Meaning == FxDailyMeaning.Better) ? InsightDirection.Up : InsightDirection.Down;
-					}
-					else if (pair.QuoteCurrency.Symbol == calendar.Currency.ToUpper())
-					{
-						direction = (calendar.Meaning == FxDailyMeaning.Better) ? InsightDirection.Down : InsightDirection.Up;
-					}
+                    if (pair.BaseCurrencySymbol == calendar.Currency.ToUpper())
+                    {
+                        direction = (calendar.Meaning == FxDailyMeaning.Better) ? InsightDirection.Up : InsightDirection.Down;
+                    }
+                    else if (pair.QuoteCurrency.Symbol == calendar.Currency.ToUpper())
+                    {
+                        direction = (calendar.Meaning == FxDailyMeaning.Better) ? InsightDirection.Down : InsightDirection.Up;
+                    }
 
-					if (direction != InsightDirection.Flat)
-					{
-						insights.Add(Insight.Price(symbol, period, direction, magnitude));
-					}
-				}
-			}
+                    if (direction != InsightDirection.Flat)
+                    {
+                        insights.Add(Insight.Price(symbol, period, direction, magnitude));
+                    }
+                }
+            }
 
-			return insights;
-		}
-
-		public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes) {	 }
-	}
+            return insights;
+        }
+    }
 }

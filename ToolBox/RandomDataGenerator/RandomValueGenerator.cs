@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
@@ -18,12 +19,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         // used to prevent generating duplicates, but also caps
         // the memory allocated to checking for duplicates
-        private readonly FixedSizeHashQueue<Symbol> symbols;
+        private readonly FixedSizeHashQueue<Symbol> _symbols;
 
         public RandomValueGenerator()
         {
             _random = new Random();
-            symbols = new FixedSizeHashQueue<Symbol>(1000);
+            _symbols = new FixedSizeHashQueue<Symbol>(1000);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
         }
@@ -31,7 +32,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         public RandomValueGenerator(int seed)
         {
             _random = new Random(seed);
-            symbols = new FixedSizeHashQueue<Symbol>(1000);
+            _symbols = new FixedSizeHashQueue<Symbol>(1000);
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
         }
@@ -40,8 +41,13 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         {
             _random = new Random(seed);
             _marketHoursDatabase = marketHoursDatabase;
-            symbols = new FixedSizeHashQueue<Symbol>(1000);
+            _symbols = new FixedSizeHashQueue<Symbol>(1000);
             _symbolPropertiesDatabase = symbolPropertiesDatabase;
+        }
+
+        public bool NextBool(double percentOddsForTrue)
+        {
+            return _random.NextDouble() <= percentOddsForTrue/100;
         }
 
         public virtual string NextUpperCaseString(int minLength, int maxLength)
@@ -196,7 +202,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     resolution = Resolution.Second;
                 }
 
-                // emit a new tick somewhere in the next trading day at a step lower resolution to guarantee a hit
+                // emit a new tick somewhere in the next trading day at a step higher resolution to guarantee a hit
                 return NextTickTime(symbol, nextMarketOpen, resolution - 1, density);
             }
 
@@ -221,13 +227,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     return tick;
 
                 case TickType.Quote:
-                    var quoteDeviation = Math.Max(0.1m, maximumPercentDeviation / 10m);
-                    var bid = NextPrice(symbol.SecurityType, symbol.ID.Market, tick.Value, quoteDeviation);
+                    var bid = NextPrice(symbol.SecurityType, symbol.ID.Market, tick.Value, maximumPercentDeviation);
                     if (bid > tick.Value)
                     {
                         bid = tick.Value - (bid - tick.Value);
                     }
-                    var ask = NextPrice(symbol.SecurityType, symbol.ID.Market, tick.Value, quoteDeviation);
+                    var ask = NextPrice(symbol.SecurityType, symbol.ID.Market, tick.Value, maximumPercentDeviation);
                     if (ask < tick.Value)
                     {
                         ask = tick.Value + (tick.Value - ask);
@@ -263,7 +268,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             // ticker then we'll end up resolving the first trading date for use in the SID, otherwise, all
             // generated symbol will have a date equal to SecurityIdentifier.DefaultDate
             var symbol = Symbol.Create(ticker, securityType, market);
-            if (symbols.Add(symbol))
+            if (_symbols.Add(symbol))
             {
                 return symbol;
             }
