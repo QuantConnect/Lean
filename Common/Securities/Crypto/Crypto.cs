@@ -19,6 +19,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities.Forex;
+using System;
 
 namespace QuantConnect.Securities.Crypto
 {
@@ -58,9 +59,15 @@ namespace QuantConnect.Securities.Crypto
             Holdings = new CryptoHolding(this, currencyConverter);
 
             // decompose the symbol into each currency pair
-            string baseCurrencySymbol, quoteCurrencySymbol;
-            Forex.Forex.DecomposeCurrencyPair(config.Symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
-            BaseCurrencySymbol = baseCurrencySymbol;
+            string quoteCurrencySymbol = symbolProperties.QuoteCurrency;
+            if (config.Symbol.Value.EndsWith(quoteCurrencySymbol))
+            {
+                BaseCurrencySymbol = config.Symbol.Value.RemoveFromEnd(quoteCurrencySymbol);
+            }
+            else
+            {
+                throw new InvalidOperationException($"symbol doesn't end with {quoteCurrencySymbol}");
+            }
         }
 
         /// <summary>
@@ -93,9 +100,15 @@ namespace QuantConnect.Securities.Crypto
             Holdings = new CryptoHolding(this, currencyConverter);
 
             // decompose the symbol into each currency pair
-            string baseCurrencySymbol, quoteCurrencySymbol;
-            Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrencySymbol, out quoteCurrencySymbol);
-            BaseCurrencySymbol = baseCurrencySymbol;
+            string quoteCurrencySymbol = symbolProperties.QuoteCurrency;
+            if (symbol.Value.EndsWith(quoteCurrencySymbol))
+            {
+                BaseCurrencySymbol = symbol.Value.RemoveFromEnd(quoteCurrencySymbol);
+            }
+            else
+            {
+                throw new InvalidOperationException($"symbol doesn't end with {quoteCurrencySymbol}");
+            }
         }
 
         /// <summary>
