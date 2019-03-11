@@ -62,7 +62,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// </summary>
         public void Convert()
         {
-
+            Log.Trace("AlgoSeekFuturesConverter.Convert(): Copying remote raw data files locally.");
             //Get the list of available raw files, copy from its remote location to a local folder and then for each file open a separate streamer.
             var files = _remote.EnumerateFiles("*")
                 .Where(f => (f.Extension == ".gz" || f.Extension == ".bz2") && !f.Name.Contains("option"))
@@ -82,8 +82,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             var symbolMultipliers = LoadSymbolMultipliers();
 
             //Extract each file massively in parallel.
-            //Parallel.ForEach(files, file =>
-            foreach (var file in files)
+            Parallel.ForEach(files, file =>
             {
                 try
                 {
@@ -190,8 +189,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 {
                     Log.Error("Exception caught! File: {0} Err: {1} Source {2} Stack {3}", file, err.Message, err.Source, err.StackTrace);
                 }
-            }
-            //);
+            });
 
 
         }
