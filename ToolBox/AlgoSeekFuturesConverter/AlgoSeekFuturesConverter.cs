@@ -34,8 +34,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
     public class AlgoSeekFuturesConverter
     {
         private const int ExecTimeout = 60;// sec
-        private readonly string _source;
-        private readonly string _remote;
+        private readonly DirectoryInfo _source;
+        private readonly DirectoryInfo _remote;
         private readonly string _destination;
         private readonly List<Resolution> _resolutions;
         private readonly DateTime _referenceDate;
@@ -50,8 +50,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <param name="destination">Destination directory of the processed future files</param>
         public AlgoSeekFuturesConverter(List<Resolution> resolutions, DateTime referenceDate, string remote, string source, string destination)
         {
-            _source = source;
-            _remote = remote;
+            _source = new DirectoryInfo(source);
+            _remote = new DirectoryInfo(remote);
             _referenceDate = referenceDate;
             _destination = destination;
             _resolutions = resolutions;
@@ -62,11 +62,12 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// </summary>
         public void Convert()
         {
-            //Get the list of all the files, then for each file open a separate streamer.
-            var files = Directory.EnumerateFiles(_remote);
 
-            files = files.Where(x => (Path.GetExtension(x) == ".gz" || Path.GetExtension(x) == ".bz2") &&
-                !Path.GetFileNameWithoutExtension(x).ToLower().Contains("option"));
+            //Get the list of available raw files, copy from its remote location to a local folder and then for each file open a separate streamer.
+            var files = _remote.EnumerateFiles("*")
+                .Where(f => (f.Extension == ".gz" || f.Extension == ".bz2") && !f.Name.Contains("option"))
+                .Select(remote => remote.CopyTo(Path.Combine(Path.GetTempPath(), remote.Name), true))
+                .ToList();
 
             Log.Trace("AlgoSeekFuturesConverter.Convert(): Loading {0} AlgoSeekFuturesReader for {1} ", files.Count(), _referenceDate);
 
@@ -81,13 +82,14 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             var symbolMultipliers = LoadSymbolMultipliers();
 
             //Extract each file massively in parallel.
-            Parallel.ForEach(files, file =>
+            //Parallel.ForEach(files, file =>
+            foreach (var file in files)
             {
                 try
                 {
                     Log.Trace("Remote File :" + file);
 
-                    var csvFile = Path.Combine(_source, Path.GetFileName(file).Replace(Path.GetExtension(file), ""));
+                    var csvFile = Path.Combine(_source.FullName, Path.GetFileNameWithoutExtension(file.Name));
 
                     Log.Trace("Source File :" + csvFile);
 
@@ -98,7 +100,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                         Directory.CreateDirectory(csvFileInfo.DirectoryName);
 
                         Log.Trace("AlgoSeekFuturesConverter.Convert(): Extracting " + file);
-                        var psi = new ProcessStartInfo(zipper, " e " + file + " -o" + _source)
+                        var psi = new ProcessStartInfo(zipper, " e " + file.FullName + " -o" + _source.FullName)
                         {
                             CreateNoWindow = true,
                             WindowStyle = ProcessWindowStyle.Hidden,
@@ -188,7 +190,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 {
                     Log.Error("Exception caught! File: {0} Err: {1} Source {2} Stack {3}", file, err.Message, err.Source, err.StackTrace);
                 }
-            });
+            }
+            //);
 
 
         }
