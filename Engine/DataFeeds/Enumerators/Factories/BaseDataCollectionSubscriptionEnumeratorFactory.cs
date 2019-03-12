@@ -56,12 +56,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 var tradableDays = _tradableDaysProvider(request);
                 var sourceFactory = (BaseData)Activator.CreateInstance(request.Configuration.Type);
 
+                // Note: this enumerator factory is currently only used in backtesting with coarse data
+                // and has been updated to behave in the same way as in live trading
+                // (i.e. only emit coarse data on dates following a trading day)
+                // The shifting of dates is needed to ensure we never emit coarse data on the same date,
+                // because it would enable look-ahead bias.
+
+                // shift all tradeable dates forward one day
                 foreach (var date in tradableDays.Select(x => x.AddDays(1)))
                 {
+                    // request the file for the previous date, which is a tradeable day
                     var source = sourceFactory.GetSource(configuration, date.AddDays(-1), false);
                     var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, configuration, date.AddDays(-1), false);
                     var coarseFundamentalForDate = factory.Read(source);
 
+                    // Coarse data has a period of one day (EndTime == Time + OneDay) but BaseDataCollection has no period (EndTime == Time),
+                    // so we need to add one more day here.
                     yield return new BaseDataCollection(date.AddDays(1), configuration.Symbol, coarseFundamentalForDate);
                 }
             }
