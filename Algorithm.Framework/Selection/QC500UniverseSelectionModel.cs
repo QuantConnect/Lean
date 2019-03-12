@@ -28,8 +28,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class QC500UniverseSelectionModel : FundamentalUniverseSelectionModel
     {
-        private const int NumberOfSymbolsCoarse = 1000;
-        private const int NumberOfSymbolsFine = 500;
+        private const int _numberOfSymbolsCoarse = 1000;
+        private const int _numberOfSymbolsFine = 500;
 
         // rebalances at the start of each month
         private int _lastMonth = -1;
@@ -61,35 +61,26 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         public override IEnumerable<Symbol> SelectCoarse(QCAlgorithmFramework algorithm, IEnumerable<CoarseFundamental> coarse)
         {
-            // materialize to collection if not already materialized
-            coarse = coarse as ICollection<CoarseFundamental> ?? coarse.ToList();
-            if (!coarse.Any())
+            if (algorithm.Time.Month == _lastMonth)
             {
                 return Universe.Unchanged;
             }
-
-            var month = coarse.First().EndTime.Month;
-            if (month == _lastMonth)
-            {
-                return Universe.Unchanged;
-            }
-            _lastMonth = month;
 
             // The stocks must have fundamental data
             // The stock must have positive previous-day close price
             // The stock must have positive volume on the previous trading day
-            var sortedByDollarVolume = from x in coarse
-                                       where x.HasFundamentalData && x.Volume > 0 && x.Price > 0
-                                       orderby x.DollarVolume descending
-                                       select x;
+            var sortedByDollarVolume =
+                (from x in coarse
+                 where x.HasFundamentalData && x.Volume > 0 && x.Price > 0
+                 orderby x.DollarVolume descending
+                 select x).Take(_numberOfSymbolsCoarse).ToList();
 
-            var top = sortedByDollarVolume.Take(NumberOfSymbolsCoarse).ToList();
-            foreach (var i in top)
+            _dollarVolumeBySymbol.Clear();
+            foreach (var i in sortedByDollarVolume)
             {
                 _dollarVolumeBySymbol[i.Symbol] = i.DollarVolume;
             }
-
-            return top.Select(x => x.Symbol);
+            return _dollarVolumeBySymbol.Keys;
         }
 
         /// <summary>
@@ -101,32 +92,49 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         public override IEnumerable<Symbol> SelectFine(QCAlgorithmFramework algorithm, IEnumerable<FineFundamental> fine)
         {
+            if (algorithm.Time.Month == _lastMonth)
+            {
+                return Universe.Unchanged;
+            }
+            _lastMonth = algorithm.Time.Month;
+
             // The company's headquarter must in the U.S.
-            // The stock must be traded on either the NYSE or NASDAQ
+            // The stock must be traded on either the NYSE or NASDAQ 
             // At least half a year since its initial public offering
             // The stock's market cap must be greater than 500 million
-            var filteredFine = (from x in fine
-                                where x.CompanyReference.CountryId == "USA" &&
-                                    (x.CompanyReference.PrimaryExchangeID == "NYS" || x.CompanyReference.PrimaryExchangeID == "NAS") &&
-                                    (algorithm.Time - x.SecurityReference.IPODate).Days > 180 &&
-                                    x.EarningReports.BasicAverageShares.ThreeMonths *
-                                    x.EarningReports.BasicEPS.TwelveMonths * x.ValuationRatios.PERatio > 500000000m
-                                select x).ToList();
+            var filteredFine =
+                (from x in fine
+                 where x.CompanyReference.CountryId == "USA" &&
+                       (x.CompanyReference.PrimaryExchangeID == "NYS" || x.CompanyReference.PrimaryExchangeID == "NAS") &&
+                       (algorithm.Time - x.SecurityReference.IPODate).Days > 180 &&
+                       x.EarningReports.BasicAverageShares.ThreeMonths *
+                       x.EarningReports.BasicEPS.TwelveMonths * x.ValuationRatios.PERatio > 500000000m
+                 select x).ToList();
 
-            // select stocks with top dollar volume in every single sector
-            var myDict = new[] { "B", "I", "M", "N", "T", "U" }.ToDictionary(x => x, y => new List<FineFundamental>());
-            var percent = (float)NumberOfSymbolsFine / filteredFine.Count;
-            foreach (var key in myDict.Keys.ToList())
+            if (filteredFine.Count == 0)
             {
-                var value = (from x in filteredFine
-                             where x.CompanyReference.IndustryTemplateCode == key
-                             orderby _dollarVolumeBySymbol[x.Symbol] descending
-                             select x).ToList();
-                myDict[key] = value.Take((int)Math.Ceiling(value.Count * percent)).ToList();
+                algorithm.Error($"QC500UniverseSelectionModel.SelectFine: fine universe filtering returned an empty list. fine.Count = {fine.Count()}");
+                return Universe.Unchanged;
             }
-            var topFine = myDict.Values.ToList().SelectMany(x => x).Take(NumberOfSymbolsFine).ToList();
 
-            return topFine.Select(x => x.Symbol);
+            var percent = _numberOfSymbolsFine / (double)filteredFine.Count;
+
+            // select stocks with top dollar volume in every single sector 
+            var topFineBySector =
+                (from x in filteredFine
+                 // Group by sector
+                 group x by x.CompanyReference.IndustryTemplateCode into g
+                 let y = from item in g
+                         orderby _dollarVolumeBySymbol[item.Symbol] descending
+                         select item
+                 let c = (int)Math.Ceiling(y.Count() * percent)
+                 select new { g.Key, Value = y.Take(c) }
+                 ).ToDictionary(x => x.Key, x => x.Value);
+
+            return topFineBySector.SelectMany(x => x.Value)
+                .OrderByDescending(x => _dollarVolumeBySymbol[x.Symbol])
+                .Take(_numberOfSymbolsFine)
+                .Select(x => x.Symbol);
         }
     }
 }
