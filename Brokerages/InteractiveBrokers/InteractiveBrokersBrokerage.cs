@@ -435,15 +435,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (!IsConnected)
             {
-                Log.Trace("InteractiveBrokersBrokerage.GetCashBalance(): not connected, connecting now");
-                Connect();
+                if (IsWithinScheduledServerResetTimes())
+                {
+                    // Occasionally the disconnection due to the IB reset period might last
+                    // much longer than expected during weekends (even up to the cash sync time).
+                    // In this case we do not try to reconnect (since this would fail anyway)
+                    // but we return the existing balances instead.
+                    Log.Trace("InteractiveBrokersBrokerage.GetCashBalance(): not connected within reset times, returning existing balances");
+                }
+                else
+                {
+                    Log.Trace("InteractiveBrokersBrokerage.GetCashBalance(): not connected, connecting now");
+                    Connect();
+                }
             }
 
             var balances = _accountData.CashBalances.Select(x => new CashAmount(x.Value, x.Key)).ToList();
 
             if (balances.Count == 0)
             {
-                Log.Trace($"InteractiveBrokersBrokerage.GetCashBalance(): no balances found, IsConnected: {IsConnected}");
+                Log.Trace($"InteractiveBrokersBrokerage.GetCashBalance(): no balances found, IsConnected: {IsConnected}, _disconnected1100Fired: {_disconnected1100Fired}");
             }
 
             return balances;
@@ -2588,6 +2599,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 (request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.IsCanonical()) ||
                 (request.Symbol.ID.SecurityType == SecurityType.Future && request.Symbol.IsCanonical()))
             {
+                yield break;
+            }
+
+            // tick resolution not supported for now
+            if (request.Resolution == Resolution.Tick)
+            {
+                // TODO: upgrade IB C# API DLL
+                // In IB API version 973.04, the reqHistoricalTicks function has been added,
+                // which would now enable us to support history requests at Tick resolution.
                 yield break;
             }
 

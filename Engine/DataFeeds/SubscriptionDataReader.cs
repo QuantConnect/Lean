@@ -23,7 +23,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.Tiingo;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Logging;
@@ -375,7 +374,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // as updating factors and symbol mapping
                     if (instance.EndTime.Date > _tradeableDates.Current)
                     {
-                        var currentPriceScaleFactor = _config.PriceScaleFactor;
                         // this is fairly hacky and could be solved by removing the aux data from this class
                         // the case is with coarse data files which have many daily sized data points for the
                         // same date,
@@ -384,32 +382,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // this will advance the date enumerator and determine if a new
                             // instance of the subscription enumerator is required
                             _subscriptionFactoryEnumerator = ResolveDataEnumerator(false);
-                        }
-
-                        // TODO: we should be able to remove this `if` once the underlying data
-                        // scale process is performed later in the enumerator stack and in its own
-                        // enumerator.
-                        // with hourly resolution the first bar for the new date is received
-                        // before the price scale factor is updated by ResolveDataEnumerator,
-                        // so we have to 'rescale' prices before emitting the bar
-                        if (currentPriceScaleFactor != _config.PriceScaleFactor)
-                        {
-                            if ((_config.Resolution == Resolution.Hour
-                                || (_config.Resolution == Resolution.Daily
-                                    && instance.EndTime.Date > _tradeableDates.Current))
-                                && (_config.SecurityType == SecurityType.Equity
-                                || _config.SecurityType == SecurityType.Option))
-                            {
-                                var tradeBar = instance as TradeBar;
-                                if (tradeBar != null)
-                                {
-                                    var bar = tradeBar;
-                                    bar.Open = _config.GetNormalizedPrice(GetRawValue(bar.Open, _config.SumOfDividends, currentPriceScaleFactor));
-                                    bar.High = _config.GetNormalizedPrice(GetRawValue(bar.High, _config.SumOfDividends, currentPriceScaleFactor));
-                                    bar.Low = _config.GetNormalizedPrice(GetRawValue(bar.Low, _config.SumOfDividends, currentPriceScaleFactor));
-                                    bar.Close = _config.GetNormalizedPrice(GetRawValue(bar.Close, _config.SumOfDividends, currentPriceScaleFactor));
-                                }
-                            }
                         }
                     }
 
@@ -579,8 +551,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     continue;
                 }
 
-                UpdateScaleFactors(date);
-
                 // we've passed initial checks,now go get data for this date!
                 return true;
             }
@@ -591,68 +561,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// For backwards adjusted data the price is adjusted by a scale factor which is a combination of splits and dividends.
-        /// This backwards adjusted price is used by default and fed as the current price.
-        /// </summary>
-        /// <param name="date">Current date of the backtest.</param>
-        private void UpdateScaleFactors(DateTime date)
-        {
-            if (_hasScaleFactors)
-            {
-                switch (_config.DataNormalizationMode)
-                {
-                    case DataNormalizationMode.Raw:
-                        return;
-
-                    case DataNormalizationMode.TotalReturn:
-                    case DataNormalizationMode.SplitAdjusted:
-                        _config.PriceScaleFactor = _factorFile.GetSplitFactor(date);
-                        break;
-
-                    case DataNormalizationMode.Adjusted:
-                        _config.PriceScaleFactor = _factorFile.GetPriceScaleFactor(date);
-                        break;
-
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-        }
-
-        /// <summary>
         /// Reset the IEnumeration
         /// </summary>
         /// <remarks>Not used</remarks>
         public void Reset()
         {
             throw new NotImplementedException("Reset method not implemented. Assumes loop will only be used once.");
-        }
-
-        /// <summary>
-        /// Un-normalizes a price
-        /// </summary>
-        private decimal GetRawValue(decimal price, decimal sumOfDividends, decimal priceScaleFactor)
-        {
-            switch (_config.DataNormalizationMode)
-            {
-                case DataNormalizationMode.Raw:
-                    break;
-
-                case DataNormalizationMode.SplitAdjusted:
-                case DataNormalizationMode.Adjusted:
-                    // we need to 'unscale' the price
-                    price = price / priceScaleFactor;
-                    break;
-
-                case DataNormalizationMode.TotalReturn:
-                    // we need to remove the dividends since we've been accumulating them in the price
-                    price = (price - sumOfDividends) / priceScaleFactor;
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            return price;
         }
 
         /// <summary>

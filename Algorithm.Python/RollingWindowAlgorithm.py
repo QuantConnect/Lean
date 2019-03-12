@@ -47,7 +47,7 @@ class RollingWindowAlgorithm(QCAlgorithm):
 
         # Creates an indicator and adds to a rolling window when it is updated
         self.sma = self.SMA("SPY", 5)
-        self.Updated += self.SmaUpdated
+        self.sma.Updated += self.SmaUpdated
         self.smaWin = RollingWindow[IndicatorDataPoint](5)
 
 

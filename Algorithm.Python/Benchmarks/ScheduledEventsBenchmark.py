@@ -26,16 +26,14 @@ class ScheduledEventsBenchmark(QCAlgorithm):
 
     def Initialize(self):
 
-        self.SetStartDate(2011, 1, 1)   
-        self.SetEndDate(2018, 1, 1)     
-        self.SetCash(100000)            
-        self.AddEquity("SPY", Resolution.Minute)
+        self.SetStartDate(2011, 1, 1)
+        self.SetEndDate(2018, 1, 1)
+        self.SetCash(100000)
+        self.AddEquity("SPY")
 
-        for i in range(100):
+        for i in range(300):
             self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", i), self.Rebalance)
             self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.BeforeMarketClose("SPY", i), self.Rebalance)
-
-        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.Every(timedelta(seconds=5)), self.Rebalance)
 
     def OnData(self, data):
         pass
