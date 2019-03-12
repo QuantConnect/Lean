@@ -38,6 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             AddUniverse(CoarseSelectionFunction);
 
+            // schedule an event at 10 AM every day
             Schedule.On(
                 DateRules.EveryDay(),
                 TimeRules.At(10, 0),
@@ -47,6 +48,12 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         if (Securities.ContainsKey(symbol))
                         {
+                            // If the coarse price is emitted at midnight for the same date, we would have look-ahead bias
+                            // i.e. _coarsePrices[symbol] would be the closing price of the current day,
+                            // which we obviously cannot know at 10 AM :)
+                            // As the coarse data is now emitted for the previous day, there is no look-ahead bias:
+                            // _coarsePrices[symbol] and Securities[symbol].Price will have the same value (equal to the previous closing price)
+                            // for the backtesting period, so we expect this algorithm to make zero trades.
                             if (_coarsePrices[symbol] > Securities[symbol].Price)
                             {
                                 SetHoldings(symbol, 1m / NumberOfSymbols);
@@ -66,6 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
             var sortedByDollarVolume = coarse.OrderByDescending(x => x.DollarVolume);
             var top = sortedByDollarVolume.Take(NumberOfSymbols).ToList();
 
+            // save the coarse adjusted prices in a dictionary, so we can access them in the scheduled event handler
             _coarsePrices = top.ToDictionary(c => c.Symbol, c => c.AdjustedPrice);
 
             return top.Select(x => x.Symbol);
