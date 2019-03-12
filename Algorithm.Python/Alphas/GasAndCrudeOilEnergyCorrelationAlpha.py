@@ -26,7 +26,6 @@
     sourced so the community and client funds can see an example of an alpha.
 '''
 
-
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
@@ -36,6 +35,8 @@ AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
+from QuantConnect.Orders import OrderStatus
+from QuantConnect.Orders.Fees import ConstantFeeModel
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Algorithm.Framework import *
@@ -44,48 +45,43 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Selection import *
+import pandas as pd
+from datetime import timedelta
 
-import numpy as np
-from scipy import stats
-from scipy.stats import kendalltau 
-from datetime import timedelta, datetime
-
-class EnergyETFPairsTradingAlgorithm(QCAlgorithmFramework):
+class GasAndCrudeOilEnergyCorrelationAlpha(QCAlgorithmFramework):
 
     def Initialize(self):
-        
         self.SetStartDate(2018, 1, 1)   #Set Start Date
-        self.SetCash(100000)           #Set Strategy Cash
-        
-        natural_gas = ['UNG','BOIL','FCG']
-        crude_oil = ['USO','UCO','DBO']
-        symbols = [ Symbol.Create(ticker, SecurityType.Equity, Market.USA) for ticker in natural_gas + crude_oil ]
-        
+        self.SetCash(100000)            #Set Strategy Cash
+
+        natural_gas = [Symbol.Create(x, SecurityType.Equity, Market.USA) for x in ['UNG','BOIL','FCG']]
+        crude_oil = [Symbol.Create(x, SecurityType.Equity, Market.USA) for x in ['USO','UCO','DBO']]
+
         ## Set Universe Selection
         self.UniverseSettings.Resolution = Resolution.Minute
-        self.SetUniverseSelection( ManualUniverseSelectionModel(symbols) )
+        self.SetUniverseSelection( ManualUniverseSelectionModel(natural_gas + crude_oil) )
         self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
-        
+
         ## Custom Alpha Model
         self.SetAlpha(PairsAlphaModel(leading = natural_gas, following = crude_oil, history_days = 90, resolution = Resolution.Minute))
-        
+
         ## Equal-weight our positions, in this case 100% in USO
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel(resolution = Resolution.Minute))
 
-        ## Immediate Execution Fill Model        
+        ## Immediate Execution Fill Model
         self.SetExecution(CustomExecutionModel())
-        
+
         ## Null Risk-Management Model
         self.SetRiskManagement(NullRiskManagementModel())
-        
+
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
-            self.Debug("Purchased Stock: {0}".format(orderEvent.Symbol))
-            
+            self.Debug(f'Purchased Stock: {orderEvent.Symbol}')
+
     def OnEndOfAlgorithm(self):
         for kvp in self.Portfolio:
-            if self.Portfolio[kvp.Key].Invested:
-                self.Log('Invested in: ' + str(kvp.Key))
+            if kvp.Value.Invested:
+                self.Log(f'Invested in: {kvp.Key}')
 
 
 class PairsAlphaModel:
@@ -93,136 +89,126 @@ class PairsAlphaModel:
         of the price of the crude oil ETF. The model will take in arguments for a threshold
         at which the model triggers an insight, the length of the look-back period for evaluating
         rate-of-change of UNG prices, and the duration of the insight'''
-    
+
     def __init__(self, *args, **kwargs):
-        
-        self.difference_trigger = kwargs['difference_trigger'] if 'difference_trigger' in kwargs else 0.75
-        self.lookback = kwargs['lookback'] if 'lookback' in kwargs else 5
-        self.history_days = kwargs['history_days'] if 'history_days' in kwargs else 90 ## In days
-        self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Hour
+        self.leading = kwargs.get('leading', [])
+        self.following = kwargs.get('following', [])
+        self.history_days = kwargs.get('history_days', 90) ## In days
+        self.lookback = kwargs.get('lookback', 5)
+        self.resolution = kwargs.get('resolution', Resolution.Hour)
         self.prediction_interval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), 5) ## Arbitrary
+        self.difference_trigger = kwargs.get('difference_trigger', 0.75)
         self.symbolDataBySymbol = {}
         self.next_update = None
-        self.leading = kwargs['leading'] if 'leading' in kwargs else None
-        self.following = kwargs['following'] if 'following' in kwargs else None
-        self.tickers = self.leading + self.following
-        self.ticker_list_of_lists = [[],[]]
-        for i in range(len(self.leading)):
-            for j in range(len(self.following)):
-                self.ticker_list_of_lists[0].append(self.leading[i])
-        self.ticker_list_of_lists[1] = self.following * 3
 
     def Update(self, algorithm, data):
-        
+
         if (self.next_update is None) or (algorithm.Time > self.next_update):
-            self.pairs = self.CorrelationPairsSelection(algorithm)
-            self.next_update = algorithm.Time + (timedelta(days = 30))
-            
-        ## Build a list to hold our insights
-        insights = []
-        
-        ## These lists hold the Symbol for the following ETF and data from the leading ETF that we need to pass into the Insight() constructor
-        leading_data = []       
-        following_symbol = []    
-        
+            self.CorrelationPairsSelection()
+            self.next_update = algorithm.Time + timedelta(30)
+
+        magnitude = round(self.pairs[0].Return / 100, 6)
+
+        ## Check if Natural Gas returns are greater than the threshold we've set
+        if self.pairs[0].Return > self.difference_trigger:
+            return [Insight.Price(self.pairs[1].Symbol, self.prediction_interval, InsightDirection.Up, magnitude)]
+        if self.pairs[0].Return < -self.difference_trigger:
+            return [Insight.Price(self.pairs[1].Symbol, self.prediction_interval, InsightDirection.Down, magnitude)]
+
+        return []
+
+    def CorrelationPairsSelection(self):
+        ## Get returns for each natural gas/oil ETF
+        daily_return = {}
         for symbol, symbolData in self.symbolDataBySymbol.items():
-            if symbol.Value == self.pairs[0]:
-                leading_data.append(symbolData)             ## Add symbol data if it's Natural Gas
-            elif symbol.Value == self.pairs[1]:
-                following_symbol.append(symbol)             ## Stash the Symbol object if it's Crude Oil
-        
-        for i in range(len(following_symbol)):
-            symbolData = leading_data[i]
-            if symbolData.Return > self.difference_trigger:      ## Check if Natural Gas returns are greater than the threshold we've set
-                ## If so, create and Insight with this information for Crude Oil
-                insights.append(Insight(following_symbol[i], self.prediction_interval, InsightType.Price, InsightDirection.Up, symbolData.Return/100, None))
+            daily_return[symbol] = symbolData.DailyReturnArray
 
-            elif symbolData.Return < -self.difference_trigger:   ## Check if UNG returns are greater than the threshold we've set
-                insights.append(Insight(following_symbol[i], self.prediction_interval, InsightType.Price, InsightDirection.Down, symbolData.Return/100, None))
-
-        return insights
-    
-    def CorrelationPairsSelection(self, algorithm):
-        tick_syl = self.ticker_list_of_lists
-        tickers = self.tickers
-        logreturn={}
-        ## Get log returns for each natural gas/oil ETF pair
-        unique = list(set([item for sublist in self.ticker_list_of_lists for item in sublist]))
-        df = algorithm.History(unique, self.history_days, Resolution.Daily)
-        df = df['close'].unstack(level=0)
-        df = (np.log(df) - np.log(df.shift(1))).dropna()
-        for tick in tickers:
-            logreturn[tick] = df[[tick]]
-        
         ## Estimate coefficients of different correlation measures 
-        tau_coef = []
-        for i in range(len(tick_syl[0])):
-            tik_x, tik_y= logreturn[tick_syl[0][i]], logreturn[tick_syl[1][i]]
-            min_length = min(len(tik_x), len(tik_y))
-            tau_coef.append(kendalltau(tik_x[:min_length], tik_y[:min_length])[0])
-        index_max = tau_coef.index(max(tau_coef))    
-        pair = [tick_syl[0][index_max],tick_syl[1][index_max]]
-        
-        ## Return the pair with highest historical correlation
-        return pair
-        
+        tau = pd.DataFrame.from_dict(daily_return).corr(method='kendall')
+
+        ## Calculate the pair with highest historical correlation
+        max_corr = -1
+        for x in self.leading:
+            df = tau[[x]].loc[self.following]
+            corr = float(df.max())
+            if corr > max_corr:
+                self.pairs = (
+                    self.symbolDataBySymbol[x], 
+                    self.symbolDataBySymbol[df.idxmax()[0]])
+                max_corr = corr
+
     def OnSecuritiesChanged(self, algorithm, changes):
         '''Event fired each time the we add/remove securities from the data feed
         Args:
             algorithm: The algorithm instance that experienced the change in securities
             changes: The security additions and removals from the algorithm'''
         for removed in changes.RemovedSecurities:
-            algorithm.Log('Removed: ' + str(removed.Symbol))
             symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
             if symbolData is not None:
                 symbolData.RemoveConsolidators(algorithm)
 
         # initialize data for added securities
         symbols = [ x.Symbol for x in changes.AddedSecurities ]
-        history = algorithm.History(symbols, self.lookback, self.resolution)
+        history = algorithm.History(symbols, self.history_days + 1, Resolution.Daily)
         if history.empty: return
 
         tickers = history.index.levels[0]
         for ticker in tickers:
             symbol = SymbolCache.GetSymbol(ticker)
-
             if symbol not in self.symbolDataBySymbol:
-                symbolData = SymbolData(symbol, self.lookback, self.resolution, algorithm)
+                symbolData = SymbolData(symbol, self.history_days, self.lookback, self.resolution, algorithm)
                 self.symbolDataBySymbol[symbol] = symbolData
-                symbolData.WarmUpIndicators(history.loc[ticker])
-        
+                symbolData.UpdateDailyRateOfChange(history.loc[ticker])
+
+        history = algorithm.History(symbols, self.lookback, self.resolution)
+        if history.empty: return
+        for ticker in tickers:
+            symbol = SymbolCache.GetSymbol(ticker)
+            if symbol in self.symbolDataBySymbol:
+                self.symbolDataBySymbol[symbol].UpdateRateOfChange(history.loc[ticker])
+
 class SymbolData:
     '''Contains data specific to a symbol required by this model'''
-    def __init__(self, symbol, lookback, resolution, algorithm):
+    def __init__(self, symbol, dailyLookback, lookback, resolution, algorithm):
         self.Symbol = symbol
-        self.ROCP = RateOfChangePercent('{}.ROCP({})'.format(symbol, lookback), lookback)
-        self.Consolidator = algorithm.ResolveConsolidator(self.Symbol, resolution)
-        algorithm.RegisterIndicator(symbol, self.ROCP, self.Consolidator)
-        self.previous = 0
+
+        self.dailyReturn = RateOfChangePercent('f{symbol}.DailyROCP({1})', 1)
+        self.dailyConsolidator = algorithm.ResolveConsolidator(symbol, Resolution.Daily)
+        self.dailyReturnHistory = RollingWindow[IndicatorDataPoint](dailyLookback)
+
+        def updatedailyReturnHistory(s, e):
+            self.dailyReturnHistory.Add(e)
+
+        self.dailyReturn.Updated += updatedailyReturnHistory
+        algorithm.RegisterIndicator(symbol, self.dailyReturn, self.dailyConsolidator)
+
+        self.rocp = RateOfChangePercent(f'{symbol}.ROCP({lookback})', lookback)
+        self.consolidator = algorithm.ResolveConsolidator(symbol, resolution)
+        algorithm.RegisterIndicator(symbol, self.rocp, self.consolidator)
 
     def RemoveConsolidators(self, algorithm):
-        if self.Consolidator is not None:
-            algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.Consolidator)
+        algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.consolidator)
+        algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.dailyConsolidator)
 
-    def WarmUpIndicators(self, history):
+    def UpdateRateOfChange(self, history):
         for tuple in history.itertuples():
-            self.ROCP.Update(tuple.Index, tuple.close)
+            self.rocp.Update(tuple.Index, tuple.close)
+
+    def UpdateDailyRateOfChange(self, history):
+        for tuple in history.itertuples():
+            self.dailyReturn.Update(tuple.Index, tuple.close)
 
     @property
     def Return(self):
-        return float(self.ROCP.Current.Value)
+        return float(self.rocp.Current.Value)
 
     @property
-    def CanEmit(self):
-        if self.previous == self.ROCP.Samples:
-            return False
+    def DailyReturnArray(self):
+        return pd.Series({x.EndTime: x.Value for x in self.dailyReturnHistory})
 
-        self.previous = self.ROCP.Samples
-        return self.ROCP.IsReady
+    def __repr__(self):
+        return f"{self.rocp.Name} - {Return}"
 
-    def __str__(self, **kwargs):
-        return '{}: {:.2%}'.format(self.ROCP.Name, (1 + self.Return)**252 - 1)
-        
 
 class CustomExecutionModel(ExecutionModel):
     '''Provides an implementation of IExecutionModel that immediately submits market orders to achieve the desired portfolio targets'''

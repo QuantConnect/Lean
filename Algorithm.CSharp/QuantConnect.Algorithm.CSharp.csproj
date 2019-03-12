@@ -122,6 +122,8 @@
     </Compile>
     <Compile Include="AddRemoveOptionUniverseRegressionAlgorithm.cs" />
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
+    <Compile Include="Alphas\GasAndCrudeOilEnergyCorrelationAlpha.cs" />
+    <Compile Include="Alphas\GreenblattMagicFormulaAlpha.cs" />
     <Compile Include="Alphas\IntradayReversalCurrencyMarketsAlpha.cs" />
     <Compile Include="Alphas\ShareClassMeanReversionAlpha.cs" />
     <Compile Include="Alphas\SykesShortMicroCapAlpha.cs" />
