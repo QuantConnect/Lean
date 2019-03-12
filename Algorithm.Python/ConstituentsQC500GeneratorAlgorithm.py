@@ -42,6 +42,3 @@ class ConstituentsQC500GeneratorAlgorithm(QCAlgorithm):
 
         # Add QC500 Universe
         self.AddUniverse(self.Universe.Index.QC500)
-
-    def OnSecuritiesChanged(self, changes):
-        self.Log(f"{Time} :: {changes}")

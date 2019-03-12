@@ -39,10 +39,5 @@ namespace QuantConnect.Algorithm.CSharp
             // Add QC500 Universe
             AddUniverse(Universe.Index.QC500);
         }
-
-        public override void OnSecuritiesChanged(SecurityChanges changes)
-        {
-            Log($"{Time} :: {changes}");
-        }
     }
 }
