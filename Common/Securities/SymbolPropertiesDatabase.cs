@@ -35,6 +35,34 @@ namespace QuantConnect.Securities
         {
             _entries = entries.ToDictionary();
         }
+        
+        /// <summary>
+        /// Check whether symbol properties exists for the specified market/symbol/security-type
+        /// </summary>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="symbol">The particular symbol being traded</param>
+        /// <param name="securityType">The security type of the symbol</param>
+        public bool ContainsKey(string market, string symbol, SecurityType securityType)
+        {
+            var key = new SecurityDatabaseKey(market, symbol, securityType);
+            return _entries.ContainsKey(key);
+        }
+
+        /// <summary>
+        /// Check whether symbol properties exists for the specified market/symbol/security-type
+        /// </summary>
+        /// <param name="market">The market the exchange resides in, i.e, 'usa', 'fxcm', ect...</param>
+        /// <param name="symbol">The particular symbol being traded (Symbol class)</param>
+        /// <param name="securityType">The security type of the symbol</param>
+        public bool ContainsKey(string market, Symbol symbol, SecurityType securityType)
+        {
+            var stringSymbol = symbol == null ? string.Empty :
+                (symbol.ID.SecurityType == SecurityType.Option ? symbol.Underlying.Value :
+                (symbol.ID.SecurityType == SecurityType.Future ? symbol.ID.Symbol :
+                 symbol.Value));
+
+            return ContainsKey(market, stringSymbol, securityType);
+        }
 
         /// <summary>
         /// Gets the symbol properties for the specified market/symbol/security-type

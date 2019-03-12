@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using System;
 
 namespace QuantConnect.Securities
 {
@@ -61,13 +62,17 @@ namespace QuantConnect.Securities
             var exchangeHours = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType).ExchangeHours;
 
             var defaultQuoteCurrency = _cashBook.AccountCurrency;
-            if (symbol.ID.SecurityType == SecurityType.Forex || symbol.ID.SecurityType == SecurityType.Crypto)
+            if (symbol.ID.SecurityType == SecurityType.Forex)
             {
                 defaultQuoteCurrency = symbol.Value.Substring(3);
             }
 
-            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
+            if (symbol.ID.SecurityType == SecurityType.Crypto && !_symbolPropertiesDatabase.ContainsKey(symbol.ID.Market, symbol, symbol.ID.SecurityType))
+            {
+                throw new ArgumentException($"symbol can't be found in csv: {symbol.Value}");
+            }
 
+            var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
             // add the symbol to our cache
             if (addToSymbolCache)
             {
@@ -85,7 +90,18 @@ namespace QuantConnect.Securities
             {
                 // decompose the symbol into each currency pair
                 string baseCurrency;
-                Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
+                if (symbol.ID.SecurityType == SecurityType.Forex)
+                {
+                    Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
+                }
+                else if (symbol.Value.EndsWith(quoteCurrency))
+                {
+                    baseCurrency = symbol.Value.RemoveFromEnd(quoteCurrency);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"symbol doesn't end with {quoteCurrency}");
+                }
 
                 if (!_cashBook.ContainsKey(baseCurrency))
                 {
