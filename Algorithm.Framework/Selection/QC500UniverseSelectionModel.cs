@@ -111,12 +111,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
                        x.EarningReports.BasicEPS.TwelveMonths * x.ValuationRatios.PERatio > 500000000m
                  select x).ToList();
 
-            if (filteredFine.Count == 0)
-            {
-                algorithm.Error($"QC500UniverseSelectionModel.SelectFine: fine universe filtering returned an empty list. fine.Count = {fine.Count()}");
-                return Universe.Unchanged;
-            }
-
             var percent = _numberOfSymbolsFine / (double)filteredFine.Count;
 
             // select stocks with top dollar volume in every single sector 

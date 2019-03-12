@@ -97,8 +97,6 @@ class ConstituentsQC500GeneratorAlgorithm(QCAlgorithm):
             c = ceil(len(y) * percent)
             sortedByDollarVolume.extend(y[:c])
 
-            self.Log(f"{self.Time} :: {code}-{c}: {','.join([x.Symbol.Value for x in y[:10]])}")
-
         sortedByDollarVolume = sorted(sortedByDollarVolume, key = lambda x: self.dollarVolumeBySymbol[x.Symbol], reverse=True)
         self.symbols = [x.Symbol for x in sortedByDollarVolume[:self.numberOfSymbolsFine]]
         return self.symbols

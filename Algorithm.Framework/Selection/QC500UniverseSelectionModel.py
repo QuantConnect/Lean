@@ -69,10 +69,6 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
                                         and (algorithm.Time - x.SecurityReference.IPODate).days > 180
                                         and x.EarningReports.BasicAverageShares.ThreeMonths * x.EarningReports.BasicEPS.TwelveMonths * x.ValuationRatios.PERatio > 5e8]
 
-        if len(filteredFine) == 0:
-            algorithm.Error(f"QC500UniverseSelectionModel.SelectFine: fine universe filtering returned an empty list. fine.Count = {fine.Count()}")
-            return self.symbols
-
         sortedByDollarVolume = []
         sortedBySector = sorted(filteredFine, key = lambda x: x.CompanyReference.IndustryTemplateCode)
 

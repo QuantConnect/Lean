@@ -111,12 +111,6 @@ namespace QuantConnect.Algorithm.CSharp
                  select new { g.Key, Value = y.Take(c) }
                  ).ToDictionary(x => x.Key, x => x.Value);
 
-            foreach (var kvp in topFineBySector)
-            {
-                var ordered = kvp.Value.OrderByDescending(x => _dollarVolumeBySymbol[x.Symbol]).Select(x => x.Symbol.Value).ToList();
-                Log($"{Time} :: {kvp.Key}-{ordered.Count}: {string.Join(",", ordered.Take(10))}");
-            }
-
             return topFineBySector.SelectMany(x => x.Value)
                 .OrderByDescending(x => _dollarVolumeBySymbol[x.Symbol])
                 .Take(_numberOfSymbolsFine)
