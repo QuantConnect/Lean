@@ -210,6 +210,7 @@
     <Compile Include="Common\Orders\Fills\BackwardsCompatibilityFillModelsTests.cs" />
     <Compile Include="Common\Securities\CashAmountTests.cs" />
     <Compile Include="Common\Data\Custom\QuandlTests.cs" />
+    <Compile Include="Common\Securities\Cryptos\CryptoTests.cs" />
     <Compile Include="Common\Securities\ErrorCurrencyConverterTests.cs" />
     <Compile Include="Common\Securities\IdentityCurrencyConverterTests.cs" />
     <Compile Include="Common\Securities\AccountCurrencyImmediateSettlementModelTests.cs" />
