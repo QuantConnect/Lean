@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -55,10 +56,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 var tradableDays = _tradableDaysProvider(request);
                 var sourceFactory = (BaseData)Activator.CreateInstance(request.Configuration.Type);
 
-                foreach (var date in tradableDays)
+                foreach (var date in tradableDays.Select(x => x.AddDays(1)))
                 {
-                    var source = sourceFactory.GetSource(configuration, date, false);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, configuration, date, false);
+                    var source = sourceFactory.GetSource(configuration, date.AddDays(-1), false);
+                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, configuration, date.AddDays(-1), false);
                     var coarseFundamentalForDate = factory.Read(source);
 
                     yield return new BaseDataCollection(date.AddDays(1), configuration.Symbol, coarseFundamentalForDate);
