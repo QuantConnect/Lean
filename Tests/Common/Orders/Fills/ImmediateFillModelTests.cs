@@ -58,6 +58,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(security.Price, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
+
         [Test]
         public void PerformsMarketFillSell()
         {
@@ -675,6 +676,30 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(limitPrice, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
             Assert.AreEqual(0, fill.OrderFee.Value.Amount);
+        }
+
+        [Test]
+        public void MarketOrderFillWithStalePriceHasWarningMessage()
+        {
+            var model = new ImmediateFillModel();
+            var order = new MarketOrder(Symbols.SPY, -100, Noon.ConvertToUtc(TimeZones.NewYork).AddMinutes(30));
+            var config = CreateTradeBarConfig(Symbols.SPY);
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance
+            );
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
+
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config))).OrderEvent;
+
+            Assert.IsTrue(fill.Message.Contains("Warning: fill at stale price"));
         }
 
         private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
