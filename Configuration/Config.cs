@@ -91,7 +91,7 @@ namespace QuantConnect.Configuration
                     {"live-mode", false},
                     {"data-folder", "../../../Data/"},
                     {"messaging-handler", "QuantConnect.Messaging.Messaging"},
-                    {"queue-handler", "QuantConnect.Queues.Queues"},
+                    {"job-queue-handler", "QuantConnect.Queues.JobQueue"},
                     {"api-handler", "QuantConnect.Api.Api"},
                     {"setup-handler", "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler"},
                     {"result-handler", "QuantConnect.Lean.Engine.Results.BacktestingResultHandler"},
