@@ -116,6 +116,16 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "symbol can't be found in csv")]
+        public void ThrowOnCreateCryptoNotDescribedInCSV()
+        {
+            var symbol = Symbol.Create("ABCDEFG", SecurityType.Crypto, Market.GDAX);
+
+            var configs = _subscriptionManager.SubscriptionDataConfigService.Add(typeof(QuoteBar), symbol, Resolution.Minute, false, false, false);
+            var actual = _securityService.CreateSecurity(symbol, configs, 1.0m, false);
+        }
+
+        [Test]
         public void CanCreate_ConcreteOptions_WithCorrectSubscriptions()
         {
             var underlying = SecurityIdentifier.GenerateEquity(new DateTime(1998, 01, 02), "SPY", Market.USA);
