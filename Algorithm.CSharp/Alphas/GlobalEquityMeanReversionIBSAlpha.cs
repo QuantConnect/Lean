@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     /// that the ETF with the highest IBS value will decrease in price, and the ETF with the lowest IBS value 
     /// will increase in price.
     ///
-    /// Source: Kakushadze, Zura, and Juan AndrÈs Serur. ì4. Exchange-Traded Funds (ETFs).î 151 Trading Strategies, Palgrave Macmillan, 2018, pp. 90ñ91.
+    /// Source: Kakushadze, Zura, and Juan Andr√©s Serur. ‚Äú4. Exchange-Traded Funds (ETFs).‚Äù 151 Trading Strategies, Palgrave Macmillan, 2018, pp. 90‚Äì91.
     ///
     /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
     ///</summary>

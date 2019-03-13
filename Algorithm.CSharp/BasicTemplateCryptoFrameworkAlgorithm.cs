@@ -49,9 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-
-            SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
-
+            
             // set algorithm framework models
             SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX)));
             SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));

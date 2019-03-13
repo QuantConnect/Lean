@@ -27,7 +27,7 @@ import numpy as np
 
 ### <summary>
 ### Algorithm demonstrating FOREX asset types and requesting history on them in bulk. As FOREX uses
-### QuoteBars you should request slices or
+### QuoteBars you should request slices
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="history and warm up" />
