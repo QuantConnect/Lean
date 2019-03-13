@@ -124,6 +124,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="CandlestickPatterns.cs" />
+    <Compile Include="IndexUniverseDefinitions.cs" />
     <Compile Include="DollarVolumeUniverseDefinitions.cs" />
     <Compile Include="QCAlgorithm.cs" />
     <Compile Include="QCAlgorithm.History.cs" />
