@@ -97,16 +97,36 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
+        /// Method to retrieve the 2nd Friday of the given month
+        /// </summary>
+        /// <param name="time">Date from the given month</param>
+        /// <returns>2nd Friday of given month</returns>
+        public static DateTime SecondFriday(DateTime time) => NthFriday(time, 2);
+
+        /// <summary>
         /// Method to retrieve the 3rd Friday of the given month
         /// </summary>
         /// <param name="time">Date from the given month</param>
-        /// <returns>ThirdFriday of given month</returns>
-        public static DateTime ThirdFriday(DateTime time)
+        /// <returns>3rd Friday of given month</returns>
+        public static DateTime ThirdFriday(DateTime time) => NthFriday(time, 3);
+
+        /// <summary>
+        /// Method to retrieve the Nth Friday of the given month
+        /// </summary>
+        /// <param name="time">Date from the given month</param>
+        /// <param name="n">The order of the Friday in the period</param>
+        /// <returns>Nth Friday of given month</returns>
+        public static DateTime NthFriday(DateTime time, int n)
         {
+            if (n < 1 || n > 5)
+            {
+                throw new ArgumentOutOfRangeException($"'n' lower than 1 or greater than 5");
+            }
+
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
             return (from day in Enumerable.Range(1, daysInMonth)
                     where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Friday
-                    select new DateTime(time.Year, time.Month, day)).ElementAt(2);
+                    select new DateTime(time.Year, time.Month, day)).ElementAt(n - 1);
         }
 
         /// <summary>

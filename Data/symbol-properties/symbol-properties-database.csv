@@ -111,6 +111,8 @@ usa,GE,future,,USD,2500,0.005,1
 usa,ES,future,,USD,50,0.25,1
 usa,NQ,future,,USD,20,0.25,1
 usa,YM,future,,USD,5,1,1
+usa,RTY,future,,USD,50,0.1,1
+usa,NKD,future,,USD,5,5,1
 usa,LE,future,,USD,400,0.025,1
 usa,GF,future,,USD,500,0.025,1
 usa,HE,future,,USD,400,0.025,1
@@ -122,6 +124,7 @@ usa,CT,future,,USD,500,0.01,1
 usa,OJ,future,,USD,150,0.05,1
 usa,KC,future,,USD,375,0.05,1
 usa,SB,future,,USD,1120,0.01,1
+usa,YO,future,,USD,112000,0.0001,1
 usa,CC,future,,USD,10,1,1
 usa,VX,future,,USD,1000,0.05,1
 usa,[*],future,,USD,1,0.01,1

@@ -31,6 +31,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         private const string Zero = "00:00:00";
         private const string NineSixteenCentralTime = "14:16:00";
         private const string NineThirtyEasternTime = "13:30:00";
+        private const string FiveOClockPMEasternTime = "21:00:00";
         private const string EightOClockChicagoTime = "13:00:00";
         private const string TwelveOclock = "12:00:00";
         private const string TwelveOne = "12:01:00";
@@ -142,6 +143,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Indices.SP500EMini, NineThirtyEasternTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.NASDAQ100EMini, NineThirtyEasternTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.Dow30EMini, NineThirtyEasternTime)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.Russell2000EMini, NineThirtyEasternTime)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.Nikkei225Dollar, FiveOClockPMEasternTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.VIX, EightOClockChicagoTime)]
         public void IndicesExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
@@ -187,6 +190,25 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Metals.Platinum)]
         [TestCase(QuantConnect.Securities.Futures.Metals.Palladium)]
         public void MetalsExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol)
+        {
+            Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
+            foreach (var date in _data[symbol])
+            {
+                //Arrange
+                var security = Symbol.CreateFuture(symbol, Market.USA, date.ContractMonth);
+                var func = FuturesExpiryFunctions.FuturesExpiryFunction(security.ID.Symbol);
+
+                //Act
+                var actual = func(security.ID.Date);
+                var expected = date.LastTrade;
+
+                //Assert
+                Assert.AreEqual(expected, actual, "Failed for symbol: " + symbol);
+            }
+        }
+
+        [TestCase(QuantConnect.Securities.Futures.Softs.Sugar11CME)]
+        public void SoftsExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
             foreach (var date in _data[symbol])
