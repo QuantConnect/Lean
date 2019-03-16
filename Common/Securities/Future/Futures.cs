@@ -1,8 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
 
 namespace QuantConnect.Securities
 {
@@ -11,48 +21,46 @@ namespace QuantConnect.Securities
     /// </summary>
     public static class Futures
     {
-
         /// <summary>
         /// Grains and Oilseeds group 
         /// </summary>
         public static class Grains
         {
             /// <summary>
-            /// Wheat Futures  
+            /// Wheat Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Wheat = "ZW";
 
             /// <summary>
-            /// Corn Futures  
+            /// Corn Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Corn = "ZC";
 
             /// <summary>
-            /// Soybeans Futures  
+            /// Soybeans Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Soybeans = "ZS";
 
             /// <summary>
-            /// Soybean Meal Futures  
+            /// Soybean Meal Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string SoybeanMeal = "ZM";
 
             /// <summary>
-            /// Soybean Oil Futures  
+            /// Soybean Oil Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string SoybeanOil = "ZL";
 
             /// <summary>
-            /// Oats Futures  
+            /// Oats Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Oats = "ZO";
-
         }
 
         /// <summary>
@@ -61,49 +69,49 @@ namespace QuantConnect.Securities
         public static class Currencies
         {
             /// <summary>
-            /// U.S. Dollar Index Futures  
+            /// U.S. Dollar Index Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string USD = "DX";
 
             /// <summary>
-            /// British Pound Futures  
+            /// British Pound Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string GBP = "6B";
 
             /// <summary>
-            /// Canadian Dollar Futures  
+            /// Canadian Dollar Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string CAD = "6C";
 
             /// <summary>
-            /// Japanese Yen Futures  
+            /// Japanese Yen Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string JPY = "6J";
 
             /// <summary>
-            /// Swiss Franc Futures  
+            /// Swiss Franc Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string CHF = "6S";
 
             /// <summary>
-            /// Euro FX Futures  
+            /// Euro FX Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string EUR = "6E";
 
             /// <summary>
-            /// Australian Dollar Futures  
+            /// Australian Dollar Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string AUD = "6A";
 
             /// <summary>
-            /// New Zealand Dollar Futures  
+            /// New Zealand Dollar Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string NZD = "6N";
@@ -115,29 +123,28 @@ namespace QuantConnect.Securities
         public static class Energies
         {
             /// <summary>
-            /// Crude Oil WTI Futures  
+            /// Crude Oil WTI Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string CrudeOilWTI = "CL";
 
             /// <summary>
-            /// Heating Oil Futures  
+            /// Heating Oil Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string HeatingOil = "HO";
 
             /// <summary>
-            /// Gasoline RBOB Futures  
+            /// Gasoline RBOB Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Gasoline = "RB";
 
             /// <summary>
-            /// Natural Gas Futures  
+            /// Natural Gas Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string NaturalGas = "NG";
-
         }
 
         /// <summary>
@@ -146,31 +153,31 @@ namespace QuantConnect.Securities
         public static class Financials
         {
             /// <summary>
-            /// 30Y U.S. Treasury Bond Futures  
+            /// 30Y U.S. Treasury Bond Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Y30TreasuryBond = "ZB";
 
             /// <summary>
-            /// 10Y U.S. Treasury Note Futures  
+            /// 10Y U.S. Treasury Note Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Y10TreasuryNote = "ZN";
 
             /// <summary>
-            /// 5Y U.S. Treasury Note Futures 
+            /// 5Y U.S. Treasury Note Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Y5TreasuryNote = "ZF";
 
             /// <summary>
-            /// 2Y U.S. Treasury Note Futures 
+            /// 2Y U.S. Treasury Note Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Y2TreasuryNote = "ZT";
 
             /// <summary>
-            /// EuroDollar Futures  
+            /// EuroDollar Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string EuroDollar = "GE";
@@ -182,28 +189,40 @@ namespace QuantConnect.Securities
         public static class Indices
         {
             /// <summary>
-            /// E-mini S&amp;P 500 Futures  
+            /// E-mini S&amp;P 500 Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string SP500EMini = "ES";
 
             /// <summary>
-            /// E-mini NASDAQ 100 Futures  
+            /// E-mini NASDAQ 100 Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string NASDAQ100EMini = "NQ";
 
             /// <summary>
-            /// E-mini Dow Indu 30 Futures  
+            /// E-mini Dow Indu 30 Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Dow30EMini = "YM";
 
             /// <summary>
-            /// CBOE Volatility Index Futures  
+            /// CBOE Volatility Index Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string VIX = "VX";
+
+            /// <summary>
+            /// E-mini Russell 2000 Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Russell2000EMini = "RTY";
+
+            /// <summary>
+            /// Nikkei-225 Dollar Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Nikkei225Dollar = "NKD";
         }
 
         /// <summary>
@@ -212,23 +231,22 @@ namespace QuantConnect.Securities
         public static class Meats
         {
             /// <summary>
-            /// Live Cattle Futures  
+            /// Live Cattle Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string LiveCattle = "LE";
 
             /// <summary>
-            /// Feeder Cattle Futures  
+            /// Feeder Cattle Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string FeederCattle = "GF";
 
             /// <summary>
-            /// Lean Hogs Futures  
+            /// Lean Hogs Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string LeanHogs = "HE";
-
         }
 
         /// <summary>
@@ -237,25 +255,25 @@ namespace QuantConnect.Securities
         public static class Metals
         {
             /// <summary>
-            /// Gold Futures  
+            /// Gold Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Gold = "GC";
 
             /// <summary>
-            /// Silver Futures  
+            /// Silver Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Silver = "SI";
 
             /// <summary>
-            /// Platinum Futures  
+            /// Platinum Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Platinum = "PL";
 
             /// <summary>
-            /// Palladium Futures  
+            /// Palladium Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Palladium = "PA";
@@ -267,37 +285,40 @@ namespace QuantConnect.Securities
         public static class Softs
         {
             /// <summary>
-            /// Cotton #2 Futures  
+            /// Cotton #2 Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Cotton2 = "CT";
 
             /// <summary>
-            /// Orange Juice Futures  
+            /// Orange Juice Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string OrangeJuice = "OJ";
 
             /// <summary>
-            /// Coffee C Arabica Futures  
+            /// Coffee C Arabica Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Coffee = "KC";
 
             /// <summary>
-            /// Sugar #11 Futures  
+            /// Sugar #11 Futures ICE
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Sugar11 = "SB";
 
             /// <summary>
-            /// Cocoa Futures  
+            /// Sugar #11 Futures CME
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Sugar11CME = "YO";
+
+            /// <summary>
+            /// Cocoa Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Cocoa = "CC";
-
-
         }
-
     }
 }
