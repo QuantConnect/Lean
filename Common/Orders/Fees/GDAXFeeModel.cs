@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fees
@@ -24,9 +26,14 @@ namespace QuantConnect.Orders.Fees
     {
         /// <summary>
         /// Tier 1 taker fees
-        /// https://www.gdax.com/fees
+        /// https://pro.coinbase.com/orders/fees
+        /// https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
         /// </summary>
-        public const decimal TakerFee = 0.003m;
+        private static readonly List<FeeHistoryEntry> FeeHistory = new List<FeeHistoryEntry>
+        {
+            new FeeHistoryEntry(DateTime.MinValue, 0m, 0.003m),
+            new FeeHistoryEntry(new DateTime(2019, 3, 23, 1, 30, 0), 0.0015m, 0.0025m)
+        };
 
         /// <summary>
         /// Get the fee for this order in quote currency
@@ -40,21 +47,73 @@ namespace QuantConnect.Orders.Fees
             var security = parameters.Security;
 
             // marketable limit orders are considered takers
-            decimal fee = 0;
-            // check limit order posted to the order book, 0% maker fee
-            if (!(order.Type == OrderType.Limit && !order.IsMarketable))
+            var isMaker = order.Type == OrderType.Limit && !order.IsMarketable;
+
+            var feePercentage = GetFeePercentage(order.Time, isMaker);
+
+            // get order value in quote currency, then apply maker/taker fee factor
+            var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+            unitPrice *= security.SymbolProperties.ContractMultiplier;
+
+            // currently we do not model 30-day volume, so we use the first tier
+
+            var fee = unitPrice * order.AbsoluteQuantity * feePercentage;
+
+            return new OrderFee(new CashAmount(fee, security.QuoteCurrency.Symbol));
+        }
+
+        /// <summary>
+        /// Returns the maker/taker fee percentage effective at the requested date.
+        /// </summary>
+        /// <param name="utcTime">The date/time requested (UTC)</param>
+        /// <param name="isMaker">true if the maker percentage fee is requested, false otherwise</param>
+        /// <returns>The fee percentage effective at the requested date</returns>
+        public static decimal GetFeePercentage(DateTime utcTime, bool isMaker)
+        {
+            for (var index = FeeHistory.Count - 1; index >= 0; index--)
             {
-                // get order value in quote currency, then apply taker fee factor
-                var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
-                unitPrice *= security.SymbolProperties.ContractMultiplier;
-
-                // currently we do not model 30-day volume, so we use the first tier
-
-                fee = unitPrice * order.AbsoluteQuantity * TakerFee;
+                var entry = FeeHistory[index];
+                if (utcTime >= entry.EffectiveDateTime)
+                {
+                    return isMaker ? entry.MakerFeePercentage : entry.TakerFeePercentage;
+                }
             }
-            return new OrderFee(new CashAmount(
-                fee,
-                security.QuoteCurrency.Symbol));
+
+            return 0m;
+        }
+
+        /// <summary>
+        /// Represents an entry in the list of historical fee changes.
+        /// </summary>
+        public class FeeHistoryEntry
+        {
+            /// <summary>
+            /// The date/time (UTC) when the new fees go into effect.
+            /// </summary>
+            public DateTime EffectiveDateTime { get; set; }
+
+            /// <summary>
+            /// The maker fee percentage.
+            /// </summary>
+            public decimal MakerFeePercentage { get; set; }
+
+            /// <summary>
+            /// The taker fee percentage.
+            /// </summary>
+            public decimal TakerFeePercentage { get; set; }
+
+            /// <summary>
+            /// Creates an instance of the <see cref="FeeHistoryEntry"/> class.
+            /// </summary>
+            /// <param name="effectiveDateTime">The date/time (UTC) when the new fees go into effect.</param>
+            /// <param name="makerFeePercentage">The maker fee percentage.</param>
+            /// <param name="takerFeePercentage">The taker fee percentage.</param>
+            public FeeHistoryEntry(DateTime effectiveDateTime, decimal makerFeePercentage, decimal takerFeePercentage)
+            {
+                EffectiveDateTime = effectiveDateTime;
+                MakerFeePercentage = makerFeePercentage;
+                TakerFeePercentage = takerFeePercentage;
+            }
         }
     }
 }
