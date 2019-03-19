@@ -1519,6 +1519,351 @@
       "saturday": [],
       "holidays": []
     },
+    "Future-usa-1S": {
+      "dataTimeZone": "UTC-05",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-22": {
+      "dataTimeZone": "UTC",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        },
+        {
+          "start": "18:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "17:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-6L": {
+      "dataTimeZone": "UTC",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-6M": {
+      "dataTimeZone": "UTC",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-6R": {
+      "dataTimeZone": "UTC",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        },
+        {
+          "start": "17:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "16:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
     "Future-usa-CL": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
