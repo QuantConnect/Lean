@@ -247,6 +247,7 @@
     <Compile Include="Securities\BuyingPowerModel.cs" />
     <Compile Include="Securities\BuyingPowerModelExtensions.cs" />
     <Compile Include="Securities\ErrorCurrencyConverter.cs" />
+    <Compile Include="Securities\Future\FuturesExpiryCalendar.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForTargetValueParameters.cs" />
     <Compile Include="Securities\HasSufficientBuyingPowerForOrderParameters.cs" />
     <Compile Include="Securities\ICurrencyConverter.cs" />
