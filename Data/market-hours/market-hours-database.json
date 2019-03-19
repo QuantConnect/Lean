@@ -1520,7 +1520,7 @@
       "holidays": []
     },
     "Future-usa-1S": {
-      "dataTimeZone": "UTC-05",
+      "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/New_York",
       "sunday": [
         {
