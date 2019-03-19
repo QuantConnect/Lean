@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders.Fills;
 
 namespace QuantConnect
 {
@@ -43,6 +45,17 @@ namespace QuantConnect
         public bool LiquidateEnabled { get; set; }
 
         /// <summary>
+        /// Gets/sets the minimum time span elapsed to consider a market fill price as stale (defaults to one hour)
+        /// </summary>
+        /// <remarks>
+        /// In the default fill models, a warning message will be added to market order fills
+        /// if this time span (or more) has elapsed since the price was last updated.
+        /// </remarks>
+        /// <seealso cref="FillModel"/>
+        /// <seealso cref="ImmediateFillModel"/>
+        public TimeSpan StalePriceTimeSpan { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmSettings"/> class
         /// </summary>
         public AlgorithmSettings()
@@ -51,6 +64,7 @@ namespace QuantConnect
             DataSubscriptionLimit = int.MaxValue;
             LiquidateEnabled = true;
             FreePortfolioValuePercentage = 0.0025m;
+            StalePriceTimeSpan = Time.OneHour;
         }
     }
 }

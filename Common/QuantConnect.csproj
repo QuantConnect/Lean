@@ -668,15 +668,11 @@
     <Compile Include="Util\ExpressionBuilder.cs" />
     <Compile Include="Util\FixedSizeQueue.cs" />
     <Compile Include="Util\FixedSizeHashQueue.cs" />
-    <Compile Include="Util\FuncParallelRunnerWorkItem.cs" />
     <Compile Include="Util\FuncTextWriter.cs" />
-    <Compile Include="Util\IParallelRunnerWorkItem.cs" />
     <Compile Include="Util\LeanData.cs" />
     <Compile Include="Util\LeanDataPathComponents.cs" />
     <Compile Include="Util\ListComparer.cs" />
     <Compile Include="Util\MarketHoursDatabaseJsonConverter.cs" />
-    <Compile Include="Util\ParallelRunner.cs" />
-    <Compile Include="Util\ParallelRunnerWorker.cs" />
     <Compile Include="Util\ColorJsonConverter.cs" />
     <Compile Include="Util\PythonUtil.cs" />
     <Compile Include="Util\RateGate.cs" />

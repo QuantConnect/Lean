@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Interfaces
 {
     /// <summary>
@@ -39,5 +41,10 @@ namespace QuantConnect.Interfaces
         /// with the exception of options and futures where every single contract in a chain counts as one.
         /// </remarks>
         int DataSubscriptionLimit { get; set; }
+
+        /// <summary>
+        /// Gets the minimum time span elapsed to consider a market fill price as stale (defaults to one hour)
+        /// </summary>
+        TimeSpan StalePriceTimeSpan { get; set; }
     }
 }

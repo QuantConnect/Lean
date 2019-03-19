@@ -27,7 +27,6 @@ from QuantConnect.Securities import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Data.Consolidators import *
 
-import decimal as d
 from datetime import timedelta
 from math import floor
 

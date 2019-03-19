@@ -23,7 +23,6 @@ from QuantConnect.Data import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from System.Collections.Generic import List
-import decimal as d
 
 ### <summary>
 ### In this algorithm we demonstrate how to perform some technical analysis as
@@ -92,7 +91,7 @@ class EmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
 class SymbolData(object):
     def __init__(self, symbol):
         self.symbol = symbol
-        self.tolerance = d.Decimal(1.01)
+        self.tolerance = 1.01
         self.fast = ExponentialMovingAverage(100)
         self.slow = ExponentialMovingAverage(300)
         self.is_uptrend = False
@@ -105,4 +104,4 @@ class SymbolData(object):
             self.is_uptrend = fast > slow * self.tolerance
 
         if self.is_uptrend:
-            self.scale = (fast - slow) / ((fast + slow) / d.Decimal(2.0))
+            self.scale = (fast - slow) / ((fast + slow) / 2.0)

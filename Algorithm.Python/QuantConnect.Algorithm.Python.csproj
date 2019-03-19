@@ -36,17 +36,20 @@
     <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="Alphas\ContingentClaimsAnalysisDefaultPredictionAlpha.py" />
     <Content Include="Alphas\ForexCalendarAlpha.py" />
     <Content Include="Alphas\GasAndCrudeOilEnergyCorrelationAlpha.py" />
     <Content Include="Alphas\GlobalEquityMeanReversionIBSAlpha.py" />
     <Content Include="Alphas\IntradayReversalCurrencyMarketsAlpha.py" />
-    <Content Include="Alphas\GreenblattMagicFormulaAlgorithm.py" />
+    <Content Include="Alphas\GreenblattMagicFormulaAlpha.py" />
     <Content Include="Alphas\MeanReversionLunchBreakAlpha.py" />
+    <Content Include="Alphas\PriceGapMeanReversionAlpha.py" />
     <Content Include="Alphas\SykesShortMicroCapAlpha.py" />
     <Content Include="Alphas\RebalancingLeveragedETFAlpha.py" />
     <Content Include="Alphas\TriangleExchangeRateArbitrageAlpha.py" />
     <Content Include="Alphas\ShareClassMeanReversionAlpha.py" />
     <Content Include="Alphas\TripleLeverageETFPairVolatilityDecayAlpha.py" />
+    <Content Include="Alphas\VIXDualThrustAlpha.py" />
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
     <Content Include="BasicTemplateFuturesFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateOptionsFrameworkAlgorithm.py" />

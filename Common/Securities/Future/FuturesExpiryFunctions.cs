@@ -95,6 +95,27 @@ namespace QuantConnect.Securities.Future
                     return thirdFriday.Add(new TimeSpan(13,30,0));
                 })
             },
+            // Russell2000EMini (RTY): https://www.cmegroup.com/trading/equity-index/us-index/e-mini-russell-2000_contract_specifications.html
+            {Futures.Indices.Russell2000EMini, (time =>
+                {
+                    // Trading can occur up to 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    return thirdFriday.Add(new TimeSpan (13,30,0));
+                })
+            },
+            // Nikkei225Dollar (NKD): https://www.cmegroup.com/trading/equity-index/international-index/nikkei-225-dollar_contract_specifications.html
+            {Futures.Indices.Nikkei225Dollar, (time =>
+                {
+                    // Trading terminates at 5:00 p.m. Eastern Time (ET) on Business Day prior to 2nd Friday of the contract month.
+                    var secondFriday = FuturesExpiryUtilityFunctions.SecondFriday(time);
+                    var priorBusinessDay = secondFriday.AddDays(-1);
+                    while (!FuturesExpiryUtilityFunctions.NotHoliday(priorBusinessDay))
+                    {
+                        priorBusinessDay = priorBusinessDay.AddDays(-1);
+                    }
+                    return priorBusinessDay.Add(TimeSpan.FromHours(21));
+                })
+            },
             // CBOE Volatility Index Futures (VIX): https://cfe.cboe.com/cfe-products/vx-cboe-volatility-index-vix-futures/contract-specifications
             {Futures.Indices.VIX, (time =>
                 {
@@ -419,6 +440,14 @@ namespace QuantConnect.Securities.Future
                         lastThursday = lastThursday.AddDays(-7);
                     }
                     return lastThursday;
+                })
+            },
+            // Sugar #11 CME (YO): https://www.cmegroup.com/trading/agricultural/softs/sugar-no11_contract_specifications.html
+            {Futures.Softs.Sugar11CME, (time =>
+                {
+                    // Trading terminates on the day immediately preceding the first notice day of the corresponding trading month of Sugar No. 11 futures at ICE Futures U.S.
+                    var precedingMonth = time.AddMonths(-1);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(precedingMonth, 1);
                 })
             }
         };
