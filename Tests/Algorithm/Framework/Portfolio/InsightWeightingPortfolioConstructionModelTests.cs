@@ -321,6 +321,39 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             AssertTargets(expectedTargets, actualTargets);
         }
 
+        [Test]
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void GeneratesNoTargetsForInsightsWithNoWeight(Language language)
+        {
+            SetPortfolioConstruction(language, _algorithm);
+
+            var insights = new[]
+            {
+                Insight.Price(Symbols.SPY, TimeSpan.FromDays(1), InsightDirection.Down)
+            };
+
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+            Assert.AreEqual(0, actualTargets.Count);
+        }
+
+        [Test]
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void GeneratesZeroTargetForZeroInsightWeight(Language language)
+        {
+            SetPortfolioConstruction(language, _algorithm);
+
+            var insights = new[]
+            {
+                GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime, weight:0)
+            };
+
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+            Assert.AreEqual(1, actualTargets.Count);
+            AssertTargets(actualTargets, new[] {new PortfolioTarget(Symbols.SPY, 0)});
+        }
+
         private Security GetSecurity(Symbol symbol)
         {
             var config = SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc);

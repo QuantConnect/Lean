@@ -61,7 +61,7 @@ class InsightWeightingPortfolioConstructionModel(PortfolioConstructionModel):
 
         # Ignore insights that don't have Weight value
         for insight in insights:
-            if insight.Weight:
+            if insight.Weight is not None:
                 self.insightCollection.Add(insight)
 
         # Create flatten target for each security that was removed from the universe
