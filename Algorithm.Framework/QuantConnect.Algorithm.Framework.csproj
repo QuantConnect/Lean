@@ -113,6 +113,9 @@
     <Compile Include="Execution\VolumeWeightedAveragePriceExecutionModel.cs" />
     <Compile Include="NotifiedSecurityChanges.cs" />
     <Compile Include="Portfolio\BlackLittermanOptimizationPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\InsightWeightingPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\IPortfolioOptimizer.cs" />
     <Compile Include="Portfolio\UnconstrainedMeanVariancePortfolioOptimizer.cs" />
     <Compile Include="Portfolio\MaximumSharpeRatioPortfolioOptimizer.cs" />
     <Compile Include="Portfolio\MeanVarianceOptimizationPortfolioConstructionModel.cs" />
@@ -154,6 +157,9 @@
   <ItemGroup>
     <None Include="packages.config" />
     <Content Include="Portfolio\BlackLittermanOptimizationPortfolioConstructionModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Portfolio\InsightWeightingPortfolioConstructionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Portfolio\UnconstrainedMeanVariancePortfolioOptimizer.py">
