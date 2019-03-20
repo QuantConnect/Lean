@@ -264,10 +264,12 @@ namespace QuantConnect.Securities.Future
             {Futures.Currencies.BRL, (time =>
                 {
                     // On the last business day of the month, at 9:15 a.m. CT, immediately preceding the contract month, on which the Central Bank of Brazil is scheduled to publish its final end-of-month (EOM), "Commercial exchange rate for Brazilian reais per U.S. dollar for cash delivery" (PTAX rate).
-                    // TODO: Might need custom calendar
                     var lastPrecedingBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(time, -1);
+                    var symbolHolidays = MarketHoursDatabase.FromDataFolder().GetEntry("usa", Futures.Currencies.BRL, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
 
-                    while (FuturesExpiryCalendar.BrazilDates.Contains(lastPrecedingBusinessDay))
+                    while (symbolHolidays.Contains(lastPrecedingBusinessDay))
                     {
                         lastPrecedingBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastPrecedingBusinessDay, -1);
                     }
@@ -275,14 +277,19 @@ namespace QuantConnect.Securities.Future
                     return lastPrecedingBusinessDay.Add(new TimeSpan(14,15,0));
                 })
             },
-            // MXN (6R): https://www.cmegroup.com/trading/fx/emerging-market/mexican-peso_contract_specifications.html
+            // MXN (6M): https://www.cmegroup.com/trading/fx/emerging-market/mexican-peso_contract_specifications.html
             {Futures.Currencies.MXN, (time =>
                 {
                     // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday). 
                     var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
                     var secondBusinessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday,-2);
+
+                    var symbolHolidays = MarketHoursDatabase.FromDataFolder().GetEntry("usa", Futures.Currencies.MXN, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
                     // Day of the races holiday/observance
-                    if (FuturesExpiryCalendar.MexicoDates.Contains(secondBusinessDayPrecedingThridWednesday))
+                    if (symbolHolidays.Contains(secondBusinessDayPrecedingThridWednesday))
                     {
                         secondBusinessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThridWednesday, -1);
                     }
