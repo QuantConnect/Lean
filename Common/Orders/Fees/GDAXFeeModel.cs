@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fees
@@ -24,17 +23,6 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     public class GDAXFeeModel : FeeModel
     {
-        /// <summary>
-        /// Tier 1 taker fees
-        /// https://pro.coinbase.com/orders/fees
-        /// https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
-        /// </summary>
-        private static readonly List<FeeHistoryEntry> FeeHistory = new List<FeeHistoryEntry>
-        {
-            new FeeHistoryEntry(DateTime.MinValue, 0m, 0.003m),
-            new FeeHistoryEntry(new DateTime(2019, 3, 23, 1, 30, 0), 0.0015m, 0.0025m)
-        };
-
         /// <summary>
         /// Get the fee for this order in quote currency
         /// </summary>
@@ -70,50 +58,14 @@ namespace QuantConnect.Orders.Fees
         /// <returns>The fee percentage effective at the requested date</returns>
         public static decimal GetFeePercentage(DateTime utcTime, bool isMaker)
         {
-            for (var index = FeeHistory.Count - 1; index >= 0; index--)
-            {
-                var entry = FeeHistory[index];
-                if (utcTime >= entry.EffectiveDateTime)
-                {
-                    return isMaker ? entry.MakerFeePercentage : entry.TakerFeePercentage;
-                }
-            }
+            // Tier 1 fees
+            // https://pro.coinbase.com/orders/fees
+            // https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
 
-            return 0m;
-        }
+            if (utcTime < new DateTime(2019, 3, 23, 1, 30, 0))
+                return isMaker ? 0m : 0.003m;
 
-        /// <summary>
-        /// Represents an entry in the list of historical fee changes.
-        /// </summary>
-        public class FeeHistoryEntry
-        {
-            /// <summary>
-            /// The date/time (UTC) when the new fees go into effect.
-            /// </summary>
-            public DateTime EffectiveDateTime { get; set; }
-
-            /// <summary>
-            /// The maker fee percentage.
-            /// </summary>
-            public decimal MakerFeePercentage { get; set; }
-
-            /// <summary>
-            /// The taker fee percentage.
-            /// </summary>
-            public decimal TakerFeePercentage { get; set; }
-
-            /// <summary>
-            /// Creates an instance of the <see cref="FeeHistoryEntry"/> class.
-            /// </summary>
-            /// <param name="effectiveDateTime">The date/time (UTC) when the new fees go into effect.</param>
-            /// <param name="makerFeePercentage">The maker fee percentage.</param>
-            /// <param name="takerFeePercentage">The taker fee percentage.</param>
-            public FeeHistoryEntry(DateTime effectiveDateTime, decimal makerFeePercentage, decimal takerFeePercentage)
-            {
-                EffectiveDateTime = effectiveDateTime;
-                MakerFeePercentage = makerFeePercentage;
-                TakerFeePercentage = takerFeePercentage;
-            }
+            return isMaker ? 0.0015m : 0.0025m;
         }
     }
 }
