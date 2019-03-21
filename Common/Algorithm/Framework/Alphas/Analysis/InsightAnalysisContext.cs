@@ -166,6 +166,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
             {
                 return Insight.Magnitude.HasValue;
             }
+            else if (scoreType == InsightScoreType.Direction)
+            {
+                return Insight.Direction != InsightDirection.Flat;
+            }
 
             return true;
         }
