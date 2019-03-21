@@ -330,7 +330,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var insights = new[]
             {
-                Insight.Price(Symbols.SPY, TimeSpan.FromDays(1), InsightDirection.Down)
+                GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime, weight:null)
             };
 
             var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
@@ -366,7 +366,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             );
         }
 
-        private Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double weight = Weight)
+        private Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double? weight = Weight)
         {
             period = period ?? TimeSpan.FromDays(1);
             var insight = Insight.Price(symbol, period.Value, direction, weight: weight);

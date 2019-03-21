@@ -49,10 +49,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetExecution(new ImmediateExecutionModel());
         }
 
-        public override void OnEndOfDay()
+        public override void OnEndOfAlgorithm()
         {
-            if (Portfolio.Invested &&
-                // holdings value should be 0.25 - to avoid price fluctuation issue we compare with 0.28 and 0.23
+            if (// holdings value should be 0.25 - to avoid price fluctuation issue we compare with 0.28 and 0.23
                 (Portfolio.TotalHoldingsValue > Portfolio.TotalPortfolioValue * 0.28m
                 ||
                 Portfolio.TotalHoldingsValue < Portfolio.TotalPortfolioValue * 0.23m))
