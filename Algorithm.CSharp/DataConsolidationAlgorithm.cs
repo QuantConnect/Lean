@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
             // we have data for these dates locally
             var start = new DateTime(2013, 10, 07, 09, 30, 0);
             SetStartDate(start);
-            SetEndDate(start.AddDays(1));
+            SetEndDate(start.AddDays(60));
 
             // define our 30 minute trade bar consolidator. we can access the 30 minute bar
             // from the DataConsolidated events
@@ -94,6 +94,14 @@ namespace QuantConnect.Algorithm.CSharp
             Consolidate("SPY", TimeSpan.FromMinutes(45), FortyFiveMinuteBarHandler);
             Consolidate("SPY", Resolution.Hour, HourBarHandler);
             Consolidate("EURUSD", Resolution.Daily, DailyEurUsdBarHandler);
+
+            // API convenience method for easily receiving weekly-consolidated data
+            WeeklyConsolidate("SPY", CalendarTradeBarHandler);
+            WeeklyConsolidate("EURUSD", CalendarQuoteBarHandler);
+
+            // API convenience method for easily receiving monthly-consolidated data
+            MonthlyConsolidate("SPY", CalendarTradeBarHandler);
+            MonthlyConsolidate("EURUSD", CalendarQuoteBarHandler);
 
             // requires quote data subscription
             //Consolidate<QuoteBar>("EURUSD", TimeSpan.FromMinutes(45), FortyFiveMinuteBarHandler);
@@ -176,6 +184,16 @@ namespace QuantConnect.Algorithm.CSharp
         private void DailyEurUsdBarHandler(QuoteBar consolidated)
         {
             Log($"{consolidated.EndTime:o} EURUSD Daily consolidated.");
+        }
+
+        private void CalendarTradeBarHandler(TradeBar tradeBar)
+        {
+            Log($"{Time} :: {tradeBar.Time:o} {tradeBar.Close}");
+        }
+
+        private void CalendarQuoteBarHandler(QuoteBar quoteBar)
+        {
+            Log($"{Time} :: {quoteBar.Time:o} {quoteBar.Close}");
         }
 
         public override void OnEndOfAlgorithm()

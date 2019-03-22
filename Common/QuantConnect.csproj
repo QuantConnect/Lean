@@ -217,7 +217,14 @@
     <Compile Include="Brokerages\GDAXBrokerageModel.cs" />
     <Compile Include="Chart.cs" />
     <Compile Include="ChartPoint.cs" />
+    <Compile Include="Data\Consolidators\BaseDataCalendarConsolidator.cs" />
     <Compile Include="Data\Consolidators\FilteredIdentityDataConsolidator.cs" />
+    <Compile Include="Data\Consolidators\QuoteBarCalendarConsolidator.cs" />
+    <Compile Include="Data\Consolidators\TickQuoteBarCalendarConsolidator.cs" />
+    <Compile Include="Data\Consolidators\TickCalendarConsolidator.cs" />
+    <Compile Include="Data\Consolidators\DynamicDataCalendarConsolidator.cs" />
+    <Compile Include="Data\Consolidators\TradeBarCalendarConsolidator.cs" />
+    <Compile Include="Data\Consolidators\CalendarConsolidatorBase.cs" />
     <Compile Include="Data\HistoryProviderBase.cs" />
     <Compile Include="Data\HistoryProviderInitializeParameters.cs" />
     <Compile Include="Data\HistoryRequestFactory.cs" />

@@ -927,6 +927,53 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        public IDataConsolidator WeeklyConsolidate(Symbol symbol, PyObject handler)
+        {
+            return CalendarConsolidate(symbol, CalendarType.Weekly, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        public IDataConsolidator MonthlyConsolidate(Symbol symbol, PyObject handler)
+        {
+            return CalendarConsolidate(symbol, CalendarType.Monthly, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="calendarType">The consolidation period</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        private IDataConsolidator CalendarConsolidate(Symbol symbol, CalendarType calendarType, PyObject handler)
+        {
+            // resolve consolidator input subscription
+            var type = GetSubscription(symbol, null).Type;
+
+            if (type == typeof(TradeBar))
+            {
+                return CalendarConsolidate(symbol, calendarType, TickType.Trade, handler.ConvertToDelegate<Action<TradeBar>>());
+            }
+
+            if (type == typeof(QuoteBar))
+            {
+                return CalendarConsolidate(symbol, calendarType, TickType.Quote, handler.ConvertToDelegate<Action<QuoteBar>>());
+            }
+
+            return CalendarConsolidate(symbol, calendarType, null, handler.ConvertToDelegate<Action<BaseData>>());
+        }
+
+        /// <summary>
         /// Gets indicator base type
         /// </summary>
         /// <param name="type">Indicator type</param>

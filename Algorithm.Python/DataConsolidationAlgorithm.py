@@ -43,7 +43,7 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
         self.SetStartDate(DateTime(2013, 10, 7, 9, 30, 0))  #Set Start Date
-        self.SetEndDate(self.StartDate + timedelta(1))           #Set End Date
+        self.SetEndDate(self.StartDate + timedelta(60))          #Set End Date
         # Find more symbols here: http://quantconnect.com/data
         self.AddEquity("SPY")
         self.AddForex("EURUSD", Resolution.Hour)
@@ -88,6 +88,14 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         self.Consolidate("SPY", Resolution.Hour, self.HourBarHandler)
         self.Consolidate("EURUSD", Resolution.Daily, self.DailyEurUsdBarHandler)
 
+        # API convenience method for easily receiving weekly-consolidated data
+        self.WeeklyConsolidate("SPY", self.CalendarTradeBarHandler)
+        self.WeeklyConsolidate("EURUSD", self.CalendarQuoteBarHandler)
+
+        # API convenience method for easily receiving monthly-consolidated data
+        self.MonthlyConsolidate("SPY", self.CalendarTradeBarHandler);
+        self.MonthlyConsolidate("EURUSD", self.CalendarQuoteBarHandler);
+
         # some securities may have trade and quote data available, so we can choose it based on TickType:
         #self.Consolidate("BTCUSD", Resolution.Hour, TickType.Trade, self.HourBarHandler)   # to get TradeBar
         #self.Consolidate("BTCUSD", Resolution.Hour, TickType.Quote, self.HourBarHandler)   # to get QuoteBar (default)
@@ -128,7 +136,7 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         consolidator produces a new 3 day bar, this function will be called automatically. The 'sender' parameter
         will be the instance of the IDataConsolidator that invoked the event, but you'll almost never need that!'''
         self.Log(f"{consolidated.Time} >> Plotting!")
-        self.Plot(consolidated.Symbol, "3HourBar", consolidated.Close)
+        self.Plot(consolidated.Symbol.Value, "3HourBar", consolidated.Close)
 
     def FortyFiveMinuteBarHandler(self, consolidated):
         ''' This is our event handler for our 45 minute consolidated defined using the Consolidate method'''
@@ -143,6 +151,12 @@ class DataConsolidationAlgorithm(QCAlgorithm):
     def DailyEurUsdBarHandler(self, consolidated):
         '''This is our event handler for our daily consolidated defined using the Consolidate method'''
         self.Log(f"{consolidated.EndTime} EURUSD Daily consolidated.")
+
+    def CalendarTradeBarHandler(self, tradeBar):
+        self.Log(f'{self.Time} :: {tradeBar.Time} {tradeBar.Close}')
+
+    def CalendarQuoteBarHandler(self, quoteBar):
+        self.Log(f'{self.Time} :: {quoteBar.Time} {quoteBar.Close}')
 
     def OnEndOfAlgorithm(self):
         if not self.consolidatedHour:
