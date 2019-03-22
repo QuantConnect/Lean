@@ -43,8 +43,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 output.Info.WriteLine("Launching coarse data generator...");
                 var coarseFiles = CoarseUniverseGenerator.CoarseUniverseGeneratorProgram.ProcessEquityDirectories(
                     Globals.DataFolder,
-                    false,
-                    settings.Start
+                    false
                 ).ToList();
                 output.Info.WriteLine("Coarse data generation completed. Produced the following files:");
                 foreach (var coarseFile in coarseFiles)
