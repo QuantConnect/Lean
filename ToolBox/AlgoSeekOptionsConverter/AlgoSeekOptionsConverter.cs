@@ -42,7 +42,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private Resolution _resolution;
         private DateTime _referenceDate;
 
-        private readonly ParallelOptions parallelOptionsProcessing = new ParallelOptions { MaxDegreeOfParallelism = OS.IsWindows ? Environment.ProcessorCount * 5 : 2 /*ubuntu optimal setting*/};
+        private readonly ParallelOptions parallelOptionsProcessing = new ParallelOptions {MaxDegreeOfParallelism = Environment.ProcessorCount};
         private readonly ParallelOptions parallelOptionsZipping = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 5 };
 
         /// <summary>
