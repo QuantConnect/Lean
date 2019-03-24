@@ -1388,10 +1388,10 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Safely remove ending
+        /// Returns a new string in which specified ending in the current instance is removed.
         /// </summary>
-        /// <param name="s"></param>
-        /// <param name="ending"></param>
+        /// <param name="s">original string value</param>
+        /// <param name="ending">the string to be removed</param>
         /// <returns></returns>
         public static string RemoveFromEnd(this string s, string ending)
         {
