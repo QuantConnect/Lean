@@ -35,7 +35,7 @@ namespace QuantConnect.Securities
         {
             _entries = entries.ToDictionary();
         }
-        
+
         /// <summary>
         /// Check whether symbol properties exists for the specified market/symbol/security-type
         /// </summary>
@@ -56,12 +56,10 @@ namespace QuantConnect.Securities
         /// <param name="securityType">The security type of the symbol</param>
         public bool ContainsKey(string market, Symbol symbol, SecurityType securityType)
         {
-            var stringSymbol = symbol == null ? string.Empty :
-                (symbol.ID.SecurityType == SecurityType.Option ? symbol.Underlying.Value :
-                (symbol.ID.SecurityType == SecurityType.Future ? symbol.ID.Symbol :
-                 symbol.Value));
-
-            return ContainsKey(market, stringSymbol, securityType);
+            return ContainsKey(
+                market,
+                MarketHoursDatabase.GetDatabaseSymbolKey(symbol),
+                securityType);
         }
 
         /// <summary>
@@ -100,12 +98,11 @@ namespace QuantConnect.Securities
         /// <returns>The symbol properties matching the specified market/symbol/security-type or null if not found</returns>
         public SymbolProperties GetSymbolProperties(string market, Symbol symbol, SecurityType securityType, string defaultQuoteCurrency)
         {
-            var stringSymbol = symbol == null ? string.Empty :
-                (symbol.ID.SecurityType == SecurityType.Option ? symbol.Underlying.Value :
-                (symbol.ID.SecurityType == SecurityType.Future ? symbol.ID.Symbol :
-                 symbol.Value));
-
-            return GetSymbolProperties(market, stringSymbol, securityType, defaultQuoteCurrency);
+            return GetSymbolProperties(
+                market,
+                MarketHoursDatabase.GetDatabaseSymbolKey(symbol),
+                securityType,
+                defaultQuoteCurrency);
         }
 
         /// <summary>
@@ -167,12 +164,12 @@ namespace QuantConnect.Securities
             var csv = line.Split(',');
 
             key = new SecurityDatabaseKey(
-                market: csv[0], 
-                symbol: csv[1], 
+                market: csv[0],
+                symbol: csv[1],
                 securityType: (SecurityType)Enum.Parse(typeof(SecurityType), csv[2], true));
 
             return new SymbolProperties(
-                description: csv[3], 
+                description: csv[3],
                 quoteCurrency: csv[4],
                 contractMultiplier: csv[5].ToDecimal(),
                 minimumPriceVariation: csv[6].ToDecimal(),
