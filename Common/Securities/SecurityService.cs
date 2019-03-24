@@ -94,13 +94,9 @@ namespace QuantConnect.Securities
                 {
                     Forex.Forex.DecomposeCurrencyPair(symbol.Value, out baseCurrency, out quoteCurrency);
                 }
-                else if (symbol.Value.EndsWith(quoteCurrency))
-                {
-                    baseCurrency = symbol.Value.RemoveFromEnd(quoteCurrency);
-                }
                 else
                 {
-                    throw new InvalidOperationException($"symbol doesn't end with {quoteCurrency}");
+                    Crypto.Crypto.DecomposeCurrencyPair(symbol, symbolProperties, out baseCurrency, out quoteCurrency);
                 }
 
                 if (!_cashBook.ContainsKey(baseCurrency))
