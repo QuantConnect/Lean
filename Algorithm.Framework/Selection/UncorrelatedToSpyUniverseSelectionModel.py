@@ -48,9 +48,6 @@ class UncorrelatedToSPYUniverseSelectionModel(FundamentalUniverseSelectionModel)
         
         # Symbols in universe
         self.symbols = []
-
-        # Set True when initial history has been retrieved.
-        self.initialHistory = False
         
         self.coarseSymbols = []
         self.cor = None
@@ -84,16 +81,14 @@ class UncorrelatedToSPYUniverseSelectionModel(FundamentalUniverseSelectionModel)
         returns=hist.close.unstack(level=0).pct_change()
       
         # Calculate stdev(correlation) using rolling window for all history
-        if not self.initialHistory:
+        if self.cor is None:
             corMat=returns.rolling(self.windowLength,min_periods = self.windowLength).corr().dropna()
             
             # Correlation of all securities against SPY
             self.cor = corMat[str(self.spySymbol)].unstack()
-            
-            self.initialHistory = True
-            
+                       
         # Calculate stdev(correlation) for last period and append a new row
-        if self.initialHistory:
+        else:
             corRow=returns.tail(self.windowLength).corr()[str(self.spySymbol)]
             
             # Correlation of all securities against SPY
