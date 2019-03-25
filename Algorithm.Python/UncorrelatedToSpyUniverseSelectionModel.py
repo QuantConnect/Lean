@@ -49,7 +49,7 @@ class UncorrelatedToSPYUniverseSelectionModel(FundamentalUniverseSelectionModel)
         # Symbols in universe
         self.symbols = []
 
-        # Initial history not retrieved. Set True when history has been retrieved.
+        # Set True when initial history has been retrieved.
         self.initialHistory = False
         
         self.coarseSymbols = []
@@ -80,7 +80,7 @@ class UncorrelatedToSPYUniverseSelectionModel(FundamentalUniverseSelectionModel)
         # Retrieve history of prices
         hist = algorithm.History(symbols + [self.spySymbol], self.historyLength, Resolution.Daily)
 
-        # # Calculate returns
+        # Calculate returns
         returns=hist.close.unstack(level=0).pct_change()
       
         # Calculate stdev(correlation) using rolling window for all history
