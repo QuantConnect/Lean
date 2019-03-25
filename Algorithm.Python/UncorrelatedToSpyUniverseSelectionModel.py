@@ -61,7 +61,7 @@ class UncorrelatedToSPYUniverseSelectionModel(FundamentalUniverseSelectionModel)
             # The stocks must have fundamental data
             # The stock must have positive previous-day close price
             # The stock must have positive volume on the previous trading day
-            filtered = [x for x in coarse if x.HasFundamentalData and x.Volume ¨ 0 and x.Price > 0]
+            filtered = [x for x in coarse if x.HasFundamentalData and x.Volume > 0 and x.Price > 0]
             sortedByDollarVolume = sorted(filtered, key = lambda x: x.DollarVolume, reverse=True)[:self.numberOfSymbolsCoarse]
     
             self.coarseSymbols = [x.Symbol for x in sortedByDollarVolume]
