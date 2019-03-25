@@ -293,7 +293,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>A new insight object for the specified parameters</returns>
         public static Insight Price(Symbol symbol, DateTime closeTimeLocal, InsightDirection direction, double? magnitude = null, double? confidence = null, string sourceModel = null)
         {
-            var spec = new CloseTimePeriodSpecification(closeTimeLocal);
+            var spec = closeTimeLocal == Time.EndOfTime ? (IPeriodSpecification)
+                new EndOfTimeCloseTimePeriodSpecification() : new CloseTimePeriodSpecification(closeTimeLocal);
             return new Insight(symbol, spec, InsightType.Price, direction, magnitude, confidence, sourceModel);
         }
 
@@ -314,7 +315,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 throw new ArgumentOutOfRangeException(nameof(period), "Insight period must be greater than or equal to 1 second.");
             }
 
-            var spec = new TimeSpanPeriodSpecification(period);
+            var spec = period == Time.EndOfTimeTimeSpan ? (IPeriodSpecification)
+                new EndOfTimeCloseTimePeriodSpecification() : new TimeSpanPeriodSpecification(period);
             return new Insight(symbol, spec, InsightType.Price, direction, magnitude, confidence, sourceModel);
         }
 
@@ -637,6 +639,20 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 }
 
                 insight.Period = ComputePeriod(exchangeHours, insight.GeneratedTimeUtc, insight.CloseTimeUtc);
+            }
+        }
+
+        /// <summary>
+        /// Special case for insights where we do not know whats the
+        /// <see cref="Period"/> or <see cref="CloseTimeUtc"/>.
+        /// </summary>
+        /// <remarks><see cref="OrderBasedInsightGenerator"/></remarks>
+        private class EndOfTimeCloseTimePeriodSpecification : IPeriodSpecification
+        {
+            public void SetPeriodAndCloseTime(Insight insight, SecurityExchangeHours exchangeHours)
+            {
+                insight.Period = Time.EndOfTimeTimeSpan;
+                insight.CloseTimeUtc = Time.EndOfTime;
             }
         }
     }

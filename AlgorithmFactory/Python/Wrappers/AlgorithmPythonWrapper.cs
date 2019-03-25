@@ -889,5 +889,14 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="slice">The Slice object</param>
         public void SetCurrentSlice(Slice slice) => _baseAlgorithm.SetCurrentSlice(slice);
+
+        /// <summary>
+        /// Will emit a new <see cref="Insight"/> based on the given
+        /// <see cref="OrderEvent"/>
+        /// </summary>
+        /// <remarks>To be called before updating the <see cref="Portfolio"/></remarks>
+        /// <param name="orderEvent">The <see cref="OrderEvent"/> from which
+        /// the new <see cref="Insight"/> will be created</param>
+        public void EmitInsightBasedOnFill(OrderEvent orderEvent) => _baseAlgorithm.EmitInsightBasedOnFill(orderEvent);
     }
 }

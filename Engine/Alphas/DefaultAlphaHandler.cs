@@ -39,7 +39,6 @@ namespace QuantConnect.Lean.Engine.Alphas
     {
         private DateTime _lastSecurityValuesSnapshotTime;
 
-        private bool _isNotFrameworkAlgorithm;
         private ChartingInsightManagerExtension _charting;
         private ISecurityValuesProvider _securityValuesProvider;
         private CancellationTokenSource _cancellationTokenSource;
@@ -97,11 +96,6 @@ namespace QuantConnect.Lean.Engine.Alphas
             Job = job;
             Algorithm = algorithm;
             MessagingHandler = messagingHandler;
-            _isNotFrameworkAlgorithm = !algorithm.IsFrameworkAlgorithm;
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
 
             _securityValuesProvider = new AlgorithmSecurityValuesProvider(algorithm);
 
@@ -127,11 +121,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         public void OnAfterAlgorithmInitialized(IAlgorithm algorithm)
         {
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
-
             // send date ranges to extensions for initialization -- this data wasn't available when the handler was
             // initialzied, so we need to invoke it here
             InsightManager.InitializeExtensionsForRange(algorithm.StartDate, algorithm.EndDate, algorithm.UtcTime);
@@ -142,11 +131,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// </summary>
         public virtual void ProcessSynchronousEvents()
         {
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
-
             // check the last snap shot time, we may have already produced a snapshot via OnInsightssGenerated
             if (_lastSecurityValuesSnapshotTime != Algorithm.UtcTime)
             {
@@ -159,11 +143,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// </summary>
         public virtual void Run()
         {
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
-
             IsActive = true;
             _cancellationTokenSource = new CancellationTokenSource();
 
@@ -197,11 +176,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// </summary>
         public void Exit()
         {
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
-
             Log.Trace("DefaultAlphaHandler.Exit(): Exiting Thread...");
 
             _cancellationTokenSource.Cancel(false);
@@ -210,7 +184,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Performs asynchronous processing, including broadcasting of insights to messaging handler
         /// </summary>
-        protected void ProcessAsynchronousEvents()
+        protected virtual void ProcessAsynchronousEvents()
         {
         }
 
