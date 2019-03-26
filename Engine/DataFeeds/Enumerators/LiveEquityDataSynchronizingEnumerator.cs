@@ -16,7 +16,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Util;
@@ -24,29 +23,38 @@ using QuantConnect.Util;
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
     /// <summary>
-    /// Represents an enumerator capable of synchronizing live base data enumerators in time.
+    /// Represents an enumerator capable of synchronizing live equity data enumerators in time.
     /// This assumes that all enumerators have data time stamped in the same time zone.
     /// </summary>
-    public class LiveBaseDataSynchronizingEnumerator : IEnumerator<BaseData>
+    public class LiveEquityDataSynchronizingEnumerator : IEnumerator<BaseData>
     {
         private readonly ITimeProvider _timeProvider;
         private readonly DateTimeZone _exchangeTimeZone;
-        private readonly List<IEnumerator<BaseData>> _enumerators;
+        private readonly IEnumerator<BaseData> _auxDataEnumerator;
+        private readonly IEnumerator<BaseData> _tradeBarAggregator;
+        private bool _auxDataEnumeratorAdvanced;
+        private bool _tradeBarEnumeratorAdvanced;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LiveBaseDataSynchronizingEnumerator"/> class
+        /// Initializes a new instance of the <see cref="LiveEquityDataSynchronizingEnumerator"/> class
         /// </summary>
         /// <param name="timeProvider">The source of time used to gauge when this enumerator should emit extra bars when null data is returned from the source enumerator</param>
         /// <param name="exchangeTimeZone">The time zone the raw data is time stamped in</param>
-        /// <param name="enumerators">The enumerators to be synchronized. NOTE: Assumes the same time zone for all data</param>
-        public LiveBaseDataSynchronizingEnumerator(ITimeProvider timeProvider, DateTimeZone exchangeTimeZone, params IEnumerator<BaseData>[] enumerators)
+        /// <param name="auxDataEnumerator">The auxiliary data enumerator</param>
+        /// <param name="tradeBarAggregator">The trade bar aggregator enumerator</param>
+        public LiveEquityDataSynchronizingEnumerator(ITimeProvider timeProvider, DateTimeZone exchangeTimeZone, IEnumerator<BaseData> auxDataEnumerator, IEnumerator<BaseData> tradeBarAggregator)
         {
             _timeProvider = timeProvider;
             _exchangeTimeZone = exchangeTimeZone;
-            _enumerators = enumerators.ToList();
+            _auxDataEnumerator = auxDataEnumerator;
+            _tradeBarAggregator = tradeBarAggregator;
 
             // prime enumerators
-            _enumerators.ForEach(x => x.MoveNext());
+            _auxDataEnumerator.MoveNext();
+            tradeBarAggregator.MoveNext();
+
+            _auxDataEnumeratorAdvanced = true;
+            _tradeBarEnumeratorAdvanced = true;
         }
 
         /// <summary>
@@ -57,24 +65,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public bool MoveNext()
         {
             // use manual time provider from LiveTradingDataFeed
-            var frontier = _timeProvider.GetUtcNow().ConvertFromUtc(_exchangeTimeZone);
+            var frontierUtc = _timeProvider.GetUtcNow();
 
             // check if any enumerator is ready to emit
-            if (DataPointEmitted(_enumerators, frontier))
+            if (DataPointEmitted(frontierUtc))
                 return true;
 
             // advance enumerators with no current data
-            var enumeratorsAdvanced = new List<IEnumerator<BaseData>>();
-            _enumerators.ForEach(x =>
-            {
-                if (x.Current == null && x.MoveNext())
-                {
-                    enumeratorsAdvanced.Add(x);
-                }
-            });
+            _auxDataEnumeratorAdvanced = _auxDataEnumerator.Current == null && _auxDataEnumerator.MoveNext();
+            _tradeBarEnumeratorAdvanced = _tradeBarAggregator.Current == null && _tradeBarAggregator.MoveNext();
 
             // check if any enumerator is ready to emit
-            if (DataPointEmitted(enumeratorsAdvanced, frontier))
+            if (DataPointEmitted(frontierUtc))
                 return true;
 
             Current = null;
@@ -90,7 +92,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created.</exception>
         public void Reset()
         {
-            _enumerators.ForEach(x => Reset());
+            _auxDataEnumerator.Reset();
+            _tradeBarAggregator.Reset();
         }
 
         /// <summary>
@@ -110,26 +113,55 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         public void Dispose()
         {
-            _enumerators.ForEach(x => x.DisposeSafely());
+            _auxDataEnumerator.DisposeSafely();
+            _tradeBarAggregator.DisposeSafely();
         }
 
-        private bool DataPointEmitted(IEnumerable<IEnumerator<BaseData>> enumerators, DateTime frontier)
+        private bool DataPointEmitted(DateTime frontierUtc)
         {
             // check if any enumerator is ready to emit
-            var enumerator = enumerators
-                .Where(x => x.Current != null && x.Current.EndTime <= frontier)
-                .OrderBy(x => x.Current?.EndTime)
-                .FirstOrDefault();
-
-            if (enumerator != null)
+            if (_auxDataEnumeratorAdvanced && _auxDataEnumerator.Current != null && _tradeBarEnumeratorAdvanced && _tradeBarAggregator.Current != null)
             {
-                // emit new data point
-                Current = enumerator.Current;
-
-                // advance enumerator
-                enumerator.MoveNext();
-
-                return true;
+                var auxDataEndTime = _auxDataEnumerator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
+                var tradeBarEndTime = _tradeBarAggregator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
+                if (auxDataEndTime < tradeBarEndTime)
+                {
+                    if (auxDataEndTime <= frontierUtc)
+                    {
+                        Current = _auxDataEnumerator.Current;
+                        _auxDataEnumerator.MoveNext();
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (tradeBarEndTime <= frontierUtc)
+                    {
+                        Current = _tradeBarAggregator.Current;
+                        _tradeBarAggregator.MoveNext();
+                        return true;
+                    }
+                }
+            }
+            else if (_auxDataEnumeratorAdvanced && _auxDataEnumerator.Current != null)
+            {
+                var auxDataEndTime = _auxDataEnumerator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
+                if (auxDataEndTime <= frontierUtc)
+                {
+                    Current = _auxDataEnumerator.Current;
+                    _auxDataEnumerator.MoveNext();
+                    return true;
+                }
+            }
+            else if (_tradeBarEnumeratorAdvanced && _tradeBarAggregator.Current != null)
+            {
+                var tradeBarEndTime = _tradeBarAggregator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
+                if (tradeBarEndTime <= frontierUtc)
+                {
+                    Current = _tradeBarAggregator.Current;
+                    _tradeBarAggregator.MoveNext();
+                    return true;
+                }
             }
 
             return false;
