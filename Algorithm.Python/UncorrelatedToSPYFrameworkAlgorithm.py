@@ -22,67 +22,53 @@ from QuantConnect import *
 from QuantConnect.Orders import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
+from QuantConnect.Algorithm.Framework.Alphas import *
+from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
+from QuantConnect.Algorithm.Framework.Execution import ImmediateExecutionModel
+from Selection.UncorrelatedToBenchmarkUniverseSelectionModel import UncorrelatedToBenchmarkUniverseSelectionModel
+from datetime import timedelta
 
-from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
-from Selection.UncorrelatedToSPYUniverseSelectionModel import UncorrelatedToSPYUniverseSelectionModel
-
-from datetime import datetime, timedelta
-
-class UncorrelatedToSPYFrameworkAlgorithm(QCAlgorithmFramework):
+class UncorrelatedToBenchmarkFrameworkAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
         
         self.UniverseSettings.Resolution = Resolution.Daily
         
-        self.SetStartDate(2019,2,2)   # Set Start Date
-        self.SetEndDate(2019,3,15)    # Set End Date
-        self.SetCash(100000)          # Set Strategy Cash
+        self.SetStartDate(2017,1,1)   # Set Start Date
+        self.SetEndDate(2017,3,1)     # Set End Date
+        self.SetCash(1000000)         # Set Strategy Cash
 
-        self.SetUniverseSelection(UncorrelatedToSPYUniverseSelectionModel())
-        self.SetAlpha(UncorrelatedToSPYAlphaModel())
+        benchmark = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
+        self.SetUniverseSelection(UncorrelatedToBenchmarkUniverseSelectionModel(benchmark))
+        self.SetAlpha(UncorrelatedToBenchmarkAlphaModel())
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
 
 
-class UncorrelatedToSPYAlphaModel(AlphaModel):
+class UncorrelatedToBenchmarkAlphaModel(AlphaModel):
     '''Uses ranking of intraday percentage difference between open price and close price to create magnitude and direction prediction for insights'''
 
-    def __init__(self, *args, **kwargs): 
-        self.lookback = kwargs['lookback'] if 'lookback' in kwargs else 1
-        self.numberOfStocks = kwargs['numberOfStocks'] if 'numberOfStocks' in kwargs else 10
-        self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Daily
-        self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), self.lookback)
-        self.symbolDataBySymbol = {}
+    def __init__(self, numberOfStocks = 10, predictionInterval = timedelta(1)): 
+        self.predictionInterval = predictionInterval
+        self.numberOfStocks = numberOfStocks
 
     def Update(self, algorithm, data):
-        
-        insights = []
-        ret = []
-        symbols = []
-        
-        activeSec = [x.Key for x in algorithm.ActiveSecurities]
-        
-        for symbol in activeSec:
-            if algorithm.ActiveSecurities[symbol].HasData:
-                open = algorithm.Securities[symbol].Open
-                close = algorithm.Securities[symbol].Close
+        symbolsRet = dict()
+
+        for kvp in algorithm.ActiveSecurities:
+            security = kvp.Value
+            if security.HasData:
+                open = security.Open
                 if open != 0:
-                    openCloseReturn = close/open - 1
-                    ret.append(openCloseReturn)
-                    symbols.append(symbol)
-                    
-                    
-        # Intraday price change
-        symbolsRet = dict(zip(symbols,ret))
-        
-        # Rank on price change
-        symbolsRanked = dict(sorted(symbolsRet.items(), key=lambda kv: kv[1],reverse=False)[:self.numberOfStocks])
-        
-        # Emit "up" insight if the price change is positive and "down" insight if the price change is negative
-        for key,value in symbolsRanked.items():
-            if value > 0:
-                insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Up, value, None))
-            else:
-                insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Down, value, None))
+                    symbolsRet[security.Symbol] = security.Close / open - 1
+
+        # Rank on the absolute value of price change
+        symbolsRet = dict(sorted(symbolsRet.items(), key=lambda kvp: abs(kvp[1]),reverse=True)[:self.numberOfStocks])
+
+        insights = []
+        for symbol, price_change in symbolsRet.items():
+            # Emit "up" insight if the price change is positive and "down" otherwise
+            direction = InsightDirection.Up if price_change > 0 else InsightDirection.Down
+            insights.append(Insight.Price(symbol, self.predictionInterval, direction, abs(price_change), None))
 
         return insights
