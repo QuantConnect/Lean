@@ -19,41 +19,39 @@ AddReference("QuantConnect.Common")
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
-
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
-class UncorrelatedToSPYUniverseSelectionModel(FundamentalUniverseSelectionModel):
-    '''
-        This universe selection model picks stocks that currently have their correlation to SPY deviated from the mean. 
-    '''
+class UncorrelatedToBenchmarkUniverseSelectionModel(FundamentalUniverseSelectionModel):
+    '''This universe selection model picks stocks that currently have their correlation to a benchmark deviated from the mean.'''
 
-    def __init__(self, filterFineData = False, universeSettings = None, securityInitializer = None):
-        '''Initializes a new default instance of the OnTheMoveUniverseSelectionModel'''
-        super().__init__(filterFineData, universeSettings, securityInitializer)
-        
-        # Add SPY to the universe
-        self.spySymbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
-        
-        # Number of coarse symbols
-        self.numberOfSymbolsCoarse = 400
-        
-        # Number of symbols selected by the universe model
-        self.numberOfSymbols = 10
-        
-        # Rolling window length period for correlation calculation
-        self.windowLength = 5
-        
-        # History length period
-        self.historyLength = 25
+    def __init__(self,
+                 benchmark = Symbol.Create("SPY", SecurityType.Equity, Market.USA),
+                 numberOfSymbolsCoarse = 40,
+                 numberOfSymbols = 10,
+                 windowLength = 5,
+                 historyLength = 25):
+        '''Initializes a new default instance of the OnTheMoveUniverseSelectionModel
+        Args:
+            benchmark: Symbol of the benchmark
+            numberOfSymbolsCoarse: Number of coarse symbols
+            numberOfSymbols: Number of symbols selected by the universe model
+            windowLength: Rolling window length period for correlation calculation
+            historyLength: History length period'''
+        super().__init__(False)
+
+        self.benchmark = benchmark 
+        self.numberOfSymbolsCoarse = numberOfSymbolsCoarse
+        self.numberOfSymbols = numberOfSymbols
+        self.windowLength = windowLength
+        self.historyLength = historyLength
         
         # Symbols in universe
         self.symbols = []
-        
         self.coarseSymbols = []
         self.cor = None
 
     def SelectCoarse(self, algorithm, coarse):
-        
+
         if not self.coarseSymbols:
             # The stocks must have fundamental data
             # The stock must have positive previous-day close price
@@ -69,13 +67,13 @@ class UncorrelatedToSPYUniverseSelectionModel(FundamentalUniverseSelectionModel)
         return self.symbols 
     
     def corRanked(self, algorithm, symbols):
-        
+
         # Not enough symbols to filter
         if len(symbols) <= self.numberOfSymbols:
             return symbols
-        
+
         # Retrieve history of prices
-        hist = algorithm.History(symbols + [self.spySymbol], self.historyLength, Resolution.Daily)
+        hist = algorithm.History(symbols + [self.benchmark], self.historyLength, Resolution.Daily)
 
         # Calculate returns
         returns=hist.close.unstack(level=0).pct_change()
@@ -85,30 +83,30 @@ class UncorrelatedToSPYUniverseSelectionModel(FundamentalUniverseSelectionModel)
             corMat=returns.rolling(self.windowLength,min_periods = self.windowLength).corr().dropna()
             
             # Correlation of all securities against SPY
-            self.cor = corMat[str(self.spySymbol)].unstack()
-                       
+            self.cor = corMat[str(self.benchmark)].unstack()
+
         # Calculate stdev(correlation) for last period and append a new row
         else:
-            corRow=returns.tail(self.windowLength).corr()[str(self.spySymbol)]
-            
+            corRow=returns.tail(self.windowLength).corr()[str(self.benchmark)]
+
             # Correlation of all securities against SPY
             self.cor = self.cor.append(corRow).tail(self.historyLength)
-        
-        # Calculate the mean of correlation
+
+        # Calculate the mean of correlation.
+        # Only include stocks with significantly positive or negative correlation to benchmark.
         corMu = self.cor.mean()
-        
+        corMu = corMu[abs(corMu) > 0.5].drop(str(self.benchmark))
+
         # Calculate the standard deviation of correlation
         corStd = self.cor.std()
-        
-        # Calculate absolute value of Z-Score for stocks in the Coarse Universe. Only include stocks with significantly positive or negative correlation to SPY.
-        zScore = {}
-        for symbol in corStd.index:
-            if not symbol == "SPY":
-                if abs(corMu[symbol]) > 0.5:
-                    zScore.update({symbol : abs((self.cor[symbol].tail(1).values-corMu[symbol])/corStd[symbol])})
 
+        # Current correlation
+        corCur = self.cor.tail(1).unstack()
+
+        # Calculate absolute value of Z-Score for stocks in the Coarse Universe. 
+        zScore = (abs(corCur - corMu) / corStd).dropna()
 
         # Rank stocks on Z-Score
-        symbols=sorted(zScore, key=lambda symbol: zScore[symbol],reverse=True)[:self.numberOfSymbols]
+        zScore = zScore.sort_values(ascending=False).head(self.numberOfSymbols)
 
-        return symbols
+        return zScore.index.levels[0].tolist()
