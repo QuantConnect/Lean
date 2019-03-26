@@ -26,7 +26,7 @@ class UncorrelatedToBenchmarkUniverseSelectionModel(FundamentalUniverseSelection
 
     def __init__(self,
                  benchmark = Symbol.Create("SPY", SecurityType.Equity, Market.USA),
-                 numberOfSymbolsCoarse = 40,
+                 numberOfSymbolsCoarse = 400,
                  numberOfSymbols = 10,
                  windowLength = 5,
                  historyLength = 25):
