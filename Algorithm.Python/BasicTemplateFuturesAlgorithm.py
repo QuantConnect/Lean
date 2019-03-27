@@ -60,7 +60,3 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
                 self.MarketOrder(front.Symbol , 1)
         else:
             self.Liquidate()
-
-
-    def OnOrderEvent(self, orderEvent):
-        self.Log(str(orderEvent))

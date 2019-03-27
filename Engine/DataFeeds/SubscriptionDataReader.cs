@@ -129,7 +129,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="factorFileProvider">Used for getting factor files</param>
         /// <param name="dataCacheProvider">Used for caching files</param>
-        /// <param name="tradeableDates">Defines the dates for which we'll request data, in order, in the security's exchange time zone</param>
+        /// <param name="tradeableDates">Defines the dates for which we'll request data, in order, in the security's data time zone</param>
         /// <param name="isLiveMode">True if we're in live mode, false otherwise</param>
         public SubscriptionDataReader(SubscriptionDataConfig config,
             DateTime periodStart,
@@ -372,7 +372,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // if we move past our current 'date' then we need to do daily things, such
                     // as updating factors and symbol mapping
-                    if (instance.EndTime.Date > _tradeableDates.Current)
+                    if (instance.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > _tradeableDates.Current)
                     {
                         // this is fairly hacky and could be solved by removing the aux data from this class
                         // the case is with coarse data files which have many daily sized data points for the
@@ -419,8 +419,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // fetch the new source, using the data time zone for the date
-                var dateInDataTimeZone = date.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone);
-                var newSource = _dataFactory.GetSource(_config, dateInDataTimeZone, _isLiveMode);
+                var newSource = _dataFactory.GetSource(_config, date, _isLiveMode);
 
                 // check if we should create a new subscription factory
                 var sourceChanged = _source != newSource && newSource.Source != "";
@@ -546,7 +545,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // don't do other checks if we haven't gotten data for this date yet
-                if (_previous != null && _previous.EndTime > _tradeableDates.Current)
+                if (_previous != null && _previous.EndTime.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone) > _tradeableDates.Current)
                 {
                     continue;
                 }
