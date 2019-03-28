@@ -196,7 +196,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
+            Assert.AreEqual(security.High, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
@@ -242,7 +242,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
+            Assert.AreEqual(security.Low, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
@@ -280,7 +280,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             // this fills worst case scenario, so it's min of asset/stop price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(security.Low, fill.FillPrice);
+            Assert.AreEqual(Math.Max(security.Price, order.StopPrice), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
@@ -318,7 +318,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             // this fills worst case scenario, so it's min of asset/stop price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(security.High, fill.FillPrice);
+            Assert.AreEqual(Math.Min(security.Price, order.StopPrice), fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
