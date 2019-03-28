@@ -32,6 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
         private double _expectedConfidence;
         private InsightDirection _expectedInsightDirection;
         private bool _emitted;
+        private List<Insight> _insights;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -44,6 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             _spy = AddEquity("SPY", Resolution.Daily).Symbol;
             InsightsGenerated += OnInsightsGeneratedVerifier;
+            _insights = new List<Insight>();
         }
 
         private void OnInsightsGeneratedVerifier(IAlgorithm algorithm,
@@ -62,6 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Unexpected insight Direction: {insight.Direction}." +
                     $" Expected: {_expectedInsightDirection}. Step {_step}");
             }
+            _insights.Add(insight);
         }
 
         public override void OnEndOfAlgorithm()
@@ -73,6 +76,12 @@ namespace QuantConnect.Algorithm.CSharp
             if (_step != 7)
             {
                 throw new Exception($"Unexpected final step value: {_step}. Expected 7");
+            }
+            if (_insights.Take(_insights.Count - 1) // the last is not closed yet
+                .Any(insight => insight.CloseTimeUtc == QuantConnect.Time.EndOfTime
+                 || insight.Period == QuantConnect.Time.EndOfTimeTimeSpan))
+            {
+                throw new Exception("Found insight with invalid close or period value");
             }
         }
 
