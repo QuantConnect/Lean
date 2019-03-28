@@ -118,7 +118,7 @@ namespace QuantConnect.Orders.Fills
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // if the order is filled on stale (fill-forward) data, set a warning message on the order event
-            if (pricesEndTimeUtc < order.Time)
+            if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
             {
                 fill.Message = $"Warning: fill at stale price ({prices.EndTime} {asset.Exchange.TimeZone})";
             }

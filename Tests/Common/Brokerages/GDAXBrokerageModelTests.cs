@@ -100,17 +100,21 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual(isValidSecurityType, _unit.CanSubmitOrder(GDAXTestsHelpers.GetSecurity(1.0m, securityType), order.Object, out message));
         }
 
-        [TestCase(OrderType.Market, true)]
-        [TestCase(OrderType.Limit, true)]
-        [TestCase(OrderType.MarketOnClose, false)]
-        [TestCase(OrderType.MarketOnOpen, false)]
-        [TestCase(OrderType.StopLimit, false)]
-        [TestCase(OrderType.StopMarket, true)]
-        public void CanSubmit_CertainOrderTypes(OrderType orderType, bool isValidOrderType)
+        [TestCase(OrderType.Market, 2019, 2, 1, 0, 0, 0, true)]
+        [TestCase(OrderType.Limit, 2019, 2, 1, 0, 0, 0, true)]
+        [TestCase(OrderType.MarketOnClose, 2019, 2, 1, 0, 0, 0, false)]
+        [TestCase(OrderType.MarketOnOpen, 2019, 2, 1, 0, 0, 0, false)]
+        [TestCase(OrderType.StopLimit, 2019, 2, 1, 0, 0, 0, false)]
+        [TestCase(OrderType.StopMarket, 2019, 2, 1, 0, 0, 0, true)]
+        [TestCase(OrderType.StopMarket, 2019, 3, 23, 0, 59, 59, true)]
+        [TestCase(OrderType.StopMarket, 2019, 3, 23, 1, 0, 0, false)]
+        public void CanSubmit_CertainOrderTypes(OrderType orderType, int year, int month, int day, int hour, int minute, int second, bool isValidOrderType)
         {
+            var utcTime = new DateTime(year, month, day, hour, minute, second);
+
             BrokerageMessageEvent message;
             var security = GDAXTestsHelpers.GetSecurity();
-            var order = Order.CreateOrder(new SubmitOrderRequest(orderType, SecurityType.Crypto, security.Symbol, 10.0m, 1.0m, 10.0m, DateTime.Now, "Test Order"));
+            var order = Order.CreateOrder(new SubmitOrderRequest(orderType, SecurityType.Crypto, security.Symbol, 10.0m, 1.0m, 10.0m, utcTime, "Test Order"));
 
             Assert.AreEqual(isValidOrderType, _unit.CanSubmitOrder(security, order, out message));
         }

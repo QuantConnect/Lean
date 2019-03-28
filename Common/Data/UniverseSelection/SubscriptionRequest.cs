@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ namespace QuantConnect.Data.UniverseSelection
     public class SubscriptionRequest
     {
         private readonly Lazy<DateTime> _localStartTime;
-        private readonly Lazy<DateTime> _localEndTime; 
+        private readonly Lazy<DateTime> _localEndTime;
 
         /// <summary>
         /// Gets true if the subscription is a universe
@@ -74,7 +74,7 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Gets the tradable days specified by this request
+        /// Gets the tradable days specified by this request, in the security's data time zone
         /// </summary>
         public IEnumerable<DateTime> TradableDays
         {

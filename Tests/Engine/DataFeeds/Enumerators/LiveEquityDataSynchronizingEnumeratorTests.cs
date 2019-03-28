@@ -25,7 +25,7 @@ using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 {
     [TestFixture]
-    public class LiveBaseDataSynchronizingEnumeratorTests
+    public class LiveEquityDataSynchronizingEnumeratorTests
     {
         [Test]
         public void SynchronizesData()
@@ -36,10 +36,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var time = start;
             var stream1 = Enumerable.Range(0, 10).Select(x => new Tick { Time = time.AddSeconds(x * 1) }).GetEnumerator();
             var stream2 = Enumerable.Range(0, 5).Select(x => new Tick { Time = time.AddSeconds(x * 2) }).GetEnumerator();
-            var stream3 = Enumerable.Range(0, 20).Select(x => new Tick { Time = time.AddSeconds(x * 0.5) }).GetEnumerator();
 
             var previous = DateTime.MinValue;
-            var synchronizer = new LiveBaseDataSynchronizingEnumerator(new RealTimeProvider(), DateTimeZone.Utc, stream1, stream2, stream3);
+            var synchronizer = new LiveEquityDataSynchronizingEnumerator(new RealTimeProvider(), DateTimeZone.Utc, stream1, stream2);
             while (synchronizer.MoveNext() && DateTime.UtcNow < end)
             {
                 if (synchronizer.Current != null)

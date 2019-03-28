@@ -28,7 +28,7 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class GDAXBrokerageModel : DefaultBrokerageModel
     {
-        private static BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
+        private readonly BrokerageMessageEvent _message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, "Brokerage does not support update. You must cancel and re-create instead.");
 
         // https://support.gdax.com/customer/portal/articles/2725970-trading-rules
         private static readonly Dictionary<string, decimal> MinimumOrderSizes = new Dictionary<string, decimal>
@@ -51,6 +51,9 @@ namespace QuantConnect.Brokerages
             { "LTCGBP", 0.1m },
             { "LTCBTC", 0.1m }
         };
+
+        // https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
+        private readonly DateTime _stopMarketOrderSupportEndDate = new DateTime(2019, 3, 23, 1, 0, 0);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GDAXBrokerageModel"/> class
@@ -140,6 +143,15 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     $"The {nameof(GDAXBrokerageModel)} does not support {order.Type} order type."
+                );
+
+                return false;
+            }
+
+            if (order.Type == OrderType.StopMarket && order.Time >= _stopMarketOrderSupportEndDate)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    $"Stop Market orders are no longer supported since {_stopMarketOrderSupportEndDate}."
                 );
 
                 return false;

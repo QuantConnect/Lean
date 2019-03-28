@@ -57,10 +57,11 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [Test]
         public void ReturnsFeeInQuoteCurrencyInAccountCurrency()
         {
+            var time = new DateTime(2019, 2, 1);
             var fee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     _btcusd,
-                    new MarketOrder(_btcusd.Symbol, 1, DateTime.UtcNow)
+                    new MarketOrder(_btcusd.Symbol, 1, time)
                 )
             );
 
@@ -72,16 +73,36 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         [Test]
         public void ReturnsFeeInQuoteCurrencyInOtherCurrency()
         {
+            var time = new DateTime(2019, 2, 1);
             var fee = _feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     _btceur,
-                    new MarketOrder(_btceur.Symbol, 1, DateTime.UtcNow)
+                    new MarketOrder(_btceur.Symbol, 1, time)
                 )
             );
 
             Assert.AreEqual("EUR", fee.Value.Currency);
             // 100 (price) * 0.003 (taker fee)
             Assert.AreEqual(0.3m, fee.Value.Amount);
+        }
+
+        [TestCase(2019, 2, 1, 0, 0, 0, 0.3)]
+        [TestCase(2019, 3, 23, 1, 29, 59, 0.3)]
+        [TestCase(2019, 3, 23, 1, 30, 0, 0.25)]
+        [TestCase(2019, 4, 1, 0, 0, 0, 0.25)]
+        public void FeeChangesOverTime(int year, int month, int day, int hour, int minute, int second, decimal expectedFee)
+        {
+            var time = new DateTime(year, month, day, hour, minute, second);
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    _btcusd,
+                    new MarketOrder(_btcusd.Symbol, 1, time)
+                )
+            );
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            // 100 (price) * fee (taker fee)
+            Assert.AreEqual(expectedFee, fee.Value.Amount);
         }
     }
 }

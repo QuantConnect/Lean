@@ -95,6 +95,27 @@ namespace QuantConnect.Securities.Future
                     return thirdFriday.Add(new TimeSpan(13,30,0));
                 })
             },
+            // Russell2000EMini (RTY): https://www.cmegroup.com/trading/equity-index/us-index/e-mini-russell-2000_contract_specifications.html
+            {Futures.Indices.Russell2000EMini, (time =>
+                {
+                    // Trading can occur up to 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    return thirdFriday.Add(new TimeSpan (13,30,0));
+                })
+            },
+            // Nikkei225Dollar (NKD): https://www.cmegroup.com/trading/equity-index/international-index/nikkei-225-dollar_contract_specifications.html
+            {Futures.Indices.Nikkei225Dollar, (time =>
+                {
+                    // Trading terminates at 5:00 p.m. Eastern Time (ET) on Business Day prior to 2nd Friday of the contract month.
+                    var secondFriday = FuturesExpiryUtilityFunctions.SecondFriday(time);
+                    var priorBusinessDay = secondFriday.AddDays(-1);
+                    while (!FuturesExpiryUtilityFunctions.NotHoliday(priorBusinessDay))
+                    {
+                        priorBusinessDay = priorBusinessDay.AddDays(-1);
+                    }
+                    return priorBusinessDay.Add(TimeSpan.FromHours(21));
+                })
+            },
             // CBOE Volatility Index Futures (VIX): https://cfe.cboe.com/cfe-products/vx-cboe-volatility-index-vix-futures/contract-specifications
             {Futures.Indices.VIX, (time =>
                 {
@@ -226,7 +247,55 @@ namespace QuantConnect.Securities.Future
                     return secondBusinessDayPrecedingThridWednesday.Add(new TimeSpan(14,16,0));
                 })
             },
+            // RUB (6R): https://www.cmegroup.com/trading/fx/emerging-market/russian-ruble_contract_specifications.html
+            {Futures.Currencies.RUB, (time =>
+                {
+                    // 11:00 a.m. Mosccow time on the fifteenth day of the month, or, if not a business day, on the next business day for the Moscow interbank foreign exchange market.
+                    var fifteenth = new DateTime(time.Year, time.Month, 15);
 
+                    while (!FuturesExpiryUtilityFunctions.NotHoliday(fifteenth))
+                    {
+                        fifteenth = FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth, 1);
+                    }
+                    return fifteenth.Add(new TimeSpan(08,0,0));
+                })
+            },
+            // BRL (6L): https://www.cmegroup.com/trading/fx/emerging-market/brazilian-real_contract_specifications.html
+            {Futures.Currencies.BRL, (time =>
+                {
+                    // On the last business day of the month, at 9:15 a.m. CT, immediately preceding the contract month, on which the Central Bank of Brazil is scheduled to publish its final end-of-month (EOM), "Commercial exchange rate for Brazilian reais per U.S. dollar for cash delivery" (PTAX rate).
+                    var lastPrecedingBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(time, -1);
+                    var symbolHolidays = MarketHoursDatabase.FromDataFolder().GetEntry("usa", Futures.Currencies.BRL, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (symbolHolidays.Contains(lastPrecedingBusinessDay))
+                    {
+                        lastPrecedingBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastPrecedingBusinessDay, -1);
+                    }
+
+                    return lastPrecedingBusinessDay.Add(new TimeSpan(14,15,0));
+                })
+            },
+            // MXN (6M): https://www.cmegroup.com/trading/fx/emerging-market/mexican-peso_contract_specifications.html
+            {Futures.Currencies.MXN, (time =>
+                {
+                    // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday). 
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday,-2);
+
+                    var symbolHolidays = MarketHoursDatabase.FromDataFolder().GetEntry("usa", Futures.Currencies.MXN, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    // Day of the races holiday/observance
+                    if (symbolHolidays.Contains(secondBusinessDayPrecedingThridWednesday))
+                    {
+                        secondBusinessDayPrecedingThridWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThridWednesday, -1);
+                    }
+                    return secondBusinessDayPrecedingThridWednesday.Add(new TimeSpan(14,16,0));
+                })
+            },
             // Financials group
             // Y30TreasuryBond (ZB): http://www.cmegroup.com/trading/interest-rates/us-treasury/30-year-us-treasury-bond_contract_specifications.html
             {Futures.Financials.Y30TreasuryBond, (time =>
@@ -265,6 +334,20 @@ namespace QuantConnect.Securities.Future
             // EuroDollar Futures : TODO London bank calendar
 
             // Energies group
+            //Propane Non LDH Mont Belvieu (1S): https://www.cmegroup.com/trading/energy/petrochemicals/propane-non-ldh-mt-belvieu-opis-balmo-swap_contract_specifications.html
+            {Futures.Energies.PropaneNonLDHMontBelvieu, (time =>
+                {
+                    // Trading shall cease on the last business day of the contract month (no time specified)
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                })
+            },
+            {Futures.Energies.ArgusPropaneFarEastIndex, (time =>
+                {
+                    // Trading shall cease on the last business day of the contract month. Business days are based on the Singapore Public Holiday calendar.
+                    // TODO: Might need singapore calendar
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                })
+            },
             // CrudeOilWTI (CL): http://www.cmegroup.com/trading/energy/crude-oil/light-sweet-crude_contract_specifications.html
             {Futures.Energies.CrudeOilWTI, (time =>
                 {
@@ -364,6 +447,14 @@ namespace QuantConnect.Securities.Future
                         lastThursday = lastThursday.AddDays(-7);
                     }
                     return lastThursday;
+                })
+            },
+            // Sugar #11 CME (YO): https://www.cmegroup.com/trading/agricultural/softs/sugar-no11_contract_specifications.html
+            {Futures.Softs.Sugar11CME, (time =>
+                {
+                    // Trading terminates on the day immediately preceding the first notice day of the corresponding trading month of Sugar No. 11 futures at ICE Futures U.S.
+                    var precedingMonth = time.AddMonths(-1);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(precedingMonth, 1);
                 })
             }
         };

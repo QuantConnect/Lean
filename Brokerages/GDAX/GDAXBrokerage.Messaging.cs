@@ -421,7 +421,7 @@ namespace QuantConnect.Brokerages.GDAX
                 : order.PriceCurrency;
 
             var orderFee = new OrderFee(new CashAmount(
-                GetFillFee(symbol, fillPrice, fillQuantity, isMaker),
+                GetFillFee(_algorithm.UtcTime, fillPrice, fillQuantity, isMaker),
                 currency));
 
             var orderEvent = new OrderEvent
@@ -629,14 +629,11 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// Returns the fee paid for a total or partial order fill
         /// </summary>
-        public static decimal GetFillFee(Symbol symbol, decimal fillPrice, decimal fillQuantity, bool isMaker)
+        public static decimal GetFillFee(DateTime utcTime, decimal fillPrice, decimal fillQuantity, bool isMaker)
         {
-            if (isMaker)
-            {
-                return 0;
-            }
+            var feePercentage = GDAXFeeModel.GetFeePercentage(utcTime, isMaker);
 
-            return fillPrice * Math.Abs(fillQuantity) * GDAXFeeModel.TakerFee;
+            return fillPrice * Math.Abs(fillQuantity) * feePercentage;
         }
     }
 }
