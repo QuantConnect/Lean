@@ -115,6 +115,24 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string NZD = "6N";
+    
+            /// <summary>
+            /// Russian Ruble Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string RUB = "6R";
+
+            /// <summary>
+            /// Brazillian Real Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string BRL = "6L";
+
+            /// <summary>
+            /// Mexican Peso Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MXN = "6M";
         }
 
         /// <summary>
@@ -122,6 +140,18 @@ namespace QuantConnect.Securities
         /// </summary>
         public static class Energies
         {
+            /// <summary>
+            /// Propane Non LDH Mont Belvieu (OPIS) BALMO Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string PropaneNonLDHMontBelvieu = "1S";
+
+            /// <summary>
+            /// Argus Propane Far East Index BALMO Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string ArgusPropaneFarEastIndex = "22";
+
             /// <summary>
             /// Crude Oil WTI Futures
             /// </summary>
