@@ -46,6 +46,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             = new ConcurrentDictionary<SubscriptionDataConfig, SubscriptionDataConfig>();
 
         /// <summary>
+        /// Event fired when a new subscription is added
+        /// </summary>
+        public event EventHandler<Subscription> SubscriptionAdded;
+
+        /// <summary>
+        /// Event fired when an existing subscription is removed
+        /// </summary>
+        public event EventHandler<Subscription> SubscriptionRemoved;
+
+        /// <summary>
         /// Creates a new instance of the DataManager
         /// </summary>
         public DataManager(
@@ -170,6 +180,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
+            OnSubscriptionAdded(subscription);
+
             LiveDifferentiatedLog($"DataManager.AddSubscription(): Added {request.Configuration}." +
                 $" Start: {request.StartTimeUtc}. End: {request.EndTimeUtc}");
             return DataFeedSubscriptions.TryAdd(subscription);
@@ -200,6 +212,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     _dataFeed.RemoveSubscription(subscription);
 
+                    OnSubscriptionRemoved(subscription);
+
                     subscription.Dispose();
 
                     RemoveSubscriptionDataConfig(subscription);
@@ -209,6 +223,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="SubscriptionAdded"/> event
+        /// </summary>
+        /// <param name="subscription">The added subscription</param>
+        public void OnSubscriptionAdded(Subscription subscription)
+        {
+            SubscriptionAdded?.Invoke(this, subscription);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="SubscriptionRemoved"/> event
+        /// </summary>
+        /// <param name="subscription">The removed subscription</param>
+        public void OnSubscriptionRemoved(Subscription subscription)
+        {
+            SubscriptionRemoved?.Invoke(this, subscription);
         }
 
         #endregion

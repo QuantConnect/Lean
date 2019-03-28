@@ -220,6 +220,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         enqueable.Enqueue(data);
 
+                        subscription.OnNewDataAvailable();
+
                         UpdateSubscriptionRealTimePrice(
                             subscription,
                             timeZoneOffsetProvider,
@@ -242,7 +244,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                                 if (tick.TickType == TickType.Quote)
                                 {
-                                    quoteBarAggregator.ProcessData(tick);
+                                    if (quoteBarAggregator.ProcessData(tick))
+                                    {
+                                        subscription.OnNewDataAvailable();
+                                    }
 
                                     UpdateSubscriptionRealTimePrice(
                                         subscription,
@@ -264,13 +269,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 if (data.DataType == MarketDataType.Auxiliary)
                                 {
                                     auxDataEnumerator.Enqueue(data);
+
+                                    subscription.OnNewDataAvailable();
                                 }
                                 else
                                 {
                                     var tick = data as Tick;
                                     if (tick.TickType == TickType.Trade)
                                     {
-                                        tradeBarAggregator.ProcessData(tick);
+                                        if (tradeBarAggregator.ProcessData(tick))
+                                        {
+                                            subscription.OnNewDataAvailable();
+                                        }
 
                                         UpdateSubscriptionRealTimePrice(
                                             subscription,
@@ -294,7 +304,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                                 if (tick.TickType == TickType.OpenInterest)
                                 {
-                                    oiAggregator.ProcessData(tick);
+                                    if (oiAggregator.ProcessData(tick))
+                                    {
+                                        subscription.OnNewDataAvailable();
+                                    }
                                 }
                             });
                             enumerator = oiAggregator;
@@ -308,6 +321,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _exchange.SetDataHandler(request.Configuration.Symbol, data =>
                     {
                         tickEnumerator.Enqueue(data);
+
+                        subscription.OnNewDataAvailable();
 
                         if (data.DataType != MarketDataType.Auxiliary)
                         {

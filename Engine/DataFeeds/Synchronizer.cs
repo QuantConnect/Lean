@@ -35,6 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private IAlgorithm _algorithm;
         private DateTimeZone _dateTimeZone;
         private bool _liveMode;
+        private readonly ManualResetEvent _newLiveDataEmitted = new ManualResetEvent(false);
 
         /// <summary>
         /// Continuous UTC time provider
@@ -64,6 +65,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 TimeProvider = GetTimeProvider();
                 _subscriptionSynchronizer.SetTimeProvider(TimeProvider);
+
+                // attach event handlers to subscriptions
+                dataFeedSubscriptionManager.SubscriptionAdded += (sender, subscription) =>
+                {
+                    subscription.NewDataAvailable += OnSubscriptionNewDataAvailable;
+                };
+
+                dataFeedSubscriptionManager.SubscriptionRemoved += (sender, subscription) =>
+                {
+                    subscription.NewDataAvailable -= OnSubscriptionNewDataAvailable;
+                };
             }
         }
 
@@ -79,6 +91,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var previousEmitTime = DateTime.MaxValue;
             while (!cancellationToken.IsCancellationRequested)
             {
+                if (_liveMode)
+                {
+                    _newLiveDataEmitted.WaitOne(TimeSpan.FromMilliseconds(500));
+                }
+
                 TimeSlice timeSlice;
                 try
                 {
@@ -92,6 +109,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _algorithm.Status = AlgorithmStatus.RuntimeError;
                     shouldSendExtraEmptyPacket = _liveMode;
                     break;
+                }
+
+                if (_liveMode)
+                {
+                    _newLiveDataEmitted.Reset();
                 }
 
                 // check for cancellation
@@ -145,6 +167,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
             Log.Trace("Synchronizer.GetEnumerator(): Exited thread.");
+        }
+
+        private void OnSubscriptionNewDataAvailable(object sender, EventArgs args)
+        {
+            _newLiveDataEmitted.Set();
         }
 
         private void PostInitialize()

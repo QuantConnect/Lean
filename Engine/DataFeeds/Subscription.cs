@@ -36,6 +36,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private List<SubscriptionRequest> _subscriptionRequests;
 
         /// <summary>
+        /// Event fired when a new data point is available
+        /// </summary>
+        public event EventHandler NewDataAvailable;
+
+        /// <summary>
         /// Gets the universe for this subscription
         /// </summary>
         public IEnumerable<Universe> Universes => _subscriptionRequests
@@ -282,6 +287,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public override string ToString()
         {
             return Configuration.ToString();
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="NewDataAvailable"/> event
+        /// </summary>
+        public void OnNewDataAvailable()
+        {
+            NewDataAvailable?.Invoke(this, EventArgs.Empty);
         }
     }
 }

@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,7 +52,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// and emitted after the alotted time has passed
         /// </summary>
         /// <param name="data">The new data to be aggregated</param>
-        public void ProcessData(BaseData data)
+        public bool ProcessData(BaseData data)
         {
             TradeBar working;
             var tick = data as Tick;
@@ -65,16 +65,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var barStartTime = currentLocalTime.RoundDown(_barSize);
                 working = new TradeBar(barStartTime, data.Symbol, marketPrice, marketPrice, marketPrice, marketPrice, qty, _barSize);
                 _queue.Enqueue(working);
+                return true;
             }
-            else
-            {
-                // we're still within this bar size's time
-                var bidPrice = tick == null ? data.Value : tick.BidPrice;
-                var askPrice = tick == null ? data.Value : tick.AskPrice;
-                var bidSize = tick == null ? 0m : tick.BidSize;
-                var askSize = tick == null ? 0m : tick.AskSize;
-                working.Update(data.Value, bidPrice, askPrice, qty, bidSize, askSize);
-            }
+
+            // we're still within this bar size's time
+            var bidPrice = tick == null ? data.Value : tick.BidPrice;
+            var askPrice = tick == null ? data.Value : tick.AskPrice;
+            var bidSize = tick == null ? 0m : tick.BidSize;
+            var askSize = tick == null ? 0m : tick.AskSize;
+            working.Update(data.Value, bidPrice, askPrice, qty, bidSize, askSize);
+            return false;
         }
 
         /// <summary>
