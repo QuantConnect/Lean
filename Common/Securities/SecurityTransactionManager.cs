@@ -191,7 +191,7 @@ namespace QuantConnect.Securities
             var cancelledOrders = new List<OrderTicket>();
             foreach (var ticket in GetOpenOrderTickets())
             {
-                ticket.Cancel($"Canceled by CancelOpenOrders() on {_algorithm.UtcTime:o}");
+                ticket.Cancel($"Canceled by CancelOpenOrders() at {_algorithm.UtcTime:o}");
                 cancelledOrders.Add(ticket);
             }
             return cancelledOrders;
