@@ -36,6 +36,11 @@ namespace QuantConnect
         public static readonly DateTime EndOfTime = new DateTime(2050, 12, 31);
 
         /// <summary>
+        /// Provides a time span based on <see cref="EndOfTime"/>
+        /// </summary>
+        public static TimeSpan EndOfTimeTimeSpan = new TimeSpan(EndOfTime.Ticks);
+
+        /// <summary>
         /// Provides a value far enough in the past that can be used as a lower bound on dates
         /// </summary>
         /// <value>

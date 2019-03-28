@@ -91,6 +91,8 @@ namespace QuantConnect.Algorithm
 
         private readonly HistoryRequestFactory _historyRequestFactory;
 
+        private readonly OrderBasedInsightGenerator _orderBasedInsightGenerator;
+
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
         /// QCAlgorithm manages the transactions, portfolio, charting and security subscriptions for the users algorithms.
@@ -158,6 +160,8 @@ namespace QuantConnect.Algorithm
             OptionChainProvider = new EmptyOptionChainProvider();
             FutureChainProvider = new EmptyFutureChainProvider();
             _historyRequestFactory = new HistoryRequestFactory(this);
+
+            _orderBasedInsightGenerator = new OrderBasedInsightGenerator();
         }
 
         /// <summary>
@@ -2163,6 +2167,31 @@ namespace QuantConnect.Algorithm
         public void SetCurrentSlice(Slice slice)
         {
             CurrentSlice = slice;
+        }
+
+        /// <summary>
+        /// Will emit a new <see cref="Insight"/> based on the given
+        /// <see cref="OrderEvent"/>
+        /// </summary>
+        /// <remarks>To be called before updating the <see cref="Portfolio"/></remarks>
+        /// <param name="orderEvent">The <see cref="OrderEvent"/> from which
+        /// the new <see cref="Insight"/> will be created</param>
+        public void EmitInsightBasedOnFill(OrderEvent orderEvent)
+        {
+            if (!IsFrameworkAlgorithm
+                && (orderEvent.Status == OrderStatus.Filled
+                    || orderEvent.Status == OrderStatus.PartiallyFilled))
+            {
+                var security = Securities[orderEvent.Symbol];
+                var insight = _orderBasedInsightGenerator.GenerateInsightFromFill(
+                    orderEvent,
+                    security.Holdings);
+
+                InsightsGenerated?.Invoke(this, new GeneratedInsightsCollection(
+                    UtcTime,
+                    new[] {insight},
+                    clone:false));
+            }
         }
     }
 }

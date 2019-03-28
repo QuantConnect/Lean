@@ -1076,8 +1076,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     try
                     {
-                        _algorithm.Portfolio.ProcessFill(fill);
+                        // to be called before updating the Portfolio
+                        _algorithm.EmitInsightBasedOnFill(fill);
 
+                        _algorithm.Portfolio.ProcessFill(fill);
                         _algorithm.TradeBuilder.ProcessFill(
                             fill,
                             securityConversionRate,

@@ -669,5 +669,14 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="slice">The Slice object</param>
         void SetCurrentSlice(Slice slice);
+
+        /// <summary>
+        /// Will emit a new <see cref="Insight"/> based on the given
+        /// <see cref="OrderEvent"/>
+        /// </summary>
+        /// <remarks>To be called before updating the <see cref="Portfolio"/></remarks>
+        /// <param name="orderEvent">The <see cref="OrderEvent"/> from which
+        /// the new <see cref="Insight"/> will be created</param>
+        void EmitInsightBasedOnFill(OrderEvent orderEvent);
     }
 }

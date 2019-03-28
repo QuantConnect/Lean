@@ -141,6 +141,7 @@
     <Compile Include="FeeModelNotUsingAccountCurrency.cs" />
     <Compile Include="MaximumPortfolioDrawdownFrameworkAlgorithm.cs" />
     <Compile Include="CompositeRiskManagementModelFrameworkAlgorithm.cs" />
+    <Compile Include="OrderBasedInsightGeneratedAlgorithm.cs" />
     <Compile Include="ProcessSplitSymbolsRegressionAlgorithm.cs" />
     <Compile Include="SetAccountCurrencyCashBuyingPowerModelRegressionAlgorithm.cs" />
     <Compile Include="SetAccountCurrencySecurityMarginModelRegressionAlgorithm.cs" />
