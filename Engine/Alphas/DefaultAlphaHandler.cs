@@ -39,10 +39,10 @@ namespace QuantConnect.Lean.Engine.Alphas
     {
         private DateTime _lastSecurityValuesSnapshotTime;
 
-        private bool _isNotFrameworkAlgorithm;
         private ChartingInsightManagerExtension _charting;
         private ISecurityValuesProvider _securityValuesProvider;
         private CancellationTokenSource _cancellationTokenSource;
+        private readonly object _lock = new object();
 
         /// <summary>
         /// Gets a flag indicating if this handler's thread is still running and processing messages
@@ -97,11 +97,6 @@ namespace QuantConnect.Lean.Engine.Alphas
             Job = job;
             Algorithm = algorithm;
             MessagingHandler = messagingHandler;
-            _isNotFrameworkAlgorithm = !algorithm.IsFrameworkAlgorithm;
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
 
             _securityValuesProvider = new AlgorithmSecurityValuesProvider(algorithm);
 
@@ -127,11 +122,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         public void OnAfterAlgorithmInitialized(IAlgorithm algorithm)
         {
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
-
             // send date ranges to extensions for initialization -- this data wasn't available when the handler was
             // initialzied, so we need to invoke it here
             InsightManager.InitializeExtensionsForRange(algorithm.StartDate, algorithm.EndDate, algorithm.UtcTime);
@@ -142,11 +132,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// </summary>
         public virtual void ProcessSynchronousEvents()
         {
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
-
             // check the last snap shot time, we may have already produced a snapshot via OnInsightssGenerated
             if (_lastSecurityValuesSnapshotTime != Algorithm.UtcTime)
             {
@@ -159,28 +144,29 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// </summary>
         public virtual void Run()
         {
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
-
             IsActive = true;
             _cancellationTokenSource = new CancellationTokenSource();
 
-            // run main loop until canceled, will clean out work queues separately
-            while (!_cancellationTokenSource.IsCancellationRequested)
+            using (LiveMode ? new Timer(_ => StoreInsights(),
+                null,
+                TimeSpan.FromMinutes(10),
+                TimeSpan.FromMinutes(10)) : null)
             {
-                try
+                // run main loop until canceled, will clean out work queues separately
+                while (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    ProcessAsynchronousEvents();
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
-                    throw;
-                }
+                    try
+                    {
+                        ProcessAsynchronousEvents();
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
+                        throw;
+                    }
 
-                Thread.Sleep(1);
+                    Thread.Sleep(1);
+                }
             }
 
             // persist insights at exit
@@ -197,11 +183,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// </summary>
         public void Exit()
         {
-            if (_isNotFrameworkAlgorithm)
-            {
-                return;
-            }
-
             Log.Trace("DefaultAlphaHandler.Exit(): Exiting Thread...");
 
             _cancellationTokenSource.Cancel(false);
@@ -219,15 +200,26 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// </summary>
         protected virtual void StoreInsights()
         {
-            // default save all results to disk and don't remove any from memory
-            // this will result in one file with all of the insights/results in it
-            var insights = InsightManager.AllInsights.OrderBy(insight => insight.GeneratedTimeUtc).ToList();
-            if (insights.Count > 0)
+            // avoid reentrancy
+            if (Monitor.TryEnter(_lock))
             {
-                var directory = Path.Combine(Directory.GetCurrentDirectory(), AlgorithmId);
-                var path = Path.Combine(directory, "alpha-results.json");
-                Directory.CreateDirectory(directory);
-                File.WriteAllText(path, JsonConvert.SerializeObject(insights, Formatting.Indented));
+                try
+                {
+                    // default save all results to disk and don't remove any from memory
+                    // this will result in one file with all of the insights/results in it
+                    var insights = InsightManager.AllInsights.OrderBy(insight => insight.GeneratedTimeUtc).ToList();
+                    if (insights.Count > 0)
+                    {
+                        var directory = Path.Combine(Directory.GetCurrentDirectory(), AlgorithmId);
+                        var path = Path.Combine(directory, "alpha-results.json");
+                        Directory.CreateDirectory(directory);
+                        File.WriteAllText(path, JsonConvert.SerializeObject(insights, Formatting.Indented));
+                    }
+                }
+                finally
+                {
+                    Monitor.Exit(_lock);
+                }
             }
         }
 

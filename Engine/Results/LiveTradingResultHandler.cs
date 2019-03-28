@@ -823,7 +823,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                 if (live != null)
                 {
-                    // Set
+                    live.Results.AlphaRuntimeStatistics = AlphaRuntimeStatistics;
 
                     // we need to down sample
                     var start = DateTime.UtcNow.Date;
