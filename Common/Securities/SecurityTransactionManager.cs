@@ -178,6 +178,26 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Cancels all open orders for all symbols
+        /// </summary>
+        /// <returns>List containing the cancelled order tickets</returns>
+        public List<OrderTicket> CancelOpenOrders()
+        {
+            if (_algorithm != null && _algorithm.IsWarmingUp)
+            {
+                throw new Exception("This operation is not allowed in Initialize or during warm up: CancelOpenOrders. Please move this code to the OnWarmupFinished() method.");
+            }
+
+            var cancelledOrders = new List<OrderTicket>();
+            foreach (var ticket in GetOpenOrderTickets())
+            {
+                ticket.Cancel($"Canceled by CancelOpenOrders() at {_algorithm.UtcTime:o}");
+                cancelledOrders.Add(ticket);
+            }
+            return cancelledOrders;
+        }
+
+        /// <summary>
         /// Cancels all open orders for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol whose orders are to be cancelled</param>
