@@ -677,6 +677,7 @@ namespace QuantConnect.Interfaces
         /// <remarks>To be called before updating the <see cref="Portfolio"/></remarks>
         /// <param name="orderEvent">The <see cref="OrderEvent"/> from which
         /// the new <see cref="Insight"/> will be created</param>
-        void EmitInsightBasedOnFill(OrderEvent orderEvent);
+        /// <returns>True if an <see cref="Insight"/> was emitted</returns>
+        bool EmitInsightBasedOnFill(OrderEvent orderEvent);
     }
 }

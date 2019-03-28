@@ -14,7 +14,6 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Common")
 
 from System import *
@@ -32,7 +31,7 @@ from datetime import timedelta
 import numpy as np
 
 
-class MaximumPortfolioDrawdownFrameworkAlgorithm(QCAlgorithmFramework):
+class MaximumPortfolioDrawdownFrameworkAlgorithm(QCAlgorithm):
     '''Show example of how to use the MaximumDrawdownPercentPortfolio Risk Management Model'''
 
     def Initialize(self):

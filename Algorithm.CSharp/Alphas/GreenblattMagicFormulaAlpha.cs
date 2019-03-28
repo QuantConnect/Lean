@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -28,13 +27,14 @@ using QuantConnect.Orders.Fees;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
     /// <summary>
     /// This alpha picks stocks according to Joel Greenblatt's Magic Formula.
     /// First, each stock is ranked depending on the relative value of the ratio EV/EBITDA. For example, a stock
-    /// that has the lowest EV/EBITDA ratio in the security universe receives a score of one while a stock that has 
+    /// that has the lowest EV/EBITDA ratio in the security universe receives a score of one while a stock that has
     /// the tenth lowest EV/EBITDA score would be assigned 10 points.
     ///
     /// Then, each stock is ranked and given a score for the second valuation ratio, Return on Capital (ROC).

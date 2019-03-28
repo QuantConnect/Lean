@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Gets an identifier for the source model that generated this insight.
         /// </summary>
-        public string SourceModel { get; internal set; }
+        public string SourceModel { get; set; }
 
         /// <summary>
         /// Gets the utc time this insight was generated
@@ -57,14 +57,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// If providing custom <see cref="Insight"/> implementation, be sure
         /// to set this value to algorithm.UtcTime when the insight is generated.
         /// </remarks>
-        public DateTime GeneratedTimeUtc { get; internal set; }
+        public DateTime GeneratedTimeUtc { get; set; }
 
         /// <summary>
         /// Gets the insight's prediction end time. This is the time when this
         /// insight prediction is expected to be fulfilled. This time takes into
         /// account market hours, weekends, as well as the symbol's data resolution
         /// </summary>
-        public DateTime CloseTimeUtc { get; internal set; }
+        public DateTime CloseTimeUtc { get; set; }
 
         /// <summary>
         /// Gets the symbol this insight is for
@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// Gets the reference value this insight is predicting against. The value is dependent on the specified <see cref="InsightType"/>
         /// </summary>
-        public decimal ReferenceValue { get; internal set; }
+        public decimal ReferenceValue { get; set; }
 
         /// <summary>
         /// Gets the predicted direction, down, flat or up

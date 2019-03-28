@@ -15,7 +15,6 @@ from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
@@ -29,7 +28,7 @@ from datetime import timedelta
 
 #
 # Leveraged ETFs (LETF) promise a fixed leverage ratio with respect to an underlying asset or an index.
-# A Triple-Leveraged ETF allows speculators to amplify their exposure to the daily returns of an underlying index by a factor of 3. 
+# A Triple-Leveraged ETF allows speculators to amplify their exposure to the daily returns of an underlying index by a factor of 3.
 #
 # Increased volatility generally decreases the value of a LETF over an extended period of time as daily compounding is amplified.
 #
@@ -37,9 +36,9 @@ from datetime import timedelta
 # ETFs with equal weights each day.
 #
 # This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
-# 
+#
 
-class TripleLeverageETFPairVolatilityDecayAlpha(QCAlgorithmFramework):
+class TripleLeverageETFPairVolatilityDecayAlpha(QCAlgorithm):
 
     def Initialize(self):
 
@@ -51,8 +50,8 @@ class TripleLeverageETFPairVolatilityDecayAlpha(QCAlgorithmFramework):
         self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
 
         # 3X ETF pair tickers
-        ultraLong = Symbol.Create("UGLD", SecurityType.Equity, Market.USA) 
-        ultraShort = Symbol.Create("DGLD", SecurityType.Equity, Market.USA) 
+        ultraLong = Symbol.Create("UGLD", SecurityType.Equity, Market.USA)
+        ultraShort = Symbol.Create("DGLD", SecurityType.Equity, Market.USA)
 
         # Manually curated universe
         self.UniverseSettings.Resolution = Resolution.Daily

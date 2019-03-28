@@ -16,7 +16,6 @@ AddReference("System")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Indicators")
-AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
@@ -36,12 +35,12 @@ from datetime import timedelta
 
 #
 # This is a demonstration algorithm. It trades UVXY.
-# Dual Thrust alpha model is used to produce insights. 
+# Dual Thrust alpha model is used to produce insights.
 # Those input parameters have been chosen that gave acceptable results on a series
 # of random backtests run for the period from Oct, 2016 till Feb, 2019.
 #
 
-class VIXDualThrustAlpha(QCAlgorithmFramework):
+class VIXDualThrustAlpha(QCAlgorithm):
 
     def Initialize(self):
 

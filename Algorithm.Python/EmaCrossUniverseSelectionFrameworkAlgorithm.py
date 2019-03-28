@@ -14,7 +14,6 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Common")
 
 from System import *
@@ -32,11 +31,11 @@ from datetime import timedelta
 ### Framework algorithm that uses the EmaCrossUniverseSelectionModel to
 ### select the universe based on a moving average cross.
 ### </summary>
-class EmaCrossUniverseSelectionFrameworkAlgorithm(QCAlgorithmFramework):
+class EmaCrossUniverseSelectionFrameworkAlgorithm(QCAlgorithm):
     '''Framework algorithm that uses the EmaCrossUniverseSelectionModel to select the universe based on a moving average cross.'''
 
     def Initialize(self):
- 
+
         self.SetStartDate(2013,1,1)
         self.SetEndDate(2015,1,1)
         self.SetCash(100000)

@@ -14,7 +14,6 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Common")
 
 from System import *
@@ -35,7 +34,7 @@ from datetime import date, timedelta
 ### Basic template options framework algorithm uses framework components
 ### to define an algorithm that trades options.
 ### </summary>
-class BasicTemplateOptionsFrameworkAlgorithm(QCAlgorithmFramework):
+class BasicTemplateOptionsFrameworkAlgorithm(QCAlgorithm):
 
     def Initialize(self):
 

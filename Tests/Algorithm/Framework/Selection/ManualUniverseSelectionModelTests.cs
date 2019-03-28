@@ -16,8 +16,8 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Selection;
+using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Selection
 {

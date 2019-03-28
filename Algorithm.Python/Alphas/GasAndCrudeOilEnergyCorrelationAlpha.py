@@ -19,9 +19,9 @@
     Natural Gas/Crude Oil ETF pair with the highest historical price correlation and
     then create insights for Crude Oil depending on whether or not the Natural Gas ETF price change
     is above/below a certain threshold that we set (arbitrarily).
-    
-    
-    
+
+
+
     This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     sourced so the community and client funds can see an example of an alpha.
 '''
@@ -31,7 +31,6 @@ AddReference("System")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Indicators")
-AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
@@ -48,7 +47,7 @@ from QuantConnect.Algorithm.Framework.Selection import *
 import pandas as pd
 from datetime import timedelta
 
-class GasAndCrudeOilEnergyCorrelationAlpha(QCAlgorithmFramework):
+class GasAndCrudeOilEnergyCorrelationAlpha(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2018, 1, 1)   #Set Start Date
@@ -123,7 +122,7 @@ class PairsAlphaModel:
         for symbol, symbolData in self.symbolDataBySymbol.items():
             daily_return[symbol] = symbolData.DailyReturnArray
 
-        ## Estimate coefficients of different correlation measures 
+        ## Estimate coefficients of different correlation measures
         tau = pd.DataFrame.from_dict(daily_return).corr(method='kendall')
 
         ## Calculate the pair with highest historical correlation
@@ -133,7 +132,7 @@ class PairsAlphaModel:
             corr = float(df.max())
             if corr > max_corr:
                 self.pairs = (
-                    self.symbolDataBySymbol[x], 
+                    self.symbolDataBySymbol[x],
                     self.symbolDataBySymbol[df.idxmax()[0]])
                 max_corr = corr
 

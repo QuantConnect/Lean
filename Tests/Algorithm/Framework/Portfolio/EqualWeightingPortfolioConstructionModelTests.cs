@@ -16,7 +16,6 @@
 using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.Market;
@@ -27,8 +26,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {

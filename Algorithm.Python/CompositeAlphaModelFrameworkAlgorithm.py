@@ -25,16 +25,14 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
-from Alphas.RsiAlphaModel import RsiAlphaModel
-from Alphas.EmaCrossAlphaModel import EmaCrossAlphaModel
-from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from QuantConnect.Algorithm.Framework.Portfolio import *
 from datetime import timedelta
 import numpy as np
 
 ### <summary>
 ### Show cases how to use the CompositeAlphaModel to define.
 ### </summary>
-class CompositeAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
+class CompositeAlphaModelFrameworkAlgorithm(QCAlgorithm):
     '''Show cases how to use the CompositeAlphaModel to define.'''
 
     def Initialize(self):

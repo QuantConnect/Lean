@@ -18,10 +18,10 @@ using System.Linq;
 using Moq;
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Risk
 {

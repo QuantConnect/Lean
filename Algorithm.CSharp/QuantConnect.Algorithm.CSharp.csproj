@@ -137,6 +137,8 @@
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
     <Compile Include="ExpiryHelperAlphaModelFrameworkAlgorithm.cs" />
     <Compile Include="CfdTimeZonesRegressionAlgorithm.cs" />
+    <Compile Include="ClassicFrameworkMergeAlgorithm.cs" />
+    <Compile Include="ClassicFrameworkInvalidMergeAlgorithm.cs" />
     <Compile Include="CoarseNoLookAheadBiasAlgorithm.cs" />
     <Compile Include="HistoryWithSymbolChangesRegressionAlgorithm.cs" />
     <Compile Include="FeeModelNotUsingAccountCurrency.cs" />
@@ -280,10 +282,6 @@
     <Compile Include="ZeroFeeRegressionAlgorithm.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj">
-      <Project>{75981418-7246-4b91-b136-482728e02901}</Project>
-      <Name>QuantConnect.Algorithm.Framework</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
       <Project>{3240aca4-bdd4-4d24-ac36-bbb651c39212}</Project>
       <Name>QuantConnect.Algorithm</Name>

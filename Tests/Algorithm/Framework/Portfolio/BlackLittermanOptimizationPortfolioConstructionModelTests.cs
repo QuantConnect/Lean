@@ -16,7 +16,6 @@
 using Accord.Math;
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
@@ -25,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 using System;
 using System.Linq;
-using QuantConnect.Tests.Common.Securities;
+using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {

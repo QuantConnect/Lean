@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -29,12 +28,13 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Orders.Fees;
+using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
     /// <summary>
     /// This is a demonstration algorithm. It trades UVXY.
-    /// Dual Thrust alpha model is used to produce insights. 
+    /// Dual Thrust alpha model is used to produce insights.
     /// Those input parameters have been chosen that gave acceptable results on a series
     /// of random backtests run for the period from Oct, 2016 till Feb, 2019.
     /// </summary>
@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             SetStartDate(2016, 10, 01);
             SetSecurityInitializer(s => s.SetFeeModel(new ConstantFeeModel(0m)));
             SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
-            
+
             // Universe Selection
             UniverseSettings.Resolution = Resolution.Minute;   // it's minute by default, but lets leave this param here
             var symbols = new[] { QuantConnect.Symbol.Create("UVXY", SecurityType.Equity, Market.USA) };
@@ -229,7 +229,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             // current range value
             public decimal Range { get; private set; }
 
-            // upper Line 
+            // upper Line
             public decimal UpperLine { get; private set; }
 
             // lower Line
@@ -260,7 +260,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 // event fired at new consolidated trade bar
                 _consolidator.DataConsolidated += (sender, consolidated) =>
                 {
-                    // add new tradebar to 
+                    // add new tradebar to
                     _rangeWindow.Add(consolidated);
 
                     if (IsReady)

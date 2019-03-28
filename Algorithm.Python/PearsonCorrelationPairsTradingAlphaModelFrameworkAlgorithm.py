@@ -23,6 +23,7 @@ from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
+from Risk.NullRiskManagementModel import NullRiskManagementModel
 
 
 ### <summary>
@@ -30,7 +31,7 @@ from QuantConnect.Algorithm.Framework.Selection import *
 ### This model extendes BasePairsTradingAlphaModel and uses Pearson correlation
 ### to rank the pairs trading candidates and use the best candidate to trade.
 ### </summary>
-class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
+class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithm):
     '''Framework algorithm that uses the PearsonCorrelationPairsTradingAlphaModel.
     This model extendes BasePairsTradingAlphaModel and uses Pearson correlation
     to rank the pairs trading candidates and use the best candidate to trade.'''

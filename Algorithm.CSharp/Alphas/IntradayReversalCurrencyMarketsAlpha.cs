@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -26,12 +25,13 @@ using QuantConnect.Orders.Fees;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
     /// <summary>
     /// Reversal strategy that goes long when price crosses below SMA and Short when price crosses above SMA.
-    /// The trading strategy is implemented only between 10AM - 3PM (NY time). Research suggests this is due to 
+    /// The trading strategy is implemented only between 10AM - 3PM (NY time). Research suggests this is due to
     /// institutional trades during market hours which need hedging with the USD. Source paper:
     /// LeBaron, Zhao: Intraday Foreign Exchange Reversals
     /// http://people.brandeis.edu/~blebaron/wps/fxnyc.pdf
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     {
                         var price = kvp.Value.Price;
 
-                        var direction = symbolData.IsUptrend(price) 
+                        var direction = symbolData.IsUptrend(price)
                             ? InsightDirection.Up
                             : InsightDirection.Down;
 
@@ -139,7 +139,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 var timeOfDay = algorithm.Time.TimeOfDay;
 
                 return algorithm.Securities[symbol].HasData &&
-                    timeOfDay >= TimeSpan.FromHours(10) && 
+                    timeOfDay >= TimeSpan.FromHours(10) &&
                     timeOfDay <= TimeSpan.FromHours(15);
             }
 
@@ -166,7 +166,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     PreviousDirection = InsightDirection.Flat;
                     _priceSMA = algorithm.SMA(symbol, periodSma, resolution);
                 }
-                
+
                 public bool IsUptrend(decimal price)
                 {
                     return _priceSMA.IsReady && price < Math.Round(_priceSMA * 1.001m, 6);

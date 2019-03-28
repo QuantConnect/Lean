@@ -14,20 +14,20 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
 from QuantConnect.Orders import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import QCAlgorithmFramework
+from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from Alphas.HistoricalReturnsAlphaModel import HistoricalReturnsAlphaModel
 from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from Portfolio.BlackLittermanOptimizationPortfolioConstructionModel import *
 from Portfolio.UnconstrainedMeanVariancePortfolioOptimizer import UnconstrainedMeanVariancePortfolioOptimizer
+from Risk.NullRiskManagementModel import NullRiskManagementModel
 
 
 ### <summary>
@@ -38,7 +38,7 @@ from Portfolio.UnconstrainedMeanVariancePortfolioOptimizer import UnconstrainedM
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="trading and orders" />
-class BlackLittermanPortfolioOptimizationFrameworkAlgorithm(QCAlgorithmFramework):
+class BlackLittermanPortfolioOptimizationFrameworkAlgorithm(QCAlgorithm):
     '''Black-Litterman Optimization algorithm.'''
 
     def Initialize(self):

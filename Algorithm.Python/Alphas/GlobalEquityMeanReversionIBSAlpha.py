@@ -15,7 +15,6 @@ from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
@@ -27,12 +26,12 @@ from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioCo
 from QuantConnect.Algorithm.Framework.Selection import ManualUniverseSelectionModel
 
 #
-# Equity indices exhibit mean reversion in daily returns. The Internal Bar Strength indicator (IBS), 
+# Equity indices exhibit mean reversion in daily returns. The Internal Bar Strength indicator (IBS),
 # which relates the closing price of a security to its daily range can be used to identify overbought
 # and oversold securities.
 #
 # This alpha ranks 33 global equity ETFs on its IBS value the previous day and predicts for the following day
-# that the ETF with the highest IBS value will decrease in price, and the ETF with the lowest IBS value 
+# that the ETF with the highest IBS value will decrease in price, and the ETF with the lowest IBS value
 # will increase in price.
 #
 # Source: Kakushadze, Zura, and Juan Andrés Serur. “4. Exchange-Traded Funds (ETFs).” 151 Trading Strategies, Palgrave Macmillan, 2018, pp. 90–91.
@@ -40,7 +39,7 @@ from QuantConnect.Algorithm.Framework.Selection import ManualUniverseSelectionMo
 # This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
 #
 
-class GlobalEquityMeanReversionIBSAlpha(QCAlgorithmFramework):
+class GlobalEquityMeanReversionIBSAlpha(QCAlgorithm):
 
     def Initialize(self):
 
@@ -79,7 +78,7 @@ class GlobalEquityMeanReversionIBSAlpha(QCAlgorithmFramework):
 class MeanReversionIBSAlphaModel(AlphaModel):
     '''Uses ranking of Internal Bar Strength (IBS) to create direction prediction for insights'''
 
-    def __init__(self, *args, **kwargs): 
+    def __init__(self, *args, **kwargs):
         lookback = kwargs['lookback'] if 'lookback' in kwargs else 1
         resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Daily
         self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(resolution), lookback)

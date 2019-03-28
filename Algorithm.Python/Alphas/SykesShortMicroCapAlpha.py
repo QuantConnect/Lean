@@ -15,7 +15,6 @@ from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
-AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
@@ -32,7 +31,7 @@ from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelec
 # This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
 #
 
-class SykesShortMicroCapAlpha(QCAlgorithmFramework):
+class SykesShortMicroCapAlpha(QCAlgorithm):
     ''' Alpha Streams: Benchmark Alpha: Identify "pumped" penny stocks and predict that the price of a "pumped" penny stock reverts to mean'''
 
     def Initialize(self):
@@ -63,7 +62,7 @@ class SykesShortMicroCapAlpha(QCAlgorithmFramework):
 class SykesShortMicroCapAlphaModel(AlphaModel):
     '''Uses ranking of intraday percentage difference between open price and close price to create magnitude and direction prediction for insights'''
 
-    def __init__(self, *args, **kwargs): 
+    def __init__(self, *args, **kwargs):
         lookback = kwargs['lookback'] if 'lookback' in kwargs else 1
         resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Daily
         self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(resolution), lookback)

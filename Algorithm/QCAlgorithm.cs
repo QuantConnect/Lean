@@ -41,6 +41,10 @@ using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Crypto;
 using System.Net;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers;
+using QuantConnect.Algorithm.Framework.Execution;
+using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Risk;
 
 namespace QuantConnect.Algorithm
 {
@@ -92,6 +96,8 @@ namespace QuantConnect.Algorithm
         private readonly HistoryRequestFactory _historyRequestFactory;
 
         private readonly OrderBasedInsightGenerator _orderBasedInsightGenerator;
+
+        private bool _isAlgorithmFrameworkBridge;
 
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
@@ -162,6 +168,17 @@ namespace QuantConnect.Algorithm
             _historyRequestFactory = new HistoryRequestFactory(this);
 
             _orderBasedInsightGenerator = new OrderBasedInsightGenerator();
+
+            // Framework
+            _securityValuesProvider = new AlgorithmSecurityValuesProvider(this);
+
+            // set model defaults, universe selection set via PostInitialize
+            SetAlpha(new NullAlphaModel());
+            SetPortfolioConstruction(new NullPortfolioConstructionModel());
+            SetExecution(new ImmediateExecutionModel());
+            SetRiskManagement(new NullRiskManagementModel());
+
+            IsFrameworkAlgorithm = true;
         }
 
         /// <summary>
@@ -266,7 +283,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public virtual bool IsFrameworkAlgorithm
         {
-            get { return false; }
+            get;
+            private set;
         }
 
         /// <summary>
@@ -526,6 +544,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public virtual void PostInitialize()
         {
+            FrameworkPostInitialize();
+
             // if the benchmark hasn't been set yet, set it
             if (Benchmark == null)
             {
@@ -555,7 +575,6 @@ namespace QuantConnect.Algorithm
                     });
                 }
             }
-
             // perform end of time step checks, such as enforcing underlying securities are in raw data mode
             OnEndOfTimeStep();
         }
@@ -725,29 +744,11 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Used to send data updates to algorithm framework models
-        /// </summary>
-        /// <param name="slice">The current data slice</param>
-        public virtual void OnFrameworkData(Slice slice)
-        {
-            // NOP - overriden by QCAlgorithmFramework
-        }
-
-        /// <summary>
         /// Event fired each time the we add/remove securities from the data feed
         /// </summary>
         /// <param name="changes">Security additions/removals for this time step</param>
         public virtual void OnSecuritiesChanged(SecurityChanges changes)
         {
-        }
-
-        /// <summary>
-        /// Used to send security changes to algorithm framework models
-        /// </summary>
-        /// <param name="changes">Security additions/removals for this time step</param>
-        public virtual void OnFrameworkSecuritiesChanged(SecurityChanges changes)
-        {
-            // NOP - overriden by QCAlgorithmFramework
         }
 
         // <summary>
@@ -2155,7 +2156,7 @@ namespace QuantConnect.Algorithm
         /// Event invocator for the <see cref="InsightsGenerated"/> event
         /// </summary>
         /// <param name="insights">The collection of insights generaed at the current time step</param>
-        protected virtual void OnInsightsGenerated(IEnumerable<Insight> insights)
+        private void OnInsightsGenerated(IEnumerable<Insight> insights)
         {
             InsightsGenerated?.Invoke(this, new GeneratedInsightsCollection(UtcTime, insights));
         }
@@ -2176,7 +2177,8 @@ namespace QuantConnect.Algorithm
         /// <remarks>To be called before updating the <see cref="Portfolio"/></remarks>
         /// <param name="orderEvent">The <see cref="OrderEvent"/> from which
         /// the new <see cref="Insight"/> will be created</param>
-        public void EmitInsightBasedOnFill(OrderEvent orderEvent)
+        /// <returns>True if an <see cref="Insight"/> was emitted</returns>
+        public bool EmitInsightBasedOnFill(OrderEvent orderEvent)
         {
             if (!IsFrameworkAlgorithm
                 && (orderEvent.Status == OrderStatus.Filled
@@ -2191,7 +2193,9 @@ namespace QuantConnect.Algorithm
                     UtcTime,
                     new[] {insight},
                     clone:false));
+                return true;
             }
+            return false;
         }
     }
 }

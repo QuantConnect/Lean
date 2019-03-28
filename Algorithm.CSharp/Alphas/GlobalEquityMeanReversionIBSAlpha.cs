@@ -13,28 +13,27 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders.Fees;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
     /// <summary>
-    /// Equity indices exhibit mean reversion in daily returns. The Internal Bar Strength indicator (IBS), 
+    /// Equity indices exhibit mean reversion in daily returns. The Internal Bar Strength indicator (IBS),
     /// which relates the closing price of a security to its daily range can be used to identify overbought
     /// and oversold securities.
     ///
     /// This alpha ranks 33 global equity ETFs on its IBS value the previous day and predicts for the following day
-    /// that the ETF with the highest IBS value will decrease in price, and the ETF with the lowest IBS value 
+    /// that the ETF with the highest IBS value will decrease in price, and the ETF with the lowest IBS value
     /// will increase in price.
     ///
     /// Source: Kakushadze, Zura, and Juan Andrés Serur. “4. Exchange-Traded Funds (ETFs).” 151 Trading Strategies, Palgrave Macmillan, 2018, pp. 90–91.

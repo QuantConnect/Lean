@@ -1,6 +1,5 @@
 ﻿#r "pythonnet/Python.Runtime.dll"
 #r "QuantConnect.Algorithm.dll"
-#r "QuantConnect.Algorithm.Framework.dll"
 #r "QuantConnect.Common.dll"
 #r "QuantConnect.Indicators.dll"
 #r "QuantConnect.Jupyter.dll"
@@ -37,6 +36,6 @@
 */
 using QuantConnect;
 using QuantConnect.Algorithm;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Indicators;
 using QuantConnect.Jupyter;
+using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
