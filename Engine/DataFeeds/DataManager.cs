@@ -178,7 +178,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            OnSubscriptionAdded(subscription);
+            if (_algorithm.LiveMode)
+            {
+                OnSubscriptionAdded(subscription);
+            }
 
             LiveDifferentiatedLog($"DataManager.AddSubscription(): Added {request.Configuration}." +
                 $" Start: {request.StartTimeUtc}. End: {request.EndTimeUtc}");
@@ -210,7 +213,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     _dataFeed.RemoveSubscription(subscription);
 
-                    OnSubscriptionRemoved(subscription);
+                    if (_algorithm.LiveMode)
+                    {
+                        OnSubscriptionRemoved(subscription);
+                    }
 
                     subscription.Dispose();
 
