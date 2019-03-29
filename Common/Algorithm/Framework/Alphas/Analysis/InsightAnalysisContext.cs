@@ -126,6 +126,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
                 {
                     // Special case, see OrderBasedInsightGenerator
                     AnalysisEndTimeUtc = Insight.CloseTimeUtc;
+                    Insight.Period = Insight.CloseTimeUtc - Insight.GeneratedTimeUtc;
                 }
             }
 
