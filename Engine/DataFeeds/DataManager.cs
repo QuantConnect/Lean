@@ -34,11 +34,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DataManager : IAlgorithmSubscriptionManager, IDataFeedSubscriptionManager, IDataManager
     {
-        private readonly IAlgorithmSettings _algorithmSettings;
+        private readonly IAlgorithm _algorithm;
         private readonly IDataFeed _dataFeed;
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly ITimeKeeper _timeKeeper;
-        private readonly bool _liveMode;
 
         /// There is no ConcurrentHashSet collection in .NET,
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
@@ -68,11 +67,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
             UniverseSelection.SetDataManager(this);
-            _algorithmSettings = algorithm.Settings;
+            _algorithm = algorithm;
             AvailableDataTypes = SubscriptionManager.DefaultDataTypes();
             _timeKeeper = timeKeeper;
             _marketHoursDatabase = marketHoursDatabase;
-            _liveMode = algorithm.LiveMode;
 
             var liveStart = DateTime.UtcNow;
             // wire ourselves up to receive notifications when universes are added/removed
@@ -469,7 +467,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void LiveDifferentiatedLog(string message)
         {
-            if (_liveMode)
+            if (_algorithm.LiveMode)
             {
                 Log.Trace(message);
             }
