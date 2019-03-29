@@ -61,7 +61,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new UniverseSelection(algorithm, securityService),
                 algorithm,
                 algorithm.TimeKeeper,
-                marketHoursDatabase);
+                marketHoursDatabase,
+                false);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
 
             algorithm.Initialize();

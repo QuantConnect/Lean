@@ -72,7 +72,8 @@ namespace QuantConnect.Tests.Engine
                     new SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algo)),
                 algo,
                 algo.TimeKeeper,
-                marketHoursDatabase);
+                marketHoursDatabase,
+                true);
             algo.SubscriptionManager.SetDataManager(dataManager);
             var synchronizer = new LiveSynchronizer();
             synchronizer.Initialize(algo, dataManager);

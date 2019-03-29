@@ -38,6 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly IDataFeed _dataFeed;
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly ITimeKeeper _timeKeeper;
+        private readonly bool _liveMode;
 
         /// There is no ConcurrentHashSet collection in .NET,
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
@@ -62,7 +63,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             UniverseSelection universeSelection,
             IAlgorithm algorithm,
             ITimeKeeper timeKeeper,
-            MarketHoursDatabase marketHoursDatabase)
+            MarketHoursDatabase marketHoursDatabase,
+            bool liveMode)
         {
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
@@ -71,6 +73,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             AvailableDataTypes = SubscriptionManager.DefaultDataTypes();
             _timeKeeper = timeKeeper;
             _marketHoursDatabase = marketHoursDatabase;
+            _liveMode = liveMode;
 
             var liveStart = DateTime.UtcNow;
             // wire ourselves up to receive notifications when universes are added/removed
@@ -178,7 +181,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
-            if (_algorithm.LiveMode)
+            if (_liveMode)
             {
                 OnSubscriptionAdded(subscription);
             }
@@ -213,7 +216,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     _dataFeed.RemoveSubscription(subscription);
 
-                    if (_algorithm.LiveMode)
+                    if (_liveMode)
                     {
                         OnSubscriptionRemoved(subscription);
                     }
@@ -473,7 +476,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void LiveDifferentiatedLog(string message)
         {
-            if (_algorithm.LiveMode)
+            if (_liveMode)
             {
                 Log.Trace(message);
             }

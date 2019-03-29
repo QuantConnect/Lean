@@ -51,7 +51,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm)),
                 algorithm,
                 algorithm.TimeKeeper,
-                marketHoursDatabase);
+                marketHoursDatabase,
+                false);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             var synchronizer = new Synchronizer();
             synchronizer.Initialize(algorithm, dataManager);
