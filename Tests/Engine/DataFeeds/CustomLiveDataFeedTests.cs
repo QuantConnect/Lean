@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class CustomLiveDataFeedTests
     {
-        private Synchronizer _synchronizer;
+        private LiveSynchronizer _synchronizer;
         private IDataFeed _feed;
 
         [Test]
@@ -274,7 +274,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             ITimeProvider timeProvider,
             DataManager dataManager)
         {
-            _synchronizer = new TestableSynchronizer(algorithm, dataManager, true, timeProvider);
+            _synchronizer = new TestableLiveSynchronizer(timeProvider);
+            _synchronizer.Initialize(algorithm, dataManager);
 
             var mapFileProvider = new LocalDiskMapFileProvider();
             _feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),

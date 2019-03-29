@@ -54,7 +54,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 marketHoursDatabase);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             var synchronizer = new Synchronizer();
-            synchronizer.Initialize(algorithm, dataManager, false);
+            synchronizer.Initialize(algorithm, dataManager);
 
             feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider, dataManager, synchronizer);
             algorithm.Initialize();
