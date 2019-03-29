@@ -445,6 +445,21 @@ namespace QuantConnect
     }
 
     /// <summary>
+    /// Expiry calendar. Defines end of a period following calendar rules.
+    /// </summary>
+    public enum ExpiryCalendar
+    {
+        /// End of day (next open)
+        EndOfDay,
+        /// End of week expiry (next Monday)
+        EndOfWeek,
+        /// End of month expiry (1st of the next Month)
+        EndOfMonth,
+        /// Monthly expiry (nth day to nth day of the following month)
+        OneMonth
+    }
+
+    /// <summary>
     /// Specifies the different types of options
     /// </summary>
     public enum OptionRight

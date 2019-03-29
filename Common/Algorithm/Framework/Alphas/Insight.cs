@@ -172,6 +172,33 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="Insight"/> class
+        /// </summary>
+        /// <param name="symbol">The symbol this insight is for</param>
+        /// <param name="expiry">The period over which the prediction will come true represented by an expiry calendar</param>
+        /// <param name="type">The type of insight, price/volatility</param>
+        /// <param name="direction">The predicted direction</param>
+        public Insight(Symbol symbol, ExpiryCalendar expiry, InsightType type, InsightDirection direction)
+            : this(symbol, expiry, type, direction, null, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Insight"/> class
+        /// </summary>
+        /// <param name="symbol">The symbol this insight is for</param>
+        /// <param name="expiry">The period over which the prediction will come true represented by an expiry calendar</param>
+        /// <param name="type">The type of insight, price/volatility</param>
+        /// <param name="direction">The predicted direction</param>
+        /// <param name="magnitude">The predicted magnitude as a percentage change</param>
+        /// <param name="confidence">The confidence in this insight</param>
+        /// <param name="sourceModel">An identifier defining the model that generated this insight</param>
+        public Insight(Symbol symbol, ExpiryCalendar expiry, InsightType type, InsightDirection direction, double? magnitude, double? confidence, string sourceModel = null)
+            : this(symbol, new ExpiryCalendarPeriodSpecification(expiry), type, direction, magnitude, confidence)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Insight"/> class.
         /// This constructor is provided mostly for testing purposes. When running inside an algorithm,
         /// the generated and close times are set based on the algorithm's time.
@@ -318,6 +345,21 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             var spec = period == Time.EndOfTimeTimeSpan ? (IPeriodSpecification)
                 new EndOfTimeCloseTimePeriodSpecification() : new TimeSpanPeriodSpecification(period);
             return new Insight(symbol, spec, InsightType.Price, direction, magnitude, confidence, sourceModel);
+        }
+
+        /// <summary>
+        /// Creates a new insight for predicting the percent change in price over the specified period
+        /// </summary>
+        /// <param name="symbol">The symbol this insight is for</param>
+        /// <param name="expiry">The period over which the prediction will come true represented by an expiry calendar</param>
+        /// <param name="direction">The predicted direction</param>
+        /// <param name="magnitude">The predicted magnitude as a percent change</param>
+        /// <param name="confidence">The confidence in this insight</param>
+        /// <param name="sourceModel">The model generating this insight</param>
+        /// <returns>A new insight object for the specified parameters</returns>
+        public static Insight Price(Symbol symbol, ExpiryCalendar expiry, InsightDirection direction, double? magnitude = null, double? confidence = null, string sourceModel = null)
+        {
+            return new Insight(symbol, expiry, InsightType.Price, direction, magnitude, confidence, sourceModel);
         }
 
         /// <summary>
@@ -639,6 +681,53 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 }
 
                 insight.Period = ComputePeriod(exchangeHours, insight.GeneratedTimeUtc, insight.CloseTimeUtc);
+            }
+        }
+
+        /// <summary>
+        /// Special case for insights where we do not know the period or the close time
+        /// and want insights to expiry with calendar rules 
+        /// </summary>
+        private class ExpiryCalendarPeriodSpecification : IPeriodSpecification
+        {
+            public readonly ExpiryCalendar _expiryCalendar;
+
+            public ExpiryCalendarPeriodSpecification(ExpiryCalendar expiryCalendar)
+            {
+                _expiryCalendar = expiryCalendar;
+            }
+
+            public void SetPeriodAndCloseTime(Insight insight, SecurityExchangeHours exchangeHours)
+            {
+                var closeTimeLocal = insight.GeneratedTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
+
+                if (_expiryCalendar == ExpiryCalendar.EndOfDay)
+                {
+                    closeTimeLocal = closeTimeLocal.AddDays(1).Date;
+                }
+                else if (_expiryCalendar == ExpiryCalendar.EndOfWeek)
+                {
+                    var value = 6 + (int)closeTimeLocal.DayOfWeek;
+                    closeTimeLocal = closeTimeLocal.AddDays(value).Date;
+                }
+                else
+                {
+                    closeTimeLocal = closeTimeLocal.AddMonths(1);
+                    if (_expiryCalendar == ExpiryCalendar.EndOfMonth)
+                    {
+                        var value = 1 - insight.GeneratedTimeUtc.Day;
+                        closeTimeLocal = closeTimeLocal.AddDays(value).Date;
+                    }
+                }
+
+                // Prevent close time to be defined to a date/time in closed market
+                if (!exchangeHours.IsOpen(closeTimeLocal, false))
+                {
+                    closeTimeLocal = exchangeHours.GetNextMarketOpen(closeTimeLocal, false);
+                }
+
+                insight.CloseTimeUtc = closeTimeLocal.ConvertToUtc(exchangeHours.TimeZone);
+                insight.Period = insight.CloseTimeUtc - insight.GeneratedTimeUtc;
             }
         }
 

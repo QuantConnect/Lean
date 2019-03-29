@@ -213,6 +213,42 @@ namespace QuantConnect.Tests.Algorithm.Framework
         }
 
         [Test]
+        [TestCase(ExpiryCalendar.EndOfDay, 2018, 12, 4, 9, 30)]
+        [TestCase(ExpiryCalendar.EndOfWeek, 2018, 12, 10, 9, 30)]
+        [TestCase(ExpiryCalendar.EndOfMonth, 2019, 1, 2, 9, 30)]
+        [TestCase(ExpiryCalendar.OneMonth, 2019, 1, 3, 9, 31)]
+        public void SetPeriodAndCloseTimeUsingExpiryCalendarEquity(ExpiryCalendar expiryCalendar, int year, int month, int day, int hour, int minute)
+        {
+            var symbol = Symbols.SPY;
+            var insight = Insight.Price(symbol, expiryCalendar, InsightDirection.Up);
+            insight.GeneratedTimeUtc = new DateTime(2018, 12, 3, 9, 31, 0).ConvertToUtc(TimeZones.NewYork);
+
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            insight.SetPeriodAndCloseTime(exchangeHours);
+            
+            var expected = new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.NewYork);
+            Assert.AreEqual(expected, insight.CloseTimeUtc);
+        }
+
+        [Test]
+        [TestCase(ExpiryCalendar.EndOfDay, 2018, 12, 4, 0, 0)]
+        [TestCase(ExpiryCalendar.EndOfWeek, 2018, 12, 10, 0, 0)]
+        [TestCase(ExpiryCalendar.EndOfMonth, 2019, 1, 2, 0, 0)]
+        [TestCase(ExpiryCalendar.OneMonth, 2019, 1, 3, 9, 31)]
+        public void SetPeriodAndCloseTimeUsingExpiryCalendarForex(ExpiryCalendar expiryCalendar, int year, int month, int day, int hour, int minute)
+        {
+            var symbol = Symbols.EURUSD;
+            var insight = Insight.Price(symbol, expiryCalendar, InsightDirection.Up);
+            insight.GeneratedTimeUtc = new DateTime(2018, 12, 3, 9, 31, 0).ConvertToUtc(TimeZones.EasternStandard);
+
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            insight.SetPeriodAndCloseTime(exchangeHours);
+
+            var expected = new DateTime(year, month, day, hour, minute, 0).ConvertToUtc(TimeZones.EasternStandard);
+            Assert.AreEqual(expected, insight.CloseTimeUtc);
+        }
+
+        [Test]
         [TestCase(Resolution.Tick, 1)]
         [TestCase(Resolution.Tick, 10)]
         [TestCase(Resolution.Tick, 100)]
