@@ -261,7 +261,7 @@ namespace QuantConnect.Orders.Fills
                         if (asset.Price < order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = order.LimitPrice;
+                            fill.FillPrice = Math.Min(prices.High, order.LimitPrice);;
                             // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
                         }
@@ -279,7 +279,7 @@ namespace QuantConnect.Orders.Fills
                         if (asset.Price > order.LimitPrice)
                         {
                             fill.Status = OrderStatus.Filled;
-                            fill.FillPrice = order.LimitPrice; // Fill at limit price not asset price.
+                            fill.FillPrice = Math.Max(prices.Low, order.LimitPrice);
                             // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
                         }
