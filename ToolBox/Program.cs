@@ -165,8 +165,8 @@ namespace QuantConnect.ToolBox
                     case "rdg":
                     case "randomdatagenerator":
                         RandomDataGeneratorProgram.RandomDataGenerator(
-                            GetParameterOrExit(optionsObject, "from-date"),
-                            GetParameterOrExit(optionsObject, "to-date"),
+                            GetParameterOrExit(optionsObject, "start"),
+                            GetParameterOrExit(optionsObject, "end"),
                             GetParameterOrExit(optionsObject, "symbol-count"),
                             GetParameterOrDefault(optionsObject, "market", null),
                             GetParameterOrDefault(optionsObject, "security-type", "Equity"),
