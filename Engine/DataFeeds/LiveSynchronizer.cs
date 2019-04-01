@@ -28,7 +28,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class LiveSynchronizer : Synchronizer
     {
-        private readonly ManualResetEvent _newLiveDataEmitted = new ManualResetEvent(false);
+        private readonly AutoResetEvent _newLiveDataEmitted = new AutoResetEvent(false);
 
         /// <summary>
         /// Initializes the instance of the Synchronizer class
@@ -83,8 +83,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     break;
                 }
 
-                _newLiveDataEmitted.Reset();
-
                 // check for cancellation
                 if (cancellationToken.IsCancellationRequested) break;
 
@@ -100,9 +98,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // the heartbeat of the application
                     nextEmit = frontierUtc.RoundDown(Time.OneSecond).Add(Time.OneSecond);
                 }
-
-                // take a short nap
-                Thread.Sleep(1);
             }
 
             if (shouldSendExtraEmptyPacket)
