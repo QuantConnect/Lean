@@ -163,7 +163,6 @@
     <Compile Include="Selection\FutureUniverseSelectionModel.cs" />
     <Compile Include="Selection\OptionUniverseSelectionModel.cs" />
     <Compile Include="Selection\ScheduledUniverseSelectionModel.cs" />
-    <Compile Include="Selection\UncorrelatedUniverseSelectionModel.cs" />
     <Compile Include="Selection\UniverseSelectionModel.cs" />
     <Compile Include="Selection\UniverseSelectionModelPythonWrapper.cs" />
     <Compile Include="Selection\QC500UniverseSelectionModel.cs" />
