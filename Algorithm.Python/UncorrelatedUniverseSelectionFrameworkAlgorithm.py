@@ -25,7 +25,7 @@ from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
 from QuantConnect.Algorithm.Framework.Execution import ImmediateExecutionModel
-from Selection.UncorrelatedSelectionModel import UncorrelatedSelectionModel
+from Selection.UncorrelatedUniverseSelectionModel import UncorrelatedUniverseSelectionModel
 
 from datetime import timedelta
 
