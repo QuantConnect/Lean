@@ -25,11 +25,9 @@ from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
 from QuantConnect.Algorithm.Framework.Execution import ImmediateExecutionModel
-from QuantConnect.Indicators import RollingWindow, IndicatorDataPoint
 from Selection.UncorrelatedSelectionModel import UncorrelatedSelectionModel
 
 from datetime import timedelta
-import pandas as pd
 
 class UncorrelatedFrameworkAlgorithm(QCAlgorithmFramework):
 
