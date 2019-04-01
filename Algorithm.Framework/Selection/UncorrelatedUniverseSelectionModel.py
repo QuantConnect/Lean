@@ -20,6 +20,9 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
+from QuantConnect.Indicators import RollingWindow, IndicatorDataPoint
+
+import pandas as pd
 
 class UncorrelatedUniverseSelectionModel(FundamentalUniverseSelectionModel):
     '''This universe selection model picks stocks that currently have their correlation to a benchmark deviated from the mean.'''
