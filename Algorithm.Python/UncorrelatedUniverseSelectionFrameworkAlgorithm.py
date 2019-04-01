@@ -29,7 +29,7 @@ from Selection.UncorrelatedSelectionModel import UncorrelatedSelectionModel
 
 from datetime import timedelta
 
-class UncorrelatedFrameworkAlgorithm(QCAlgorithmFramework):
+class UncorrelatedUniverseSelectionFrameworkAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
         
