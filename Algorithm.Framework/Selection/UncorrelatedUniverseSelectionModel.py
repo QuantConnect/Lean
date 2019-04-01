@@ -21,7 +21,7 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
-class UncorrelatedToBenchmarkUniverseSelectionModel(FundamentalUniverseSelectionModel):
+class UncorrelatedUniverseSelectionModel(FundamentalUniverseSelectionModel):
     '''This universe selection model picks stocks that currently have their correlation to a benchmark deviated from the mean.'''
 
     def __init__(self,
@@ -29,14 +29,16 @@ class UncorrelatedToBenchmarkUniverseSelectionModel(FundamentalUniverseSelection
                  numberOfSymbolsCoarse = 400,
                  numberOfSymbols = 10,
                  windowLength = 5,
-                 historyLength = 25):
+                 historyLength = 25,
+                 threshold = 0.5):
         '''Initializes a new default instance of the OnTheMoveUniverseSelectionModel
         Args:
             benchmark: Symbol of the benchmark
             numberOfSymbolsCoarse: Number of coarse symbols
             numberOfSymbols: Number of symbols selected by the universe model
             windowLength: Rolling window length period for correlation calculation
-            historyLength: History length period'''
+            historyLength: History length period
+            threshold: Threadhold for the minimum mean correlation between security and benchmark'''
         super().__init__(False)
 
         self.benchmark = benchmark 
@@ -44,69 +46,126 @@ class UncorrelatedToBenchmarkUniverseSelectionModel(FundamentalUniverseSelection
         self.numberOfSymbols = numberOfSymbols
         self.windowLength = windowLength
         self.historyLength = historyLength
-        
-        # Symbols in universe
-        self.symbols = []
-        self.coarseSymbols = []
-        self.cor = None
+        self.threshold = threshold
+
+        self.cache = dict()
+        self.symbol = list()
 
     def SelectCoarse(self, algorithm, coarse):
+        '''Select stocks with highest Z-Score with fundamental data and positive previous-day price and volume'''
 
-        if not self.coarseSymbols:
-            # The stocks must have fundamental data
-            # The stock must have positive previous-day close price
-            # The stock must have positive volume on the previous trading day
-            filtered = [x for x in coarse if x.HasFundamentalData and x.Volume > 0 and x.Price > 0]
-            sortedByDollarVolume = sorted(filtered, key = lambda x: x.DollarVolume, reverse=True)[:self.numberOfSymbolsCoarse]
-    
-            self.coarseSymbols = [x.Symbol for x in sortedByDollarVolume]
-            
-        # return the symbol objects our sorted collection
-        self.symbols = self.corRanked(algorithm,self.coarseSymbols)
+        # Verify whether the benchmark is present in the Coarse Fundamental
+        benchmark = next((x for x in coarse if x.Symbol == self.benchmark), None)
+        if benchmark is None:
+            return self.symbol
 
-        return self.symbols 
-    
-    def corRanked(self, algorithm, symbols):
+        # Get the symbols with the highest dollar volume
+        coarse = sorted([x for x in coarse if x.HasFundamentalData 
+                                          and x.Volume * x.Price > 0 
+                                          and x.Symbol != self.benchmark],
+                        key = lambda x: x.DollarVolume, reverse=True)[:self.numberOfSymbolsCoarse]
+        
+        newSymbols = list()
+        for cf in coarse + [benchmark]:
+            symbol = cf.Symbol
+            data = self.cache.setdefault(symbol, self.SymbolData(self, symbol))
+            data.Update(cf.EndTime, cf.AdjustedPrice)
+            if not data.IsReady:
+                newSymbols.append(symbol)
 
-        # Not enough symbols to filter
-        if len(symbols) <= self.numberOfSymbols:
-            return symbols
+        # Warm up the dictionary objects of selected symbols and benchmark that do not have enought data
+        if len(newSymbols) > 1:
+            algorithm.Log(f'{algorithm.Time - algorithm.StartDate} :: {len(newSymbols)} :: {len(self.cache)}')
+            history = algorithm.History(newSymbols, self.historyLength, Resolution.Daily)
+            history = history.close.unstack(level=0)
+            for symbol in newSymbols:
+                self.cache[symbol].Warmup(history)
 
-        # Retrieve history of prices
-        hist = algorithm.History(symbols + [self.benchmark], self.historyLength, Resolution.Daily)
+        # Create a new dictionary with the zScore
+        zScore = dict()
+        benchmark = self.cache[self.benchmark].GetReturns()
+        for cf in coarse:
+            symbol = cf.Symbol
+            value = self.cache[symbol].CalculateZScore(benchmark)
+            if value > 0: zScore[symbol] = value
 
-        # Calculate returns
-        returns=hist.close.unstack(level=0).pct_change()
-      
-        # Calculate stdev(correlation) using rolling window for all history
-        if self.cor is None:
-            corMat=returns.rolling(self.windowLength,min_periods = self.windowLength).corr().dropna()
-            
-            # Correlation of all securities against SPY
-            self.cor = corMat[str(self.benchmark)].unstack()
+        # Sort the zScore dictionary by value
+        if len(zScore) > self.numberOfSymbols:
+            sorted_zScore = sorted(zScore.items(), key=lambda kvp: kvp[1], reverse=True)
+            zScore = dict(sorted_zScore[:self.numberOfSymbols])
 
-        # Calculate stdev(correlation) for last period and append a new row
-        else:
-            corRow=returns.tail(self.windowLength).corr()[str(self.benchmark)]
+        # Return the symbols
+        self.symbols = list(zScore.keys())
+        return self.symbols
 
-            # Correlation of all securities against SPY
-            self.cor = self.cor.append(corRow).tail(self.historyLength)
 
-        # Calculate the mean of correlation.
-        # Only include stocks with significantly positive or negative correlation to benchmark.
-        corMu = self.cor.mean()
-        corMu = corMu[abs(corMu) > 0.5].drop(str(self.benchmark))
+    class SymbolData:
+        '''Contains data specific to a symbol required by this model'''
+        def __init__(self, model, symbol):
+            self.symbol = symbol
+            self.windowLength = model.windowLength
+            self.historyLength = model.historyLength
+            self.threshold = model.threshold
+            self.history = RollingWindow[IndicatorDataPoint](self.historyLength)
+            self.correlation = None
 
-        # Calculate the standard deviation of correlation
-        corStd = self.cor.std()
+        def Warmup(self, history):
+            '''Save the historical data that will be used to compute the correlation'''
+            symbol = str(self.symbol)
+            if symbol not in history:
+                return
 
-        # Current correlation
-        corCur = self.cor.tail(1).unstack()
+            # Save the last point before reset
+            last = self.history[0]
+            self.history.Reset()
 
-        # Calculate absolute value of Z-Score for stocks in the Coarse Universe. 
-        zScore = (abs(corCur - corMu) / corStd).dropna()
+            # Uptade window with historical data
+            for time, value in history[symbol].iteritems():
+                self.Update(time, value)
 
-        # Rank stocks on Z-Score
-        zScore = zScore.sort_values(ascending=False).head(self.numberOfSymbols)
+            # Re-add the last point if necessary
+            if last.EndTime > time:
+                self.Update(last.EndTime, last.Value)
 
-        return zScore.index.levels[0].tolist()
+        def Update(self, time, value):
+            '''Update the historical data'''
+            self.history.Add(IndicatorDataPoint(self.symbol, time, value))
+
+        def CalculateZScore(self, benchmark):
+            '''Computes the ZScore'''
+            # Not enough data to compute zScore
+            if not self.IsReady:
+                return 0
+
+            returns = pd.DataFrame.from_dict({"A": self.GetReturns(), "B": benchmark})
+
+            if self.correlation is None:
+                # Calculate stdev(correlation) using rolling window for all history
+                correlation = returns.rolling(self.windowLength, min_periods = self.windowLength).corr()
+                self.correlation = correlation["B"].dropna().unstack()
+            else:
+                last_correlation = returns.tail(self.windowLength).corr()["B"]
+                self.correlation = self.correlation.append(last_correlation).tail(self.historyLength)
+
+            # Calculate the mean of correlation and discard low mean correlation
+            mean = self.correlation.mean()
+            if mean.empty or mean[0] < self.threshold:
+                return 0
+
+            # Calculate the standard deviation of correlation
+            std = self.correlation.std()
+
+            # Current correlation
+            current = self.correlation.tail(1).unstack()
+
+            # Calculate absolute value of Z-Score for stocks in the Coarse Universe.
+            return abs(current[0] - mean[0]) / std[0]
+
+        def GetReturns(self):
+            '''Get the returns from the rolling window dictionary'''
+            historyDict = {x.EndTime: x.Value for x in self.history}
+            return pd.Series(historyDict).sort_index().pct_change().dropna()
+
+        @property
+        def IsReady(self):
+            return self.history.IsReady
