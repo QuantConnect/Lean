@@ -25,27 +25,30 @@ from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
 from QuantConnect.Algorithm.Framework.Execution import ImmediateExecutionModel
-from Selection.UncorrelatedToBenchmarkUniverseSelectionModel import UncorrelatedToBenchmarkUniverseSelectionModel
-from datetime import timedelta
+from QuantConnect.Indicators import RollingWindow, IndicatorDataPoint
+from Selection.UncorrelatedSelectionModel import UncorrelatedSelectionModel
 
-class UncorrelatedToBenchmarkFrameworkAlgorithm(QCAlgorithmFramework):
+from datetime import timedelta
+import pandas as pd
+
+class UncorrelatedFrameworkAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
         
         self.UniverseSettings.Resolution = Resolution.Daily
         
-        self.SetStartDate(2017,1,1)   # Set Start Date
-        self.SetEndDate(2017,3,1)     # Set End Date
+        self.SetStartDate(2018,1,1)   # Set Start Date
         self.SetCash(1000000)         # Set Strategy Cash
 
+
         benchmark = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
-        self.SetUniverseSelection(UncorrelatedToBenchmarkUniverseSelectionModel(benchmark))
-        self.SetAlpha(UncorrelatedToBenchmarkAlphaModel())
+        self.SetUniverseSelection(UncorrelatedUniverseSelectionModel(benchmark))
+        self.SetAlpha(UncorrelatedAlphaModel())
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
 
 
-class UncorrelatedToBenchmarkAlphaModel(AlphaModel):
+class UncorrelatedAlphaModel(AlphaModel):
     '''Uses ranking of intraday percentage difference between open price and close price to create magnitude and direction prediction for insights'''
 
     def __init__(self, numberOfStocks = 10, predictionInterval = timedelta(1)): 
