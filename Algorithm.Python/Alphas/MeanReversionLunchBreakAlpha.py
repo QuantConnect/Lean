@@ -16,6 +16,7 @@ AddReference("System")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Indicators")
 AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *

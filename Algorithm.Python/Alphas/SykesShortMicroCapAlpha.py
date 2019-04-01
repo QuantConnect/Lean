@@ -15,6 +15,7 @@ from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *

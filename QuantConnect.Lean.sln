@@ -54,6 +54,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Jupyter", "Jup
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "QuantConnect.Algorithm.PythonTools", "Algorithm.Python\QuantConnect.Algorithm.PythonTools.pyproj", "{4A5DED1F-3E34-40E2-B1F2-9A8A02195508}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm.Framework", "Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj", "{75981418-7246-4B91-B136-482728E02901}"
+EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "QuantConnect.PythonToolbox", "PythonToolbox\QuantConnect.PythonToolbox.pyproj", "{1C47F4DB-2AFF-4FAE-9142-B33BE654A516}"
 EndProject
 Global
@@ -204,6 +206,14 @@ Global
 		{4A5DED1F-3E34-40E2-B1F2-9A8A02195508}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{4A5DED1F-3E34-40E2-B1F2-9A8A02195508}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4A5DED1F-3E34-40E2-B1F2-9A8A02195508}.Release|x64.ActiveCfg = Release|Any CPU
+		{75981418-7246-4B91-B136-482728E02901}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75981418-7246-4B91-B136-482728E02901}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75981418-7246-4B91-B136-482728E02901}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{75981418-7246-4B91-B136-482728E02901}.Debug|x64.Build.0 = Debug|Any CPU
+		{75981418-7246-4B91-B136-482728E02901}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75981418-7246-4B91-B136-482728E02901}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75981418-7246-4B91-B136-482728E02901}.Release|x64.ActiveCfg = Release|Any CPU
+		{75981418-7246-4B91-B136-482728E02901}.Release|x64.Build.0 = Release|Any CPU
 		{1C47F4DB-2AFF-4FAE-9142-B33BE654A516}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1C47F4DB-2AFF-4FAE-9142-B33BE654A516}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{1C47F4DB-2AFF-4FAE-9142-B33BE654A516}.Release|Any CPU.ActiveCfg = Release|Any CPU

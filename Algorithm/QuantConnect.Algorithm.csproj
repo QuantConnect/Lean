@@ -64,18 +64,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Accord, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.3.6.0\lib\net45\Accord.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Math, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Math.3.6.0\lib\net45\Accord.Math.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Math.Core, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Math.3.6.0\lib\net45\Accord.Math.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Accord.Statistics, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
-      <HintPath>..\packages\Accord.Statistics.3.6.0\lib\net45\Accord.Statistics.dll</HintPath>
-    </Reference>
     <Reference Include="MathNet.Numerics, Version=3.19.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MathNet.Numerics.3.19.0\lib\net40\MathNet.Numerics.dll</HintPath>
     </Reference>
@@ -138,44 +126,28 @@
     <Compile Include="Alphas\AlphaModel.cs" />
     <Compile Include="Alphas\AlphaModelExtensions.cs" />
     <Compile Include="Alphas\AlphaModelPythonWrapper.cs" />
-    <Compile Include="Alphas\BasePairsTradingAlphaModel.cs" />
-    <Compile Include="Alphas\CompositeAlphaModel.cs" />
-    <Compile Include="Alphas\ConstantAlphaModel.cs" />
-    <Compile Include="Alphas\EmaCrossAlphaModel.cs" />
-    <Compile Include="Alphas\HistoricalReturnsAlphaModel.cs" />
+    <Compile Include="Alphas\IAlphaModel.cs" />
     <Compile Include="Alphas\INamedModel.cs" />
-    <Compile Include="Alphas\MacdAlphaModel.cs" />
     <Compile Include="Alphas\NullAlphaModel.cs" />
-    <Compile Include="Alphas\PearsonCorrelationPairsTradingAlphaModel.cs" />
-    <Compile Include="Alphas\RsiAlphaModel.cs" />
     <Compile Include="CandlestickPatterns.cs" />
     <Compile Include="Execution\ExecutionModel.cs" />
     <Compile Include="Execution\ExecutionModelPythonWrapper.cs" />
+    <Compile Include="Execution\IExecutionModel.cs" />
     <Compile Include="Execution\ImmediateExecutionModel.cs" />
     <Compile Include="Execution\NullExecutionModel.cs" />
-    <Compile Include="Execution\StandardDeviationExecutionModel.cs" />
-    <Compile Include="Execution\VolumeWeightedAveragePriceExecutionModel.cs" />
-    <Compile Include="Alphas\IAlphaModel.cs" />
-    <Compile Include="Execution\IExecutionModel.cs" />
     <Compile Include="IndexUniverseDefinitions.cs" />
     <Compile Include="DollarVolumeUniverseDefinitions.cs" />
     <Compile Include="INotifiedSecurityChanges.cs" />
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
-    <Compile Include="QCAlgorithm.Framework.Python.cs" />
-    <Compile Include="Risk\IRiskManagementModel.cs" />
-    <Compile Include="Selection\IUniverseSelectionModel.cs" />
-    <Compile Include="NotifiedSecurityChanges.cs" />
-    <Compile Include="Portfolio\BlackLittermanOptimizationPortfolioConstructionModel.cs" />
-    <Compile Include="Portfolio\EqualWeightingPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\IPortfolioOptimizer.cs" />
-    <Compile Include="Portfolio\MaximumSharpeRatioPortfolioOptimizer.cs" />
-    <Compile Include="Portfolio\MeanVarianceOptimizationPortfolioConstructionModel.cs" />
-    <Compile Include="Portfolio\MinimumVariancePortfolioOptimizer.cs" />
     <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModelPythonWrapper.cs" />
-    <Compile Include="Portfolio\ReturnsSymbolData.cs" />
-    <Compile Include="Portfolio\UnconstrainedMeanVariancePortfolioOptimizer.cs" />
+    <Compile Include="QCAlgorithm.Framework.Python.cs" />
+    <Compile Include="Risk\IRiskManagementModel.cs" />
+    <Compile Include="Risk\NullRiskManagementModel.cs" />
+    <Compile Include="Risk\RiskManagementModel.cs" />
+    <Compile Include="Risk\RiskManagementModelPythonWrapper.cs" />
     <Compile Include="QCAlgorithm.cs" />
     <Compile Include="QCAlgorithm.Framework.cs" />
     <Compile Include="QCAlgorithm.History.cs" />
@@ -186,25 +158,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QCAlgorithm.Universe.cs" />
     <Compile Include="QCAlgorithmFrameworkBridge.cs" />
-    <Compile Include="Risk\CompositeRiskManagementModel.cs" />
-    <Compile Include="Risk\MaximumDrawdownPercentPerSecurity.cs" />
-    <Compile Include="Risk\MaximumDrawdownPercentPortfolio.cs" />
-    <Compile Include="Risk\MaximumSectorExposureRiskManagementModel.cs" />
-    <Compile Include="Risk\MaximumUnrealizedProfitPercentPerSecurity.cs" />
-    <Compile Include="Risk\NullRiskManagementModel.cs" />
-    <Compile Include="Risk\RiskManagementModel.cs" />
-    <Compile Include="Risk\RiskManagementModelPythonWrapper.cs" />
-    <Compile Include="Risk\TrailingStopRiskManagementModel.cs" />
-    <Compile Include="Selection\CoarseFundamentalUniverseSelectionModel.cs" />
-    <Compile Include="Selection\EmaCrossUniverseSelectionModel.cs" />
-    <Compile Include="Selection\FineFundamentalUniverseSelectionModel.cs" />
-    <Compile Include="Selection\FundamentalUniverseSelectionModel.cs" />
-    <Compile Include="Selection\FutureUniverseSelectionModel.cs" />
+    <Compile Include="Selection\IUniverseSelectionModel.cs" />
     <Compile Include="Selection\ManualUniverse.cs" />
     <Compile Include="Selection\ManualUniverseSelectionModel.cs" />
-    <Compile Include="Selection\OptionUniverseSelectionModel.cs" />
-    <Compile Include="Selection\QC500UniverseSelectionModel.cs" />
-    <Compile Include="Selection\ScheduledUniverseSelectionModel.cs" />
     <Compile Include="Selection\UniverseSelectionModel.cs" />
     <Compile Include="Selection\UniverseSelectionModelPythonWrapper.cs" />
     <Compile Include="UniverseDefinitions.cs" />
@@ -233,28 +189,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Alphas\BasePairsTradingAlphaModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Alphas\ConstantAlphaModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Alphas\EmaCrossAlphaModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Alphas\HistoricalReturnsAlphaModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Alphas\MacdAlphaModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Alphas\NullAlphaModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Alphas\PearsonCorrelationPairsTradingAlphaModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Alphas\RsiAlphaModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Execution\ImmediateExecutionModel.py">
@@ -263,74 +198,16 @@
     <Content Include="Execution\NullExecutionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Execution\StandardDeviationExecutionModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Execution\VolumeWeightedAveragePriceExecutionModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Portfolio\BlackLittermanOptimizationPortfolioConstructionModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Portfolio\EqualWeightingPortfolioConstructionModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Portfolio\MaximumSharpeRatioPortfolioOptimizer.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Portfolio\MeanVarianceOptimizationPortfolioConstructionModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Portfolio\MinimumVariancePortfolioOptimizer.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Portfolio\NullPortfolioConstructionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Portfolio\UnconstrainedMeanVariancePortfolioOptimizer.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Risk\CompositeRiskManagementModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Risk\MaximumDrawdownPercentPerSecurity.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Risk\MaximumDrawdownPercentPortfolio.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Risk\MaximumSectorExposureRiskManagementModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Risk\MaximumUnrealizedProfitPercentPerSecurity.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Risk\NullRiskManagementModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Risk\TrailingStopRiskManagementModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Selection\EmaCrossUniverseSelectionModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Selection\FundamentalUniverseSelectionModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Selection\FutureUniverseSelectionModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Selection\OptionUniverseSelectionModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Selection\QC500UniverseSelectionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Selection\UniverseSelectionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.19\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.19\build\QuantConnect.pythonnet.targets')" />

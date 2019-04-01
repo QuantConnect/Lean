@@ -46,7 +46,7 @@ from datetime import datetime, timedelta
 class TriangleExchangeRateArbitrageAlgorithm(QCAlgorithmFramework):
 
     def Initialize(self):
-        
+
         self.SetStartDate(2019, 2, 1)   #Set Start Date
         self.SetCash(100000)           #Set Strategy Cash
 
