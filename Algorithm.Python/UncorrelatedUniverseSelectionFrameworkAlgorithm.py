@@ -43,7 +43,7 @@ class UncorrelatedFrameworkAlgorithm(QCAlgorithmFramework):
 
         benchmark = Symbol.Create("SPY", SecurityType.Equity, Market.USA)
         self.SetUniverseSelection(UncorrelatedUniverseSelectionModel(benchmark))
-        self.SetAlpha(UncorrelatedAlphaModel())
+        self.SetAlpha(UncorrelatedUniverseSelectionAlphaModel())
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
 
