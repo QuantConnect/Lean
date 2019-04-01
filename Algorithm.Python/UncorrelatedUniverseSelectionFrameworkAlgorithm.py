@@ -46,7 +46,7 @@ class UncorrelatedFrameworkAlgorithm(QCAlgorithmFramework):
         self.SetExecution(ImmediateExecutionModel())
 
 
-class UncorrelatedAlphaModel(AlphaModel):
+class UncorrelatedUniverseSelectionAlphaModel(AlphaModel):
     '''Uses ranking of intraday percentage difference between open price and close price to create magnitude and direction prediction for insights'''
 
     def __init__(self, numberOfStocks = 10, predictionInterval = timedelta(1)): 
