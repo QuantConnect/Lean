@@ -70,9 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, configuration, date.AddDays(-1), false);
                     var coarseFundamentalForDate = factory.Read(source);
 
-                    // Coarse data has a period of one day (EndTime == Time + OneDay) but BaseDataCollection has no period (EndTime == Time),
-                    // so we need to add one more day here.
-                    yield return new BaseDataCollection(date.AddDays(1), configuration.Symbol, coarseFundamentalForDate);
+                    yield return new BaseDataCollection(date, configuration.Symbol, coarseFundamentalForDate);
                 }
             }
         }

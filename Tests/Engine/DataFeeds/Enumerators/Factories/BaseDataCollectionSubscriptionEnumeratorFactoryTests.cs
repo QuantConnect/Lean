@@ -75,5 +75,50 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.IsTrue(ramUsageAfterLoop - ramUsageBeforeLoop < 10);
         }
 
+        [Test]
+        public void ReturnsExpectedTimestamps()
+        {
+            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
+            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var security = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                config,
+                new Cash(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance
+            );
+
+            var universeSettings = new UniverseSettings(Resolution.Daily, 2m, true, false, TimeSpan.FromDays(1));
+            var securityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(), SecuritySeeder.Null);
+            var universe = new CoarseFundamentalUniverse(universeSettings, securityInitializer, x => new List<Symbol> { Symbols.AAPL });
+
+            var fileProvider = new DefaultDataProvider();
+
+            var factory = new BaseDataCollectionSubscriptionEnumeratorFactory();
+
+            var dateStart = new DateTime(2014, 3, 25);
+            var dateEnd = new DateTime(2014, 3, 26);
+            var days = (dateEnd - dateStart).Days + 1;
+
+            var request = new SubscriptionRequest(true, universe, security, config, dateStart, dateEnd);
+
+            using (var enumerator = factory.CreateEnumerator(request, fileProvider))
+            {
+                for (var i = 0; i < days; i++)
+                {
+                    Assert.IsTrue(enumerator.MoveNext());
+
+                    var current = enumerator.Current as BaseDataCollection;
+                    Assert.IsNotNull(current);
+                    Assert.AreEqual(dateStart.AddDays(i), current.Time);
+                    Assert.AreEqual(dateStart.AddDays(i), current.EndTime);
+                    Assert.AreEqual(dateStart.AddDays(i - 1), current.Data[0].Time);
+                    Assert.AreEqual(dateStart.AddDays(i), current.Data[0].EndTime);
+                }
+
+                Assert.IsFalse(enumerator.MoveNext());
+                Assert.IsNotNull(enumerator.Current);
+            }
+        }
     }
 }

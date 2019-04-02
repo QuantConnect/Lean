@@ -116,25 +116,25 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "10"},
-            {"Average Win", "0.68%"},
-            {"Average Loss", "-0.49%"},
-            {"Compounding Annual Return", "-45.883%"},
-            {"Drawdown", "3.200%"},
-            {"Expectancy", "-0.405"},
-            {"Net Profit", "-2.656%"},
-            {"Sharpe Ratio", "-3.491"},
-            {"Loss Rate", "75%"},
-            {"Win Rate", "25%"},
-            {"Profit-Loss Ratio", "1.38"},
-            {"Alpha", "-0.697"},
-            {"Beta", "14.064"},
-            {"Annual Standard Deviation", "0.136"},
-            {"Annual Variance", "0.019"},
-            {"Information Ratio", "-3.608"},
-            {"Tracking Error", "0.136"},
-            {"Treynor Ratio", "-0.034"},
-            {"Total Fees", "$10.61"}
+            {"Total Trades", "11"},
+            {"Average Win", "0.51%"},
+            {"Average Loss", "-0.33%"},
+            {"Compounding Annual Return", "-31.051%"},
+            {"Drawdown", "2.700%"},
+            {"Expectancy", "0.263"},
+            {"Net Profit", "-1.516%"},
+            {"Sharpe Ratio", "-2.526"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "1.53"},
+            {"Alpha", "-0.556"},
+            {"Beta", "14.058"},
+            {"Annual Standard Deviation", "0.124"},
+            {"Annual Variance", "0.015"},
+            {"Information Ratio", "-2.666"},
+            {"Tracking Error", "0.124"},
+            {"Treynor Ratio", "-0.022"},
+            {"Total Fees", "$11.63"}
         };
     }
 }
