@@ -77,7 +77,8 @@ namespace QuantConnect
             {"XRP", "XRP"},
             {"XLM", "XLM"},
             {"ETC", "ETC"},
-            {"ZRX", "ZRX"}
+            {"ZRX", "ZRX"},
+            {"USDT", "USDT"}
         };
 
         /// <summary>
