@@ -17,9 +17,11 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -32,6 +34,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly DateTimeZone _timeZone;
         private readonly ITimeProvider _timeProvider;
         private readonly ConcurrentQueue<TradeBar> _queue;
+        private readonly bool _liveMode;
+        private readonly Timer _timer;
+        private readonly EventHandler _newDataAvailableHandler;
+
+        /// <summary>
+        /// Event fired when a new data point is available
+        /// </summary>
+        public event EventHandler NewDataAvailable;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TradeBarBuilderEnumerator"/> class
@@ -40,19 +50,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="timeZone">The time zone the raw data is time stamped in</param>
         /// <param name="timeProvider">The time provider instance used to determine when bars are completed and
         /// can be emitted</param>
-        public TradeBarBuilderEnumerator(TimeSpan barSize, DateTimeZone timeZone, ITimeProvider timeProvider)
+        /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
+        /// <param name="newDataAvailableHandler">The event handler for the <see cref="NewDataAvailable"/> event</param>
+        public TradeBarBuilderEnumerator(TimeSpan barSize, DateTimeZone timeZone, ITimeProvider timeProvider, bool liveMode, EventHandler newDataAvailableHandler = null)
         {
             _barSize = barSize;
             _timeZone = timeZone;
             _timeProvider = timeProvider;
             _queue = new ConcurrentQueue<TradeBar>();
+            _liveMode = liveMode;
+            _newDataAvailableHandler = newDataAvailableHandler ?? ((s, e) => { });
+
+            if (liveMode)
+            {
+                NewDataAvailable += _newDataAvailableHandler;
+
+                _timer = new Timer(
+                    o =>
+                    {
+                        OnNewDataAvailable();
+                        _timer.Change(Timeout.Infinite, Timeout.Infinite);
+                    });
+            }
         }
+
         /// <summary>
         /// Pushes the tick into this enumerator. This tick will be aggregated into a bar
         /// and emitted after the alotted time has passed
         /// </summary>
         /// <param name="data">The new data to be aggregated</param>
-        public bool ProcessData(BaseData data)
+        public void ProcessData(BaseData data)
         {
             TradeBar working;
             var tick = data as Tick;
@@ -65,16 +92,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var barStartTime = currentLocalTime.RoundDown(_barSize);
                 working = new TradeBar(barStartTime, data.Symbol, marketPrice, marketPrice, marketPrice, marketPrice, qty, _barSize);
                 _queue.Enqueue(working);
-                return true;
-            }
 
-            // we're still within this bar size's time
-            var bidPrice = tick == null ? data.Value : tick.BidPrice;
-            var askPrice = tick == null ? data.Value : tick.AskPrice;
-            var bidSize = tick == null ? 0m : tick.BidSize;
-            var askSize = tick == null ? 0m : tick.AskSize;
-            working.Update(data.Value, bidPrice, askPrice, qty, bidSize, askSize);
-            return false;
+                if (_liveMode)
+                {
+                    _timer.Change(_barSize.Subtract(currentLocalTime - barStartTime), _barSize);
+                }
+            }
+            else
+            {
+                // we're still within this bar size's time
+                var bidPrice = tick == null ? data.Value : tick.BidPrice;
+                var askPrice = tick == null ? data.Value : tick.AskPrice;
+                var bidSize = tick == null ? 0m : tick.BidSize;
+                var askSize = tick == null ? 0m : tick.AskSize;
+                working.Update(data.Value, bidPrice, askPrice, qty, bidSize, askSize);
+            }
         }
 
         /// <summary>
@@ -131,10 +163,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// The current element in the collection.
         /// </returns>
         /// <filterpriority>2</filterpriority>
-        object IEnumerator.Current
-        {
-            get { return Current; }
-        }
+        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -142,6 +171,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            if (_liveMode)
+            {
+                _timer?.DisposeSafely();
+                NewDataAvailable -= _newDataAvailableHandler;
+            }
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="NewDataAvailable"/> event
+        /// </summary>
+        public void OnNewDataAvailable()
+        {
+            NewDataAvailable?.Invoke(this, EventArgs.Empty);
         }
     }
 }

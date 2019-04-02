@@ -237,17 +237,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     switch (request.Configuration.TickType)
                     {
                         case TickType.Quote:
-                            var quoteBarAggregator = new QuoteBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+                            var quoteBarAggregator = new QuoteBarBuilderEnumerator(
+                                request.Configuration.Increment,
+                                request.Security.Exchange.TimeZone,
+                                _timeProvider,
+                                true,
+                                (sender, args) => subscription.OnNewDataAvailable());
+
                             _exchange.AddDataHandler(request.Configuration.Symbol, data =>
                             {
                                 var tick = data as Tick;
 
                                 if (tick.TickType == TickType.Quote)
                                 {
-                                    if (quoteBarAggregator.ProcessData(tick))
-                                    {
-                                        subscription.OnNewDataAvailable();
-                                    }
+                                    quoteBarAggregator.ProcessData(tick);
 
                                     UpdateSubscriptionRealTimePrice(
                                         subscription,
@@ -261,7 +264,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         case TickType.Trade:
                         default:
-                            var tradeBarAggregator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+                            var tradeBarAggregator = new TradeBarBuilderEnumerator(
+                                request.Configuration.Increment,
+                                request.Security.Exchange.TimeZone,
+                                _timeProvider,
+                                true,
+                                (sender, args) => subscription.OnNewDataAvailable());
+
                             var auxDataEnumerator = new LiveAuxiliaryDataEnumerator(request.Security.Exchange.TimeZone, _timeProvider);
 
                             _exchange.AddDataHandler(request.Configuration.Symbol, data =>
@@ -277,10 +286,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     var tick = data as Tick;
                                     if (tick.TickType == TickType.Trade)
                                     {
-                                        if (tradeBarAggregator.ProcessData(tick))
-                                        {
-                                            subscription.OnNewDataAvailable();
-                                        }
+                                        tradeBarAggregator.ProcessData(tick);
 
                                         UpdateSubscriptionRealTimePrice(
                                             subscription,
@@ -297,17 +303,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             break;
 
                         case TickType.OpenInterest:
-                            var oiAggregator = new OpenInterestEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+                            var oiAggregator = new OpenInterestEnumerator(
+                                request.Configuration.Increment,
+                                request.Security.Exchange.TimeZone,
+                                _timeProvider,
+                                true,
+                                (sender, args) => subscription.OnNewDataAvailable());
+
                             _exchange.AddDataHandler(request.Configuration.Symbol, data =>
                             {
                                 var tick = data as Tick;
 
                                 if (tick.TickType == TickType.OpenInterest)
                                 {
-                                    if (oiAggregator.ProcessData(tick))
-                                    {
-                                        subscription.OnNewDataAvailable();
-                                    }
+                                    oiAggregator.ProcessData(tick);
                                 }
                             });
                             enumerator = oiAggregator;

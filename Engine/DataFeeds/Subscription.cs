@@ -27,7 +27,7 @@ using QuantConnect.Util;
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Represents the data required for a data feed to process a single subsciption
+    /// Represents the data required for a data feed to process a single subscription
     /// </summary>
     public class Subscription : IEnumerator<SubscriptionData>
     {
