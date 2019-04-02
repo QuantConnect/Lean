@@ -137,11 +137,14 @@
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
     <Compile Include="ExpiryHelperAlphaModelFrameworkAlgorithm.cs" />
     <Compile Include="CfdTimeZonesRegressionAlgorithm.cs" />
-    <Compile Include="ClassicFrameworkMergeAlgorithm.cs" />
-    <Compile Include="ClassicFrameworkInvalidMergeAlgorithm.cs" />
+    <Compile Include="EmightInsightCryptoCashAccountType.cs" />
+    <Compile Include="EmightInsightsAlgorithm.cs" />
+    <Compile Include="EmightInsightNoAlphaModelAlgorithm.cs" />
     <Compile Include="CoarseNoLookAheadBiasAlgorithm.cs" />
+    <Compile Include="ConvertToFrameworkAlgorithm.cs" />
     <Compile Include="HistoryWithSymbolChangesRegressionAlgorithm.cs" />
     <Compile Include="FeeModelNotUsingAccountCurrency.cs" />
+    <Compile Include="InvalidEmightInsightsAlgorithm.cs" />
     <Compile Include="MaximumPortfolioDrawdownFrameworkAlgorithm.cs" />
     <Compile Include="CompositeRiskManagementModelFrameworkAlgorithm.cs" />
     <Compile Include="OrderBasedInsightGeneratedAlgorithm.cs" />
@@ -160,7 +163,6 @@
     <Compile Include="OptionExpiryDateOnHolidayCase.cs" />
     <Compile Include="OptionDataNullReferenceRegressionAlgorithm.cs" />
     <Compile Include="CancelOpenOrdersRegressionAlgorithm.cs" />
-    <Compile Include="ConvertToFrameworkAlgorithm.cs" />
     <Compile Include="OptionDelistedDataRegressionAlgorithm.cs" />
     <Compile Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.cs" />
     <Compile Include="RawPricesCoarseUniverseAlgorithm.cs" />

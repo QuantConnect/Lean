@@ -16,7 +16,6 @@
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -33,7 +32,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The portfolio targets to be ordered</param>
-        public override void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
             _targetsCollection.AddRange(targets);
 
@@ -56,7 +55,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
         }
     }

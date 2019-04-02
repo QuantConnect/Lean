@@ -16,7 +16,6 @@
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -24,7 +23,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Framework algorithm that uses the <see cref="EmaCrossUniverseSelectionModel"/> to
     /// select the universe based on a moving average cross.
     /// </summary>
-    public class EmaCrossUniverseSelectionFrameworkAlgorithm : QCAlgorithmFramework
+    public class EmaCrossUniverseSelectionFrameworkAlgorithm : QCAlgorithm
     {
         public override void Initialize()
         {

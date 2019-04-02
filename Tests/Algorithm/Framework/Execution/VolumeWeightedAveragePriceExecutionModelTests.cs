@@ -20,6 +20,7 @@ using Moq;
 using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data;
@@ -29,7 +30,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Execution
 {
@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 .Returns((OrderTicket)null)
                 .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
 
-            var algorithm = new QCAlgorithmFramework();
+            var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();
             algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
 
@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                             }
                         })));
 
-            var algorithm = new QCAlgorithmFramework();
+            var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.SetPandasConverter();
             algorithm.SetHistoryProvider(historyProvider.Object);

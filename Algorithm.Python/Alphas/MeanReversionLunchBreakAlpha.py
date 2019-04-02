@@ -23,7 +23,6 @@ from QuantConnect import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework import QCAlgorithmFramework
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
 from QuantConnect.Algorithm.Framework.Selection import CoarseFundamentalUniverseSelectionModel

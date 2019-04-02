@@ -26,7 +26,6 @@ from QuantConnect.Data.Market import TradeBar
 from QuantConnect.Indicators import RollingWindow
 from QuantConnect.Brokerages import BrokerageName
 from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework import QCAlgorithmFramework
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Selection import ManualUniverseSelectionModel
 from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel

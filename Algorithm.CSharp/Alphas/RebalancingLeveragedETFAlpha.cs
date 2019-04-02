@@ -23,7 +23,6 @@ using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -35,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     /// <meta name="tag" content="alphastream" />
     /// <meta name="tag" content="algorithm framework" />
     /// <meta name="tag" content="etf" />
-    public class RebalancingLeveragedETFAlpha : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class RebalancingLeveragedETFAlpha : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private readonly List<ETFGroup> Groups = new List<ETFGroup>();
 
@@ -132,7 +131,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         /// <summary>
         /// Scan to see if the returns are greater than 1% at 2.15pm to emit an insight.
         /// </summary>
-        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
             // Initialize:
             var insights = new List<Insight>();

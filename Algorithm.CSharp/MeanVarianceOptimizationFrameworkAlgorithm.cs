@@ -22,11 +22,10 @@ using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Interfaces;
 using System.Linq;
 using QuantConnect.Data.UniverseSelection;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp
 {
-    public class MeanVarianceOptimizationFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class MeanVarianceOptimizationFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private IEnumerable<Symbol> _symbols = (new string[] { "AIG", "BAC", "IBM", "SPY" }).Select(s => QuantConnect.Symbol.Create(s, SecurityType.Equity, Market.USA));
 

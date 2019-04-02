@@ -22,9 +22,6 @@ using QuantConnect.Algorithm.Framework.Selection;
 
 namespace QuantConnect.Algorithm
 {
-    /// <summary>
-    /// Algorithm framework base class that enforces a modular approach to algorithm development
-    /// </summary>
     public partial class QCAlgorithm
     {
         /// <summary>
@@ -64,7 +61,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Sets the portfolio construction model
         /// </summary>
-        /// <param name="portfolioConstruction">Model defining how to build a portoflio from alphas</param>
+        /// <param name="portfolioConstruction">Model defining how to build a portfolio from alphas</param>
         public void SetPortfolioConstruction(PyObject portfolioConstruction)
         {
             IPortfolioConstructionModel model;

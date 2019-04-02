@@ -27,7 +27,6 @@ using QuantConnect.Orders.Fees;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -46,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     /// sourced so the community and client funds can see an example of an alpha.
     ///</summary>
-    public class GreenblattMagicFormulaAlpha : QCAlgorithmFramework
+    public class GreenblattMagicFormulaAlpha : QCAlgorithm
     {
         public override void Initialize()
         {
@@ -92,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
             }
 
-            public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+            public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 var insights = new List<Insight>();
 
@@ -109,7 +108,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 return insights;
             }
 
-            public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+            public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
             {
                 // Clean up data for removed securities
                 foreach (var removed in changes.RemovedSecurities)
@@ -166,7 +165,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     }
                 }
 
-                public SymbolData(QCAlgorithmFramework algorithm, Symbol symbol, int lookback, Resolution resolution)
+                public SymbolData(QCAlgorithm algorithm, Symbol symbol, int lookback, Resolution resolution)
                 {
                     _symbol = symbol;
                     Return = new RateOfChange($"{symbol}.ROC({lookback})", lookback);
@@ -174,7 +173,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     algorithm.RegisterIndicator(symbol, Return, _consolidator);
                 }
 
-                internal void RemoveConsolidators(QCAlgorithmFramework algorithm)
+                internal void RemoveConsolidators(QCAlgorithm algorithm)
                 {
                     algorithm.SubscriptionManager.RemoveConsolidator(_symbol, _consolidator);
                 }
@@ -209,7 +208,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             /// The stock must have positive previous-day close price
             /// The stock must have positive volume on the previous trading day
             /// </summary>
-            public override IEnumerable<Symbol> SelectCoarse(QCAlgorithmFramework algorithm, IEnumerable<CoarseFundamental> coarse)
+            public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
             {
                 if (algorithm.Time.Month == _lastMonth)
                 {
@@ -239,7 +238,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             /// Magic Formula: Rank stocks by Enterprise Value to EBITDA(EV/EBITDA)
             /// Rank subset of previously ranked stocks(EV/EBITDA), using the valuation ratio Return on Assets(ROA)
             /// </summary>
-            public override IEnumerable<Symbol> SelectFine(QCAlgorithmFramework algorithm, IEnumerable<FineFundamental> fine)
+            public override IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
             {
                 var filteredFine =
                     from x in fine

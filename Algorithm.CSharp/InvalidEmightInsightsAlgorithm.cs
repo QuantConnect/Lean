@@ -16,41 +16,29 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Algorithm.Framework.Execution;
-using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Algorithm.Framework.Risk;
-using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression test showcasing an algorithm inheriting from <see cref="QCAlgorithm"/>
-    /// with an invalid case because the set framework models will be ignored since no
-    /// <see cref="AlphaModel"/> model is set.
+    /// Regression test showcasing backwards incompatible behavior
+    /// for framework bridge algorithms
     /// </summary>
-    public class ClassicFrameworkInvalidMergeAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class InvalidEmightInsightsAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private readonly Symbol _symbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private Symbol _symbol;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            // Set requested data resolution
-            UniverseSettings.Resolution = Resolution.Daily;
-
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
-            // set algorithm framework models except ALPHA
-            SetUniverseSelection(new ManualUniverseSelectionModel(_symbol));
-            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
-            SetExecution(new ImmediateExecutionModel());
-            SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.01m));
+            _symbol = AddEquity("SPY").Symbol;
         }
 
         /// <summary>
@@ -59,24 +47,18 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            SetHoldings(_symbol, 1);
             try
             {
-                EmitInsights(Insight.Price(_symbol, Resolution.Daily, 1, InsightDirection.Down));
+                EmitInsights(Insight.Price(_symbol, Resolution.Daily, 1, InsightDirection.Up));
+                throw new Exception("Expected an exception");
             }
             catch (InvalidOperationException exception)
             {
-                if (!exception.Message.Contains("This method is for backwards compatibility"))
+                if (!exception.Message.Contains("EmitInsights should be called before placing an order"))
                 {
                     throw;
                 }
-            }
-            if (IsFrameworkAlgorithm)
-            {
-                throw new Exception("Unexpected IsFrameworkAlgorithm true value");
-            }
-            if (!Portfolio.Invested)
-            {
-                SetHoldings(_symbol, 1);
             }
         }
 
@@ -98,20 +80,20 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "238.977%"},
-            {"Drawdown", "1.100%"},
+            {"Compounding Annual Return", "263.153%"},
+            {"Drawdown", "2.200%"},
             {"Expectancy", "0"},
-            {"Net Profit", "1.686%"},
-            {"Sharpe Ratio", "4.159"},
+            {"Net Profit", "1.663%"},
+            {"Sharpe Ratio", "4.41"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "62.227"},
-            {"Annual Standard Deviation", "0.172"},
-            {"Annual Variance", "0.03"},
-            {"Information Ratio", "4.094"},
-            {"Tracking Error", "0.172"},
+            {"Alpha", "0.007"},
+            {"Beta", "76.118"},
+            {"Annual Standard Deviation", "0.192"},
+            {"Annual Variance", "0.037"},
+            {"Information Ratio", "4.354"},
+            {"Tracking Error", "0.192"},
             {"Treynor Ratio", "0.011"},
             {"Total Fees", "$3.26"},
             {"Total Insights Generated", "1"},

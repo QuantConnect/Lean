@@ -15,23 +15,25 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression test showcasing an algorithm inheriting from <see cref="QCAlgorithm"/>
-    /// and using the framework models.
+    /// Regression test showcasing an algorithm without setting an <see cref="AlphaModel"/>,
+    /// directly calling <see cref="QCAlgorithm.EmitInsights"/> and <see cref="QCAlgorithm.SetHoldings"/>.
+    /// Note that calling <see cref="QCAlgorithm.SetHoldings"/> is useless because
+    /// next time Lean calls the Portfolio construction model it will counter it with another order
+    /// since it only knows of the emitted insights
     /// </summary>
-    public class ClassicFrameworkMergeAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class EmightInsightNoAlphaModelAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private readonly Symbol _symbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
@@ -41,18 +43,15 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             // Set requested data resolution
-            UniverseSettings.Resolution = Resolution.Minute;
+            UniverseSettings.Resolution = Resolution.Daily;
 
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
-            // set algorithm framework models
+            // set algorithm framework models except ALPHA
             SetUniverseSelection(new ManualUniverseSelectionModel(_symbol));
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
-            SetExecution(new ImmediateExecutionModel());
-            SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.01m));
         }
 
         /// <summary>
@@ -61,31 +60,40 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            try
+            if (!Portfolio.Invested)
             {
-                EmitInsights(Insight.Price(_symbol, Resolution.Daily, 1, InsightDirection.Down));
-            }
-            catch (InvalidOperationException exception)
-            {
-                if (!exception.Message.Contains("This method is for backwards compatibility"))
+                var order = Transactions.GetOpenOrders(_symbol).FirstOrDefault();
+
+                if (order != null)
                 {
-                    throw;
+                    throw new Exception($"Unexpected open order {order}");
                 }
+
+                EmitInsights(Insight.Price(_symbol, Resolution.Daily, 10, InsightDirection.Down));
+
+                // emitted insight should have triggered a new order
+                order = Transactions.GetOpenOrders(_symbol).FirstOrDefault();
+
+                if (order == null)
+                {
+                    throw new Exception("Expected open order for emitted insight");
+                }
+                if (order.Direction != OrderDirection.Sell
+                    || order.Symbol != _symbol)
+                {
+                    throw new Exception($"Unexpected open order for emitted insight: {order}");
+                }
+
+                SetHoldings(_symbol, 1);
             }
-            if (!IsFrameworkAlgorithm)
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            var holdings = Securities[_symbol].Holdings;
+            if (Math.Sign(holdings.Quantity) != -1)
             {
-                throw new Exception("Unexpected IsFrameworkAlgorithm false value");
-            }
-            if (EmitInsightBasedOnFill(new OrderEvent(1,
-                _symbol,
-                UtcTime,
-                OrderStatus.Filled,
-                OrderDirection.Buy,
-                1,
-                1,
-                OrderFee.Zero)))
-            {
-                throw new Exception("Unexpected insight emission based on order fill");
+                throw new Exception("Unexpected holdings");
             }
         }
 
@@ -104,38 +112,38 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "3"},
+            {"Total Trades", "4"},
             {"Average Win", "0%"},
-            {"Average Loss", "-1.03%"},
-            {"Compounding Annual Return", "245.167%"},
-            {"Drawdown", "2.300%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "-72.251%"},
+            {"Drawdown", "2.800%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "1.597%"},
-            {"Sharpe Ratio", "4.169"},
+            {"Net Profit", "-1.741%"},
+            {"Sharpe Ratio", "-4.242"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.007"},
-            {"Beta", "73.191"},
-            {"Annual Standard Deviation", "0.195"},
-            {"Annual Variance", "0.038"},
-            {"Information Ratio", "4.113"},
-            {"Tracking Error", "0.195"},
+            {"Alpha", "0"},
+            {"Beta", "-62.982"},
+            {"Annual Standard Deviation", "0.171"},
+            {"Annual Variance", "0.029"},
+            {"Information Ratio", "-4.308"},
+            {"Tracking Error", "0.171"},
             {"Treynor Ratio", "0.011"},
-            {"Total Fees", "$9.77"},
-            {"Total Insights Generated", "100"},
-            {"Total Insights Closed", "99"},
-            {"Total Insights Analysis Completed", "99"},
-            {"Long Insight Count", "100"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$158418.3850"},
-            {"Total Accumulated Estimated Alpha Value", "$25522.9620"},
-            {"Mean Population Estimated Insight Value", "$257.8077"},
-            {"Mean Population Direction", "54.5455%"},
-            {"Mean Population Magnitude", "54.5455%"},
-            {"Rolling Averaged Population Direction", "59.8056%"},
-            {"Rolling Averaged Population Magnitude", "59.8056%"}
+            {"Total Fees", "$10.77"},
+            {"Total Insights Generated", "1"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "1"},
+            {"Long/Short Ratio", "0%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"}
         };
     }
 }

@@ -25,22 +25,22 @@ using QuantConnect.Securities.Equity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Algorithm;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
     [TestFixture]
     public class EqualWeightingPortfolioConstructionModelTests
     {
-        private QCAlgorithmFramework _algorithm;
+        private QCAlgorithm _algorithm;
         private const decimal _startingCash = 100000;
 
         [TestFixtureSetUp]
         public void SetUp()
         {
-            _algorithm = new QCAlgorithmFramework();
+            _algorithm = new QCAlgorithm();
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
 
             var prices = new Dictionary<Symbol, decimal>
@@ -313,7 +313,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python)]
         public void DoesNotReturnTargetsIfSecurityPriceIsZero(Language language)
         {
-            var algorithm = new QCAlgorithmFramework();
+            var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.AddEquity(Symbols.SPY.Value);
             algorithm.SetDateTime(DateTime.MinValue.ConvertToUtc(_algorithm.TimeZone));
@@ -348,7 +348,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return insight;
         }
 
-        private void SetPortfolioConstruction(Language language, QCAlgorithmFramework algorithm)
+        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm)
         {
             algorithm.SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             if (language == Language.Python)

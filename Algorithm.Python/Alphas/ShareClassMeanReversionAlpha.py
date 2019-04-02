@@ -48,7 +48,7 @@ import numpy as np
 # sourced so the community and client funds can see an example of an alpha.
 #
 
-class ShareClassMeanReversionAlgorithm(QCAlgorithmFramework):
+class ShareClassMeanReversionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
 
@@ -105,7 +105,7 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
         for security in algorithm.Securities:
             if self.DataEventOccured(data, security.Key):
                 return insights
-        
+
         ## If Alpha and Beta haven't been calculated yet, then do so
         if (self.alpha is None) or (self.beta is None):
            self.CalculateAlphaBeta(algorithm, data)
@@ -116,7 +116,7 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
         if not self.sma.IsReady:
             self.UpdateIndicators(data)
             return insights
-        
+
         ## Update indicator and Rolling Window for each data slice passed into Update() method
         self.UpdateIndicators(data)
 
@@ -131,18 +131,18 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
 
             elif self.position_value < self.sma.Current.Value:
                 insights.append(Insight(self.long_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Up, self.insight_magnitude, None))
-                insights.append(Insight(self.short_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Down, self.insight_magnitude, None))        
-                
+                insights.append(Insight(self.short_symbol, self.prediction_interval, InsightType.Price, InsightDirection.Down, self.insight_magnitude, None))
+
                 ## Reset invested boolean
                 self.invested = True
-                
+
         ## If the portfolio is invested and crossed back over the SMA, then emit flat insights
-        elif self.invested and self.CrossedMean(): 
+        elif self.invested and self.CrossedMean():
             ## Reset invested boolean
             self.invested = False
 
         return Insight.Group(insights)
-        
+
     def DataEventOccured(self, data, symbol):
         ## Helper function to check to see if data slice will contain a symbol
         if data.Splits.ContainsKey(symbol) or \
@@ -150,7 +150,7 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
            data.Delistings.ContainsKey(symbol) or \
            data.SymbolChangedEvents.ContainsKey(symbol):
             return True
-            
+
     def UpdateIndicators(self, data):
         ## Calculate position value and update the SMA indicator and Rolling Window
         self.position_value = (self.alpha * data[self.long_symbol].Close) - (self.beta * data[self.short_symbol].Close)
@@ -165,7 +165,7 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
             return True
         else:
             return False
-        
+
     def CalculateAlphaBeta(self, algorithm, data):
         ## Calculate Alpha and Beta, the initial number of shares for each security needed to achieve a 50/50 weighting
         self.alpha = algorithm.CalculateOrderQuantity(self.long_symbol, 0.5)

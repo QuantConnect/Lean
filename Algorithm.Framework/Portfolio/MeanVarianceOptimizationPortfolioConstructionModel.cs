@@ -20,8 +20,6 @@ using Accord.Math;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -71,9 +69,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Create portfolio targets from the specified insights
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="insights">The insights to create portoflio targets from</param>
-        /// <returns>An enumerable of portoflio targets to be sent to the execution model</returns>
-        public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
+        /// <param name="insights">The insights to create portfolio targets from</param>
+        /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
+        public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
         {
             var targets = new List<IPortfolioTarget>();
 
@@ -147,7 +145,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
             // clean up data for removed securities
             foreach (var removed in changes.RemovedSecurities)

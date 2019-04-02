@@ -16,9 +16,9 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using Python.Runtime;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Selection;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             return new BasePairsTradingAlphaModel(_lookback, _resolution);
         }
 
-        protected override void InitializeAlgorithm(QCAlgorithmFramework algorithm)
+        protected override void InitializeAlgorithm(QCAlgorithm algorithm)
         {
             algorithm.SetUniverseSelection(new ManualUniverseSelectionModel(
                 Symbol.Create("AIG", SecurityType.Equity, Market.USA),

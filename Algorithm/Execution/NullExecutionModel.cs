@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -23,7 +22,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// </summary>
     public class NullExecutionModel : ExecutionModel
     {
-        public override void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
             // NOP
         }

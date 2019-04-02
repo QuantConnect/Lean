@@ -95,7 +95,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                     // If _algorithm could not be set, throw exception
                     if (_algorithm == null)
                     {
-                        throw new Exception("Please ensure that one class inherits from QCAlgorithm or QCAlgorithmFramework.");
+                        throw new Exception("Please ensure that one class inherits from QCAlgorithm.");
                     }
                 }
             }
@@ -172,11 +172,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                 SetHistoryProvider(value);
             }
         }
-
-        /// <summary>
-        /// Gets a flag indicating whether or not this algorithm uses the QCAlgorithmFramework
-        /// </summary>
-        public bool IsFrameworkAlgorithm => _baseAlgorithm.IsFrameworkAlgorithm;
 
         /// <summary>
         /// Gets whether or not this algorithm is still warming up
@@ -674,7 +669,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
-        /// Margin call warning event handler. This method is called when Portoflio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue
+        /// Margin call warning event handler. This method is called when Portfolio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue
         /// </summary>
         public void OnMarginCallWarning()
         {
@@ -891,12 +886,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetCurrentSlice(Slice slice) => _baseAlgorithm.SetCurrentSlice(slice);
 
         /// <summary>
-        /// Will emit a new <see cref="Insight"/> based on the given
-        /// <see cref="OrderEvent"/>
+        /// Sets the order event provider
         /// </summary>
-        /// <remarks>To be called before updating the <see cref="Portfolio"/></remarks>
-        /// <param name="orderEvent">The <see cref="OrderEvent"/> from which
-        /// the new <see cref="Insight"/> will be created</param>
-        public bool EmitInsightBasedOnFill(OrderEvent orderEvent) =>  _baseAlgorithm.EmitInsightBasedOnFill(orderEvent);
+        /// <param name="newOrderEvent">The order event provider</param>
+        /// <remarks>Will be called before the <see cref="SecurityPortfolioManager"/></remarks>
+        public void SetOrderEventProvider(IOrderEventProvider newOrderEvent)
+            => _baseAlgorithm.SetOrderEventProvider(newOrderEvent);
     }
 }

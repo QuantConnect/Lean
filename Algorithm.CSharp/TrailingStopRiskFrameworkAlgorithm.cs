@@ -22,14 +22,13 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Show cases how to use the <see cref="TrailingStopRiskManagementModel"/>
     /// </summary>
-    public class TrailingStopRiskFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class TrailingStopRiskFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.

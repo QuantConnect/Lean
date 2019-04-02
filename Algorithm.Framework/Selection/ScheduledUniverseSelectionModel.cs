@@ -21,7 +21,6 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -118,7 +117,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="algorithm">The algorithm instance to create universes for</param>
         /// <returns>The universes to be used by the algorithm</returns>
-        public override IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
+        public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
             yield return new ScheduledUniverse(
                 _timeZone ?? algorithm.TimeZone,

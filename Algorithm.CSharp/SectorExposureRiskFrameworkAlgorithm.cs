@@ -24,7 +24,6 @@ using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -32,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// This example algorithm defines its own custom coarse/fine fundamental selection model
     /// with equally weighted portfolio and a maximum sector exposure
     /// </summary>
-    public class SectorExposureRiskFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class SectorExposureRiskFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {

@@ -28,7 +28,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Orders.Fees;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -38,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     /// Those input parameters have been chosen that gave acceptable results on a series
     /// of random backtests run for the period from Oct, 2016 till Feb, 2019.
     /// </summary>
-    class VIXDualThrustAlpha : QCAlgorithmFramework
+    class VIXDualThrustAlpha : QCAlgorithm
     {
         // -- STRATEGY INPUT PARAMETERS --
         private decimal _k1 = 0.63m;
@@ -131,7 +130,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
         /// <returns>The new insights generated</returns>
-        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
             var insights = new List<Insight>();
 
@@ -174,7 +173,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
             // added
             foreach (var added in changes.AddedSecurities)

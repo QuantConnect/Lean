@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -36,6 +35,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="algorithm">The algorithm instance to create universes for</param>
         /// <returns>The universes to be used by the algorithm</returns>
-        IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm);
+        IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm);
     }
 }

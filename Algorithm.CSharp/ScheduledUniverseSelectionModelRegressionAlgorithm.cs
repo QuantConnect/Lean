@@ -22,14 +22,13 @@ using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algortihm for testing <see cref="ScheduledUniverseSelectionModel"/> scheduling functions
     /// </summary>
-    public class ScheduledUniverseSelectionModelRegressionAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class ScheduledUniverseSelectionModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {

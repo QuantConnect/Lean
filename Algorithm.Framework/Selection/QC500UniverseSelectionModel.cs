@@ -19,7 +19,6 @@ using System.Linq;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -60,7 +59,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// The stock must have positive previous-day close price
         /// The stock must have positive volume on the previous trading day
         /// </summary>
-        public override IEnumerable<Symbol> SelectCoarse(QCAlgorithmFramework algorithm, IEnumerable<CoarseFundamental> coarse)
+        public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
             if (algorithm.Time.Month == _lastMonth)
             {
@@ -91,7 +90,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// At least half a year since its initial public offering
         /// The stock's market cap must be greater than 500 million
         /// </summary>
-        public override IEnumerable<Symbol> SelectFine(QCAlgorithmFramework algorithm, IEnumerable<FineFundamental> fine)
+        public override IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
         {
             if (algorithm.Time.Month == _lastMonth)
             {

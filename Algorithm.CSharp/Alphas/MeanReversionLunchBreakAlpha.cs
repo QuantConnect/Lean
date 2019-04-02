@@ -25,7 +25,6 @@ using QuantConnect.Orders.Fees;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -39,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     ///
     /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
     ///</summary>
-    public class MeanReversionLunchBreakAlpha : QCAlgorithmFramework
+    public class MeanReversionLunchBreakAlpha : QCAlgorithm
     {
         public override void Initialize()
         {
@@ -94,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
             }
 
-            public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+            public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 foreach (var kvp in _symbolDataBySymbol)
                 {
@@ -110,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     : Enumerable.Empty<Insight>();
             }
 
-            public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+            public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
             {
                 foreach (var security in changes.RemovedSecurities)
                 {

@@ -93,8 +93,6 @@ namespace QuantConnect.API
             // Results json
             var results = jObject["LiveResults"]["results"];
 
-            var isFrameworkAlgorithm = results["IsFrameworkAlgorithm"].Value<bool?>() ?? false;
-
             // Deserialize charting data
             var charts = results["Charts"];
             var chartDictionary = new Dictionary<string, Chart>();
@@ -110,7 +108,7 @@ namespace QuantConnect.API
             }
 
             // Live Results - At this time only that charting data can be returned from the api (9/30/2016)
-            liveAlgoResults.LiveResults.Results = new LiveResult(isFrameworkAlgorithm, chartDictionary,
+            liveAlgoResults.LiveResults.Results = new LiveResult(chartDictionary,
                 new Dictionary<int, Order>(),
                 new Dictionary<DateTime, decimal>(),
                 new Dictionary<string, Holding>(),

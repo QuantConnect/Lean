@@ -15,7 +15,6 @@
 
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -31,6 +30,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
         /// <returns>The new insights generated</returns>
-        IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data);
+        IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data);
     }
 }

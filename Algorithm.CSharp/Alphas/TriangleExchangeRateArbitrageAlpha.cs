@@ -23,7 +23,6 @@ using QuantConnect.Orders.Fees;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -39,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     ///
     /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
     /// </summary>
-    public class TriangleExchangeRateArbitrageAlpha : QCAlgorithmFramework
+    public class TriangleExchangeRateArbitrageAlpha : QCAlgorithm
     {
         public override void Initialize()
         {
@@ -86,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 _insightPeriod = resolution.ToTimeSpan().Multiply(5);
             }
 
-            public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+            public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 // Check to make sure all currency symbols are present
                 if (data.QuoteBars.Count < 3)

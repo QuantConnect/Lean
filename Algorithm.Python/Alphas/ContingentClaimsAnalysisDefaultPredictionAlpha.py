@@ -32,24 +32,26 @@
         σ (sigma) = standard deviation of firm value changes (returns in V)
         τ (tau)  = time to debt’s maturity
         µ (mu) = interest rate
-        
+
     This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     sourced so the community and client funds can see an example of an alpha.
 '''
 
 
+AddReference("QuantConnect.Algorithm")
 
 import scipy.stats as sp
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
+from QuantConnect.Algorithm import *
 from Risk.NullRiskManagementModel import NullRiskManagementModel
 from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 
 
-class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithmFramework):
+class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithm):
 
     def Initialize(self):
 
@@ -57,11 +59,11 @@ class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithmFramework):
         self.UniverseSettings.Resolution = Resolution.Daily
         self.month = None
         self.symbols = None
-        
+
         ## Declare single variable to be passed in multiple places -- prevents issue with conflicting start dates declared in different places
         self.SetStartDate(2018,1,1)
         self.SetCash(100000)
-        
+
         ## SPDR Small Cap ETF is a better benchmark than the default SP500
         self.SetBenchmark('IJR')
 
@@ -70,13 +72,13 @@ class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithmFramework):
         self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
         ## Set CCA Alpha Model
         self.SetAlpha(ContingentClaimsAnalysisAlphaModel())
-        
+
         ## Set Portfolio Construction Model
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        
+
         ## Set Execution Model
         self.SetExecution(ImmediateExecutionModel())
-        
+
         ## Set Risk Management Model
         self.SetRiskManagement(NullRiskManagementModel())
 
@@ -93,13 +95,13 @@ class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithmFramework):
 
             ## Filter for assets with fundamental data
             filtered = [ x.Symbol for x in sortedByDollarVolume ]
-        
+
             ## Return smallest 750 -- idea is that smaller companies are most likely to go bankrupt than blue-chip companies
             self.symbols = filtered[:750]
 
             return self.symbols
-    
-    
+
+
     def FineSelectionFunction(self, fine):
         ## Boolean controls so that our symbol universe is updated only at the beginning of each month
         if self.Time.month == self.month:
@@ -107,13 +109,13 @@ class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithmFramework):
         else:
             self.month = self.Time.month
             ## Select symbols with data necessary for our pricing model
-            
+
             def IsValid(x):
                 statement = x.FinancialStatements
                 sheet = statement.BalanceSheet
                 total_assets = sheet.TotalAssets
                 ratios = x.OperationRatios
-    
+
                 return total_assets.OneMonth > 0 and \
                         total_assets.ThreeMonths > 0 and \
                         total_assets.SixMonths  > 0 and \
@@ -125,7 +127,7 @@ class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithmFramework):
                         ratios.ROA.OneYear > 0
 
             fineFilter = sorted(fine, key=lambda x: IsValid(x))
-            
+
             if len(fine) == len(fineFilter):
                 self.Debug("Did not filter")
 
@@ -135,14 +137,14 @@ class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithmFramework):
 
 
 class ContingentClaimsAnalysisAlphaModel:
-    
+
     def __init__(self, *args, **kwargs):
         self.symbolDataBySymbol = {}
         self.month = None
-        self.default_threshold = kwargs['default_threshold'] if 'default_threshold' in kwargs else 0.25        
+        self.default_threshold = kwargs['default_threshold'] if 'default_threshold' in kwargs else 0.25
 
     def Update(self, algorithm, data):
-        
+
         '''Updates this alpha model with the latest data from the algorithm.
         This is called each time the algorithm receives data for subscribed securities
         Args:
@@ -150,10 +152,10 @@ class ContingentClaimsAnalysisAlphaModel:
             data: The new data available
         Returns:
             The new insights generated'''
-            
+
         ## Build a list to hold our insights
         insights = []
-        
+
         for symbol, symbolData in self.symbolDataBySymbol.items():
             pod = symbolData.ProbabilityOfDefault
 
@@ -163,19 +165,19 @@ class ContingentClaimsAnalysisAlphaModel:
                 algorithm.Log(str(symbol) + 'Probability of Default: ' + str(round(pod*100,4)) + '%')
 
         return insights
-    
-    def OnSecuritiesChanged(self, algorithm, changes): 
-        
+
+    def OnSecuritiesChanged(self, algorithm, changes):
+
         for removed in changes.RemovedSecurities:
             algorithm.Log('Removed: ' + str(removed.Symbol))
             symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
-            
+
         # initialize data for added securities
         symbols = [ x.Symbol for x in changes.AddedSecurities ]
-        
+
         for symbol in symbols:
             if symbol not in self.symbolDataBySymbol:
-                
+
                 ## Retrieve fundamentals data necessary for our CCA valuation
                 security = algorithm.Securities[symbol]
                 if security.Fundamentals is None or security.Fundamentals.FinancialStatements is None or security.Fundamentals.OperationRatios is None:
@@ -184,7 +186,7 @@ class ContingentClaimsAnalysisAlphaModel:
                 self.symbolDataBySymbol[symbol] = symbolData
 
 class SymbolData:
-    
+
     def __init__(self, security):
         statement = security.Fundamentals.FinancialStatements
         sheet = statement.BalanceSheet

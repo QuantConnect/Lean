@@ -26,4 +26,4 @@ class UniverseSelectionModel:
             algorithm: The algorithm instance to create universes for</param>
         Returns:
             The universes to be used by the algorithm'''
-        raise NotImplementedError("Types deriving from 'UniverseSelectionModel' must implement the 'def CreateUniverses(QCAlgorithmFramework) method.")
+        raise NotImplementedError("Types deriving from 'UniverseSelectionModel' must implement the 'def CreateUniverses(QCAlgorithm) method.")

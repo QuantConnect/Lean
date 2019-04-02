@@ -26,9 +26,9 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Algorithm;
 using QuantConnect.Python;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
@@ -37,14 +37,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
     /// </summary>
     public abstract class CommonAlphaModelTests
     {
-        private QCAlgorithmFramework _algorithm;
+        private QCAlgorithm _algorithm;
 
         [TestFixtureSetUp]
         public void Initialize()
         {
             PythonInitializer.Initialize();
 
-            _algorithm = new QCAlgorithmFramework();
+            _algorithm = new QCAlgorithm();
             _algorithm.PortfolioConstruction = new NullPortfolioConstructionModel();
             _algorithm.HistoryProvider = new SineHistoryProvider(_algorithm.Securities);
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
@@ -196,7 +196,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         /// <summary>
         /// Provides derived types a chance to initialize anything special they require
         /// </summary>
-        protected virtual void InitializeAlgorithm(QCAlgorithmFramework algorithm)
+        protected virtual void InitializeAlgorithm(QCAlgorithm algorithm)
         {
             _algorithm.SetStartDate(2018, 1, 4);
             _algorithm.AddEquity(Symbols.SPY.Value, Resolution.Daily);

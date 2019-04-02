@@ -20,14 +20,13 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Interfaces;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Show example of how to use the <see cref="MaximumDrawdownPercentPortfolio"/> Risk Management Model
     /// </summary>
-    public class MaximumPortfolioDrawdownFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class MaximumPortfolioDrawdownFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {

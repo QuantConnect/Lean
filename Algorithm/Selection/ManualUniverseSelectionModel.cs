@@ -20,7 +20,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -96,7 +95,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// Called at algorithm start.
         /// </summary>
         /// <returns>The universes defined by this model</returns>
-        public override IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
+        public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
             var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
             var securityInitializer = _securityInitializer ?? algorithm.SecurityInitializer;

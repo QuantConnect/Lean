@@ -24,21 +24,21 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 using System;
 using System.Linq;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
+using QuantConnect.Algorithm;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
     [TestFixture]
     public class BlackLittermanOptimizationPortfolioConstructionModelTests
     {
-        private QCAlgorithmFramework _algorithm;
+        private QCAlgorithm _algorithm;
         private Insight[] _view1Insights;
         private Insight[] _view2Insights;
 
         [TestFixtureSetUp]
         public void SetUp()
         {
-            _algorithm = new QCAlgorithmFramework();
+            _algorithm = new QCAlgorithm();
             SetUtcTime(new DateTime(2018, 8, 7));
 
             // Germany will outperform the other European markets by 5%
@@ -234,7 +234,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 return w.Dot(Σ.Multiply(delta));
             }
 
-            public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+            public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
             {
 
             }

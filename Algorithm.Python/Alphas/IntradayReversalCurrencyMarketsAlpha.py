@@ -24,7 +24,6 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.Consolidators import *
 from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework import QCAlgorithmFramework
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Selection import ManualUniverseSelectionModel
 from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel

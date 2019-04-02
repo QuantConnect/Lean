@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using Accord.Math;
 using Accord.Math.Optimization;
 using Accord.Statistics;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {

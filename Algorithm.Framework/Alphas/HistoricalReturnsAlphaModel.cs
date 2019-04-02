@@ -20,7 +20,6 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -58,7 +57,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
         /// <returns>The new insights generated</returns>
-        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
             var insights = new List<Insight>();
             foreach (var symbolData in _symbolDataBySymbol.Values)
@@ -80,7 +79,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
             // clean up data for removed securities
             foreach (var removed in changes.RemovedSecurities)
@@ -130,7 +129,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             public RateOfChange ROC;
             public long previous = 0;
 
-            public SymbolData(QCAlgorithmFramework algorithm, Security security, int lookback, Resolution resolution)
+            public SymbolData(QCAlgorithm algorithm, Security security, int lookback, Resolution resolution)
             {
                 Security = security;
                 Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);

@@ -20,7 +20,6 @@ using System.Linq;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -66,7 +65,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="coarse">The coarse fundamental data used to perform filtering</param>
         /// <returns>An enumerable of symbols passing the filter</returns>
-        public override IEnumerable<Symbol> SelectCoarse(QCAlgorithmFramework algorithm, IEnumerable<CoarseFundamental> coarse)
+        public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
             return (from cf in coarse
                         // grab th SelectionData instance for this symbol

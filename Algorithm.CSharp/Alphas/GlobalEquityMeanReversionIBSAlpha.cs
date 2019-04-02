@@ -23,7 +23,6 @@ using QuantConnect.Orders.Fees;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp.Alphas
 {
@@ -40,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     ///
     /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
     ///</summary>
-    public class GlobalEquityMeanReversionIBSAlpha : QCAlgorithmFramework
+    public class GlobalEquityMeanReversionIBSAlpha : QCAlgorithm
     {
         public override void Initialize()
         {
@@ -92,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 _predictionInterval = resolution.ToTimeSpan().Multiply(lookback);
             }
 
-            public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+            public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 var symbolsIBS = new Dictionary<Symbol, decimal>();
                 var returns = new Dictionary<Symbol, decimal>();

@@ -20,7 +20,6 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -29,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// This model extendes <see cref="BasePairsTradingAlphaModel"/> and uses Pearson correlation
     /// to rank the pairs trading candidates and use the best candidate to trade.
     /// </summary>
-    public class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {

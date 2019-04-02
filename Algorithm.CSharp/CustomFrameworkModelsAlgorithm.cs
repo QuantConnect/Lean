@@ -22,7 +22,6 @@ using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// This example algorithm defines its own custom coarse/fine fundamental selection model
     /// combined with the MACD alpha model.
     /// </summary>
-    public class CustomFrameworkModelsAlgorithm : QCAlgorithmFramework
+    public class CustomFrameworkModelsAlgorithm : QCAlgorithm
     {
         public override void Initialize()
         {
@@ -76,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="algorithm">The algorithm instance</param>
             /// <param name="coarse">The coarse fundamental data used to perform filtering</param>
             /// <returns>An enumerable of symbols passing the filter</returns>
-            public override IEnumerable<Symbol> SelectCoarse(QCAlgorithmFramework algorithm, IEnumerable<CoarseFundamental> coarse)
+            public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
             {
                 return coarse
                     .OrderByDescending(c => c.DollarVolume)
@@ -90,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="algorithm">The algorithm instance</param>
             /// <param name="fine">The fine fundamental data used to perform filtering</param>
             /// <returns>An enumerable of symbols passing the filter</returns>
-            public override IEnumerable<Symbol> SelectFine(QCAlgorithmFramework algorithm, IEnumerable<FineFundamental> fine)
+            public override IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
             {
                 return fine
                     .OrderByDescending(f => f.ValuationRatios.EarningYield)

@@ -22,7 +22,6 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Basic template options framework algorithm uses framework components to define an algorithm
     /// that trades options.
     /// </summary>
-    public class BasicTemplateOptionsFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class BasicTemplateOptionsFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -115,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         class SingleSharePortfolioConstructionModel : PortfolioConstructionModel
         {
-            public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
+            public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
             {
                 foreach (var insight in insights)
                 {

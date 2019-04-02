@@ -16,7 +16,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -25,7 +24,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class NullPortfolioConstructionModel : PortfolioConstructionModel
     {
-        public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithmFramework algorithm, Insight[] insights)
+        public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
         {
             return Enumerable.Empty<IPortfolioTarget>();
         }

@@ -15,7 +15,6 @@
 
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -31,9 +30,9 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The portfolio targets just emitted by the portfolio construction model.
         /// These are always just the new/updated targets and not a complete set of targets</param>
-        public virtual void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        public virtual void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
-            throw new System.NotImplementedException("Types deriving from 'ExecutionModel' must implement the 'void Execute(QCAlgorithmFramework, IPortfolioTarget[]) method.");
+            throw new System.NotImplementedException("Types deriving from 'ExecutionModel' must implement the 'void Execute(QCAlgorithm, IPortfolioTarget[]) method.");
         }
 
         /// <summary>
@@ -41,7 +40,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public virtual void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
         }
     }

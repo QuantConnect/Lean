@@ -21,7 +21,6 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -94,7 +93,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="algorithm">The algorithm instance to create universes for</param>
         /// <returns>The universes to be used by the algorithm</returns>
-        public override IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
+        public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
             _nextRefreshTimeUtc = algorithm.UtcTime + _refreshInterval;
 
@@ -123,7 +122,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="initializer">Performs extra initialization (such as setting models) after we create a new security object</param>
         /// <returns><see cref="Future"/> for the given symbol</returns>
         [Obsolete("This method is obsolete because SecurityInitializer is obsolete and will not be used.")]
-        protected virtual Future CreateFutureChainSecurity(QCAlgorithmFramework algorithm, Symbol symbol, UniverseSettings settings, ISecurityInitializer initializer)
+        protected virtual Future CreateFutureChainSecurity(QCAlgorithm algorithm, Symbol symbol, UniverseSettings settings, ISecurityInitializer initializer)
         {
             return CreateFutureChainSecurity(
                 algorithm.SubscriptionManager.SubscriptionDataConfigService,
@@ -171,7 +170,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="algorithm">The algorithm instance to create universes for</param>
         /// <param name="symbol">Symbol of the future</param>
         /// <returns><see cref="FuturesChainUniverse"/> for the given symbol</returns>
-        private FuturesChainUniverse CreateFutureChain(QCAlgorithmFramework algorithm, Symbol symbol)
+        private FuturesChainUniverse CreateFutureChain(QCAlgorithm algorithm, Symbol symbol)
         {
             if (symbol.SecurityType != SecurityType.Future)
             {

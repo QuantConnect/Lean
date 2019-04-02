@@ -16,7 +16,6 @@
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Risk
 {
@@ -30,9 +29,9 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="targets">The current portfolio targets to be assessed for risk</param>
-        public virtual IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+        public virtual IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
-            throw new System.NotImplementedException("Types deriving from 'RiskManagementModel' must implement the 'IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithmFramework, IPortfolioTarget[]) method.");
+            throw new System.NotImplementedException("Types deriving from 'RiskManagementModel' must implement the 'IEnumerable<IPortfolioTarget> ManageRisk(QCAlgorithm, IPortfolioTarget[]) method.");
         }
 
         /// <summary>
@@ -40,7 +39,7 @@ namespace QuantConnect.Algorithm.Framework.Risk
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public virtual void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public virtual void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
         }
     }

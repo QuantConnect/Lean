@@ -13,13 +13,20 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Algorithm.Framework
+using System;
+using QuantConnect.Orders;
+
+namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Provides a base class for algorithms written against <see cref="QCAlgorithm"/>
-    /// to be easily ported into the algorithm framework.
+    /// Represents a type with a new <see cref="OrderEvent"/> event <see cref="EventHandler"/>.
     /// </summary>
-    public class QCAlgorithmFrameworkBridge : QCAlgorithm
+    public interface IOrderEventProvider
     {
+        /// <summary>
+        /// Event fired when there is a new <see cref="QuantConnect.Orders.OrderEvent"/>
+        /// </summary>
+        /// <remarks>Will be called before the <see cref="SecurityPortfolioManager"/></remarks>
+        event EventHandler<OrderEvent> NewOrderEvent;
     }
 }

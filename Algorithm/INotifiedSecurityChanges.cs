@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Data.UniverseSelection;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework
 {
@@ -28,6 +27,6 @@ namespace QuantConnect.Algorithm.Framework
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes);
+        void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes);
     }
 }

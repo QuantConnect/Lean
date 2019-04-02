@@ -19,7 +19,6 @@ using System.Linq;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -59,7 +58,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="algorithm">The algorithm instance to create universes for</param>
         /// <returns>The universe defined by this model</returns>
-        public override IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
+        public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
             var universe = CreateCoarseFundamentalUniverse(algorithm);
             if (_filterFineData)
@@ -75,7 +74,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <returns>The coarse fundamental universe</returns>
-        public virtual Universe CreateCoarseFundamentalUniverse(QCAlgorithmFramework algorithm)
+        public virtual Universe CreateCoarseFundamentalUniverse(QCAlgorithm algorithm)
         {
             var universeSettings = _universeSettings ?? algorithm.UniverseSettings;
             var securityInitializer = _securityInitializer ?? algorithm.SecurityInitializer;
@@ -97,7 +96,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="coarse">The coarse fundamental data used to perform filtering</param>
         /// <returns>An enumerable of symbols passing the filter</returns>
-        public abstract IEnumerable<Symbol> SelectCoarse(QCAlgorithmFramework algorithm, IEnumerable<CoarseFundamental> coarse);
+        public abstract IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse);
 
         /// <summary>
         /// Defines the fine fundamental selection function.
@@ -105,7 +104,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="fine">The fine fundamental data used to perform filtering</param>
         /// <returns>An enumerable of symbols passing the filter</returns>
-        public virtual IEnumerable<Symbol> SelectFine(QCAlgorithmFramework algorithm, IEnumerable<FineFundamental> fine)
+        public virtual IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
         {
             // default impl performs no filtering of fine data
             return fine.Select(f => f.Symbol);
