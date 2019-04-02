@@ -85,7 +85,13 @@ namespace QuantConnect
             "EOSBTC",
             "XLMBTC",
             "ETCBTC",
-            "ZRXBTC"
+            "ZRXBTC",
+
+            //binance
+            "BTCUSDT",
+            "BCHUSDT",
+            "LTCUSDT",
+            "ETHUSDT"
         };
 
         /// <summary>
@@ -345,7 +351,8 @@ namespace QuantConnect
             {"XRP", "XRP"},
             {"XLM", "XLM"},
             {"ETC", "ETC"},
-            {"ZRX", "ZRX"}
+            {"ZRX", "ZRX"},
+            {"USDT", "USDT"}
         };
 
         /// <summary>
