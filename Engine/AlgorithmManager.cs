@@ -190,11 +190,9 @@ namespace QuantConnect.Lean.Engine
                     //If we couldnt find the event handler, let the user know we can't fire that event.
                     if (genericMethod == null && !hasOnDataSlice)
                     {
-                        algorithm.RunTimeError = new Exception("Data event handler not found, please create a function matching this template: public void OnData(" + config.Type.Name + " data) {  }");
-                        _algorithm.Status = AlgorithmStatus.RuntimeError;
-                        return;
+                        algorithm.Error("Data event handler not found, please create a function matching this template: public void OnData(" + config.Type.Name + " data) {  }");
                     }
-                    if (genericMethod != null)
+                    else if (genericMethod != null)
                     {
                         methodInvokers.Add(config.Type, genericMethod.DelegateForCallMethod());
                     }
