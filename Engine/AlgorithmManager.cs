@@ -187,12 +187,7 @@ namespace QuantConnect.Lean.Engine
                     //If we already have this Type-handler then don't add it to invokers again.
                     if (methodInvokers.ContainsKey(config.Type)) continue;
 
-                    //If we couldnt find the event handler, let the user know we can't fire that event.
-                    if (genericMethod == null && !hasOnDataSlice)
-                    {
-                        algorithm.Debug("Data event handler not found, please create a function matching this template: public void OnData(" + config.Type.Name + " data) {  }");
-                    }
-                    else if (genericMethod != null)
+                    if (genericMethod != null)
                     {
                         methodInvokers.Add(config.Type, genericMethod.DelegateForCallMethod());
                     }
