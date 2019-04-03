@@ -58,7 +58,7 @@ namespace QuantConnect.Lean.Engine.Results
         private double _daysProcessed;
         private double _lastDaysProcessed = 1;
         private bool _processingFinalPacket;
-        private bool _sentExceededDataPointsMessage;
+        private readonly HashSet<string> _chartSeriesExceededDataPoints = new HashSet<string>();
 
         //Processing Time:
         private readonly DateTime _startTime = DateTime.UtcNow;
@@ -689,9 +689,9 @@ namespace QuantConnect.Lean.Engine.Results
                                     //We already have this record, so just the new samples to the end:
                                     values.AddRange(series.Values);
                                 }
-                                else if(!_sentExceededDataPointsMessage)
+                                else if(!_chartSeriesExceededDataPoints.Contains(chart.Name + series.Name))
                                 {
-                                    _sentExceededDataPointsMessage = true;
+                                    _chartSeriesExceededDataPoints.Add(chart.Name + series.Name);
                                     DebugMessage($"Exceeded maximum data points per series, chart update skipped. Chart Name {update.Name}. Series name {series.Name}. " +
                                                  $"Limit is currently set at {_job.Controls.MaximumDataPointsPerChartSeries}");
                                 }
