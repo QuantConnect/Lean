@@ -82,20 +82,18 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
             var firstTick = true;
 
-            // Iterrate through all ticks and generate splits and dividend data
+            // Iterate through all ticks and generate splits and dividend data
             if (_settings.SecurityType == SecurityType.Equity)
             {
                 foreach (var tick in tickHistory)
                 {
-                    // On the first trading day write relevant starting data to map and factor files
+                    // On the first trading day write relevant starting data to factor files
                     if (firstTick)
                     {
                         DividendsSplits.Add(new FactorFileRow(tick.Time,
                             previousPriceFactor,
                             previousSplitFactor,
                             tick.Value));
-
-                        MapRows.Add(new MapFileRow(tick.Time, CurrentSymbol.Value));
                     }
 
                     // Add the split to the DividendsSplits list if we have a pending
@@ -181,9 +179,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         // 10% chance of being renamed every month
                         if (hasRename && _randomValueGenerator.NextBool(10.0))
                         {
-                            CurrentSymbol = _randomValueGenerator.NextSymbol(_settings.SecurityType, _settings.Market);
                             var randomDate = _randomValueGenerator.NextDate(tick.Time, tick.Time.AddMonths(1), (DayOfWeek)_random.Next(1, 5));
                             MapRows.Add(new MapFileRow(randomDate, CurrentSymbol.Value));
+
+                            CurrentSymbol = _randomValueGenerator.NextSymbol(_settings.SecurityType, _settings.Market);
                         }
 
                         previousMonth = tick.Time.Month;

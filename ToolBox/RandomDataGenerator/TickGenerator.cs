@@ -43,7 +43,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             if (_random.NextBool(5.0))
             {
                 current = _random.NextDate(_settings.Start, _settings.End, null);
-                Console.WriteLine($"\tSymbol: {symbol} has delayed IPO at date {current:yyyy MMMM DD}");
+                Console.WriteLine($"\tSymbol: {symbol} has delayed IPO at date {current:yyyy MMMM dd}");
             }
 
             // creates a max deviation that scales parabolically as resolution decreases (lower frequency)
