@@ -111,7 +111,6 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     return insights;
                 }
-
 				// Extract current mortgage rate, the current STD indicator value, and current SMA value
                 var rate = data[_mortgageRate].Value;
                 var deviation = _deviations * _mortgageRateStd.Current.Value;
@@ -142,12 +141,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return insights;
             }
 
-            public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
-            {
-                // Nothing needed here
-            }
-
-            public void WarmUpIndicators(QCAlgorithmFramework algorithm)
+            private void WarmUpIndicators(QCAlgorithmFramework algorithm)
             {
             	// Make a history call and update the indicators
                 algorithm.History(new[] { _mortgageRate }, _indicatorPeriod, _resolution).PushThrough(bar =>
