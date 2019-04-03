@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -26,9 +25,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Expiry Helper framework algorithm uses <see cref="Expiry"/> helper class in an Alpha Model
+    /// Expiry Helper algorithm uses <see cref="Expiry"/> helper class in an Alpha Model
     /// </summary>
-    public class ExpiryHelperAlphaModelFrameworkAlgorithm : QCAlgorithmFramework
+    public class ExpiryHelperAlphaModelFrameworkAlgorithm : QCAlgorithm
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -67,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
             private const InsightDirection _direction = InsightDirection.Up;
             private DateTime _nextUpdate = DateTime.MinValue;
 
-            public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+            public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 if (_nextUpdate > algorithm.Time)
                 {

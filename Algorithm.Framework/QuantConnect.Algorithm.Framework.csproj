@@ -218,9 +218,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Selection\UncorrelatedUniverseSelectionModel.py">
-     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-   </Content>
-    <Content Include="Selection\UniverseSelectionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Selection\QC500UniverseSelectionModel.py">

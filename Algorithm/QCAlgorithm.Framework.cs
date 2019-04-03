@@ -208,9 +208,9 @@ namespace QuantConnect.Algorithm
                 && Execution.GetType() != typeof(NullExecutionModel)
                 && BrokerageModel.AccountType == AccountType.Cash)
             {
-                throw new InvalidOperationException("These models are currently unsuitable for Cash Modeled brokerages (e.g. GDAX) and may result in unexpected trades."
+                throw new InvalidOperationException($"Non null {nameof(IExecutionModel)} and {nameof(IPortfolioConstructionModel)} are currently unsuitable for Cash Modeled brokerages (e.g. GDAX) and may result in unexpected trades."
                     + " To prevent possible user error we've restricted them to Margin trading. You can select margin account types with"
-                    + " SetBrokerage( ... AccountType.Margin)");
+                    + $" SetBrokerage( ... AccountType.Margin). Or please set them to {nameof(NullExecutionModel)}, {nameof(NullPortfolioConstructionModel)}");
             }
 
             Execution.Execute(this, riskAdjustedTargets);

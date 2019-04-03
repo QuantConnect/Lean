@@ -19,6 +19,7 @@ AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
+from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Execution import *
@@ -27,9 +28,9 @@ from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
 
 ### <summary>
-### Expiry Helper framework algorithm uses Expiry helper class in an Alpha Model
+### Expiry Helper algorithm uses Expiry helper class in an Alpha Model
 ### </summary>
-class ExpiryHelperAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
+class ExpiryHelperAlphaModelFrameworkAlgorithm(QCAlgorithm):
     '''Expiry Helper framework algorithm uses Expiry helper class in an Alpha Model'''
 
     def Initialize(self):
