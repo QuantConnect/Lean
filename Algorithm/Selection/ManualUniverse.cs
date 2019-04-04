@@ -54,6 +54,16 @@ namespace QuantConnect.Algorithm.Framework.Selection
         }
 
         /// <summary>
+        /// Creates a new instance of the <see cref="ManualUniverse"/>
+        /// </summary>
+        public ManualUniverse(SubscriptionDataConfig configuration,
+            UniverseSettings universeSettings,
+            Symbol[] symbols)
+            : base(configuration, universeSettings, Time.MaxTimeSpan, symbols)
+        {
+        }
+
+        /// <summary>
         /// Gets the subscription requests to be added for the specified security
         /// </summary>
         /// <param name="security">The security to get subscriptions for</param>
