@@ -136,6 +136,7 @@
     <Compile Include="Alphas\TripleLeveragedETFPairVolatilityDecayAlpha.cs" />
     <Compile Include="Alphas\VixDualThrustAlpha.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
+    <Compile Include="G10CurrencySelectionModelFrameworkAlgorithm.cs" />
     <Compile Include="ExpiryHelperAlphaModelFrameworkAlgorithm.cs" />
     <Compile Include="CfdTimeZonesRegressionAlgorithm.cs" />
     <Compile Include="EmightInsightCryptoCashAccountType.cs" />
