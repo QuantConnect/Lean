@@ -479,7 +479,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Console.WriteLine("Count: " + count);
             Console.WriteLine("Spool up time: " + stopwatch.Elapsed);
 
-            Assert.That(count, Is.GreaterThan(20));
+            Assert.That(count, Is.GreaterThan(15));
             Assert.IsTrue(emittedData);
         }
 
@@ -697,7 +697,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, _dataManager, _synchronizer);
 
             _algorithm.PostInitialize();
-            Thread.Sleep(200); // small handicap for the data to be pumped so TimeSlices have data of all subscriptions
+            Thread.Sleep(150); // small handicap for the data to be pumped so TimeSlices have data of all subscriptions
             return feed;
         }
 
@@ -733,6 +733,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 _algorithm.OnEndOfTimeStep();
                 _manualTimeProvider.AdvanceSeconds(1);
+                Thread.Sleep(1);
                 if (endTime <= DateTime.UtcNow)
                 {
                     feed.Exit();

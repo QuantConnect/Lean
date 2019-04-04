@@ -126,6 +126,7 @@
     <Compile Include="Alphas\AlphaModel.cs" />
     <Compile Include="Alphas\AlphaModelExtensions.cs" />
     <Compile Include="Alphas\AlphaModelPythonWrapper.cs" />
+    <Compile Include="Alphas\CompositeAlphaModel.cs" />
     <Compile Include="Alphas\IAlphaModel.cs" />
     <Compile Include="Alphas\INamedModel.cs" />
     <Compile Include="Alphas\NullAlphaModel.cs" />
