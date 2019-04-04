@@ -219,12 +219,12 @@ namespace QuantConnect.Lean.Engine.Setup
                         //Initialise the algorithm, get the required data:
                         algorithm.Initialize();
 
-                        if (algorithm.AccountCurrency != Currencies.USD)
-                        {
-                            throw new NotImplementedException(
-                                "BrokerageSetupHandler.Setup(): calling 'QCAlgorithm.SetAccountCurrency()' " +
-                                "is only supported in backtesting for now.");
-                        }
+                        //if (algorithm.AccountCurrency != Currencies.USD)
+                        //{
+                        //    throw new NotImplementedException(
+                        //        "BrokerageSetupHandler.Setup(): calling 'QCAlgorithm.SetAccountCurrency()' " +
+                        //        "is only supported in backtesting for now.");
+                        //}
 
                         if (liveJob.Brokerage != "PaperBrokerage")
                         {
