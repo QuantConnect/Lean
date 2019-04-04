@@ -113,8 +113,8 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 				// Extract current mortgage rate, the current STD indicator value, and current SMA value
                 var rate = data[_mortgageRate].Value;
-                var deviation = _deviations * _mortgageRateStd.Current.Value;
-                var sma = _mortgageRateSma.Current.Value;
+                var deviation = _deviations * _mortgageRateStd;
+                var sma = _mortgageRateSma;
 
 				// Loop through all Active Securities to emit insights
                 foreach (var security in algorithm.ActiveSecurities.Keys)

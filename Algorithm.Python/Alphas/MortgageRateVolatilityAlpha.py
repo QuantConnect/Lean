@@ -116,10 +116,6 @@ class MortgageRateVolatilityAlphaModel(AlphaModel):
             self.mortgageRateStd.Update(index[1], row['value'])
             self.mortgageRateSma.Update(index[1], row['value'])
     
-    def OnSecuritiesChanged(self, algorithm, changes):
-        ## No need to do anything here -- static Universe
-        pass
-    
 class QuandlMortgagePriceColumns(PythonQuandl):
     
     def __init__(self):
