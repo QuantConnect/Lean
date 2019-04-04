@@ -94,19 +94,18 @@ class MortgageRateVolatilityAlphaModel(AlphaModel):
         deviation = self.deviations * self.mortgageRateStd.Current.Value
         sma = self.mortgageRateSma.Current.Value
         
-        ## Loop through all Active Securities to emit insights
-        for security in algorithm.ActiveSecurities.Keys:
-            ## Mortgage rate Symbol will be in the collection, so skip it
-            if security == self.mortgageRate: continue
-            
-            ## If volatility in mortgage rates is high, then we emit an Insight to sell
-            if (mortgageRate < sma - deviation) or (mortgageRate > sma + deviation):
-                insights.append(Insight(security, self.insightDuration, InsightType.Price, InsightDirection.Down, self.insightMagnitude, None))
-            
-            ## If volatility in mortgage rates is low, then we emit an Insight to buy
-            if (mortgageRate < sma - deviation/2) or (mortgageRate > sma + deviation/2):
-                insights.append(Insight(security, self.insightDuration, InsightType.Price, InsightDirection.Up, self.insightMagnitude, None))
-
+        ## If volatility in mortgage rates is high, then we emit an Insight to sell
+        if (mortgageRate < sma - deviation) or (mortgageRate > sma + deviation):
+            ## Emit insights for all securities that are currently in the Universe,
+            ## except for the Quandl Symbol
+            insights = [Insight(security, self.insightDuration, InsightType.Price, InsightDirection.Down, self.insightMagnitude, None) \
+                        for security in algorithm.ActiveSecurities.Keys if security != self.mortgageRate]
+        
+        ## If volatility in mortgage rates is low, then we emit an Insight to buy
+        if (mortgageRate < sma - deviation/2) or (mortgageRate > sma + deviation/2):
+            insights = [Insight(security, self.insightDuration, InsightType.Price, InsightDirection.Up, self.insightMagnitude, None) \
+                        for security in algorithm.ActiveSecurities.Keys if security != self.mortgageRate]
+        
         return insights
     
     def WarmupIndicators(self, algorithm):
