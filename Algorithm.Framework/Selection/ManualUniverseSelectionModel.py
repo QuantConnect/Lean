@@ -17,7 +17,7 @@ AddReference("System")
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm.Framework")
 
-from QuantConnect import *
+from QuantConnect import Extensions, Resolution, SecurityType, Symbol, SymbolCache
 from QuantConnect.Data import SubscriptionDataConfig
 from QuantConnect.Data.Market import Tick, TradeBar
 from QuantConnect.Securities import MarketHoursDatabase
@@ -52,6 +52,8 @@ class ManualUniverseSelectionModel(UniverseSelectionModel):
         resolution = universeSettings.Resolution
         type = typeof(Tick) if resolution == Resolution.Tick else typeof(TradeBar);
 
+        universes = list()
+
         # universe per security type/market
         self.symbols = sorted(self.symbols, key=lambda s: (s.ID.Market, s.SecurityType))
         for key, grp in groupby(self.symbols, lambda s: (s.ID.Market, s.SecurityType)):
@@ -72,4 +74,6 @@ class ManualUniverseSelectionModel(UniverseSelectionModel):
                 entry = self.MarketHours.GetEntry(market, None, securityType)
 
             config = SubscriptionDataConfig(type, universeSymbol, resolution, entry.DataTimeZone, entry.ExchangeHours.TimeZone, False, False, True)
-            yield ManualUniverse(config, universeSettings, list(grp))
+            universes.append( ManualUniverse(config, universeSettings, list(grp)))
+
+        return universes

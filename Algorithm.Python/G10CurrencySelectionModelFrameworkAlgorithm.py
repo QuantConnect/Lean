@@ -26,15 +26,16 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Risk import *
-from Selection.G10CurrencySelectionModel import G10CurrencySelectionModel
+from Selection.ManualUniverseSelectionModel import ManualUniverseSelectionModel
 from datetime import timedelta
-import numpy as np
 
 ### <summary>
-### Framework algorithm that uses the G10CurrencySelectionModel
+### Framework algorithm that uses the G10CurrencySelectionModel,
+### a Universe Selection Model that inherits from ManualUniverseSelectionModel
 ### </summary>
 class G10CurrencySelectionModelFrameworkAlgorithm(QCAlgorithmFramework):
-    '''Framework algorithm that uses the G10CurrencySelectionModel'''
+    '''Framework algorithm that uses the G10CurrencySelectionModel,
+    a Universe Selection Model that inherits from ManualUniverseSelectionMode'''
 
     def Initialize(self):
         ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
@@ -47,7 +48,7 @@ class G10CurrencySelectionModelFrameworkAlgorithm(QCAlgorithmFramework):
         self.SetCash(100000)           #Set Strategy Cash
 
         # set algorithm framework models
-        self.SetUniverseSelection(G10CurrencySelectionModel())
+        self.SetUniverseSelection(self.G10CurrencySelectionModel())
         self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(minutes = 20), 0.025, None))
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
         self.SetExecution(ImmediateExecutionModel())
@@ -56,3 +57,19 @@ class G10CurrencySelectionModelFrameworkAlgorithm(QCAlgorithmFramework):
     def OnOrderEvent(self, orderEvent):
         if orderEvent.Status == OrderStatus.Filled:
             self.Debug("Purchased Stock: {0}".format(orderEvent.Symbol))
+
+    class G10CurrencySelectionModel(ManualUniverseSelectionModel):
+        '''Provides an implementation of IUniverseSelectionModel that simply subscribes to G10 currencies'''
+        def __init__(self):
+            '''Initializes a new instance of the G10CurrencySelectionModel class
+            using the algorithm's security initializer and universe settings'''
+            super().__init__([Symbol.Create(x, SecurityType.Forex, Market.Oanda)
+                             for x in [ "EURUSD",
+                                        "GBPUSD",
+                                        "USDJPY",
+                                        "AUDUSD",
+                                        "NZDUSD",
+                                        "USDCAD",
+                                        "USDCHF",
+                                        "NOKUSD",
+                                        "SEKUSD" ]])

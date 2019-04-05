@@ -21,11 +21,13 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Orders;
 using System;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Framework algorithm that uses the G10CurrencySelectionModel
+    /// Framework algorithm that uses the G10CurrencySelectionModel,
+    /// a Universe Selection Model that inherits from ManualUniverseSelectionModel
     /// </summary>
     public class G10CurrencySelectionModelFrameworkAlgorithm : QCAlgorithmFramework
     {
@@ -54,6 +56,29 @@ namespace QuantConnect.Algorithm.CSharp
             if (orderEvent.Status.IsFill())
             {
                 Debug($"Purchased Stock: {orderEvent.Symbol}");
+            }
+        }
+
+        private class G10CurrencySelectionModel : ManualUniverseSelectionModel
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="G10CurrencySelectionModel"/> class
+            /// using the algorithm's security initializer and universe settings
+            /// </summary>
+            public G10CurrencySelectionModel()
+                : base(new[]
+                {
+                "EURUSD",
+                "GBPUSD",
+                "USDJPY",
+                "AUDUSD",
+                "NZDUSD",
+                "USDCAD",
+                "USDCHF",
+                "NOKUSD",
+                "SEKUSD"
+                }.Select(x => QuantConnect.Symbol.Create(x, SecurityType.Forex, Market.Oanda)))
+            {
             }
         }
     }
