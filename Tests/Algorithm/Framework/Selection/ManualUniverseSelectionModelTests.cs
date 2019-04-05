@@ -16,7 +16,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Algorithm.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Selection;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Selection
@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             };
 
             var model = new ManualUniverseSelectionModel(symbols);
-            var universe = model.CreateUniverses(new QCAlgorithmFramework()).Single();
+            var universe = model.CreateUniverses(new QCAlgorithm()).Single();
             var selectedSymbols = universe.SelectSymbols(default(DateTime), null).ToList();
 
             Assert.AreEqual(1, selectedSymbols.Count);

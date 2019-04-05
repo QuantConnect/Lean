@@ -21,14 +21,13 @@ AddReference("QuantConnect.Indicators")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import QCAlgorithmFrameworkBridge
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Indicators import *
 from datetime import timedelta
 
 ### <summary>
 ### Demonstration algorithm showing how to easily convert an old algorithm into the framework.
-### 
+###
 ###  1. Make class derive from QCAlgorithmFrameworkBridge instead of QCAlgorithm.
 ###  2. When making orders, also create insights for the correct direction (up/down), can also set insight prediction period/magnitude/direction
 ###  3. Profit :)
@@ -36,7 +35,7 @@ from datetime import timedelta
 ###  <meta name="tag" content="indicators" />
 ###  <meta name="tag" content="indicator classes" />
 ###  <meta name="tag" content="plotting indicators" />
-class ConvertToFrameworkAlgorithm(QCAlgorithmFrameworkBridge):   # 1. Derive from QCAlgorithmFrameworkBridge
+class ConvertToFrameworkAlgorithm(QCAlgorithm):   # 1. Derive from QCAlgorithmFrameworkBridge
     '''Demonstration algorithm showing how to easily convert an old algorithm into the framework.'''
 
     FastEmaPeriod = 12

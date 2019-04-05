@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -33,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="indicators" />
     /// <meta name="tag" content="indicator classes" />
     /// <meta name="tag" content="plotting indicators" />
-    public class ConvertToFrameworkAlgorithm : QCAlgorithmFrameworkBridge, IRegressionAlgorithmDefinition  // 1. Derive from QCAlgorithmFrameworkBridge
+    public class ConvertToFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition  // 1. Derive from QCAlgorithmFrameworkBridge
     {
         private MovingAverageConvergenceDivergence _macd;
         private readonly string _symbol = "SPY";

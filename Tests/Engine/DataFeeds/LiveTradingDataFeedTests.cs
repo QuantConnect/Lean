@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = RunDataFeed(forex: new List<string> { Symbols.EURUSD });
 
             var emittedData = false;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(10), true, ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
                 if (ts.Slice.HasData)
                 {
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = RunDataFeed(equities: equities, forex: forex);
 
             var emittedData = false;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts =>
             {
                 var delta = (DateTime.UtcNow - ts.Time).TotalMilliseconds;
                 var values = ts.Slice.Keys.Select(x => x.Value).ToList();
@@ -479,7 +479,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Console.WriteLine("Count: " + count);
             Console.WriteLine("Spool up time: " + stopwatch.Elapsed);
 
-            Assert.That(count, Is.GreaterThan(20));
+            Assert.That(count, Is.GreaterThan(15));
             Assert.IsTrue(emittedData);
         }
 
@@ -660,13 +660,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var time = _manualTimeProvider.GetUtcNow();
                 if (time == lastTime) return Enumerable.Empty<BaseData>();
                 lastTime = time;
+                var tickTime = lastTime.AddMinutes(-1).ConvertFromUtc(TimeZones.NewYork);
                 return fdqh.Subscriptions.Where(symbol => !_algorithm.UniverseManager.ContainsKey(symbol)) // its not a universe
-                    .Select(symbol => new Tick(lastTime.ConvertFromUtc(TimeZones.NewYork), symbol, 1, 2)
+                    .Select(symbol => new Tick(tickTime, symbol, 1, 2)
                     {
                         Quantity = 1,
                         // Symbol could not be in the Securities collections for the custom Universe tests. AlgorithmManager is in charge of adding them, and we are not executing that code here.
                         TickType = _algorithm.Securities.ContainsKey(symbol) ? _algorithm.Securities[symbol].SubscriptionDataConfig.TickType : TickType.Trade
-                    });
+                    }).ToList();
             });
 
             // job is used to send into DataQueueHandler
@@ -697,7 +698,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             _algorithm.PostInitialize();
             Thread.Sleep(150); // small handicap for the data to be pumped so TimeSlices have data of all subscriptions
-
             return feed;
         }
 
@@ -733,6 +733,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
                 _algorithm.OnEndOfTimeStep();
                 _manualTimeProvider.AdvanceSeconds(1);
+                Thread.Sleep(1);
                 if (endTime <= DateTime.UtcNow)
                 {
                     feed.Exit();

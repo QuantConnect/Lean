@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// The stock must have positive previous-day close price
         /// The stock must have positive volume on the previous trading day
         /// </summary>
-        public override IEnumerable<Symbol> SelectCoarse(QCAlgorithmFramework algorithm, IEnumerable<CoarseFundamental> coarse)
+        public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
             if (algorithm.Time.Month == _lastMonth)
             {
@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// At least half a year since its initial public offering
         /// The stock's market cap must be greater than 500 million
         /// </summary>
-        public override IEnumerable<Symbol> SelectFine(QCAlgorithmFramework algorithm, IEnumerable<FineFundamental> fine)
+        public override IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
         {
             if (algorithm.Time.Month == _lastMonth)
             {
@@ -99,7 +99,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
             _lastMonth = algorithm.Time.Month;
 
             // The company's headquarter must in the U.S.
-            // The stock must be traded on either the NYSE or NASDAQ 
+            // The stock must be traded on either the NYSE or NASDAQ
             // At least half a year since its initial public offering
             // The stock's market cap must be greater than 500 million
             var filteredFine =
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
 
             var percent = _numberOfSymbolsFine / (double)filteredFine.Count;
 
-            // select stocks with top dollar volume in every single sector 
+            // select stocks with top dollar volume in every single sector
             var topFineBySector =
                 (from x in filteredFine
                  // Group by sector

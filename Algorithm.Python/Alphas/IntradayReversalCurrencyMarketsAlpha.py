@@ -24,7 +24,6 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.Consolidators import *
 from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework import QCAlgorithmFramework
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Selection import ManualUniverseSelectionModel
 from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
@@ -32,7 +31,7 @@ from datetime import datetime, timedelta, time
 
 #
 # Reversal strategy that goes long when price crosses below SMA and Short when price crosses above SMA.
-# The trading strategy is implemented only between 10AM - 3PM (NY time). Research suggests this is due to 
+# The trading strategy is implemented only between 10AM - 3PM (NY time). Research suggests this is due to
 # institutional trades during market hours which need hedging with the USD. Source paper:
 # LeBaron, Zhao: Intraday Foreign Exchange Reversals
 # http://people.brandeis.edu/~blebaron/wps/fxnyc.pdf
@@ -41,7 +40,7 @@ from datetime import datetime, timedelta, time
 # This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
 #
 
-class IntradayReversalCurrencyMarketsAlpha(QCAlgorithmFramework):
+class IntradayReversalCurrencyMarketsAlpha(QCAlgorithm):
 
     def Initialize(self):
 
@@ -72,7 +71,7 @@ class IntradayReversalCurrencyMarketsAlpha(QCAlgorithmFramework):
         self.SetRiskManagement(NullRiskManagementModel())
 
         #Set WarmUp for Indicators
-        self.SetWarmUp(20) 
+        self.SetWarmUp(20)
 
 
 class IntradayReversalAlphaModel(AlphaModel):
@@ -89,7 +88,7 @@ class IntradayReversalAlphaModel(AlphaModel):
         self.cache = {} # Cache for SymbolData
         self.Name = 'IntradayReversalAlphaModel'
 
-    def Update(self, algorithm, data): 
+    def Update(self, algorithm, data):
         # Set the time to close all positions at 3PM
         timeToClose = algorithm.Time.replace(hour=15, minute=1, second=0)
 
@@ -117,7 +116,7 @@ class IntradayReversalAlphaModel(AlphaModel):
 
         return insights
 
-    def OnSecuritiesChanged(self, algorithm, changes): 
+    def OnSecuritiesChanged(self, algorithm, changes):
         '''Handle creation of the new security and its cache class.
         Simplified in this example as there is 1 asset.'''
         for security in changes.AddedSecurities:

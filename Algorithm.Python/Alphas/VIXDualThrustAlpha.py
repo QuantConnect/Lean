@@ -26,7 +26,6 @@ from QuantConnect.Data.Market import TradeBar
 from QuantConnect.Indicators import RollingWindow
 from QuantConnect.Brokerages import BrokerageName
 from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework import QCAlgorithmFramework
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Selection import ManualUniverseSelectionModel
 from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
@@ -36,12 +35,12 @@ from datetime import timedelta
 
 #
 # This is a demonstration algorithm. It trades UVXY.
-# Dual Thrust alpha model is used to produce insights. 
+# Dual Thrust alpha model is used to produce insights.
 # Those input parameters have been chosen that gave acceptable results on a series
 # of random backtests run for the period from Oct, 2016 till Feb, 2019.
 #
 
-class VIXDualThrustAlpha(QCAlgorithmFramework):
+class VIXDualThrustAlpha(QCAlgorithm):
 
     def Initialize(self):
 

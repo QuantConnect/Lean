@@ -40,3 +40,5 @@ using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework;
 using QuantConnect.Indicators;
 using QuantConnect.Jupyter;
+using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
+using QCAlgorithmFrameworkBridge = QuantConnect.Algorithm.QCAlgorithm;

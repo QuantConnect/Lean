@@ -43,10 +43,10 @@ from datetime import datetime, timedelta
 # This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
 #
 
-class TriangleExchangeRateArbitrageAlgorithm(QCAlgorithmFramework):
+class TriangleExchangeRateArbitrageAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        
+
         self.SetStartDate(2019, 2, 1)   #Set Start Date
         self.SetCash(100000)           #Set Strategy Cash
 

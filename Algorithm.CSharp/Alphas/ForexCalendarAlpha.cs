@@ -14,7 +14,6 @@
 */
 
 using NodaTime;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -22,7 +21,6 @@ using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities.Forex;
 using System;
@@ -35,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     /// This demonstration alpha reads the DailyFx calendar and provides insights based upon
     /// the news outlook for the country associated currency pairs
     ///</summary>
-    public class ForexCalendarAlpha : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class ForexCalendarAlpha : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -129,7 +127,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             Name = "FxCalendarTrigger";
         }
 
-        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
             var insights = new List<Insight>();
             var period = TimeSpan.FromMinutes(5);

@@ -34,7 +34,7 @@ from datetime import date, timedelta
 ### This example algorithm defines its own custom coarse/fine fundamental selection model
 ### with equally weighted portfolio and a maximum sector exposure.
 ### </summary>
-class SectorExposureRiskFrameworkAlgorithm(QCAlgorithmFramework):
+class SectorExposureRiskFrameworkAlgorithm(QCAlgorithm):
     '''This example algorithm defines its own custom coarse/fine fundamental selection model
 ### with equally weighted portfolio and a maximum sector exposure.'''
 

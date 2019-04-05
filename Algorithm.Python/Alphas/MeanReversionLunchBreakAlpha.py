@@ -23,27 +23,26 @@ from QuantConnect import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework import QCAlgorithmFramework
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
 from QuantConnect.Algorithm.Framework.Selection import CoarseFundamentalUniverseSelectionModel
 
 #
 # Academic research suggests that stock market participants generally place their orders at the market open and close.
-# Intraday trading volume is J-Shaped, where the minimum trading volume of the day is during lunch-break. Stocks become 
+# Intraday trading volume is J-Shaped, where the minimum trading volume of the day is during lunch-break. Stocks become
 # more volatile as order flow is reduced and tend to mean-revert during lunch-break.
 #
 # This alpha aims to capture the mean-reversion effect of ETFs during lunch-break by ranking 20 ETFs
-# on their return between the close of the previous day to 12:00 the day after and predicting mean-reversion 
+# on their return between the close of the previous day to 12:00 the day after and predicting mean-reversion
 # in price during lunch-break.
 #
-# Source:  Lunina, V. (June 2011). The Intraday Dynamics of Stock Returns and Trading Activity: Evidence from OMXS 30 (Master's Essay, Lund University). 
+# Source:  Lunina, V. (June 2011). The Intraday Dynamics of Stock Returns and Trading Activity: Evidence from OMXS 30 (Master's Essay, Lund University).
 # Retrieved from http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=1973850&fileOId=1973852
 #
 # This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
 #
 
-class MeanReversionLunchBreakAlpha(QCAlgorithmFramework):
+class MeanReversionLunchBreakAlpha(QCAlgorithm):
 
     def Initialize(self):
 
@@ -78,11 +77,11 @@ class MeanReversionLunchBreakAlpha(QCAlgorithmFramework):
 
 
 class MeanReversionLunchBreakAlphaModel(AlphaModel):
-    '''Uses the price return between the close of previous day to 12:00 the day after to 
-    predict mean-reversion of stock price during lunch break and creates direction prediction 
+    '''Uses the price return between the close of previous day to 12:00 the day after to
+    predict mean-reversion of stock price during lunch break and creates direction prediction
     for insights accordingly.'''
 
-    def __init__(self, *args, **kwargs): 
+    def __init__(self, *args, **kwargs):
         lookback = kwargs['lookback'] if 'lookback' in kwargs else 1
         self.resolution = Resolution.Hour
         self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), lookback)

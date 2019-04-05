@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         /// <param name="algorithm">The algorithm instance to create universes for</param>
         /// <returns>The universes to be used by the algorithm</returns>
-        public override IEnumerable<Universe> CreateUniverses(QCAlgorithmFramework algorithm)
+        public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
             _nextRefreshTimeUtc = algorithm.UtcTime + _refreshInterval;
 
@@ -121,7 +121,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="initializer">Performs extra initialization (such as setting models) after we create a new security object</param>
         /// <returns><see cref="Option"/> for the given symbol</returns>
         [Obsolete("This method is obsolete because SecurityInitializer is obsolete and will not be used.")]
-        protected virtual Option CreateOptionChainSecurity(QCAlgorithmFramework algorithm, Symbol symbol, UniverseSettings settings, ISecurityInitializer initializer)
+        protected virtual Option CreateOptionChainSecurity(QCAlgorithm algorithm, Symbol symbol, UniverseSettings settings, ISecurityInitializer initializer)
         {
             return CreateOptionChainSecurity(
                 algorithm.SubscriptionManager.SubscriptionDataConfigService,
@@ -169,7 +169,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="algorithm">The algorithm instance to create universes for</param>
         /// <param name="symbol">Symbol of the option</param>
         /// <returns><see cref="OptionChainUniverse"/> for the given symbol</returns>
-        private OptionChainUniverse CreateOptionChain(QCAlgorithmFramework algorithm, Symbol symbol)
+        private OptionChainUniverse CreateOptionChain(QCAlgorithm algorithm, Symbol symbol)
         {
             if (symbol.SecurityType != SecurityType.Option)
             {

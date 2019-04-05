@@ -157,14 +157,6 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Gets a flag indicating whether or not this algorithm uses the QCAlgorithmFramework
-        /// </summary>
-        bool IsFrameworkAlgorithm
-        {
-            get;
-        }
-
-        /// <summary>
         /// Gets whether or not this algorithm is still warming up
         /// </summary>
         bool IsWarmingUp
@@ -444,7 +436,7 @@ namespace QuantConnect.Interfaces
         void OnMarginCall(List<SubmitOrderRequest> requests);
 
         /// <summary>
-        /// Margin call warning event handler. This method is called when Portoflio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue
+        /// Margin call warning event handler. This method is called when Portfolio.MarginRemaining is under 5% of your Portfolio.TotalPortfolioValue
         /// </summary>
         void OnMarginCallWarning();
 
@@ -671,12 +663,10 @@ namespace QuantConnect.Interfaces
         void SetCurrentSlice(Slice slice);
 
         /// <summary>
-        /// Will emit a new <see cref="Insight"/> based on the given
-        /// <see cref="OrderEvent"/>
+        /// Sets the order event provider
         /// </summary>
-        /// <remarks>To be called before updating the <see cref="Portfolio"/></remarks>
-        /// <param name="orderEvent">The <see cref="OrderEvent"/> from which
-        /// the new <see cref="Insight"/> will be created</param>
-        void EmitInsightBasedOnFill(OrderEvent orderEvent);
+        /// <param name="newOrderEvent">The order event provider</param>
+        /// <remarks>Will be called before the <see cref="SecurityPortfolioManager"/></remarks>
+        void SetOrderEventProvider(IOrderEventProvider newOrderEvent);
     }
 }

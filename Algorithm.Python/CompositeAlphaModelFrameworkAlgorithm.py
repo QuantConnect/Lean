@@ -34,7 +34,7 @@ import numpy as np
 ### <summary>
 ### Show cases how to use the CompositeAlphaModel to define.
 ### </summary>
-class CompositeAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
+class CompositeAlphaModelFrameworkAlgorithm(QCAlgorithm):
     '''Show cases how to use the CompositeAlphaModel to define.'''
 
     def Initialize(self):

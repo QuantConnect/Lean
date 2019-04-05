@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -34,11 +33,11 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 {
     /// <summary>
     /// This is a demonstration algorithm. It trades UVXY.
-    /// Dual Thrust alpha model is used to produce insights. 
+    /// Dual Thrust alpha model is used to produce insights.
     /// Those input parameters have been chosen that gave acceptable results on a series
     /// of random backtests run for the period from Oct, 2016 till Feb, 2019.
     /// </summary>
-    class VIXDualThrustAlpha : QCAlgorithmFramework
+    class VIXDualThrustAlpha : QCAlgorithm
     {
         // -- STRATEGY INPUT PARAMETERS --
         private decimal _k1 = 0.63m;
@@ -53,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             SetStartDate(2016, 10, 01);
             SetSecurityInitializer(s => s.SetFeeModel(new ConstantFeeModel(0m)));
             SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
-            
+
             // Universe Selection
             UniverseSettings.Resolution = Resolution.Minute;   // it's minute by default, but lets leave this param here
             var symbols = new[] { QuantConnect.Symbol.Create("UVXY", SecurityType.Equity, Market.USA) };
@@ -131,7 +130,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
         /// <returns>The new insights generated</returns>
-        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
             var insights = new List<Insight>();
 
@@ -174,7 +173,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
             // added
             foreach (var added in changes.AddedSecurities)
@@ -229,7 +228,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             // current range value
             public decimal Range { get; private set; }
 
-            // upper Line 
+            // upper Line
             public decimal UpperLine { get; private set; }
 
             // lower Line
@@ -260,7 +259,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 // event fired at new consolidated trade bar
                 _consolidator.DataConsolidated += (sender, consolidated) =>
                 {
-                    // add new tradebar to 
+                    // add new tradebar to
                     _rangeWindow.Add(consolidated);
 
                     if (IsReady)

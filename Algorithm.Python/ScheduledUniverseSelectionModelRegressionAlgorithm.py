@@ -29,7 +29,7 @@ from datetime import datetime, timedelta
 ### <summary>
 ### Regression algorithm for testing ScheduledUniverseSelectionModel scheduling functions.
 ### </summary>
-class ScheduledUniverseSelectionModelRegressionAlgorithm(QCAlgorithmFramework):
+class ScheduledUniverseSelectionModelRegressionAlgorithm(QCAlgorithm):
     '''Regression algorithm for testing ScheduledUniverseSelectionModel scheduling functions.'''
 
     def Initialize(self):

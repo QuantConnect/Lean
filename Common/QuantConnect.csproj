@@ -257,6 +257,7 @@
     <Compile Include="Securities\IdentityCurrencyConverter.cs" />
     <Compile Include="Securities\AccountCurrencyImmediateSettlementModel.cs" />
     <Compile Include="Securities\InitialMarginRequiredForOrderParameters.cs" />
+    <Compile Include="Securities\IOrderEventProvider.cs" />
     <Compile Include="Securities\ReservedBuyingPowerForPosition.cs" />
     <Compile Include="Securities\ReservedBuyingPowerForPositionParameters.cs" />
     <Compile Include="Securities\SecurityService.cs" />

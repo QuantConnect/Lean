@@ -38,7 +38,7 @@ from Portfolio.MeanVarianceOptimizationPortfolioConstructionModel import *
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="trading and orders" />
-class MeanVarianceOptimizationFrameworkAlgorithm(QCAlgorithmFramework):
+class MeanVarianceOptimizationFrameworkAlgorithm(QCAlgorithm):
     '''Mean Variance Optimization algorithm.'''
 
     def Initialize(self):

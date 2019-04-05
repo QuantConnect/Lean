@@ -13,14 +13,12 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders.Fees;
 using System;
 using System.Collections.Generic;
@@ -29,16 +27,16 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 {
     /// <summary>
     /// Leveraged ETFs (LETF) promise a fixed leverage ratio with respect to an underlying asset or an index.
-    /// A Triple-Leveraged ETF allows speculators to amplify their exposure to the daily returns of an underlying index by a factor of 3. 
+    /// A Triple-Leveraged ETF allows speculators to amplify their exposure to the daily returns of an underlying index by a factor of 3.
     ///
     /// Increased volatility generally decreases the value of a LETF over an extended period of time as daily compounding is amplified.
     ///
     /// This alpha emits short-biased insight to capitalize on volatility decay for each listed pair of TL-ETFs, by rebalancing the
     /// ETFs with equal weights each day.
     ///
-    /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha. 
+    /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
     /// </summary>
-    public class TripleLeveragedETFPairVolatilityDecayAlpha : QCAlgorithmFramework
+    public class TripleLeveragedETFPairVolatilityDecayAlpha : QCAlgorithm
     {
         public override void Initialize()
         {
@@ -91,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 Name = "RebalancingTripleLeveragedETFAlphaModel";
             }
 
-            public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+            public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 return Insight.Group(new[]
                 {

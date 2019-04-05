@@ -13,14 +13,12 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Orders.Fees;
 using System;
@@ -42,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     ///
     /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
     /// </summary>
-    public class ShareClassMeanReversionAlpha : QCAlgorithmFramework
+    public class ShareClassMeanReversionAlpha : QCAlgorithm
     {
         public override void Initialize()
         {
@@ -102,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 _positionWindow = new RollingWindow<decimal>(2);
             }
 
-            public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+            public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 // Check to see if either ticker will return a NoneBar, and skip the data slice if so
                 if (data.Bars.Count < 2)
@@ -158,7 +156,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             /// Calculate Alpha and Beta, the initial number of shares for each security needed to achieve a 50/50 weighting
             /// </summary>
             /// <param name="algorithm"></param>
-            private void CalculateAlphaBeta(QCAlgorithmFramework algorithm)
+            private void CalculateAlphaBeta(QCAlgorithm algorithm)
             {
                 _alpha = algorithm.CalculateOrderQuantity(_longSymbol, 0.5);
                 _beta = algorithm.CalculateOrderQuantity(_shortSymbol, 0.5);

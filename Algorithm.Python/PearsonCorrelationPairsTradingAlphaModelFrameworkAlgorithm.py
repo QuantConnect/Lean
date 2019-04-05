@@ -30,7 +30,7 @@ from QuantConnect.Algorithm.Framework.Selection import *
 ### This model extendes BasePairsTradingAlphaModel and uses Pearson correlation
 ### to rank the pairs trading candidates and use the best candidate to trade.
 ### </summary>
-class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithmFramework):
+class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm(QCAlgorithm):
     '''Framework algorithm that uses the PearsonCorrelationPairsTradingAlphaModel.
     This model extendes BasePairsTradingAlphaModel and uses Pearson correlation
     to rank the pairs trading candidates and use the best candidate to trade.'''

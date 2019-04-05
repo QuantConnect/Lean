@@ -84,7 +84,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public IPortfolioTarget Target
         {
-            get; internal set;
+            get; set;
         }
 
         /// <summary>

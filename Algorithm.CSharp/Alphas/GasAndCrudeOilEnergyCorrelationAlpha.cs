@@ -15,7 +15,6 @@
 
 using Accord.Math;
 using Accord.Statistics;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -44,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
     /// sourced so the community and client funds can see an example of an alpha.
     ///</summary>
-    public class GasAndCrudeOilEnergyCorrelationAlpha : QCAlgorithmFramework
+    public class GasAndCrudeOilEnergyCorrelationAlpha : QCAlgorithm
     {
         public override void Initialize()
         {
@@ -113,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 _predictionInterval = resolution.ToTimeSpan().Multiply(lookback);
             }
 
-            public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+            public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 if (_nextUpdate == DateTime.MinValue || algorithm.Time > _nextUpdate)
                 {
@@ -179,7 +178,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 }
             }
 
-            public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+            public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
             {
                 foreach (var removed in changes.RemovedSecurities)
                 {
@@ -286,7 +285,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             /// </summary>
             /// <param name="algorithm">The algorithm instance</param>
             /// <param name="targets">The portfolio targets to be ordered</param>
-            public override void Execute(QCAlgorithmFramework algorithm, IPortfolioTarget[] targets)
+            public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
             {
                 _targetsCollection.AddRange(targets);
 

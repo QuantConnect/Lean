@@ -36,7 +36,7 @@ from datetime import date, timedelta
 ### Basic template futures framework algorithm uses framework components
 ### to define an algorithm that trades futures.
 ### </summary>
-class BasicTemplateFuturesFrameworkAlgorithm(QCAlgorithmFramework):
+class BasicTemplateFuturesFrameworkAlgorithm(QCAlgorithm):
 
     def Initialize(self):
 
@@ -83,7 +83,7 @@ class ConstantFutureContractAlphaModel(ConstantAlphaModel):
         return super().ShouldEmitInsight(utcTime, symbol)
 
 class SingleSharePortfolioConstructionModel(PortfolioConstructionModel):
-    '''Portoflio construction model that sets target quantities to 1 for up insights and -1 for down insights'''
+    '''Portfolio construction model that sets target quantities to 1 for up insights and -1 for down insights'''
     def CreateTargets(self, algorithm, insights):
         targets = []
         for insight in insights:

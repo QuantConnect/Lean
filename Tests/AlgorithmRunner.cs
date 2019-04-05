@@ -21,7 +21,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using NodaTime;
 using NUnit.Framework;
-using QuantConnect.Algorithm.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -185,7 +185,7 @@ namespace QuantConnect.Tests
             public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
             {
                 Algorithm = base.CreateAlgorithmInstance(algorithmNodePacket, assemblyPath);
-                var framework = Algorithm as QCAlgorithmFramework;
+                var framework = Algorithm as QCAlgorithm;
                 if (framework != null)
                 {
                     framework.DebugMode = true;

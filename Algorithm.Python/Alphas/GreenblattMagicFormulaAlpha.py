@@ -20,7 +20,7 @@ AddReference("QuantConnect.Algorithm.Framework")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Orders.Fees import ConstantFeeModel 
+from QuantConnect.Orders.Fees import ConstantFeeModel
 from QuantConnect.Data.UniverseSelection import *
 from QuantConnect.Indicators import *
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
@@ -32,7 +32,7 @@ from itertools import chain
 #
 # This alpha picks stocks according to Joel Greenblatt's Magic Formula.
 # First, each stock is ranked depending on the relative value of the ratio EV/EBITDA. For example, a stock
-# that has the lowest EV/EBITDA ratio in the security universe receives a score of one while a stock that has 
+# that has the lowest EV/EBITDA ratio in the security universe receives a score of one while a stock that has
 # the tenth lowest EV/EBITDA score would be assigned 10 points.
 #
 # Then, each stock is ranked and given a score for the second valuation ratio, Return on Capital (ROC).
@@ -45,7 +45,7 @@ from itertools import chain
 # sourced so the community and client funds can see an example of an alpha.
 #
 
-class GreenblattMagicFormulaAlpha(QCAlgorithmFramework):
+class GreenblattMagicFormulaAlpha(QCAlgorithm):
     ''' Alpha Streams: Benchmark Alpha: Pick stocks according to Joel Greenblatt's Magic Formula'''
 
     def Initialize(self):
@@ -74,7 +74,7 @@ class GreenblattMagicFormulaAlpha(QCAlgorithmFramework):
 class RateOfChangeAlphaModel(AlphaModel):
     '''Uses Rate of Change (ROC) to create magnitude prediction for insights.'''
 
-    def __init__(self, *args, **kwargs): 
+    def __init__(self, *args, **kwargs):
         self.lookback = kwargs.get('lookback', 1)
         self.resolution = kwargs.get('resolution', Resolution.Daily)
         self.predictionInterval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), self.lookback)
@@ -83,7 +83,7 @@ class RateOfChangeAlphaModel(AlphaModel):
     def Update(self, algorithm, data):
         insights = []
         for symbol, symbolData in self.symbolDataBySymbol.items():
-            if symbolData.CanEmit: 
+            if symbolData.CanEmit:
                 insights.append(Insight.Price(symbol, self.predictionInterval, InsightDirection.Up, symbolData.Return, None))
         return insights
 
@@ -148,13 +148,13 @@ class SymbolData:
 
 
 class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionModel):
-    '''Defines a universe according to Joel Greenblatt's Magic Formula, as a universe selection model for the framework algorithm. 
+    '''Defines a universe according to Joel Greenblatt's Magic Formula, as a universe selection model for the framework algorithm.
        From the universe QC500, stocks are ranked using the valuation ratios, Enterprise Value to EBITDA (EV/EBITDA) and Return on Assets (ROA).
     '''
 
     def __init__(self,
                  filterFineData = True,
-                 universeSettings = None, 
+                 universeSettings = None,
                  securityInitializer = None):
         '''Initializes a new default instance of the MagicFormulaUniverseSelectionModel'''
         super().__init__(filterFineData, universeSettings, securityInitializer)
@@ -226,10 +226,10 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
             value = sorted(value, key=lambda x: self.dollarVolumeBySymbol[x.Symbol], reverse = True)
             myDict[key] = value[:ceil(len(value) * percent)]
 
-        # stocks in QC500 universe 
+        # stocks in QC500 universe
         topFine = chain.from_iterable(myDict.values())
 
-        #  Magic Formula: 
+        #  Magic Formula:
         ## Rank stocks by Enterprise Value to EBITDA (EV/EBITDA)
         ## Rank subset of previously ranked stocks (EV/EBITDA), using the valuation ratio Return on Assets (ROA)
 

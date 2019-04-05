@@ -36,7 +36,7 @@ import numpy as np
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="trading and orders" />
-class BasicTemplateFrameworkAlgorithm(QCAlgorithmFramework):
+class BasicTemplateFrameworkAlgorithm(QCAlgorithm):
     '''Basic template framework algorithm uses framework components to define the algorithm.'''
 
     def Initialize(self):

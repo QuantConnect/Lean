@@ -28,7 +28,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// The pass this information back to the algorithm portfolio and ensure the cash and portfolio are synchronized.
     /// </summary>
     [InheritedExport(typeof(ITransactionHandler))]
-    public interface ITransactionHandler : IOrderProcessor
+    public interface ITransactionHandler : IOrderProcessor, IOrderEventProvider
     {
         /// <summary>
         /// Boolean flag indicating the thread is busy.

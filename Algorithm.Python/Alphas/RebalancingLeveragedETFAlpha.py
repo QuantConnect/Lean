@@ -29,7 +29,7 @@ from decimal import Decimal
 ### <meta name="tag" content="alphastream" />
 ### <meta name="tag" content="etf" />
 ### <meta name="tag" content="algorithm framework" />
-class RebalancingLeveragedETFAlpha(QCAlgorithmFramework):
+class RebalancingLeveragedETFAlpha(QCAlgorithm):
     ''' Alpha Streams: Benchmark Alpha: Leveraged ETF Rebalancing
         Strategy by Prof. Shum, reposted by Ernie Chan.
         Source: http://epchan.blogspot.com/2012/10/a-leveraged-etfs-strategy.html'''

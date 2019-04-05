@@ -14,7 +14,7 @@
 
 '''
     The motivating idea for this Alpha Model is that a large price gap (here we use true outliers --
-    price gaps that whose absolutely values are greater than 3 * Volatility) is due to rebound 
+    price gaps that whose absolutely values are greater than 3 * Volatility) is due to rebound
     back to an appropriate price or at least retreat from its brief extreme. Using a Coarse Universe selection
     function, the algorithm selects the top x-companies by Dollar Volume (x can be any number you choose)
     to trade with, and then uses the Standard Deviation of the 100 most-recent closing prices to determine
@@ -38,7 +38,7 @@ from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Orders.Fees import ConstantFeeModel
-from QuantConnect.Algorithm.Framework.Selection import * 
+from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Indicators import RollingWindow, SimpleMovingAverage
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, EqualWeightingPortfolioConstructionModel
@@ -46,38 +46,38 @@ from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, EqualWei
 import numpy as np
 from datetime import timedelta, datetime
 
-class PriceGapMeanReversionAlpha(QCAlgorithmFramework):
+class PriceGapMeanReversionAlpha(QCAlgorithm):
 
     def Initialize(self):
-        
+
         self.SetStartDate(2018, 1, 1)   #Set Start Date
         self.SetCash(100000)           #Set Strategy Cash
 
         ## Initialize variables to be used in controlling frequency of universe selection
         self.week = None
-        self.symbols = None 
-        
+        self.symbols = None
+
         self.SetWarmUp(100)
-        
-        ## Manual Universe Selection 
+
+        ## Manual Universe Selection
         self.SetUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseSelectionFunction))
-        
+
         ## Set trading fees to $0
         self.SetSecurityInitializer(lambda security: security.SetFeeModel(ConstantFeeModel(0)))
-        
+
         ## Set custom Alpha Model
         self.SetAlpha(PriceGapMeanReversionAlphaModel())
-        
+
         ## Set equal-weighting Portfolio Construction Model
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
-        
+
         ## Set Execution Model
         self.SetExecution(ImmediateExecutionModel())
-        
+
         ## Set Risk Management Model
         self.SetRiskManagement(NullRiskManagementModel())
-        
-    
+
+
     def CoarseSelectionFunction(self, coarse):
         ## If it isn't a new week, return the same symbols
         current_week = self.Time.isocalendar()[1]
@@ -90,8 +90,8 @@ class PriceGapMeanReversionAlpha(QCAlgorithmFramework):
         self.symbols = [ x.Symbol for x in sortedByDollarVolume[:25] ]
         return self.symbols
 
-        
-        
+
+
 class PriceGapMeanReversionAlphaModel:
 
     def __init__(self, *args, **kwargs):
@@ -99,26 +99,26 @@ class PriceGapMeanReversionAlphaModel:
         self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Minute
         self.prediction_interval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), 5) ## Arbitrary
         self.symbolDataBySymbol = {}
-        
+
     def Update(self, algorithm, data):
         insights = []
-        
+
         ## Loop through all Symbol Data objects
         for symbol, symbolData in self.symbolDataBySymbol.items():
             if symbol not in data.Keys:   ## Skip this slice if the data dictionary doesn't contain the symbol
                 continue
-            
+
             security = algorithm.Securities[symbol]
-            
+
             ## Update the symbolData properties
             if not symbolData.Update(data, security): return insights
-            
+
             ## Evaluate whether or not the price jump is expected to rebound up or return down, and emit insights accordingly
             if symbolData.DownTrend:
                 insights.append(Insight(symbol, self.prediction_interval, InsightType.Price, InsightDirection.Down, symbolData.PriceJump, None))
             elif symbolData.UpTrend:
                 insights.append(Insight(symbol, self.prediction_interval, InsightType.Price, InsightDirection.Up, symbolData.PriceJump, None))
-            
+
         return insights
 
     def OnSecuritiesChanged(self, algorithm, changes):
@@ -150,17 +150,17 @@ class SymbolData:
 
         ## Check for any data events that would return a NoneBar in the Alpha Model Update() method
         if not data.Bars.ContainsKey(self.symbol) or data.Bars[self.symbol].Close == 0:
-            return False 
-            
+            return False
+
         price = data.Bars[self.symbol].Close
         self.last_price = self.close
         self.close = price
         self.price_jump = (self.close / self.last_price) - 1
-        
+
         return True
-        
+
     def Initialize(self, data, security):
-        
+
         self.volatility.Update(data.Time, data.Close)
         price = data.Close
         if self.last_price == 0:
@@ -169,7 +169,7 @@ class SymbolData:
         else:
             self.last_price = self.close
             self.close = price
-        
+
 
     @property
     def PriceJump(self):

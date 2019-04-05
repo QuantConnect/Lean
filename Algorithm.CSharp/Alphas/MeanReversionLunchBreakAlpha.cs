@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -31,15 +30,15 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 {
     /// <summary>
     /// This alpha aims to capture the mean-reversion effect of ETFs during lunch-break by ranking 20 ETFs
-    /// on their return between the close of the previous day to 12:00 the day after and predicting mean-reversion 
+    /// on their return between the close of the previous day to 12:00 the day after and predicting mean-reversion
     /// in price during lunch-break.
     ///
-    /// Source:  Lunina, V. (June 2011). The Intraday Dynamics of Stock Returns and Trading Activity: Evidence from OMXS 30 (Master's Essay, Lund University). 
+    /// Source:  Lunina, V. (June 2011). The Intraday Dynamics of Stock Returns and Trading Activity: Evidence from OMXS 30 (Master's Essay, Lund University).
     /// Retrieved from http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=1973850&fileOId=1973852
     ///
     /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
     ///</summary>
-    public class MeanReversionLunchBreakAlpha : QCAlgorithmFramework
+    public class MeanReversionLunchBreakAlpha : QCAlgorithm
     {
         public override void Initialize()
         {
@@ -78,8 +77,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         }
 
         /// <summary>
-        /// Uses the price return between the close of previous day to 12:00 the day after to 
-        /// predict mean-reversion of stock price during lunch break and creates direction prediction 
+        /// Uses the price return between the close of previous day to 12:00 the day after to
+        /// predict mean-reversion of stock price during lunch break and creates direction prediction
         /// for insights accordingly.
         /// </summary>
         private class MeanReversionLunchBreakAlphaModel : AlphaModel
@@ -94,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
             }
 
-            public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+            public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 foreach (var kvp in _symbolDataBySymbol)
                 {
@@ -110,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                     : Enumerable.Empty<Insight>();
             }
 
-            public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+            public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
             {
                 foreach (var security in changes.RemovedSecurities)
                 {

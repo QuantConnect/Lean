@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -29,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// This model extendes <see cref="BasePairsTradingAlphaModel"/> and uses Pearson correlation
     /// to rank the pairs trading candidates and use the best candidate to trade.
     /// </summary>
-    public class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {

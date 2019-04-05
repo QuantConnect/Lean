@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -33,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
     ///
     /// This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
     ///</summary>
-    public class SykesShortMicroCapAlpha : QCAlgorithmFramework
+    public class SykesShortMicroCapAlpha : QCAlgorithm
     {
         public override void Initialize()
         {
@@ -76,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             {
             }
 
-            public override IEnumerable<Symbol> SelectCoarse(QCAlgorithmFramework algorithm, IEnumerable<CoarseFundamental> coarse)
+            public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
             {
                 var month = algorithm.Time.Month;
                 if (month == _lastMonth)
@@ -112,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 _predictionInterval = resolution.ToTimeSpan().Multiply(lookback);
             }
 
-            public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+            public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 return (
                     from entry in algorithm.ActiveSecurities

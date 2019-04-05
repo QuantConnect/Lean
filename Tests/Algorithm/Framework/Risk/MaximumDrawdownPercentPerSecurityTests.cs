@@ -18,7 +18,7 @@ using System.Linq;
 using Moq;
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Algorithm.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
 
             security.Object.Holdings = holding.Object;
 
-            var algorithm = new QCAlgorithmFramework();
+            var algorithm = new QCAlgorithm();
             algorithm.SetPandasConverter();
             algorithm.Securities.Add(Symbols.AAPL, security.Object);
 

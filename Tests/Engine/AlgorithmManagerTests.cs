@@ -374,6 +374,8 @@ namespace QuantConnect.Tests.Engine
             {
                 throw new NotImplementedException();
             }
+
+            public event EventHandler<OrderEvent> NewOrderEvent;
         }
 
         class NullSynchronizer : ISynchronizer

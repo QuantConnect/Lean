@@ -32,7 +32,7 @@ from datetime import timedelta
 import numpy as np
 
 
-class MaximumPortfolioDrawdownFrameworkAlgorithm(QCAlgorithmFramework):
+class MaximumPortfolioDrawdownFrameworkAlgorithm(QCAlgorithm):
     '''Show example of how to use the MaximumDrawdownPercentPortfolio Risk Management Model'''
 
     def Initialize(self):

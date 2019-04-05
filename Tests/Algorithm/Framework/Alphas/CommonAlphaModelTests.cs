@@ -14,7 +14,6 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
@@ -27,6 +26,7 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Algorithm;
 using QuantConnect.Python;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -37,18 +37,86 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
     /// </summary>
     public abstract class CommonAlphaModelTests
     {
-        private QCAlgorithmFramework _algorithm;
+        private QCAlgorithm _algorithm;
 
         [TestFixtureSetUp]
         public void Initialize()
         {
             PythonInitializer.Initialize();
 
-            _algorithm = new QCAlgorithmFramework();
+            _algorithm = new QCAlgorithm();
             _algorithm.PortfolioConstruction = new NullPortfolioConstructionModel();
             _algorithm.HistoryProvider = new SineHistoryProvider(_algorithm.Securities);
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
             InitializeAlgorithm(_algorithm);
+        }
+
+        [Test]
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void AddAlphaModel(Language language)
+        {
+            IAlphaModel model;
+            IAlphaModel model2 = null;
+            IAlphaModel model3 = null;
+            if (!TryCreateModel(language, out model)
+                || !TryCreateModel(language, out model2)
+                || !TryCreateModel(language, out model3))
+            {
+                Assert.Ignore($"Ignore {GetType().Name}: Could not create {language} model.");
+            }
+
+            // Set the alpha model
+            _algorithm.SetAlpha(model);
+            _algorithm.AddAlpha(model2);
+            _algorithm.AddAlpha(model3);
+            _algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
+
+            var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);
+            _algorithm.OnFrameworkSecuritiesChanged(changes);
+
+            var actualInsights = new List<Insight>();
+            _algorithm.InsightsGenerated += (s, e) => actualInsights.AddRange(e.Insights);
+
+            var expectedInsights = ExpectedInsights().ToList();
+
+            var consolidators = _algorithm.Securities.SelectMany(kvp => kvp.Value.Subscriptions).SelectMany(x => x.Consolidators);
+            var slices = CreateSlices();
+
+            foreach (var slice in slices.ToList())
+            {
+                _algorithm.SetDateTime(slice.Time);
+
+                foreach (var symbol in slice.Keys)
+                {
+                    var data = slice[symbol];
+                    _algorithm.Securities[symbol].SetMarketPrice(data);
+
+                    foreach (var consolidator in consolidators)
+                    {
+                        consolidator.Update(data);
+                    }
+                }
+
+                _algorithm.OnFrameworkData(slice);
+            }
+
+            Assert.AreEqual(expectedInsights.Count * 3, actualInsights.Count);
+
+            for (var i = 0; i < actualInsights.Count; i = i + 3)
+            {
+                var expected = expectedInsights[i / 3];
+                for (int j = i; j < 3; j++)
+                {
+                    var actual = actualInsights[j];
+                    Assert.AreEqual(expected.Symbol, actual.Symbol);
+                    Assert.AreEqual(expected.Type, actual.Type);
+                    Assert.AreEqual(expected.Direction, actual.Direction);
+                    Assert.AreEqual(expected.Period, actual.Period);
+                    Assert.AreEqual(expected.Magnitude, actual.Magnitude);
+                    Assert.AreEqual(expected.Confidence, actual.Confidence);
+                }
+            }
         }
 
         [Test]
@@ -196,7 +264,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         /// <summary>
         /// Provides derived types a chance to initialize anything special they require
         /// </summary>
-        protected virtual void InitializeAlgorithm(QCAlgorithmFramework algorithm)
+        protected virtual void InitializeAlgorithm(QCAlgorithm algorithm)
         {
             _algorithm.SetStartDate(2018, 1, 4);
             _algorithm.AddEquity(Symbols.SPY.Value, Resolution.Daily);
