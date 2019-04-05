@@ -37,7 +37,7 @@
     sourced so the community and client funds can see an example of an alpha.
 '''
 
-
+from clr import AddReference
 AddReference("QuantConnect.Algorithm")
 
 import scipy.stats as sp
@@ -45,13 +45,15 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
+from QuantConnect import *
 from QuantConnect.Algorithm import *
+from QuantConnect.Algorithm.Framework.Selection import *
 from Risk.NullRiskManagementModel import NullRiskManagementModel
 from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
 from Execution.ImmediateExecutionModel import ImmediateExecutionModel
 
 
-class ContingentClaimAnalysisDefaultPredictionAlpha(QCAlgorithm):
+class ContingentClaimsAnalysisDefaultPredictionAlpha(QCAlgorithm):
 
     def Initialize(self):
 

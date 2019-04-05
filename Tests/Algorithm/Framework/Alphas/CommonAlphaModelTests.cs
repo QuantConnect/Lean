@@ -68,8 +68,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
             // Set the alpha model
             _algorithm.SetAlpha(model);
-            _algorithm.AddAlphaModel(model2);
-            _algorithm.AddAlphaModel(model3);
+            _algorithm.AddAlpha(model2);
+            _algorithm.AddAlpha(model3);
             _algorithm.SetUniverseSelection(new ManualUniverseSelectionModel());
 
             var changes = new SecurityChanges(AddedSecurities, RemovedSecurities);

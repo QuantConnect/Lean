@@ -42,6 +42,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Adds a new alpha model
+        /// </summary>
+        /// <param name="alpha">Model that generates alpha to add</param>
+        public void AddAlpha(PyObject alpha)
+        {
+            IAlphaModel model;
+            if (alpha.TryConvert(out model))
+            {
+                AddAlpha(model);
+            }
+            else
+            {
+                AddAlpha(new AlphaModelPythonWrapper(alpha));
+            }
+        }
+
+        /// <summary>
         /// Sets the execution model
         /// </summary>
         /// <param name="execution">Model defining how to execute trades to reach a portfolio target</param>

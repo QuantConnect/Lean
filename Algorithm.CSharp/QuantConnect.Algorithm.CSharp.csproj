@@ -120,6 +120,7 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="AddAlphaModelAlgorithm.cs" />
     <Compile Include="AddRemoveOptionUniverseRegressionAlgorithm.cs" />
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
     <Compile Include="Alphas\GasAndCrudeOilEnergyCorrelationAlpha.cs" />

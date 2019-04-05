@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// </summary>
     public class CompositeAlphaModel : AlphaModel
     {
-        private readonly IAlphaModel[] _alphaModels;
+        private readonly List<IAlphaModel> _alphaModels = new List<IAlphaModel>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompositeAlphaModel"/> class
@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 throw new ArgumentException("Must specify at least 1 alpha model for the CompositeAlphaModel");
             }
 
-            _alphaModels = alphaModels;
+            _alphaModels.AddRange(alphaModels);
         }
 
         /// <summary>
@@ -55,14 +55,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 throw new ArgumentException("Must specify at least 1 alpha model for the CompositeAlphaModel");
             }
 
-            _alphaModels = new IAlphaModel[alphaModels.Length];
-
-            for (var i = 0; i < alphaModels.Length; i++)
+            foreach (var pyAlphaModel in alphaModels)
             {
-                if (!alphaModels[i].TryConvert(out _alphaModels[i]))
-                {
-                    _alphaModels[i] = new AlphaModelPythonWrapper(alphaModels[i]);
-                }
+                AddAlpha(pyAlphaModel);
             }
         }
 
@@ -114,6 +109,29 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             {
                 model.OnSecuritiesChanged(algorithm, changes);
             }
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="AlphaModel"/>
+        /// </summary>
+        /// <param name="alphaModel">The alpha model to add</param>
+        public void AddAlpha(IAlphaModel alphaModel)
+        {
+            _alphaModels.Add(alphaModel);
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="AlphaModel"/>
+        /// </summary>
+        /// <param name="pyAlphaModel">The alpha model to add</param>
+        public void AddAlpha(PyObject pyAlphaModel)
+        {
+            IAlphaModel alphaModel;
+            if (!pyAlphaModel.TryConvert(out alphaModel))
+            {
+                alphaModel = new AlphaModelPythonWrapper(pyAlphaModel);
+            }
+            _alphaModels.Add(alphaModel);
         }
     }
 }
