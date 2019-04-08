@@ -53,6 +53,7 @@
     <Content Include="Alphas\TripleLeverageETFPairVolatilityDecayAlpha.py" />
     <Content Include="Alphas\VIXDualThrustAlpha.py" />
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
+    <Content Include="G10CurrencySelectionModelFrameworkAlgorithm.py" />
     <Content Include="ExpiryHelperAlphaModelFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateFuturesFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateOptionsFrameworkAlgorithm.py" />
