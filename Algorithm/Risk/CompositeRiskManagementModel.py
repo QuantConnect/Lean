@@ -64,3 +64,9 @@ class CompositeRiskManagementModel(RiskManagementModel):
             changes: The security additions and removals from the algorithm'''
         for model in self.riskManagementModels:
             model.OnSecuritiesChanged(algorithm, changes)
+
+    def AddRiskManagement(riskManagementModel):
+        '''Adds a new 'IRiskManagementModel' instance
+        Args:
+            riskManagementModel: The risk management model to add'''
+        self.riskManagementModels.Add(riskManagementModel)

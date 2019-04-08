@@ -123,6 +123,7 @@
     <Compile Include="AddAlphaModelAlgorithm.cs" />
     <Compile Include="AddRemoveOptionUniverseRegressionAlgorithm.cs" />
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
+    <Compile Include="AddRiskManagementAlgorithm.cs" />
     <Compile Include="Alphas\GasAndCrudeOilEnergyCorrelationAlpha.cs" />
     <Compile Include="Alphas\GreenblattMagicFormulaAlpha.cs" />
     <Compile Include="Alphas\IntradayReversalCurrencyMarketsAlpha.cs" />

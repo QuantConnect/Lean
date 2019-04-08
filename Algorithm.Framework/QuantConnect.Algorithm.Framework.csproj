@@ -120,7 +120,6 @@
     <Compile Include="Portfolio\EqualWeightingPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\ReturnsSymbolData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Risk\CompositeRiskManagementModel.cs" />
     <Compile Include="Risk\MaximumDrawdownPercentPortfolio.cs" />
     <Compile Include="Risk\MaximumDrawdownPercentPerSecurity.cs" />
     <Compile Include="Risk\MaximumSectorExposureRiskManagementModel.cs" />
@@ -187,9 +186,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Portfolio\EqualWeightingPortfolioConstructionModel.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Risk\CompositeRiskManagementModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Risk\TrailingStopRiskManagementModel.py">

@@ -19,7 +19,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 namespace QuantConnect.Algorithm.Framework.Risk
 {
     /// <summary>
-    /// Algorithm framework model that manage's an algorithm's risk/downside
+    /// Algorithm framework model that manages an algorithm's risk/downside
     /// </summary>
     public interface IRiskManagementModel : INotifiedSecurityChanges
     {

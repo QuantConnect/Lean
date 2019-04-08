@@ -298,10 +298,34 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Sets the risk management model
         /// </summary>
-        /// <param name="riskManagement">Model defining </param>
+        /// <param name="riskManagement">Model defining how risk is managed</param>
         public void SetRiskManagement(IRiskManagementModel riskManagement)
         {
             RiskManagement = riskManagement;
+        }
+
+        /// <summary>
+        /// Adds a new risk management model
+        /// </summary>
+        /// <param name="riskManagement">Model defining how risk is managed to add</param>
+        public void AddRiskManagement(IRiskManagementModel riskManagement)
+        {
+            if (RiskManagement.GetType() != typeof(NullRiskManagementModel))
+            {
+                var compositeRiskModel = RiskManagement as CompositeRiskManagementModel;
+                if (compositeRiskModel != null)
+                {
+                    compositeRiskModel.AddRiskManagement(riskManagement);
+                }
+                else
+                {
+                    RiskManagement = new CompositeRiskManagementModel(RiskManagement, riskManagement);
+                }
+            }
+            else
+            {
+                RiskManagement = riskManagement;
+            }
         }
 
         /// <summary>

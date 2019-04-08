@@ -145,6 +145,7 @@
     <Compile Include="Portfolio\PortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModelPythonWrapper.cs" />
     <Compile Include="QCAlgorithm.Framework.Python.cs" />
+    <Compile Include="Risk\CompositeRiskManagementModel.cs" />
     <Compile Include="Risk\IRiskManagementModel.cs" />
     <Compile Include="Risk\NullRiskManagementModel.cs" />
     <Compile Include="Risk\RiskManagementModel.cs" />
@@ -199,6 +200,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Portfolio\NullPortfolioConstructionModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Risk\CompositeRiskManagementModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Risk\NullRiskManagementModel.py">
