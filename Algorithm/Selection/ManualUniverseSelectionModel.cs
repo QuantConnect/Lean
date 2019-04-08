@@ -110,7 +110,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
 
                 var market = grp.Key.Market;
                 var securityType = grp.Key.SecurityType;
-                var universeSymbol = Symbol.Create($"manual-universe-selection-model-{securityType}-{market}", securityType, market);
+                var hashCode = 1;
+                foreach (var symbol in grp)
+                {
+                    hashCode = hashCode * 31 + symbol.GetHashCode();
+                }
+                var universeSymbol = Symbol.Create($"manual-universe-selection-model-{securityType}-{market}-{hashCode}", securityType, market);
                 if (securityType == SecurityType.Base)
                 {
                     // add an entry for this custom universe symbol -- we don't really know the time zone for sure,

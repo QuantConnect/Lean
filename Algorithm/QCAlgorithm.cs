@@ -181,7 +181,7 @@ namespace QuantConnect.Algorithm
             SetPortfolioConstruction(new NullPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new NullRiskManagementModel());
-            SetUniverseSelection(new ManualUniverseSelectionModel());
+            SetUniverseSelection(new NullUniverseSelectionModel());
         }
 
         /// <summary>
