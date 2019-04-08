@@ -26,263 +26,325 @@ namespace QuantConnect.Tests.Common.Data
     [TestFixture]
     public class CalendarConsolidatorsTests
     {
-        [TestCase(CalendarType.Monthly)]
-        [TestCase(CalendarType.Weekly)]
-        public void AggregatesTradeBarToCalendarTradeBarProperly(CalendarType calendarType)
+        [Test]
+        public void AggregatesTradeBarToCalendarTradeBarProperly()
         {
-            var multiplier = calendarType == CalendarType.Weekly ? 2.5 : 5;
-
-            TradeBar newBar = null;
-            var consolidator = new TradeBarCalendarConsolidator(calendarType);
-            consolidator.DataConsolidated += (s, e) => newBar = e;
-
             // Monday
-            var reference = new DateTime(2019, 3, 17);
+            var reference = new DateTime(2019, 3, 18);
             var bars = new List<TradeBar>
             {
                 new TradeBar(reference.AddDays(1), Symbols.SPY, 9, 11, 8, 10, 100, Time.OneDay),
-                new TradeBar(reference.AddDays(1 * multiplier), Symbols.SPY, 10, 12, 8, 11, 100, Time.OneDay),
-                new TradeBar(reference.AddDays(2 * multiplier), Symbols.SPY, 11, 13, 9, 10, 100, Time.OneDay),
-                new TradeBar(reference.AddDays(3 * multiplier), Symbols.SPY, 11, 13, 9, 11, 100, Time.OneDay)
+                new TradeBar(reference.AddDays(3), Symbols.SPY, 10, 12, 8, 11, 100, Time.OneDay),
+                new TradeBar(reference.AddDays(5), Symbols.SPY, 11, 13, 9, 10, 100, Time.OneDay),
+                new TradeBar(reference.AddDays(7), Symbols.SPY, 11, 13, 9, 11, 100, Time.OneDay),
+                new TradeBar(reference.AddDays(14), Symbols.SPY, 11, 13, 9, 11, 100, Time.OneDay)
             };
+
+            var weeklyConsolidator = new TradeBarConsolidator(CalendarType.Weekly);
+            weeklyConsolidator.DataConsolidated += (s, e) =>
+            {
+                AssertTradeBar(
+                    bars.Take(3),
+                    reference,
+                    reference.AddDays(7),
+                    Symbols.SPY,
+                    e);
+            };
+
+            var monthlyConsolidator = new TradeBarConsolidator(CalendarType.Monthly);
+            monthlyConsolidator.DataConsolidated += (s, e) =>
+            {
+                AssertTradeBar(
+                    bars.Take(4),
+                    new DateTime(reference.Year, reference.Month, 1),
+                    new DateTime(reference.Year, reference.Month + 1, 1),
+                    Symbols.SPY,
+                    e);
+            };
+
+            foreach (var bar in bars.Take(4))
+            {
+                weeklyConsolidator.Update(bar);
+            }
 
             foreach (var bar in bars)
             {
-                Assert.IsNull(newBar);
-                consolidator.Update(bar);
+                monthlyConsolidator.Update(bar);
             }
-            Assert.IsNotNull(newBar);
-
-            if (calendarType == CalendarType.Monthly)
-            {
-                var openTime = new DateTime(reference.Year, reference.Month, 1);
-                var closeTime = new DateTime(reference.Year, reference.Month + 1, 1);
-                Assert.AreEqual(openTime, newBar.Time);
-                Assert.AreEqual(closeTime, newBar.EndTime);
-            }
-            else
-            {
-                Assert.AreEqual(reference, newBar.Time);
-                Assert.AreEqual(reference.AddDays(7), newBar.EndTime);
-            }
-
-            Assert.AreEqual(Symbols.SPY, newBar.Symbol);
-            Assert.AreEqual(bars.First().Open, newBar.Open);
-            Assert.AreEqual(bars.Max(x => x.High), newBar.High);
-            Assert.AreEqual(bars.Min(x => x.Low), newBar.Low);
-            Assert.AreEqual(bars.Last().Close, newBar.Close);
-            Assert.AreEqual(bars.Sum(x => x.Volume), newBar.Volume);
         }
 
-        [TestCase(CalendarType.Monthly)]
-        [TestCase(CalendarType.Weekly)]
-        public void AggregatesQuoteBarToCalendarQuoteBarProperly(CalendarType calendarType)
+        private void AssertTradeBar(IEnumerable<TradeBar> tradeBars, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
         {
-            var multiplier = calendarType == CalendarType.Weekly ? 2.5 : 5;
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(openTime, consolidated.Time);
+            Assert.AreEqual(closeTime, consolidated.EndTime);
+            Assert.AreEqual(symbol, consolidated.Symbol);
+            Assert.AreEqual(tradeBars.First().Open, consolidated.Open);
+            Assert.AreEqual(tradeBars.Max(x => x.High), consolidated.High);
+            Assert.AreEqual(tradeBars.Min(x => x.Low), consolidated.Low);
+            Assert.AreEqual(tradeBars.Last().Close, consolidated.Close);
+            Assert.AreEqual(tradeBars.Sum(x => x.Volume), consolidated.Volume);
+        }
 
-            QuoteBar newBar = null;
-            var consolidator = new QuoteBarCalendarConsolidator(calendarType);
-            consolidator.DataConsolidated += (s, e) => newBar = e;
-
+        [Test]
+        public void AggregatesQuoteBarToCalendarQuoteBarProperly()
+        {
             // Monday
-            var reference = new DateTime(2019, 3, 17);
+            var reference = new DateTime(2019, 3, 18);
             var bars = new List<QuoteBar>
             {
                 new QuoteBar(reference.AddDays(1), Symbols.EURUSD, new Bar(9, 11, 8, 10), 10, new Bar(9, 11, 8, 10), 10, Time.OneDay),
-                new QuoteBar(reference.AddDays(1 * multiplier), Symbols.EURUSD, new Bar(10, 12, 8, 11), 10, new Bar(10, 12, 8, 11), 10, Time.OneDay),
-                new QuoteBar(reference.AddDays(2 * multiplier), Symbols.EURUSD, new Bar(11, 13, 9, 10), 10, new Bar(11, 13, 9, 10), 10, Time.OneDay),
-                new QuoteBar(reference.AddDays(3 * multiplier), Symbols.EURUSD, new Bar(11, 13, 9, 11), 10, new Bar(11, 13, 9, 11), 10, Time.OneDay)
+                new QuoteBar(reference.AddDays(3), Symbols.EURUSD, new Bar(10, 12, 8, 11), 10, new Bar(10, 12, 8, 11), 10, Time.OneDay),
+                new QuoteBar(reference.AddDays(5), Symbols.EURUSD, new Bar(11, 13, 9, 10), 10, new Bar(11, 13, 9, 10), 10, Time.OneDay),
+                new QuoteBar(reference.AddDays(7), Symbols.EURUSD, new Bar(11, 13, 9, 11), 10, new Bar(11, 13, 9, 11), 10, Time.OneDay),
+                new QuoteBar(reference.AddDays(14), Symbols.EURUSD, new Bar(11, 13, 9, 11), 10, new Bar(11, 13, 9, 11), 10, Time.OneDay)
             };
 
-            foreach (var bar in bars)
+            var weeklyConsolidator = new QuoteBarConsolidator(CalendarType.Weekly);
+            weeklyConsolidator.DataConsolidated += (s, e) =>
             {
-                Assert.IsNull(newBar);
-                consolidator.Update(bar);
-            }
-            Assert.IsNotNull(newBar);
+                AssertQuoteBar(
+                    bars.Take(3),
+                    reference,
+                    reference.AddDays(7),
+                    Symbols.EURUSD,
+                    e);
+            };
 
-            if (calendarType == CalendarType.Monthly)
+            var monthlyConsolidator = new QuoteBarConsolidator(CalendarType.Monthly);
+            monthlyConsolidator.DataConsolidated += (s, e) =>
             {
-                var openTime = new DateTime(reference.Year, reference.Month, 1);
-                var closeTime = new DateTime(reference.Year, reference.Month + 1, 1);
-                Assert.AreEqual(openTime, newBar.Time);
-                Assert.AreEqual(closeTime, newBar.EndTime);
-            }
-            else
+                AssertQuoteBar(
+                    bars.Take(4),
+                    new DateTime(reference.Year, reference.Month, 1),
+                    new DateTime(reference.Year, reference.Month + 1, 1),
+                    Symbols.EURUSD,
+                    e);
+            };
+
+            foreach (var bar in bars.Take(4))
             {
-                Assert.AreEqual(reference, newBar.Time);
-                Assert.AreEqual(reference.AddDays(7), newBar.EndTime);
+                weeklyConsolidator.Update(bar);
             }
 
-            Assert.AreEqual(Symbols.EURUSD, newBar.Symbol);
-            Assert.AreEqual(bars.First().Open, newBar.Open);
-            Assert.AreEqual(bars.First().Bid.Open, newBar.Bid.Open);
-            Assert.AreEqual(bars.First().Ask.Open, newBar.Ask.Open);
-            Assert.AreEqual(bars.Max(x => x.High), newBar.High);
-            Assert.AreEqual(bars.Max(x => x.Bid.High), newBar.Bid.High);
-            Assert.AreEqual(bars.Max(x => x.Ask.High), newBar.Ask.High);
-            Assert.AreEqual(bars.Min(x => x.Low), newBar.Low);
-            Assert.AreEqual(bars.Min(x => x.Bid.Low), newBar.Bid.Low);
-            Assert.AreEqual(bars.Min(x => x.Ask.Low), newBar.Ask.Low);
-            Assert.AreEqual(bars.Last().Close, newBar.Close);
-            Assert.AreEqual(bars.Last().Bid.Close, newBar.Bid.Close);
-            Assert.AreEqual(bars.Last().Ask.Close, newBar.Ask.Close);
+            foreach (var bar in bars.Take(5))
+            {
+                monthlyConsolidator.Update(bar);
+            }
+        }
+        private void AssertQuoteBar(IEnumerable<QuoteBar> quoteBars, DateTime openTime, DateTime closeTime, Symbol symbol, QuoteBar consolidated)
+        {
+            Assert.AreEqual(symbol, consolidated.Symbol);
+            Assert.AreEqual(openTime, consolidated.Time);
+            Assert.AreEqual(closeTime, consolidated.EndTime);
+            Assert.AreEqual(quoteBars.First().Open, consolidated.Open);
+            Assert.AreEqual(quoteBars.First().Bid.Open, consolidated.Bid.Open);
+            Assert.AreEqual(quoteBars.First().Ask.Open, consolidated.Ask.Open);
+            Assert.AreEqual(quoteBars.Max(x => x.High), consolidated.High);
+            Assert.AreEqual(quoteBars.Max(x => x.Bid.High), consolidated.Bid.High);
+            Assert.AreEqual(quoteBars.Max(x => x.Ask.High), consolidated.Ask.High);
+            Assert.AreEqual(quoteBars.Min(x => x.Low), consolidated.Low);
+            Assert.AreEqual(quoteBars.Min(x => x.Bid.Low), consolidated.Bid.Low);
+            Assert.AreEqual(quoteBars.Min(x => x.Ask.Low), consolidated.Ask.Low);
+            Assert.AreEqual(quoteBars.Last().Close, consolidated.Close);
+            Assert.AreEqual(quoteBars.Last().Bid.Close, consolidated.Bid.Close);
+            Assert.AreEqual(quoteBars.Last().Ask.Close, consolidated.Ask.Close);
         }
 
-        [TestCase(CalendarType.Monthly)]
-        [TestCase(CalendarType.Weekly)]
-        public void AggregatesTickToCalendarTradeBarProperly(CalendarType calendarType)
+        [Test]
+        public void AggregatesTickToCalendarTradeBarProperly()
         {
-            var multiplier = calendarType == CalendarType.Weekly ? 2.5 : 5;
-
-            TradeBar newBar = null;
-            var consolidator = new TickCalendarConsolidator(calendarType);
-            consolidator.DataConsolidated += (s, e) => newBar = e;
-
             // Monday
-            var reference = new DateTime(2019, 3, 17);
+            var reference = new DateTime(2019, 3, 18);
             var ticks = new List<Tick>
             {
                 new Tick(reference.AddDays(1), Symbols.SPY, 9, 11, 8){ TickType = TickType.Trade, Quantity = 10 },
-                new Tick(reference.AddDays(1 * multiplier), Symbols.SPY, 10, 12, 8){ TickType = TickType.Trade,  Quantity = 10 },
-                new Tick(reference.AddDays(2 * multiplier), Symbols.SPY, 11, 13, 9){ TickType = TickType.Trade,  Quantity = 10 },
-                new Tick(reference.AddDays(3 * multiplier), Symbols.SPY, 11, 13, 9){ TickType = TickType.Trade,  Quantity = 10 }
+                new Tick(reference.AddDays(3), Symbols.SPY, 10, 12, 8){ TickType = TickType.Trade,  Quantity = 10 },
+                new Tick(reference.AddDays(5), Symbols.SPY, 11, 13, 9){ TickType = TickType.Trade,  Quantity = 10 },
+                new Tick(reference.AddDays(7), Symbols.SPY, 11, 13, 9){ TickType = TickType.Trade,  Quantity = 10 },
+                new Tick(reference.AddDays(14), Symbols.SPY, 11, 13, 9){ TickType = TickType.Trade,  Quantity = 10 }
             };
 
-            foreach (var bar in ticks)
+            var weeklyConsolidator = new TickConsolidator(CalendarType.Weekly);
+            weeklyConsolidator.DataConsolidated += (s, e) =>
             {
-                Assert.IsNull(newBar);
-                consolidator.Update(bar);
-            }
-            Assert.IsNotNull(newBar);
-
-            if (calendarType == CalendarType.Monthly)
-            {
-                var openTime = new DateTime(reference.Year, reference.Month, 1);
-                var closeTime = new DateTime(reference.Year, reference.Month + 1, 1);
-                Assert.AreEqual(openTime, newBar.Time);
-                Assert.AreEqual(closeTime, newBar.EndTime);
-            }
-            else
-            {
-                Assert.AreEqual(reference, newBar.Time);
-                Assert.AreEqual(reference.AddDays(7), newBar.EndTime);
-            }
-
-            Assert.AreEqual(Symbols.SPY, newBar.Symbol);
-            Assert.AreEqual(ticks.First().Value, newBar.Open);
-            Assert.AreEqual(ticks.Max(x => x.Value), newBar.High);
-            Assert.AreEqual(ticks.Min(x => x.Value), newBar.Low);
-            Assert.AreEqual(ticks.Last().Value, newBar.Close);
-            Assert.AreEqual(ticks.Sum(x => x.Quantity), newBar.Volume);
-        }
-
-        [TestCase(CalendarType.Monthly)]
-        [TestCase(CalendarType.Weekly)]
-        public void AggregatesTickToCalendarQuoteBarProperly(CalendarType calendarType)
-        {
-            var multiplier = calendarType == CalendarType.Weekly ? 2.5 : 5;
-
-            QuoteBar newBar = null;
-            var consolidator = new TickQuoteBarCalendarConsolidator(calendarType);
-            consolidator.DataConsolidated += (s, e) => newBar = e;
-
-            // Monday
-            var reference = new DateTime(2019, 3, 17);
-            var ticks = new List<Tick>
-            {
-                new Tick(reference.AddDays(1), Symbols.EURUSD, 9, 11, 8){ Quantity = 10 },
-                new Tick(reference.AddDays(1 * multiplier), Symbols.EURUSD, 10, 12, 8){ Quantity = 10 },
-                new Tick(reference.AddDays(2 * multiplier), Symbols.EURUSD, 11, 13, 9){ Quantity = 10 },
-                new Tick(reference.AddDays(3 * multiplier), Symbols.EURUSD, 11, 13, 9){ Quantity = 10 }
+                AssertTickTradeBar(
+                    ticks.Take(3),
+                    reference,
+                    reference.AddDays(7),
+                    Symbols.SPY,
+                    e);
             };
+
+            var monthlyConsolidator = new TickConsolidator(CalendarType.Monthly);
+            monthlyConsolidator.DataConsolidated += (s, e) =>
+            {
+                AssertTickTradeBar(
+                    ticks.Take(4),
+                    new DateTime(reference.Year, reference.Month, 1),
+                    new DateTime(reference.Year, reference.Month + 1, 1),
+                    Symbols.SPY,
+                    e);
+            };
+
+            foreach (var tick in ticks.Take(4))
+            {
+                weeklyConsolidator.Update(tick);
+            }
 
             foreach (var tick in ticks)
             {
-                Assert.IsNull(newBar);
-                consolidator.Update(tick);
+                monthlyConsolidator.Update(tick);
             }
-            Assert.IsNotNull(newBar);
-
-            if (calendarType == CalendarType.Monthly)
-            {
-                var openTime = new DateTime(reference.Year, reference.Month, 1);
-                var closeTime = new DateTime(reference.Year, reference.Month + 1, 1);
-                Assert.AreEqual(openTime, newBar.Time);
-                Assert.AreEqual(closeTime, newBar.EndTime);
-            }
-            else
-            {
-                Assert.AreEqual(reference, newBar.Time);
-                Assert.AreEqual(reference.AddDays(7), newBar.EndTime);
-            }
-
-            Assert.AreEqual(Symbols.EURUSD, newBar.Symbol);
-            Assert.AreEqual(ticks.First().BidPrice, newBar.Bid.Open);
-            Assert.AreEqual(ticks.First().AskPrice, newBar.Ask.Open);
-            Assert.AreEqual(ticks.Max(x => x.BidPrice), newBar.Bid.High);
-            Assert.AreEqual(ticks.Max(x => x.AskPrice), newBar.Ask.High);
-            Assert.AreEqual(ticks.Min(x => x.BidPrice), newBar.Bid.Low);
-            Assert.AreEqual(ticks.Min(x => x.AskPrice), newBar.Ask.Low);
-            Assert.AreEqual(ticks.Last().BidPrice, newBar.Bid.Close);
-            Assert.AreEqual(ticks.Last().AskPrice, newBar.Ask.Close);
         }
 
-        [TestCase(CalendarType.Monthly)]
-        [TestCase(CalendarType.Weekly)]
-        public void AggregatesBaseDataToCalendarTradeBarProperly(CalendarType calendarType)
+        private void AssertTickTradeBar(IEnumerable<Tick> ticks, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
         {
-            var multiplier = calendarType == CalendarType.Weekly ? 2.5 : 5;
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(openTime, consolidated.Time);
+            Assert.AreEqual(closeTime, consolidated.EndTime);
+            Assert.AreEqual(symbol, consolidated.Symbol);
+            Assert.AreEqual(ticks.First().Value, consolidated.Open);
+            Assert.AreEqual(ticks.Max(x => x.Value), consolidated.High);
+            Assert.AreEqual(ticks.Min(x => x.Value), consolidated.Low);
+            Assert.AreEqual(ticks.Last().Value, consolidated.Close);
+            Assert.AreEqual(ticks.Sum(x => x.Quantity), consolidated.Volume);
+        }
 
-            TradeBar newBar = null;
-            var consolidator = new BaseDataCalendarConsolidator(calendarType);
-            consolidator.DataConsolidated += (s, e) => newBar = e;
-
+        [Test]
+        public void AggregatesTickToCalendarQuoteBarProperly()
+        {
             // Monday
-            var reference = new DateTime(2019, 3, 17);
+            var reference = new DateTime(2019, 3, 18);
+            var ticks = new List<Tick>
+            {
+                new Tick(reference.AddDays(1), Symbols.EURUSD, 9, 11, 8){ Quantity = 10 },
+                new Tick(reference.AddDays(3), Symbols.EURUSD, 10, 12, 8){ Quantity = 10 },
+                new Tick(reference.AddDays(5), Symbols.EURUSD, 11, 13, 9){ Quantity = 10 },
+                new Tick(reference.AddDays(7), Symbols.EURUSD, 11, 13, 9){ Quantity = 10 },
+                new Tick(reference.AddDays(14), Symbols.EURUSD, 11, 13, 9){ Quantity = 10 }
+            };
+
+            var weeklyConsolidator = new TickQuoteBarConsolidator(CalendarType.Weekly);
+            weeklyConsolidator.DataConsolidated += (s, e) =>
+            {
+                AssertTickQuoteBar(
+                    ticks.Take(3),
+                    reference,
+                    reference.AddDays(7),
+                    Symbols.EURUSD,
+                    e);
+            };
+
+            var monthlyConsolidator = new TickQuoteBarConsolidator(CalendarType.Monthly);
+            monthlyConsolidator.DataConsolidated += (s, e) =>
+            {
+                AssertTickQuoteBar(
+                    ticks.Take(4),
+                    new DateTime(reference.Year, reference.Month, 1),
+                    new DateTime(reference.Year, reference.Month + 1, 1),
+                    Symbols.EURUSD,
+                    e);
+            };
+
+            foreach (var tick in ticks.Take(4))
+            {
+                weeklyConsolidator.Update(tick);
+            }
+
+            foreach (var tick in ticks)
+            {
+                monthlyConsolidator.Update(tick);
+            }
+        }
+
+        private void AssertTickQuoteBar(IEnumerable<Tick> ticks, DateTime openTime, DateTime closeTime, Symbol symbol, QuoteBar consolidated)
+        {
+            Assert.IsNotNull(consolidated);        
+            Assert.AreEqual(openTime, consolidated.Time);
+            Assert.AreEqual(closeTime, consolidated.EndTime);
+            Assert.AreEqual(symbol, consolidated.Symbol);
+            Assert.AreEqual(ticks.First().BidPrice, consolidated.Bid.Open);
+            Assert.AreEqual(ticks.First().AskPrice, consolidated.Ask.Open);
+            Assert.AreEqual(ticks.Max(x => x.BidPrice), consolidated.Bid.High);
+            Assert.AreEqual(ticks.Max(x => x.AskPrice), consolidated.Ask.High);
+            Assert.AreEqual(ticks.Min(x => x.BidPrice), consolidated.Bid.Low);
+            Assert.AreEqual(ticks.Min(x => x.AskPrice), consolidated.Ask.Low);
+            Assert.AreEqual(ticks.Last().BidPrice, consolidated.Bid.Close);
+            Assert.AreEqual(ticks.Last().AskPrice, consolidated.Ask.Close);
+        }
+
+        [Test]
+        public void AggregatesBaseDataToCalendarTradeBarProperly()
+        {
+            // Monday
+            var reference = new DateTime(2019, 3, 18);
             var ticks = new List<Tick>
             {
                 new Tick(reference.AddDays(1), Symbols.SPY, 9, 11, 8){ Quantity = 10 },
-                new Tick(reference.AddDays(1 * multiplier), Symbols.SPY, 10, 12, 8){ Quantity = 10 },
-                new Tick(reference.AddDays(2 * multiplier), Symbols.SPY, 11, 13, 9){ Quantity = 10 },
-                new Tick(reference.AddDays(3 * multiplier), Symbols.SPY, 11, 13, 9){ Quantity = 10 }
+                new Tick(reference.AddDays(3), Symbols.SPY, 10, 12, 8){ Quantity = 10 },
+                new Tick(reference.AddDays(5), Symbols.SPY, 11, 13, 9){ Quantity = 10 },
+                new Tick(reference.AddDays(7), Symbols.SPY, 11, 13, 9){ Quantity = 10 },
+                new Tick(reference.AddDays(14), Symbols.SPY, 11, 13, 9){ Quantity = 10 }
             };
 
-            foreach (var bar in ticks)
+            var weeklyConsolidator = new BaseDataConsolidator(CalendarType.Weekly);
+            weeklyConsolidator.DataConsolidated += (s, e) => 
             {
-                Assert.IsNull(newBar);
-                consolidator.Update(bar);
-            }
-            Assert.IsNotNull(newBar);
+                AssertBaseTradeBar(
+                    ticks.Take(3),
+                    reference,
+                    reference.AddDays(7),
+                    Symbols.SPY,
+                    e);
+            };
 
-            if (calendarType == CalendarType.Monthly)
+            var monthlyConsolidator = new BaseDataConsolidator(CalendarType.Monthly);
+            monthlyConsolidator.DataConsolidated += (s, e) =>
             {
-                var openTime = new DateTime(reference.Year, reference.Month, 1);
-                var closeTime = new DateTime(reference.Year, reference.Month + 1, 1);
-                Assert.AreEqual(openTime, newBar.Time);
-                Assert.AreEqual(closeTime, newBar.EndTime);
-            }
-            else
+                AssertBaseTradeBar(
+                    ticks.Take(4),
+                    new DateTime(reference.Year, reference.Month, 1),
+                    new DateTime(reference.Year, reference.Month + 1, 1),
+                    Symbols.SPY,
+                    e);
+            };
+
+            foreach (var tick in ticks.Take(4))
             {
-                Assert.AreEqual(reference, newBar.Time);
-                Assert.AreEqual(reference.AddDays(7), newBar.EndTime);
+                weeklyConsolidator.Update(tick);
             }
 
-            Assert.AreEqual(Symbols.SPY, newBar.Symbol);
-            Assert.AreEqual(ticks.First().Value, newBar.Open);
-            Assert.AreEqual(ticks.Max(x => x.Value), newBar.High);
-            Assert.AreEqual(ticks.Min(x => x.Value), newBar.Low);
-            Assert.AreEqual(ticks.Last().Value, newBar.Close);
-            Assert.AreEqual(0, newBar.Volume);
+            foreach (var tick in ticks)
+            {
+                monthlyConsolidator.Update(tick);
+            }
+        }
+
+        private void AssertBaseTradeBar(IEnumerable<Tick> ticks, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
+        {
+            Assert.AreEqual(openTime, consolidated.Time);
+            Assert.AreEqual(closeTime, consolidated.EndTime);
+            Assert.AreEqual(symbol, consolidated.Symbol);
+            Assert.AreEqual(ticks.First().Value, consolidated.Open);
+            Assert.AreEqual(ticks.Max(x => x.Value), consolidated.High);
+            Assert.AreEqual(ticks.Min(x => x.Value), consolidated.Low);
+            Assert.AreEqual(ticks.Last().Value, consolidated.Close);
+            Assert.AreEqual(0, consolidated.Volume);
         }
 
         private SimpleMovingAverage indicator;
 
-        [TestCase(CalendarType.Monthly)]
-        [TestCase(CalendarType.Weekly)]
-        public void CalendarConsolidatesWithRegisterIndicator(CalendarType calendarType)
+        [Test]
+        public void AllCalendarsConsolidatesWithRegisterIndicator()
         {
-            var consolidator = new TradeBarCalendarConsolidator(calendarType);
+            CalendarConsolidatesWithRegisterIndicator(CalendarType.Weekly);
+            CalendarConsolidatesWithRegisterIndicator(CalendarType.Monthly);
+        }
+
+        private void CalendarConsolidatesWithRegisterIndicator(Func<DateTime, CalendarInfo> calendarType)
+        {
+            var consolidator = new TradeBarConsolidator(calendarType);
             consolidator.DataConsolidated += (s, e) =>
             {
                 if (!indicator.IsReady) return;

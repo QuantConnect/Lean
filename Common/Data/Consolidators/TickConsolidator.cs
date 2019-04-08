@@ -53,6 +53,15 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="TickQuoteBarConsolidator"/> class
+        /// </summary>
+        /// <param name="func">Func that defines the start time of a consolidated data</param>
+        public TickConsolidator(Func<DateTime, CalendarInfo> func)
+            : base(func)
+        {
+        }
+
+        /// <summary>
         /// Determines whether or not the specified data should be processd
         /// </summary>
         /// <param name="data">The data to check</param>

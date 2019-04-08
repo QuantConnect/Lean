@@ -96,12 +96,12 @@ namespace QuantConnect.Algorithm.CSharp
             Consolidate("EURUSD", Resolution.Daily, DailyEurUsdBarHandler);
 
             // API convenience method for easily receiving weekly-consolidated data
-            WeeklyConsolidate("SPY", CalendarTradeBarHandler);
-            WeeklyConsolidate("EURUSD", CalendarQuoteBarHandler);
+            Consolidate("SPY", CalendarType.Weekly, CalendarTradeBarHandler);
+            Consolidate("EURUSD", CalendarType.Weekly, CalendarQuoteBarHandler);
 
             // API convenience method for easily receiving monthly-consolidated data
-            MonthlyConsolidate("SPY", CalendarTradeBarHandler);
-            MonthlyConsolidate("EURUSD", CalendarQuoteBarHandler);
+            Consolidate("SPY", CalendarType.Monthly, CalendarTradeBarHandler);
+            Consolidate("EURUSD", CalendarType.Monthly, CalendarQuoteBarHandler);
 
             // requires quote data subscription
             //Consolidate<QuoteBar>("EURUSD", TimeSpan.FromMinutes(45), FortyFiveMinuteBarHandler);
