@@ -245,6 +245,30 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Adds a new universe selection model
+        /// </summary>
+        /// <param name="universeSelection">Model defining universes for the algorithm to add</param>
+        public void AddUniverseSelection(IUniverseSelectionModel universeSelection)
+        {
+            if (UniverseSelection.GetType() != typeof(NullUniverseSelectionModel))
+            {
+                var compositeUniverseSelection = UniverseSelection as CompositeUniverseSelectionModel;
+                if (compositeUniverseSelection != null)
+                {
+                    compositeUniverseSelection.AddUniverseSelection(universeSelection);
+                }
+                else
+                {
+                    UniverseSelection = new CompositeUniverseSelectionModel(UniverseSelection, universeSelection);
+                }
+            }
+            else
+            {
+                UniverseSelection = universeSelection;
+            }
+        }
+
+        /// <summary>
         /// Sets the alpha model
         /// </summary>
         /// <param name="alpha">Model that generates alpha</param>
