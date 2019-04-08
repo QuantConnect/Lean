@@ -125,5 +125,19 @@ namespace QuantConnect.Algorithm
                 RiskManagement = new RiskManagementModelPythonWrapper(riskManagement);
             }
         }
+
+        /// <summary>
+        /// Adds a new risk management model
+        /// </summary>
+        /// <param name="riskManagement">Model defining how risk is managed to add</param>
+        public void AddRiskManagement(PyObject riskManagement)
+        {
+            IRiskManagementModel model;
+            if (!riskManagement.TryConvert(out model))
+            {
+                model = new RiskManagementModelPythonWrapper(riskManagement);
+            }
+            AddRiskManagement(model);
+        }
     }
 }
