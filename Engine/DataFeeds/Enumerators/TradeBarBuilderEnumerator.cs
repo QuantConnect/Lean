@@ -95,7 +95,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 if (_liveMode)
                 {
-                    _timer.Change(_barSize.Subtract(currentLocalTime - barStartTime), _barSize);
+                    _timer.Change(_barSize.Subtract(currentLocalTime - barStartTime), Timeout.InfiniteTimeSpan);
                 }
             }
             else
@@ -181,7 +181,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// Event invocator for the <see cref="NewDataAvailable"/> event
         /// </summary>
-        public void OnNewDataAvailable()
+        private void OnNewDataAvailable()
         {
             NewDataAvailable?.Invoke(this, EventArgs.Empty);
         }

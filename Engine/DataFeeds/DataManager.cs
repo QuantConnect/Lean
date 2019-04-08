@@ -236,7 +236,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Event invocator for the <see cref="SubscriptionAdded"/> event
         /// </summary>
         /// <param name="subscription">The added subscription</param>
-        public void OnSubscriptionAdded(Subscription subscription)
+        private void OnSubscriptionAdded(Subscription subscription)
         {
             SubscriptionAdded?.Invoke(this, subscription);
         }
@@ -245,7 +245,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Event invocator for the <see cref="SubscriptionRemoved"/> event
         /// </summary>
         /// <param name="subscription">The removed subscription</param>
-        public void OnSubscriptionRemoved(Subscription subscription)
+        private void OnSubscriptionRemoved(Subscription subscription)
         {
             SubscriptionRemoved?.Invoke(this, subscription);
         }
