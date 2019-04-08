@@ -33,6 +33,8 @@ namespace QuantConnect.Tests
                 "./Selection",
                 "./RegressionAlgorithms",
                 "./Jupyter/RegressionScripts",
+                "../../../Algorithm",
+                "../../../Algorithm/Selection",
                 "../../../Algorithm.Framework",
                 "../../../Algorithm.Framework/Selection",
                 "../../../Algorithm.Python");

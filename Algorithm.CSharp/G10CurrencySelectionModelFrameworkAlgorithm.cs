@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Framework algorithm that uses the G10CurrencySelectionModel,
     /// a Universe Selection Model that inherits from ManualUniverseSelectionModel
     /// </summary>
-    public class G10CurrencySelectionModelFrameworkAlgorithm : QCAlgorithmFramework
+    public class G10CurrencySelectionModelFrameworkAlgorithm : QCAlgorithm
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.

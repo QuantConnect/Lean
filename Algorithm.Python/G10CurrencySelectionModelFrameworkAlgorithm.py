@@ -33,7 +33,7 @@ from datetime import timedelta
 ### Framework algorithm that uses the G10CurrencySelectionModel,
 ### a Universe Selection Model that inherits from ManualUniverseSelectionModel
 ### </summary>
-class G10CurrencySelectionModelFrameworkAlgorithm(QCAlgorithmFramework):
+class G10CurrencySelectionModelFrameworkAlgorithm(QCAlgorithm):
     '''Framework algorithm that uses the G10CurrencySelectionModel,
     a Universe Selection Model that inherits from ManualUniverseSelectionMode'''
 

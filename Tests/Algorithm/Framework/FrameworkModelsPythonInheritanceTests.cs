@@ -16,7 +16,7 @@
 
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Algorithm.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data.UniverseSelection;
 using System;
@@ -49,7 +49,7 @@ class MockUniverseSelectionModel(ManualUniverseSelectionModel):
 
                 var model = new UniverseSelectionModelPythonWrapper(pyModel());
 
-                var universes = model.CreateUniverses(new QCAlgorithmFramework()).ToList();
+                var universes = model.CreateUniverses(new QCAlgorithm()).ToList();
                 Assert.AreEqual(1, universes.Count);
 
                 var universe = universes.First();
@@ -86,7 +86,7 @@ class MockUniverseSelectionModel(FundamentalUniverseSelectionModel):
 
                 var model = new UniverseSelectionModelPythonWrapper(pyModel());
 
-                var universes = model.CreateUniverses(new QCAlgorithmFramework()).ToList();
+                var universes = model.CreateUniverses(new QCAlgorithm()).ToList();
                 Assert.AreEqual(1, universes.Count);
 
                 var data = new BaseDataCollection();
