@@ -104,8 +104,7 @@ usa,6R,future,,USD,2500000,0.000005,1
 usa,6L,future,,USD,100000,0.00005,1
 usa,6M,future,,USD,500000,0.00001,1
 usa,6Z,future,,USD,500000,0.000025,1
-# TODO: verify if ACD is accurate
-usa,ACD,future,,USD,200000,0.00005,1
+usa,ACD,future,,CAD,200000,0.0001,1
 usa,1S,future,,USD,42000,0.00001,1
 usa,22,future,,USD,1000,0.001,1
 usa,A0D,future,,USD,100,0.001,1
