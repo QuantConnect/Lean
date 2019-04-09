@@ -174,7 +174,12 @@ namespace QuantConnect.ToolBox
                             GetParameterOrDefault(optionsObject, "data-density", "Dense"),
                             GetParameterOrDefault(optionsObject, "include-coarse", "true"),
                             GetParameterOrDefault(optionsObject, "quote-trade-ratio", "1"),
-                            GetParameterOrDefault(optionsObject, "random-seed", null)
+                            GetParameterOrDefault(optionsObject, "random-seed", null),
+                            GetParameterOrDefault(optionsObject, "ipo-percentage", "5.0"),
+                            GetParameterOrDefault(optionsObject, "rename-percentage", "30.0"),
+                            GetParameterOrDefault(optionsObject, "splits-percentage", "15.0"),
+                            GetParameterOrDefault(optionsObject, "dividends-percentage", "60.0"),
+                            GetParameterOrDefault(optionsObject, "dividend-every-quarter-percentage", "30.0")
                         );
                         break;
                     default:

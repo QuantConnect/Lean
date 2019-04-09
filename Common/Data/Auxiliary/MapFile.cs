@@ -150,6 +150,14 @@ namespace QuantConnect.Data.Auxiliary
         public void WriteToCsv(string market) 
         {
             var filePath = GetMapFilePath(Permtick, market);
+            var fileDir = Path.GetDirectoryName(filePath);
+
+            if (!Directory.Exists(fileDir))
+            {
+                Directory.CreateDirectory(fileDir);
+                Log.Trace($"Created directory for map file: {fileDir}");
+            }
+
             File.WriteAllLines(filePath, ToCsvLines());
         }
 

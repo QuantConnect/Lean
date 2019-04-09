@@ -21,7 +21,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             string dataDensityString,
             string includeCoarseString,
             string quoteTradeRatioString,
-            string randomSeed
+            string randomSeed,
+            string hasIpoPercentageString, 
+            string hasRenamePercentageString,
+            string hasSplitsPercentageString,
+            string hasDividendsPercentageString,
+            string dividendEveryQuarterPercentageString
             )
         {
             var output = new ConsoleLeveledOutput();
@@ -36,6 +41,12 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 includeCoarseString,
                 quoteTradeRatioString,
                 randomSeed,
+                hasIpoPercentageString,
+                hasRenamePercentageString,
+                hasSplitsPercentageString,
+                hasDividendsPercentageString,
+                dividendEveryQuarterPercentageString,
+
                 output
             );
 

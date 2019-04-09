@@ -68,10 +68,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             var previousMonth = -1;
             var monthsTrading = 0;
 
-            var hasRename = _randomValueGenerator.NextBool(30.0);
-            var hasSplits = _randomValueGenerator.NextBool(15.0);
-            var hasDividends = _randomValueGenerator.NextBool(60.0);
-            var dividendEveryQuarter = _randomValueGenerator.NextBool(30.0);
+            var hasRename = _randomValueGenerator.NextBool(_settings.HasRenamePercentage);
+            var hasSplits = _randomValueGenerator.NextBool(_settings.HasSplitsPercentage);
+            var hasDividends = _randomValueGenerator.NextBool(_settings.HasDividendsPercentage);
+            var dividendEveryQuarter = _randomValueGenerator.NextBool(_settings.DividendEveryQuarterPercentage);
 
             var previousX = _random.NextDouble();
             var previousSplitFactor = hasSplits ? (decimal)_random.NextDouble() : 1;
