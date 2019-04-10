@@ -56,7 +56,7 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 var source = _pythonData.GetSource(config, date, isLiveMode);
-                return GetTypeAndDispose<SubscriptionDataSource>(source);
+                return (source as PyObject).GetAndDispose<SubscriptionDataSource>();
             }
         }
 
@@ -73,7 +73,7 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 var data = _pythonData.Reader(config, line, date, isLiveMode);
-                return GetTypeAndDispose<BaseData>(data);
+                return (data as PyObject).GetAndDispose<BaseData>();
             }
         }
 
@@ -93,23 +93,6 @@ namespace QuantConnect.Python
             {
                 SetProperty(index, value is double ? Convert.ToDecimal(value) : value);
             }
-        }
-
-        private T GetTypeAndDispose<T>(dynamic instance)
-        {
-            if (instance == null)
-            {
-                return default(T);
-            }
-            var pyInstance = instance as PyObject;
-            if (pyInstance != null)
-            {
-                var returnInstance = pyInstance.As<T>();
-                pyInstance.Dispose();
-                return returnInstance;
-            }
-            throw new ArgumentException($"Unexpected type: {instance.GetType()}." +
-                $" Was expecting {nameof(PyObject)}");
         }
     }
 }

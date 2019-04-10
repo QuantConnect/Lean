@@ -62,14 +62,18 @@ namespace QuantConnect.Python
                 // Since ExecuteMarginCall may return a python list
                 // Need to convert to C# list
                 var tickets = new List<OrderTicket>();
-                foreach (PyObject pyObject in marginCalls)
+                var iterator = marginCalls.GetIterator();
+                foreach (PyObject pyObject in iterator)
                 {
                     OrderTicket ticket;
                     if (pyObject.TryConvert(out ticket))
                     {
                         tickets.Add(ticket);
                     }
+                    pyObject.Dispose();
                 }
+                iterator.Dispose();
+                marginCalls.Dispose();
                 return tickets;
             }
         }
@@ -87,7 +91,8 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin, maintenanceMarginRequirement);
+                return (_model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin, maintenanceMarginRequirement)
+                    as PyObject).GetAndDispose<SubmitOrderRequest>();
             }
         }
 
@@ -103,7 +108,7 @@ namespace QuantConnect.Python
             {
                 var value = _model.GetMarginCallOrders(out issueMarginCallWarning);
 
-                // Since pythonnet does not support out parameters, the methods return 
+                // Since pythonnet does not support out parameters, the methods return
                 // a tuple where the out parameter comes after the other returned values
                 if (!PyTuple.IsTupleType(value))
                 {
@@ -111,9 +116,9 @@ namespace QuantConnect.Python
                 }
 
                 // In this case, the first item holds the list of margin calls
-                // and the second the out parameter 'issueMarginCallWarning' 
+                // and the second the out parameter 'issueMarginCallWarning'
                 var marginCallOrders = value[0] as PyObject;
-                issueMarginCallWarning = value[1];
+                issueMarginCallWarning = (value[1] as PyObject).GetAndDispose<bool>();
 
                 // Since GetMarginCallOrders may return a python list
                 // Need to convert to C# list
@@ -127,6 +132,8 @@ namespace QuantConnect.Python
                     }
                 }
                 issueMarginCallWarning |= requests.Count > 0;
+                marginCallOrders.Dispose();
+                (value as PyObject).Dispose();
                 return requests;
             }
         }

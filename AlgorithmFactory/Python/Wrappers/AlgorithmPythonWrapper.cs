@@ -61,8 +61,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                     Logging.Log.Trace($"AlgorithmPythonWrapper(): Python version {PythonEngine.Version}: Importing python module {moduleName}");
 
                     var module = Py.Import(moduleName);
-
-                    foreach (var name in module.Dir())
+                    var pyList = module.Dir();
+                    foreach (var name in pyList)
                     {
                         Type type;
                         var attr = module.GetAttr(name.ToString());
@@ -90,8 +90,10 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                             _onOrderEvent = (_algorithm as PyObject).GetAttr("OnOrderEvent");
                         }
+                        attr.Dispose();
                     }
-
+                    module.Dispose();
+                    pyList.Dispose();
                     // If _algorithm could not be set, throw exception
                     if (_algorithm == null)
                     {

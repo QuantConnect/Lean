@@ -40,11 +40,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                     // if the model defines a Name property then use that
                     if (_model.HasAttr("Name"))
                     {
-                        return _model.Name;
+                        return (_model.Name as PyObject).GetAndDispose<string>();
                     }
 
                     // if the model does not define a name property, use the python type name
-                    return _model.__class__.__name__;
+                    return (_model.__class__.__name__ as PyObject).GetAndDispose<string>();
                 }
             }
         }
@@ -80,11 +80,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             using (Py.GIL())
             {
                 var insights = _model.Update(algorithm, data) as PyObject;
-                foreach (PyObject insight in insights)
+                var iterator = insights.GetIterator();
+                foreach (PyObject insight in iterator)
                 {
-                    yield return insight.AsManagedObject(typeof(Insight)) as Insight;
+                    yield return insight.GetAndDispose<Insight>();
                 }
-                insights.Destroy();
+                iterator.Dispose();
+                insights.Dispose();
             }
         }
 

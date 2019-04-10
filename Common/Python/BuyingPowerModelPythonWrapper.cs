@@ -54,7 +54,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetBuyingPower(parameters);
+                return (_model.GetBuyingPower(parameters) as PyObject).GetAndDispose<BuyingPower>();
             }
         }
 
@@ -67,7 +67,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetLeverage(security);
+                return (_model.GetLeverage(security) as PyObject).GetAndDispose<decimal>();
             }
         }
 
@@ -80,7 +80,8 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetMaximumOrderQuantityForTargetValue(parameters);
+                return (_model.GetMaximumOrderQuantityForTargetValue(parameters)
+                    as PyObject).GetAndDispose<GetMaximumOrderQuantityForTargetValueResult>();
             }
         }
 
@@ -93,7 +94,8 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetReservedBuyingPowerForPosition(parameters);
+                return (_model.GetReservedBuyingPowerForPosition(parameters)
+                    as PyObject).GetAndDispose<ReservedBuyingPowerForPosition>();
             }
         }
 
@@ -106,7 +108,8 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.HasSufficientBuyingPowerForOrder(parameters);
+                return (_model.HasSufficientBuyingPowerForOrder(parameters)
+                    as PyObject).GetAndDispose<HasSufficientBuyingPowerForOrderResult>();
             }
         }
 
