@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
 
             using (Py.GIL())
             {
-                return _model.GetNextRefreshTimeUtc();
+                return (_model.GetNextRefreshTimeUtc() as PyObject).GetAndDispose<DateTime>();
             }
         }
 
@@ -76,11 +76,13 @@ namespace QuantConnect.Algorithm.Framework.Selection
             using (Py.GIL())
             {
                 var universes = _model.CreateUniverses(algorithm) as PyObject;
-                foreach (PyObject universe in universes)
+                var iterator = universes.GetIterator();
+                foreach (PyObject universe in iterator)
                 {
-                    yield return universe.AsManagedObject(typeof(Universe)) as Universe;
+                    yield return universe.GetAndDispose<Universe>();
                 }
-                universes.Destroy();
+                iterator.Dispose();
+                universes.Dispose();
             }
         }
     }

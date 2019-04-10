@@ -58,11 +58,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             using (Py.GIL())
             {
                 var targets = _model.CreateTargets(algorithm, insights) as PyObject;
-                foreach (PyObject target in targets)
+                var iterator = targets.GetIterator();
+                foreach (PyObject target in iterator)
                 {
-                    yield return target.AsManagedObject(typeof(IPortfolioTarget)) as IPortfolioTarget;
+                    yield return target.GetAndDispose<IPortfolioTarget>();
                 }
-                targets.Destroy();
+                iterator.Dispose();
+                targets.Dispose();
             }
         }
 

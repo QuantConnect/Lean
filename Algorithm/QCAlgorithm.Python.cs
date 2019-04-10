@@ -383,7 +383,9 @@ namespace QuantConnect.Algorithm
             {
                 using (Py.GIL())
                 {
-                    indicator.InvokeMethod("Update", new[] { consolidated.ToPython() });
+                    var data = consolidated.ToPython();
+                    indicator.InvokeMethod("Update", new[] { data });
+                    data.Dispose();
                 }
             };
         }
@@ -400,7 +402,7 @@ namespace QuantConnect.Algorithm
             {
                 try
                 {
-                    decimal value = ((dynamic)pyObject).Current.Value;
+                    var value = (((dynamic)pyObject).Current.Value as PyObject).GetAndDispose<decimal>();
                     Plot(series, value);
                 }
                 catch

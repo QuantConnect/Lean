@@ -28,6 +28,8 @@ namespace QuantConnect.Util
     /// </summary>
     public class PythonUtil
     {
+        private static readonly Lazy<dynamic> lazyInspect = new Lazy<dynamic>(() => Py.Import("inspect"));
+
         /// <summary>
         /// Encapsulates a python method with a <see cref="System.Action{T1}"/>
         /// </summary>
@@ -184,19 +186,24 @@ namespace QuantConnect.Util
         {
             using (Py.GIL())
             {
-                dynamic inspect = Py.Import("inspect");
-
+                var inspect = lazyInspect.Value;
                 if (inspect.isfunction(pyObject))
                 {
-                    var args = inspect.getargspec(pyObject).args;
-                    length = new PyList(args).Length();
+                    var args = inspect.getargspec(pyObject).args as PyObject;
+                    var pyList = new PyList(args);
+                    length = pyList.Length();
+                    pyList.Dispose();
+                    args.Dispose();
                     return true;
                 }
 
                 if (inspect.ismethod(pyObject))
                 {
-                    var args = inspect.getargspec(pyObject).args;
-                    length = new PyList(args).Length() - 1;
+                    var args = inspect.getargspec(pyObject).args as PyObject;
+                    var pyList = new PyList(args);
+                    length = pyList.Length() - 1;
+                    pyList.Dispose();
+                    args.Dispose();
                     return true;
                 }
             }

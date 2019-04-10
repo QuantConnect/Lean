@@ -58,7 +58,7 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    return (decimal)_model.Volatility;
+                    return (_model.Volatility as PyObject).GetAndDispose<decimal>();
                 }
             }
         }
@@ -87,7 +87,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetHistoryRequirements(security, utcTime);
+                return (_model.GetHistoryRequirements(security, utcTime) as PyObject).GetAndDispose<IEnumerable<HistoryRequest>>();
             }
         }
 

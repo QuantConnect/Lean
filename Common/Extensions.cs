@@ -40,6 +40,26 @@ namespace QuantConnect
     public static class Extensions
     {
         /// <summary>
+        /// Helper method that will cast the provided <see cref="PyObject"/>
+        /// to a T type and dispose of it.
+        /// </summary>
+        /// <typeparam name="T">The target type</typeparam>
+        /// <param name="instance">The <see cref="PyObject"/> instance to cast and dispose</param>
+        /// <returns>The instance of type T. Will return default value if
+        /// provided instance is null</returns>
+        public static T GetAndDispose<T>(this PyObject instance)
+        {
+            if (instance == null)
+            {
+                return default(T);
+            }
+            var returnInstance = instance.As<T>();
+            // will reduce ref count
+            instance.Dispose();
+            return returnInstance;
+        }
+
+        /// <summary>
         /// Extension to move one element from list from A to position B.
         /// </summary>
         /// <typeparam name="T">Type of list</typeparam>
@@ -1038,25 +1058,31 @@ namespace QuantConnect
         {
             using (Py.GIL())
             {
+                var value = "";
                 // PyObject objects that have the to_string method, like some pandas objects,
                 // can use this method to convert them into string objects
                 if (pyObject.HasAttr("to_string"))
                 {
-                    return Environment.NewLine + pyObject.InvokeMethod("to_string").ToString();
+                    var pyValue = pyObject.InvokeMethod("to_string");
+                    value = Environment.NewLine + pyValue;
+                    pyValue.Dispose();
                 }
-
-                var value = pyObject.ToString();
-                if (string.IsNullOrWhiteSpace(value))
+                else
                 {
-                    var pythonType = pyObject.GetPythonType();
-                    if (pythonType.GetType() == typeof(PyObject))
+                    value = pyObject.ToString();
+                    if (string.IsNullOrWhiteSpace(value))
                     {
-                        value = pythonType.ToString();
-                    }
-                    else
-                    {
-                        var type = pythonType.As<Type>();
-                        value = pyObject.AsManagedObject(type).ToString();
+                        var pythonType = pyObject.GetPythonType();
+                        if (pythonType.GetType() == typeof(PyObject))
+                        {
+                            value = pythonType.ToString();
+                        }
+                        else
+                        {
+                            var type = pythonType.As<Type>();
+                            value = pyObject.AsManagedObject(type).ToString();
+                        }
+                        pythonType.Dispose();
                     }
                 }
                 return value;
@@ -1103,6 +1129,7 @@ namespace QuantConnect
 
                     if (!type.IsAssignableFrom(csharpType))
                     {
+                        pythonType.Dispose();
                         return false;
                     }
 
@@ -1111,7 +1138,8 @@ namespace QuantConnect
                     // If the PyObject type and the managed object names are the same,
                     // pyObject is a C# object wrapped in PyObject, in this case return true
                     // Otherwise, pyObject is a python object that subclass a C# class.
-                    string name = ((dynamic) pythonType).__name__;
+                    var name = (((dynamic) pythonType).__name__ as PyObject).GetAndDispose<string>();
+                    pythonType.Dispose();
                     return name == result.GetType().Name;
                 }
                 catch
@@ -1148,12 +1176,12 @@ namespace QuantConnect
             }
 
             var code = string.Empty;
-            var locals = new PyDict();
             var types = type.GetGenericArguments();
 
-            try
+            using (Py.GIL())
             {
-                using (Py.GIL())
+                var locals = new PyDict();
+                try
                 {
                     for (var i = 0; i < types.Length; i++)
                     {
@@ -1168,14 +1196,15 @@ namespace QuantConnect
 
                     PythonEngine.Exec(code, null, locals.Handle);
                     result = (T)locals.GetItem("delegate").AsManagedObject(typeof(T));
-
+                    locals.Dispose();
                     return true;
                 }
-            }
-            catch
-            {
-                // Do not throw or log the exception.
-                // Return false as an exception means that the conversion could not be made.
+                catch
+                {
+                    // Do not throw or log the exception.
+                    // Return false as an exception means that the conversion could not be made.
+                }
+                locals.Dispose();
             }
             return false;
         }
@@ -1217,33 +1246,6 @@ namespace QuantConnect
                 using (Py.GIL())
                 {
                     throw new ArgumentException($"GetEnumString(): {pyObject.Repr()} is not a C# Type.");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Destroys a PyObject
-        /// https://docs.python.org/2/reference/datamodel.html#object.__del__
-        /// </summary>
-        /// <param name="pyObject">PyObject to be destroyed</param>
-        public static void Destroy(this PyObject pyObject)
-        {
-            try
-            {
-                if (pyObject.HasAttr("__del__"))
-                {
-                    pyObject.InvokeMethod("__del__");
-                }
-            }
-            catch (PythonException e)
-            {
-                if (string.IsNullOrWhiteSpace(e.StackTrace))
-                {
-                    throw new Exception($"{(pyObject as dynamic).__qualname__} returned a result with an undefined error set.");
-                }
-                else
-                {
-                    throw e;
                 }
             }
         }
