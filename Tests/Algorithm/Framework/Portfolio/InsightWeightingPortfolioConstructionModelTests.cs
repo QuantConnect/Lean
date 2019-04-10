@@ -19,7 +19,7 @@ using System.Linq;
 using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Algorithm.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.Market;
@@ -34,14 +34,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     [TestFixture]
     public class InsightWeightingPortfolioConstructionModelTests
     {
-        private QCAlgorithmFramework _algorithm;
+        private QCAlgorithm _algorithm;
         private const decimal _startingCash = 100000;
         private const double Weight = 0.01;
 
         [TestFixtureSetUp]
         public void SetUp()
         {
-            _algorithm = new QCAlgorithmFramework();
+            _algorithm = new QCAlgorithm();
             _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
 
             var prices = new Dictionary<Symbol, decimal>
@@ -375,7 +375,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return insight;
         }
 
-        private void SetPortfolioConstruction(Language language, QCAlgorithmFramework algorithm)
+        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm)
         {
             algorithm.SetPortfolioConstruction(new InsightWeightingPortfolioConstructionModel());
             if (language == Language.Python)

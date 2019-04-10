@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -28,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Test algorithm using <see cref="InsightWeightingPortfolioConstructionModel"/> and <see cref="ConstantAlphaModel"/>
     /// generating a constant <see cref="Insight"/> with a 0.25 weight
     /// </summary>
-    public class InsightWeightingFrameworkAlgorithm : QCAlgorithmFramework, IRegressionAlgorithmDefinition
+    public class InsightWeightingFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -52,9 +51,9 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfAlgorithm()
         {
             if (// holdings value should be 0.25 - to avoid price fluctuation issue we compare with 0.28 and 0.23
-                (Portfolio.TotalHoldingsValue > Portfolio.TotalPortfolioValue * 0.28m
+                Portfolio.TotalHoldingsValue > Portfolio.TotalPortfolioValue * 0.28m
                 ||
-                Portfolio.TotalHoldingsValue < Portfolio.TotalPortfolioValue * 0.23m))
+                Portfolio.TotalHoldingsValue < Portfolio.TotalPortfolioValue * 0.23m)
             {
                 throw new Exception($"Unexpected Total Holdings Value: {Portfolio.TotalHoldingsValue}");
             }
@@ -68,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp };
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
