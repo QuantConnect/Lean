@@ -1648,20 +1648,6 @@ namespace QuantConnect.Algorithm
         /// <param name="period">The consolidation period</param>
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
-        public IDataConsolidator Consolidate<T>(Symbol symbol, Resolution period, Action<T> handler)
-            where T : class, IBaseData
-        {
-            return Consolidate(symbol, period.ToTimeSpan(), null, handler);
-        }
-
-        /// <summary>
-        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol and tick type.
-        /// The handler and tick type must match.
-        /// </summary>
-        /// <param name="symbol">The symbol who's data is to be consolidated</param>
-        /// <param name="period">The consolidation period</param>
-        /// <param name="handler">Data handler receives new consolidated data when generated</param>
-        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
         public IDataConsolidator Consolidate<T>(Symbol symbol, TimeSpan period, Action<T> handler)
             where T : class, IBaseData
         {
@@ -1722,6 +1708,122 @@ namespace QuantConnect.Algorithm
             consolidator.DataConsolidated += (sender, consolidated) => handler((T) consolidated);
 
             return consolidator;
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="calendarType">The consolidation calendar type</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        public IDataConsolidator Consolidate(Symbol symbol, Func<DateTime, CalendarInfo> calendarType, Action<QuoteBar> handler)
+        {
+            return Consolidate(symbol, calendarType, TickType.Quote, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="calendarType">The consolidation calendar type</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        public IDataConsolidator Consolidate(Symbol symbol, Func<DateTime, CalendarInfo> calendarType, Action<TradeBar> handler)
+        {
+            return Consolidate(symbol, calendarType, TickType.Trade, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol and tick type.
+        /// The handler and tick type must match.
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="calendarType">The consolidation calendar type</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        public IDataConsolidator Consolidate<T>(Symbol symbol, Func<DateTime, CalendarInfo> calendarType, Action<T> handler)
+            where T : class, IBaseData
+        {
+            return Consolidate(symbol, calendarType, null, handler);
+        }
+
+        /// <summary>
+        /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol and tick type.
+        /// The handler and tick type must match.
+        /// </summary>
+        /// <param name="symbol">The symbol who's data is to be consolidated</param>
+        /// <param name="calendarType">The consolidation calendar type</param>
+        /// <param name="tickType">The tick type of subscription used as data source for consolidator. Specify null to use first subscription found.</param>
+        /// <param name="handler">Data handler receives new consolidated data when generated</param>
+        /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
+        private IDataConsolidator Consolidate<T>(Symbol symbol, Func<DateTime, CalendarInfo> calendarType, TickType? tickType, Action<T> handler)
+            where T : class, IBaseData
+        {
+            // resolve consolidator input subscription
+            var subscription = GetSubscription(symbol, tickType);
+
+            // create requested consolidator
+            var consolidator = CreateConsolidator(calendarType, subscription.Type, subscription.TickType);
+
+            if (!typeof(T).IsAssignableFrom(consolidator.OutputType))
+            {
+                // special case downgrading of QuoteBar -> TradeBar
+                if (typeof(T) == typeof(TradeBar) && consolidator.OutputType == typeof(QuoteBar))
+                {
+                    // collapse quote bar into trade bar (ignore the funky casting, required due to generics)
+                    consolidator.DataConsolidated += (sender, consolidated) => handler((T)(object)((QuoteBar)consolidated).Collapse());
+                }
+
+                throw new ArgumentException(
+                    $"Unable to consolidate with the specified handler because the consolidator's output type " +
+                    $"is {consolidator.OutputType.Name} but the handler's input type is {typeof(T).Name}.");
+            }
+
+            // register user-defined handler to receive consolidated data events
+            consolidator.DataConsolidated += (sender, consolidated) => handler((T)consolidated);
+            
+            // register the consolidator for automatic updates via SubscriptionManager
+            SubscriptionManager.AddConsolidator(symbol, consolidator);
+
+            return consolidator;
+        }
+
+        private IDataConsolidator CreateConsolidator(Func<DateTime, CalendarInfo> calendarType, Type consolidatorInputType, TickType tickType)
+        {
+            // if our type can be used as a trade bar, then let's just make one of those
+            // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to TradeBar
+            if (typeof(TradeBar).IsAssignableFrom(consolidatorInputType))
+            {
+                return new TradeBarConsolidator(calendarType);
+            }
+
+            // if our type can be used as a quote bar, then let's just make one of those
+            // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to QuoteBar
+            if (typeof(QuoteBar).IsAssignableFrom(consolidatorInputType))
+            {
+                return new QuoteBarConsolidator(calendarType);
+            }
+
+            // if our type can be used as a tick then we'll use a consolidator that keeps the TickType
+            // we use IsAssignableFrom instead of IsSubclassOf so that we can account for types that are able to be cast to Tick
+            if (typeof(Tick).IsAssignableFrom(consolidatorInputType))
+            {
+                if (tickType == TickType.Quote)
+                {
+                    return new TickQuoteBarConsolidator(calendarType);
+                }
+                return new TickConsolidator(calendarType);
+            }
+
+            // if our type can be used as a DynamicData then we'll use the DynamicDataConsolidator
+            if (typeof(DynamicData).IsAssignableFrom(consolidatorInputType))
+            {
+                return new DynamicDataConsolidator(calendarType);
+            }
+
+            // no matter what we can always consolidate based on the time-value pair of BaseData
+            return new BaseDataConsolidator(calendarType);
         }
     }
 }
