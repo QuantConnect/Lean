@@ -5,9 +5,9 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class AccelerationBandsTests : CommonIndicatorTests<TradeBar>
+    public class AccelerationBandsTests : CommonIndicatorTests<IBaseDataBar>
     {
-        protected override IndicatorBase<TradeBar> CreateIndicator()
+        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
             return new AccelerationBands(period: 20, width: 4m);
         }
