@@ -183,7 +183,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// </summary>
         private void UpdateScores(ReadOnlySecurityValuesCollection securityValuesCollection)
         {
-            var removals = new HashSet<InsightAnalysisContext>();
+            var removals = new List<InsightAnalysisContext>();
             foreach (var context in _openInsightContexts)
             {
                 // was this insight period closed before we update the times?

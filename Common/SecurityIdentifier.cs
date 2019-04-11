@@ -95,6 +95,8 @@ namespace QuantConnect
         private readonly string _symbol;
         private readonly ulong _properties;
         private readonly SidBox _underlying;
+        private readonly Lazy<SecurityType> _lazySecurityType;
+        private readonly Lazy<int> _lazyHashCode;
 
         #endregion
 
@@ -181,10 +183,7 @@ namespace QuantConnect
         /// <summary>
         /// Gets the security type component of this security identifier.
         /// </summary>
-        public SecurityType SecurityType
-        {
-            get { return (SecurityType)ExtractFromProperties(SecurityTypeOffset, SecurityTypeWidth); }
-        }
+        public SecurityType SecurityType => _lazySecurityType.Value;
 
         /// <summary>
         /// Gets the option strike price. This only applies to SecurityType.Option
@@ -262,6 +261,8 @@ namespace QuantConnect
             _symbol = symbol;
             _properties = properties;
             _underlying = null;
+            _lazySecurityType = new Lazy<SecurityType>(() => (SecurityType)ExtractFromProperties(SecurityTypeOffset, SecurityTypeWidth, properties));
+            _lazyHashCode = new Lazy<int>(() => unchecked (symbol.GetHashCode() * 397) ^ properties.GetHashCode());
         }
 
         /// <summary>
@@ -646,7 +647,16 @@ namespace QuantConnect
         /// </summary>
         private ulong ExtractFromProperties(ulong offset, ulong width)
         {
-            return (_properties/offset)%width;
+            return ExtractFromProperties(offset, width, _properties);
+        }
+
+        /// <summary>
+        /// Extracts the embedded value from _otherData
+        /// </summary>
+        /// <remarks>Static so it can be used in <see cref="_lazySecurityType"/> initialization</remarks>
+        private static ulong ExtractFromProperties(ulong offset, ulong width, ulong properties)
+        {
+            return (properties / offset) % width;
         }
 
         #endregion
@@ -688,10 +698,7 @@ namespace QuantConnect
         /// A hash code for the current <see cref="T:System.Object"/>.
         /// </returns>
         /// <filterpriority>2</filterpriority>
-        public override int GetHashCode()
-        {
-            unchecked { return (_symbol.GetHashCode()*397) ^ _properties.GetHashCode(); }
-        }
+        public override int GetHashCode() => _lazyHashCode.Value;
 
         /// <summary>
         /// Override equals operator

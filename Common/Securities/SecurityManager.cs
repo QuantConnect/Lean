@@ -232,11 +232,12 @@ namespace QuantConnect.Securities
         {
             get
             {
-                if (!_securityManager.ContainsKey(symbol))
+                Security security;
+                if (!_securityManager.TryGetValue(symbol, out security))
                 {
                     throw new Exception(string.Format("This asset symbol ({0}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{1}\")'", symbol, SymbolCache.GetTicker(symbol)));
                 }
-                return _securityManager[symbol];
+                return security;
             }
             set
             {

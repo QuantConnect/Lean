@@ -299,7 +299,7 @@ namespace QuantConnect.Statistics
             else
             {
                 // execution has opposite direction of trade
-                if (position.PendingFills.Sum(x => x.FillQuantity) + fill.FillQuantity == 0 || fill.AbsoluteFillQuantity > Math.Abs(position.PendingFills.Sum(x => x.FillQuantity)))
+                if (position.PendingFills.Aggregate(0m, (d, x) => d + x.FillQuantity) + fill.FillQuantity == 0 || fill.AbsoluteFillQuantity > Math.Abs(position.PendingFills.Aggregate(0m, (d, x) => d + x.FillQuantity)))
                 {
                     // trade closed
                     position.PendingFills.Add(fill);

@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
         /// <summary>Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
         /// <returns>The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.</returns>
-        public int Count => _insights.Sum(kvp => kvp.Value.Count);
+        public int Count => _insights.Aggregate(0, (i, kvp) => i + kvp.Value.Count);
 
         /// <summary>Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</summary>
         /// <returns>true if the <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only; otherwise, false.</returns>

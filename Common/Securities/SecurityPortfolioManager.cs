@@ -301,7 +301,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal TotalAbsoluteHoldingsCost
         {
-            get { return Securities.Sum(x => x.Value.Holdings.AbsoluteHoldingsCost); }
+            get { return Securities.Aggregate(0m, (d, pair) => d + pair.Value.Holdings.AbsoluteHoldingsCost); }
         }
 
         /// <summary>
@@ -383,7 +383,7 @@ namespace QuantConnect.Securities
 
                 var totalFuturesAndCfdHoldingsValue = Securities
                     .Where(x => x.Value.Type == SecurityType.Future || x.Value.Type == SecurityType.Cfd)
-                    .Sum(x => x.Value.Holdings.UnrealizedProfit);
+                    .Aggregate(0m, (d, pair) => d + pair.Value.Holdings.UnrealizedProfit);
 
                 return CashBook.TotalValueInAccountCurrency +
                        UnsettledCashBook.TotalValueInAccountCurrency +

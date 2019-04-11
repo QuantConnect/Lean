@@ -23,6 +23,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
     /// </summary>
     public class InsightAnalysisContext
     {
+        private readonly Lazy<int> _lazyHashCode;
         private DateTime _previousEvaluationTimeUtc;
         private readonly Dictionary<string, object> _contextStorage;
         private readonly TimeSpan _analysisPeriod;
@@ -110,6 +111,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
             }
 
             _analysisPeriod = AnalysisEndTimeUtc - initialValues.TimeUtc;
+            _lazyHashCode = new Lazy<int>(() => Id.GetHashCode());
         }
 
         /// <summary>
@@ -193,7 +195,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <filterpriority>2</filterpriority>
         public override int GetHashCode()
         {
-            return Id.GetHashCode();
+            return _lazyHashCode.Value;
         }
 
         /// <summary>Determines whether the specified object is equal to the current object.</summary>

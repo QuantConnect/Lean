@@ -46,10 +46,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             DateTimeUtc = dateTimeUtc;
 
-            // ensure we're keeping copies to avoid reference shenanigans
-            // except for the OrderBasedInsightGenerator case, which modifies
-            // insights after emitting them.
-            Insights = insights.Select(insight => clone ? insight.Clone() : insight).ToList();
+            // for performance only call 'ToArray' if not empty enumerable (which is static)
+            Insights = insights == Enumerable.Empty<Insight>()
+                ? new List<Insight>() : insights.Select(insight => clone ? insight.Clone() : insight).ToList();
         }
     }
 }

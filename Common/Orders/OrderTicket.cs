@@ -344,7 +344,8 @@ namespace QuantConnect.Orders
                     // keep running totals of quantity filled and the average fill price so we
                     // don't need to compute these on demand
                     _quantityFilled += orderEvent.FillQuantity;
-                    var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill()).Sum(x => x.AbsoluteFillQuantity*x.FillPrice);
+                    var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill())
+                        .Aggregate(0m, (d, x) => d + x.AbsoluteFillQuantity*x.FillPrice);
                     _averageFillPrice = quantityWeightedFillPrice/Math.Abs(_quantityFilled);
                 }
             }
