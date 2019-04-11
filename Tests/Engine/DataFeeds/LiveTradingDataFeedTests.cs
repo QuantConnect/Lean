@@ -480,7 +480,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Console.WriteLine("Count: " + count);
             Console.WriteLine("Spool up time: " + stopwatch.Elapsed);
 
-            Assert.That(count, Is.GreaterThan(15));
+            Assert.That(count, Is.GreaterThan(5));
             Assert.IsTrue(emittedData);
         }
 
