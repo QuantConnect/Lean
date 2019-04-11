@@ -22,18 +22,26 @@ using QuantConnect.Data.Market;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Globalization;
+using System.Text;
 using QuantConnect.Data;
 
 namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 {
+    public class TickContainer
+    {
+        public string SecurityRawIdentifier { get; set; }
+        public Tick Tick { get; set; }
+    }
+
     /// <summary>
     /// Enumerator for converting AlgoSeek option files into Ticks.
     /// </summary>
-    public class AlgoSeekOptionsReader : IEnumerator<Tick>
+    public class AlgoSeekOptionsReader : IEnumerator<TickContainer>
     {
-        private DateTime _date;
-        private Stream _stream;
-        private StreamReader _streamReader;
+        private readonly string _file;
+        private readonly DateTime _date;
+        private readonly Stream _stream;
+        private readonly StreamReader _streamReader;
         private HashSet<string> _symbolFilter;
 
         private Dictionary<string, Symbol> _underlyingCache;
@@ -49,7 +57,8 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private readonly int _columnPremium = -1;
         private readonly int _columnExchange = -1;
         private readonly int _columnsCount = -1;
-        private string _file;
+
+        private readonly StringBuilder _securityRawIdentifier = new StringBuilder();
 
         /// <summary>
         /// Enumerate through the lines of the algoseek files.
@@ -58,14 +67,15 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// <param name="date">Reference date of the folder</param>
         public AlgoSeekOptionsReader(string file, DateTime date, HashSet<string> symbolFilter = null)
         {
+            _file = file;
             _date = date;
+            _symbolFilter = symbolFilter;
+
             _underlyingCache = new Dictionary<string, Symbol>();
 
             var streamProvider = StreamProvider.ForExtension(Path.GetExtension(file));
-            _file = file;
             _stream = streamProvider.Open(file).First();
             _streamReader = new StreamReader(_stream);
-            _symbolFilter = symbolFilter;
 
             // detecting column order in the file
             var headerLine = _streamReader.ReadLine();
@@ -98,7 +108,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         public bool MoveNext()
         {
             string line;
-            Tick tick = null;
+            TickContainer tick = null;
             while (tick == null && (line = _streamReader.ReadLine()) != null)
                 {
                 // If line is invalid continue looping to find next valid line.
@@ -111,10 +121,9 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// <summary>
         /// Current top of the tick file.
         /// </summary>
-        public Tick Current
+        public TickContainer Current
         {
             get; private set;
-
         }
 
         /// <summary>
@@ -152,149 +161,115 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// </summary>
         /// <param name="line"></param>
         /// <returns></returns>
-        private Tick Parse(string line)
+        private TickContainer Parse(string line)
         {
             try
             {
-                // parse csv check column count
-                var csv = line.ToCsv();
-                if (csv.Count - 1 < _columnsCount)
+                var column = -1;
+                int last = 0;
+                var tickBuilder = new Tick();
+                var isAsk = false;
+                var price = decimal.Zero;
+                var quantity = 0;
+                _securityRawIdentifier.Clear();
+                var readOnlySpan = line.AsSpan();
+                for (int i = 0; i < line.Length; i++)
                 {
-                    return null;
-                }
-
-                TickType tickType;
-                bool isAsk = false;
-
-                switch (csv[_columnType])
-                {
-                    case "O":
-                        tickType = TickType.OpenInterest;
-                        break;
-                    case "T":
-                        tickType = TickType.Trade;
-                        break;
-                    case "F":
-                        switch (csv[_columnSide])
+                    if (line[i] == ',')
+                    {
+                        if (last != 0) last = last + 1;
+                        var columnContent = readOnlySpan.Slice(last, i - last);
+                        last = i;
+                        column++;
+                        if (columnContent.IsEmpty || columnContent.IsWhiteSpace()) continue;
+                        if (column == _columnTimestamp) tickBuilder.Time = _date + TimeSpan.ParseExact(columnContent.ToString(), @"h\:mm\:ss\.fff", CultureInfo.InvariantCulture);
+                        if (column == _columnType)
                         {
-                            case "B":
-                                tickType = TickType.Quote;
-                                isAsk = false;
-                                break;
-                            case "O":
-                                tickType = TickType.Quote;
-                                isAsk = true;
-                                break;
-                            default:
-                                return null;
+                            switch (columnContent.GetPinnableReference())
+                            {
+                                case 'O':
+                                    tickBuilder.TickType = TickType.OpenInterest;
+                                    break;
+                                case 'T':
+                                    tickBuilder.TickType = TickType.Trade;
+                                    break;
+                                case 'F':
+                                    tickBuilder.TickType = TickType.Quote;
+                                    break;
+                            }
                         }
-                        break;
-                    default:
-                        return null;
+                        if (column == _columnSide)
+                        {
+                            switch (columnContent.GetPinnableReference())
+                            {
+                                case 'B':
+                                    tickBuilder.TickType = TickType.Quote;
+                                    break;
+                                case 'O':
+                                    tickBuilder.TickType = TickType.Quote;
+                                    isAsk = true;
+                                    break;
+                            }
+                        }
+
+                        if (column == _columnTicker)
+                        {
+                            _securityRawIdentifier.Append(columnContent.ToArray());
+                            _securityRawIdentifier.Append('-');
+                        }
+                        if (column == _columnPutCall)
+                        {
+                            _securityRawIdentifier.Append(columnContent.ToArray());
+                            _securityRawIdentifier.Append('-');
+                        }
+                        if (column == _columnExpiration)
+                        {
+                            _securityRawIdentifier.Append(columnContent.ToArray());
+                            _securityRawIdentifier.Append('-');
+                        }
+                        if (column == _columnStrike)
+                        {
+                            _securityRawIdentifier.Append(columnContent.ToArray());
+                        }
+
+                        if (column == _columnPremium) price = columnContent.ToArray().ToInt32() / 10000m;
+                        if (column == _columnQuantity) quantity = columnContent.ToArray().ToInt32();
+                    }
                 }
 
-                var underlying = csv[_columnTicker];
-
-                if (_symbolFilter != null && !_symbolFilter.Contains(underlying))
-                    return null;
-
-                if (string.IsNullOrEmpty(underlying))
-                {
-                    return null;
-                }
-
-                // ignoring time zones completely -- this is all in the 'data-time-zone'
-                var timeString = csv[_columnTimestamp];
-                var hours = timeString.Substring(0, 2).ToInt32();
-                var minutes = timeString.Substring(3, 2).ToInt32();
-                var seconds = timeString.Substring(6, 2).ToInt32();
-                var millis = timeString.Substring(9, 3).ToInt32();
-                var time = _date.Add(new TimeSpan(0, hours, minutes, seconds, millis));
-
-                var optionRight = csv[_columnPutCall][0] == 'P' ? OptionRight.Put : OptionRight.Call;
-
-                var expiry = DateTime.MinValue;
-                if (!DateTime.TryParseExact(csv[_columnExpiration], "yyyyMMdd", null, DateTimeStyles.None, out expiry))
-                {
-                    // sometimes we see the corrupted data with yyyyMMdd, where dd is equal to zeros
-                    DateTime.TryParseExact(csv[_columnExpiration], "yyyyMM", null, DateTimeStyles.None, out expiry);
-                }
-
-                var strike = csv[_columnStrike].ToDecimal() / 10000m;
-                var optionStyle = OptionStyle.American; // couldn't see this specified in the file, maybe need a reference file
-
-                Symbol symbol;
-
-                if (!_underlyingCache.ContainsKey(underlying))
-                {
-                    symbol = Symbol.CreateOption(underlying, Market.USA, optionStyle, optionRight, strike, expiry, null, false);
-                    _underlyingCache[underlying] = symbol.Underlying;
-                }
-                else
-                {
-                    symbol = Symbol.CreateOption(_underlyingCache[underlying], Market.USA, optionStyle, optionRight, strike, expiry);
-                }
-
-                var price = csv[_columnPremium].ToDecimal() / 10000m;
-                var quantity = csv[_columnQuantity].ToInt32();
-
-                switch (tickType)
+                switch (tickBuilder.TickType)
                 {
                     case TickType.Quote:
-
-                        var tick = new Tick
-                        {
-                            Symbol = symbol,
-                            Time = time,
-                            TickType = tickType,
-                            Exchange = Market.USA,
-                            Value = price
-                        };
-
                         if (isAsk)
                         {
-                            tick.AskPrice = price;
-                            tick.AskSize = quantity;
+                            tickBuilder.AskPrice = price;
+                            tickBuilder.AskSize = quantity;
                         }
                         else
                         {
-                            tick.BidPrice = price;
-                            tick.BidSize = quantity;
+                            tickBuilder.BidPrice = price;
+                            tickBuilder.BidSize = quantity;
                         }
 
-                        return tick;
-
+                        break;
                     case TickType.Trade:
-
-                        tick = new Tick
-                        {
-                            Symbol = symbol,
-                            Time = time,
-                            TickType = tickType,
-                            Exchange = Market.USA,
-                            Value = price,
-                            Quantity = quantity
-                        };
-
-                        return tick;
-
+                        tickBuilder.Exchange = Market.USA;
+                        tickBuilder.Value = price;
+                        tickBuilder.Quantity = quantity;
+                        break;
                     case TickType.OpenInterest:
-
-                        tick = new Tick
-                        {
-                            Symbol = symbol,
-                            Time = time,
-                            TickType = tickType,
-                            Exchange = Market.USA,
-                            Value = quantity
-                        };
-
-                        return tick;
+                        tickBuilder.Exchange = Market.USA;
+                        tickBuilder.Value = quantity;
+                        break;
                 }
 
-                return null;
+                return new TickContainer
+                {
+                    SecurityRawIdentifier = _securityRawIdentifier.ToString(),
+                    Tick = tickBuilder
+                };
             }
-            catch(Exception err)
+            catch (Exception err)
             {
                 Log.Error(err);
                 Log.Trace("Line: {0}, File: {1}", line, _file);

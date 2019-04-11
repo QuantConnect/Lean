@@ -39,10 +39,13 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private string _dataDirectory;
         private IDataConsolidator _consolidator;
         private DateTime _referenceDate;
-        private static string[] _windowsRestrictedNames =
+        private string[] _windowsRestrictedNames =
         {
             "con", "prn", "aux", "nul"
         };
+
+        private readonly bool _isWindows = OS.IsWindows;
+        private string _securityRawIdentifier;
 
         /// <summary>
         /// Zip entry name for the option contract
@@ -118,9 +121,9 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// <param name="tickType">TradeBar or QuoteBar to generate</param>
         /// <param name="resolution">Resolution to consolidate</param>
         /// <param name="dataDirectory">Data directory for LEAN</param>
-        public AlgoSeekOptionsProcessor(Symbol symbol, DateTime date, TickType tickType, Resolution resolution, string dataDirectory)
+        public AlgoSeekOptionsProcessor(string securityRawIdentifier, DateTime date, TickType tickType, Resolution resolution, string dataDirectory)
         {
-            _symbol = Safe(symbol);
+            _securityRawIdentifier = securityRawIdentifier;
             _tickType = tickType;
             _referenceDate = date;
             _resolution = resolution;
@@ -186,9 +189,9 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// </summary>
         /// <param name="symbol">Symbol to rename if required</param>
         /// <returns>Renamed symbol for reserved names</returns>
-        private static Symbol Safe(Symbol symbol)
+        private Symbol Safe(Symbol symbol)
         {
-            if (OS.IsWindows)
+            if (_isWindows)
             {
                 if (_windowsRestrictedNames.Contains(symbol.Value.ToLower()) || 
                     _windowsRestrictedNames.Contains(symbol.Underlying.Value.ToLower()))
@@ -199,9 +202,9 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             return symbol;
         }
 
-        private static string SafeName(string fileName)
+        private string SafeName(string fileName)
         {
-            if (OS.IsWindows)
+            if (_isWindows)
             {
                 if (_windowsRestrictedNames.Contains(fileName.ToLower()))
                     return "_" + fileName;

@@ -334,6 +334,17 @@ namespace QuantConnect
         /// <summary>
         /// Extension method for faster string to Int32 conversion.
         /// </summary>
+        /// <param name="charArray">String to be converted to positive Int32 value</param>
+        /// <remarks>Method makes some assuptions - always numbers, no "signs" +,- etc.</remarks>
+        /// <returns>Int32 value of the string</returns>
+        public static int ToInt32(this char[] charArray)
+        {
+            return charArray.TakeWhile(t => t != '.').Aggregate(0, (current, t) => current * 10 + (t - '0'));
+        }
+
+        /// <summary>
+        /// Extension method for faster string to Int32 conversion.
+        /// </summary>
         /// <param name="str">String to be converted to positive Int32 value</param>
         /// <remarks>Method makes some assuptions - always numbers, no "signs" +,- etc.</remarks>
         /// <returns>Int32 value of the string</returns>
