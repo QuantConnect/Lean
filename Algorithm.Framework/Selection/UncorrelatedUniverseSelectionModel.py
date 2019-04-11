@@ -80,7 +80,7 @@ class UncorrelatedUniverseSelectionModel(FundamentalUniverseSelectionModel):
         if len(newSymbols) > 1:
             history = algorithm.History(newSymbols, self.historyLength, Resolution.Daily)
             if not history.empty:
-                history = history.close.unstack(level=0).fillna(method='bfill')
+                history = history.close.unstack(level=0)
                 for symbol in newSymbols:
                     self.cache[symbol].Warmup(history)
 
