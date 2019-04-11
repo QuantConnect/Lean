@@ -5,8 +5,8 @@ namespace QuantConnect.Indicators
     /// <summary>
     ///     The Acceleration Bands created by Price Headley plots upper and lower envelope bands around a moving average.
     /// </summary>
-    /// <seealso cref="Indicators.IndicatorBase{TradeBar}" />
-    public class AccelerationBands : IndicatorBase<TradeBar>
+    /// <seealso cref="Indicators.IndicatorBase{IBaseDataBar}" />
+    public class AccelerationBands : IndicatorBase<IBaseDataBar>
     {
         private readonly decimal _width;
 
@@ -90,7 +90,7 @@ namespace QuantConnect.Indicators
         /// <returns>
         ///     A new value for this indicator
         /// </returns>
-        protected override decimal ComputeNextValue(TradeBar input)
+        protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             MiddleBand.Update(new IndicatorDataPoint
             {
