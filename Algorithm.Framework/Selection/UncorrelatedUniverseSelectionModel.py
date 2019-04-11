@@ -76,11 +76,11 @@ class UncorrelatedUniverseSelectionModel(FundamentalUniverseSelectionModel):
             if not data.IsReady:
                 newSymbols.append(symbol)
 
-        # Warm up the dictionary objects of selected symbols and benchmark that do not have enought data
+        # Warm up the dictionary objects of selected symbols and benchmark that do not have enough data
         if len(newSymbols) > 1:
             history = algorithm.History(newSymbols, self.historyLength, Resolution.Daily)
-            if not (history.empty or len(history.index) < self.historyLength):
-                history = history.close.unstack(level=0).dropna()
+            if not history.empty:
+                history = history.close.unstack(level=0).fillna(method='bfill')
                 for symbol in newSymbols:
                     self.cache[symbol].Warmup(history)
 
