@@ -116,7 +116,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     yield return timeSlice;
                 }
             }
-            Log.Trace("Synchronizer.GetEnumerator(): Exited thread.");
+
+            Log.Trace("LiveSynchronizer.GetEnumerator(): Exited thread.");
         }
 
         /// <summary>
