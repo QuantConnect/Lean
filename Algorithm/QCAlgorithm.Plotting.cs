@@ -178,9 +178,10 @@ namespace QuantConnect.Algorithm
             if (!thisChart.Series.ContainsKey(series))
             {
                 //Number of series in total, excluding reserved charts
-                var seriesCount = _charts.Select(x => x.Value).Sum(c => ReservedChartSeriesNames.TryGetValue(c.Name, out reservedSeriesNames)
-                    ? c.Series.Values.Count(s => reservedSeriesNames.Count > 0 && !reservedSeriesNames.Contains(s.Name))
-                    : c.Series.Count);
+                var seriesCount = _charts.Select(x => x.Value)
+                    .Aggregate(0, (i, c) => ReservedChartSeriesNames.TryGetValue(c.Name, out reservedSeriesNames)
+                    ? i + c.Series.Values.Count(s => reservedSeriesNames.Count > 0 && !reservedSeriesNames.Contains(s.Name))
+                    : i + c.Series.Count);
 
                 if (seriesCount > 10)
                 {

@@ -66,7 +66,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public decimal TotalValueInAccountCurrency
         {
-            get { return _currencies.Sum(x => x.Value.ValueInAccountCurrency); }
+            get { return _currencies.Aggregate(0m, (d, pair) => d + pair.Value.ValueInAccountCurrency); }
         }
 
         /// <summary>

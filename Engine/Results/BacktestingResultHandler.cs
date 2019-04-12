@@ -316,7 +316,7 @@ namespace QuantConnect.Lean.Engine.Results
             foreach (var chart in deltaCharts.Values)
             {
                 //Don't add packet if the series is empty:
-                if (chart.Series.Values.Sum(x => x.Values.Count) == 0) continue;
+                if (chart.Series.Values.Aggregate(0, (i, x) => i + x.Values.Count) == 0) continue;
 
                 splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult
                 {

@@ -39,7 +39,8 @@ namespace QuantConnect.Algorithm.Framework.Execution
             foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
             {
                 var existing = algorithm.Securities[target.Symbol].Holdings.Quantity
-                    + algorithm.Transactions.GetOpenOrders(target.Symbol).Sum(o => o.Quantity);
+                    + algorithm.Transactions.GetOpenOrders(target.Symbol)
+                        .Aggregate(0m, (d, order) => d + order.Quantity);
                 var quantity = target.Quantity - existing;
                 if (quantity != 0)
                 {

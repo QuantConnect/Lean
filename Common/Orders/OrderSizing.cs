@@ -65,7 +65,7 @@ namespace QuantConnect.Orders
         {
             var security = algorithm.Securities[target.Symbol];
             var holdings = security.Holdings.Quantity;
-            var openOrderQuantity = algorithm.Transactions.GetOpenOrders(target.Symbol).Sum(o => o.Quantity);
+            var openOrderQuantity = algorithm.Transactions.GetOpenOrders(target.Symbol).Aggregate(0m, (d, o) => d + o.Quantity);
             var quantity = target.Quantity - holdings - openOrderQuantity;
 
             // check if we're below the lot size threshold
