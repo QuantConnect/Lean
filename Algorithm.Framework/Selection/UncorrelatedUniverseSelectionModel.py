@@ -76,12 +76,13 @@ class UncorrelatedUniverseSelectionModel(FundamentalUniverseSelectionModel):
             if not data.IsReady:
                 newSymbols.append(symbol)
 
-        # Warm up the dictionary objects of selected symbols and benchmark that do not have enought data
+        # Warm up the dictionary objects of selected symbols and benchmark that do not have enough data
         if len(newSymbols) > 1:
             history = algorithm.History(newSymbols, self.historyLength, Resolution.Daily)
-            history = history.close.unstack(level=0)
-            for symbol in newSymbols:
-                self.cache[symbol].Warmup(history)
+            if not history.empty:
+                history = history.close.unstack(level=0)
+                for symbol in newSymbols:
+                    self.cache[symbol].Warmup(history)
 
         # Create a new dictionary with the zScore
         zScore = dict()
