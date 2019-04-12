@@ -35,7 +35,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private readonly string _dataDirectory;
         private string _entryPath;
         private readonly DateTime _referenceDate;
-        private string _securityRawIdentifier;
+        public string SecurityRawIdentifier { get; }
 
         private readonly string[] _windowsRestrictedNames =
         {
@@ -54,7 +54,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// <param name="dataDirectory">Data directory for LEAN</param>
         public AlgoSeekOptionsProcessor(string securityRawIdentifier, DateTime date, TickType tickType, Resolution resolution, string dataDirectory)
         {
-            _securityRawIdentifier = securityRawIdentifier;
+            SecurityRawIdentifier = securityRawIdentifier;
             TickType = tickType;
             _referenceDate = date;
             Resolution = resolution;
@@ -81,36 +81,15 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             _consolidator.DataConsolidated += (sender, consolidated) => { Queue.Enqueue(consolidated); };
         }
 
-        /// <summary>
-        ///     Zip entry name for the option contract
-        /// </summary>
-        public string EntryPath
+        public FileInfo GetEntryPath(Symbol symbol)
         {
-            get
-            {
-                if (_entryPath == null) _entryPath = SafeName(LeanData.GenerateZipEntryName(Symbol, _referenceDate, Resolution, TickType));
-                return _entryPath;
-            }
-            set { _entryPath = value; }
+            return  new FileInfo(LeanData.GenerateZipEntryName(symbol, _referenceDate, Resolution, TickType));
         }
 
-        /// <summary>
-        ///     Zip file path for the option contract collection
-        /// </summary>
-        public string ZipPath
+        public FileInfo GetZipPath(Symbol symbol)
         {
-            get
-            {
-                if (_zipPath == null) _zipPath = Path.Combine(_dataDirectory, SafeName(LeanData.GenerateRelativeZipFilePath(Safe(Symbol), _referenceDate, Resolution, TickType).Replace(".zip", string.Empty))) + ".zip";
-                return _zipPath;
-            }
-            set { _zipPath = value; }
+            return new FileInfo(Path.Combine(_dataDirectory, SafeName(LeanData.GenerateRelativeZipFilePath(Safe(symbol), _referenceDate, Resolution, TickType).Replace(".zip", string.Empty))));
         }
-
-        /// <summary>
-        ///     Public access to the processor symbol
-        /// </summary>
-        public Symbol Symbol { get; }
 
         /// <summary>
         ///     Output base data queue for processing in memory

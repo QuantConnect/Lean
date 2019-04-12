@@ -39,7 +39,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             var remoteMask = Config.Get("options-remote-file-mask", "*.bz2").Replace("{0}", date);
             var remoteDirectory = Config.Get("options-remote-directory").Replace("{0}", date);
             var sourceDirectory = Config.Get("options-source-directory").Replace("{0}", date);
-            var dataDirectory = Config.Get("data-directory").Replace("{0}", date);
+            var dataDirectory = Config.Get("data-folder").Replace("{0}", date);
             var cleanSourceDirectory = Config.GetBool("clean-source-directory", false);
 
             Log.Trace("CONFIGURATION:");
@@ -60,17 +60,12 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 return;
             }
 
-            if (opraFileName != string.Empty)
+            if (opraFileName == string.Empty)
                 SingleInstanceProcessing(referenceDate, remoteDirectory, remoteMask, sourceDirectory, dataDirectory, cleanSourceDirectory);
             else
                 MultipleInstanceProcessing(referenceDate, remoteDirectory, sourceDirectory, dataDirectory, opraFileName);
         }
 
-        /// <summary>
-        ///     Multiples the instance processing.
-        /// </summary>
-        /// <param name="date">The date.</param>
-        /// <param name="opraFileNumber">The opra file number.</param>
         private static void MultipleInstanceProcessing(DateTime referenceDate, string remoteDirectory, string sourceDirectory, string dataDirectory, string opraFileName)
         {
             // After many iterations, this shows to be GC parameters with the best performance.
@@ -83,6 +78,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             }
 
             var converter = new AlgoSeekOptionsConverterMultipleInstances(referenceDate, sourceDirectory, dataDirectory, remoteOpraFile);
+            converter.Convert();
         }
 
         private static void SingleInstanceProcessing(DateTime referenceDate, string remoteDirectory, string remoteMask, string sourceDirectory, string dataDirectory, bool cleanSourceDirectory)

@@ -54,7 +54,7 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("data-density", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Valid values: --data-density=Dense/Sparse/VerySparse ]"),
                 new CommandLineOption("include-coarse", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Only used for Equity, defaults to true: Example: --include-coarse=true"),
                 new CommandLineOption("quote-trade-ratio", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Sets the ratio of generated quotes to generated trades. Values larger than 1 mean more quotes than trades. Only used for Option, Future and Crypto, defaults to 1: Example: --quote-trade-ratio=1.75"),
-                new CommandLineOption("opra-file", CommandOptionType.SingleValue, "[OPTIONAL for AlgoSeekOptionsConverterProgram. Sets the opra file name to be processed.")
+                new CommandLineOption("opra-file-name", CommandOptionType.SingleValue, "[OPTIONAL for AlgoSeekOptionsConverterProgram. Sets the opra file name to be processed.")
             };
 
         /// <summary>

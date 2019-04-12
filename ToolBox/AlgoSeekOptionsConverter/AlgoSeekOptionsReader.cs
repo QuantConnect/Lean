@@ -63,16 +63,15 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// </summary>
         /// <param name="file">BZ File for algoseek</param>
         /// <param name="date">Reference date of the folder</param>
-        public AlgoSeekOptionsReader(string file, DateTime date, HashSet<string> symbolFilter = null)
+        public AlgoSeekOptionsReader(FileInfo file, DateTime date, HashSet<string> symbolFilter = null)
         {
-            _file = file;
+            _file = file.FullName;
             _date = date;
             _symbolFilter = symbolFilter;
 
             _underlyingCache = new Dictionary<string, Symbol>();
 
-            var streamProvider = StreamProvider.ForExtension(Path.GetExtension(file));
-            _stream = streamProvider.Open(file).First();
+            _stream = file.OpenRead();
             _streamReader = new StreamReader(_stream);
 
             // detecting column order in the file

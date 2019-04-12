@@ -14,13 +14,16 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ikvm.extensions;
 using ICSharpCode.SharpZipLib.BZip2;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
@@ -38,14 +41,14 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private readonly Resolution _resolution = Resolution.Minute;
         private readonly bool _testing = Config.GetBool("testing", false);
 
+        private readonly ParallelOptions parallelOptionsWriting = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount / 2 };
         private readonly ParallelOptions parallelOptionsZipping = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 5 };
         private readonly DirectoryInfo _destination;
-        private readonly List<Processors> _globalProcessors;
         private readonly DateTime _referenceDate;
         private readonly FileInfo _remoteOpraFile;
         private readonly DirectoryInfo _source;
+        private ConcurrentDictionary<string, Symbol> _underlyingCache;
 
-        private long _totalLinesProcessed;
 
         public AlgoSeekOptionsConverterMultipleInstances(DateTime referenceDate, string sourceDirectory, string dataDirectory, FileInfo remoteOpraFile)
         {
@@ -53,32 +56,37 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             _source = new DirectoryInfo(sourceDirectory);
             _destination = new DirectoryInfo(dataDirectory);
             _remoteOpraFile = remoteOpraFile;
-            _globalProcessors = new List<Processors>();
             Log.DebuggingEnabled = _testing;
+            _source.Create();
         }
 
         /// <summary>
         ///     Give the reference date and source directory, convert the algoseek options data into n-resolutions LEAN format.
         /// </summary>
-        /// <param name="symbolFilter">HashSet of symbols as string to process. *Only used for testing*</param>
-        public void Convert(HashSet<string> symbolFilter = null)
+        public void Convert()
         {
             Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Copying {_remoteOpraFile.Name} into {_source.FullName}");
-            var localOpraFile = _remoteOpraFile.CopyTo(Path.Combine(_source.FullName, _remoteOpraFile.Name));
-
-            Log.Trace(
+            var localOpraFile = new FileInfo(Path.Combine(_source.FullName, _remoteOpraFile.Name));
+            if (!_testing)
+            {
+                localOpraFile = _remoteOpraFile.CopyTo(Path.Combine(_source.FullName, _remoteOpraFile.Name));
+                Log.Trace(
                 $"AlgoSeekOptionsConverterMultipleInstances.Convert(): {localOpraFile.Name} OPRA files for {_referenceDate:yyyy-MM-dd} " +
-                $"with total size of {localOpraFile.Length / Math.Pow(1024, 3):N1} GB copied locally."
-            );
+                $"with total size of {localOpraFile.Length / Math.Pow(1024, 2):N1} MB copied locally.");
+            }
+
 
             var decompressedOpraFile = new FileInfo(Path.Combine(_source.FullName, Path.GetFileNameWithoutExtension(localOpraFile.Name)));
             Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Decompress {localOpraFile.Name} into {decompressedOpraFile.FullName}");
             var timer = new Stopwatch();
             timer.Start();
-            if (!DecompressOpraFile(localOpraFile, decompressedOpraFile))
+            if (!_testing)
             {
-                Log.Error($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Decompressing {localOpraFile.Name} failed!");
-                return;
+                if (!DecompressOpraFile(localOpraFile, decompressedOpraFile))
+                {
+                    Log.Error($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Decompressing {localOpraFile.Name} failed!");
+                    return;
+                }
             }
 
             Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): {localOpraFile.Name} decompressed in {timer.Elapsed:g} full size {decompressedOpraFile.Length / Math.Pow(1024, 3):N1} GB.");
@@ -87,6 +95,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             var thread = new Thread(ProcessOpraFile);
             thread.Priority = ThreadPriority.Highest;
             thread.Start(decompressedOpraFile);
+            thread.Join();
         }
 
         public void ProcessOpraFile(object opraFileInfo)
@@ -96,13 +105,13 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             var processors = new Processors();
             var totalLinesProcessed = 0L;
             var start = DateTime.Now;
-            using (var reader = new AlgoSeekOptionsReader(rawDataFile.FullName, _referenceDate))
+            using (var reader = new AlgoSeekOptionsReader(rawDataFile, _referenceDate))
             {
                 var previousTime = start;
 
                 // reader contains the data
                 if (reader.Current != null)
-                { 
+                {
                     do
                     {
                         var tick = reader.Current;
@@ -126,19 +135,17 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                         if (++totalLinesProcessed % 1000000 == 0)
                         {
                             var now = DateTime.Now;
-                            var averageSpeed = totalLinesProcessed / 1000L / (now - start).TotalSeconds;
                             var speed = 1000 / (now - previousTime).TotalSeconds;
 
-                            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): {rawDataFile.Name} - Processed {totalLinesProcessed} ticks at {speed:N2} k/sec" +
-                                      $"(average speed {averageSpeed:N2} k/sec);  Memory in use: {Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024):N2} MB");
+                            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): {rawDataFile.Name} - Processed {totalLinesProcessed / 1e6} M lines at {speed:N2} k/sec, " +
+                                      $" Memory in use: {Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024):N2} MB");
                             previousTime = DateTime.Now;
                         }
-
                     } while (reader.MoveNext());
                 }
             }
             Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Finished processing file {rawDataFile.Name}, {totalLinesProcessed / 1000000L:N2} M lines processed in {DateTime.Now - start:g}.");
-            rawDataFile.Delete();
+            if (!_testing) rawDataFile.Delete();
 
             Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Saving processed ticks to disk...");
             WriteToDisk(processors);
@@ -155,43 +162,71 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         {
             Flush(processors, DateTime.MaxValue, true);
 
-
-
-            foreach (var processor in processors)
+            _underlyingCache = new ConcurrentDictionary<string, Symbol>();
+            var filesCounter = 0;
+            var start = DateTime.Now;
+            Parallel.ForEach(processors, parallelOptionsWriting, securityTicks =>
+            //foreach (var securityTicks in processors)
             {
+                var symbol = GenerateSymbolFromSecurityRawIdentifier(securityTicks.Key);
+                var zipPath = securityTicks.Value.First().GetZipPath(symbol);
+                Directory.CreateDirectory(zipPath.FullName);
+                var ticksByTickType = securityTicks.Value.ToLookup(t => t.TickType, p => p);
+                foreach (var entryTicks in ticksByTickType)
+                {
+                    var content = FileBuilder(entryTicks.First());
+                    if (content != string.Empty)
+                    {
+                        File.WriteAllText(Path.Combine(zipPath.FullName, entryTicks.First().GetEntryPath(symbol).Name), content);
+                        var filesWritten = Interlocked.Increment(ref filesCounter);
+                        if (filesWritten % 1000 == 0)
+                        {
+                            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): {_remoteOpraFile.Name} - {filesWritten} files written " +
+                                      $"at {filesWritten / (DateTime.Now - start).TotalMinutes:N2} files / minute");
+                        }
+                    }
+                }
+            });
+            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Finished writing {_remoteOpraFile.Name}. {filesCounter} files written in {(DateTime.Now - start):g}.");
+        }
 
-                var entryPath = processor.Value.First().EntryPath;
-                var zipPath = processor.Value.First().ZipPath;
+        /// <summary>
+        /// Output a list of basedata objects into a string csv line.
+        /// </summary>
+        /// <param name="processor"></param>
+        /// <returns></returns>
+        private string FileBuilder(AlgoSeekOptionsProcessor processor)
+        {
+            var sb = new StringBuilder();
+            foreach (var data in processor.Queue)
+            {
+                sb.AppendLine(LeanData.GenerateLine(data, SecurityType.Option, processor.Resolution));
+            }
+            return sb.ToString();
+        }
 
+        private Symbol GenerateSymbolFromSecurityRawIdentifier(string securityRawIdentifier)
+        {
+            var contractParts = securityRawIdentifier.split("-");
+            var underlying = contractParts[0];
+            var optionRight = contractParts[1] == "P" ? OptionRight.Put : OptionRight.Call;
+            var expiry = DateTime.MinValue;
+            if (!DateTime.TryParseExact(contractParts[2], "yyyyMMdd", null, DateTimeStyles.None, out expiry))
+            {
+                // sometimes we see the corrupted data with yyyyMMdd, where dd is equal to zeros
+                DateTime.TryParseExact(contractParts[2], "yyyyMM", null, DateTimeStyles.None, out expiry);
+            }
+            var strike = contractParts[3].ToDecimal() / 10000m;
+
+            Symbol underlyingSymbol;
+
+            if (!_underlyingCache.TryGetValue(underlying, out underlyingSymbol))
+            {
+                underlyingSymbol = Symbol.Create(underlying, SecurityType.Equity, Market.USA);
+                _underlyingCache.AddOrUpdate(underlying, underlyingSymbol);
             }
 
-
-            var dataByZipFile = processors.SelectMany(p => p.Value)
-                .OrderBy(p => p.Symbol.Underlying.Value)
-                .GroupBy(p => p.ZipPath);
-            Parallel.ForEach(
-                dataByZipFile,
-                parallelOptionsZipping,
-                (zipFileData, loopState) =>
-                {
-                    Directory.CreateDirectory(Path.GetDirectoryName(zipFileData.Key));
-
-                    var filenamesAndData = new List<KeyValuePair<string, byte[]>>();
-                    var dataByZipEntry = zipFileData.GroupBy(d => d.EntryPath);
-
-                    foreach (var entryData in dataByZipEntry)
-                    {
-                        var data = entryData.SelectMany(d => d.Queue)
-                            .OrderBy(b => b.Time)
-                            .Select(b => LeanData.GenerateLine(b, SecurityType.Option, Resolution.Minute));
-                        var bytesData = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, data));
-                        filenamesAndData.Add(new KeyValuePair<string, byte[]>(entryData.Key, bytesData));
-                    }
-
-                    Compression.ZipData(zipFileData.Key, filenamesAndData);
-                    Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.WriteToDisk(): {zipFileData.Key} saved!");
-                }
-            );
+            return Symbol.CreateOption(underlyingSymbol, Market.USA, OptionStyle.American, optionRight, strike, expiry);
         }
 
         private void Flush(Processors processors, DateTime time, bool final)
