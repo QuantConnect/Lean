@@ -27,7 +27,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     /// </summary>
     public static class AlgoSeekOptionsConverterProgram
     {
-        public static void AlgoSeekOptionsConverter(string date)
+        public static void AlgoSeekOptionsConverter(string date, string opraFileNumber = "")
         {
             // There are practical file limits we need to override for this to work.
             // By default programs are only allowed 1024 files open; for options parsing we need 100k
@@ -60,6 +60,31 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 return;
             }
 
+            if (opraFileNumber != String.Empty)
+            {
+                SingleInstanceProcessing(referenceDate, remoteDirectory, remoteMask, sourceDirectory, dataDirectory, cleanSourceDirectory);
+            }
+            else
+            {
+                MultipleInstanceProcessing(date, opraFileName);
+            }
+        }
+
+        /// <summary>
+        /// Multiples the instance processing.
+        /// </summary>
+        /// <param name="date">The date.</param>
+        /// <param name="opraFileNumber">The opra file number.</param>
+        private static void MultipleInstanceProcessing(DateTime referenceDate, string remoteDirectory, string sourceDirectory, string dataDirectory, string opraFileName)
+        {
+            // After many iterations, this shows to be GC parameters with the best performance.
+            Environment.SetEnvironmentVariable("MONO_GC_PARAMS", "major=marksweep-fixed");
+
+
+        }
+
+        private static void SingleInstanceProcessing(DateTime referenceDate, string remoteDirectory, string remoteMask, string sourceDirectory, string dataDirectory, bool cleanSourceDirectory)
+        {
             // Convert the date:
             var timer = Stopwatch.StartNew();
             var converter = new AlgoSeekOptionsConverter(Resolution.Minute, referenceDate, remoteDirectory, remoteMask, sourceDirectory, dataDirectory);
@@ -88,7 +113,6 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): Error while cleaning source directory {0}", err.Message));
                 }
             }
-
         }
     }
 }
