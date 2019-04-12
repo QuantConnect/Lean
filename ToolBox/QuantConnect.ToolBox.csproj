@@ -213,6 +213,11 @@
     </When>
   </Choose>
   <ItemGroup>
+    <Compile Include="AlgoSeekOptionsConverterOld\AlgoSeekOptionsConverterOld.cs" />
+    <Compile Include="AlgoSeekOptionsConverterOld\AlgoSeekOptionsConverterProgramOld.cs" />
+    <Compile Include="AlgoSeekOptionsConverterOld\AlgoSeekOptionsProcessorOld.cs" />
+    <Compile Include="AlgoSeekOptionsConverterOld\AlgoSeekOptionsReaderOld.cs" />
+    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverterMultipleInstances.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDataDownloader.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDownloaderProgram.cs" />
     <Compile Include="GDAXDownloader\GDAXDownloader.cs" />
@@ -239,7 +244,6 @@
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesReader.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProgram.cs" />
-    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverter.cs" />
     <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsProcessor.cs" />
     <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsReader.cs" />
     <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverterProgram.cs" />

@@ -14,107 +14,38 @@
 */
 
 using System;
-using QuantConnect.Data;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
-using System.Linq;
 
 namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 {
     /// <summary>
-    /// Processor for caching and consolidating ticks; 
-    /// then flushing the ticks in memory to disk when triggered.
+    ///     Processor for caching and consolidating ticks;
+    ///     then flushing the ticks in memory to disk when triggered.
     /// </summary>
     public class AlgoSeekOptionsProcessor
     {
-        private string _zipPath;
+        private readonly bool _isWindows = OS.IsWindows;
+        private readonly IDataConsolidator _consolidator;
+        private readonly string _dataDirectory;
         private string _entryPath;
-        private Symbol _symbol;
-        private TickType _tickType;
-        private Resolution _resolution;
-        private Queue<IBaseData> _queue;
-        private string _dataDirectory;
-        private IDataConsolidator _consolidator;
-        private DateTime _referenceDate;
-        private string[] _windowsRestrictedNames =
+        private readonly DateTime _referenceDate;
+        private string _securityRawIdentifier;
+
+        private readonly string[] _windowsRestrictedNames =
         {
             "con", "prn", "aux", "nul"
         };
 
-        private readonly bool _isWindows = OS.IsWindows;
-        private string _securityRawIdentifier;
+        private string _zipPath;
 
         /// <summary>
-        /// Zip entry name for the option contract
-        /// </summary>
-        public string EntryPath
-        {
-            get
-            {
-                if (_entryPath == null)
-                {
-                    _entryPath = SafeName(LeanData.GenerateZipEntryName(_symbol, _referenceDate, _resolution, _tickType));
-                }   
-                return _entryPath;
-            }
-            set { _entryPath = value; }
-        }
-
-        /// <summary>
-        /// Zip file path for the option contract collection
-        /// </summary>
-        public string ZipPath
-        {
-            get
-            {
-                if (_zipPath == null)
-                {
-                    _zipPath = Path.Combine(_dataDirectory, SafeName(LeanData.GenerateRelativeZipFilePath(Safe(_symbol), _referenceDate, _resolution, _tickType).Replace(".zip", string.Empty))) + ".zip";
-                }
-                return _zipPath;
-            }
-            set { _zipPath = value; }
-        }
-
-        /// <summary>
-        /// Public access to the processor symbol
-        /// </summary>
-        public Symbol Symbol
-        {
-            get { return _symbol; }
-        }
-
-        /// <summary>
-        /// Output base data queue for processing in memory
-        /// </summary>
-        public Queue<IBaseData> Queue
-        {
-            get { return _queue; }
-        }
-
-        /// <summary>
-        /// Accessor for the final enumerator
-        /// </summary>
-        public Resolution Resolution
-        {
-            get { return _resolution; }
-        }
-
-        /// <summary>
-        /// Type of this option processor. 
-        /// ASOP's are grouped trade type for file writing.
-        /// </summary>
-        public TickType TickType
-        {
-            get { return _tickType; }
-            set { _tickType = value; }
-        }
-
-        /// <summary>
-        /// Create a new AlgoSeekOptionsProcessor for enquing consolidated bars and flushing them to disk
+        ///     Create a new AlgoSeekOptionsProcessor for enquing consolidated bars and flushing them to disk
         /// </summary>
         /// <param name="symbol">Symbol for the processor</param>
         /// <param name="date">Reference date for the processor</param>
@@ -124,10 +55,10 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         public AlgoSeekOptionsProcessor(string securityRawIdentifier, DateTime date, TickType tickType, Resolution resolution, string dataDirectory)
         {
             _securityRawIdentifier = securityRawIdentifier;
-            _tickType = tickType;
+            TickType = tickType;
             _referenceDate = date;
-            _resolution = resolution;
-            _queue = new Queue<IBaseData>();
+            Resolution = resolution;
+            Queue = new Queue<IBaseData>();
             _dataDirectory = dataDirectory;
 
             // Setup the consolidator for the requested resolution
@@ -147,28 +78,69 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             }
 
             // On consolidating the bars put the bar into a queue in memory to be written to disk later.
-            _consolidator.DataConsolidated += (sender, consolidated) =>
-            {
-                _queue.Enqueue(consolidated);
-            };
+            _consolidator.DataConsolidated += (sender, consolidated) => { Queue.Enqueue(consolidated); };
         }
 
         /// <summary>
-        /// Process the tick; add to the con
+        ///     Zip entry name for the option contract
+        /// </summary>
+        public string EntryPath
+        {
+            get
+            {
+                if (_entryPath == null) _entryPath = SafeName(LeanData.GenerateZipEntryName(Symbol, _referenceDate, Resolution, TickType));
+                return _entryPath;
+            }
+            set { _entryPath = value; }
+        }
+
+        /// <summary>
+        ///     Zip file path for the option contract collection
+        /// </summary>
+        public string ZipPath
+        {
+            get
+            {
+                if (_zipPath == null) _zipPath = Path.Combine(_dataDirectory, SafeName(LeanData.GenerateRelativeZipFilePath(Safe(Symbol), _referenceDate, Resolution, TickType).Replace(".zip", string.Empty))) + ".zip";
+                return _zipPath;
+            }
+            set { _zipPath = value; }
+        }
+
+        /// <summary>
+        ///     Public access to the processor symbol
+        /// </summary>
+        public Symbol Symbol { get; }
+
+        /// <summary>
+        ///     Output base data queue for processing in memory
+        /// </summary>
+        public Queue<IBaseData> Queue { get; }
+
+        /// <summary>
+        ///     Accessor for the final enumerator
+        /// </summary>
+        public Resolution Resolution { get; }
+
+        /// <summary>
+        ///     Type of this option processor.
+        ///     ASOP's are grouped trade type for file writing.
+        /// </summary>
+        public TickType TickType { get; set; }
+
+        /// <summary>
+        ///     Process the tick; add to the con
         /// </summary>
         /// <param name="data"></param>
         public void Process(Tick data)
         {
-            if (data.TickType != _tickType)
-            {
-                return;
-            }
+            if (data.TickType != TickType) return;
 
             _consolidator.Update(data);
         }
 
         /// <summary>
-        /// Write the in memory queues to the disk.
+        ///     Write the in memory queues to the disk.
         /// </summary>
         /// <param name="frontierTime">Current foremost tick time</param>
         /// <param name="finalFlush">Indicates is this is the final push to disk at the end of the data</param>
@@ -178,37 +150,28 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             _consolidator.Scan(frontierTime);
 
             // If this is the final packet dump it to the queue
-            if (finalFlush && _consolidator.WorkingData != null)
-            {
-                _queue.Enqueue(_consolidator.WorkingData);
-            }
+            if (finalFlush && _consolidator.WorkingData != null) Queue.Enqueue(_consolidator.WorkingData);
         }
 
         /// <summary>
-        /// Add filtering to safe check the symbol for windows environments
+        ///     Add filtering to safe check the symbol for windows environments
         /// </summary>
         /// <param name="symbol">Symbol to rename if required</param>
         /// <returns>Renamed symbol for reserved names</returns>
         private Symbol Safe(Symbol symbol)
         {
             if (_isWindows)
-            {
-                if (_windowsRestrictedNames.Contains(symbol.Value.ToLower()) || 
+                if (_windowsRestrictedNames.Contains(symbol.Value.ToLower()) ||
                     _windowsRestrictedNames.Contains(symbol.Underlying.Value.ToLower()))
-                {
                     symbol = Symbol.CreateOption(SafeName(symbol.Underlying.Value), Market.USA, OptionStyle.American, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
-                }
-            }
             return symbol;
         }
 
         private string SafeName(string fileName)
         {
             if (_isWindows)
-            {
                 if (_windowsRestrictedNames.Contains(fileName.ToLower()))
                     return "_" + fileName;
-            }
             return fileName;
         }
     }

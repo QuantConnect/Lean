@@ -29,11 +29,11 @@ using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 {
-    using Processors = Dictionary<Symbol, List<AlgoSeekOptionsProcessor>>;
+    using Processors = Dictionary<Symbol, List<AlgoSeekOptionsProcessorOld>>;
     /// <summary>
     /// Process a directory of algoseek option files into separate resolutions.
     /// </summary>
-    public class AlgoSeekOptionsConverter
+    public class AlgoSeekOptionsConverterOld
     {
         private string _source;
         private string _remote;
@@ -53,7 +53,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// <param name="source">Remote directory of the .bz algoseek files</param>
         /// <param name="source">Source directory of the .csv algoseek files</param>
         /// <param name="destination">Data directory of LEAN</param>
-        public AlgoSeekOptionsConverter(Resolution resolution, DateTime referenceDate, string remote, string remoteMask, string source, string destination)
+        public AlgoSeekOptionsConverterOld(Resolution resolution, DateTime referenceDate, string remote, string remoteMask, string source, string destination)
         {
             _remote = remote;
             _remoteMask = remoteMask;
@@ -73,7 +73,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             var compressedRawDatafiles = Directory.EnumerateFiles(_remote, _remoteMask).Select(f => new FileInfo(f)).ToList();
             var rawDatafiles = new List<FileInfo>();
 
-            Log.Trace("AlgoSeekOptionsConverter.Convert(): Loading {0} AlgoSeekOptionsReader for {1} ", compressedRawDatafiles.Count, _referenceDate);
+            Log.Trace("AlgoSeekOptionsConverterOld.Convert(): Loading {0} AlgoSeekOptionsReader for {1} ", compressedRawDatafiles.Count, _referenceDate);
 
             //Initialize parameters
             var totalLinesProcessed = 0L;
@@ -90,7 +90,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 do
                 {
                     var attempt = counter == 1 ? string.Empty : $" attempt {counter} of 3";
-                    Log.Trace($"AlgoSeekOptionsConverter.Convert(): Extracting {compressedRawDatafile.Name}{attempt}.");
+                    Log.Trace($"AlgoSeekOptionsConverterOld.Convert(): Extracting {compressedRawDatafile.Name}{attempt}.");
                     decompressSuccessful = DecompressOpraFile(compressedRawDatafile, rawDataFile);
                     counter++;
                 } while (!decompressSuccessful && counter <= 3);
@@ -101,7 +101,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     throw new NotImplementedException();
                 }
 
-                Log.Trace($"AlgoSeekOptionsConverter.Convert(): Extraction successful in {DateTime.UtcNow - timer:g}.");
+                Log.Trace($"AlgoSeekOptionsConverterOld.Convert(): Extraction successful in {DateTime.UtcNow - timer:g}.");
                 rawDatafiles.Add(rawDataFile);
             }
 
@@ -119,7 +119,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 // var symbolFilter = symbolFilterNames.SelectMany(name => new[] { name, name + "1", name + ".1" }).ToHashSet();
                 // var reader = new AlgoSeekOptionsReader(csvFile, _referenceDate, symbolFilter);
 
-                using (var reader = new AlgoSeekOptionsReader(rawDataFile.FullName, _referenceDate, symbolFilter))
+                using (var reader = new AlgoSeekOptionsReaderOld(rawDataFile.FullName, _referenceDate, symbolFilter))
                 {
                     if (start == DateTime.MinValue)
                     {
@@ -139,14 +139,14 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                                 processors = new Processors();
                             }
                             //Add or create the consolidator-flush mechanism for symbol:
-                            List<AlgoSeekOptionsProcessor> symbolProcessors;
+                            List<AlgoSeekOptionsProcessorOld> symbolProcessors;
                             if (!processors.TryGetValue(tick.Symbol, out symbolProcessors))
                             {
-                                symbolProcessors = new List<AlgoSeekOptionsProcessor>(3)
+                                symbolProcessors = new List<AlgoSeekOptionsProcessorOld>(3)
                                 {
-                                    new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.Trade, _resolution, _destination),
-                                    new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.Quote, _resolution, _destination),
-                                    new AlgoSeekOptionsProcessor(tick.Symbol, _referenceDate, TickType.OpenInterest, _resolution, _destination)
+                                    new AlgoSeekOptionsProcessorOld(tick.Symbol, _referenceDate, TickType.Trade, _resolution, _destination),
+                                    new AlgoSeekOptionsProcessorOld(tick.Symbol, _referenceDate, TickType.Quote, _resolution, _destination),
+                                    new AlgoSeekOptionsProcessorOld(tick.Symbol, _referenceDate, TickType.OpenInterest, _resolution, _destination)
                                 };
                                 processors[tick.Symbol] = symbolProcessors;
                             }
@@ -155,22 +155,22 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                             if (Interlocked.Increment(ref totalLinesProcessed) % 1000000m == 0)
                             {
                                 Log.Trace(
-                                    "AlgoSeekOptionsConverter.Convert(): Processed {0,3}M ticks( {1}k / sec); Memory in use: {2} MB; Total progress: {3}%",
+                                    "AlgoSeekOptionsConverterOld.Convert(): Processed {0,3}M ticks( {1}k / sec); Memory in use: {2} MB; Total progress: {3}%",
                                     Math.Round(totalLinesProcessed / 1000000m, 2),
                                     Math.Round(totalLinesProcessed / 1000L / (DateTime.Now - start).TotalSeconds),
                                     Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024),
                                     100 * totalFilesProcessed / totalFiles);
                             }
                         } while (reader.MoveNext());
-                        Log.Trace("AlgoSeekOptionsConverter.Convert(): Performing final flush to disk... ");
+                        Log.Trace("AlgoSeekOptionsConverterOld.Convert(): Performing final flush to disk... ");
                         Flush(processors, DateTime.MaxValue, true);
                         WriteToDisk(processors, waitForFlush, DateTime.MaxValue, flushStep, true);
                     }
-                    Log.Trace("AlgoSeekOptionsConverter.Convert(): Cleaning up extracted options file {0}", rawDataFile.FullName);
+                    Log.Trace("AlgoSeekOptionsConverterOld.Convert(): Cleaning up extracted options file {0}", rawDataFile.FullName);
                 }
                 rawDataFile.Delete();
                 processors = null;
-                Log.Trace("AlgoSeekOptionsConverter.Convert(): Finished processing file: " + rawDataFile);
+                Log.Trace("AlgoSeekOptionsConverterOld.Convert(): Finished processing file: " + rawDataFile);
                 Interlocked.Increment(ref totalFilesProcessed);
             });
         }
@@ -216,14 +216,14 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                             }
                             catch (Exception err)
                             {
-                                Log.Error("AlgoSeekOptionsConverter.WriteToDisk() returned error: " + err.Message + " zip name: " + zip);
+                                Log.Error("AlgoSeekOptionsConverterOld.WriteToDisk() returned error: " + err.Message + " zip name: " + zip);
                             }
                         });
                     }
                 }
                 catch (Exception err)
                 {
-                    Log.Error("AlgoSeekOptionsConverter.WriteToDisk() returned error: " + err.Message);
+                    Log.Error("AlgoSeekOptionsConverterOld.WriteToDisk() returned error: " + err.Message);
                 }
                 waitForFlush.Set();
             });
@@ -240,7 +240,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// </summary>
         /// <param name="processor"></param>
         /// <returns></returns>
-        private string FileBuilder(AlgoSeekOptionsProcessor processor)
+        private string FileBuilder(AlgoSeekOptionsProcessorOld processor)
         {
             var sb = new StringBuilder();
             foreach (var data in processor.Queue)
@@ -263,7 +263,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// </summary>
         public void Package(DateTime date)
         {
-            Log.Trace("AlgoSeekOptionsConverter.Package(): Zipping all files ...");
+            Log.Trace("AlgoSeekOptionsConverterOld.Package(): Zipping all files ...");
 
             var destination = Path.Combine(_destination, "option");
             var dateMask = date.ToString(DateFormat.EightCharacter);
@@ -282,7 +282,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     var filesToCompress = Directory.GetFiles(file.Key, "*.csv", SearchOption.AllDirectories);
                     using (var zip = ZipFile.Open(outputFileName, ZipArchiveMode.Create))
                     {
-                        Log.Trace("AlgoSeekOptionsConverter.Package(): Zipping " + outputFileName);
+                        Log.Trace("AlgoSeekOptionsConverterOld.Package(): Zipping " + outputFileName);
 
                         foreach (var fileToCompress in filesToCompress)
                         {
@@ -297,7 +297,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     }
                     catch (Exception err)
                     {
-                        Log.Error("AlgoSeekOptionsConverter.Package(): Directory.Delete returned error: " + err.Message);
+                        Log.Error("AlgoSeekOptionsConverterOld.Package(): Directory.Delete returned error: " + err.Message);
                     }
                 }
                 catch (Exception err)
@@ -312,7 +312,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// </summary>
         public void Clean(DateTime date)
         {
-            Log.Trace("AlgoSeekOptionsConverter.Clean(): cleaning all zip and csv files for {0} before start...", date.ToShortDateString());
+            Log.Trace("AlgoSeekOptionsConverterOld.Clean(): cleaning all zip and csv files for {0} before start...", date.ToShortDateString());
 
             var extensions = new HashSet<string> { ".zip", ".csv" };
             var destination = Path.Combine(_destination, "option");
@@ -324,7 +324,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 .Where(x => extensions.Contains(Path.GetExtension(x)))
                 .ToList();
 
-            Log.Trace("AlgoSeekOptionsConverter.Clean(): found {0} files..", files.Count);
+            Log.Trace("AlgoSeekOptionsConverterOld.Clean(): found {0} files..", files.Count);
 
             //Clean each file massively in parallel.
             Parallel.ForEach(files, parallelOptionsZipping, file =>
@@ -335,7 +335,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 }
                 catch (Exception err)
                 {
-                    Log.Error("AlgoSeekOptionsConverter.Clean(): File.Delete returned error: " + err.Message);
+                    Log.Error("AlgoSeekOptionsConverterOld.Clean(): File.Delete returned error: " + err.Message);
                 }
             });
         }
@@ -362,7 +362,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"AlgoSeekOptionsConverter.DecompressOpraFile({compressedRawDatafile.Name}, {rawDatafile.Name}): SharpzipLib.BZip2.Decompress returned error: " + ex);
+                    Log.Error($"AlgoSeekOptionsConverterOld.DecompressOpraFile({compressedRawDatafile.Name}, {rawDatafile.Name}): SharpzipLib.BZip2.Decompress returned error: " + ex);
                 }
             }
             return outcome;

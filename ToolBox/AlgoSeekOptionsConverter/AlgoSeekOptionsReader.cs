@@ -16,14 +16,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using QuantConnect.Data.Market;
-using QuantConnect.Util;
-using QuantConnect.Logging;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Text;
-using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 {
@@ -34,34 +32,34 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     }
 
     /// <summary>
-    /// Enumerator for converting AlgoSeek option files into Ticks.
+    ///     Enumerator for converting AlgoSeek option files into Ticks.
     /// </summary>
     public class AlgoSeekOptionsReader : IEnumerator<TickContainer>
     {
-        private readonly string _file;
+        private readonly int _columnExchange = -1;
+        private readonly int _columnExpiration = -1;
+        private readonly int _columnPremium = -1;
+        private readonly int _columnPutCall = -1;
+        private readonly int _columnQuantity = -1;
+        private readonly int _columnsCount = -1;
+        private readonly int _columnSide = -1;
+        private readonly int _columnStrike = -1;
+        private readonly int _columnTicker = -1;
+
+        private readonly int _columnTimestamp = -1;
+        private readonly int _columnType = -1;
         private readonly DateTime _date;
+        private readonly string _file;
+
+        private readonly StringBuilder _securityRawIdentifier = new StringBuilder();
         private readonly Stream _stream;
         private readonly StreamReader _streamReader;
         private HashSet<string> _symbolFilter;
 
         private Dictionary<string, Symbol> _underlyingCache;
 
-        private readonly int _columnTimestamp = -1;
-        private readonly int _columnTicker = -1;
-        private readonly int _columnType = -1;
-        private readonly int _columnSide = -1;
-        private readonly int _columnPutCall = -1;
-        private readonly int _columnExpiration = -1;
-        private readonly int _columnStrike = -1;
-        private readonly int _columnQuantity = -1;
-        private readonly int _columnPremium = -1;
-        private readonly int _columnExchange = -1;
-        private readonly int _columnsCount = -1;
-
-        private readonly StringBuilder _securityRawIdentifier = new StringBuilder();
-
         /// <summary>
-        /// Enumerate through the lines of the algoseek files.
+        ///     Enumerate through the lines of the algoseek files.
         /// </summary>
         /// <param name="file">BZ File for algoseek</param>
         /// <param name="date">Reference date of the folder</param>
@@ -93,16 +91,20 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 _columnPremium = header.FindIndex(x => x == "Premium");
                 _columnExchange = header.FindIndex(x => x == "Exchange");
 
-                _columnsCount = Enumerable.Max(new[] { _columnTimestamp, _columnTicker, _columnType, _columnSide,
-                    _columnPutCall, _columnExpiration, _columnStrike, _columnQuantity, _columnPremium, _columnExchange });
+                _columnsCount = new[]
+                {
+                    _columnTimestamp, _columnTicker, _columnType, _columnSide,
+                    _columnPutCall, _columnExpiration, _columnStrike, _columnQuantity, _columnPremium, _columnExchange
+                }.Max();
             }
+
             //Prime the data pump, set the current.
             Current = null;
             MoveNext();
         }
 
         /// <summary>
-        /// Parse the next line of the algoseek option file.
+        ///     Parse the next line of the algoseek option file.
         /// </summary>
         /// <returns></returns>
         public bool MoveNext()
@@ -110,35 +112,27 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             string line;
             TickContainer tick = null;
             while (tick == null && (line = _streamReader.ReadLine()) != null)
-                {
                 // If line is invalid continue looping to find next valid line.
                 tick = Parse(line);
-            }
             Current = tick;
             return Current != null;
         }
 
         /// <summary>
-        /// Current top of the tick file.
+        ///     Current top of the tick file.
         /// </summary>
-        public TickContainer Current
-        {
-            get; private set;
-        }
+        public TickContainer Current { get; private set; }
 
         /// <summary>
-        /// Gets the current element in the collection.
+        ///     Gets the current element in the collection.
         /// </summary>
         /// <returns>
-        /// The current element in the collection.
+        ///     The current element in the collection.
         /// </returns>
-        object IEnumerator.Current
-        {
-            get { return Current; }
-        }
+        object IEnumerator.Current => Current;
 
         /// <summary>
-        /// Reset the enumerator for the AlgoSeekOptionReader
+        ///     Reset the enumerator for the AlgoSeekOptionReader
         /// </summary>
         public void Reset()
         {
@@ -146,7 +140,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         }
 
         /// <summary>
-        /// Dispose of the underlying AlgoSeekOptionsReader
+        ///     Dispose of the underlying AlgoSeekOptionsReader
         /// </summary>
         public void Dispose()
         {
@@ -157,7 +151,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         }
 
         /// <summary>
-        /// Parse a string line into a option tick.
+        ///     Parse a string line into a option tick.
         /// </summary>
         /// <param name="line"></param>
         /// <returns></returns>
@@ -166,15 +160,14 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             try
             {
                 var column = -1;
-                int last = 0;
+                var last = 0;
                 var tickBuilder = new Tick();
                 var isAsk = false;
                 var price = decimal.Zero;
                 var quantity = 0;
                 _securityRawIdentifier.Clear();
                 var readOnlySpan = line.AsSpan();
-                for (int i = 0; i < line.Length; i++)
-                {
+                for (var i = 0; i < line.Length; i++)
                     if (line[i] == ',')
                     {
                         if (last != 0) last = last + 1;
@@ -184,7 +177,6 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                         if (columnContent.IsEmpty || columnContent.IsWhiteSpace()) continue;
                         if (column == _columnTimestamp) tickBuilder.Time = _date + TimeSpan.ParseExact(columnContent.ToString(), @"h\:mm\:ss\.fff", CultureInfo.InvariantCulture);
                         if (column == _columnType)
-                        {
                             switch (columnContent.GetPinnableReference())
                             {
                                 case 'O':
@@ -197,9 +189,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                                     tickBuilder.TickType = TickType.Quote;
                                     break;
                             }
-                        }
                         if (column == _columnSide)
-                        {
                             switch (columnContent.GetPinnableReference())
                             {
                                 case 'B':
@@ -210,32 +200,30 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                                     isAsk = true;
                                     break;
                             }
-                        }
 
                         if (column == _columnTicker)
                         {
                             _securityRawIdentifier.Append(columnContent.ToArray());
                             _securityRawIdentifier.Append('-');
                         }
+
                         if (column == _columnPutCall)
                         {
                             _securityRawIdentifier.Append(columnContent.ToArray());
                             _securityRawIdentifier.Append('-');
                         }
+
                         if (column == _columnExpiration)
                         {
                             _securityRawIdentifier.Append(columnContent.ToArray());
                             _securityRawIdentifier.Append('-');
                         }
-                        if (column == _columnStrike)
-                        {
-                            _securityRawIdentifier.Append(columnContent.ToArray());
-                        }
+
+                        if (column == _columnStrike) _securityRawIdentifier.Append(columnContent.ToArray());
 
                         if (column == _columnPremium) price = columnContent.ToArray().ToInt32() / 10000m;
                         if (column == _columnQuantity) quantity = columnContent.ToArray().ToInt32();
                     }
-                }
 
                 switch (tickBuilder.TickType)
                 {

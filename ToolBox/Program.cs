@@ -132,8 +132,7 @@ namespace QuantConnect.ToolBox
                         break;
                     case "asoc":
                     case "algoseekoptionsconverter":
-                        AlgoSeekOptionsConverterProgram.AlgoSeekOptionsConverter(GetParameterOrExit(optionsObject, "date"),
-                                                                                    GetParameterOrDefault(optionsObject, "opra-file-number", "0"));
+                        AlgoSeekOptionsConverterProgramOld.AlgoSeekOptionsConverterOld(GetParameterOrExit(optionsObject, "date"));//, GetParameterOrDefault(optionsObject, "opra-file-number", "0"));
                         break;
                     case "ivec":
                     case "ivolatilityequityconverter":
