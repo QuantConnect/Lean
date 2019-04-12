@@ -161,6 +161,7 @@
     <Compile Include="SetAccountCurrencyCashBuyingPowerModelRegressionAlgorithm.cs" />
     <Compile Include="SetAccountCurrencySecurityMarginModelRegressionAlgorithm.cs" />
     <Compile Include="SetCashOnDataRegressionAlgorithm.cs" />
+    <Compile Include="SmaCrossUniverseSelectionAlgorithm.cs" />
     <Compile Include="StartingCapitalRegressionAlgorithm.cs" />
     <Compile Include="TrailingStopRiskFrameworkAlgorithm.cs" />
     <Compile Include="BasicTemplateFuturesFrameworkAlgorithm.cs" />
