@@ -60,18 +60,6 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "forward only")]
-        public void ThrowsOnPastTimes()
-        {
-            var target = new TestIndicator();
-
-            var time = DateTime.UtcNow;
-
-            target.Update(new IndicatorDataPoint(time, 1m));
-            target.Update(new IndicatorDataPoint(time.AddMilliseconds(-1), 2m));
-        }
-
-        [Test]
         [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "expected to be of type")]
         public void ThrowsOnDifferentDataType()
         {

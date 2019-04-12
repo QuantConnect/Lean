@@ -574,7 +574,7 @@ namespace QuantConnect.Algorithm
             {
                 var requests = new List<HistoryRequest>();
 
-                foreach (var config in GetMatchingSubscriptions(x, typeof(BaseData)))
+                foreach (var config in GetMatchingSubscriptions(x, typeof(BaseData), resolution))
                 {
                     var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x), resolution);
 
@@ -602,7 +602,21 @@ namespace QuantConnect.Algorithm
                 var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res.Value, exchange);
                 var end = Time.RoundDown(res.Value.ToTimeSpan());
 
-                return GetMatchingSubscriptions(x, typeof(BaseData))
+                return GetMatchingSubscriptions(x, typeof(BaseData), resolution)
+                    .Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res));
+            });
+        }
+
+        private IEnumerable<HistoryRequest> CreateBarCountHistoryRequestsWithNewSubscription(IEnumerable<Symbol> symbols, int periods, Resolution? resolution)
+        {
+            return symbols.Where(x => !x.IsCanonical()).SelectMany(x =>
+            {
+                var res = resolution ?? UniverseSettings.Resolution;
+                var exchange = GetExchangeHours(x);
+                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange);
+                var end = Time.RoundDown(res.ToTimeSpan());
+
+                return CreateSubscriptions(x, typeof(BaseData), resolution)
                     .Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res));
             });
         }
@@ -613,7 +627,7 @@ namespace QuantConnect.Algorithm
             return GetMatchingSubscriptions(symbol, type).FirstOrDefault();
         }
 
-        private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type)
+        private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type, Resolution? resolution = null)
         {
             Security security;
             if (Securities.TryGetValue(symbol, out security))
@@ -625,11 +639,29 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                var resolution = UniverseSettings.Resolution;
-                var timeZone = GetExchangeHours(symbol).TimeZone;
-                var subscriptionDataTypes = SubscriptionManager.LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution, symbol.IsCanonical());
-                return subscriptionDataTypes.Select(x => new SubscriptionDataConfig(x.Item1, symbol, resolution, timeZone, timeZone, UniverseSettings.FillForward, UniverseSettings.ExtendedMarketHours, false, false, x.Item2));
+                return CreateSubscriptions(symbol, type, resolution);
             }
+        }
+
+        private IEnumerable<SubscriptionDataConfig> CreateSubscriptions(Symbol symbol, Type type, Resolution? resolution = null)
+        {
+            var timeZone = GetExchangeHours(symbol).TimeZone;
+            resolution = GetResolution(symbol, resolution) ?? UniverseSettings.Resolution;
+
+            return SubscriptionManager
+                .LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution.Value, symbol.IsCanonical())
+                .Select(x => new SubscriptionDataConfig(
+                    x.Item1,
+                    symbol,
+                    resolution.Value,
+                    timeZone, timeZone,
+                    UniverseSettings.FillForward,
+                    UniverseSettings.ExtendedMarketHours,
+                    true,
+                    false,
+                    x.Item2,
+                    true,
+                    UniverseSettings.DataNormalizationMode));
         }
 
         private SecurityExchangeHours GetExchangeHours(Symbol symbol)

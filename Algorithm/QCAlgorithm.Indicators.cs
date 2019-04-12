@@ -18,12 +18,18 @@ using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
+        /// <summary>
+        /// Gets whether or not WarmUpIndicator is allowed to warm up indicators/>
+        /// </summary>
+        public bool IsWarmUpIndicatorEnabled { get; set; } = false;
+
         /// <summary>
         /// Creates a new Acceleration Bands indicator.
         /// </summary>
@@ -1001,6 +1007,7 @@ namespace QuantConnect.Algorithm
             RegisterIndicator(symbol, sma, resolution, selector);
             return sma;
         }
+
         /// <summary>
         /// Creates a new StandardDeviation indicator. This will return the population standard deviation of samples over the specified period.
         /// </summary>
@@ -1477,9 +1484,67 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbol">The symbol whose indicator we want</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The given indicator</returns>
+        public IndicatorBase<IndicatorDataPoint> WarmUpIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            // assign default using cast
+            selector = selector ?? (x => x.Value);
+
+            GetIndicatorWarmUpHistory(symbol, indicator, resolution)
+                .PushThrough(bar =>
+                {
+                    var input = new IndicatorDataPoint(bar.Symbol, bar.EndTime, selector(bar));
+                    indicator.Update(input);
+                });
+
+            return indicator;
+        }
+
+        /// <summary>
+        /// Warms up a given indicator with historical data
+        /// </summary>
+        /// <param name="symbol">The symbol whose indicator we want</param>
+        /// <param name="indicator">The indicator we want to warm up</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        /// <returns>The given indicator</returns>
+        public IndicatorBase<T> WarmUpIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, Resolution? resolution = null, Func<IBaseData, T> selector = null)
+            where T : IBaseData
+        {
+            // assign default using cast
+            selector = selector ?? (x => (T)x);
+
+            GetIndicatorWarmUpHistory(symbol, indicator, resolution)
+                .PushThrough(bar => indicator.Update(selector(bar)));
+
+            return indicator;
+        }
+
+        private IEnumerable<Slice> GetIndicatorWarmUpHistory(Symbol symbol, IIndicator indicator, Resolution? resolution)
+        {
+            var periods = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
+
+            if (IsWarmUpIndicatorEnabled && periods.HasValue)
+            {
+                return History(CreateBarCountHistoryRequestsWithNewSubscription(
+                    new[] { symbol },
+                    periods.Value,
+                    resolution));
+            }
+
+            return Enumerable.Empty<Slice>();
+        }
+
+        /// <summary>
         /// Gets the default consolidator for the specified symbol and resolution
         /// </summary>
-        /// <param name="symbol">The symbo whose data is to be consolidated</param>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
         /// <param name="resolution">The resolution for the consolidator, if null, uses the resolution from subscription</param>
         /// <returns>The new default consolidator</returns>
         public IDataConsolidator ResolveConsolidator(Symbol symbol, Resolution? resolution)
@@ -1510,7 +1575,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the default consolidator for the specified symbol and resolution
         /// </summary>
-        /// <param name="symbol">The symbo whose data is to be consolidated</param>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
         /// <param name="timeSpan">The requested time span for the consolidator, if null, uses the resolution from subscription</param>
         /// <returns>The new default consolidator</returns>
         public IDataConsolidator ResolveConsolidator(Symbol symbol, TimeSpan? timeSpan)
