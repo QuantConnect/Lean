@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
@@ -23,6 +24,7 @@ using System.ComponentModel.Composition.ReflectionModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
 
@@ -48,20 +50,49 @@ namespace QuantConnect.Util
         {
             // grab assemblies from current executing directory if not defined by 'composer-dll-directory' configuration key
             var primaryDllLookupDirectory = new DirectoryInfo(Config.Get("composer-dll-directory", AppDomain.CurrentDomain.BaseDirectory)).FullName;
-            var catalogs = new List<ComposablePartCatalog>
+
+            _composableParts = Task.Run(() =>
             {
-                new DirectoryCatalog(primaryDllLookupDirectory, "*.dll"),
-                new DirectoryCatalog(primaryDllLookupDirectory, "*.exe")
-            };
-            if (!string.IsNullOrWhiteSpace(PluginDirectory) && Directory.Exists(PluginDirectory) && new DirectoryInfo(PluginDirectory).FullName != primaryDllLookupDirectory)
-            {
-                catalogs.Add(new DirectoryCatalog(PluginDirectory, "*.dll"));
-            }
-            var aggregate = new AggregateCatalog(catalogs);
-            _compositionContainer = new CompositionContainer(aggregate);
+                var catalogs = new List<ComposablePartCatalog>
+                {
+                    new DirectoryCatalog(primaryDllLookupDirectory, "*.dll"),
+                    new DirectoryCatalog(primaryDllLookupDirectory, "*.exe")
+                };
+                if (!string.IsNullOrWhiteSpace(PluginDirectory) && Directory.Exists(PluginDirectory) && new DirectoryInfo(PluginDirectory).FullName != primaryDllLookupDirectory)
+                {
+                    catalogs.Add(new DirectoryCatalog(PluginDirectory, "*.dll"));
+                }
+                var aggregate = new AggregateCatalog(catalogs);
+                _compositionContainer = new CompositionContainer(aggregate);
+                return _compositionContainer.Catalog.Parts.ToList();
+            });
+
+            // for performance we will load our assemblies and keep their exported types
+            // which is much faster that using CompositionContainer which uses reflexion
+            var exportedTypes = new ConcurrentBag<Type>();
+            Parallel.ForEach(Directory.EnumerateFiles(primaryDllLookupDirectory, $"{nameof(QuantConnect)}.*.dll"),
+                file =>
+                {
+                    try
+                    {
+                        foreach (var type in
+                            Assembly.LoadFrom(file).ExportedTypes.Where(type => !type.IsAbstract && !type.IsInterface && !type.IsEnum))
+                        {
+                            exportedTypes.Add(type);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // ignored, just in case
+                    }
+                }
+            );
+            _exportedTypes.AddRange(exportedTypes);
         }
 
-        private readonly CompositionContainer _compositionContainer;
+        private CompositionContainer _compositionContainer;
+        private readonly List<Type> _exportedTypes = new List<Type>();
+        private readonly Task<List<ComposablePartDefinition>> _composableParts;
         private readonly object _exportedValuesLockObject = new object();
         private readonly Dictionary<Type, IEnumerable> _exportedValues = new Dictionary<Type, IEnumerable>();
 
@@ -118,7 +149,7 @@ namespace QuantConnect.Util
             {
                 lock (_exportedValuesLockObject)
                 {
-                    T instance;
+                    T instance = null;
                     IEnumerable values;
                     var type = typeof(T);
                     if (_exportedValues.TryGetValue(type, out values))
@@ -131,24 +162,33 @@ namespace QuantConnect.Util
                         }
                     }
 
-                    // we want to get the requested part without instantiating each one of that type
-                    var selectedPart = _compositionContainer.Catalog.Parts
-                        .Select(x => new { part = x, Type = ReflectionModelServices.GetPartType(x).Value })
-                        .Where(x => type.IsAssignableFrom(x.Type))
-                        .Where(x => x.Type.MatchesTypeName(typeName))
-                        .Select(x => x.part)
-                        .FirstOrDefault();
-
-                    if (selectedPart == null)
+                    var typeT = _exportedTypes.FirstOrDefault(type1 => type.IsAssignableFrom(type1) && type1.MatchesTypeName(typeName));
+                    if (typeT != null)
                     {
-                        throw new ArgumentException(
-                            "Unable to locate any exports matching the requested typeName: " + typeName, "typeName");
+                        instance = (T)Activator.CreateInstance(typeT);
                     }
 
-                    var exportDefinition =
-                        selectedPart.ExportDefinitions.First(
-                            x => x.ContractName == AttributedModelServices.GetContractName(type));
-                    instance = (T)selectedPart.CreatePart().GetExportedValue(exportDefinition);
+                    if(instance == null)
+                    {
+                        // we want to get the requested part without instantiating each one of that type
+                        var selectedPart = _composableParts.Result
+                            .Select(x => new { part = x, Type = ReflectionModelServices.GetPartType(x).Value })
+                            .Where(x => type.IsAssignableFrom(x.Type))
+                            .Where(x => x.Type.MatchesTypeName(typeName))
+                            .Select(x => x.part)
+                            .FirstOrDefault();
+
+                        if (selectedPart == null)
+                        {
+                            throw new ArgumentException(
+                                "Unable to locate any exports matching the requested typeName: " + typeName, "typeName");
+                        }
+
+                        var exportDefinition =
+                            selectedPart.ExportDefinitions.First(
+                                x => x.ContractName == AttributedModelServices.GetContractName(type));
+                        instance = (T)selectedPart.CreatePart().GetExportedValue(exportDefinition);
+                    }
 
                     var exportedParts = instance.GetType().GetInterfaces()
                         .Where(interfaceType => interfaceType.GetCustomAttribute<InheritedExportAttribute>() != null);
@@ -199,6 +239,7 @@ namespace QuantConnect.Util
                     return values.OfType<T>();
                 }
 
+                _composableParts.Wait();
                 values = _compositionContainer.GetExportedValues<T>().ToList();
                 _exportedValues[typeof (T)] = values;
                 return values.OfType<T>();

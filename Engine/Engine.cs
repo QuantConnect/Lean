@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -48,7 +49,8 @@ namespace QuantConnect.Lean.Engine
         private readonly bool _liveMode;
         private readonly LeanEngineSystemHandlers _systemHandlers;
         private readonly LeanEngineAlgorithmHandlers _algorithmHandlers;
-        private readonly StackExceptionInterpreter _exceptionInterpreter = StackExceptionInterpreter.CreateFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+        private readonly Lazy<StackExceptionInterpreter> _exceptionInterpreter
+            = new Lazy<StackExceptionInterpreter>(() => StackExceptionInterpreter.CreateFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
 
         /// <summary>
         /// Gets the configured system handlers for this engine instance
@@ -92,6 +94,9 @@ namespace QuantConnect.Lean.Engine
 
             try
             {
+                // create db right away since it takes some time
+                var marketHoursDatabase = Task.Run(() => MarketHoursDatabase.FromDataFolder());
+
                 //Reset thread holders.
                 var initializeComplete = false;
                 Thread threadTransactions = null;
@@ -126,11 +131,10 @@ namespace QuantConnect.Lean.Engine
                     IBrokerageFactory factory;
                     brokerage = _algorithmHandlers.Setup.CreateBrokerage(job, algorithm, out factory);
 
-                    var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
                     var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
                     var securityService = new SecurityService(algorithm.Portfolio.CashBook,
-                        marketHoursDatabase,
+                        marketHoursDatabase.Result,
                         symbolPropertiesDatabase,
                         (ISecurityInitializerProvider)algorithm);
 
@@ -142,7 +146,7 @@ namespace QuantConnect.Lean.Engine
                             securityService),
                         algorithm,
                         algorithm.TimeKeeper,
-                        marketHoursDatabase);
+                        marketHoursDatabase.Result);
 
                     _algorithmHandlers.Results.SetDataManager(dataManager);
                     algorithm.SubscriptionManager.SetDataManager(dataManager);
@@ -225,8 +229,8 @@ namespace QuantConnect.Lean.Engine
                             var message = e.Message;
                             if (e.InnerException != null)
                             {
-                                var err = _exceptionInterpreter.Interpret(e.InnerException, _exceptionInterpreter);
-                                message += _exceptionInterpreter.GetExceptionMessageHeader(err);
+                                var err = _exceptionInterpreter.Value.Interpret(e.InnerException, _exceptionInterpreter.Value);
+                                message += _exceptionInterpreter.Value.GetExceptionMessageHeader(err);
                             }
                             return message;
                         }));
@@ -505,9 +509,9 @@ namespace QuantConnect.Lean.Engine
             if (_algorithmHandlers.Results != null)
             {
                 // perform exception interpretation
-                err = _exceptionInterpreter.Interpret(err, _exceptionInterpreter);
+                err = _exceptionInterpreter.Value.Interpret(err, _exceptionInterpreter.Value);
 
-                var message = "Runtime Error: " + _exceptionInterpreter.GetExceptionMessageHeader(err);
+                var message = "Runtime Error: " + _exceptionInterpreter.Value.GetExceptionMessageHeader(err);
                 Log.Trace("Engine.Run(): Sending runtime error to user...");
                 _algorithmHandlers.Results.LogMessage(message);
                 _algorithmHandlers.Results.RuntimeError(message, err.ToString());
