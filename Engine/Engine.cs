@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Brokerages;
@@ -89,13 +90,13 @@ namespace QuantConnect.Lean.Engine
         /// <param name="assemblyPath">The path to the algorithm's assembly</param>
         public void Run(AlgorithmNodePacket job, AlgorithmManager manager, string assemblyPath)
         {
+            var marketHoursDatabaseTask = Task.Run(() => StaticInitializations());
+
             var algorithm = default(IAlgorithm);
             var algorithmManager = manager;
 
             try
             {
-                // create db right away since it takes some time
-                var marketHoursDatabase = Task.Run(() => MarketHoursDatabase.FromDataFolder());
 
                 //Reset thread holders.
                 var initializeComplete = false;
@@ -118,6 +119,10 @@ namespace QuantConnect.Lean.Engine
                 var synchronizer = new Synchronizer();
                 try
                 {
+                    // we get the mhdb before creating the algorithm instance,
+                    // since the algorithm constructor will use it
+                    var marketHoursDatabase = marketHoursDatabaseTask.Result;
+
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(job, assemblyPath);
 
@@ -134,7 +139,7 @@ namespace QuantConnect.Lean.Engine
                     var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
                     var securityService = new SecurityService(algorithm.Portfolio.CashBook,
-                        marketHoursDatabase.Result,
+                        marketHoursDatabase,
                         symbolPropertiesDatabase,
                         (ISecurityInitializerProvider)algorithm);
 
@@ -146,7 +151,7 @@ namespace QuantConnect.Lean.Engine
                             securityService),
                         algorithm,
                         algorithm.TimeKeeper,
-                        marketHoursDatabase.Result);
+                        marketHoursDatabase);
 
                     _algorithmHandlers.Results.SetDataManager(dataManager);
                     algorithm.SubscriptionManager.SetDataManager(dataManager);
@@ -558,5 +563,18 @@ namespace QuantConnect.Lean.Engine
                 }
             }
         }
+
+        /// <summary>
+        /// Initialize slow static variables
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        private static MarketHoursDatabase StaticInitializations()
+        {
+            // This is slow because it create all static timezones
+            var nyTime = TimeZones.NewYork;
+            // slow because if goes to disk and parses json
+            return MarketHoursDatabase.FromDataFolder();
+        }
+
     } // End Algorithm Node Core Thread
 } // End Namespace
