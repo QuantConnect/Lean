@@ -203,6 +203,10 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                         if (column == _columnTicker)
                         {
                             _securityRawIdentifier.Append(columnContent.ToArray());
+#if DEBUG
+                            if (_symbolFilter != null && !_symbolFilter.Contains(_securityRawIdentifier.ToString())) return null;
+#endif
+                            _securityRawIdentifier.Append(columnContent.ToArray());
                             _securityRawIdentifier.Append('-');
                         }
 

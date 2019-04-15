@@ -37,10 +37,9 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     /// <summary>
     ///     Process a directory of algoseek option files into separate resolutions.
     /// </summary>
-    public class AlgoSeekOptionsConverterMultipleInstances
+    public class AlgoSeekOptionsConverter
     {
         private readonly Resolution _resolution = Resolution.Minute;
-        private readonly bool _testing = Config.GetBool("testing", false);
 
         private readonly ParallelOptions parallelOptionsWriting = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount / 2 };
         private readonly DirectoryInfo _destination;
@@ -50,46 +49,39 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private ConcurrentDictionary<string, Symbol> _underlyingCache;
 
 
-        public AlgoSeekOptionsConverterMultipleInstances(DateTime referenceDate, string sourceDirectory, string destinationDirectory, FileInfo remoteOpraFile)
+        public AlgoSeekOptionsConverter(DateTime referenceDate, string sourceDirectory, string destinationDirectory, FileInfo remoteOpraFile)
         {
             _referenceDate = referenceDate;
             _source = new DirectoryInfo(sourceDirectory);
             _destination = new DirectoryInfo(destinationDirectory);
             _remoteOpraFile = remoteOpraFile;
-            Log.DebuggingEnabled = _testing;
             _source.Create();
         }
 
         /// <summary>
         ///     Give the reference date and source directory, convert the algoseek options data into n-resolutions LEAN format.
         /// </summary>
-        public void Convert()
+        public void Convert(HashSet<string> symbolFilter = null)
         {
-            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Copying {_remoteOpraFile.Name} into {_source.FullName}");
+            Log.Trace($"AlgoSeekOptionsConverter.Convert(): Copying {_remoteOpraFile.Name} into {_source.FullName}");
             var localOpraFile = new FileInfo(Path.Combine(_source.FullName, _remoteOpraFile.Name));
-            if (!_testing)
-            {
                 localOpraFile = _remoteOpraFile.CopyTo(Path.Combine(_source.FullName, _remoteOpraFile.Name));
                 Log.Trace(
-                $"AlgoSeekOptionsConverterMultipleInstances.Convert(): Copy {localOpraFile.Name} file for {_referenceDate:yyyy-MM-dd} locally, " +
+                $"AlgoSeekOptionsConverter.Convert(): Copy {localOpraFile.Name} file for {_referenceDate:yyyy-MM-dd} locally, " +
                 $"size {localOpraFile.Length / Math.Pow(1024, 2):N1} MB.");
-            }
 
 
             var decompressedOpraFile = new FileInfo(Path.Combine(_source.FullName, Path.GetFileNameWithoutExtension(localOpraFile.Name)));
-            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Decompress {localOpraFile.Name} into {decompressedOpraFile.FullName}");
+            Log.Trace($"AlgoSeekOptionsConverter.Convert(): Decompress {localOpraFile.Name} into {decompressedOpraFile.FullName}");
             var timer = new Stopwatch();
             timer.Start();
-            if (!_testing)
-            {
                 if (!DecompressOpraFile(localOpraFile, decompressedOpraFile))
                 {
-                    Log.Error($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Decompressing {localOpraFile.Name} failed!");
+                    Log.Error($"AlgoSeekOptionsConverter.Convert(): Decompressing {localOpraFile.Name} failed!");
                     return;
                 }
-            }
 
-            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): {localOpraFile.Name} decompressed in {timer.Elapsed:g} full size {decompressedOpraFile.Length / Math.Pow(1024, 3):N1} GB.");
+            Log.Trace($"AlgoSeekOptionsConverter.Convert(): {localOpraFile.Name} decompressed in {timer.Elapsed:g} full size {decompressedOpraFile.Length / Math.Pow(1024, 3):N1} GB.");
             localOpraFile.Delete();
 
             var thread = new Thread(ProcessOpraFile);
@@ -101,7 +93,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         public void ProcessOpraFile(object opraFileInfo)
         {
             var rawDataFile = (FileInfo)opraFileInfo;
-            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.ProcessOpraFile(): Starting processing {rawDataFile.Name}...");
+            Log.Trace($"AlgoSeekOptionsConverter.ProcessOpraFile(): Starting processing {rawDataFile.Name}...");
             var processors = new Processors();
             var totalLinesProcessed = 0L;
             var start = DateTime.Now;
@@ -137,18 +129,18 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                             var now = DateTime.Now;
                             var speed = 10000 / (now - previousTime).TotalSeconds;
 
-                            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): {rawDataFile.Name} - Processed {totalLinesProcessed / 1e6,3} M lines at {speed:N2} k/sec, " +
+                            Log.Trace($"AlgoSeekOptionsConverter.Convert(): {rawDataFile.Name} - Processed {totalLinesProcessed / 1e6,3} M lines at {speed:N2} k/sec, " +
                                       $" Memory in use: {Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024):N2} MB");
                             previousTime = DateTime.Now;
                         }
                     } while (reader.MoveNext());
                 }
             }
-            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Finished processing file {rawDataFile.Name}, {totalLinesProcessed / 1000000L:N2} M lines processed in {DateTime.Now - start:g} " +
+            Log.Trace($"AlgoSeekOptionsConverter.Convert(): Finished processing file {rawDataFile.Name}, {totalLinesProcessed / 1000000L:N2} M lines processed in {DateTime.Now - start:g} " +
                       $"at {totalLinesProcessed / 1000 / (DateTime.Now - start).TotalSeconds:N2} k/sec.");
-            if (!_testing) rawDataFile.Delete();
+            rawDataFile.Delete();
 
-            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Saving processed ticks to disk...");
+            Log.Trace($"AlgoSeekOptionsConverter.Convert(): Saving processed ticks to disk...");
             WriteToDisk(processors);
         }
 
@@ -180,14 +172,14 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                         var filesWritten = Interlocked.Increment(ref filesCounter);
                         if (filesWritten % 10000 == 0)
                         {
-                            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): {_remoteOpraFile.Name} - {filesWritten} files written " +
+                            Log.Trace($"AlgoSeekOptionsConverter.Convert(): {_remoteOpraFile.Name} - {filesWritten} files written " +
                                       $"at {filesWritten / (DateTime.Now - start).TotalSeconds:N2} files/second.");
                         }
                     }
                 }
             });
             var totalTime = DateTime.Now - start;
-            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Finished writing {_remoteOpraFile.Name}. {filesCounter} files written in {totalTime:g} " +
+            Log.Trace($"AlgoSeekOptionsConverter.Convert(): Finished writing {_remoteOpraFile.Name}. {filesCounter} files written in {totalTime:g} " +
                       $"at {filesCounter / totalTime.TotalSeconds:N2} files/second.");
 
         }
@@ -207,7 +199,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             return sb.ToString();
         }
 
-        private Symbol GenerateSymbolFromSecurityRawIdentifier(string securityRawIdentifier)
+        public Symbol GenerateSymbolFromSecurityRawIdentifier(string securityRawIdentifier)
         {
             var contractParts = securityRawIdentifier.split("-");
             var underlying = contractParts[0];
@@ -303,7 +295,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                             var filesZipped = Interlocked.Increment(ref zipFilesCounter);
                             if (filesZipped % 100000 == 0)
                             {
-                                Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Package(): {filesZipped} files zipped " +
+                                Log.Trace($"AlgoSeekOptionsConverter.Package(): {filesZipped} files zipped " +
                                           $"at {filesZipped / (DateTime.Now - start).TotalSeconds:N2} files/second.");
                             }
                         }
@@ -326,7 +318,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             });
 
             var totalTime = DateTime.Now - start;
-            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Finished packaging. {zipFilesCounter} files zipped in {totalTime:g} " +
+            Log.Trace($"AlgoSeekOptionsConverter.Convert(): Finished packaging. {zipFilesCounter} files zipped in {totalTime:g} " +
                       $"at {zipFilesCounter / totalTime.TotalSeconds:N2} files/second.");
 
 
@@ -340,7 +332,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         public void Clean(DateTime date)
         {
             Log.Trace(
-                "AlgoSeekOptionsConverterMultipleInstances.Clean(): cleaning all zip and csv files for {0} before start...",
+                "AlgoSeekOptionsConverter.Clean(): cleaning all zip and csv files for {0} before start...",
                 date.ToShortDateString()
             );
             var extensions = new HashSet<string> { ".zip", ".csv" };
@@ -349,7 +341,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             var dateMask = date.ToString(DateFormat.EightCharacter);
             var files = Directory.EnumerateFiles(destination, dateMask + "_" + "*.*", SearchOption.AllDirectories)
                 .Where(x => extensions.Contains(Path.GetExtension(x))).ToList();
-            Log.Trace("AlgoSeekOptionsConverterMultipleInstances.Clean(): found {0} files..", files.Count);
+            Log.Trace("AlgoSeekOptionsConverter.Clean(): found {0} files..", files.Count);
 
             //Clean each file massively in parallel.
             Parallel.ForEach(
@@ -363,7 +355,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     }
                     catch (Exception err)
                     {
-                        Log.Error("AlgoSeekOptionsConverterMultipleInstances.Clean(): File.Delete returned error: " + err.Message);
+                        Log.Error("AlgoSeekOptionsConverter.Clean(): File.Delete returned error: " + err.Message);
                     }
                 }
             );
