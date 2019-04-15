@@ -33,20 +33,19 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             // By default programs are only allowed 1024 files open; for options parsing we need 100k
             Environment.SetEnvironmentVariable("MONO_MANAGED_WATCHER", "disabled");
             Environment.SetEnvironmentVariable("MONO_GC_PARAMS", "max-heap-size=4g");
-            Log.LogHandler = new CompositeLogHandler(new ConsoleLogHandler(), new FileLogHandler("log.txt"));
 
             // Directory for the data, output and processed cache:
             var remoteMask = Config.Get("options-remote-file-mask", "*.bz2").Replace("{0}", date);
             var remoteDirectory = Config.Get("options-remote-directory").Replace("{0}", date);
             var sourceDirectory = Config.Get("options-source-directory").Replace("{0}", date);
-            var dataDirectory = Config.Get("data-folder").Replace("{0}", date);
+            var tempOutputDirectory = Config.Get("temp-output-directory");
             var cleanSourceDirectory = Config.GetBool("clean-source-directory", false);
 
             Log.Trace("CONFIGURATION:");
             Log.Trace("Processor Count: " + Environment.ProcessorCount);
             Log.Trace("Remote Directory: " + remoteDirectory);
             Log.Trace("Source Directory: " + sourceDirectory);
-            Log.Trace("Destination Directory: " + dataDirectory);
+            Log.Trace("Destination Directory: " + tempOutputDirectory);
 
             // Date for the option bz files.
             var referenceDate = DateTime.ParseExact(date, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
@@ -61,12 +60,12 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             }
 
             if (opraFileName == string.Empty)
-                SingleInstanceProcessing(referenceDate, remoteDirectory, remoteMask, sourceDirectory, dataDirectory, cleanSourceDirectory);
+                SingleInstanceProcessing(referenceDate, remoteDirectory, remoteMask, sourceDirectory, tempOutputDirectory, cleanSourceDirectory);
             else
-                MultipleInstanceProcessing(referenceDate, remoteDirectory, sourceDirectory, dataDirectory, opraFileName);
+                MultipleInstanceProcessing(referenceDate, remoteDirectory, sourceDirectory, tempOutputDirectory, opraFileName);
         }
 
-        private static void MultipleInstanceProcessing(DateTime referenceDate, string remoteDirectory, string sourceDirectory, string dataDirectory, string opraFileName)
+        private static void MultipleInstanceProcessing(DateTime referenceDate, string remoteDirectory, string sourceDirectory, string destinationDirectory, string opraFileName)
         {
             // After many iterations, this shows to be GC parameters with the best performance.
             Environment.SetEnvironmentVariable("MONO_GC_PARAMS", "major=marksweep-fixed");
@@ -77,7 +76,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 return;
             }
 
-            var converter = new AlgoSeekOptionsConverterMultipleInstances(referenceDate, sourceDirectory, dataDirectory, remoteOpraFile);
+            var converter = new AlgoSeekOptionsConverterMultipleInstances(referenceDate, sourceDirectory, destinationDirectory, remoteOpraFile);
             converter.Convert();
         }
 

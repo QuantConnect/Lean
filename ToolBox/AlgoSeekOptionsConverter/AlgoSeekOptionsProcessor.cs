@@ -32,7 +32,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
     {
         private readonly bool _isWindows = OS.IsWindows;
         private readonly IDataConsolidator _consolidator;
-        private readonly string _dataDirectory;
+        private readonly string _destinationDirectory;
         private string _entryPath;
         private readonly DateTime _referenceDate;
         public string SecurityRawIdentifier { get; }
@@ -51,15 +51,15 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         /// <param name="date">Reference date for the processor</param>
         /// <param name="tickType">TradeBar or QuoteBar to generate</param>
         /// <param name="resolution">Resolution to consolidate</param>
-        /// <param name="dataDirectory">Data directory for LEAN</param>
-        public AlgoSeekOptionsProcessor(string securityRawIdentifier, DateTime date, TickType tickType, Resolution resolution, string dataDirectory)
+        /// <param name="destinationDirectory">Data directory for LEAN</param>
+        public AlgoSeekOptionsProcessor(string securityRawIdentifier, DateTime date, TickType tickType, Resolution resolution, string destinationDirectory)
         {
             SecurityRawIdentifier = securityRawIdentifier;
             TickType = tickType;
             _referenceDate = date;
             Resolution = resolution;
             Queue = new Queue<IBaseData>();
-            _dataDirectory = dataDirectory;
+            _destinationDirectory = destinationDirectory;
 
             // Setup the consolidator for the requested resolution
             if (resolution == Resolution.Tick) throw new NotSupportedException();
@@ -88,7 +88,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 
         public FileInfo GetZipPath(Symbol symbol)
         {
-            return new FileInfo(Path.Combine(_dataDirectory, SafeName(LeanData.GenerateRelativeZipFilePath(Safe(symbol), _referenceDate, Resolution, TickType).Replace(".zip", string.Empty))));
+            return new FileInfo(Path.Combine(_destinationDirectory, SafeName(LeanData.GenerateRelativeZipFilePath(Safe(symbol), _referenceDate, Resolution, TickType).Replace(".zip", string.Empty))));
         }
 
         /// <summary>

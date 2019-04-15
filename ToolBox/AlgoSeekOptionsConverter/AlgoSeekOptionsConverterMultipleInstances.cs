@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -42,7 +43,6 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private readonly bool _testing = Config.GetBool("testing", false);
 
         private readonly ParallelOptions parallelOptionsWriting = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount / 2 };
-        private readonly ParallelOptions parallelOptionsZipping = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 5 };
         private readonly DirectoryInfo _destination;
         private readonly DateTime _referenceDate;
         private readonly FileInfo _remoteOpraFile;
@@ -50,11 +50,11 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private ConcurrentDictionary<string, Symbol> _underlyingCache;
 
 
-        public AlgoSeekOptionsConverterMultipleInstances(DateTime referenceDate, string sourceDirectory, string dataDirectory, FileInfo remoteOpraFile)
+        public AlgoSeekOptionsConverterMultipleInstances(DateTime referenceDate, string sourceDirectory, string destinationDirectory, FileInfo remoteOpraFile)
         {
             _referenceDate = referenceDate;
             _source = new DirectoryInfo(sourceDirectory);
-            _destination = new DirectoryInfo(dataDirectory);
+            _destination = new DirectoryInfo(destinationDirectory);
             _remoteOpraFile = remoteOpraFile;
             Log.DebuggingEnabled = _testing;
             _source.Create();
@@ -137,21 +137,21 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                             var now = DateTime.Now;
                             var speed = 1000 / (now - previousTime).TotalSeconds;
 
-                            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): {rawDataFile.Name} - Processed {totalLinesProcessed / 1e6} M lines at {speed:N2} k/sec, " +
+                            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): {rawDataFile.Name} - Processed {totalLinesProcessed / 1e6,-3} M lines at {speed:N2} k/sec, " +
                                       $" Memory in use: {Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024):N2} MB");
                             previousTime = DateTime.Now;
                         }
                     } while (reader.MoveNext());
                 }
             }
-            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Finished processing file {rawDataFile.Name}, {totalLinesProcessed / 1000000L:N2} M lines processed in {DateTime.Now - start:g}.");
+            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Finished processing file {rawDataFile.Name}, {totalLinesProcessed / 1000000L:N2} M lines processed in {DateTime.Now - start:g}" +
+                      $"at {totalLinesProcessed / 1000 / (DateTime.Now - start).TotalSeconds:N2} k/sec.");
             if (!_testing) rawDataFile.Delete();
 
             Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Saving processed ticks to disk...");
             WriteToDisk(processors);
         }
 
-        /// <summary>
         ///     Write the processor queues to disk
         /// </summary>
         /// <param name="peekTickTime">Time of the next tick in the stream</param>
@@ -179,15 +179,18 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                     {
                         File.WriteAllText(Path.Combine(zipPath.FullName, entryTicks.First().GetEntryPath(symbol).Name), content);
                         var filesWritten = Interlocked.Increment(ref filesCounter);
-                        if (filesWritten % 1000 == 0)
+                        if (filesWritten % 10000 == 0)
                         {
                             Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): {_remoteOpraFile.Name} - {filesWritten} files written " +
-                                      $"at {filesWritten / (DateTime.Now - start).TotalMinutes:N2} files / minute");
+                                      $"at {filesWritten / (DateTime.Now - start).TotalSeconds:N2} files/second.");
                         }
                     }
                 }
             });
-            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Finished writing {_remoteOpraFile.Name}. {filesCounter} files written in {(DateTime.Now - start):g}.");
+            var totalTime = DateTime.Now - start;
+            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Finished writing {_remoteOpraFile.Name}. {filesCounter} files written in {totalTime:g} " +
+                      $"at {filesCounter / totalTime.TotalSeconds:N2} files/second.");
+
         }
 
         /// <summary>
@@ -266,6 +269,73 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         }
 
         /// <summary>
+        /// Compress the queue buffers directly to a zip file. Lightening fast as streaming ram-> compressed zip.
+        /// </summary>
+        public static bool Package(DateTime date, string destinationDirectory)
+        {
+            var success = true;
+            var parallelOptionsZipping = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 5 };
+
+            Log.Trace("AlgoSeekOptionsConverter.Package(): Zipping all files ...");
+
+            var destination = Path.Combine(destinationDirectory, "option");
+            var dateMask = date.ToString(DateFormat.EightCharacter);
+
+            var files =
+                Directory.EnumerateFiles(destination, dateMask + "*.csv", SearchOption.AllDirectories)
+                .GroupBy(x => Directory.GetParent(x).FullName);
+
+            //Zip each file massively in parallel.
+            var start = DateTime.Now;
+            var zipFilesCounter = 0L;
+            Parallel.ForEach(files, file =>
+            {
+                try
+                {
+                    var outputFileName = file.Key + ".zip";
+                    // Create and open a new ZIP file
+                    var filesToCompress = Directory.GetFiles(file.Key, "*.csv", SearchOption.AllDirectories);
+                    using (var zip = ZipFile.Open(outputFileName, ZipArchiveMode.Create))
+                    {
+                        foreach (var fileToCompress in filesToCompress)
+                        {
+                            // Add the entry for each file
+                            zip.CreateEntryFromFile(fileToCompress, Path.GetFileName(fileToCompress), CompressionLevel.Optimal);
+                            var filesZipped = Interlocked.Increment(ref zipFilesCounter);
+                            if (filesZipped % 10000 == 0)
+                            {
+                                Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Package(): {filesZipped} files written " +
+                                          $"at {filesZipped / (DateTime.Now - start).TotalSeconds:N2} files/second.");
+                            }
+                        }
+                    }
+
+                    try
+                    {
+                        Directory.Delete(file.Key, true);
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error("AlgoSeekOptionsConverter.Package(): Directory.Delete returned error: " + err.Message);
+                    }
+                }
+                catch (Exception err)
+                {
+                    Log.Error("File: {0} Err: {1} Source {2} Stack {3}", file, err.Message, err.Source, err.StackTrace);
+                    success = false;
+                }
+            });
+
+            var totalTime = DateTime.Now - start;
+            Log.Trace($"AlgoSeekOptionsConverterMultipleInstances.Convert(): Finished packaging. {zipFilesCounter} files zipped in {totalTime:g} " +
+                      $"at {zipFilesCounter / totalTime.TotalSeconds:N2} files/second.");
+
+
+            return success;
+        }
+
+
+        /// <summary>
         ///     Cleans zip archives and source data folders before run
         /// </summary>
         public void Clean(DateTime date)
@@ -285,7 +355,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             //Clean each file massively in parallel.
             Parallel.ForEach(
                 files,
-                parallelOptionsZipping,
+                parallelOptionsWriting,
                 file =>
                 {
                     try
