@@ -50,7 +50,9 @@ namespace QuantConnect.Util
         {
             // grab assemblies from current executing directory if not defined by 'composer-dll-directory' configuration key
             var primaryDllLookupDirectory = new DirectoryInfo(Config.Get("composer-dll-directory", AppDomain.CurrentDomain.BaseDirectory)).FullName;
-
+            var loadFromPluginDir = !string.IsNullOrWhiteSpace(PluginDirectory)
+                && Directory.Exists(PluginDirectory) &&
+                new DirectoryInfo(PluginDirectory).FullName != primaryDllLookupDirectory;
             _composableParts = Task.Run(() =>
             {
                 var catalogs = new List<ComposablePartCatalog>
@@ -58,7 +60,7 @@ namespace QuantConnect.Util
                     new DirectoryCatalog(primaryDllLookupDirectory, "*.dll"),
                     new DirectoryCatalog(primaryDllLookupDirectory, "*.exe")
                 };
-                if (!string.IsNullOrWhiteSpace(PluginDirectory) && Directory.Exists(PluginDirectory) && new DirectoryInfo(PluginDirectory).FullName != primaryDllLookupDirectory)
+                if (loadFromPluginDir)
                 {
                     catalogs.Add(new DirectoryCatalog(PluginDirectory, "*.dll"));
                 }
@@ -70,7 +72,23 @@ namespace QuantConnect.Util
             // for performance we will load our assemblies and keep their exported types
             // which is much faster that using CompositionContainer which uses reflexion
             var exportedTypes = new ConcurrentBag<Type>();
-            Parallel.ForEach(Directory.EnumerateFiles(primaryDllLookupDirectory, $"{nameof(QuantConnect)}.*.dll"),
+            var fileNames = Directory.EnumerateFiles(primaryDllLookupDirectory, $"{nameof(QuantConnect)}.*.dll");
+            if (loadFromPluginDir)
+            {
+                fileNames = fileNames.Concat(Directory.EnumerateFiles(PluginDirectory, $"{nameof(QuantConnect)}.*.dll"));
+            }
+
+            // guarantee file name uniqueness
+            var files = new Dictionary<string, string>();
+            foreach (var filePath in fileNames)
+            {
+                var fileName = Path.GetFileName(filePath);
+                if (!string.IsNullOrEmpty(fileName))
+                {
+                    files[fileName] = filePath;
+                }
+            }
+            Parallel.ForEach(files.Values,
                 file =>
                 {
                     try
@@ -239,7 +257,10 @@ namespace QuantConnect.Util
                     return values.OfType<T>();
                 }
 
-                _composableParts.Wait();
+                if (!_composableParts.IsCompleted)
+                {
+                    _composableParts.Wait();
+                }
                 values = _compositionContainer.GetExportedValues<T>().ToList();
                 _exportedValues[typeof (T)] = values;
                 return values.OfType<T>();
