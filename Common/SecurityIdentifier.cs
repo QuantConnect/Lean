@@ -19,6 +19,7 @@ using System.Linq;
 using System.Numerics;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -40,6 +41,8 @@ namespace QuantConnect
 
         private static readonly string MapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
         private static readonly char[] InvalidCharacters = {'|', ' '};
+        private static IMapFileProvider _mapFileProvider;
+        private static readonly object _mapFileProviderLock = new object();
 
         /// <summary>
         /// Gets an instance of <see cref="SecurityIdentifier"/> that is empty, that is, one with no symbol specified
@@ -338,14 +341,30 @@ namespace QuantConnect
         {
             if (mapSymbol)
             {
-                mapFileProvider = mapFileProvider ?? Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(MapFileProviderTypeName);
-                var resolver = mapFileProvider.Get(market);
-                var mapFile = resolver.ResolveMapFile(symbol, DateTime.Today);
+                MapFile mapFile;
+                if (mapFileProvider == null)
+                {
+                    lock (_mapFileProviderLock)
+                    {
+                        if (_mapFileProvider == null)
+                        {
+                            _mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(MapFileProviderTypeName);
+                        }
+
+                        mapFile = GetMapFile(_mapFileProvider, market, symbol);
+                    }
+                }
+                else
+                {
+                    mapFile = GetMapFile(mapFileProvider, market, symbol);
+                }
+
                 var firstDate = mapFile.FirstDate;
                 if (mapFile.Any())
                 {
-                    symbol = mapFile.OrderBy(x => x.Date).First().MappedSymbol;
+                    symbol = mapFile.FirstTicker;
                 }
+
                 return GenerateEquity(firstDate, symbol, market);
             }
             else
@@ -353,6 +372,13 @@ namespace QuantConnect
                 return GenerateEquity(DefaultDate, symbol, market);
             }
 
+        }
+
+        public static MapFile GetMapFile(IMapFileProvider mapFileProvider, string market, string symbol)
+        {
+            var resolver = mapFileProvider.Get(market);
+            var mapFile = resolver.ResolveMapFile(symbol, DateTime.Today);
+            return mapFile;
         }
 
         /// <summary>
