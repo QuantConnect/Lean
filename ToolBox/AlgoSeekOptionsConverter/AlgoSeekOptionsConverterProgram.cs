@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using QuantConnect.Configuration;
@@ -59,7 +58,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 Log.Error("Remote Directory doesn't exist: " + remoteDirectory);
                 return;
             }
-           
+
             var remoteOpraFile = new FileInfo(Path.Combine(remoteDirectory, opraFileName));
             if (!remoteOpraFile.Exists)
             {
@@ -70,6 +69,5 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             var converter = new AlgoSeekOptionsConverter(referenceDate, sourceDirectory, destinationDirectory, remoteOpraFile);
             converter.Convert();
         }
-            
     }
 }

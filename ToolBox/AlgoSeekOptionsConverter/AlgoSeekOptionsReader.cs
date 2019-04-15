@@ -25,6 +25,9 @@ using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 {
+    /// <summary>
+    /// Helper class.
+    /// </summary>
     public class TickContainer
     {
         public string SecurityRawIdentifier { get; set; }

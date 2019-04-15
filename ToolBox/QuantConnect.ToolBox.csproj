@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -214,10 +214,6 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverter.cs" />
-    <Compile Include="AlgoSeekOptionsConverterOld\AlgoSeekOptionsConverterProgramOld.cs" />
-    <Compile Include="AlgoSeekOptionsConverterOld\AlgoSeekOptionsProcessorOld.cs" />
-    <Compile Include="AlgoSeekOptionsConverterOld\AlgoSeekOptionsReaderOld.cs" />
-    <Compile Include="AlgoSeekOptionsConverter\AlgoSeekOptionsConverterMultipleInstances.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDataDownloader.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDownloaderProgram.cs" />
     <Compile Include="GDAXDownloader\GDAXDownloader.cs" />
