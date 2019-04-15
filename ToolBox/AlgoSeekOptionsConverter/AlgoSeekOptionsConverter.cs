@@ -102,7 +102,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         public void ProcessOpraFile(object opraFileInfo)
         {
             var rawDataFile = (FileInfo)opraFileInfo;
-            Log.Trace($"AlgoSeekOptionsConverter.ProcessOpraFile(): Starting processing {rawDataFile.Name}...");
+            Log.Trace($"AlgoSeekOptionsConverter.ProcessOpraFile(): Start processing {rawDataFile.Name}...");
             var processors = new Processors();
             var totalLinesProcessed = 0L;
             var start = DateTime.Now;

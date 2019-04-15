@@ -36,7 +36,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         private readonly DateTime _referenceDate;
 
         private readonly string[] _windowsRestrictedNames =
-        {
+        {   
             "con", "prn", "aux", "nul"
         };
 
