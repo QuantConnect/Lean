@@ -41,8 +41,13 @@ class CustomDataNIFTYAlgorithm(QCAlgorithm):
         self.SetCash(100000)
 
         # Define the symbol and "type" of our generic data:
-        self.AddData(DollarRupee, "USDINR")
-        self.AddData(Nifty, "NIFTY")
+        rupee = self.AddData(DollarRupee, "USDINR", Resolution.Daily).Symbol
+        nifty = self.AddData(Nifty, "NIFTY", Resolution.Daily).Symbol
+
+        self.EnableAutomaticIndicatorWarmUp = True
+        rupeeSma = self.SMA(rupee, 20)
+        niftySma = self.SMA(rupee, 20)
+        self.Log(f"SMA - Is ready? USDINR: {rupeeSma.IsReady} NIFTY: {niftySma.IsReady}")
 
         self.minimumCorrelationHistory = 50
         self.today = CorrelationPair()

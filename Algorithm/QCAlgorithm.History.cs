@@ -607,20 +607,6 @@ namespace QuantConnect.Algorithm
             });
         }
 
-        private IEnumerable<HistoryRequest> CreateBarCountHistoryRequestsWithNewSubscription(IEnumerable<Symbol> symbols, int periods, Resolution? resolution)
-        {
-            return symbols.Where(x => !x.IsCanonical()).SelectMany(x =>
-            {
-                var res = resolution ?? UniverseSettings.Resolution;
-                var exchange = GetExchangeHours(x);
-                var start = _historyRequestFactory.GetStartTimeAlgoTz(x, periods, res, exchange);
-                var end = Time.RoundDown(res.ToTimeSpan());
-
-                return CreateSubscriptions(x, typeof(BaseData), resolution)
-                    .Select(config => _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res));
-            });
-        }
-
         private SubscriptionDataConfig GetMatchingSubscription(Symbol symbol, Type type)
         {
             // find the first subscription matching the requested type with a higher resolution than requested
@@ -639,29 +625,24 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                return CreateSubscriptions(symbol, type, resolution);
+                var timeZone = GetExchangeHours(symbol).TimeZone;
+                resolution = GetResolution(symbol, resolution);
+
+                return SubscriptionManager
+                    .LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution.Value, symbol.IsCanonical())
+                    .Select(x => new SubscriptionDataConfig(
+                        x.Item1,
+                        symbol,
+                        resolution.Value,
+                        timeZone, timeZone,
+                        UniverseSettings.FillForward,
+                        UniverseSettings.ExtendedMarketHours,
+                        true,
+                        false,
+                        x.Item2,
+                        true));
+                // TODO: replace default DataNormalizationMode for a UniverseSettings variable
             }
-        }
-
-        private IEnumerable<SubscriptionDataConfig> CreateSubscriptions(Symbol symbol, Type type, Resolution? resolution = null)
-        {
-            var timeZone = GetExchangeHours(symbol).TimeZone;
-            resolution = GetResolution(symbol, resolution) ?? UniverseSettings.Resolution;
-
-            return SubscriptionManager
-                .LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution.Value, symbol.IsCanonical())
-                .Select(x => new SubscriptionDataConfig(
-                    x.Item1,
-                    symbol,
-                    resolution.Value,
-                    timeZone, timeZone,
-                    UniverseSettings.FillForward,
-                    UniverseSettings.ExtendedMarketHours,
-                    true,
-                    false,
-                    x.Item2,
-                    true,
-                    UniverseSettings.DataNormalizationMode));
         }
 
         private SecurityExchangeHours GetExchangeHours(Symbol symbol)

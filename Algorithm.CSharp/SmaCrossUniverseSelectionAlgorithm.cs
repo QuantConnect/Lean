@@ -39,12 +39,22 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2019, 01, 01);
             SetCash(1000000);
 
-            IsWarmUpIndicatorEnabled = true;
+            EnableAutomaticIndicatorWarmUp = true;
 
-            var symbol = AddEquity("SPY", Resolution.Hour).Symbol;
-            var ema = EMA(symbol, 10);
-            WarmUpIndicator(symbol, ema);
-            Log($"{ema.Name}: {ema.Current.Time} - {ema}. IsReady? {ema.IsReady}");
+            var ibm = AddEquity("IBM", Resolution.Tick).Symbol;
+            var ibmSma = SMA(ibm, 40);
+            Log($"{ibmSma.Name}: {ibmSma.Current.Time} - {ibmSma}. IsReady? {ibmSma.IsReady}");
+
+            var spy = AddEquity("SPY", Resolution.Hour).Symbol;
+            var spySma = SMA(spy, 10);     // Data point indicator
+            var spyAtr = ATR(spy, 10);     // Bar indicator
+            var spyVwap = VWAP(spy, 10);   // TradeBar indicator
+            Log($"SPY    - Is ready? SMA: {spySma.IsReady}, ATR: {spyAtr.IsReady}, VWAP: {spyVwap.IsReady}");
+
+            var eur = AddForex("EURUSD", Resolution.Hour).Symbol;
+            var eurSma = SMA(eur, 20, Resolution.Daily);
+            var eurAtr = ATR(eur, 20, resolution: Resolution.Daily);
+            Log($"EURUSD - Is ready? SMA: {eurSma.IsReady}, ATR: {eurAtr.IsReady}");
 
             AddUniverse(coarse =>
             {
@@ -64,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
                         select cf.Symbol).Take(_count);
             });
 
-            // Since the SPY EMA is ready, we will receive error messages
+            // Since the indicators are ready, we will receive error messages
             // reporting that the algorithm manager is trying to add old information
             SetWarmUp(10);
         }

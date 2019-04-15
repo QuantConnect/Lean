@@ -41,18 +41,28 @@ class SmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
         self.SetEndDate(2019, 1, 1)
         self.SetCash(1000000)
 
-        self.IsWarmUpIndicatorEnabled = True
+        self.EnableAutomaticIndicatorWarmUp = True
 
-        symbol = self.AddEquity("SPY", Resolution.Hour).Symbol
-        ema = self.EMA(symbol, 10)
-        ema = self.WarmUpIndicator(symbol, ema)
-        self.Log(f"{ema.Name}: {ema.Current.Time} - {ema}. IsReady? {ema.IsReady}");
+        ibm = self.AddEquity("IBM", Resolution.Tick).Symbol
+        ibmSma = self.SMA(ibm, 40)
+        self.Log(f"{ibmSma.Name}: {ibmSma.Current.Time} - {ibmSma}. IsReady? {ibmSma.IsReady}")
+
+        spy = self.AddEquity("SPY", Resolution.Hour).Symbol
+        spySma = self.SMA(spy, 10)     # Data point indicator
+        spyAtr = self.ATR(spy, 10,)    # Bar indicator
+        spyVwap = self.VWAP(spy, 10)   # TradeBar indicator
+        self.Log(f"SPY    - Is ready? SMA: {spySma.IsReady}, ATR: {spyAtr.IsReady}, VWAP: {spyVwap.IsReady}")
+
+        eur = self.AddForex("EURUSD", Resolution.Hour).Symbol
+        eurSma = self.SMA(eur, 20, Resolution.Daily)
+        eurAtr = self.ATR(eur, 20, MovingAverageType.Simple, Resolution.Daily)
+        self.Log(f"EURUSD - Is ready? SMA: {eurSma.IsReady}, ATR: {eurAtr.IsReady}")
 
         self.AddUniverse(self.CoarseSmaSelector)
 
-    # Since the SPY EMA is ready, we will receive error messages
-    # reporting that the algorithm manager is trying to add old information
-    self.SetWarmUp(10)
+        # Since the indicators are ready, we will receive error messages
+        # reporting that the algorithm manager is trying to add old information
+        self.SetWarmUp(10)
 
     def CoarseSmaSelector(self, coarse):
 
@@ -63,7 +73,7 @@ class SmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
             symbol = cf.Symbol
             price = cf.AdjustedPrice
             # grab the SMA instance for this symbol
-            avg = self.averages.setdefault(symbol, 
+            avg = self.averages.setdefault(symbol,
                 self.WarmUpIndicator(symbol, SimpleMovingAverage(100), Resolution.Daily))
             # Update returns true when the indicators are ready, so don't accept until they are
             if avg.Update(cf.EndTime, price):

@@ -28,7 +28,7 @@ namespace QuantConnect.Indicators
     ///   ABS(High - PreviousClose)
     ///   ABS(Low  - PreviousClose)
     /// </summary>
-    public class AverageTrueRange : BarIndicator
+    public class AverageTrueRange : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>This indicator is used to smooth the TrueRange computation</summary>
         /// <remarks>This is not exposed publicly since it is the same value as this indicator, meaning
@@ -49,6 +49,11 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
+
+        /// <summary>
         /// Creates a new AverageTrueRange indicator using the specified period and moving average type
         /// </summary>
         /// <param name="name">The name of this indicator</param>
@@ -57,6 +62,8 @@ namespace QuantConnect.Indicators
         public AverageTrueRange(string name, int period, MovingAverageType movingAverageType = MovingAverageType.Wilders)
             : base(name)
         {
+            WarmUpPeriod = period;
+
             _smoother = movingAverageType.AsIndicator(string.Format("{0}_{1}", name, movingAverageType), period);
 
             IBaseDataBar previous = null;
