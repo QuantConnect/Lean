@@ -185,9 +185,9 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Monthly Alpha Value", "$8015512.7828"},
             {"Total Accumulated Estimated Alpha Value", "$3250735.7397"},
             {"Mean Population Estimated Insight Value", "$541789.2899"},
-            {"Mean Population Direction", "66.6667%"},
+            {"Mean Population Direction", "83.3333%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "96.0788%"},
+            {"Rolling Averaged Population Direction", "98.0198%"},
             {"Rolling Averaged Population Magnitude", "0%"}
         };
     }

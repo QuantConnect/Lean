@@ -25,16 +25,15 @@ namespace QuantConnect.Tests.Engine.Alphas
     [TestFixture]
     public class InsightAnalysisContextTests
     {
-        [TestCase(InsightScoreType.Direction, false, InsightType.Price, null)]
-        [TestCase(InsightScoreType.Magnitude, false, InsightType.Price, null)]
-        [TestCase(InsightScoreType.Direction, false, InsightType.Volatility, null)]
-        [TestCase(InsightScoreType.Magnitude, false, InsightType.Volatility, null)]
-        [TestCase(InsightScoreType.Direction, false, InsightType.Price, 1.0)]
-        [TestCase(InsightScoreType.Magnitude, true, InsightType.Price, 1.0)]
-        [TestCase(InsightScoreType.Direction, false, InsightType.Volatility, 1.0)]
-        [TestCase(InsightScoreType.Magnitude, true, InsightType.Volatility, 1.0)]
+        [TestCase(InsightScoreType.Direction, InsightType.Price, null)]
+        [TestCase(InsightScoreType.Magnitude, InsightType.Price, null)]
+        [TestCase(InsightScoreType.Direction, InsightType.Volatility, null)]
+        [TestCase(InsightScoreType.Magnitude, InsightType.Volatility, null)]
+        [TestCase(InsightScoreType.Direction, InsightType.Price, 1.0)]
+        [TestCase(InsightScoreType.Magnitude, InsightType.Price, 1.0)]
+        [TestCase(InsightScoreType.Direction, InsightType.Volatility, 1.0)]
+        [TestCase(InsightScoreType.Magnitude, InsightType.Volatility, 1.0)]
         public void ShouldAnalyzeInsight(InsightScoreType scoreType,
-            bool result,
             InsightType insightType,
             double? magnitude)
         {
@@ -50,7 +49,7 @@ namespace QuantConnect.Tests.Engine.Alphas
                     SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                     1, 1, 1, 1),
                 TimeSpan.FromDays(1));
-            Assert.AreEqual(result, context.ShouldAnalyze(scoreType));
+            Assert.AreEqual(false, context.ShouldAnalyze(scoreType));
         }
     }
 }
