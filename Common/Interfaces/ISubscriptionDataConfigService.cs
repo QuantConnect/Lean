@@ -39,7 +39,8 @@ namespace QuantConnect.Interfaces
             bool extendedMarketHours = false,
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
-            bool isCustomData = false
+            bool isCustomData = false,
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
             );
 
         /// <summary>
@@ -55,7 +56,8 @@ namespace QuantConnect.Interfaces
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
             bool isCustomData = false,
-            List<Tuple<Type, TickType>> subscriptionDataTypes = null
+            List<Tuple<Type, TickType>> subscriptionDataTypes = null,
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
             );
 
         /// <summary>

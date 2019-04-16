@@ -121,6 +121,7 @@ namespace QuantConnect.Data
         ///     True if this subscription should have filters applied to it (market hours/user
         ///     filters from security), false otherwise
         /// </param>
+        /// <param name="dataNormalizationMode">Define how data is normalized</param>
         /// <returns>
         ///     The newly created <see cref="SubscriptionDataConfig" /> or existing instance if it already existed
         /// </returns>
@@ -135,12 +136,14 @@ namespace QuantConnect.Data
             bool fillDataForward = true,
             bool extendedMarketHours = false,
             bool isInternalFeed = false,
-            bool isFilteredSubscription = true
+            bool isFilteredSubscription = true,
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
             )
         {
             return SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward,
                 extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
-                new List<Tuple<Type, TickType>> {new Tuple<Type, TickType>(dataType, tickType)}).First();
+                new List<Tuple<Type, TickType>> {new Tuple<Type, TickType>(dataType, tickType)},
+                dataNormalizationMode).First();
         }
 
 

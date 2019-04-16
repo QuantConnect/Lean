@@ -162,6 +162,7 @@
     <Compile Include="Algorithm\AlgorithmSetHoldingsTests.cs" />
     <Compile Include="Algorithm\AlgorithmSettingsTest.cs" />
     <Compile Include="Algorithm\AlgorithmSubscriptionManagerRemoveConsolidatorTests.cs" />
+    <Compile Include="Algorithm\AlgorithmUniverseSettingsTests.cs" />
     <Compile Include="Algorithm\CashModelAlgorithmTradingTests.cs" />
     <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\CommonAlphaModelTests.cs" />
