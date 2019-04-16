@@ -246,16 +246,10 @@ namespace QuantConnect.Data.UniverseSelection
         {
             var result = subscriptionService.Add(security.Symbol, UniverseSettings.Resolution,
                                                  UniverseSettings.FillForward,
-                                                 UniverseSettings.ExtendedMarketHours);
+                                                 UniverseSettings.ExtendedMarketHours,
+                                                 // force raw data normalization mode for underlying
+                                                 dataNormalizationMode: DataNormalizationMode.Raw);
 
-            // force raw data normalization mode for underlying
-            if (security.Symbol == _underlyingSymbol.First())
-            {
-                foreach (var config in result)
-                {
-                    config.DataNormalizationMode = DataNormalizationMode.Raw;
-                }
-            }
             return result.Select(config => new SubscriptionRequest(isUniverseSubscription: false,
                                                                    universe: this,
                                                                    security: security,
