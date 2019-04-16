@@ -56,7 +56,7 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly object _runtimeLock = new object();
         private readonly Dictionary<string, string> _runtimeStatistics = new Dictionary<string, string>();
         private double _daysProcessed;
-        private double _lastDaysProcessed = 1;
+        private double _daysProcessedFrontier;
         private bool _processingFinalPacket;
         private readonly HashSet<string> _chartSeriesExceededDataPoints = new HashSet<string>();
 
@@ -149,9 +149,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public void Run()
         {
-            //Initialize:
-            _lastDaysProcessed = 5;
-
             //Setup minimum result arrays:
             //SampleEquity(job.periodStart, job.startingCapital);
             //SamplePerformance(job.periodStart, 0);
@@ -209,7 +206,7 @@ namespace QuantConnect.Lean.Engine.Results
                     return;
                 }
 
-                if (DateTime.UtcNow <= _nextUpdate || !(_daysProcessed > (_lastDaysProcessed + 1))) return;
+                if (DateTime.UtcNow <= _nextUpdate || _daysProcessed < _daysProcessedFrontier) return;
 
                 //Extract the orders since last update
                 var deltaOrders = new Dictionary<int, Order>();
@@ -232,7 +229,7 @@ namespace QuantConnect.Lean.Engine.Results
                 try
                 {
                     _lastUpdate = Algorithm.UtcTime.Date;
-                    _lastDaysProcessed = _daysProcessed;
+                    _daysProcessedFrontier = _daysProcessed + 1;
                     _nextUpdate = DateTime.UtcNow.AddSeconds(2);
                 }
                 catch (Exception err)
