@@ -63,13 +63,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             Assert.AreEqual(0, actualOrdersSubmitted.Count);
         }
 
-        [TestCase(Language.CSharp, new[] { 270d, 260d, 250d }, 1, 10)]
-        [TestCase(Language.CSharp, new[] { 250d, 250d, 250d }, 0, 0)]
-        [TestCase(Language.Python, new[] { 270d, 260d, 250d }, 1, 10)]
-        [TestCase(Language.Python, new[] { 250d, 250d, 250d }, 0, 0)]
+        [TestCase(Language.CSharp, new[] { 270d, 260d, 250d }, 240, 1, 10)]
+        [TestCase(Language.CSharp, new[] { 250d, 250d, 250d }, 250, 0, 0)]
+        [TestCase(Language.Python, new[] { 270d, 260d, 250d }, 240, 1, 10)]
+        [TestCase(Language.Python, new[] { 250d, 250d, 250d }, 250, 0, 0)]
         public void OrdersAreSubmittedWhenRequiredForTargetsToExecute(
             Language language,
             double[] historicalPrices,
+            decimal currentPrice,
             int expectedOrdersSubmitted,
             decimal expectedTotalQuantity)
         {
@@ -101,7 +102,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             algorithm.SetDateTime(time.AddMinutes(5));
 
             var security = algorithm.AddEquity(Symbols.AAPL.Value);
-            security.SetMarketPrice(new TradeBar { Value = 250 });
+            security.SetMarketPrice(new TradeBar { Value = currentPrice });
 
             algorithm.SetFinishedWarmingUp();
 

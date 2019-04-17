@@ -114,27 +114,13 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
-            var addedSymbols = new List<Symbol>();
             foreach (var added in changes.AddedSecurities)
             {
                 // initialize new securities
                 if (!_symbolData.ContainsKey(added.Symbol))
                 {
-                    var symbolData = new SymbolData(algorithm, added, _period, _resolution);
-                    addedSymbols.Add(added.Symbol);
-                    _symbolData[added.Symbol] = symbolData;
+                    _symbolData[added.Symbol] = new SymbolData(algorithm, added, _period, _resolution);
                 }
-            }
-
-            if (addedSymbols.Count > 0)
-            {
-                // warmup our indicators by pushing history through the consolidators
-                algorithm.History(addedSymbols, _period, _resolution)
-                    .PushThroughConsolidators(symbol =>
-                    {
-                        SymbolData data;
-                        return _symbolData.TryGetValue(symbol, out data) ? data.Consolidator : null;
-                    });
             }
 
             foreach (var removed in changes.RemovedSecurities)
@@ -159,22 +145,9 @@ namespace QuantConnect.Algorithm.Framework.Execution
         protected virtual bool PriceIsFavorable(SymbolData data, decimal unorderedQuantity)
         {
             var deviations = _deviations * data.STD;
-            if (unorderedQuantity > 0)
-            {
-                if (data.Security.BidPrice < data.SMA - deviations)
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                if (data.Security.AskPrice > data.SMA + deviations)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return unorderedQuantity > 0
+                ? data.Security.BidPrice < data.SMA - deviations
+                : data.Security.AskPrice > data.SMA + deviations;
         }
 
         /// <summary>
@@ -197,17 +170,21 @@ namespace QuantConnect.Algorithm.Framework.Execution
             {
                 Security = security;
                 Consolidator = algorithm.ResolveConsolidator(security.Symbol, resolution);
+
                 var smaName = algorithm.CreateIndicatorName(security.Symbol, "SMA" + period, resolution);
                 SMA = new SimpleMovingAverage(smaName, period);
+                algorithm.RegisterIndicator(security.Symbol, SMA, Consolidator);
+
                 var stdName = algorithm.CreateIndicatorName(security.Symbol, "STD" + period, resolution);
                 STD = new StandardDeviation(stdName, period);
+                algorithm.RegisterIndicator(security.Symbol, STD, Consolidator);
 
-                algorithm.SubscriptionManager.AddConsolidator(security.Symbol, Consolidator);
-                Consolidator.DataConsolidated += (sender, consolidated) =>
+                // warmup our indicators by pushing history through the indicators
+                foreach (var bar in algorithm.History(Security.Symbol, period, resolution))
                 {
-                    SMA.Update(consolidated.EndTime, consolidated.Value);
-                    STD.Update(consolidated.EndTime, consolidated.Value);
-                };
+                    SMA.Update(bar.EndTime, bar.Value);
+                    STD.Update(bar.EndTime, bar.Value);
+                }
             }
         }
     }
