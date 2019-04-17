@@ -640,8 +640,8 @@ namespace QuantConnect.Algorithm
                         true,
                         false,
                         x.Item2,
-                        true));
-                // TODO: replace default DataNormalizationMode for a UniverseSettings variable
+                        true,
+                        UniverseSettings.DataNormalizationMode));
             }
         }
 
