@@ -22,6 +22,7 @@ using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -523,6 +524,128 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void CoarseFundamentalDataGetsPipedCorrectly()
+        {
+            var lck = new object();
+            BaseDataCollection list = null;
+            var timer = new Timer(state =>
+            {
+                var currentTime = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
+                lock (state)
+                {
+                    list = new BaseDataCollection { Symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false) };
+                    list.Data.Add(new CoarseFundamental
+                    {
+                        Symbol = Symbols.SPY,
+                        Time = currentTime - Time.OneDay, // hard-coded coarse period of one day
+                    });
+                }
+            }, lck, TimeSpan.FromSeconds(0.5), TimeSpan.FromMilliseconds(-1));
+
+            var yieldedUniverseData = false;
+            var feed = RunDataFeed(getNextTicksFunction: fdqh =>
+            {
+                lock (lck)
+                {
+                    if (list != null)
+                        try
+                        {
+                            var tmp = list;
+                            return new List<BaseData> { tmp };
+                        }
+                        finally
+                        {
+                            list = null;
+                            yieldedUniverseData = true;
+                        }
+                }
+                return Enumerable.Empty<BaseData>();
+            });
+
+            _algorithm.AddUniverse(coarse => coarse.Take(10).Select(x => x.Symbol));
+
+            var receivedCoarseData = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts =>
+            {
+                if (ts.UniverseData.Count > 0 &&
+                    ts.UniverseData.First().Value.Data.First() is CoarseFundamental)
+                {
+                    receivedCoarseData = true;
+                }
+            }, sendUniverseData: true);
+
+            timer.Dispose();
+            Assert.IsTrue(yieldedUniverseData);
+            Assert.IsTrue(receivedCoarseData);
+        }
+
+        [Test]
+        public void FineCoarseFundamentalDataGetsPipedCorrectly()
+        {
+            var lck = new object();
+            BaseDataCollection list = null;
+            var timer = new Timer(state =>
+            {
+                lock (state)
+                {
+                    list = new BaseDataCollection { Symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false) };
+                    list.Data.Add(new CoarseFundamental
+                    {
+                        Symbol = Symbols.AAPL,
+                        Time = new DateTime(2014, 04, 24)
+                    });
+                }
+            }, lck, TimeSpan.FromSeconds(0.5), TimeSpan.FromMilliseconds(-1));
+
+            var yieldedUniverseData = false;
+            var feed = RunDataFeed(getNextTicksFunction: fdqh =>
+            {
+                lock (lck)
+                {
+                    if (list != null)
+                        try
+                        {
+                            var tmp = list;
+                            return new List<BaseData> { tmp };
+                        }
+                        finally
+                        {
+                            list = null;
+                            yieldedUniverseData = true;
+                        }
+                }
+                return Enumerable.Empty<BaseData>();
+            });
+
+            var fineWasCalled = false;
+            _algorithm.AddUniverse(coarse => coarse.Take(1).Select(x => x.Symbol),
+                fine =>
+                {
+                    var symbol = fine.First().Symbol;
+                    if (symbol == Symbols.AAPL)
+                    {
+                        fineWasCalled = true;
+                    }
+                    return new[] {symbol};
+                });
+
+            var receivedFundamentalsData = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts =>
+            {
+                if (ts.UniverseData.Count > 0 &&
+                    ts.UniverseData.First().Value.Data.First() is Fundamentals)
+                {
+                    receivedFundamentalsData = true;
+                }
+            }, sendUniverseData: true);
+
+            timer.Dispose();
+            Assert.IsTrue(yieldedUniverseData);
+            Assert.IsTrue(receivedFundamentalsData);
+            Assert.IsTrue(fineWasCalled);
+        }
+
+        [Test]
         public void HandlesCoarseFundamentalData()
         {
             Symbol symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
@@ -701,16 +824,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             return feed;
         }
 
-        private void ConsumeBridge(IDataFeed feed, TimeSpan timeout, Action<TimeSlice> handler)
+        private void ConsumeBridge(IDataFeed feed, TimeSpan timeout, Action<TimeSlice> handler, bool sendUniverseData = false)
         {
-            ConsumeBridge(feed, timeout, false, handler);
+            ConsumeBridge(feed, timeout, false, handler, sendUniverseData: sendUniverseData);
         }
 
         private void ConsumeBridge(IDataFeed feed,
             TimeSpan timeout,
             bool alwaysInvoke,
             Action<TimeSlice> handler,
-            bool noOutput = true)
+            bool noOutput = true,
+            bool sendUniverseData = false)
         {
             var endTime = DateTime.UtcNow.Add(timeout);
             bool startedReceivingata = false;
@@ -723,7 +847,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                      $". TimeSlice.Time (EDT): {timeSlice.Time.ConvertFromUtc(TimeZones.NewYork):o}");
                 }
 
-                if (!startedReceivingata && timeSlice.Slice.Count != 0)
+                if (!startedReceivingata
+                    && (timeSlice.Slice.Count != 0
+                        || sendUniverseData && timeSlice.UniverseData.Count > 0))
                 {
                     startedReceivingata = true;
                 }

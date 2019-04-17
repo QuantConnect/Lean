@@ -161,11 +161,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// Creates the symbol used for coarse fundamental data
         /// </summary>
         /// <param name="market">The market</param>
+        /// <param name="addGuid">True, will add a random GUID to allow uniqueness</param>
         /// <returns>A coarse universe symbol for the specified market</returns>
-        public static Symbol CreateUniverseSymbol(string market)
+        public static Symbol CreateUniverseSymbol(string market, bool addGuid = true)
         {
             market = market.ToLower();
-            var ticker = $"qc-universe-coarse-{market}-{Guid.NewGuid()}";
+            var ticker = $"qc-universe-coarse-{market}";
+            if (addGuid)
+            {
+                ticker += $"-{Guid.NewGuid()}";
+            }
             var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
             return new Symbol(sid, ticker);
         }
