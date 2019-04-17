@@ -122,6 +122,10 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             foreach (var scoreType in InsightManager.ScoreTypes)
             {
+                if (!context.ShouldAnalyze(scoreType))
+                {
+                    continue;
+                }
                 var score = context.Score.GetScore(scoreType);
                 var currentTime = context.CurrentValues.TimeUtc;
 

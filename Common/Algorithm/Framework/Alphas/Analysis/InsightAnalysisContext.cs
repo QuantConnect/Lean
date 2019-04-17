@@ -170,13 +170,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <returns>True to proceed with analyzing this insight for the specified score type, false to skip analysis of the score type</returns>
         public bool ShouldAnalyze(InsightScoreType scoreType)
         {
-            if (scoreType == InsightScoreType.Magnitude)
+            if (Insight.Direction == InsightDirection.Flat)
+            {
+                return false;
+            }
+            else if (scoreType == InsightScoreType.Magnitude)
             {
                 return Insight.Magnitude.HasValue;
-            }
-            else if (scoreType == InsightScoreType.Direction)
-            {
-                return Insight.Direction != InsightDirection.Flat;
             }
 
             return true;
