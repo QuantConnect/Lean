@@ -154,8 +154,10 @@ namespace QuantConnect.Securities
                 security.SetLeverage(leverage);
             }
 
-            // In live mode, equity assumes specific price variation model
-            if (_isLiveMode && security.Type == SecurityType.Equity)
+            var isNotNormalized = configList.DataNormalizationMode() == DataNormalizationMode.Raw;
+
+            // In live mode and non normalized data, equity assumes specific price variation model
+            if ((_isLiveMode || isNotNormalized) && security.Type == SecurityType.Equity)
             {
                 security.PriceVariationModel = new EquityPriceVariationModel();
             }

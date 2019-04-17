@@ -311,11 +311,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             bool extendedMarketHours = false,
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
-            bool isCustomData = false
+            bool isCustomData = false,
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
             )
         {
             return Add(symbol, resolution, fillForward, extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
-                new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(dataType, LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType))})
+                new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(dataType, LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType))}, dataNormalizationMode)
                 .First();
         }
 
@@ -332,7 +333,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
             bool isCustomData = false,
-            List<Tuple<Type, TickType>> subscriptionDataTypes = null
+            List<Tuple<Type, TickType>> subscriptionDataTypes = null,
+            DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted
             )
         {
             var dataTypes = subscriptionDataTypes ??
@@ -340,9 +342,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
-            var dataNormalizationMode = symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.Future
-                ? DataNormalizationMode.Raw
-                : DataNormalizationMode.Adjusted;
+            if (symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.Future)
+            {
+                dataNormalizationMode = DataNormalizationMode.Raw;
+            }
 
             if (marketHoursDbEntry.DataTimeZone == null)
             {

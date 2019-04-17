@@ -247,11 +247,11 @@ namespace QuantConnect.Data.UniverseSelection
             DateTime maximumEndTimeUtc,
             ISubscriptionDataConfigService subscriptionService)
         {
-
             var result = subscriptionService.Add(security.Symbol,
                 UniverseSettings.Resolution,
                 UniverseSettings.FillForward,
-                UniverseSettings.ExtendedMarketHours);
+                UniverseSettings.ExtendedMarketHours,
+                dataNormalizationMode: UniverseSettings.DataNormalizationMode);
             return result.Select(config => new SubscriptionRequest(isUniverseSubscription: false,
                 universe: this,
                 security: security,
