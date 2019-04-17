@@ -128,6 +128,9 @@ namespace QuantConnect.Brokerages.GDAX.Messages
         public decimal ExecutedValue { get; set; }
         public string Status { get; set; }
         public bool Settled { get; set; }
+        public string Stop { get; set; }
+        [JsonProperty("stop_price")]
+        public decimal StopPrice { get; set; }
     }
 
     public class Account

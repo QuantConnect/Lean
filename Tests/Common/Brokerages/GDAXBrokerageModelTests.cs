@@ -104,7 +104,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(OrderType.Limit, 2019, 2, 1, 0, 0, 0, true)]
         [TestCase(OrderType.MarketOnClose, 2019, 2, 1, 0, 0, 0, false)]
         [TestCase(OrderType.MarketOnOpen, 2019, 2, 1, 0, 0, 0, false)]
-        [TestCase(OrderType.StopLimit, 2019, 2, 1, 0, 0, 0, false)]
+        [TestCase(OrderType.StopLimit, 2019, 2, 1, 0, 0, 0, true)]
         [TestCase(OrderType.StopMarket, 2019, 2, 1, 0, 0, 0, true)]
         [TestCase(OrderType.StopMarket, 2019, 3, 23, 0, 59, 59, true)]
         [TestCase(OrderType.StopMarket, 2019, 3, 23, 1, 0, 0, false)]
