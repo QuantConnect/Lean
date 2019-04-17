@@ -155,6 +155,7 @@
     <Compile Include="CompositeRiskManagementModelFrameworkAlgorithm.cs" />
     <Compile Include="OrderBasedInsightGeneratedAlgorithm.cs" />
     <Compile Include="ProcessSplitSymbolsRegressionAlgorithm.cs" />
+    <Compile Include="RawPricesUniverseRegressionAlgorithm.cs" />
     <Compile Include="SetAccountCurrencyCashBuyingPowerModelRegressionAlgorithm.cs" />
     <Compile Include="SetAccountCurrencySecurityMarginModelRegressionAlgorithm.cs" />
     <Compile Include="SetCashOnDataRegressionAlgorithm.cs" />
