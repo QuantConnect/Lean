@@ -16,8 +16,10 @@
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
+using System;
 using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm
@@ -31,24 +33,9 @@ namespace QuantConnect.Tests.Algorithm
         [TestCase(DataNormalizationMode.TotalReturn)]
         public void CheckUniverseSelectionSecurityDataNormalizationMode(DataNormalizationMode dataNormalizationMode)
         {
-            var algorithm = new QCAlgorithm();
-
-            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-
-            var dataManager = new DataManager(
-                new MockDataFeed(),
-                new UniverseSelection(
-                    algorithm,
-                    new SecurityService(
-                        algorithm.Portfolio.CashBook,
-                        marketHoursDatabase,
-                        SymbolPropertiesDatabase.FromDataFolder(),
-                        algorithm)),
-                algorithm,
-                algorithm.TimeKeeper,
-                marketHoursDatabase);
-
-            algorithm.SubscriptionManager.SetDataManager(dataManager);
+            var tuple = GetAlgorithmAndDataManager();
+            var algorithm = tuple.Item1;
+            var dataManager = tuple.Item2;
 
             var symbol = Symbols.SPY;
             algorithm.UniverseSettings.DataNormalizationMode = dataNormalizationMode;
@@ -65,6 +52,66 @@ namespace QuantConnect.Tests.Algorithm
             var security = changes.AddedSecurities.First();
             Assert.AreEqual(symbol, security.Symbol);
             Assert.AreEqual(dataNormalizationMode, security.DataNormalizationMode);
+        }
+
+        [Test]
+        public void CheckManualSecurityDataNormalizationModePersistence()
+        {
+            var tuple = GetAlgorithmAndDataManager();
+            var algorithm = tuple.Item1;
+            var dataManager = tuple.Item2;
+
+            var expected = DataNormalizationMode.Adjusted;
+            var spy = algorithm.AddEquity("SPY");
+            Assert.AreEqual(expected, spy.DataNormalizationMode);
+
+            var symbol = spy.Symbol;
+            algorithm.UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
+            algorithm.AddUniverse(coarse => new[] { symbol });
+
+            var changes = dataManager.UniverseSelection
+                .ApplyUniverseSelection(
+                    algorithm.UniverseManager.First().Value,
+                    algorithm.UtcTime,
+                    new BaseDataCollection(algorithm.UtcTime, null, Enumerable.Empty<CoarseFundamental>()));
+
+            Assert.AreEqual(1, changes.AddedSecurities.Count());
+
+            var security = changes.AddedSecurities.First();
+            Assert.AreEqual(symbol, security.Symbol);
+            Assert.AreEqual(spy, security);
+            Assert.AreEqual(expected, security.DataNormalizationMode);
+        }
+
+        private Tuple<QCAlgorithm, DataManager> GetAlgorithmAndDataManager()
+        {
+            var algorithm = new QCAlgorithm();
+
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
+
+            var dataManager = new DataManager(
+                new MockDataFeed(),
+                new UniverseSelection(
+                    algorithm,
+                    new SecurityService(
+                        algorithm.Portfolio.CashBook,
+                        marketHoursDatabase,
+                        symbolPropertiesDatabase,
+                        algorithm)),
+                algorithm,
+                algorithm.TimeKeeper,
+                marketHoursDatabase);
+
+            var securityService = new SecurityService(
+                algorithm.Portfolio.CashBook,
+                marketHoursDatabase,
+                symbolPropertiesDatabase,
+                algorithm);
+
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+            algorithm.Securities.SetSecurityService(securityService);
+            return Tuple.Create(algorithm, dataManager);
         }
     }
 }
