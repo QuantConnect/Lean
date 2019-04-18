@@ -19,7 +19,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
@@ -32,6 +31,11 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class FactorFile : IEnumerable<FactorFileRow>
     {
+        /// <summary>
+        /// Keeping a reversed version is more performant that reversing it each time we need it
+        /// </summary>
+        private readonly List<DateTime> _reversedFactorFileDates;
+
         /// <summary>
         /// The factor file data rows sorted by date
         /// </summary>
@@ -52,8 +56,8 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the most recent factor change in the factor file
         /// </summary>
-        public DateTime MostRecentFactorChange => SortedFactorFileData.Reverse()
-            .FirstOrDefault(kvp => kvp.Key != Time.EndOfTime).Key;
+        public DateTime MostRecentFactorChange => _reversedFactorFileDates
+            .FirstOrDefault(time => time != Time.EndOfTime);
 
         /// <summary>
         /// Gets the symbol this factor file represents
@@ -79,6 +83,12 @@ namespace QuantConnect.Data.Auxiliary
                 dictionary.Add(row.Date, row);
             }
             SortedFactorFileData = new SortedList<DateTime, FactorFileRow>(dictionary);
+
+            _reversedFactorFileDates = new List<DateTime>();
+            foreach (var time in SortedFactorFileData.Keys.Reverse())
+            {
+                _reversedFactorFileDates.Add(time);
+            }
 
             FactorFileMinimumDate = factorFileMinimumDate;
         }
@@ -108,7 +118,7 @@ namespace QuantConnect.Data.Auxiliary
         {
             decimal factor = 1;
             //Iterate backwards to find the most recent factor:
-            foreach (var splitDate in SortedFactorFileData.Keys.Reverse())
+            foreach (var splitDate in _reversedFactorFileDates)
             {
                 if (splitDate.Date < searchDate.Date) break;
                 factor = SortedFactorFileData[splitDate].PriceScaleFactor;
@@ -123,7 +133,7 @@ namespace QuantConnect.Data.Auxiliary
         {
             decimal factor = 1;
             //Iterate backwards to find the most recent factor:
-            foreach (var splitDate in SortedFactorFileData.Keys.Reverse())
+            foreach (var splitDate in _reversedFactorFileDates)
             {
                 if (splitDate.Date < searchDate.Date) break;
                 factor = SortedFactorFileData[splitDate].SplitFactor;
@@ -139,7 +149,7 @@ namespace QuantConnect.Data.Auxiliary
             var factors = new FactorFileRow(searchDate, 1m, 1m, 0m);
 
             // Iterate backwards to find the most recent factors
-            foreach (var splitDate in SortedFactorFileData.Keys.Reverse())
+            foreach (var splitDate in _reversedFactorFileDates)
             {
                 if (splitDate.Date < searchDate.Date) break;
                 factors = SortedFactorFileData[splitDate];

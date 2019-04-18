@@ -245,6 +245,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // find new selections and add them to the algorithm
             foreach (var symbol in selections)
             {
+                if (universe.Securities.ContainsKey(symbol))
+                {
+                    // if its already part of the universe no need to re add it
+                    continue;
+                }
+
                 // create the new security, the algorithm thread will add this at the appropriate time
                 Security security;
                 if (!pendingAdditions.TryGetValue(symbol, out security) && !_algorithm.Securities.TryGetValue(symbol, out security))

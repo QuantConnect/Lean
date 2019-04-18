@@ -29,6 +29,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <param name="symbol">The symbol to get price/volatility for</param>
         /// <returns>The insight target values for the specified symbol</returns>
         SecurityValues GetValues(Symbol symbol);
+
+        /// <summary>
+        /// Gets the current values for all the algorithm securities (price/volatility)
+        /// </summary>
+        /// <returns>The insight target values for all the algorithm securities</returns>
+        ReadOnlySecurityValuesCollection GetAllValues();
     }
 
     /// <summary>

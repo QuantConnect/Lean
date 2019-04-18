@@ -241,18 +241,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else
             {
-                // count data subscriptions by symbol, ignoring multiple data types.
-                // this limit was added due to the limits IB places on number of subscriptions
-                var uniqueCount = SubscriptionManagerSubscriptions
-                    .Where(x => !x.Symbol.IsCanonical())
-                    .DistinctBy(x => x.Symbol.Value)
-                    .Count();
-
-                if (uniqueCount > _algorithmSettings.DataSubscriptionLimit)
+                // for performance, only count if we are above the limit
+                if (SubscriptionManagerCount() > _algorithmSettings.DataSubscriptionLimit)
                 {
-                    throw new Exception(
-                        $"The maximum number of concurrent market data subscriptions was exceeded ({_algorithmSettings.DataSubscriptionLimit})." +
-                        "Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.");
+                    // count data subscriptions by symbol, ignoring multiple data types.
+                    // this limit was added due to the limits IB places on number of subscriptions
+                    var uniqueCount = SubscriptionManagerSubscriptions
+                        .Where(x => !x.Symbol.IsCanonical())
+                        .DistinctBy(x => x.Symbol.Value)
+                        .Count();
+
+                    if (uniqueCount > _algorithmSettings.DataSubscriptionLimit)
+                    {
+                        throw new Exception(
+                            $"The maximum number of concurrent market data subscriptions was exceeded ({_algorithmSettings.DataSubscriptionLimit})." +
+                            "Please reduce the number of symbols requested or increase the limit using Settings.DataSubscriptionLimit.");
+                    }
                 }
 
                 // add the time zone to our time keeper

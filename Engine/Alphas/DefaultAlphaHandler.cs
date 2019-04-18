@@ -245,7 +245,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         private ReadOnlySecurityValuesCollection CreateSecurityValuesSnapshot()
         {
             _lastSecurityValuesSnapshotTime = Algorithm.UtcTime;
-            return _securityValuesProvider.GetValues(Algorithm.Securities.Keys);
+            return _securityValuesProvider.GetAllValues();
         }
 
         /// <summary>

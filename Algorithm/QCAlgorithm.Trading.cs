@@ -783,13 +783,20 @@ namespace QuantConnect.Algorithm
                 return orderIdList;
             }
 
-
-            foreach (var symbol in Securities.Keys.OrderBy(x => x.Value))
+            IEnumerable<Symbol> toLiquidate;
+            if (symbolToLiquidate != null)
             {
-                // symbol not matching, do nothing
-                if (symbol != symbolToLiquidate && symbolToLiquidate != null)
-                    continue;
+                toLiquidate = Securities.ContainsKey(symbolToLiquidate)
+                    ? new[] { symbolToLiquidate } : Enumerable.Empty<Symbol>();
+            }
+            else
+            {
+                toLiquidate = Securities.Keys.OrderBy(x => x.Value);
+            }
 
+
+            foreach (var symbol in toLiquidate)
+            {
                 // get open orders
                 var orders = Transactions.GetOpenOrders(symbol);
 

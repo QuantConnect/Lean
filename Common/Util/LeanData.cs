@@ -361,9 +361,9 @@ namespace QuantConnect.Util
         public static string GenerateRelativeZipFileDirectory(Symbol symbol, Resolution resolution)
         {
             var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
-            var securityType = symbol.ID.SecurityType.ToLower();
+            var securityType = symbol.ID.SecurityType.SecurityTypeToLower();
             var market = symbol.ID.Market.ToLower();
-            var res = resolution.ToLower();
+            var res = resolution.ResolutionToLower();
             var directory = Path.Combine(securityType, market, res);
             switch (symbol.ID.SecurityType)
             {
@@ -412,7 +412,7 @@ namespace QuantConnect.Util
         /// </summary>
         public static string GenerateRelativeZipFilePath(string symbol, SecurityType securityType, string market, DateTime date, Resolution resolution)
         {
-            var directory = Path.Combine(securityType.ToLower(), market.ToLower(), resolution.ToLower());
+            var directory = Path.Combine(securityType.SecurityTypeToLower(), market.ToLower(), resolution.ResolutionToLower());
             if (resolution != Resolution.Daily && resolution != Resolution.Hour)
             {
                 directory = Path.Combine(directory, symbol.ToLower());
@@ -456,8 +456,8 @@ namespace QuantConnect.Util
                     return string.Format("{0}_{1}_{2}_{3}.csv",
                         formattedDate,
                         symbol.Value.ToLower(),
-                        resolution.ToLower(),
-                        tickType.ToLower()
+                        resolution.ResolutionToLower(),
+                        tickType.TickTypeToLower()
                         );
 
                 case SecurityType.Option:
@@ -465,7 +465,7 @@ namespace QuantConnect.Util
                     {
                         return string.Join("_",
                             symbol.Underlying.Value.ToLower(), // underlying
-                            tickType.ToLower(),
+                            tickType.TickTypeToLower(),
                             symbol.ID.OptionStyle.ToLower(),
                             symbol.ID.OptionRight.ToLower(),
                             Scale(symbol.ID.StrikePrice),
@@ -476,8 +476,8 @@ namespace QuantConnect.Util
                     return string.Join("_",
                         formattedDate,
                         symbol.Underlying.Value.ToLower(), // underlying
-                        resolution.ToLower(),
-                        tickType.ToLower(),
+                        resolution.ResolutionToLower(),
+                        tickType.TickTypeToLower(),
                         symbol.ID.OptionStyle.ToLower(),
                         symbol.ID.OptionRight.ToLower(),
                         Scale(symbol.ID.StrikePrice),
@@ -489,7 +489,7 @@ namespace QuantConnect.Util
                     {
                         return string.Join("_",
                             symbol.ID.Symbol.ToLower(),
-                            tickType.ToLower(),
+                            tickType.TickTypeToLower(),
                             symbol.ID.Date.ToString(DateFormat.YearMonth)
                             ) + ".csv";
                     }
@@ -497,8 +497,8 @@ namespace QuantConnect.Util
                     return string.Join("_",
                         formattedDate,
                         symbol.ID.Symbol.ToLower(),
-                        resolution.ToLower(),
-                        tickType.ToLower(),
+                        resolution.ResolutionToLower(),
+                        tickType.TickTypeToLower(),
                         symbol.ID.Date.ToString(DateFormat.YearMonth)
                         ) + ".csv";
 
@@ -513,7 +513,7 @@ namespace QuantConnect.Util
         /// </summary>
         public static string GenerateZipFileName(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
         {
-            var tickTypeString = tickType.ToLower();
+            var tickTypeString = tickType.TickTypeToLower();
             var formattedDate = date.ToString(DateFormat.EightCharacter);
             var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
 
@@ -593,7 +593,7 @@ namespace QuantConnect.Util
 
             var zipFileName = date.ToString(DateFormat.EightCharacter);
             tickType = tickType ?? (securityType == SecurityType.Forex || securityType == SecurityType.Cfd ? TickType.Quote : TickType.Trade);
-            var suffix = string.Format("_{0}.zip", tickType.Value.ToLower());
+            var suffix = string.Format("_{0}.zip", tickType.Value.TickTypeToLower());
             return zipFileName + suffix;
         }
 
