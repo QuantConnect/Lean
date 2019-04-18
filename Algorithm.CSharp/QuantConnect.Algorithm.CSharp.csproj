@@ -139,6 +139,8 @@
     <Compile Include="Alphas\TripleLeveragedETFPairVolatilityDecayAlpha.cs" />
     <Compile Include="Alphas\VixDualThrustAlpha.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
+    <Compile Include="Benchmarks\StatefulCoarseUniverseSelectionBenchmark.cs" />
+    <Compile Include="Benchmarks\StatelessCoarseUniverseSelectionBenchmark.cs" />
     <Compile Include="CapmAlphaRankingFrameworkAlgorithm.cs" />
     <Compile Include="G10CurrencySelectionModelFrameworkAlgorithm.cs" />
     <Compile Include="ExpiryHelperAlphaModelFrameworkAlgorithm.cs" />
