@@ -21,11 +21,12 @@ namespace QuantConnect.Indicators
     public class ExponentialMovingAverage : Indicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly decimal _k;
+        private readonly int _period;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod { get; }
+        public int WarmUpPeriod => _period;
 
         /// <summary>
         /// Initializes a new instance of the ExponentialMovingAverage class with the specified name and period
@@ -35,7 +36,7 @@ namespace QuantConnect.Indicators
         public ExponentialMovingAverage(string name, int period)
             : base(name)
         {
-            WarmUpPeriod = period;
+            _period = period;
             _k = SmoothingFactorDefault(period);
         }
 
@@ -48,7 +49,7 @@ namespace QuantConnect.Indicators
         public ExponentialMovingAverage(string name, int period, decimal smoothingFactor)
             : base(name)
         {
-            WarmUpPeriod = period;
+            _period = period;
             _k = smoothingFactor;
         }
 
@@ -81,7 +82,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => Samples >= WarmUpPeriod;
+        public override bool IsReady => Samples >= _period;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -91,7 +92,11 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
             // our first data point just return identity
-            return Samples == 1 ? input : input * _k + Current * (1 - _k);
+            if (Samples == 1)
+            {
+                return input;
+            }
+            return input * _k + Current * (1 - _k);
         }
     }
 }
