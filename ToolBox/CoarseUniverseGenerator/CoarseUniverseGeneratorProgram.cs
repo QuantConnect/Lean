@@ -167,7 +167,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             {
                 throw new Exception("Unable to resolve fundamental path for coarse folder: " + coarseFolder);
             }
-            var fineFundamentalFolder = Path.Combine(fundamentalDirectoryInfo.FullName, "fine");
+            var fineFundamentalFolder = Path.Combine(Globals.DataFolder, SecurityType.Equity.ToLower(), Market.USA.ToLower(), "fundamental", "fine");
 
             var mapFileProvider = new LocalDiskMapFileProvider();
 
