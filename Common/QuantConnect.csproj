@@ -225,6 +225,7 @@
     <Compile Include="Data\SubscriptionDataConfigExtensions.cs" />
     <Compile Include="Expiry.cs" />
     <Compile Include="HistoryProviderEvents.cs" />
+    <Compile Include="Indicators\IIndicatorWarmUpPeriodProvider.cs" />
     <Compile Include="Interfaces\IAccountCurrencyProvider.cs" />
     <Compile Include="Interfaces\IAlgorithmSubscriptionManager.cs" />
     <Compile Include="Interfaces\IHistoryProvider.cs" />
