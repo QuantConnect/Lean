@@ -63,13 +63,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             Assert.AreEqual(0, actualOrdersSubmitted.Count);
         }
 
-        [TestCase(Language.CSharp, new[] { 270d, 260d, 250d }, 1, 10)]
-        [TestCase(Language.CSharp, new[] { 250d, 250d, 250d }, 0, 0)]
-        [TestCase(Language.Python, new[] { 270d, 260d, 250d }, 1, 10)]
-        [TestCase(Language.Python, new[] { 250d, 250d, 250d }, 0, 0)]
+        [TestCase(Language.CSharp, new[] { 270d, 260d, 250d }, 240, 1, 10)]
+        [TestCase(Language.CSharp, new[] { 250d, 250d, 250d }, 250, 0, 0)]
+        [TestCase(Language.Python, new[] { 270d, 260d, 250d }, 240, 1, 10)]
+        [TestCase(Language.Python, new[] { 250d, 250d, 250d }, 250, 0, 0)]
         public void OrdersAreSubmittedWhenRequiredForTargetsToExecute(
             Language language,
             double[] historicalPrices,
+            decimal currentPrice,
             int expectedOrdersSubmitted,
             decimal expectedTotalQuantity)
         {
@@ -101,7 +102,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             algorithm.SetDateTime(time.AddMinutes(5));
 
             var security = algorithm.AddEquity(Symbols.AAPL.Value);
-            security.SetMarketPrice(new TradeBar { Value = 250 });
+            security.SetMarketPrice(new TradeBar { Value = currentPrice });
 
             algorithm.SetFinishedWarmingUp();
 
@@ -131,6 +132,53 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 Assert.AreEqual(expectedTotalQuantity, request.Quantity);
                 Assert.AreEqual(algorithm.UtcTime, request.Time);
             }
+        }
+
+        [TestCase(Language.CSharp, new[] { 270d, 260d, 250d }, MarketDataType.TradeBar)]
+        [TestCase(Language.Python, new[] { 250d, 250d, 250d }, MarketDataType.TradeBar)]
+        [TestCase(Language.CSharp, new[] { 270d, 260d, 250d }, MarketDataType.QuoteBar)]
+        [TestCase(Language.Python, new[] { 250d, 250d, 250d }, MarketDataType.QuoteBar)]
+        public void OnSecuritiesChangeDoesNotThrow(
+            Language language,
+            double[] historicalPrices,
+            MarketDataType marketDataType)
+        {
+            var time = new DateTime(2018, 8, 2, 16, 0, 0);
+
+            Func<double, int, BaseData> func = (x, i) =>
+            {
+                var price = Convert.ToDecimal(x);
+                switch (marketDataType)
+                {
+                    case MarketDataType.TradeBar:
+                        return new TradeBar(time.AddMinutes(i), Symbols.AAPL, price, price, price, price, 100m);
+                    case MarketDataType.QuoteBar:
+                        var bar = new Bar(price, price, price, price);
+                        return new QuoteBar(time.AddMinutes(i), Symbols.AAPL, bar, 10m, bar, 10m);
+                    default:
+                        throw new ArgumentException($"Invalid MarketDataType: {marketDataType}");
+                }
+            };
+
+            var historyProvider = new Mock<IHistoryProvider>();
+            historyProvider.Setup(m => m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
+                .Returns(historicalPrices.Select((x, i) => new Slice(time.AddMinutes(i), new List<BaseData> { func(x, i) })));
+
+            var algorithm = new QCAlgorithm();
+            algorithm.SetPandasConverter();
+            algorithm.SetHistoryProvider(historyProvider.Object);
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetDateTime(time.AddMinutes(5));
+
+            var security = algorithm.AddEquity(Symbols.AAPL.Value);
+            security.SetMarketPrice(new TradeBar { Value = 250 });
+            algorithm.SetFinishedWarmingUp();
+
+            var model = GetExecutionModel(language);
+            algorithm.SetExecution(model);
+
+            var changes = new SecurityChanges(new[] { security }, Enumerable.Empty<Security>());
+            Assert.DoesNotThrow(() => model.OnSecuritiesChanged(algorithm, changes));
         }
 
         private static IExecutionModel GetExecutionModel(Language language)
