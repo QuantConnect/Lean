@@ -18,27 +18,23 @@ AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm")
 
 from System import *
-from System.Collections.Generic import List
 from QuantConnect import *
 from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
 
 
-class CoarseFineUniverseSelectionBenchmark(QCAlgorithm):
+class StatefulCoarseUniverseSelectionBenchmark(QCAlgorithm):
 
     def Initialize(self):
+        self.UniverseSettings.Resolution = Resolution.Daily
 
         self.SetStartDate(2017, 11, 1)
         self.SetEndDate(2018, 1, 1)
         self.SetCash(50000)
 
-        self.UniverseSettings.Resolution = Resolution.Minute
-
-        self.AddUniverse(self.CoarseSelectionFunction, self.FineSelectionFunction)
-
-        self.numberOfSymbols = 150
-        self.numberOfSymbolsFine = 40
-        self._changes = None
+        self.AddUniverse(self.CoarseSelectionFunction)
+        self.numberOfSymbols = 250
+        self._blackList = []
 
     # sort the data by daily dollar volume and take the top 'NumberOfSymbols'
     def CoarseSelectionFunction(self, coarse):
@@ -48,27 +44,24 @@ class CoarseFineUniverseSelectionBenchmark(QCAlgorithm):
         sortedByDollarVolume = sorted(selected, key=lambda x: x.DollarVolume, reverse=True)
 
         # return the symbol objects of the top entries from our sorted collection
-        return [ x.Symbol for x in sortedByDollarVolume[:self.numberOfSymbols] ]
+        return [ x.Symbol for x in sortedByDollarVolume[:self.numberOfSymbols] if not (x.Symbol in self._blackList) ]
 
-    # sort the data by P/E ratio and take the top 'NumberOfSymbolsFine'
-    def FineSelectionFunction(self, fine):
-        # sort descending by P/E ratio
-        sortedByPeRatio = sorted(fine, key=lambda x: x.ValuationRatios.PERatio, reverse=True)
-        # take the top entries from our sorted collection
-        return [ x.Symbol for x in sortedByPeRatio[:self.numberOfSymbolsFine] ]
+    def OnData(self, slice):
+        if slice.HasData:
+            symbol = slice.Keys[0]
+            if symbol:
+                if len(self._blackList) > 50:
+                    self._blackList.pop(0)
+                self._blackList.append(symbol)
 
-    def OnData(self, data):
+    def OnSecuritiesChanged(self, changes):
         # if we have no changes, do nothing
-        if self._changes is None: return
+        if changes is None: return
 
         # liquidate removed securities
-        for security in self._changes.RemovedSecurities:
+        for security in changes.RemovedSecurities:
             if security.Invested:
                 self.Liquidate(security.Symbol)
 
-        for security in self._changes.AddedSecurities:
-            self.SetHoldings(security.Symbol, 0.02)
-        self._changes = None;
-
-    def OnSecuritiesChanged(self, changes):
-        self._changes = changes
+        for security in changes.AddedSecurities:
+            self.SetHoldings(security.Symbol, 0.001)

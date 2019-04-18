@@ -56,6 +56,8 @@
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
     <None Include="RawPricesUniverseRegressionAlgorithm.py" />
     <None Include="CapmAlphaRankingFrameworkAlgorithm.py" />
+    <Content Include="Benchmarks\StatefulCoarseUniverseSelectionBenchmark.py" />
+    <Content Include="Benchmarks\StatelessCoarseUniverseSelectionBenchmark.py" />
     <Content Include="G10CurrencySelectionModelFrameworkAlgorithm.py" />
     <Content Include="ExpiryHelperAlphaModelFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateFuturesFrameworkAlgorithm.py" />
