@@ -46,11 +46,7 @@ namespace QuantConnect.Data.Custom
         /// The end time of this data. Some data covers spans (trade bars) and as such we want
         /// to know the entire time span covered
         /// </summary>
-        public override DateTime EndTime
-        {
-            get { return Time + Period; }
-            set { Time = value - Period; }
-        }
+        public override DateTime EndTime => Time + Period;
 
         /// <summary>
         /// The period of this data (hour, month, quarter, or annual)
@@ -147,32 +143,23 @@ namespace QuantConnect.Data.Custom
         /// </returns>
         private string QuarterDateHandler(string dateData)
         {
-            string dateString;
             if (dateData.Contains("Q"))
             {
                 switch (dateData.Last())
                 {
                     case '1':
-                        dateString = dateData.Substring(0, 4) + "0331";
-                        break;
+                        return dateData.Substring(0, 4) + "0331";
                     case '2':
-                        dateString = dateData.Substring(0, 4) + "0630";
-                        break;
+                        return dateData.Substring(0, 4) + "0630";
                     case '3':
-                        dateString = dateData.Substring(0, 4) + "0930";
-                        break;
+                        return dateData.Substring(0, 4) + "0930";
                     case '4':
-                        dateString = dateData.Substring(0, 4) + "1231";
-                        break;
+                        return dateData.Substring(0, 4) + "1231";
                     default:
                         throw (new Exception("invalid quarter input"));
                 }
             }
-            else
-            {
-                dateString = dateData;
-            }
-            return dateString;
+            return dateData;
         }
 
         /// <summary>
