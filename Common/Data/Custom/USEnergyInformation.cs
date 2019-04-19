@@ -142,11 +142,11 @@ namespace QuantConnect.Data.Custom
                     case '1':
                         return dateData.Substring(0, 4) + "0101";
                     case '2':
-                        return dateData.Substring(0, 4) + "0331";
+                        return dateData.Substring(0, 4) + "0401";
                     case '3':
                         return dateData.Substring(0, 4) + "0701";
                     case '4':
-                        return dateData.Substring(0, 4) + "0930";
+                        return dateData.Substring(0, 4) + "1001";
                     default:
                         throw (new Exception("invalid quarter input"));
                 }
