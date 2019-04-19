@@ -38,7 +38,7 @@ namespace QuantConnect.Data.Custom
         private const string _hourly = "yyyyMMdd'T'HH'Z'";
         private const string _daily = "yyyyMMdd";
         private const string _monthly = "yyyyMM";
-        private const string _quarterly = "yyyyqq";
+        private const string _quarterly = "yyyyMMdd";
         private const string _annual = "yyyy";
 
         /// <summary>
@@ -168,21 +168,32 @@ namespace QuantConnect.Data.Custom
         {
             try
             {
-                var rawData = JObject.Parse(content)["series"][0]["data"];
+                var rawData = JObject.Parse(content)["series"][0]["data"];                
                 var format = GetFormat(config.Symbol.Value);
+                var objectList = new List<USEnergyInformation>();
 
-                var objectList = ((JArray)rawData).Select(element => new USEnergyInformation
+                foreach (var element in (JArray)rawData)
                 {
-                    Time = DateTime.ParseExact(QuarterDateHandler(element[0].ToString()), format, CultureInfo.InvariantCulture),
-                    Value = Convert.ToDecimal(element[1]),
-                    Period = Period,
-                    Symbol = config.Symbol
-                }).OrderBy(element => element.Time).ToList();
+                    decimal value;
+                    if (!Decimal.TryParse(element[1].ToString(), out value))
+                    {
+                        continue;
+                    }
+                    objectList.Add(new USEnergyInformation
+                    {
+                        Time = DateTime.ParseExact(QuarterDateHandler(element[0].ToString()), format, CultureInfo.InvariantCulture),
+                        Value = value,
+                        Period = Period,
+                        Symbol = config.Symbol
+                    });
+                }
+                objectList = objectList.OrderBy(element => element.Time).ToList();
 
                 return new BaseDataCollection(date, config.Symbol, objectList);
             }
-            catch
+            catch(Exception err)
             {
+                Logging.Log.Error($"Exception: {err}");
                 return new USEnergyInformation();
             }
         }
