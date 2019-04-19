@@ -54,6 +54,7 @@
     <Content Include="Alphas\TripleLeverageETFPairVolatilityDecayAlpha.py" />
     <Content Include="Alphas\VIXDualThrustAlpha.py" />
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
+    <Content Include="USEnergyInformationAdministrationAlgorithm.py" />
     <None Include="RawPricesUniverseRegressionAlgorithm.py" />
     <None Include="CapmAlphaRankingFrameworkAlgorithm.py" />
     <None Include="SmaCrossUniverseSelectionAlgorithm.py" />
