@@ -36,6 +36,11 @@ conda install -y cython pandas
 conda install -y python=3.6.6
 ```
 
+*Note:* If you encounter "System.DllNotFoundException: python3.6m" when running algorithms on mac, please find the path where your python 3.6.x is installed and perform:
+```
+cp {your_python_path}/bin/python3.6 /usr/local/lib/python3.6m
+```
+
 ### Run python algorithm
 1. Update the [config](https://github.com/QuantConnect/Lean/blob/master/Launcher/config.json) to run the python algorithm:
 ```json
@@ -45,6 +50,7 @@ conda install -y python=3.6.6
 ```
  2. Rebuild LEAN.
  3. Run LEAN. You should see the same result of the C# algorithm you tested earlier.
+
 
 ___
 #### Python.Runtime.dll compilation
