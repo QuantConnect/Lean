@@ -40,7 +40,6 @@ namespace QuantConnect.Data.Custom
         private const string _monthly = "yyyyMM";
         private const string _quarterly = "yyyyqq";
         private const string _annual = "yyyy";
-        private string _dateFormatChosen;
 
         /// <summary>
         /// The end time of this data. Some data covers spans (trade bars) and as such we want
