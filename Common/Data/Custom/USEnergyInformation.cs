@@ -171,7 +171,7 @@ namespace QuantConnect.Data.Custom
                 var rawData = JObject.Parse(content)["series"][0]["data"];
                 var format = GetFormat(config.Symbol.Value);
 
-                var objectList = ((JArray)rawData).Select(element => new EiaData
+                var objectList = ((JArray)rawData).Select(element => new USEnergyInformation
                 {
                     Time = DateTime.ParseExact(QuarterDateHandler(element[0].ToString()), format, CultureInfo.InvariantCulture),
                     Value = Convert.ToDecimal(element[1]),
@@ -183,7 +183,7 @@ namespace QuantConnect.Data.Custom
             }
             catch
             {
-                return new EiaData();
+                return new USEnergyInformation();
             }
         }
     }
