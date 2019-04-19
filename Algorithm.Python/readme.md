@@ -51,7 +51,6 @@ cp {your_python_path}/bin/python3.6 /usr/local/lib/python3.6m
  2. Rebuild LEAN.
  3. Run LEAN. You should see the same result of the C# algorithm you tested earlier.
 
-
 ___
 #### Python.Runtime.dll compilation
 LEAN users do **not** need to compile `Python.Runtime.dll`. The information below is targeted to developers who wish to improve it. 
