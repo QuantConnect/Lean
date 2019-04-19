@@ -105,33 +105,26 @@ namespace QuantConnect.Data.Custom
                 // Annual data has Period ~ 365 days
                 case 'A':
                     Period = TimeSpan.FromDays(365);
-                    _dateFormatChosen = _annual;
-                    break;
+                    return _annual;
                 // Quarterly data has Period ~ 90 days
                 case 'Q':
                     Period = TimeSpan.FromDays(90);
-                    _dateFormatChosen = _quarterly;
-                    break;
+                    return _quarterly;
                 // Monthly data has Period ~ 30 days
                 case 'M':
                     Period = TimeSpan.FromDays(30);
-                    _dateFormatChosen = _monthly;
-                    break;
+                    return _monthly;
                 // Daily has Period = 1 day
                 case 'D':
                     Period = TimeSpan.FromDays(1);
-                    _dateFormatChosen = _daily;
-                    break;
+                    return _daily;
                 // Hourly has period = 1 Hour
                 case 'H':
                     Period = TimeSpan.FromHours(1);
-                    _dateFormatChosen = _hourly;
-                    break;
+                    return _hourly;
                 default:
                     throw new Exception("Unsupported Period");
             }
-
-            return _dateFormatChosen;
         }
 
         /// <summary>
