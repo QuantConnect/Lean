@@ -24,12 +24,12 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Custom
 {
     /// <summary>
-    /// US Energy Information Association provides extensive data on energy usage, import, export,
+    /// US Energy Information Administration provides extensive data on energy usage, import, export,
     /// and forecasting across all US energy sectors.
     /// https://www.eia.gov/opendata/
     /// </summary>
 
-    public class EiaData : BaseData
+    public class USEnergyInformation : BaseData
     {
         /// <summary>
         /// Declare string representations of different periods and the variable
@@ -87,7 +87,7 @@ namespace QuantConnect.Data.Custom
         /// <returns>Subscription Data Source.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var source = $"https://api.eia.gov/series/?api_key={EiaData.AuthCode}&series_id={config.Symbol}";
+            var source = $"https://api.eia.gov/series/?api_key={USEnergyInformation.AuthCode}&series_id={config.Symbol}";
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.Rest, FileFormat.Collection);
         }
 
@@ -140,13 +140,13 @@ namespace QuantConnect.Data.Custom
                 switch (dateData.Last())
                 {
                     case '1':
-                        return dateData.Substring(0, 4) + "0331";
+                        return dateData.Substring(0, 4) + "0101";
                     case '2':
-                        return dateData.Substring(0, 4) + "0630";
+                        return dateData.Substring(0, 4) + "0331";
                     case '3':
-                        return dateData.Substring(0, 4) + "0930";
+                        return dateData.Substring(0, 4) + "0701";
                     case '4':
-                        return dateData.Substring(0, 4) + "1231";
+                        return dateData.Substring(0, 4) + "0930";
                     default:
                         throw (new Exception("invalid quarter input"));
                 }
@@ -166,19 +166,25 @@ namespace QuantConnect.Data.Custom
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
         {
-            var rawData = JObject.Parse(content)["series"][0]["data"];
-            var objectList = new List<EiaData>();
-            var format = GetFormat(config.Symbol.Value);
-
-            objectList = ((JArray)rawData).Select(element => new EiaData
+            try
             {
-                Time = DateTime.ParseExact(QuarterDateHandler(element[0].ToString()), format, CultureInfo.InvariantCulture),
-                Value = Convert.ToDecimal(element[1]),
-                Period = Period,
-                Symbol = config.Symbol
-            }).OrderBy(element => element.Time).ToList();
+                var rawData = JObject.Parse(content)["series"][0]["data"];
+                var format = GetFormat(config.Symbol.Value);
 
-            return new BaseDataCollection(date, config.Symbol, objectList);
+                var objectList = ((JArray)rawData).Select(element => new EiaData
+                {
+                    Time = DateTime.ParseExact(QuarterDateHandler(element[0].ToString()), format, CultureInfo.InvariantCulture),
+                    Value = Convert.ToDecimal(element[1]),
+                    Period = Period,
+                    Symbol = config.Symbol
+                }).OrderBy(element => element.Time).ToList();
+
+                return new BaseDataCollection(date, config.Symbol, objectList);
+            }
+            catch
+            {
+                return new EiaData();
+            }
         }
     }
 }

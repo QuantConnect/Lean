@@ -210,10 +210,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         Tiingo.SetAuthCode(Config.Get("tiingo-auth-token"));
                     }
 
-                    if (!EiaData.IsAuthCodeSet)
+                    if (!USEnergyInformation.IsAuthCodeSet)
                     {
                         // we're not using the SubscriptionDataReader, so be sure to set the auth token here
-                        EiaData.SetAuthCode(Config.Get("us-energy-information-auth-token"));
+                        USEnergyInformation.SetAuthCode(Config.Get("us-energy-information-auth-token"));
                     }
 
                     var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
