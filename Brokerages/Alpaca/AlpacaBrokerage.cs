@@ -257,28 +257,7 @@ namespace QuantConnect.Brokerages.Alpaca
             var task = _restClient.ListPositionsAsync();
             var holdings = task.SynchronouslyAwaitTaskResult();
 
-            var qcHoldings = holdings.Select(ConvertHolding).ToList();
-
-            // Set MarketPrice in each Holding
-            var alpacaSymbols = qcHoldings
-                .Select(x => x.Symbol.Value)
-                .ToList();
-
-            if (alpacaSymbols.Count > 0)
-            {
-                var quotes = GetRates(alpacaSymbols);
-                foreach (var holding in qcHoldings)
-                {
-                    var alpacaSymbol = holding.Symbol;
-                    Tick tick;
-                    if (quotes.TryGetValue(alpacaSymbol.Value, out tick))
-                    {
-                        holding.MarketPrice = (tick.BidPrice + tick.AskPrice) / 2;
-                    }
-                }
-            }
-
-            return qcHoldings;
+            return holdings.Select(ConvertHolding).ToList();
         }
 
         /// <summary>
