@@ -31,30 +31,27 @@ namespace QuantConnect.Brokerages.Alpaca
     /// </summary>
     public partial class AlpacaBrokerage
     {
+
         /// <summary>
-        /// Retrieves the current rate for each of a list of instruments
+        /// Retrieves the current quotes for an instrument
         /// </summary>
-        /// <param name="instruments">the list of instruments to check</param>
-        /// <returns>Dictionary containing the current quotes for each instrument</returns>
-        private Dictionary<string, Tick> GetRates(IEnumerable<string> instruments)
+        /// <param name="instrument">the instrument to check</param>
+        /// <returns>Returns a Tick object with the current bid/ask prices for the instrument</returns>
+        public Tick GetRates(string instrument)
         {
             CheckRateLimiting();
 
-            var task = _restClient.ListQuotesAsync(instruments);
+            var task = _restClient.GetLastQuoteAsync(instrument);
             var response = task.SynchronouslyAwaitTaskResult();
 
-            return response
-                .ToDictionary(
-                    x => x.Symbol,
-                    x => new Tick
-                    {
-                        Symbol = Symbol.Create(x.Symbol, SecurityType.Equity, Market.USA),
-                        BidPrice = x.BidPrice,
-                        AskPrice = x.AskPrice,
-                        Time = x.LastTime,
-                        TickType = TickType.Quote
-                    }
-                );
+            return new Tick
+            {
+                Symbol = Symbol.Create(response.Symbol, SecurityType.Equity, Market.USA),
+                BidPrice = response.BidPrice,
+                AskPrice = response.AskPrice,
+                Time = response.Time,
+                TickType = TickType.Quote
+            };
         }
 
         private IOrder GenerateAndPlaceOrder(Order order)

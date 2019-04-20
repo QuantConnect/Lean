@@ -382,15 +382,5 @@ namespace QuantConnect.Brokerages.Alpaca
         }
 
         #endregion
-
-        /// <summary>
-        /// Retrieves the current quotes for an instrument
-        /// </summary>
-        /// <param name="instrument">the instrument to check</param>
-        /// <returns>Returns a Tick object with the current bid/ask prices for the instrument</returns>
-        public Tick GetRates(string instrument)
-        {
-            return GetRates(new List<string> { instrument }).Values.First();
-        }
     }
 }
