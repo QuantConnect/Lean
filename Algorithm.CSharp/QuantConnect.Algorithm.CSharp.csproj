@@ -170,6 +170,7 @@
     <Compile Include="DailyResolutionSplitRegressionAlgorithm.cs" />
     <Compile Include="MeanVarianceOptimizationFrameworkAlgorithm.cs" />
     <Compile Include="TiingoDailyDataAlgorithm.cs" />
+    <Compile Include="TiingoNewsAlgorithm.cs" />
     <Compile Include="OptionExpiryDateOnHolidayCase.cs" />
     <Compile Include="OptionDataNullReferenceRegressionAlgorithm.cs" />
     <Compile Include="CancelOpenOrdersRegressionAlgorithm.cs" />
