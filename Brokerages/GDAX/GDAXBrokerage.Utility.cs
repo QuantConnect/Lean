@@ -106,6 +106,10 @@ namespace QuantConnect.Brokerages.GDAX
             {
                 return "stop";
             }
+            else if (orderType == Orders.OrderType.StopLimit)
+            {
+                return "limit";
+            }
 
             throw new NotSupportedException("GDAXBrokerage.ConvertOrderType: Unsupported order type:" + orderType.ToString());
         }

@@ -139,7 +139,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket)
+            if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket && order.Type != OrderType.StopLimit)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     $"The {nameof(GDAXBrokerageModel)} does not support {order.Type} order type."
