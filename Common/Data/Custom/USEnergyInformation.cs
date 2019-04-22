@@ -194,7 +194,7 @@ namespace QuantConnect.Data.Custom
             catch(Exception err)
             {
                 Logging.Log.Error($"Exception: {err}");
-                return new USEnergyInformation();
+                return null;
             }
         }
     }
