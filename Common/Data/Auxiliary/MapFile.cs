@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using QuantConnect.Configuration;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Data.Auxiliary
@@ -41,18 +40,12 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the last date in the map file which is indicative of a delisting event
         /// </summary>
-        public DateTime DelistingDate
-        {
-            get { return _data.Keys.Count == 0 ? Time.EndOfTime : _data.Keys.Last(); }
-        }
+        public DateTime DelistingDate { get; }
 
         /// <summary>
         /// Gets the first date in this map file
         /// </summary>
-        public DateTime FirstDate
-        {
-            get { return _data.Keys.Count == 0 ? Time.BeginningOfTime : _data.Keys.First(); }
-        }
+        public DateTime FirstDate { get; }
 
         /// <summary>
         /// Gets the first ticker for the security represented by this map file
@@ -66,6 +59,18 @@ namespace QuantConnect.Data.Auxiliary
         {
             Permtick = permtick.ToUpper();
             _data = new SortedDictionary<DateTime, MapFileRow>(data.Distinct().ToDictionary(x => x.Date));
+
+            // for performance we set first and last date on ctr
+            if (_data.Keys.Count == 0)
+            {
+                FirstDate = Time.BeginningOfTime;
+                DelistingDate = Time.EndOfTime;
+            }
+            else
+            {
+                FirstDate = _data.Keys.First();
+                DelistingDate = _data.Keys.Last();
+            }
 
             var firstTicker = GetMappedSymbol(FirstDate, Permtick);
             if (char.IsDigit(firstTicker.Last()))
@@ -115,7 +120,7 @@ namespace QuantConnect.Data.Auxiliary
                 return true;
             }
 
-            if (date < _data.Keys.First() || date > _data.Keys.Last())
+            if (date < FirstDate || date > DelistingDate)
             {
                 // don't even bother checking the disk if the map files state we don't have ze dataz
                 return false;

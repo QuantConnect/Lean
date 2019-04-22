@@ -160,7 +160,11 @@ namespace QuantConnect.Securities
         {
             get
             {
-                return AveragePrice * Convert.ToDecimal(Quantity) * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
+                if (Quantity == 0)
+                {
+                    return 0;
+                }
+                return AveragePrice * Quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
             }
         }
 
@@ -215,7 +219,14 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal HoldingsValue
         {
-            get { return _price * Quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier; }
+            get
+            {
+                if (Quantity == 0)
+                {
+                    return 0;
+                }
+                return _price * Quantity * _security.QuoteCurrency.ConversionRate * _security.SymbolProperties.ContractMultiplier;
+            }
         }
 
         /// <summary>
@@ -425,7 +436,7 @@ namespace QuantConnect.Securities
         /// <remarks>Does not use the transaction model for market fills but should.</remarks>
         public virtual decimal TotalCloseProfit()
         {
-            if (AbsoluteQuantity == 0)
+            if (Quantity == 0)
             {
                 return 0;
             }
