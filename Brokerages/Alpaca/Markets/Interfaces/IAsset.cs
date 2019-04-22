@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System;
@@ -41,5 +41,20 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// Returns <c>true</c> if asset is tradable.
         /// </summary>
         Boolean IsTradable { get; }
+
+        /// <summary>
+        /// Asset is marginable or not
+        /// </summary>
+        Boolean Marginable { get; }
+
+        /// <summary>
+        /// Asset is shortable or not
+        /// </summary>
+        Boolean Shortable { get; }
+
+        /// <summary>
+        /// Asset is easy-to-borrow or not
+        /// </summary>
+        Boolean EasyToBorrow { get; }
     }
 }

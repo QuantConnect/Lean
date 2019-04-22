@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System;
@@ -8,9 +8,9 @@ using System;
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
     /// <summary>
-    /// Encapsulates bar infromation from Polygon REST API.
+    /// Encapsulates basic bar information for Polygon APIs.
     /// </summary>
-    public interface IBar
+    public interface IAggBase
     {
         /// <summary>
         /// Gets bar open price.
@@ -36,10 +36,5 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// Gets bar trading volume.
         /// </summary>
         Int64 Volume { get; }
-
-        /// <summary>
-        /// Gets bar timestamp.
-        /// </summary>
-        DateTime Time { get; }
     }
 }

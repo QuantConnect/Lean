@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System;
@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
-    internal sealed class JsonMinuteBar : IBar
+    internal sealed class JsonBarAgg : IAgg
     {
         [JsonProperty(PropertyName = "o", Required = Required.Always)]
         public Decimal Open { get; set; }
@@ -26,17 +26,17 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         [JsonProperty(PropertyName = "v", Required = Required.Always)]
         public Int64 Volume { get; set; }
 
-        [JsonProperty(PropertyName = "d", Required = Required.Default)]
+        [JsonProperty(PropertyName = "t", Required = Required.Default)]
         public Int64 TimeOffset { get; set; }
 
         [JsonIgnore]
-        public DateTime Time { get; set; }
+        public DateTime Time { get; private set; }
 
         [OnDeserialized]
         internal void OnDeserializedMethod(
             StreamingContext context)
         {
-            Time = DateTimeHelper.FromUnixTimeMilliseconds(TimeOffset);
+            Time = DateTimeHelper.FromUnixTimeSeconds(TimeOffset);
         }
     }
 }

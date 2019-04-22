@@ -10,17 +10,11 @@ using Newtonsoft.Json.Converters;
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
     /// <summary>
-    /// Order status in Alpaca REST API.
+    /// Trade event in Alpaca trade update stream
     /// </summary>
     [JsonConverter(typeof(StringEnumConverter))]
-    public enum OrderStatus
+    public enum TradeEvent
     {
-        /// <summary>
-        /// Order accepted by server.
-        /// </summary>
-        [EnumMember(Value = "accepted")]
-        Accepted,
-
         /// <summary>
         /// New working order.
         /// </summary>
@@ -30,14 +24,14 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <summary>
         /// Order partially filled.
         /// </summary>
-        [EnumMember(Value = "partially_filled")]
-        PartiallyFilled,
+        [EnumMember(Value = "partial_fill")]
+        PartialFill,
 
         /// <summary>
         /// Order completely filled.
         /// </summary>
-        [EnumMember(Value = "filled")]
-        Filled,
+        [EnumMember(Value = "fill")]
+        Fill,
 
         /// <summary>
         /// Order processing done.
@@ -50,12 +44,6 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// </summary>
         [EnumMember(Value = "canceled")]
         Canceled,
-
-        /// <summary>
-        /// Order replaced (modified).
-        /// </summary>
-        [EnumMember(Value = "replaced")]
-        Replaced,
 
         /// <summary>
         /// Order cancellation request pending.
@@ -100,21 +88,9 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         Expired,
 
         /// <summary>
-        /// Order accepted for bidding by server.
+        /// Order cancellation was rejected.
         /// </summary>
-        [EnumMember(Value = "accepted_for_bidding")]
-        AcceptedForBidding,
-
-        /// <summary>
-        /// Order replacement request pending.
-        /// </summary>
-        [EnumMember(Value = "pending_replace")]
-        PendingReplace,
-
-        /// <summary>
-        /// Order completely filled.
-        /// </summary>
-        [EnumMember(Value = "fill")]
-        Fill
+        [EnumMember(Value = "order_cancel_rejected")]
+        OrderCancelRejected
     }
 }

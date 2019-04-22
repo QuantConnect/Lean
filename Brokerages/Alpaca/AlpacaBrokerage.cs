@@ -257,28 +257,7 @@ namespace QuantConnect.Brokerages.Alpaca
             var task = _restClient.ListPositionsAsync();
             var holdings = task.SynchronouslyAwaitTaskResult();
 
-            var qcHoldings = holdings.Select(ConvertHolding).ToList();
-
-            // Set MarketPrice in each Holding
-            var alpacaSymbols = qcHoldings
-                .Select(x => x.Symbol.Value)
-                .ToList();
-
-            if (alpacaSymbols.Count > 0)
-            {
-                var quotes = GetRates(alpacaSymbols);
-                foreach (var holding in qcHoldings)
-                {
-                    var alpacaSymbol = holding.Symbol;
-                    Tick tick;
-                    if (quotes.TryGetValue(alpacaSymbol.Value, out tick))
-                    {
-                        holding.MarketPrice = (tick.BidPrice + tick.AskPrice) / 2;
-                    }
-                }
-            }
-
-            return qcHoldings;
+            return holdings.Select(ConvertHolding).ToList();
         }
 
         /// <summary>
@@ -403,15 +382,5 @@ namespace QuantConnect.Brokerages.Alpaca
         }
 
         #endregion
-
-        /// <summary>
-        /// Retrieves the current quotes for an instrument
-        /// </summary>
-        /// <param name="instrument">the instrument to check</param>
-        /// <returns>Returns a Tick object with the current bid/ask prices for the instrument</returns>
-        public Tick GetRates(string instrument)
-        {
-            return GetRates(new List<string> { instrument }).Values.First();
-        }
     }
 }
