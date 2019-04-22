@@ -230,6 +230,7 @@ namespace QuantConnect.Securities
 
             // Just in case...
             var lastOrderQuantity = 0m;
+            var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
             do
             {
                 // Each loop will reduce the order quantity based on the difference between
@@ -263,7 +264,7 @@ namespace QuantConnect.Securities
                 lastOrderQuantity = orderQuantity;
 
                 // generate the order
-                var order = new MarketOrder(parameters.Security.Symbol, orderQuantity, DateTime.UtcNow);
+                var order = new MarketOrder(parameters.Security.Symbol, orderQuantity, utcTime);
                 var orderValue = orderQuantity * unitPrice;
 
                 var fees = parameters.Security.FeeModel.GetOrderFee(
@@ -310,7 +311,8 @@ namespace QuantConnect.Securities
             var quoteCurrencyPosition = portfolio.CashBook[security.QuoteCurrency.Symbol].Amount;
 
             // determine the unit price in terms of the quote currency
-            var unitPrice = new MarketOrder(security.Symbol, 1, DateTime.UtcNow).GetValue(security) / security.QuoteCurrency.ConversionRate;
+            var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
+            var unitPrice = new MarketOrder(security.Symbol, 1, utcTime).GetValue(security) / security.QuoteCurrency.ConversionRate;
             if (unitPrice == 0)
             {
                 return parameters.ResultInAccountCurrency(0m);
