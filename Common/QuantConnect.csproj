@@ -219,6 +219,7 @@
     <Compile Include="ChartPoint.cs" />
     <Compile Include="Data\Consolidators\CalendarType.cs" />
     <Compile Include="Data\Consolidators\FilteredIdentityDataConsolidator.cs" />
+    <Compile Include="Data\Fundamental\AssetClassificationHelper.cs" />
     <Compile Include="Data\HistoryProviderBase.cs" />
     <Compile Include="Data\HistoryProviderInitializeParameters.cs" />
     <Compile Include="Data\HistoryRequestFactory.cs" />
