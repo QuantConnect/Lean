@@ -12,7 +12,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     /// <summary>
     /// Helper class for storing parameters required for initializing rate throttler in <see cref="RestClient"/> class.
     /// </summary>
-    public sealed class ThrottleParameters
+    internal sealed class ThrottleParameters
     {
         private const Int32 DEFAULT_OCCURRENCES = 200;
 

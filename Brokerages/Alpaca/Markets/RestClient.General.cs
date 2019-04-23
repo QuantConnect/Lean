@@ -13,7 +13,7 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
-    public sealed partial class RestClient
+    internal sealed partial class RestClient
     {
         /// <summary>
         /// Gets account information from Alpaca REST API endpoint.

@@ -15,7 +15,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     /// <summary>
     /// Provides unified type-safe access for Polygon streaming API.
     /// </summary>
-    public sealed class NatsClient : IDisposable
+    internal sealed class NatsClient : IDisposable
     {
         private readonly IDictionary<String, IAsyncSubscription> _subscriptions =
             new Dictionary<String, IAsyncSubscription>(StringComparer.Ordinal);

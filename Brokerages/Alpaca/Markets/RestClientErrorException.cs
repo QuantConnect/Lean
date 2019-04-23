@@ -10,7 +10,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     /// <summary>
     /// Represents Alpaca/Polygon REST API specific error information.
     /// </summary>
-    public sealed class RestClientErrorException : Exception
+    internal sealed class RestClientErrorException : Exception
     {
         internal RestClientErrorException(
             JsonError error)

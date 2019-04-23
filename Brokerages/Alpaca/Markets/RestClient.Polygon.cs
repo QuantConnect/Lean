@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
-    public sealed partial class RestClient
+    internal sealed partial class RestClient
     {
         /// <summary>
         /// Gets list of available exchanes from Polygon REST API endpoint.

@@ -17,7 +17,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     /// <summary>
     /// Provides unified type-safe access for Alpaca REST API and Polygon REST API endpoints.
     /// </summary>
-    public sealed partial class RestClient : IDisposable
+    internal sealed partial class RestClient : IDisposable
     {
         private const Int32 DEFAULT_API_VERSION_NUMBER = 1;
         

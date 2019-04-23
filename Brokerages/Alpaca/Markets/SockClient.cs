@@ -20,7 +20,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     /// <summary>
     /// Provides unified type-safe access for Alpaca streaming API.
     /// </summary>
-    public sealed partial class SockClient : IDisposable
+    internal sealed class SockClient : IDisposable
     {
         private readonly WebSocket _webSocket;
 
