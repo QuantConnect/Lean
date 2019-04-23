@@ -17,8 +17,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -27,13 +27,15 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression test showcasing an algorithm using the framework models
-    /// and directly calling <see cref="QCAlgorithm.EmitInsights"/>
+    /// Regression test showcasing an algorithm without setting an <see cref="AlphaModel"/>,
+    /// directly calling <see cref="QCAlgorithm.EmitInsights"/> and <see cref="QCAlgorithm.SetHoldings"/>.
+    /// Note that calling <see cref="QCAlgorithm.SetHoldings"/> is useless because
+    /// next time Lean calls the Portfolio construction model it will counter it with another order
+    /// since it only knows of the emitted insights
     /// </summary>
-    public class EmightInsightsAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class EmitInsightNoAlphaModelAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private readonly Symbol _symbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-        private bool _toggle;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -47,11 +49,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
-            // set algorithm framework models
+            // set algorithm framework models except ALPHA
             SetUniverseSelection(new ManualUniverseSelectionModel(_symbol));
-            SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1), 0.025, null));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
-            SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.01m));
         }
 
         /// <summary>
@@ -60,9 +60,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (_toggle)
+            if (!Portfolio.Invested)
             {
-                _toggle = false;
                 var order = Transactions.GetOpenOrders(_symbol).FirstOrDefault();
 
                 if (order != null)
@@ -70,8 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception($"Unexpected open order {order}");
                 }
 
-                // we manually emit an insight
-                EmitInsights(Insight.Price(_symbol, Resolution.Daily, 1, InsightDirection.Down));
+                EmitInsights(Insight.Price(_symbol, Resolution.Daily, 10, InsightDirection.Down));
 
                 // emitted insight should have triggered a new order
                 order = Transactions.GetOpenOrders(_symbol).FirstOrDefault();
@@ -85,10 +83,17 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception($"Unexpected open order for emitted insight: {order}");
                 }
+
+                SetHoldings(_symbol, 1);
             }
-            else
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            var holdings = Securities[_symbol].Holdings;
+            if (Math.Sign(holdings.Quantity) != -1)
             {
-                _toggle = true;
+                throw new Exception("Unexpected holdings");
             }
         }
 
@@ -108,37 +113,37 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "4"},
-            {"Average Win", "0.96%"},
-            {"Average Loss", "-0.95%"},
-            {"Compounding Annual Return", "-44.117%"},
-            {"Drawdown", "1.100%"},
-            {"Expectancy", "0.002"},
-            {"Net Profit", "-0.794%"},
-            {"Sharpe Ratio", "-2.497"},
-            {"Loss Rate", "50%"},
-            {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "1.00"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-0.01%"},
+            {"Compounding Annual Return", "-72.251%"},
+            {"Drawdown", "2.800%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-1.741%"},
+            {"Sharpe Ratio", "-4.242"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
-            {"Beta", "-28.473"},
-            {"Annual Standard Deviation", "0.131"},
-            {"Annual Variance", "0.017"},
-            {"Information Ratio", "-2.584"},
-            {"Tracking Error", "0.131"},
+            {"Beta", "-62.982"},
+            {"Annual Standard Deviation", "0.171"},
+            {"Annual Variance", "0.029"},
+            {"Information Ratio", "-4.308"},
+            {"Tracking Error", "0.171"},
             {"Treynor Ratio", "0.011"},
-            {"Total Fees", "$16.26"},
-            {"Total Insights Generated", "7"},
-            {"Total Insights Closed", "4"},
-            {"Total Insights Analysis Completed", "4"},
-            {"Long Insight Count", "5"},
-            {"Short Insight Count", "2"},
-            {"Long/Short Ratio", "250.0%"},
-            {"Estimated Monthly Alpha Value", "$15518791.1380"},
-            {"Total Accumulated Estimated Alpha Value", "$2672680.6960"},
-            {"Mean Population Estimated Insight Value", "$668170.1740"},
-            {"Mean Population Direction", "50%"},
-            {"Mean Population Magnitude", "50%"},
-            {"Rolling Averaged Population Direction", "50%"},
-            {"Rolling Averaged Population Magnitude", "50%"}
+            {"Total Fees", "$10.77"},
+            {"Total Insights Generated", "1"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "1"},
+            {"Long/Short Ratio", "0%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"}
         };
     }
 }

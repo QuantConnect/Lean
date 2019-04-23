@@ -334,7 +334,8 @@ namespace QuantConnect.Securities
             var direction = targetPortfolioValue > currentHoldingsValue ? OrderDirection.Buy : OrderDirection.Sell;
 
             // determine the unit price in terms of the account currency
-            var unitPrice = new MarketOrder(parameters.Security.Symbol, 1, DateTime.UtcNow).GetValue(parameters.Security);
+            var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
+            var unitPrice = new MarketOrder(parameters.Security.Symbol, 1, utcTime).GetValue(parameters.Security);
             if (unitPrice == 0)
             {
                 var reason = $"The price of the {parameters.Security.Symbol.Value} security is zero because it does not have any market " +
@@ -394,7 +395,7 @@ namespace QuantConnect.Securities
                 }
 
                 // generate the order
-                var order = new MarketOrder(parameters.Security.Symbol, orderQuantity, DateTime.UtcNow);
+                var order = new MarketOrder(parameters.Security.Symbol, orderQuantity, utcTime);
 
                 var fees = parameters.Security.FeeModel.GetOrderFee(
                     new OrderFeeParameters(parameters.Security,

@@ -13,19 +13,19 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data;
+using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression test showcasing backwards incompatible behavior
-    /// for framework bridge algorithms
+    /// This algorithm showcases an <see cref="AccountType.Cash"/> emitting insights
+    /// and manually trading.
     /// </summary>
-    public class InvalidEmightInsightsAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class EmitInsightCryptoCashAccountType : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
 
@@ -34,11 +34,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            SetStartDate(2018, 4, 4); // Set Start Date
+            SetEndDate(2018, 4, 4); // Set End Date
+            SetAccountCurrency("EUR");
+            SetCash("EUR", 10000);
+            _symbol = AddCrypto("BTCEUR").Symbol;
 
-            _symbol = AddEquity("SPY").Symbol;
+            SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
         }
 
         /// <summary>
@@ -47,18 +49,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            SetHoldings(_symbol, 1);
-            try
+            if (!Portfolio.Invested)
             {
                 EmitInsights(Insight.Price(_symbol, Resolution.Daily, 1, InsightDirection.Up));
-                throw new Exception("Expected an exception");
-            }
-            catch (InvalidOperationException exception)
-            {
-                if (!exception.Message.Contains("EmitInsights should be called before placing an order"))
-                {
-                    throw;
-                }
+                SetHoldings(_symbol, 0.5);
             }
         }
 
@@ -80,31 +74,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "263.153%"},
-            {"Drawdown", "2.200%"},
+            {"Compounding Annual Return", "-100.000%"},
+            {"Drawdown", "5.500%"},
             {"Expectancy", "0"},
-            {"Net Profit", "1.663%"},
-            {"Sharpe Ratio", "4.41"},
+            {"Net Profit", "-3.802%"},
+            {"Sharpe Ratio", "-12.079"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.007"},
-            {"Beta", "76.118"},
-            {"Annual Standard Deviation", "0.192"},
-            {"Annual Variance", "0.037"},
-            {"Information Ratio", "4.354"},
-            {"Tracking Error", "0.192"},
-            {"Treynor Ratio", "0.011"},
-            {"Total Fees", "$3.26"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0.397"},
+            {"Annual Variance", "0.158"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$14.92"},
             {"Total Insights Generated", "1"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
+            {"Total Insights Closed", "1"},
+            {"Total Insights Analysis Completed", "1"},
             {"Long Insight Count", "1"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
+            {"Estimated Monthly Alpha Value", "€-7.1039"},
+            {"Total Accumulated Estimated Alpha Value", "€-0.2762628"},
+            {"Mean Population Estimated Insight Value", "€-0.2762628"},
             {"Mean Population Direction", "0%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},

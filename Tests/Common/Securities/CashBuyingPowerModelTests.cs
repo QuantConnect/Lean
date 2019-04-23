@@ -15,6 +15,7 @@
 
 using System;
 using System.Threading;
+using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
@@ -43,6 +44,7 @@ namespace QuantConnect.Tests.Common.Securities
         private BacktestingBrokerage _brokerage;
         private CashBuyingPowerModel _buyingPowerModel;
         private QCAlgorithm _algorithm;
+        private LocalTimeKeeper _timeKeeper;
 
         [SetUp]
         public void Initialize()
@@ -97,6 +99,12 @@ namespace QuantConnect.Tests.Common.Securities
             );
 
             _buyingPowerModel = new CashBuyingPowerModel();
+
+            _timeKeeper = new LocalTimeKeeper(new DateTime(2019, 4, 22), DateTimeZone.Utc);
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
+            _ethusd.SetLocalTimeKeeper(_timeKeeper);
+            _btceur.SetLocalTimeKeeper(_timeKeeper);
+            _ethbtc.SetLocalTimeKeeper(_timeKeeper);
         }
 
         [TearDown]
@@ -177,6 +185,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.SetCash(5000);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _ethusd = _algorithm.AddCrypto("ETHUSD");
@@ -206,6 +215,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.CashBook["ETH"].SetAmount(3m);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _ethusd = _algorithm.AddCrypto("ETHUSD");
@@ -321,6 +331,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.SetCash(5000);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _ethusd = _algorithm.AddCrypto("ETHUSD");
@@ -354,6 +365,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.CashBook["ETH"].SetAmount(3m);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _ethusd = _algorithm.AddCrypto("ETHUSD");
@@ -406,15 +418,19 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.SetCash("EUR", 10000m, 1.20m);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _ethusd = _algorithm.AddCrypto("ETHUSD");
+            _ethusd.SetLocalTimeKeeper(_timeKeeper);
             _ethusd.SetMarketPrice(new Tick { Value = 1000m });
 
             _ethbtc = _algorithm.AddCrypto("ETHBTC");
+            _ethbtc.SetLocalTimeKeeper(_timeKeeper);
             _ethbtc.SetMarketPrice(new Tick { Value = 0.1m });
 
             _btceur = _algorithm.AddCrypto("BTCEUR");
+            _btceur.SetLocalTimeKeeper(_timeKeeper);
             _btceur.SetMarketPrice(new Tick { Value = 12000m });
             _algorithm.SetFinishedWarmingUp();
 
@@ -452,6 +468,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.SetCash(10000);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _algorithm.SetFinishedWarmingUp();
@@ -470,6 +487,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.SetCash(10000);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _algorithm.SetFinishedWarmingUp();
@@ -488,6 +506,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.SetCash(0.00000000001m);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
 
             _algorithm.SetFinishedWarmingUp();
@@ -506,6 +525,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.SetCash(100000m);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _algorithm.Securities[_btcusd.Symbol].SetFeeModel(new ConstantFeeModel(0));
 
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
@@ -526,6 +546,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.CashBook.Add("BTC", 0.2m, 10000m);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 10000m });
             _algorithm.SetFinishedWarmingUp();
 
@@ -568,6 +589,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.SetCash(10000);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
 
@@ -586,6 +608,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ZeroTargetWithZeroHoldingsIsNotAnError()
         {
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
 
             var result = _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_algorithm.Portfolio, _btcusd, 0);
 
@@ -601,6 +624,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ZeroTargetWithNonZeroHoldingsReturnsNegativeOfQuantity()
         {
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _portfolio.CashBook.Add("BTC", 1m, 12000m);
 
             var result = _buyingPowerModel.GetMaximumOrderQuantityForTargetValue(_algorithm.Portfolio, _btcusd, 0);
@@ -619,6 +643,7 @@ namespace QuantConnect.Tests.Common.Securities
             _portfolio.SetCash(10000);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
             _btcusd.FeeModel = new NonAccountCurrencyCustomFeeModel();
@@ -642,6 +667,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(10000m, _portfolio.TotalPortfolioValue);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
 
@@ -665,6 +691,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(8800m, _portfolio.TotalPortfolioValue);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
 
@@ -693,6 +720,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(8800m, _portfolio.TotalPortfolioValue);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
 
@@ -711,6 +739,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(8800m, _portfolio.TotalPortfolioValue);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
             _btcusd.Holdings.SetHoldings(_btcusd.Price, 100);
@@ -732,6 +761,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(18800m, _portfolio.TotalPortfolioValue);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
 
@@ -750,6 +780,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(10000, _portfolio.TotalPortfolioValue);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
 
@@ -769,6 +800,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(18800m, _portfolio.TotalPortfolioValue);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
 
@@ -792,6 +824,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(18800m, _portfolio.TotalPortfolioValue);
 
             _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
             _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
             _algorithm.SetFinishedWarmingUp();
 
