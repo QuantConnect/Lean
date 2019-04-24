@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System;
@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
-    public sealed partial class RestClient
+    internal sealed partial class RestClient
     {
         /// <summary>
         /// Gets list of available exchanes from Polygon REST API endpoint.
@@ -45,7 +45,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             };
 
             return getSingleObjectAsync
-                <IReadOnlyDictionary<String, String>, Dictionary<String, String>>(
+                <IReadOnlyDictionary<String,String>, Dictionary<String, String>>(
                     _polygonHttpClient, FakeThrottler.Instance, builder);
         }
 
@@ -115,7 +115,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="dateIntoInclusive">End time for filtering (inclusive).</param>
         /// <param name="limit">Maximal number of daily bars in data response.</param>
         /// <returns>Read-only list of daily bars for specified asset.</returns>
-        public Task<IAggHistoricalItems<IBar>> ListDayAggregatesAsync(
+        public Task<IAggHistoricalItems<IAgg>> ListDayAggregatesAsync(
             String symbol,
             DateTime? dateFromInclusive = null,
             DateTime? dateIntoInclusive = null,
@@ -125,14 +125,14 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             {
                 Path = $"v1/historic/agg/day/{symbol}",
                 Query = getDefaultPolygonApiQueryBuilder()
-                    .AddParameter("from", dateFromInclusive)
-                    .AddParameter("to", dateIntoInclusive)
+                    .AddParameter("from", dateFromInclusive, "yyyy-MM-dd")
+                    .AddParameter("to", dateIntoInclusive, "yyyy-MM-dd")
                     .AddParameter("limit", limit)
             };
 
             return getSingleObjectAsync
-                <IAggHistoricalItems<IBar>,
-                    JsonAggHistoricalItems<IBar, JsonDayBar>>(
+                <IAggHistoricalItems<IAgg>,
+                    JsonAggHistoricalItems<IAgg, JsonDayAgg>>(
                 _polygonHttpClient, FakeThrottler.Instance, builder);
         }
 
@@ -144,7 +144,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="dateIntoInclusive">End time for filtering (inclusive).</param>
         /// <param name="limit">Maximal number of minute bars in data response.</param>
         /// <returns>Read-only list of minute bars for specified asset.</returns>
-        public Task<IAggHistoricalItems<IBar>> ListMinuteAggregatesAsync(
+        public Task<IAggHistoricalItems<IAgg>> ListMinuteAggregatesAsync(
             String symbol,
             DateTime? dateFromInclusive = null,
             DateTime? dateIntoInclusive = null,
@@ -160,8 +160,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             };
 
             return getSingleObjectAsync
-            <IAggHistoricalItems<IBar>,
-                JsonAggHistoricalItems<IBar, JsonMinuteBar>>(
+                <IAggHistoricalItems<IAgg>,
+                    JsonAggHistoricalItems<IAgg, JsonMinuteAgg>>(
                 _polygonHttpClient, FakeThrottler.Instance, builder);
         }
 

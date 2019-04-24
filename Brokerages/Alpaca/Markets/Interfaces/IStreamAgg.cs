@@ -8,28 +8,28 @@ using System;
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
     /// <summary>
-    /// Encapsulates historical trade information from Polygon REST API.
+    /// Encapsulates bar information from Polygon streaming API.
     /// </summary>
-    public interface IHistoricalTrade
+    public interface IStreamAgg : IAggBase
     {
         /// <summary>
-        /// Gets trade source exchange.
+        /// Gets asset name.
         /// </summary>
-        String Exchange { get; }
+        String Symbol { get; } 
+        
+        /// <summary>
+        /// Gets bar average price.
+        /// </summary>
+        Decimal Average { get; }
 
         /// <summary>
-        /// Gets trade timestamp.
+        /// Gets bar opening timestamp.
         /// </summary>
-        Int64 TimeOffset  { get; }
+        DateTime StartTime { get; }
 
         /// <summary>
-        /// Gets trade price.
+        /// Gets bar closing timestamp.
         /// </summary>
-        Decimal Price { get; }
-
-        /// <summary>
-        /// Gets trade quantity.
-        /// </summary>
-        Int64 Size { get; }
+        DateTime EndTime { get; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System;
@@ -10,9 +10,8 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
 {
     internal sealed class JsonTradeUpdate : ITradeUpdate
     {
-        // TODO: olegra - convert it into enum instead of free string
         [JsonProperty(PropertyName = "event", Required = Required.Always)]
-        public String Event { get; set; }
+        public TradeEvent Event { get; set; }
 
         [JsonProperty(PropertyName = "price", Required = Required.Default)]
         public Decimal? Price { get; set; }
@@ -27,13 +26,5 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public JsonOrder JsonOrder { get; set; }
 
         public IOrder Order => JsonOrder;
-    }
-
-    internal static class TradeUpdateEvent
-    {
-        public const string OrderFilled = "fill";
-        public const string OrderPartiallyFilled = "order_partially_filled";
-        public const string OrderCanceled = "canceled";
-        public const string OrderCancelRejected = "order_cancel_rejected";
     }
 }

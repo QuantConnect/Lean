@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System;
@@ -28,31 +28,17 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             StreamingContext context)
         {
             TradingDate = DateTime.SpecifyKind(
-                TradingDate.Date, DateTimeKind.Utc);
-
-#if NETSTANDARD1_6
-            var estTradingDate = TimeZoneInfo.ConvertTime(
-                DateTime.SpecifyKind(TradingDate.Date, DateTimeKind.Utc),
-                TimeZoneInfo.Utc, CustomTimeZone.Est).Date;
-
-            TradingOpenTime = TimeZoneInfo.ConvertTime(
-                estTradingDate.Add(TradingOpenTime.TimeOfDay),
-                CustomTimeZone.Est, TimeZoneInfo.Utc);
-            TradingCloseTime = TimeZoneInfo.ConvertTime(
-                estTradingDate.Add(TradingCloseTime.TimeOfDay),
-                CustomTimeZone.Est, TimeZoneInfo.Utc);
-#else
-            var estTradingDate = TimeZoneInfo.ConvertTimeFromUtc(
-                DateTime.SpecifyKind(TradingDate.Date, DateTimeKind.Utc),
-                CustomTimeZone.Est).Date;
+                TradingDate.Date, DateTimeKind.Unspecified).Date;
 
             TradingOpenTime = TimeZoneInfo.ConvertTimeToUtc(
-                estTradingDate.Add(TradingOpenTime.TimeOfDay),
+                TradingDate.Add(TradingOpenTime.TimeOfDay),
                 CustomTimeZone.Est);
             TradingCloseTime = TimeZoneInfo.ConvertTimeToUtc(
-                estTradingDate.Add(TradingCloseTime.TimeOfDay),
+                TradingDate.Add(TradingCloseTime.TimeOfDay),
                 CustomTimeZone.Est);
-#endif
+
+            TradingDate = DateTime.SpecifyKind(
+                TradingDate.Date, DateTimeKind.Utc);
         }
     }
 }

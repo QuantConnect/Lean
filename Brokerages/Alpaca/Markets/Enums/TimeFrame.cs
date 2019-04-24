@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System.Runtime.Serialization;
@@ -10,39 +10,33 @@ using Newtonsoft.Json.Converters;
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
     /// <summary>
-    /// Historical bar duration size for Alpaca REST API.
+    /// Supported bar duration for Alpaca REST API.
     /// </summary>
     [JsonConverter(typeof(StringEnumConverter))]
-    public enum BarDuration
+    public enum TimeFrame
     {
         /// <summary>
-        /// Minute bar.
+        /// One minute bars.
         /// </summary>
         [EnumMember(Value = "1Min")]
-        OneMinute,
+        Minute,
 
         /// <summary>
-        /// Five minutes bar.
+        /// Five minutes bars.
         /// </summary>
         [EnumMember(Value = "5Min")]
         FiveMinutes,
 
         /// <summary>
-        /// Fifteen minutes bar.
+        /// Fifteen minutes bars.
         /// </summary>
         [EnumMember(Value = "15Min")]
         FifteenMinutes,
 
         /// <summary>
-        /// Hourly bar.
-        /// </summary>
-        [EnumMember(Value = "1H")]
-        OneHour,
-
-        /// <summary>
-        /// Daily bar.
+        /// Daily bars.
         /// </summary>
         [EnumMember(Value = "1D")]
-        OneDay,
+        Day,
     }
 }

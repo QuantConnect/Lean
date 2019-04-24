@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System;
@@ -15,7 +15,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     /// <summary>
     /// Provides unified type-safe access for Polygon streaming API.
     /// </summary>
-    public sealed partial class NatsClient : IDisposable
+    internal sealed class NatsClient : IDisposable
     {
         private readonly IDictionary<String, IAsyncSubscription> _subscriptions =
             new Dictionary<String, IAsyncSubscription>(StringComparer.Ordinal);
@@ -28,7 +28,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// Creates new instance of <see cref="NatsClient"/> object.
         /// </summary>
         /// <param name="keyId">Application key identifier.</param>
-        /// <param name="isStagingEnvironment">If <c>true</c> use staging.</param>"
+        /// <param name="isStagingEnvironment">If <c>true</c> use staging.</param>
         /// <param name="natsServers">List of NATS servers/ports.</param>
         public NatsClient(
             String keyId,
@@ -64,22 +64,22 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         }
 
         /// <summary>
-        /// Occurrs when new trade received from stream.
+        /// Occured when new trade received from stream.
         /// </summary>
         public event Action<IStreamTrade> TradeReceived;
 
         /// <summary>
-        /// Occurrs when new quote received from stream.
+        /// Occured when new quote received from stream.
         /// </summary>
         public event Action<IStreamQuote> QuoteReceived;
 
         /// <summary>
-        /// Occurrs when new bar received from stream.
+        /// Occured when new bar received from stream.
         /// </summary>
-        public event Action<IStreamBar> BarReceived;
+        public event Action<IStreamAgg> AggReceived;
 
         /// <summary>
-        /// Occurrs when any error happened in stream.
+        /// Occured when any error happened in stream.
         /// </summary>
         public event Action<String> OnError;
 
@@ -115,25 +115,25 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         }
 
         /// <summary>
-        /// Subscribes for the second bar updates via <see cref="BarReceived"/>
+        /// Subscribes for the second bar updates via <see cref="AggReceived"/>
         /// event for specific asset from Polygon streaming API.
         /// </summary>
         /// <param name="symbol">Asset name for subscription change.</param>
-        public void SubscribeSecondBar(
+        public void SubscribeSecondAgg(
             String symbol)
         {
-            subscribe($"A.{symbol}", handleBarMessage);
+            subscribe($"A.{symbol}", handleAggMessage);
         }
 
         /// <summary>
-        /// Subscribes for the minute bar updates via <see cref="BarReceived"/>
+        /// Subscribes for the minute bar updates via <see cref="AggReceived"/>
         /// event for specific asset from Polygon streaming API.
         /// </summary>
         /// <param name="symbol">Asset name for subscription change.</param>
-        public void SubscribeMinuteBar(
+        public void SubscribeMinuteAgg(
             String symbol)
         {
-            subscribe($"AM.{symbol}", handleBarMessage);
+            subscribe($"AM.{symbol}", handleAggMessage);
         }
 
         /// <summary>
@@ -159,22 +159,22 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         }
 
         /// <summary>
-        /// Unsubscribes from the second bar updates via <see cref="BarReceived"/>
+        /// Unsubscribes from the second bar updates via <see cref="AggReceived"/>
         /// event for specific asset from Polygon streaming API.
         /// </summary>
         /// <param name="symbol">Asset name for subscription change.</param>
-        public void UnsubscribeSecondBar(
+        public void UnsubscribeSecondAgg(
             String symbol)
         {
             unsubscribe($"A.{symbol}");
         }
 
         /// <summary>
-        /// Unsubscribes from the minute bar updates via <see cref="BarReceived"/>
+        /// Unsubscribes from the minute bar updates via <see cref="AggReceived"/>
         /// event for specific asset from Polygon streaming API.
         /// </summary>
         /// <param name="symbol">Asset name for subscription change.</param>
-        public void UnsubscribeMinuteBar(
+        public void UnsubscribeMinuteAgg(
             String symbol)
         {
             unsubscribe($"AM.{symbol}");
@@ -219,13 +219,13 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         private void unsubscribe(
             String topic)
         {
-			IAsyncSubscription subscription;
+            IAsyncSubscription subscription;
             if (_subscriptions.TryGetValue(
                 topic, out subscription))
             {
+                _subscriptions.Remove(topic);
                 subscription?.Unsubscribe();
                 subscription?.Dispose();
-                _subscriptions.Remove(topic);
             }
         }
 
@@ -235,7 +235,10 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         {
             var message = deserializeBytes<JsonStreamTrade>(
                 eventArgs.Message.Data);
-            TradeReceived?.Invoke(message);
+            if (message != null)
+            {
+                TradeReceived?.Invoke(message);
+            }
         }
 
         private void handleQuoteMessage(
@@ -244,28 +247,41 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         {
             var message = deserializeBytes<JsonStreamQuote>(
                 eventArgs.Message.Data);
-            QuoteReceived?.Invoke(message);
+            if (message != null)
+            {
+                QuoteReceived?.Invoke(message);
+            }
         }
 
-        private void handleBarMessage(
+        private void handleAggMessage(
             Object sender,
             MsgHandlerEventArgs eventArgs)
         {
-            var message = deserializeBytes<JsonStreamBar>(
+            var message = deserializeBytes<JsonStreamAgg>(
                 eventArgs.Message.Data);
-            BarReceived?.Invoke(message);
+            if (message != null)
+            {
+                AggReceived?.Invoke(message);
+            }
         }
 
-        private static T deserializeBytes<T>(
+        private T deserializeBytes<T>(
             Byte[] bytes)
         {
-            using (var stream = new MemoryStream(bytes))
-            using (var textReader = new StreamReader(stream))
-            using (var jsonreader = new JsonTextReader(textReader))
+            try
             {
-                var serializer = new JsonSerializer();
-                var message = serializer.Deserialize<T>(jsonreader);
-                return message;
+                using (var stream = new MemoryStream(bytes))
+                using (var textReader = new StreamReader(stream))
+                using (var jsonReader = new JsonTextReader(textReader))
+                {
+                    var serializer = new JsonSerializer();
+                    return serializer.Deserialize<T>(jsonReader);
+                }
+            }
+            catch (Exception ex)
+            {
+                OnError?.Invoke(ex.Message);
+                return default(T);
             }
         }
     }

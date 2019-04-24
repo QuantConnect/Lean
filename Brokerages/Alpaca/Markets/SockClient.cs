@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
  * Changes from the above source:
  *     The websocket connection now depends on WebSocketSharp, not on WebSocket4Net as in the original source
 */
@@ -20,7 +20,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     /// <summary>
     /// Provides unified type-safe access for Alpaca streaming API.
     /// </summary>
-    public sealed partial class SockClient : IDisposable
+    internal sealed class SockClient : IDisposable
     {
         private readonly WebSocket _webSocket;
 
@@ -56,9 +56,16 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             String secretKey,
             Uri alpacaRestApi)
         {
-            if (keyId == null) throw new ArgumentException(nameof(keyId));
+            if (keyId == null)
+            {
+                throw new ArgumentException(nameof(keyId));
+            }
+            if (secretKey == null)
+            {
+                throw new ArgumentException(nameof(secretKey));
+            }
+
             _keyId = keyId;
-            if (secretKey == null) throw new ArgumentException(nameof(secretKey));
             _secretKey = secretKey;
 
             alpacaRestApi = alpacaRestApi ?? new Uri("https://api.alpaca.markets");
@@ -85,22 +92,22 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         }
 
         /// <summary>
-        /// Occurrs when new account update received from stream.
+        /// Occured when new account update received from stream.
         /// </summary>
         public event Action<IAccountUpdate> OnAccountUpdate;
 
         /// <summary>
-        /// Occurrs when new trade update received from stream.
+        /// Occured when new trade update received from stream.
         /// </summary>
         public event Action<ITradeUpdate> OnTradeUpdate;
 
         /// <summary>
-        /// Occurrs when stream successfully connected.
+        /// Occured when stream successfully connected.
         /// </summary>
         public event Action<AuthStatus> Connected;
 
         /// <summary>
-        /// Occurrs when any error happened in stream.
+        /// Occured when any error happened in stream.
         /// </summary>
         public event Action<Exception> OnError;
 
@@ -164,36 +171,43 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             MessageEventArgs e)
         {
             var message = Encoding.UTF8.GetString(e.RawData);
-            var root = JObject.Parse(message);
-
-            var data = root["data"];
-            var stream = root["stream"].ToString();
-
-            switch (stream)
+            try
             {
-                case "authorization":
-                    handleAuthorization(
-                        data.ToObject<JsonAuthResponse>());
-                    break;
+                var root = JObject.Parse(message);
 
-                case "listening":
-                    Connected?.Invoke(AuthStatus.Authorized);
-                    break;
+                var data = root["data"];
+                var stream = root["stream"].ToString();
 
-                case "trade_updates":
-                    handleTradeUpdates(
-                        data.ToObject<JsonTradeUpdate>());
-                    break;
+                switch (stream)
+                {
+                    case "authorization":
+                        handleAuthorization(
+                            data.ToObject<JsonAuthResponse>());
+                        break;
 
-                case "account_updates":
-                    handleAccountUpdates(
-                        data.ToObject<JsonAccountUpdate>());
-                    break;
+                    case "listening":
+                        Connected?.Invoke(AuthStatus.Authorized);
+                        break;
 
-                default:
-                    OnError?.Invoke(new InvalidOperationException(
-                        $"Unexpected message type '{stream}' received."));
-                    break;
+                    case "trade_updates":
+                        handleTradeUpdates(
+                            data.ToObject<JsonTradeUpdate>());
+                        break;
+
+                    case "account_updates":
+                        handleAccountUpdates(
+                            data.ToObject<JsonAccountUpdate>());
+                        break;
+
+                    default:
+                        OnError?.Invoke(new InvalidOperationException(
+                            $"Unexpected message type '{stream}' received."));
+                        break;
+                }
+            }
+            catch (Exception exception)
+            {
+                OnError?.Invoke(exception);
             }
         }
 
@@ -224,13 +238,13 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         }
 
         private void handleTradeUpdates(
-            JsonTradeUpdate update)
+            ITradeUpdate update)
         {
             OnTradeUpdate?.Invoke(update);
         }
 
         private void handleAccountUpdates(
-            JsonAccountUpdate update)
+            IAccountUpdate update)
         {
             OnAccountUpdate?.Invoke(update);
         }

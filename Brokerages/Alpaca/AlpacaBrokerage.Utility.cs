@@ -53,7 +53,6 @@ namespace QuantConnect.Brokerages.Alpaca
                 TickType = TickType.Quote
             };
         }
-
         private IOrder GenerateAndPlaceOrder(Order order)
         {
             var quantity = (long)order.Quantity;
@@ -120,11 +119,11 @@ namespace QuantConnect.Brokerages.Alpaca
 
             if (order != null)
             {
-                if (trade.Event == TradeUpdateEvent.OrderFilled || trade.Event == TradeUpdateEvent.OrderPartiallyFilled)
+                if (trade.Event == TradeEvent.Fill || trade.Event == TradeEvent.PartialFill)
                 {
                     order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
-                    var status = trade.Event == TradeUpdateEvent.OrderFilled ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
+                    var status = trade.Event == TradeEvent.Fill ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
 
                     OnOrderEvent(new OrderEvent(order,
                         DateTime.UtcNow,
@@ -136,14 +135,14 @@ namespace QuantConnect.Brokerages.Alpaca
                         FillQuantity = Convert.ToInt32(trade.Order.FilledQuantity) * (order.Direction == OrderDirection.Buy ? +1 : -1)
                     });
                 }
-                else if (trade.Event == TradeUpdateEvent.OrderCanceled)
+                else if (trade.Event == TradeEvent.Canceled)
                 {
                     OnOrderEvent(new OrderEvent(order,
                         DateTime.UtcNow,
                         OrderFee.Zero,
                         "Alpaca Cancel Order Event") { Status = OrderStatus.Canceled });
                 }
-                else if (trade.Event == TradeUpdateEvent.OrderCancelRejected)
+                else if (trade.Event == TradeEvent.OrderCancelRejected)
                 {
                     var message = $"Order cancellation rejected: OrderId: {order.Id}";
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));

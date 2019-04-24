@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System;
@@ -11,7 +11,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
 {
     internal abstract class JsonHistoricalItems<TApi, TJson> where TJson : TApi
     {
-        private static readonly IReadOnlyCollection<TApi> _empty = new TApi[0];
+        private static readonly IReadOnlyList<TApi> _empty = new TApi[0];
 
         [JsonProperty(PropertyName = "status", Required = Required.Default)]
         public String Status { get; set; }
@@ -23,7 +23,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public List<TJson> ItemsList { get; set; }
 
         [JsonIgnore]
-        public IReadOnlyCollection<TApi> Items =>
-            (IReadOnlyCollection<TApi>)ItemsList ?? _empty;
+        public IReadOnlyList<TApi> Items =>
+            (IReadOnlyList<TApi>)ItemsList ?? _empty;
     }
 }

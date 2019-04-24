@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System.Runtime.Serialization;
@@ -16,21 +16,33 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     public enum TimeInForce
     {
         /// <summary>
-        /// Daily order.
+        /// The order is good for the day, and it will be canceled automatically at the end of market hours.
         /// </summary>
         [EnumMember(Value = "day")]
         Day,
 
         /// <summary>
-        /// Good-till-cancal order.
+        /// The order is good until canceled.
         /// </summary>
         [EnumMember(Value = "gtc")]
         Gtc,
 
         /// <summary>
-        /// Market-on-open order.
+        /// The order is placed at the time the market opens.
         /// </summary>
         [EnumMember(Value = "opg")]
-        Opg
+        Opg,
+
+        /// <summary>
+        /// The order is immediately filled or canceled after being placed (may partial fill).
+        /// </summary>
+        [EnumMember(Value = "ioc")]
+        Ioc,
+
+        /// <summary>
+        /// The order is immediately filled or canceled after being placed (may not partial fill).
+        /// </summary>
+        [EnumMember(Value = "fok")]
+        Fok
     }
 }

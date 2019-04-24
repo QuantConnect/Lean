@@ -1,6 +1,6 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System;
@@ -9,13 +9,10 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
-    internal sealed class JsonStreamBar : IStreamBar
+    internal sealed class JsonStreamAgg : IStreamAgg
     {
         [JsonProperty(PropertyName = "sym", Required = Required.Always)]
         public String Symbol { get; set; }
-
-        [JsonProperty(PropertyName = "x", Required = Required.Always)]
-        public Int64 Exchange { get; set; }
 
         [JsonProperty(PropertyName = "o", Required = Required.Always)]
         public Decimal Open { get; set; }

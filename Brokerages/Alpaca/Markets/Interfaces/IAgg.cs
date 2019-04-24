@@ -8,13 +8,13 @@ using System;
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
     /// <summary>
-    /// Encapsulates last quote information from Alpaca REST API.
+    /// Encapsulates bar information from Polygon REST API.
     /// </summary>
-    public interface ILastQuote : IStreamQuote
+    public interface IAgg : IAggBase
     {
         /// <summary>
-        /// Gets quote response status.
+        /// Gets bar timestamp.
         /// </summary>
-        String Status { get; }
+        DateTime Time { get; }
     }
 }

@@ -1,18 +1,19 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
- * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/commit/161b114b4b40d852a14a903bd6e69d26fe637922
+ * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
 */
 
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
-    public sealed partial class RestClient
+    internal sealed partial class RestClient
     {
         /// <summary>
         /// Gets account information from Alpaca REST API endpoint.
@@ -21,7 +22,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public Task<IAccount> GetAccountAsync()
         {
             return getSingleObjectAsync<IAccount, JsonAccount>(
-                _alpacaHttpClient, _alpacaRestApiThrottler, "v1/account");
+                _alpacaHttpClient, _alpacaRestApiThrottler, "account");
         }
 
         /// <summary>
@@ -36,7 +37,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         {
             var builder = new UriBuilder(_alpacaHttpClient.BaseAddress)
             {
-                Path = "v1/assets",
+                Path = _alpacaHttpClient.BaseAddress.AbsolutePath + "assets",
                 Query = new QueryBuilder()
                     .AddParameter("status", assetStatus)
                     .AddParameter("asset_class", assetClass)
@@ -49,20 +50,20 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <summary>
         /// Get single asset information by asset name from Alpaca REST API endpoint.
         /// </summary>
-        /// <param name="symbol">Asset name for seaching.</param>
+        /// <param name="symbol">Asset name for searching.</param>
         /// <returns>Read-only asset information.</returns>
         public Task<IAsset> GetAssetAsync(
             String symbol)
         {
             return getSingleObjectAsync<IAsset, JsonAsset>(
-                _alpacaHttpClient, _alpacaRestApiThrottler, $"v1/assets/{symbol}");
+                _alpacaHttpClient, _alpacaRestApiThrottler, $"assets/{symbol}");
         }
 
         /// <summary>
         /// Gets list of available orders from Alpaca REST API endpoint.
         /// </summary>
         /// <param name="orderStatusFilter">Order status for filtering.</param>
-        /// <param name="untilDateTime">Returns only orders untill specified date.</param>
+        /// <param name="untilDateTime">Returns only orders until specified date.</param>
         /// <param name="limitOrderNumber">Maximal number of orders in response.</param>
         /// <returns>Read-only list of order information objects.</returns>
         public Task<IEnumerable<IOrder>> ListOrdersAsync(
@@ -72,7 +73,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         {
             var builder = new UriBuilder(_alpacaHttpClient.BaseAddress)
             {
-                Path = "v1/orders",
+                Path = _alpacaHttpClient.BaseAddress.AbsolutePath + "orders",
                 Query = new QueryBuilder()
                     .AddParameter("status", orderStatusFilter)
                     .AddParameter("until", untilDateTime)
@@ -84,7 +85,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         }
 
         /// <summary>
-        /// Creates new order for execution using Alpaca REST API endopoint.
+        /// Creates new order for execution using Alpaca REST API endpoint.
         /// </summary>
         /// <param name="symbol">Order asset name.</param>
         /// <param name="quantity">Order quantity.</param>
@@ -92,7 +93,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <param name="type">Order type.</param>
         /// <param name="duration">Order duration.</param>
         /// <param name="limitPrice">Order limit price.</param>
-        /// <param name="stopPrice">Orfer stop price.</param>
+        /// <param name="stopPrice">Order stop price.</param>
         /// <param name="clientOrderId">Client order ID.</param>
         /// <returns>Read-only order information object for newly created order.</returns>
         public async Task<IOrder> PostOrderAsync(
@@ -105,7 +106,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             Decimal? stopPrice = null,
             String clientOrderId = null)
         {
-            if (!String.IsNullOrEmpty(clientOrderId) &&
+            if (!string.IsNullOrEmpty(clientOrderId) &&
                 clientOrderId.Length > 48)
             {
                 clientOrderId = clientOrderId.Substring(0, 48);
@@ -123,7 +124,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 ClientOrderId = clientOrderId
             };
 
-            _alpacaRestApiThrottler.WaitToProceed();
+            await _alpacaRestApiThrottler.WaitToProceed();
 
             var serializer = new JsonSerializer();
             using (var stringWriter = new StringWriter())
@@ -131,7 +132,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 serializer.Serialize(stringWriter, newOrder);
 
                 using (var content = new StringContent(stringWriter.ToString()))
-                using (var response = await _alpacaHttpClient.PostAsync("v1/orders", content))
+                using (var response = await _alpacaHttpClient.PostAsync("orders", content))
                 using (var stream = await response.Content.ReadAsStreamAsync())
                 using (var textReader = new StreamReader(stream))
                 using (var reader = new JsonTextReader(textReader))
@@ -157,7 +158,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         {
             var builder = new UriBuilder(_alpacaHttpClient.BaseAddress)
             {
-                Path = "v1/orders:by_client_order_id",
+                Path = _alpacaHttpClient.BaseAddress.AbsolutePath + "orders:by_client_order_id",
                 Query = new QueryBuilder()
                     .AddParameter("client_order_id", clientOrderId)
             };
@@ -175,7 +176,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             Guid orderId)
         {
             return getSingleObjectAsync<IOrder, JsonOrder>(
-                _alpacaHttpClient, _alpacaRestApiThrottler, $"v1/orders/{orderId:D}");
+                _alpacaHttpClient, _alpacaRestApiThrottler, $"orders/{orderId:D}");
         }
 
         /// <summary>
@@ -186,9 +187,9 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public async Task<Boolean> DeleteOrderAsync(
             Guid orderId)
         {
-            _alpacaRestApiThrottler.WaitToProceed();
+            await _alpacaRestApiThrottler.WaitToProceed();
 
-            using (var response = await _alpacaHttpClient.DeleteAsync($"v1/orders/{orderId:D}"))
+            using (var response = await _alpacaHttpClient.DeleteAsync($"orders/{orderId:D}"))
             {
                 return response.IsSuccessStatusCode;
             }
@@ -201,19 +202,19 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public Task<IEnumerable<IPosition>> ListPositionsAsync()
         {
             return getObjectsListAsync<IPosition, JsonPosition>(
-                _alpacaHttpClient, _alpacaRestApiThrottler, "v1/positions");
+                _alpacaHttpClient, _alpacaRestApiThrottler, "positions");
         }
 
         /// <summary>
         /// Gets position information by asset name from Alpaca REST API endpoint.
         /// </summary>
-        /// <param name="symbol"></param>
+        /// <param name="symbol">Position asset name.</param>
         /// <returns>Read-only position information object.</returns>
         public Task<IPosition> GetPositionAsync(
             String symbol)
         {
             return getSingleObjectAsync<IPosition, JsonPosition>(
-                _alpacaHttpClient, _alpacaRestApiThrottler, $"v1/positions/{symbol}");
+                _alpacaHttpClient, _alpacaRestApiThrottler, $"positions/{symbol}");
         }
 
         /// <summary>
@@ -223,14 +224,14 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public Task<IClock> GetClockAsync()
         {
             return getSingleObjectAsync<IClock, JsonClock>(
-                _alpacaHttpClient, _alpacaRestApiThrottler, "v1/clock");
+                _alpacaHttpClient, _alpacaRestApiThrottler, "clock");
         }
 
         /// <summary>
         /// Gets list of trading days from Alpaca REST API endpoint.
         /// </summary>
-        /// <param name="startDateInclusive"></param>
-        /// <param name="endDateInclusive"></param>
+        /// <param name="startDateInclusive">Start time for filtering (inclusive).</param>
+        /// <param name="endDateInclusive">End time for filtering (inclusive).</param>
         /// <returns>Read-only list of trading date information object.</returns>
         public Task<IEnumerable<ICalendar>> ListCalendarAsync(
             DateTime? startDateInclusive = null,
@@ -238,14 +239,51 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         {
             var builder = new UriBuilder(_alpacaHttpClient.BaseAddress)
             {
-                Path = "v1/calendar",
+                Path = _alpacaHttpClient.BaseAddress.AbsolutePath + "calendar",
                 Query = new QueryBuilder()
                     .AddParameter("start", startDateInclusive, "yyyy-MM-dd")
                     .AddParameter("end", endDateInclusive, "yyyy-MM-dd")
             };
-
             return getObjectsListAsync<ICalendar, JsonCalendar>(
                 _alpacaHttpClient, _alpacaRestApiThrottler, builder);
+        }
+
+        /// <summary>
+        /// Gets lookup table of historical daily bars lists for all assets from Alpaca REST API endpoint.
+        /// </summary>
+        /// <param name="symbols">>Asset names for data retrieval.</param>
+        /// <param name="timeFrame">Type of time bars for retrieval.</param>
+        /// <param name="areTimesInclusive">
+        /// If <c>true</c> - both <paramref name="timeFrom"/> and <paramref name="timeInto"/> parameters are treated as inclusive.
+        /// </param>
+        /// <param name="timeFrom">Start time for filtering.</param>
+        /// <param name="timeInto">End time for filtering.</param>
+        /// <param name="limit">Maximal number of daily bars in data response.</param>
+        /// <returns>Read-only list of daily bars for specified asset.</returns>
+        public async Task<IReadOnlyDictionary<String, IEnumerable<IAgg>>> GetBarSetAsync(
+            IEnumerable<String> symbols,
+            TimeFrame timeFrame,
+            Int32? limit = 100,
+            Boolean areTimesInclusive = true,
+            DateTime? timeFrom = null,
+            DateTime? timeInto = null)
+        {
+            var builder = new UriBuilder(_alpacaDataClient.BaseAddress)
+            {
+                Path = _alpacaDataClient.BaseAddress.AbsolutePath + $"bars/{timeFrame.ToEnumString()}",
+                Query = new QueryBuilder()
+                    .AddParameter("symbols", string.Join(",", symbols))
+                    .AddParameter((areTimesInclusive ? "start" : "after"), timeFrom)
+                    .AddParameter((areTimesInclusive ? "end" : "until"), timeInto)
+                    .AddParameter("limit", limit)
+            };
+
+            var response = await getSingleObjectAsync
+                <IReadOnlyDictionary<String, List<JsonBarAgg>>,
+                    Dictionary<String, List<JsonBarAgg>>>(
+                _alpacaHttpClient, FakeThrottler.Instance, builder);
+
+            return response.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.AsEnumerable<IAgg>());
         }
     }
 }
