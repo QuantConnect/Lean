@@ -33,6 +33,7 @@ AddReference("QuantConnect.Indicators")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
+from QuantConnect.Indicators import *
 from QuantConnect.Data.Market import TradeBar
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Risk import *
@@ -40,7 +41,6 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Orders.Fees import ConstantFeeModel
 from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Indicators import RollingWindow, SimpleMovingAverage
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, EqualWeightingPortfolioConstructionModel
 
 import numpy as np
@@ -60,6 +60,7 @@ class PriceGapMeanReversionAlpha(QCAlgorithm):
         self.SetWarmUp(100)
 
         ## Manual Universe Selection
+        self.UniverseSettings.Resolution = Resolution.Minute
         self.SetUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseSelectionFunction))
 
         ## Set trading fees to $0
@@ -122,10 +123,16 @@ class PriceGapMeanReversionAlphaModel:
         return insights
 
     def OnSecuritiesChanged(self, algorithm, changes):
+        for security in changes.RemovedSecurities:
+            if security.Symbol in self.symbolDataBySymbol.keys():
+                self.symbolDataBySymbol.pop(security.Symbol)
+                algorithm.Log(f'{security.Symbol.Value} removed from Universe')
+        
         history_request_symbols = [ x.Symbol for x in changes.AddedSecurities ]
         history_df = algorithm.History(history_request_symbols, 100, self.resolution)
 
         for security in changes.AddedSecurities:
+            algorithm.Log(f'{security.Symbol.Value} added to Universe')
             if str(security.Symbol) not in history_df.index.get_level_values(0):
                 continue
             history = history_df.loc[str(security.Symbol)]
@@ -140,7 +147,6 @@ class PriceGapMeanReversionAlphaModel:
 class SymbolData:
     def __init__(self, algorithm, security):
         self.symbol = security.Symbol
-        self.volatility = 0
         self.close = 0
         self.last_price = 0
         self.volatility = algorithm.STD(self.symbol, 100)
