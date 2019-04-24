@@ -1442,7 +1442,7 @@ namespace QuantConnect.Algorithm
                 }
 
                 Symbol symbolObject;
-                if (!SymbolCache.TryGetSymbol(symbol, out symbolObject))
+                if (!SymbolCache.TryGetSymbol(symbol, out symbolObject) || symbolObject.ID.Market != market)
                 {
                     symbolObject = QuantConnect.Symbol.Create(symbol, securityType, market);
                 }
@@ -1496,7 +1496,7 @@ namespace QuantConnect.Algorithm
 
             Symbol canonicalSymbol;
             var alias = "?" + underlying;
-            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol))
+            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol) || canonicalSymbol.ID.Market != market)
             {
                 canonicalSymbol = QuantConnect.Symbol.Create(underlying, SecurityType.Option, market, alias);
             }
@@ -1544,7 +1544,7 @@ namespace QuantConnect.Algorithm
 
             Symbol canonicalSymbol;
             var alias = "/" + symbol;
-            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol))
+            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol) || canonicalSymbol.ID.Market != market)
             {
                 canonicalSymbol = QuantConnect.Symbol.Create(symbol, SecurityType.Future, market, alias);
             }
@@ -2021,7 +2021,7 @@ namespace QuantConnect.Algorithm
             }
 
             Symbol symbol;
-            if (!SymbolCache.TryGetSymbol(ticker, out symbol))
+            if (!SymbolCache.TryGetSymbol(ticker, out symbol) || symbol.ID.Market != market)
             {
                 symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
             }
