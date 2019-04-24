@@ -44,7 +44,7 @@ namespace QuantConnect.Data.Custom.Tiingo
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
 
-            string source = "../../../Data/alternative/tiingoNews/" + config.Symbol.Value + ".csv";
+            string source = "../../../Data/alternative/Tiingo News/" + config.Symbol.Value + ".csv";
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile);
         }
 
