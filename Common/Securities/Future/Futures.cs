@@ -27,6 +27,12 @@ namespace QuantConnect.Securities
         public static class Grains
         {
             /// <summary>
+            /// Black Sea Corn Financially Settled (Platts) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string BlackSeaCornFinanciallySettledPlatts = "BCF";
+
+            /// <summary>
             /// Wheat Futures
             /// </summary>
             /// <returns>The symbol</returns>
@@ -145,6 +151,17 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string AUDCAD = "ACD";
+            
+            /// <summary>
+            /// Australian Dollar/Japanese Yen Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string AUDJPY = "AJY";
+            
+            /// <summary>
+            /// Australian Dollar/New Zealand Dollar Futures
+            /// </summary>
+            public const string AUDNZD = "ANE";
         }
 
         /// <summary>
@@ -301,6 +318,108 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string ArgusLLSvsWTIArgusTradeMonth = "AE5";
+            
+            /// <summary>
+            /// Singapore Gasoil (Platts) vs. Low Sulphur Gasoil Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string SingaporeGasoilPlattsVsLowSulphurGasoilFutures = "AGA";
+
+            /// <summary>
+            /// Los Angeles CARBOB Gasoline (OPIS) vs. RBOB Gasoline Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string LosAngelesCARBOBGasolineOPISvsRBOBGasoline = "AJL";
+
+            /// <summary>
+            /// Los Angeles Jet (OPIS) vs. NY Harbor ULSD Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string LosAngelesJetOPISvsNYHarborULSD = "AJS";
+
+            /// <summary>
+            /// Los Angeles CARB Diesel (OPIS) vs. NY Harbor ULSD Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string LosAngelesCARBDieselOPISvsNYHarborULSD = "AKL";
+
+            /// <summary>
+            /// European Naphtha (Platts) BALMO Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string EuropeanNaphthaPlattsBALMO = "AKZ";
+            
+            /// <summary>
+            /// European Propane CIF ARA (Argus) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string EuropeanPropaneCIFARAArgus = "APS";
+            
+            /// <summary>
+            /// Mont Belvieu Natural Gasoline (OPIS) BALMO Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MontBelvieuNaturalGasolineOPISBALMO = "AR0";
+            
+            /// <summary>
+            /// RBOB Gasoline Crack Spread Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string RBOBGasolineCrackSpread = "ARE";
+            
+            /// <summary>
+            /// Gulf Coast HSFO (Platts) BALMO Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string GulfCoastHSFOPlattsBALMO = "AVZ";
+            
+            /// <summary>
+            /// Mars (Argus) vs. WTI Trade Month Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MarsArgusVsWTITradeMonth = "AYV";
+
+            /// <summary>
+            /// Mars (Argus) vs. WTI Financial Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MarsArgusVsWTIFinancial = "AYX";
+
+            /// <summary>
+            /// Ethanol T2 FOB Rdam Including Duty (Platts) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string EthanolT2FOBRdamIncludingDutyPlatts = "AZ1";
+
+            /// <summary>
+            /// Mont Belvieu LDH Propane (OPIS) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MontBelvieuLDHPropaneOPIS = "B0";
+
+            /// <summary>
+            /// Gasoline Euro-bob Oxy NWE Barges (Argus) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string GasolineEurobobOxyNWEBargesArgus = "B7H";
+            
+            /// <summary>
+            /// WTI-Brent Financial Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string WTIBrentFinancial = "BK";
+
+            /// <summary>
+            /// 3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread (1000mt) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt = "BOO";
+
+            /// <summary>
+            /// Gasoline Euro-bob Oxy NWE Barges (Argus) BALMO Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string GasolineEurobobOxyNWEBargesArgusBALMO = "BR7";
 
             /// <summary>
             /// Crude Oil WTI Futures
@@ -403,6 +522,18 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Nikkei225Dollar = "NKD";
+            
+            /// <summary>
+            /// Bloomberg Commodity Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string BloombergCommodityIndex = "AW";
+
+            /// <summary>
+            /// E-mini Nasdaq-100 Biotechnology Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string NASDAQ100BiotechnologyEMini = "BIO";
         }
 
         /// <summary>
@@ -457,6 +588,12 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string Palladium = "PA";
+
+            /// <summary>
+            /// Aluminum MW U.S. Transaction Premium Platts (25MT) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string AluminumMWUSTransactionPremiumPlatts25MT = "AUP";
         }
 
         /// <summary>

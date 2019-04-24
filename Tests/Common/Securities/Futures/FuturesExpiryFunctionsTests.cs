@@ -32,6 +32,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         private const string ElevenOclockMoscowTime = "08:00:00";
         private const string NineFifteenCentralTime = "14:15:00";
         private const string NineSixteenCentralTime = "14:16:00";
+        private const string OneThirtyPMCentralTime = "18:30:00";
         private const string NineThirtyEasternTime = "13:30:00";
         private const string FiveOClockPMEasternTime = "21:00:00";
         private const string EightOClockChicagoTime = "13:00:00";
@@ -49,6 +50,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             }
         }
 
+        [TestCase(QuantConnect.Securities.Futures.Grains.BlackSeaCornFinanciallySettledPlatts)]
         [TestCase(QuantConnect.Securities.Futures.Grains.Wheat)]
         [TestCase(QuantConnect.Securities.Futures.Grains.Corn)]
         [TestCase(QuantConnect.Securities.Futures.Grains.Soybeans)]
@@ -85,6 +87,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Currencies.MXN, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.ZAR, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.AUDCAD, NineSixteenCentralTime)]
+        [TestCase(QuantConnect.Securities.Futures.Currencies.AUDJPY, NineSixteenCentralTime)]
+        [TestCase(QuantConnect.Securities.Futures.Currencies.AUDNZD, NineSixteenCentralTime)]
         public void CurrenciesExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
@@ -128,6 +132,23 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Energies.MontBelvieuNormalButaneOPIS, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energies.BrentCrudeOilVsDubaiCrudeOilPlatts, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energies.ArgusLLSvsWTIArgusTradeMonth, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.SingaporeGasoilPlattsVsLowSulphurGasoilFutures, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.LosAngelesCARBOBGasolineOPISvsRBOBGasoline, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.LosAngelesJetOPISvsNYHarborULSD, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.LosAngelesCARBDieselOPISvsNYHarborULSD, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.EuropeanNaphthaPlattsBALMO, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.EuropeanPropaneCIFARAArgus, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.MontBelvieuNaturalGasolineOPISBALMO, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.RBOBGasolineCrackSpread, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.GulfCoastHSFOPlattsBALMO, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.MarsArgusVsWTITradeMonth, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.MarsArgusVsWTIFinancial, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.EthanolT2FOBRdamIncludingDutyPlatts, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.MontBelvieuLDHPropaneOPIS, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.GasolineEurobobOxyNWEBargesArgus, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.WTIBrentFinancial, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread1000mt, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.GasolineEurobobOxyNWEBargesArgusBALMO, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energies.CrudeOilWTI, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energies.HeatingOil, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energies.Gasoline, Zero)]
@@ -172,6 +193,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             }
         }
 
+        [TestCase(QuantConnect.Securities.Futures.Indices.BloombergCommodityIndex, OneThirtyPMCentralTime)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.NASDAQ100BiotechnologyEMini, NineThirtyEasternTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.SP500EMini, NineThirtyEasternTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.NASDAQ100EMini, NineThirtyEasternTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.Dow30EMini, NineThirtyEasternTime)]
@@ -221,6 +244,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Metals.Silver)]
         [TestCase(QuantConnect.Securities.Futures.Metals.Platinum)]
         [TestCase(QuantConnect.Securities.Futures.Metals.Palladium)]
+        [TestCase(QuantConnect.Securities.Futures.Metals.AluminumMWUSTransactionPremiumPlatts25MT)]
         public void MetalsExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
