@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@ using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm
 {
@@ -35,6 +36,30 @@ namespace QuantConnect.Algorithm
         public IndexUniverseDefinitions(QCAlgorithm algorithm)
         {
             _algorithm = algorithm;
+        }
+
+        /// <summary>
+        /// Fast pre selected version of the QC500. For backtest will read the symbols from local disk
+        /// </summary>
+        public Universe PreSelectedQC500
+        {
+            get
+            {
+                return new FuncUniverse(
+                    new SubscriptionDataConfig(
+                        typeof(PreSelected),
+                        Symbol.Create("preselected-universe-qc500", SecurityType.Equity, Market.USA),
+                        Resolution.Daily,
+                        TimeZones.NewYork,
+                        TimeZones.NewYork,
+                        false,
+                        false,
+                        true,
+                        true),
+                    _algorithm.UniverseSettings,
+                    _algorithm.SecurityInitializer,
+                    preSelecteds => preSelecteds.Select(baseData => baseData.Symbol));
+            }
         }
 
         /// <summary>
@@ -92,7 +117,7 @@ namespace QuantConnect.Algorithm
                         lastMonth = _algorithm.Time.Month;
 
                         // The company's headquarter must in the U.S.
-                        // The stock must be traded on either the NYSE or NASDAQ 
+                        // The stock must be traded on either the NYSE or NASDAQ
                         // At least half a year since its initial public offering
                         // The stock's market cap must be greater than 500 million
                         var filteredFine =
@@ -106,7 +131,7 @@ namespace QuantConnect.Algorithm
 
                         var percent = numberOfSymbolsFine / (double)filteredFine.Count;
 
-                        // select stocks with top dollar volume in every single sector 
+                        // select stocks with top dollar volume in every single sector
                         var topFineBySector =
                                 (from x in filteredFine
                                  // Group by sector

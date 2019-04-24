@@ -298,6 +298,7 @@
     <Compile Include="Data\Custom\SmartInsider\SmartInsiderTransaction.cs" />
     <Compile Include="Data\IndexedBasedData.cs" />
     <Compile Include="Data\SubscriptionDataConfigExtensions.cs" />
+    <Compile Include="Data\UniverseSelection\PreSeleceted.cs" />
     <Compile Include="Expiry.cs" />
     <Compile Include="DataProviderEvents.cs" />
     <Compile Include="IIsolatorLimitResultProvider.cs" />

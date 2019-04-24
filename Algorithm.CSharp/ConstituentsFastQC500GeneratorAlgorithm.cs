@@ -16,26 +16,20 @@
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Demonstration of how to estimate constituents of QC500 index based on the company fundamentals
-    /// The algorithm creates a default tradable and liquid universe containing 500 US equities
-    /// which are chosen at the first trading day of each month.
+    /// Demonstration algorithm using pre selected QC500
     /// </summary>
-    /// <meta name="tag" content="using data" />
-    /// <meta name="tag" content="universes" />
-    /// <meta name="tag" content="coarse universes" />
-    /// <meta name="tag" content="fine universes" />
-    public class ConstituentsQC500GeneratorAlgorithm : QCAlgorithm
+    public class ConstituentsPreSelectedQC500GeneratorAlgorithm : QCAlgorithm
     {
         public override void Initialize()
         {
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2018, 1, 1);   // Set Start Date
-            SetEndDate(2019, 1, 1);     // Set End Date
+            SetStartDate(2018, 6, 4);   // Set Start Date
+            SetEndDate(2018, 6, 4);     // Set End Date
             SetCash(100000);            // Set Strategy Cash
 
-            // Add QC500 Universe
-            AddUniverse(Universe.Index.QC500);
+            // Add PreSelectedQC500 Universe
+            AddUniverse(Universe.Index.PreSelectedQC500);
         }
     }
 }
