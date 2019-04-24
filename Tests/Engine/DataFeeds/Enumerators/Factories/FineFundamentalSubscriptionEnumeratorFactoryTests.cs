@@ -83,6 +83,32 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         }
 
         [Test]
+        public void DeserializesAssetClassificationAndCompanyProfile()
+        {
+            var symbol = Symbols.AAPL;
+            var startDate = new DateTime(2014, 4, 30);
+            var endDate = new DateTime(2014, 4, 30);
+
+            var config = new SubscriptionDataConfig(typeof(FineFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var security = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                config,
+                new Cash(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance
+            );
+            var request = new SubscriptionRequest(false, null, security, config, startDate, endDate);
+            var fileProvider = new DefaultDataProvider();
+            var factory = new FineFundamentalSubscriptionEnumeratorFactory(false);
+            var enumerator = factory.CreateEnumerator(request, fileProvider);
+            enumerator.MoveNext();
+            var fine = (FineFundamental)enumerator.Current;
+            Assert.AreEqual(438783011299, fine.CompanyProfile.EnterpriseValue);
+            Assert.AreEqual(311, fine.AssetClassification.MorningstarSectorCode);
+
+        }
+
+        [Test]
         public void DeserializesUpdatedFileFormat()
         {
             var json = File.ReadAllText("./TestData/aapl_fine_fundamental.json");
