@@ -18,7 +18,6 @@ using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm
 {
@@ -39,28 +38,11 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Fast pre selected version of the QC500. For backtest will read the symbols from local disk
+        /// Fast pre selected version of the QC500.
         /// </summary>
-        public Universe PreSelectedQC500
-        {
-            get
-            {
-                return new FuncUniverse(
-                    new SubscriptionDataConfig(
-                        typeof(PreSelected),
-                        Symbol.Create("preselected-universe-qc500", SecurityType.Equity, Market.USA),
-                        Resolution.Daily,
-                        TimeZones.NewYork,
-                        TimeZones.NewYork,
-                        false,
-                        false,
-                        true,
-                        true),
-                    _algorithm.UniverseSettings,
-                    _algorithm.SecurityInitializer,
-                    preSelecteds => preSelecteds.Select(baseData => baseData.Symbol));
-            }
-        }
+        public Universe ConstituentsQC500 => new ConstituentsUniverse(
+            Symbol.Create("constituents-universe-qc500", SecurityType.Equity, Market.USA),
+            _algorithm.UniverseSettings);
 
         /// <summary>
         /// Creates a new fine universe that contains the constituents of QC500 index based onthe company fundamentals

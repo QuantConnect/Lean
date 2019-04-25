@@ -18,7 +18,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Demonstration algorithm using pre selected QC500
     /// </summary>
-    public class ConstituentsPreSelectedQC500GeneratorAlgorithm : QCAlgorithm
+    public class ConstituentsFastQc500GeneratorAlgorithm : QCAlgorithm
     {
         public override void Initialize()
         {
@@ -28,8 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2018, 6, 4);     // Set End Date
             SetCash(100000);            // Set Strategy Cash
 
-            // Add PreSelectedQC500 Universe
-            AddUniverse(Universe.Index.PreSelectedQC500);
+            AddUniverse(Universe.Index.ConstituentsQC500);
         }
     }
 }

@@ -19,11 +19,17 @@ using System.IO;
 namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
-    /// Custom data class used for fetching pre selected symbols
+    /// Custom base data class used for <see cref="ConstituentsUniverse{T}"/>
     /// </summary>
-    public class PreSelected : BaseData
+    public class ConstituentsUniverseData : BaseData
     {
-        private const string LiveBaseUrl = @"https://www.quantconnect.com/api/v2/live/data/";
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CoarseFundamental"/> class
+        /// </summary>
+        public ConstituentsUniverseData()
+        {
+            DataType = MarketDataType.Auxiliary;
+        }
 
         /// <summary>
         /// The end time of this data.
@@ -35,14 +41,6 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CoarseFundamental"/> class
-        /// </summary>
-        public PreSelected()
-        {
-            DataType = MarketDataType.Auxiliary;
-        }
-
-        /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         /// <param name="config">Configuration object</param>
@@ -51,23 +49,21 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>String URL of source file.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var universe = config.MappedSymbol.Substring(config.MappedSymbol.LastIndexOf('-') + 1).ToLower();
-            if (!isLiveMode)
+            var universe = config.MappedSymbol.Substring(config.MappedSymbol.LastIndexOf('-') + 1).ToLowerInvariant();
+            if (isLiveMode)
             {
-                var path = Path.Combine(Globals.DataFolder,
-                    config.SecurityType.SecurityTypeToLower(),
-                    config.Market,
-                    "universes",
-                    universe,
-                    $"{date:yyyyMMdd}.csv");
-                return new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+                throw new InvalidOperationException($"For now, {nameof(ConstituentsUniverseData)}" +
+                    " is not supported for live trading");
             }
-            else
-            {
-                // example https://www.quantconnect.com/api/v2/live/data/equity-usa-universes-qc500-20180601.csv
-                var url = $"{LiveBaseUrl}{config.SecurityType.SecurityTypeToLower()}-{config.Market}-universes-{universe}-{date:yyyyMMdd}.csv";
-                return new SubscriptionDataSource(url, SubscriptionTransportMedium.RemoteFile);
-            }
+
+            var path = Path.Combine(Globals.DataFolder,
+                config.SecurityType.SecurityTypeToLower(),
+                config.Market,
+                "universes",
+                config.Resolution.ResolutionToLower(),
+                universe,
+                $"{date:yyyyMMdd}.csv");
+            return new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
         /// <summary>
@@ -84,7 +80,7 @@ namespace QuantConnect.Data.UniverseSelection
             try
             {
                 var csv = line.Split(',');
-                var preSelected = new PreSelected
+                var preSelected = new ConstituentsUniverseData
                 {
                     Symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]),
                     Time = date

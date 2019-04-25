@@ -213,23 +213,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 selectSymbolsResult = universe.PerformSelection(dateTimeUtc, universeData);
             }
 
-            // check for no changes first
-            if (ReferenceEquals(selectSymbolsResult, Universe.Unchanged))
-            {
-                return SecurityChanges.None;
-            }
-
             // materialize the enumerable into a set for processing
             var selections = selectSymbolsResult.ToHashSet();
 
             var additions = new List<Security>();
             var removals = new List<Security>();
 
+            // first check for no pending removals, even if the universe selection
+            // didn't change we might need to remove a security because a position was closed
             RemoveSecurityFromUniverse(
                 _pendingRemovalsManager.CheckPendingRemovals(selections, universe),
                 removals,
                 dateTimeUtc,
                 algorithmEndDateUtc);
+
+            // check for no changes second
+            if (ReferenceEquals(selectSymbolsResult, Universe.Unchanged))
+            {
+                return SecurityChanges.None;
+            }
 
             // determine which data subscriptions need to be removed from this universe
             foreach (var member in universe.Members.Values)
