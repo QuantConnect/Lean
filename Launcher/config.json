@@ -25,7 +25,7 @@
   //"composer-dll-directory": ".",
 
   // engine
-  "data-folder": "../../../Data/",
+  "data-folder": "../../../../Data/",
 
   // handlers
   "log-handler": "QuantConnect.Logging.CompositeLogHandler",
