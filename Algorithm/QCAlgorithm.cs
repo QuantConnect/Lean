@@ -1442,7 +1442,9 @@ namespace QuantConnect.Algorithm
                 }
 
                 Symbol symbol;
-                if (!SymbolCache.TryGetSymbol(ticker, out symbol) || symbol.ID.Market != market)
+                if (!SymbolCache.TryGetSymbol(ticker, out symbol) ||
+                    symbol.ID.Market != market ||
+                    symbol.SecurityType != securityType)
                 {
                     symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
                 }
@@ -1496,7 +1498,9 @@ namespace QuantConnect.Algorithm
 
             Symbol canonicalSymbol;
             var alias = "?" + underlying;
-            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol) || canonicalSymbol.ID.Market != market)
+            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol) ||
+                canonicalSymbol.ID.Market != market ||
+                canonicalSymbol.SecurityType != SecurityType.Option)
             {
                 canonicalSymbol = QuantConnect.Symbol.Create(underlying, SecurityType.Option, market, alias);
             }
@@ -1544,7 +1548,9 @@ namespace QuantConnect.Algorithm
 
             Symbol canonicalSymbol;
             var alias = "/" + ticker;
-            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol) || canonicalSymbol.ID.Market != market)
+            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol) ||
+                canonicalSymbol.ID.Market != market ||
+                canonicalSymbol.SecurityType != SecurityType.Future)
             {
                 canonicalSymbol = QuantConnect.Symbol.Create(ticker, SecurityType.Future, market, alias);
             }
@@ -2021,7 +2027,9 @@ namespace QuantConnect.Algorithm
             }
 
             Symbol symbol;
-            if (!SymbolCache.TryGetSymbol(ticker, out symbol) || symbol.ID.Market != market)
+            if (!SymbolCache.TryGetSymbol(ticker, out symbol) ||
+                symbol.ID.Market != market ||
+                symbol.SecurityType != securityType)
             {
                 symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
             }
