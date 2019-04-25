@@ -54,6 +54,11 @@ namespace QuantConnect
         public static readonly SecurityIdentifier Empty = new SecurityIdentifier(string.Empty, 0);
 
         /// <summary>
+        /// Gets an instance of <see cref="SecurityIdentifier"/> that is explicitly no symbol
+        /// </summary>
+        public static readonly SecurityIdentifier None = new SecurityIdentifier("NONE", 0);
+
+        /// <summary>
         /// Gets the date to be used when it does not apply.
         /// </summary>
         public static readonly DateTime DefaultDate = DateTime.FromOADate(0);

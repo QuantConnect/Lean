@@ -20,7 +20,7 @@ namespace QuantConnect.Data.UniverseSelection
 {
     /// <summary>
     /// ConstituentsUniverse allows to perform universe selection based on an
-    /// already pre selected set of <see cref="Symbol"/>.
+    /// already preselected set of <see cref="Symbol"/>.
     /// </summary>
     /// <remarks>Using this class allows a performance improvement, since there is no
     /// runtime logic computation required for selecting the <see cref="Symbol"/></remarks>
@@ -56,11 +56,21 @@ namespace QuantConnect.Data.UniverseSelection
                 universeSettings,
                 constituents =>
                 {
-                    return constituents
-                        .Where(data => data.Symbol != Symbol.Empty) // allow no selection
-                        .Select(baseData => baseData.Symbol);
+                    var symbols = constituents.Select(baseData => baseData.Symbol).ToList();
+                    // for performance, just compare to Symbol.None if we have 1 Symbol
+                    if (symbols.Count == 1 && symbols[0] == Symbol.None)
+                    {
+                        // no symbol selected
+                        return Enumerable.Empty<Symbol>();
+                    }
+                    return symbols;
                 })
         {
+            if (!subscriptionDataConfig.IsCustomData)
+            {
+                throw new InvalidOperationException($"{nameof(ConstituentsUniverse)} {nameof(SubscriptionDataConfig)}" +
+                    $" only supports custom data property set to 'true'");
+            }
         }
     }
 }
