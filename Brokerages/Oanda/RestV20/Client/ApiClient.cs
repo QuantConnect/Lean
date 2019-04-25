@@ -20,6 +20,7 @@ using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 using RestSharp;
+using TempHelper;
 
 namespace Oanda.RestV20.Client
 {

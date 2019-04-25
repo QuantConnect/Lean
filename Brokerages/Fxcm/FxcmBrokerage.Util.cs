@@ -178,7 +178,7 @@ namespace QuantConnect.Brokerages.Fxcm
         private static DateTime FromJavaDate(Date javaDate)
         {
             // Convert javaDate to UTC Instant (Epoch)
-            var instant = Instant.FromMillisecondsSinceUnixEpoch(javaDate.getTime());
+            var instant = Instant.FromUnixTimeMilliseconds(javaDate.getTime());
 
             // Convert to .Net UTC DateTime
             return instant.ToDateTimeUtc();

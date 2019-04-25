@@ -16,7 +16,6 @@
 
 using System.IO;
 using Ionic.Zip;
-using System.IO.Compression;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
