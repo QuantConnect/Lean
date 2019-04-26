@@ -71,5 +71,5 @@ class G10CurrencySelectionModelFrameworkAlgorithm(QCAlgorithm):
                                         "NZDUSD",
                                         "USDCAD",
                                         "USDCHF",
-                                        "NOKUSD",
-                                        "SEKUSD" ]])
+                                        "USDNOK",
+                                        "USDSEK" ]])

@@ -80,7 +80,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="universe">The universe to perform selection on</param>
         /// <param name="dateTimeUtc">The current date time in utc</param>
         /// <param name="universeData">The data provided to perform selection with</param>
-        public SecurityChanges  ApplyUniverseSelection(Universe universe, DateTime dateTimeUtc, BaseDataCollection universeData)
+        public SecurityChanges ApplyUniverseSelection(Universe universe, DateTime dateTimeUtc, BaseDataCollection universeData)
         {
             var algorithmEndDateUtc = _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone);
             if (dateTimeUtc > algorithmEndDateUtc)
@@ -104,7 +104,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var dataProvider = new DefaultDataProvider();
 
                     // use all available threads, the entire system is waiting for this to complete
-                    var options = new ParallelOptions{MaxDegreeOfParallelism = Environment.ProcessorCount};
+                    var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
                     Parallel.ForEach(selectSymbolsResult, options, symbol =>
                     {
                         var config = FineFundamentalUniverse.CreateConfiguration(symbol);
@@ -149,6 +149,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             Time = fine.Time,
                             EndTime = fine.EndTime,
                             DataType = fine.DataType,
+                            AssetClassification = fine.AssetClassification,
+                            CompanyProfile = fine.CompanyProfile,
                             CompanyReference = fine.CompanyReference,
                             EarningReports = fine.EarningReports,
                             EarningRatios = fine.EarningRatios,
@@ -262,7 +264,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         universe.UniverseSettings.ExtendedMarketHours,
                         dataNormalizationMode: universe.UniverseSettings.DataNormalizationMode);
 
-                    security =_securityService.CreateSecurity(symbol, configs, universe.UniverseSettings.Leverage, symbol.ID.SecurityType == SecurityType.Option);
+                    security = _securityService.CreateSecurity(symbol, configs, universe.UniverseSettings.Leverage, symbol.ID.SecurityType == SecurityType.Option);
 
                     pendingAdditions.Add(symbol, security);
 
