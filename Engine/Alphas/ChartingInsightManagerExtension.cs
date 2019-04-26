@@ -93,6 +93,9 @@ namespace QuantConnect.Lean.Engine.Alphas
                 // add sum of daily insight counts to the total insight count series
                 _totalInsightCountSeries.AddPoint(frontierTimeUtc.Date, _dailyCount);
 
+                // Create the pie chart every minute or so
+                PopulateChartWithSeriesPerSymbol(_totalInsightCountPerSymbol, _totalInsightCountPerSymbolChart, SeriesType.Treemap, frontierTimeUtc);
+
                 // Resetting our storage
                 _dailyCount = 0;
             }
@@ -100,9 +103,6 @@ namespace QuantConnect.Lean.Engine.Alphas
             // sample average population scores
             if (frontierTimeUtc >= _nextChartSampleAlgorithmTimeUtc)
             {
-                // Create the pie chart every minute or so
-                PopulateChartWithSeriesPerSymbol(_totalInsightCountPerSymbol, _totalInsightCountPerSymbolChart, SeriesType.Treemap, frontierTimeUtc);
-
                 try
                 {
                     // verify these scores have been computed before taking the first sample
