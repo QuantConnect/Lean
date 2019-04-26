@@ -58,7 +58,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         {
             _statisticsManager = statisticsManager;
             _liveMode = algorithm.LiveMode;
-            if (_liveMode) SampleInterval = TimeSpan.FromMinutes(1);
 
             // chart for average scores over sample period
             var scoreChart = new Chart("Alpha");
