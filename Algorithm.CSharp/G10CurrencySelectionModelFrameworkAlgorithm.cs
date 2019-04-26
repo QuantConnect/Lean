@@ -75,8 +75,8 @@ namespace QuantConnect.Algorithm.CSharp
                 "NZDUSD",
                 "USDCAD",
                 "USDCHF",
-                "NOKUSD",
-                "SEKUSD"
+                "USDNOK",
+                "USDSEK"
                 }.Select(x => QuantConnect.Symbol.Create(x, SecurityType.Forex, Market.Oanda)))
             {
             }
