@@ -19,12 +19,12 @@ Before we enable python support, follow the [installation instructions](https://
 1. Use the macOS x86-64 package installer from [Anaconda](https://repo.anaconda.com/archive/Anaconda3-5.2.0-MacOSX-x86_64.pkg) and follow "[Installing on macOS](https://docs.anaconda.com/anaconda/install/mac-os)" instructions from Anaconda documentation page.
 2. Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
 
-*Note:* If you encounter "System.DllNotFoundException: python3.6m" when running python algorithms on mac:
-1. Find libpython3.6m.dylib in your python installation folder. If you installed python with Anaconda, it may be find at
+*Note:* If you encounter the "System.DllNotFoundException: python3.6m" runtime error when running Python algorithms on macOS:
+1. Find `libpython3.6m.dylib` in your Python installation folder. If you installed Python with Anaconda, it may be find at
 ```
 /Users/{your_user_name}/anaconda3/lib/libpython3.6m.dylib
 ```
-2. Open `Lean/Launcher/bin/Debug/Python.Runtime.dll.config`, add following text and save:
+2. Open `Lean/Launcher/bin/Debug/Python.Runtime.dll.config`, add the following text and save:
 ```
  <configuration>
     <dllmap dll="python3.6m" target="{the path in step 1 including libpython3.6m.dylib}" os="!windows"/>
