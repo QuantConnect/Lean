@@ -46,7 +46,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Gets or sets the interval at which alpha charts are updated. This is in realtion to algorithm time.
         /// </summary>
-        protected TimeSpan SampleInterval { get; set; } = TimeSpan.FromDays(1);
+        protected TimeSpan SampleInterval { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChartingInsightManagerExtension"/> class
