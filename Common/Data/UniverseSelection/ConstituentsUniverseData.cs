@@ -50,12 +50,11 @@ namespace QuantConnect.Data.UniverseSelection
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             var universe = config.MappedSymbol.Substring(config.MappedSymbol.LastIndexOf('-') + 1).ToLowerInvariant();
+
             if (isLiveMode)
             {
-                throw new InvalidOperationException($"For now, {nameof(ConstituentsUniverseData)}" +
-                    " is not supported for live trading");
+                date = date.AddDays(-1);
             }
-
             var path = Path.Combine(Globals.DataFolder,
                 config.SecurityType.SecurityTypeToLower(),
                 config.Market,
@@ -83,7 +82,7 @@ namespace QuantConnect.Data.UniverseSelection
                 var preselected = new ConstituentsUniverseData
                 {
                     Symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]),
-                    Time = date
+                    Time = isLiveMode ? date.AddDays(-1) : date
                 };
 
                 return preselected;
