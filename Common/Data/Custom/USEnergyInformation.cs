@@ -29,7 +29,8 @@ namespace QuantConnect.Data.Custom
     public class USEnergyInformation : BaseData
     {
         private string _previousContent = string.Empty;
-
+        private DateTime _previousDate = DateTime.MinValue;
+        
         /// <summary>
         /// The end time of this data.
         /// </summary>
@@ -89,17 +90,19 @@ namespace QuantConnect.Data.Custom
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
         {
-            if (_previousContent == content)
-            {
-                return null;
-            }
+            // Do not emit if the content did not change
+            if (_previousContent == content) return null;
             _previousContent = content;
 
             try
             {
                 var format = GetFormat(config.Symbol.Value);
                 var series = JObject.Parse(content)["series"][0];
+
+                // Do not emit if the end of the series did not change
                 date = DateTimeConverter(series["end"], format);
+                if (_previousDate == date) return null;
+                _previousDate = date;
 
                 var objectList = (
                     from jToken in series["data"]
