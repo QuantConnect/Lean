@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Algorithm;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -131,6 +132,32 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(sec.Symbol.ID.Market == Market.Oanda);
             Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(OandaBrokerageModel));
             Assert.IsTrue(forexBrokerage ==  Market.Oanda);
+        }
+
+        [Test]
+        public void AddSecurityCanAddWithSameTickerAndDifferentMarket()
+        {
+            var fxcmSecurity = _algo.AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Minute, Market.FXCM, true, 1m, true);
+            var oandaSecurity = _algo.AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Minute, Market.Oanda, true, 1m, true);
+
+            Assert.AreEqual(2, _algo.Securities.Count);
+            Assert.AreEqual(Market.FXCM, _algo.Securities.First().Key.ID.Market);
+            Assert.AreEqual(Market.Oanda, _algo.Securities.Last().Key.ID.Market);
+            Assert.AreEqual(Market.FXCM, fxcmSecurity.Symbol.ID.Market);
+            Assert.AreEqual(Market.Oanda, oandaSecurity.Symbol.ID.Market);
+        }
+
+        [Test]
+        public void AddForexCanAddWithSameTickerAndDifferentMarket()
+        {
+            var fxcmSecurity = _algo.AddForex("EURUSD", Resolution.Minute, Market.FXCM);
+            var oandaSecurity = _algo.AddForex("EURUSD", Resolution.Minute, Market.Oanda);
+
+            Assert.AreEqual(2, _algo.Securities.Count);
+            Assert.AreEqual(Market.FXCM, _algo.Securities.First().Key.ID.Market);
+            Assert.AreEqual(Market.Oanda, _algo.Securities.Last().Key.ID.Market);
+            Assert.AreEqual(Market.FXCM, fxcmSecurity.Symbol.ID.Market);
+            Assert.AreEqual(Market.Oanda, oandaSecurity.Symbol.ID.Market);
         }
 
         /// <summary>

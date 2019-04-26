@@ -1384,51 +1384,51 @@ namespace QuantConnect.Algorithm
         /// Add specified data to our data subscriptions. QuantConnect will funnel this data to the handle data routine.
         /// </summary>
         /// <param name="securityType">MarketType Type: Equity, Commodity, Future, FOREX or Crypto</param>
-        /// <param name="symbol">Symbol Reference for the MarketType</param>
+        /// <param name="ticker">The security ticker</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="extendedMarketHours">Show the after market data as well</param>
-        public Security AddSecurity(SecurityType securityType, string symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false)
+        public Security AddSecurity(SecurityType securityType, string ticker, Resolution resolution = Resolution.Minute, bool fillDataForward = true, bool extendedMarketHours = false)
         {
-            return AddSecurity(securityType, symbol, resolution, fillDataForward, 0, extendedMarketHours);
+            return AddSecurity(securityType, ticker, resolution, fillDataForward, 0, extendedMarketHours);
         }
 
         /// <summary>
         /// Add specified data to required list. QC will funnel this data to the handle data routine.
         /// </summary>
         /// <param name="securityType">MarketType Type: Equity, Commodity, Future, FOREX or Crypto</param>
-        /// <param name="symbol">Symbol Reference for the MarketType</param>
+        /// <param name="ticker">The security ticker</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <param name="extendedMarketHours">Extended market hours</param>
         /// <remarks> AddSecurity(SecurityType securityType, Symbol symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours)</remarks>
-        public Security AddSecurity(SecurityType securityType, string symbol, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours)
+        public Security AddSecurity(SecurityType securityType, string ticker, Resolution resolution, bool fillDataForward, decimal leverage, bool extendedMarketHours)
         {
-            return AddSecurity(securityType, symbol, resolution, null, fillDataForward, leverage, extendedMarketHours);
+            return AddSecurity(securityType, ticker, resolution, null, fillDataForward, leverage, extendedMarketHours);
         }
 
         /// <summary>
         /// Set a required SecurityType-symbol and resolution for algorithm
         /// </summary>
         /// <param name="securityType">MarketType Type: Equity, Commodity, Future, FOREX or Crypto</param>
-        /// <param name="symbol">Symbol Representation of the MarketType, e.g. AAPL</param>
+        /// <param name="ticker">The security ticker, e.g. AAPL</param>
         /// <param name="resolution">Resolution of the MarketType required: MarketData, Second or Minute</param>
         /// <param name="market">The market the requested security belongs to, such as 'usa' or 'fxcm'</param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
-        public Security AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
+        public Security AddSecurity(SecurityType securityType, string ticker, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
         {
             // if AddSecurity method is called to add an option or a future, we delegate a call to respective methods
             if (securityType == SecurityType.Option)
             {
-                return AddOption(symbol, resolution, market, fillDataForward, leverage);
+                return AddOption(ticker, resolution, market, fillDataForward, leverage);
             }
 
             if (securityType == SecurityType.Future)
             {
-                return AddFuture(symbol, resolution, market, fillDataForward, leverage);
+                return AddFuture(ticker, resolution, market, fillDataForward, leverage);
             }
 
             try
@@ -1441,14 +1441,16 @@ namespace QuantConnect.Algorithm
                     }
                 }
 
-                Symbol symbolObject;
-                if (!SymbolCache.TryGetSymbol(symbol, out symbolObject))
+                Symbol symbol;
+                if (!SymbolCache.TryGetSymbol(ticker, out symbol) ||
+                    symbol.ID.Market != market ||
+                    symbol.SecurityType != securityType)
                 {
-                    symbolObject = QuantConnect.Symbol.Create(symbol, securityType, market);
+                    symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
                 }
 
-                var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbolObject, resolution, fillDataForward, extendedMarketHours);
-                var security = Securities.CreateSecurity(symbolObject, configs, leverage);
+                var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillDataForward, extendedMarketHours);
+                var security = Securities.CreateSecurity(symbol, configs, leverage);
 
                 AddToUserDefinedUniverse(security, configs);
                 return security;
@@ -1478,7 +1480,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Creates and adds a new equity <see cref="Option"/> security to the algorithm
         /// </summary>
-        /// <param name="underlying">The underlying equity symbol</param>
+        /// <param name="underlying">The underlying equity ticker</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
         /// <param name="market">The equity's market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
@@ -1496,7 +1498,9 @@ namespace QuantConnect.Algorithm
 
             Symbol canonicalSymbol;
             var alias = "?" + underlying;
-            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol))
+            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol) ||
+                canonicalSymbol.ID.Market != market ||
+                canonicalSymbol.SecurityType != SecurityType.Option)
             {
                 canonicalSymbol = QuantConnect.Symbol.Create(underlying, SecurityType.Option, market, alias);
             }
@@ -1526,13 +1530,13 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Creates and adds a new <see cref="Future"/> security to the algorithm
         /// </summary>
-        /// <param name="symbol">The futures contract symbol</param>
+        /// <param name="ticker">The future ticker</param>
         /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily. Default is <see cref="Resolution.Minute"/></param>
         /// <param name="market">The futures market, <seealso cref="Market"/>. Default is value null and looked up using BrokerageModel.DefaultMarkets in <see cref="AddSecurity{T}"/></param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Future"/> security</returns>
-        public Future AddFuture(string symbol, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
+        public Future AddFuture(string ticker, Resolution resolution = Resolution.Minute, string market = null, bool fillDataForward = true, decimal leverage = 0m)
         {
             if (market == null)
             {
@@ -1543,10 +1547,12 @@ namespace QuantConnect.Algorithm
             }
 
             Symbol canonicalSymbol;
-            var alias = "/" + symbol;
-            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol))
+            var alias = "/" + ticker;
+            if (!SymbolCache.TryGetSymbol(alias, out canonicalSymbol) ||
+                canonicalSymbol.ID.Market != market ||
+                canonicalSymbol.SecurityType != SecurityType.Future)
             {
-                canonicalSymbol = QuantConnect.Symbol.Create(symbol, SecurityType.Future, market, alias);
+                canonicalSymbol = QuantConnect.Symbol.Create(ticker, SecurityType.Future, market, alias);
             }
 
             var configs = SubscriptionManager.SubscriptionDataConfigService.Add(canonicalSymbol,
@@ -1757,63 +1763,63 @@ namespace QuantConnect.Algorithm
         /// AddData<typeparam name="T"/> a new user defined data source, requiring only the minimum config options.
         /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time)
         /// </summary>
-        /// <param name="symbol">Key/Symbol for data</param>
+        /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="resolution">Resolution of the data</param>
         /// <returns>The new <see cref="Security"/></returns>
         /// <remarks>Generic type T must implement base data</remarks>
-        public Security AddData<T>(string symbol, Resolution resolution = Resolution.Minute)
+        public Security AddData<T>(string ticker, Resolution resolution = Resolution.Minute)
             where T : IBaseData, new()
         {
             //Add this new generic data as a tradeable security:
             // Defaults:extended market hours"      = true because we want events 24 hours,
             //          fillforward                 = false because only want to trigger when there's new custom data.
             //          leverage                    = 1 because no leverage on nonmarket data?
-            return AddData<T>(symbol, resolution, fillDataForward: false, leverage: 1m);
+            return AddData<T>(ticker, resolution, fillDataForward: false, leverage: 1m);
         }
 
         /// <summary>
         /// AddData<typeparam name="T"/> a new user defined data source, requiring only the minimum config options.
         /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time)
         /// </summary>
-        /// <param name="symbol">Key/Symbol for data</param>
+        /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
         /// <remarks>Generic type T must implement base data</remarks>
-        public Security AddData<T>(string symbol, Resolution resolution, bool fillDataForward, decimal leverage = 1.0m)
+        public Security AddData<T>(string ticker, Resolution resolution, bool fillDataForward, decimal leverage = 1.0m)
             where T : IBaseData, new()
         {
-            return AddData<T>(symbol, resolution, TimeZones.NewYork, fillDataForward, leverage);
+            return AddData<T>(ticker, resolution, TimeZones.NewYork, fillDataForward, leverage);
         }
 
         /// <summary>
         /// AddData<typeparam name="T"/> a new user defined data source, requiring only the minimum config options.
         /// </summary>
-        /// <param name="symbol">Key/Symbol for data</param>
+        /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
         /// <remarks>Generic type T must implement base data</remarks>
-        public Security AddData<T>(string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData<T>(string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
             where T : IBaseData, new()
         {
             //Add this custom symbol to our market hours database
-            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, symbol, SecurityType.Base, timeZone);
+            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, ticker, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
-            var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
+            var symbol = new Symbol(SecurityIdentifier.GenerateBase(ticker, Market.USA), ticker);
 
             //Add this new generic data as a tradeable security:
             var config = SubscriptionManager.SubscriptionDataConfigService.Add(typeof(T),
-                symbolObject,
+                symbol,
                 resolution,
                 fillDataForward,
                 extendedMarketHours: true,
                 isCustomData: true);
-            var security = Securities.CreateSecurity(symbolObject, config, leverage);
+            var security = Securities.CreateSecurity(symbol, config, leverage);
 
             AddToUserDefinedUniverse(security, new List<SubscriptionDataConfig>{ config });
             return security;
@@ -2021,7 +2027,9 @@ namespace QuantConnect.Algorithm
             }
 
             Symbol symbol;
-            if (!SymbolCache.TryGetSymbol(ticker, out symbol))
+            if (!SymbolCache.TryGetSymbol(ticker, out symbol) ||
+                symbol.ID.Market != market ||
+                symbol.SecurityType != securityType)
             {
                 symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
             }
