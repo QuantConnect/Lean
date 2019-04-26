@@ -19,7 +19,7 @@ AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Data.UniverseSelection import *
+from QuantConnect.Data.UniverseSelection import ConstituentsUniverse
 
 ### <summary>
 ### Test algorithm using a 'ConstituentsUniverse' with test data

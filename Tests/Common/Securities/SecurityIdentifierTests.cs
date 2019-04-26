@@ -221,9 +221,21 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void PreviousEmptyFormatStillSupported()
+        {
+            Assert.AreEqual(SecurityIdentifier.Empty, SecurityIdentifier.Parse(" "));
+        }
+
+        [Test]
         public void RoundTripEmptyParse()
         {
             Assert.AreEqual(SecurityIdentifier.Empty, SecurityIdentifier.Parse(SecurityIdentifier.Empty.ToString()));
+        }
+
+        [Test]
+        public void RoundTripNoneParse()
+        {
+            Assert.AreEqual(SecurityIdentifier.None, SecurityIdentifier.Parse(SecurityIdentifier.None.ToString()));
         }
 
         [Test]

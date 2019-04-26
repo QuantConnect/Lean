@@ -62,11 +62,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [SetUp]
         public void SetUp()
         {
-            CustomMockedFileBaseData.StartDate = _startDate;
             _manualTimeProvider = new ManualTimeProvider();
-            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
             _algorithm = new AlgorithmStub(false);
             _startDate = new DateTime(2018, 08, 1, 11, 0, 0);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+            CustomMockedFileBaseData.StartDate = _startDate;
 
             TestCustomData.ReaderCallsCount = 0;
             TestCustomData.ReturnNull = false;
