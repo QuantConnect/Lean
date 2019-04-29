@@ -28,18 +28,19 @@ namespace QuantConnect.Data.Custom
     /// </summary>
     public class USEnergyInformation : BaseData
     {
+        private TimeSpan _period = TimeSpan.Zero;
         private string _previousContent = string.Empty;
         private DateTime _previousDate = DateTime.MinValue;
-        
+
+        /// <summary>
+        /// The time at the end of the period
+        /// </summary>
+        public DateTime CloseTime { get; set; }
+
         /// <summary>
         /// The end time of this data.
         /// </summary>
-        public override DateTime EndTime => Time + Period;
-
-        /// <summary>
-        /// The period of this data (hour, month, quarter, or annual)
-        /// </summary>
-        public TimeSpan Period { get; private set; }
+        public override DateTime EndTime { get; set; }
 
         /// <summary>
         /// Gets the EIA API token.
@@ -90,32 +91,43 @@ namespace QuantConnect.Data.Custom
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
         {
+            var format = GetFormat(config.Symbol.Value);
+
             // Do not emit if the content did not change
-            if (_previousContent == content) return null;
+            if (string.IsNullOrWhiteSpace(format) || _previousContent == content)
+            {
+                return null;
+            }
             _previousContent = content;
 
             try
             {
-                var format = GetFormat(config.Symbol.Value);
+                // Fix invalid json before we parse it
+                var index = content.IndexOf("\"series\":");
+                content = "{" + content.Substring(index);
                 var series = JObject.Parse(content)["series"][0];
 
                 // Do not emit if the end of the series did not change
-                date = DateTimeConverter(series["end"], format);
+                date = (DateTime)series["updated"];
                 if (_previousDate == date) return null;
                 _previousDate = date;
+
+                var last = series.Value<string>("lastHistoricalPeriod") ?? series["end"];
+                var offset = date - DateTimeConverter(last, format);
 
                 var objectList = (
                     from jToken in series["data"]
                     where jToken[1].Type != JTokenType.Null
+                    let closeTime = DateTimeConverter(jToken[0], format).ConvertFromUtc(config.DataTimeZone)
                     select new USEnergyInformation
                     {
                         Symbol = config.Symbol,
-                        Period = Period,
-                        Value = (decimal)jToken[1],
-                        Time = DateTimeConverter(jToken[0], format)
-                            .ConvertFromUtc(config.DataTimeZone) - Period
-                    })
-                    .OrderBy(x => x.EndTime);
+                        Time = closeTime - _period,
+                        CloseTime = closeTime,
+                        EndTime = closeTime + offset,
+                        Value = (decimal)jToken[1]
+                    }
+                    ).OrderBy(x => x.EndTime);
 
                 return new BaseDataCollection(date, config.Symbol, objectList);
             }
@@ -137,26 +149,26 @@ namespace QuantConnect.Data.Custom
                 // Periods are closest approximation possible in days, except hourly
                 // Annual data has Period ~ 365 days
                 case 'A':
-                    Period = TimeSpan.FromDays(365);
+                    _period = TimeSpan.FromDays(365);
                     return "yyyy";
                 // Quarterly data has Period ~ 90 days
                 case 'Q':
-                    Period = TimeSpan.FromDays(90);
+                    _period = TimeSpan.FromDays(90);
                     return DateFormat.EightCharacter;
                 // Monthly data has Period ~ 30 days
                 case 'M':
-                    Period = TimeSpan.FromDays(30);
+                    _period = TimeSpan.FromDays(30);
                     return DateFormat.YearMonth;
                 // Daily has Period = 1 day
                 case 'D':
-                    Period = TimeSpan.FromDays(1);
+                    _period = TimeSpan.FromDays(1);
                     return DateFormat.EightCharacter;
                 // Hourly has period = 1 Hour
                 case 'H':
-                    Period = TimeSpan.FromHours(1);
+                    _period = TimeSpan.FromHours(1);
                     return "yyyyMMdd'T'HHZ";
                 default:
-                    throw new Exception("Unsupported Period");
+                    return string.Empty;
             }
         }
 
@@ -173,27 +185,39 @@ namespace QuantConnect.Data.Custom
         {
             var dateData = jToken.ToString();
 
-            if (dateData.Contains("Q"))
+            if (!dateData.Contains("Q"))
             {
-                switch (dateData.Last())
-                {
-                    case '1':
-                        dateData = dateData.Substring(0, 4) + "0101";
-                        break;
-                    case '2':
-                        dateData = dateData.Substring(0, 4) + "0401";
-                        break;
-                    case '3':
-                        dateData = dateData.Substring(0, 4) + "0701";
-                        break;
-                    case '4':
-                        dateData = dateData.Substring(0, 4) + "1001";
-                        break;
-                    default:
-                        throw (new Exception("invalid quarter input"));
-                }
+                return DateTime.ParseExact(dateData, format, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal);
             }
-            return DateTime.ParseExact(dateData, format, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal);
+
+            string[] range;
+            var year = int.Parse(dateData.Substring(0, 4));
+
+            switch (dateData.Last())
+            {
+                case '1':
+                    range = new[] { $"{year}0101", $"{year}0401" };
+                    break;
+                case '2':
+                    range = new[] { $"{year}0401", $"{year}0701" };
+                    break;
+                case '3':
+                    range = new[] { $"{year}0701", $"{year}1001" };
+                    break;
+                case '4':
+                    range = new[] { $"{year}1001", $"{1 + year}0101" };
+                    break;
+                default:
+                    throw (new Exception("invalid quarter input"));
+            }
+
+            var dates = range
+                .Select(x => DateTime.ParseExact(x, format, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
+                .ToArray();
+
+            _period = dates[1] - dates[0];
+
+            return dates[1];
         }
     }
 }
