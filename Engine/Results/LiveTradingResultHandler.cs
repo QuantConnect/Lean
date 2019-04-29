@@ -23,6 +23,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Alphas;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
@@ -637,21 +638,24 @@ namespace QuantConnect.Lean.Engine.Results
                 foreach (var update in updates)
                 {
                     //Create the chart if it doesn't exist already:
-                    if (!Charts.ContainsKey(update.Name))
+                    Chart chart;
+                    if (!Charts.TryGetValue(update.Name, out chart))
                     {
-                        Charts.AddOrUpdate(update.Name, new Chart(update.Name));
+                        chart = new Chart(update.Name);
+                        Charts.AddOrUpdate(update.Name, chart);
                     }
+
+                    // for alpha assets chart, we always create a new series instance (step on previous value)
+                    var forceNewSeries = update.Name == ChartingInsightManagerExtension.AlphaAssets;
 
                     //Add these samples to this chart.
                     foreach (var series in update.Series.Values)
                     {
-                        //If we don't already have this record, its the first packet
-                        var chart = Charts[update.Name];
-
-                        var thisSeries = chart.TryAddAndGetSeries(series.Name, series.SeriesType, series.Index,
-                                                               series.Unit, series.Color, series.ScatterMarkerSymbol);
                         if (series.Values.Count > 0)
                         {
+                            var thisSeries = chart.TryAddAndGetSeries(series.Name, series.SeriesType, series.Index,
+                                series.Unit, series.Color, series.ScatterMarkerSymbol,
+                                forceNewSeries);
                             if (series.SeriesType == SeriesType.Pie)
                             {
                                 var dataPoint = series.ConsolidateChartPoints();
@@ -663,7 +667,7 @@ namespace QuantConnect.Lean.Engine.Results
                             else
                             {
                                 //We already have this record, so just the new samples to the end:
-                                chart.Series[series.Name].Values.AddRange(series.Values);
+                                thisSeries.Values.AddRange(series.Values);
                             }
                         }
                     }

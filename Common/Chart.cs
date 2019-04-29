@@ -91,11 +91,12 @@ namespace QuantConnect
         /// <param name="unit">Unit for the series axis</param>
         /// <param name="color">Color of the series</param>
         /// <param name="symbol">Symbol for the marker in a scatter plot series</param>
+        /// <param name="forceAddNew">True will always add a new Series instance, stepping on existing if any</param>
         public Series TryAddAndGetSeries(string name, SeriesType type, int index, string unit,
-                                      Color color, ScatterMarkerSymbol symbol)
+                                      Color color, ScatterMarkerSymbol symbol, bool forceAddNew = false)
         {
             Series series;
-            if (!Series.TryGetValue(name, out series))
+            if (forceAddNew || !Series.TryGetValue(name, out series))
             {
                 series = new Series(name, type, index, unit)
                 {

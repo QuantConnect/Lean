@@ -15,6 +15,7 @@
 
 using System;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect
 {
@@ -28,6 +29,7 @@ namespace QuantConnect
         public long x;
 
         /// Value of this chart point:  lower case for javascript encoding simplicty
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal y;
 
         /// <summary>
