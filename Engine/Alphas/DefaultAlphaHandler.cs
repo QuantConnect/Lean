@@ -280,29 +280,36 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             private void MessagingUpdateIntervalElapsed(object state)
             {
-                _timer.Change(Timeout.Infinite, Timeout.Infinite);
-
                 try
                 {
+                    _timer.Change(Timeout.Infinite, Timeout.Infinite);
 
-                    Insight insight;
-                    var insights = new List<Insight>();
-                    while (insights.Count < _maximumNumberOfInsightsPerPacket && _insights.TryDequeue(out insight))
+                    try
                     {
-                        insights.Add(insight);
+
+                        Insight insight;
+                        var insights = new List<Insight>();
+                        while (insights.Count < _maximumNumberOfInsightsPerPacket && _insights.TryDequeue(out insight))
+                        {
+                            insights.Add(insight);
+                        }
+
+                        if (insights.Count > 0)
+                        {
+                            _messagingHandler.Send(new AlphaResultPacket(_job.AlgorithmId, _job.UserId, insights));
+                        }
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
                     }
 
-                    if (insights.Count > 0)
-                    {
-                        _messagingHandler.Send(new AlphaResultPacket(_job.AlgorithmId, _job.UserId, insights));
-                    }
+                    _timer.Change(_interval, _interval);
                 }
-                catch (Exception err)
+                catch (ObjectDisposedException)
                 {
-                    Log.Error(err);
+                    // pass. The timer callback can be called even after disposed
                 }
-
-                _timer.Change(_interval, _interval);
             }
 
             /// <summary>
