@@ -773,7 +773,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var data = new BaseData[]
             {
                 // fri 7/20
-                new QuoteBar{Value = 0, Time =  new DateTime(2012, 7, 19, 20, 0, 0), Period = Time.OneDay},
+                new QuoteBar{Value = 0, Time = new DateTime(2012, 7, 19, 20, 0, 0), Period = Time.OneDay},
                 // sunday 7/22
                 new QuoteBar{Value = 1, Time = new DateTime(2012, 7, 21, 20, 0, 0), Period = Time.OneDay},
                 // monday 7/23
