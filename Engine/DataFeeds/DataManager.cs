@@ -34,7 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DataManager : IAlgorithmSubscriptionManager, IDataFeedSubscriptionManager, IDataManager
     {
-        private readonly IAlgorithm _algorithm;
+        private readonly IAlgorithmSettings _algorithmSettings;
         private readonly IDataFeed _dataFeed;
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly ITimeKeeper _timeKeeper;
@@ -69,7 +69,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
             UniverseSelection.SetDataManager(this);
-            _algorithm = algorithm;
+            _algorithmSettings = algorithm.Settings;
             AvailableDataTypes = SubscriptionManager.DefaultDataTypes();
             _timeKeeper = timeKeeper;
             _marketHoursDatabase = marketHoursDatabase;
