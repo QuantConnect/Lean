@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -127,16 +127,22 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 
         /// <summary>
         /// Iterates each daily file in the specified <paramref name="dailyFolder"/> and adds a line for each
-        /// day to the approriate coarse file
+        /// day to the appropriate coarse file
         /// </summary>
-        /// <param name="dailyFolder">The folder with daily data</param>
-        /// <param name="coarseFolder">The coarse output folder</param>
-        /// <param name="mapFileResolver"></param>
-        /// <param name="exclusions">The symbols to be excluded from processing</param>
+        /// <param name="dailyFolder">The folder with daily data.</param>
+        /// <param name="coarseFolder">The coarse output folder.</param>
+        /// <param name="mapFileResolver">The map file resolver.</param>
+        /// <param name="factorFileProvider">The factor file provider.</param>
+        /// <param name="exclusions">The symbols to be excluded from processing.</param>
         /// <param name="ignoreMapless">Ignore the symbols without a map file.</param>
         /// <param name="symbolResolver">Function used to provide symbol resolution. Default resolution uses the zip file name to resolve
         /// the symbol, specify null for this behavior.</param>
-        /// <returns>A collection of the generated coarse files</returns>
+        /// <returns>Collection with the names of the newly generated coarse files.</returns>
+        /// <exception cref="Exception">
+        /// Unable to resolve market for daily folder: " + dailyFolder
+        /// or
+        /// Unable to resolve fundamental path for coarse folder: " + coarseFolder
+        /// </exception>
         public static ICollection<string> ProcessDailyFolder(string dailyFolder, string coarseFolder, MapFileResolver mapFileResolver, IFactorFileProvider factorFileProvider,
             HashSet<string> exclusions, bool ignoreMapless, Func<string, string> symbolResolver = null)
         {
@@ -155,29 +161,37 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             // instead of opening/closing these constantly, open them once and dispose at the end (~3x speed improvement)
             var writers = new Dictionary<string, StreamWriter>();
 
-            var dailyFolderDirectoryInfo = new DirectoryInfo(dailyFolder).Parent;
-            if (dailyFolderDirectoryInfo == null)
+            var marketDirectoryInfo = new DirectoryInfo(dailyFolder).Parent;
+            if (marketDirectoryInfo == null)
             {
                 throw new Exception("Unable to resolve market for daily folder: " + dailyFolder);
             }
-            var market = dailyFolderDirectoryInfo.Name.ToLower();
+            var market = marketDirectoryInfo.Name.ToLower();
 
             var fundamentalDirectoryInfo = new DirectoryInfo(coarseFolder).Parent;
             if (fundamentalDirectoryInfo == null)
             {
                 throw new Exception("Unable to resolve fundamental path for coarse folder: " + coarseFolder);
             }
-            var fineFundamentalFolder = Path.Combine(Globals.DataFolder, SecurityType.Equity.ToLower(), Market.USA.ToLower(), "fundamental", "fine");
-
-            var mapFileProvider = new LocalDiskMapFileProvider();
+            var fineFundamentalFolder = Path.Combine(marketDirectoryInfo.FullName, "fundamental", "fine");
 
             // open up each daily file to get the values and append to the daily coarse files
             foreach (var file in Directory.EnumerateFiles(dailyFolder, "*.zip"))
             {
                 try
                 {
-                    var symbol = Path.GetFileNameWithoutExtension(file);
-                    if (symbol == null)
+                    var ticker = Path.GetFileNameWithoutExtension(file);
+                    var fineAvailableDates = Enumerable.Empty<DateTime>();
+
+                    var tickerFineFundamentalFolder = Path.Combine(fineFundamentalFolder, ticker);
+                    if (Directory.Exists(tickerFineFundamentalFolder))
+                    {
+                        fineAvailableDates = Directory.GetFiles(tickerFineFundamentalFolder, "*.zip")
+                        .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture))
+                        .ToList();
+                    }
+
+                    if (ticker == null)
                     {
                         Log.Trace("CoarseGenerator.ProcessDailyFolder(): Unable to resolve symbol from file: {0}", file);
                         continue;
@@ -185,28 +199,15 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 
                     if (symbolResolver != null)
                     {
-                        symbol = symbolResolver(symbol);
+                        ticker = symbolResolver(ticker);
                     }
 
-                    symbol = symbol.ToUpper();
+                    ticker = ticker.ToUpper();
 
-                    if (exclusions.Contains(symbol))
+                    if (exclusions != null && exclusions.Contains(ticker))
                     {
-                        Log.Trace("Excluded symbol: {0}", symbol);
+                        Log.Trace("Excluded symbol: {0}", ticker);
                         continue;
-                    }
-
-                    // check if symbol has any fine fundamental data
-                    var firstFineSymbolDate = DateTime.MaxValue;
-                    if (Directory.Exists(fineFundamentalFolder))
-                    {
-                        var fineSymbolFolder = Path.Combine(fineFundamentalFolder, symbol.ToLower());
-
-                        var firstFineSymbolFileName = Directory.Exists(fineSymbolFolder) ? Directory.GetFiles(fineSymbolFolder).OrderBy(x => x).FirstOrDefault() : string.Empty;
-                        if (firstFineSymbolFileName.Length > 0)
-                        {
-                            firstFineSymbolDate = DateTime.ParseExact(Path.GetFileNameWithoutExtension(firstFineSymbolFileName), "yyyyMMdd", CultureInfo.InvariantCulture);
-                        }
                     }
 
                     ZipFile zip;
@@ -225,7 +226,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             if (ignoreMapless && !checkedForMapFile)
                             {
                                 checkedForMapFile = true;
-                                if (!mapFileResolver.ResolveMapFile(symbol, date).Any())
+                                if (!mapFileResolver.ResolveMapFile(ticker, date).Any())
                                 {
                                     // if the resolved map file has zero entries then it's a mapless symbol
                                     maplessCount++;
@@ -233,7 +234,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                                 }
                             }
 
-                            var close = decimal.Parse(csv[4])/scaleFactor;
+                            var close = decimal.Parse(csv[4]) / scaleFactor;
                             var volume = long.Parse(csv[5]);
 
                             var dollarVolume = close * volume;
@@ -242,33 +243,60 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             dates.Add(date);
 
                             // try to resolve a map file and if found, regen the sid
-                            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, symbol, market);
-                            var mapFile = mapFileResolver.ResolveMapFile(symbol, date);
+                            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
+                            var mapFile = mapFileResolver.ResolveMapFile(ticker, date);
                             if (!mapFile.IsNullOrEmpty())
                             {
                                 // if available, us the permtick in the coarse files, because of this, we need
                                 // to update the coarse files each time new map files are added/permticks change
                                 sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.OrderBy(x => x.Date).First().MappedSymbol, market);
                             }
+
                             if (mapFile == null && ignoreMapless)
                             {
                                 // if we're ignoring mapless files then we should always be able to resolve this
-                                Log.Error(string.Format("CoarseGenerator.ProcessDailyFolder(): Unable to resolve map file for {0} as of {1}", symbol, date.ToShortDateString()));
+                                Log.Error(string.Format("CoarseGenerator.ProcessDailyFolder(): Unable to resolve map file for {0} as of {1}", ticker, date.ToShortDateString()));
                                 continue;
                             }
 
-                            // check if symbol has fine fundamental data for the current date
-                            var hasFundamentalDataForDate = date >= firstFineSymbolDate;
-
                             // get price and split factors from factor files
-                            var leanSymbol = new Symbol(sid, symbol);
-                            var factorFile = factorFileProvider.Get(leanSymbol);
+                            var symbol = new Symbol(sid, ticker);
+                            var factorFile = factorFileProvider.Get(symbol);
                             var factorFileRow = factorFile?.GetScalingFactors(date);
                             var priceFactor = factorFileRow?.PriceFactor ?? 1m;
                             var splitFactor = factorFileRow?.SplitFactor ?? 1m;
 
+
+                            // Check if security has fine file within a trailing month for a date-ticker set.
+                            // There are tricky cases where a folder named by a ticker can have data for multiple securities.
+                            // e.g  GOOG -> GOOGL (GOOG T1AZ164W5VTX) / GOOCV -> GOOG (GOOCV VP83T1ZUHROL) case.
+                            // The fine data in the 'fundamental/fine/goog' folder will be for 'GOOG T1AZ164W5VTX' up to the 2014-04-02 and for 'GOOCV VP83T1ZUHROL' afterward.
+                            // Therefore, date before checking if the security has fundamental data for a date, we need to filter the fine files the map's first date.
+                            var firstDate = mapFile?.FirstDate ?? DateTime.MinValue;
+                            var hasFundamentalDataForDate = fineAvailableDates.Where(d => d >= firstDate).Any(d => date.AddMonths(-1) <= d && d <= date);
+
+                            // The following section handles mergers and acquisitions cases.
+                            // e.g. YHOO -> AABA (YHOO R735QTJ8XC9X)
+                            // The dates right after the acquisition, valid fine fundamental data for AABA are still under the former ticker folder.
+                            // Therefore if no fine fundamental data is found in the 'fundamental/fine/aaba' folder, it searches into the 'yhoo' folder. 
+                            if (mapFile != null && mapFile.Count() > 2 && !hasFundamentalDataForDate)
+                            {
+                                var previousTicker = mapFile.LastOrDefault(m => m.Date < date)?.MappedSymbol;
+                                if (previousTicker != null)
+                                {
+                                    var previousTickerFineFundamentalFolder = Path.Combine(fineFundamentalFolder, previousTicker);
+                                    if (Directory.Exists(previousTickerFineFundamentalFolder))
+                                    {
+                                        var previousTickerFineAvailableDates = Directory.GetFiles(previousTickerFineFundamentalFolder, "*.zip")
+                                            .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture))
+                                            .ToList();
+                                        hasFundamentalDataForDate = previousTickerFineAvailableDates.Where(d => d >= firstDate).Any(d => date.AddMonths(-1) <= d && d <= date);
+                                    }
+                                }
+                            }
+
                             // sid,symbol,close,volume,dollar volume,has fundamental data,price factor,split factor
-                            var coarseFileLine = $"{sid},{symbol},{close},{volume},{Math.Truncate(dollarVolume)},{hasFundamentalDataForDate},{priceFactor},{splitFactor}";
+                            var coarseFileLine = $"{sid},{ticker},{close},{volume},{Math.Truncate(dollarVolume)},{hasFundamentalDataForDate},{priceFactor},{splitFactor}";
 
                             StreamWriter writer;
                             if (!writers.TryGetValue(coarseFile, out writer))
@@ -280,7 +308,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                         }
                     }
 
-                    if (symbols%1000 == 0)
+                    if (symbols % 1000 == 0)
                     {
                         Log.Trace("CoarseGenerator.ProcessDailyFolder(): Completed processing {0} symbols. Current elapsed: {1} seconds", symbols, (DateTime.UtcNow - start).TotalSeconds.ToString("0.00"));
                     }
