@@ -17,6 +17,7 @@ using System;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Orders.TimeInForces;
 
 namespace QuantConnect.Orders
 {
@@ -57,7 +58,11 @@ namespace QuantConnect.Orders
             var jo = new JObject();
 
             var type = value.GetType();
-            jo.Add("$type", type.FullName);
+            // don't add if its the default value used by the reader
+            if (type != typeof(GoodTilCanceledTimeInForce))
+            {
+                jo.Add("$type", type.FullName);
+            }
 
             foreach (var property in type.GetProperties())
             {
@@ -85,17 +90,27 @@ namespace QuantConnect.Orders
         {
             var jObject = JObject.Load(reader);
 
-            var typeName = jObject["$type"].ToString();
-            var type = Type.GetType(typeName);
-            if (type == null)
+            Type type;
+            var jToken = jObject["$type"];
+            if (jToken != null)
             {
-                throw new Exception($"Unable to find the type: {typeName}");
+                var typeName = jToken.ToString();
+                type = Type.GetType(typeName);
+                if (type == null)
+                {
+                    throw new Exception($"Unable to find the type: {typeName}");
+                }
+            }
+            else
+            {
+                // default value if not present
+                type = typeof(GoodTilCanceledTimeInForce);
             }
 
             var constructor = type.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[0], null);
             if (constructor == null)
             {
-                throw new Exception($"Unable to find a constructor for type: {typeName}");
+                throw new Exception($"Unable to find a constructor for type: {type.FullName}");
             }
 
             var timeInForce = constructor.Invoke(null);

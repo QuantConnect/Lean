@@ -15,6 +15,7 @@
 
 using System;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
 {
@@ -97,12 +98,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// See <see cref="Insight.Magnitude"/>
         /// </summary>
         [JsonProperty("magnitude", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public double? Magnitude { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.Confidence"/>
         /// </summary>
         [JsonProperty("confidence", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public double? Confidence { get; set; }
 
         /// <summary>
@@ -115,18 +118,21 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// See <see cref="InsightScore.Magnitude"/>
         /// </summary>
         [JsonProperty("score-magnitude", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public double ScoreMagnitude { get; set; }
 
         /// <summary>
         /// See <see cref="InsightScore.Direction"/>
         /// </summary>
         [JsonProperty("score-direction", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public double ScoreDirection { get; set; }
 
         /// <summary>
         /// See <see cref="Insight.EstimatedValue"/>
         /// </summary>
         [JsonProperty("estimated-value", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal EstimatedValue { get; set; }
 
         /// <summary>

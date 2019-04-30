@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Interfaces;
@@ -29,6 +28,11 @@ namespace QuantConnect.Lean.Engine.Alphas
     /// </summary>
     public class ChartingInsightManagerExtension : IInsightManagerExtension
     {
+        /// <summary>
+        /// The string name used for the Alpha Assets chart
+        /// </summary>
+        public const string AlphaAssets = "Alpha Assets";
+
         private readonly bool _liveMode;
         private readonly StatisticsInsightManagerExtension _statisticsManager;
 
@@ -36,7 +40,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         private DateTime _lastInsightCountSampleDateUtc;
         private DateTime _nextChartSampleAlgorithmTimeUtc;
 
-        private readonly Chart _totalInsightCountPerSymbolChart = new Chart("Alpha Assets");          // Heatmap chart
+        private readonly Chart _totalInsightCountPerSymbolChart = new Chart(AlphaAssets);          // Heatmap chart
         private readonly Series _totalInsightCountSeries = new Series("Count", SeriesType.Bar, "#");
 
         private int _dailyCount;
