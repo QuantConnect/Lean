@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
@@ -76,16 +77,19 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Gets the utc time the last fill was received, or null if no fills have been received
         /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public DateTime? LastFillTime { get; internal set; }
 
         /// <summary>
         /// Gets the utc time this order was last updated, or null if the order has not been updated.
         /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public DateTime? LastUpdateTime { get; internal set; }
 
         /// <summary>
         /// Gets the utc time this order was canceled, or null if the order was not canceled.
         /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public DateTime? CanceledTime { get; internal set; }
 
         /// <summary>

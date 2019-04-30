@@ -36,8 +36,6 @@ namespace QuantConnect
             if (ReferenceEquals(symbol, null)) return;
 
             writer.WriteStartObject();
-            writer.WritePropertyName("$type");
-            writer.WriteValue("QuantConnect.Symbol, QuantConnect.Common");
             writer.WritePropertyName("Value");
             writer.WriteValue(symbol.Value);
             writer.WritePropertyName("ID");

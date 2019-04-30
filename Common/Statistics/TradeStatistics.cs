@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
 {
@@ -51,41 +53,49 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// The total profit/loss for all trades (as symbol currency)
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal TotalProfitLoss { get; set; }
 
         /// <summary>
         /// The total profit for all winning trades (as symbol currency)
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal TotalProfit { get; set; }
 
         /// <summary>
         /// The total loss for all losing trades (as symbol currency)
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal TotalLoss { get; set; }
 
         /// <summary>
         /// The largest profit in a single trade (as symbol currency)
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal LargestProfit { get; set; }
 
         /// <summary>
         /// The largest loss in a single trade (as symbol currency)
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal LargestLoss { get; set; }
 
         /// <summary>
         /// The average profit/loss (a.k.a. Expectancy or Average Trade) for all trades (as symbol currency)
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AverageProfitLoss { get; set; }
 
         /// <summary>
         /// The average profit for all winning trades (as symbol currency)
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AverageProfit { get; set; }
 
         /// <summary>
         /// The average loss for all winning trades (as symbol currency)
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AverageLoss { get; set; }
 
         /// <summary>
@@ -117,6 +127,7 @@ namespace QuantConnect.Statistics
         /// The ratio of the average profit per trade to the average loss per trade
         /// </summary>
         /// <remarks>If the average loss is zero, ProfitLossRatio is set to 0</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal ProfitLossRatio { get; set; }
 
         /// <summary>
@@ -124,61 +135,72 @@ namespace QuantConnect.Statistics
         /// </summary>
         /// <remarks>If the total number of trades is zero, WinLossRatio is set to zero</remarks>
         /// <remarks>If the number of losing trades is zero and the number of winning trades is nonzero, WinLossRatio is set to 10</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal WinLossRatio { get; set; }
 
         /// <summary>
         /// The ratio of the number of winning trades to the total number of trades
         /// </summary>
         /// <remarks>If the total number of trades is zero, WinRate is set to zero</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal WinRate { get; set; }
 
         /// <summary>
         /// The ratio of the number of losing trades to the total number of trades
         /// </summary>
         /// <remarks>If the total number of trades is zero, LossRate is set to zero</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal LossRate { get; set; }
 
         /// <summary>
         /// The average Maximum Adverse Excursion for all trades
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AverageMAE { get; set; }
 
         /// <summary>
         /// The average Maximum Favorable Excursion for all trades
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AverageMFE { get; set; }
 
         /// <summary>
         /// The largest Maximum Adverse Excursion in a single trade (as symbol currency)
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal LargestMAE { get; set; }
 
         /// <summary>
         /// The largest Maximum Favorable Excursion in a single trade (as symbol currency)
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal LargestMFE { get; set; }
 
         /// <summary>
         /// The maximum closed-trade drawdown for all trades (as symbol currency)
         /// </summary>
         /// <remarks>The calculation only takes into account the profit/loss of each trade</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal MaximumClosedTradeDrawdown { get; set; }
 
         /// <summary>
         /// The maximum intra-trade drawdown for all trades (as symbol currency)
         /// </summary>
         /// <remarks>The calculation takes into account MAE and MFE of each trade</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal MaximumIntraTradeDrawdown { get; set; }
 
         /// <summary>
         /// The standard deviation of the profits/losses for all trades (as symbol currency)
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal ProfitLossStandardDeviation { get; set; }
 
         /// <summary>
         /// The downside deviation of the profits/losses for all trades (as symbol currency)
         /// </summary>
         /// <remarks>This metric only considers deviations of losing trades</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal ProfitLossDownsideDeviation { get; set; }
 
         /// <summary>
@@ -186,16 +208,19 @@ namespace QuantConnect.Statistics
         /// </summary>
         /// <remarks>If the total profit is zero, ProfitFactor is set to zero</remarks>
         /// <remarks>if the total loss is zero and the total profit is nonzero, ProfitFactor is set to 10</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal ProfitFactor { get; set; }
 
         /// <summary>
         /// The ratio of the average profit/loss to the standard deviation
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal SharpeRatio { get; set; }
 
         /// <summary>
         /// The ratio of the average profit/loss to the downside deviation
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal SortinoRatio { get; set; }
 
         /// <summary>
@@ -203,16 +228,19 @@ namespace QuantConnect.Statistics
         /// </summary>
         /// <remarks>If the total profit/loss is zero, ProfitToMaxDrawdownRatio is set to zero</remarks>
         /// <remarks>if the drawdown is zero and the total profit is nonzero, ProfitToMaxDrawdownRatio is set to 10</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal ProfitToMaxDrawdownRatio { get; set; }
 
         /// <summary>
         /// The maximum amount of profit given back by a single trade before exit (as symbol currency)
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal MaximumEndTradeDrawdown { get; set; }
 
         /// <summary>
         /// The average amount of profit given back by all trades before exit (as symbol currency)
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AverageEndTradeDrawdown { get; set; }
 
         /// <summary>
@@ -223,6 +251,7 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// The sum of fees for all trades
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal TotalFees { get; set; }
 
         /// <summary>
@@ -266,10 +295,10 @@ namespace QuantConnect.Statistics
                     TotalProfitLoss += trade.ProfitLoss;
                     TotalProfit += trade.ProfitLoss;
                     AverageProfit += (trade.ProfitLoss - AverageProfit) / NumberOfWinningTrades;
-                    
+
                     AverageWinningTradeDuration += TimeSpan.FromSeconds((trade.Duration.TotalSeconds - AverageWinningTradeDuration.TotalSeconds) / NumberOfWinningTrades);
 
-                    if (trade.ProfitLoss > LargestProfit) 
+                    if (trade.ProfitLoss > LargestProfit)
                         LargestProfit = trade.ProfitLoss;
 
                     maxConsecutiveWinners++;
@@ -321,7 +350,7 @@ namespace QuantConnect.Statistics
 
                 var prevAverageProfitLoss = AverageProfitLoss;
                 AverageProfitLoss += (trade.ProfitLoss - AverageProfitLoss) / TotalNumberOfTrades;
-                
+
                 sumForVariance += (trade.ProfitLoss - prevAverageProfitLoss) * (trade.ProfitLoss - AverageProfitLoss);
                 var variance = TotalNumberOfTrades > 1 ? sumForVariance / (TotalNumberOfTrades - 1) : 0;
                 ProfitLossStandardDeviation = (decimal)Math.Sqrt((double)variance);
@@ -330,10 +359,10 @@ namespace QuantConnect.Statistics
                 AverageMAE += (trade.MAE - AverageMAE) / TotalNumberOfTrades;
                 AverageMFE += (trade.MFE - AverageMFE) / TotalNumberOfTrades;
 
-                if (trade.MAE < LargestMAE) 
+                if (trade.MAE < LargestMAE)
                     LargestMAE = trade.MAE;
 
-                if (trade.MFE > LargestMFE) 
+                if (trade.MFE > LargestMFE)
                     LargestMFE = trade.MFE;
 
                 if (trade.EndTradeDrawdown < MaximumEndTradeDrawdown)
