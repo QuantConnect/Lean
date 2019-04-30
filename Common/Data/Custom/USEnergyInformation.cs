@@ -33,12 +33,12 @@ namespace QuantConnect.Data.Custom
         private DateTime _previousDate = DateTime.MinValue;
 
         /// <summary>
-        /// The time at the end of the period
+        /// Represents the date/time when the analysis period stops
         /// </summary>
-        public DateTime CloseTime { get; set; }
+        public DateTime EnergyDataPointCloseTime { get; set; }
 
         /// <summary>
-        /// The end time of this data.
+        /// Analysis period (see <see cref="EnergyDataPointCloseTime"/>) plus a delay to make the data lag emit times realistic
         /// </summary>
         public override DateTime EndTime { get; set; }
 
@@ -126,7 +126,7 @@ namespace QuantConnect.Data.Custom
                     {
                         Symbol = config.Symbol,
                         Time = closeTime - _period,
-                        CloseTime = closeTime,
+                        EnergyDataPointCloseTime = closeTime,
                         EndTime = closeTime + offset,
                         Value = (decimal)jToken[1]
                     }
