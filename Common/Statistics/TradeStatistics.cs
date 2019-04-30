@@ -255,9 +255,9 @@ namespace QuantConnect.Statistics
             var sumForDownsideVariance = 0m;
             var lastPeakTime = DateTime.MinValue;
             var isInDrawdown = false;
-            List<double> allTradeDurationsSeconds = new List<double>();
-            List<double> winningTradeDurationsSeconds = new List<double>();
-            List<double> losingTradeDurationsSeconds = new List<double>();
+            var allTradeDurationsTicks = new List<long>();
+            var winningTradeDurationsTicks = new List<long>();
+            var losingTradeDurationsTicks = new List<long>();
 
             foreach (var trade in trades)
             {
@@ -288,7 +288,7 @@ namespace QuantConnect.Statistics
                     
                     AverageWinningTradeDuration += TimeSpan.FromSeconds((trade.Duration.TotalSeconds - AverageWinningTradeDuration.TotalSeconds) / NumberOfWinningTrades);
 
-                    winningTradeDurationsSeconds.Add(trade.Duration.TotalSeconds);
+                    winningTradeDurationsTicks.Add(trade.Duration.Ticks);
 
                     if (trade.ProfitLoss > LargestProfit) 
                         LargestProfit = trade.ProfitLoss;
@@ -326,7 +326,7 @@ namespace QuantConnect.Statistics
 
                     AverageLosingTradeDuration += TimeSpan.FromSeconds((trade.Duration.TotalSeconds - AverageLosingTradeDuration.TotalSeconds) / NumberOfLosingTrades);
 
-                    losingTradeDurationsSeconds.Add(trade.Duration.TotalSeconds);
+                    losingTradeDurationsTicks.Add(trade.Duration.Ticks);
 
                     if (trade.ProfitLoss < LargestLoss)
                         LargestLoss = trade.ProfitLoss;
@@ -350,7 +350,7 @@ namespace QuantConnect.Statistics
                 ProfitLossStandardDeviation = (decimal)Math.Sqrt((double)variance);
 
                 AverageTradeDuration += TimeSpan.FromSeconds((trade.Duration.TotalSeconds - AverageTradeDuration.TotalSeconds) / TotalNumberOfTrades);
-                allTradeDurationsSeconds.Add(trade.Duration.TotalSeconds);
+                allTradeDurationsTicks.Add(trade.Duration.Ticks);
                 AverageMAE += (trade.MAE - AverageMAE) / TotalNumberOfTrades;
                 AverageMFE += (trade.MFE - AverageMFE) / TotalNumberOfTrades;
 
@@ -377,12 +377,12 @@ namespace QuantConnect.Statistics
 
             AverageEndTradeDrawdown = AverageProfitLoss - AverageMFE;
 
-            if (allTradeDurationsSeconds.Count > 0)
-                MedianTradeDuration = TimeSpan.FromSeconds(allTradeDurationsSeconds.Median());
-            if (winningTradeDurationsSeconds.Count > 0)
-                MedianWinningTradeDuration = TimeSpan.FromSeconds(winningTradeDurationsSeconds.Median());
-            if (losingTradeDurationsSeconds.Count > 0)
-                MedianLosingTradeDuration = TimeSpan.FromSeconds(losingTradeDurationsSeconds.Median());
+            if (allTradeDurationsTicks.Count > 0)
+                MedianTradeDuration = TimeSpan.FromTicks(allTradeDurationsTicks.Median());
+            if (winningTradeDurationsTicks.Count > 0)
+                MedianWinningTradeDuration = TimeSpan.FromTicks(winningTradeDurationsTicks.Median());
+            if (losingTradeDurationsTicks.Count > 0)
+                MedianLosingTradeDuration = TimeSpan.FromTicks(losingTradeDurationsTicks.Median());
         }
 
         /// <summary>
