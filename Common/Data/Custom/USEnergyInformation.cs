@@ -96,7 +96,7 @@ namespace QuantConnect.Data.Custom
             // Do not emit if the content did not change
             if (string.IsNullOrWhiteSpace(format) || _previousContent == content)
             {
-                return null;
+                return GetEmptyCollection(config.Symbol);
             }
             _previousContent = content;
 
@@ -109,7 +109,10 @@ namespace QuantConnect.Data.Custom
 
                 // Do not emit if the end of the series did not change
                 date = (DateTime)series["updated"];
-                if (_previousDate == date) return null;
+                if (_previousDate == date)
+                {
+                    return GetEmptyCollection(config.Symbol);
+                }
                 _previousDate = date;
 
                 var last = series.Value<string>("lastHistoricalPeriod") ?? series["end"];
@@ -133,8 +136,13 @@ namespace QuantConnect.Data.Custom
             }
             catch
             {
-                return null;
+                return GetEmptyCollection(config.Symbol);
             }
+        }
+
+        private BaseDataCollection GetEmptyCollection(Symbol symbol)
+        {
+            return new BaseDataCollection(_previousDate, symbol);
         }
 
         /// <summary>
