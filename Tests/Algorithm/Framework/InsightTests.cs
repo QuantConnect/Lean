@@ -64,6 +64,22 @@ namespace QuantConnect.Tests.Algorithm.Framework
         }
 
         [Test]
+        public void SerializationUsingJsonConvertTrimsEstimatedValue()
+        {
+            var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
+            var insight = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2, "source-model");
+            insight.EstimatedValue = 0.00001m;
+            insight.Score.SetScore(InsightScoreType.Direction, 0.00001, DateTime.UtcNow);
+            insight.Score.SetScore(InsightScoreType.Magnitude, 0.00001, DateTime.UtcNow);
+            var serialized = JsonConvert.SerializeObject(insight);
+            var deserialized = JsonConvert.DeserializeObject<Insight>(serialized);
+
+            Assert.AreEqual(0, deserialized.EstimatedValue);
+            Assert.AreEqual(0, deserialized.Score.Direction);
+            Assert.AreEqual(0, deserialized.Score.Magnitude);
+        }
+
+        [Test]
         public void SurvivesRoundTripCopy()
         {
             var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);

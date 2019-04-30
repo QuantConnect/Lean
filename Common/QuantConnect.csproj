@@ -675,6 +675,7 @@
     <Compile Include="Util\FixedSizeQueue.cs" />
     <Compile Include="Util\FixedSizeHashQueue.cs" />
     <Compile Include="Util\FuncTextWriter.cs" />
+    <Compile Include="Util\JsonRoundingConverter.cs" />
     <Compile Include="Util\LeanData.cs" />
     <Compile Include="Util\LeanDataPathComponents.cs" />
     <Compile Include="Util\ListComparer.cs" />

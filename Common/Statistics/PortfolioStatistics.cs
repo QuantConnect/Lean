@@ -17,6 +17,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.Statistics;
+using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
 {
@@ -30,93 +32,110 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// The average rate of return for winning trades
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AverageWinRate { get; set; }
 
         /// <summary>
         /// The average rate of return for losing trades
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AverageLossRate { get; set; }
 
         /// <summary>
         /// The ratio of the average win rate to the average loss rate
         /// </summary>
         /// <remarks>If the average loss rate is zero, ProfitLossRatio is set to 0</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal ProfitLossRatio { get; set; }
 
         /// <summary>
         /// The ratio of the number of winning trades to the total number of trades
         /// </summary>
         /// <remarks>If the total number of trades is zero, WinRate is set to zero</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal WinRate { get; set; }
 
         /// <summary>
         /// The ratio of the number of losing trades to the total number of trades
         /// </summary>
         /// <remarks>If the total number of trades is zero, LossRate is set to zero</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal LossRate { get; set; }
 
         /// <summary>
         /// The expected value of the rate of return
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal Expectancy { get; set; }
 
         /// <summary>
         /// Annual compounded returns statistic based on the final-starting capital and years.
         /// </summary>
         /// <remarks>Also known as Compound Annual Growth Rate (CAGR)</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal CompoundingAnnualReturn { get; set; }
 
         /// <summary>
         /// Drawdown maximum percentage.
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal Drawdown { get; set; }
 
         /// <summary>
         /// The total net profit percentage.
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal TotalNetProfit { get; set; }
 
         /// <summary>
         /// Sharpe ratio with respect to risk free rate: measures excess of return per unit of risk.
         /// </summary>
         /// <remarks>With risk defined as the algorithm's volatility</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal SharpeRatio { get; set; }
 
         /// <summary>
         /// Algorithm "Alpha" statistic - abnormal returns over the risk free rate and the relationshio (beta) with the benchmark returns.
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal Alpha { get; set; }
 
         /// <summary>
         /// Algorithm "beta" statistic - the covariance between the algorithm and benchmark performance, divided by benchmark's variance
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal Beta { get; set; }
 
         /// <summary>
         /// Annualized standard deviation
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AnnualStandardDeviation { get; set; }
 
         /// <summary>
         /// Annualized variance statistic calculation using the daily performance variance and trading days per year.
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AnnualVariance { get; set; }
 
         /// <summary>
         /// Information ratio - risk adjusted return
         /// </summary>
         /// <remarks>(risk = tracking error volatility, a volatility measures that considers the volatility of both algo and benchmark)</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal InformationRatio { get; set; }
 
         /// <summary>
         /// Tracking error volatility (TEV) statistic - a measure of how closely a portfolio follows the index to which it is benchmarked
         /// </summary>
         /// <remarks>If algo = benchmark, TEV = 0</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal TrackingError { get; set; }
 
         /// <summary>
         /// Treynor ratio statistic is a measurement of the returns earned in excess of that which could have been earned on an investment that has no diversifiable risk
         /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal TreynorRatio { get; set; }
 
 
