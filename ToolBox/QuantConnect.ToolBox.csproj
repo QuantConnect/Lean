@@ -252,8 +252,6 @@
     <Compile Include="FxcmVolumeDownloader\FxcmVolumeDownloadProgram.cs" />
     <Compile Include="FxcmDownloader\FxcmDataDownloader.cs" />
     <Compile Include="FxcmDownloader\FxcmDownloaderProgram.cs" />
-    <Compile Include="GoogleDownloader\GoogleDataDownloader.cs" />
-    <Compile Include="GoogleDownloader\GoogleDownloaderProgram.cs" />
     <Compile Include="IDataProcessor.cs" />
     <Compile Include="IEX\IEXDataQueueHandler.cs" />
     <Compile Include="IQFeed\IQFeedDataQueueHandler.cs" />
