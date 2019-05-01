@@ -258,6 +258,7 @@
     <Compile Include="UniverseSelectionDefinitionsAlgorithm.cs" />
     <Compile Include="UniverseSharingSecurityDifferentSubscriptionRequestRegressionAlgorithm.cs" />
     <Compile Include="UniverseSharingSubscriptionRequestRegressionAlgorithm.cs" />
+    <Compile Include="USEnergyInformationAdministrationAlgorithm.cs" />
     <Compile Include="UserDefinedUniverseAlgorithm.cs" />
     <Compile Include="VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm.cs" />
     <Compile Include="WarmupAlgorithm.cs" />

@@ -208,6 +208,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            // If USEnergyInformation data, set the access token in data factory
+            var energyInformation = _dataFactory as USEnergyInformation;
+            if (energyInformation != null)
+            {
+                if (!USEnergyInformation.IsAuthCodeSet)
+                {
+                    USEnergyInformation.SetAuthCode(Config.Get("us-energy-information-auth-token"));
+                }
+            }
+
             _factorFile = new FactorFile(_config.Symbol.Value, new List<FactorFileRow>());
             _mapFile = new MapFile(_config.Symbol.Value, new List<MapFileRow>());
 

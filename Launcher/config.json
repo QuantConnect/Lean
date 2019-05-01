@@ -116,6 +116,10 @@
   // To get your access token go to https://www.tiingo.com
   "tiingo-auth-token": "",
 
+  // Required to access data from US Energy Information Administration
+  // To get your access token go to https://www.eia.gov/opendata
+  "us-energy-information-auth-token": "",
+
   // alpaca configuration
   // available trading mode: 'paper', 'live'
   "alpaca-key-id": "",
