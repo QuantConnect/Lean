@@ -232,7 +232,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>True when a new fill forward piece of data was produced and should be emitted by this enumerator</returns>
         protected virtual bool RequiresFillForwardData(TimeSpan fillForwardResolution, BaseData previous, BaseData next, out BaseData fillForward)
         {
-            if (next.EndTime < previous.Time)
+            // convert times to UTC for accurate comparisons and differences across DST changes
+            var previousTimeUtc = previous.Time.ConvertToUtc(Exchange.TimeZone);
+            var nextTimeUtc = next.Time.ConvertToUtc(Exchange.TimeZone);
+            var nextEndTimeUtc = next.EndTime.ConvertToUtc(Exchange.TimeZone);
+
+            if (nextEndTimeUtc < previousTimeUtc)
             {
                 Log.Error("FillForwardEnumerator received data out of order. Symbol: " + previous.Symbol.ID);
                 fillForward = null;
@@ -240,7 +245,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             // check to see if the gap between previous and next warrants fill forward behavior
-            var nextPreviousTimeDelta = next.Time - previous.Time;
+            var nextPreviousTimeDelta = nextTimeUtc - previousTimeUtc;
             if (nextPreviousTimeDelta <= fillForwardResolution && nextPreviousTimeDelta <= _dataResolution)
             {
                 fillForward = null;

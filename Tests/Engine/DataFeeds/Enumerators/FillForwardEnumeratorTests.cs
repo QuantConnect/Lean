@@ -29,7 +29,7 @@ using QuantConnect.Util;
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
     [TestFixture]
-    public class FillForwardEnumeratorTest
+    public class FillForwardEnumeratorTests
     {
         [Test]
         public void FillsForwardMidDay()
@@ -773,7 +773,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var data = new BaseData[]
             {
                 // fri 7/20
-                new QuoteBar{Value = 0, Time =  new DateTime(2012, 7, 19, 20, 0, 0), Period = Time.OneDay},
+                new QuoteBar{Value = 0, Time = new DateTime(2012, 7, 19, 20, 0, 0), Period = Time.OneDay},
                 // sunday 7/22
                 new QuoteBar{Value = 1, Time = new DateTime(2012, 7, 21, 20, 0, 0), Period = Time.OneDay},
                 // monday 7/23
@@ -800,6 +800,48 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(new DateTime(2012, 7, 19, 20, 0, 0), fillForwardBars[0].Time);
             Assert.AreEqual(new DateTime(2012, 7, 21, 20, 0, 0), fillForwardBars[1].Time);
             Assert.AreEqual(new DateTime(2012, 7, 22, 20, 0, 0), fillForwardBars[2].Time);
+        }
+
+        [Test]
+        public void HandlesDaylightSavingTimeChange()
+        {
+            var dailyBarsEmitted = 0;
+            var fillForwardBars = new List<BaseData>();
+
+            // 3 QuoteBars as they would be read from the EURUSD oanda daily file by QuoteBar.Reader()
+            // The conversion from dataTimeZone to exchangeTimeZone has been done by hand
+            // dataTimeZone == UTC
+            /*
+                20180311 00:00,1.2308,1.2308,1.2308,1.2308,0,1.23096,1.23096,1.23096,1.23096,0
+                20180312 00:00,1.23082,1.23449,1.22898,1.23382,0,1.23097,1.23463,1.22911,1.23396,0
+            */
+            var data = new BaseData[]
+            {
+                // Sunday 3/11
+                new QuoteBar{Value = 0, Time = new DateTime(2018, 3, 10, 19, 0, 0), Period = Time.OneDay},
+                // Monday 3/12
+                new QuoteBar{Value = 1, Time = new DateTime(2018, 3, 11, 20, 0, 0), Period = Time.OneDay},
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var market = Market.Oanda;
+            var symbol = Symbol.Create("EURUSD", SecurityType.Forex, market);
+
+            var marketHours = MarketHoursDatabase.FromDataFolder();
+            var exchange = new ForexExchange(marketHours.GetExchangeHours(market, symbol, SecurityType.Forex));
+
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, exchange, Ref.Create(TimeSpan.FromDays(1)), false, data.Last().EndTime, Time.OneDay, TimeZones.Utc);
+
+            while (fillForwardEnumerator.MoveNext())
+            {
+                fillForwardBars.Add(fillForwardEnumerator.Current);
+                Console.WriteLine(fillForwardEnumerator.Current.Time.DayOfWeek + " " + fillForwardEnumerator.Current.Time + " - " + fillForwardEnumerator.Current.EndTime.DayOfWeek + " " + fillForwardEnumerator.Current.EndTime);
+                dailyBarsEmitted++;
+            }
+
+            Assert.AreEqual(2, dailyBarsEmitted);
+            Assert.AreEqual(new DateTime(2018, 3, 10, 19, 0, 0), fillForwardBars[0].Time);
+            Assert.AreEqual(new DateTime(2018, 3, 11, 20, 0, 0), fillForwardBars[1].Time);
         }
     }
 }

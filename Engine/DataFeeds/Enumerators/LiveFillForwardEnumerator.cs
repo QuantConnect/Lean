@@ -61,12 +61,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>True when a new fill forward piece of data was produced and should be emitted by this enumerator</returns>
         protected override bool RequiresFillForwardData(TimeSpan fillForwardResolution, BaseData previous, BaseData next, out BaseData fillForward)
         {
+            // convert times to UTC for accurate comparisons and differences across DST changes
             fillForward = null;
-            var nextExpectedDataPointTime = (previous.EndTime + fillForwardResolution);
+            var nextExpectedDataPointTimeUtc = previous.EndTime.ConvertToUtc(Exchange.TimeZone) + fillForwardResolution;
             if (next != null)
             {
                 // if not future data, just return the 'next'
-                if (next.EndTime <= nextExpectedDataPointTime)
+                if (next.EndTime.ConvertToUtc(Exchange.TimeZone) <= nextExpectedDataPointTimeUtc)
                 {
                     return false;
                 }
@@ -77,9 +78,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 return true;
             }
 
-            // the underlying enumerator returned null, check to see if time has passed for fill fowarding
-            var currentLocalTime = _timeProvider.GetUtcNow().ConvertFromUtc(Exchange.TimeZone);
-            if (nextExpectedDataPointTime <= currentLocalTime)
+            // the underlying enumerator returned null, check to see if time has passed for fill forwarding
+            if (nextExpectedDataPointTimeUtc <= _timeProvider.GetUtcNow())
             {
                 var clone = previous.Clone(true);
                 clone.Time = previous.Time + fillForwardResolution;
