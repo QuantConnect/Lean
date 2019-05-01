@@ -26,7 +26,6 @@ using QuantConnect.ToolBox.DukascopyDownloader;
 using QuantConnect.ToolBox.FxcmDownloader;
 using QuantConnect.ToolBox.FxcmVolumeDownload;
 using QuantConnect.ToolBox.GDAXDownloader;
-using QuantConnect.ToolBox.GoogleDownloader;
 using QuantConnect.ToolBox.IBDownloader;
 using QuantConnect.ToolBox.IEX;
 using QuantConnect.ToolBox.IVolatilityEquityConverter;
@@ -84,10 +83,6 @@ namespace QuantConnect.ToolBox
                     case "fvdl":
                     case "fxcmvolumedownload":
                         FxcmVolumeDownloadProgram.FxcmVolumeDownload(tickers, resolution, fromDate, toDate);
-                        break;
-                    case "gdl":
-                    case "googledownloader":
-                        GoogleDownloaderProgram.GoogleDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "ibdl":
                     case "ibdownloader":
