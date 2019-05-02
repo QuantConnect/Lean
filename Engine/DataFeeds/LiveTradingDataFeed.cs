@@ -333,21 +333,65 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // tick subscriptions can pass right through
                     var tickEnumerator = new EnqueueableEnumerator<BaseData>();
-                    _exchange.SetDataHandler(request.Configuration.Symbol, data =>
+
+                    switch (request.Configuration.TickType)
                     {
-                        tickEnumerator.Enqueue(data);
+                        case TickType.Quote:
+                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
+                            {
+                                var tick = data as Tick;
+                                if (tick.TickType == TickType.Quote)
+                                {
+                                    tickEnumerator.Enqueue(data);
+                                    subscription.OnNewDataAvailable();
 
-                        subscription.OnNewDataAvailable();
+                                    if (data.DataType != MarketDataType.Auxiliary)
+                                    {
+                                        UpdateSubscriptionRealTimePrice(
+                                            subscription,
+                                            timeZoneOffsetProvider,
+                                            request.Security.Exchange.Hours,
+                                            data);
+                                    }
+                                }
+                            });
+                            break;
 
-                        if (data.DataType != MarketDataType.Auxiliary)
-                        {
-                            UpdateSubscriptionRealTimePrice(
-                                subscription,
-                                timeZoneOffsetProvider,
-                                request.Security.Exchange.Hours,
-                                data);
-                        }
-                    });
+                        case TickType.Trade:
+                        default:
+                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
+                            {
+                                var tick = data as Tick;
+                                if (tick.TickType == TickType.Trade)
+                                {
+                                    tickEnumerator.Enqueue(data);
+                                    subscription.OnNewDataAvailable();
+
+                                    if (data.DataType != MarketDataType.Auxiliary)
+                                    {
+                                        UpdateSubscriptionRealTimePrice(
+                                            subscription,
+                                            timeZoneOffsetProvider,
+                                            request.Security.Exchange.Hours,
+                                            data);
+                                    }
+                                }
+                            });
+                            break;
+
+                        case TickType.OpenInterest:
+                            _exchange.AddDataHandler(request.Configuration.Symbol, data =>
+                            {
+                                var tick = data as Tick;
+                                if (tick.TickType == TickType.OpenInterest)
+                                {
+                                    tickEnumerator.Enqueue(data);
+                                    subscription.OnNewDataAvailable();
+                                }
+                            });
+                            break;
+                    }
+
                     enumerator = tickEnumerator;
                 }
 
