@@ -14,11 +14,13 @@
 */
 
 using System;
+using System.IO;
 using System.Linq;
 using Accord.Math.Comparers;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
@@ -59,6 +61,65 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataBars2 = reader.Read(source).First();
 
             Assert.AreNotEqual(dataBars.Price, dataBars2.Price);
+        }
+
+        [Test]
+        public void DataIsNotCachedForEphemeralDataCacheProvider()
+        {
+            var config = new SubscriptionDataConfig(
+                    typeof(TestTradeBarFactory),
+                    Symbol.Create("SymbolNonEphemeralTest1", SecurityType.Equity, Market.USA),
+                    Resolution.Daily,
+                    TimeZones.NewYork,
+                    TimeZones.NewYork,
+                    true,
+                    true,
+                    false);
+            var dataCacheProvider = new CustomEphemeralDataCacheProvider { IsDataEphemeral = true};
+            var reader = new TextSubscriptionDataSourceReader(
+                dataCacheProvider,
+                config,
+                _initialDate,
+                false);
+            var source = (new TradeBar()).GetSource(config, _initialDate, false);
+            dataCacheProvider.Data = "20000101 00:00,1,1,1,1,1";
+            var dataBars = reader.Read(source).First();
+            dataCacheProvider.Data = "20000101 00:00,2,2,2,2,2";
+            var dataBars2 = reader.Read(source).First();
+
+            Assert.AreEqual(new DateTime(2000, 1, 1), dataBars.Time);
+            Assert.AreEqual(new DateTime(2000, 1, 1), dataBars2.Time);
+            Assert.AreNotEqual(dataBars.Price, dataBars2.Price);
+        }
+
+        [Test]
+        public void DataIsCachedForNonEphemeralDataCacheProvider()
+        {
+            var config = new SubscriptionDataConfig(
+                typeof(TestTradeBarFactory),
+                Symbol.Create("SymbolNonEphemeralTest2", SecurityType.Equity, Market.USA),
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                true,
+                false);
+            var dataCacheProvider = new CustomEphemeralDataCacheProvider { IsDataEphemeral = false };
+            var reader = new TextSubscriptionDataSourceReader(
+                dataCacheProvider,
+                config,
+                _initialDate,
+                false);
+            var source = (new TradeBar()).GetSource(config, _initialDate, false);
+            dataCacheProvider.Data = "20000101 00:00,1,1,1,1,1";
+            var dataBars = reader.Read(source).First();
+            // even if the data changes it already cached
+            dataCacheProvider.Data = "20000101 00:00,2,2,2,2,2";
+            var dataBars2 = reader.Read(source).First();
+
+            Assert.AreEqual(new DateTime(2000, 1, 1), dataBars.Time);
+            Assert.AreEqual(new DateTime(2000, 1, 1), dataBars2.Time);
+            Assert.AreEqual(dataBars.Price, dataBars2.Price);
         }
 
         [Test]
@@ -170,6 +231,28 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 ReaderWasCalled = true;
                 return base.Reader(config, line, date, isLiveMode);
+            }
+        }
+
+        private class CustomEphemeralDataCacheProvider : IDataCacheProvider
+        {
+            public string Data { set; get; }
+            public bool IsDataEphemeral { set; get; }
+
+            public Stream Fetch(string key)
+            {
+                var stream = new MemoryStream();
+                var writer = new StreamWriter(stream);
+                writer.Write(Data);
+                writer.Flush();
+                stream.Position = 0;
+                return stream;
+            }
+            public void Store(string key, byte[] data)
+            {
+            }
+            public void Dispose()
+            {
             }
         }
     }
