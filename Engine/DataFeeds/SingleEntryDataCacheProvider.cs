@@ -33,6 +33,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private Stream _zipFileStream;
 
         /// <summary>
+        /// Property indicating the data is temporary in nature and should not be cached.
+        /// </summary>
+        public bool IsDataEphemeral => false;
+
+        /// <summary>
         /// Constructor that takes the <see cref="IDataProvider"/> to be used to retrieve data
         /// </summary>
         public SingleEntryDataCacheProvider(IDataProvider dataProvider)
