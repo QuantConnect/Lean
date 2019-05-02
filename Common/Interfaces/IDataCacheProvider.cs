@@ -26,6 +26,11 @@ namespace QuantConnect.Interfaces
     public interface IDataCacheProvider : IDisposable
     {
         /// <summary>
+        /// Property indicating the data is temporary in nature and should not be cached
+        /// </summary>
+        bool IsDataEphemeral { get; }
+
+        /// <summary>
         /// Fetch data from the cache
         /// </summary>
         /// <param name="key">A string representing the key of the cached data</param>

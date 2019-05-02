@@ -84,7 +84,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _isLiveMode = isLiveMode;
             _factory = (BaseData) ObjectActivator.GetActivator(config.Type).Invoke(new object[] { config.Type });
             _shouldCacheDataPoints = !_config.IsCustomData && _config.Resolution >= Resolution.Hour
-                && _config.Type != typeof(FineFundamental) && _config.Type != typeof(CoarseFundamental);
+                && _config.Type != typeof(FineFundamental) && _config.Type != typeof(CoarseFundamental)
+		&& !_dataCacheProvider.IsDataEphemeral;
         }
 
         /// <summary>
