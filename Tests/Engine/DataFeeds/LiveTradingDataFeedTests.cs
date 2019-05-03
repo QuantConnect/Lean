@@ -855,7 +855,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 true);
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.AddSecurities(resolution, equities, forex, crypto);
-            _synchronizer = new TestableSynchronizer(_algorithm, _dataManager, true, _manualTimeProvider);
+            _synchronizer = new TestableLiveSynchronizer(_manualTimeProvider);
+            _synchronizer.Initialize(_algorithm, _dataManager);
 
             feed.Initialize(_algorithm, job, resultHandler, mapFileProvider,
                 new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, _dataManager, _synchronizer);
