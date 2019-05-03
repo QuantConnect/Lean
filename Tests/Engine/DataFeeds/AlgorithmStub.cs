@@ -45,7 +45,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             SubscriptionManager.SetDataManager(DataManager);
         }
 
-        public void AddSecurities(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null)
+        public void AddSecurities(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null)
         {
             foreach (var ticker in equities ?? new List<string>())
             {
@@ -58,6 +58,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 AddSecurity(SecurityType.Forex, ticker, resolution);
                 var symbol = SymbolCache.GetSymbol(ticker);
                 Securities[symbol].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.EasternStandard));
+            }
+            foreach (var ticker in crypto ?? new List<string>())
+            {
+                AddSecurity(SecurityType.Crypto, ticker, resolution);
+                var symbol = SymbolCache.GetSymbol(ticker);
+                Securities[symbol].Exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.Utc));
             }
         }
 

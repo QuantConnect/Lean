@@ -765,17 +765,55 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsFalse(unhandledExceptionWasThrown);
         }
 
+        [Test]
+        public void HandlesAllTickTypesAtTickResolution()
+        {
+            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
+
+            var feed = RunDataFeed(
+                Resolution.Tick,
+                crypto: new List<string> { symbol.Value },
+                getNextTicksFunction: dqh => Enumerable.Range(0, 2)
+                    .Select(x => new Tick
+                    {
+                        Symbol = symbol,
+                        TickType = x % 2 == 0 ? TickType.Trade : TickType.Quote
+                    })
+                    .ToList());
+
+            var emittedData = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(1), true, ts =>
+            {
+                if (ts.Slice.HasData)
+                {
+                    emittedData = true;
+                    foreach (var security in _algorithm.Securities.Values)
+                    {
+                        foreach (var config in security.Subscriptions)
+                        {
+                            Assert.IsTrue(ts.ConsolidatorUpdateData.Count == 2); // Trades + Quotes
+                            Assert.IsTrue(ts.ConsolidatorUpdateData.Select(x => x.Target).Contains(config));
+                            Assert.IsTrue(ts.ConsolidatorUpdateData.All(x => x.Data.Count > 0));
+                        }
+                    }
+                }
+            });
+
+            Assert.IsTrue(emittedData);
+        }
+
         private IDataFeed RunDataFeed(Resolution resolution = Resolution.Second,
                                     List<string> equities = null,
                                     List<string> forex = null,
+                                    List<string> crypto = null,
                                     Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null)
         {
             FuncDataQueueHandler dataQueueHandler;
-            return RunDataFeed(out dataQueueHandler, getNextTicksFunction, resolution, equities, forex);
+            return RunDataFeed(out dataQueueHandler, getNextTicksFunction, resolution, equities, forex, crypto);
         }
 
         private IDataFeed RunDataFeed(out FuncDataQueueHandler dataQueueHandler, Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null,
-            Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null)
+            Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null)
         {
             _algorithm.SetStartDate(_startDate);
 
@@ -816,9 +854,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 marketHoursDatabase,
                 true);
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
-            _algorithm.AddSecurities(resolution, equities, forex);
-            _synchronizer = new TestableLiveSynchronizer(_manualTimeProvider);
-            _synchronizer.Initialize(_algorithm, _dataManager);
+            _algorithm.AddSecurities(resolution, equities, forex, crypto);
+            _synchronizer = new TestableSynchronizer(_algorithm, _dataManager, true, _manualTimeProvider);
 
             feed.Initialize(_algorithm, job, resultHandler, mapFileProvider,
                 new LocalDiskFactorFileProvider(mapFileProvider), fileProvider, _dataManager, _synchronizer);
