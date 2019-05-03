@@ -116,7 +116,7 @@ namespace QuantConnect.Lean.Engine
 
                 IBrokerage brokerage = null;
                 DataManager dataManager = null;
-                var synchronizer = new Synchronizer();
+                var synchronizer = _liveMode ? new LiveSynchronizer() : new Synchronizer();
                 try
                 {
                     // we get the mhdb before creating the algorithm instance,
@@ -151,15 +151,13 @@ namespace QuantConnect.Lean.Engine
                             securityService),
                         algorithm,
                         algorithm.TimeKeeper,
-                        marketHoursDatabase);
+                        marketHoursDatabase,
+                        _liveMode);
 
                     _algorithmHandlers.Results.SetDataManager(dataManager);
                     algorithm.SubscriptionManager.SetDataManager(dataManager);
 
-                    synchronizer.Initialize(
-                        algorithm,
-                        dataManager,
-                        _liveMode);
+                    synchronizer.Initialize(algorithm, dataManager);
 
                     // Initialize the data feed before we initialize so he can intercept added securities/universes via events
                     _algorithmHandlers.DataFeed.Initialize(

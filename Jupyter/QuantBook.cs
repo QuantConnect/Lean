@@ -76,7 +76,8 @@ namespace QuantConnect.Jupyter
                         new UniverseSelection(this, securityService),
                         this,
                         TimeKeeper,
-                        MarketHoursDatabase));
+                        MarketHoursDatabase,
+                        false));
 
                 var mapFileProvider = algorithmHandlers.MapFileProvider;
                 HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));

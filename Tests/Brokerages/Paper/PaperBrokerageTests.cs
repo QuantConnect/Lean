@@ -93,7 +93,8 @@ namespace QuantConnect.Tests.Brokerages.Paper
                     new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm)),
                 algorithm,
                 algorithm.TimeKeeper,
-                marketHoursDatabase);
+                marketHoursDatabase,
+                true);
             var synchronizer = new NullSynchronizer(algorithm, dividend);
 
             algorithm.SubscriptionManager.SetDataManager(dataManager);

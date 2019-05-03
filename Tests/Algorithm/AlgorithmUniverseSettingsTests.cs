@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Algorithm
 
             var changes = dataManager.UniverseSelection
                 .ApplyUniverseSelection(
-                    algorithm.UniverseManager.First().Value, 
+                    algorithm.UniverseManager.First().Value,
                     algorithm.UtcTime,
                     new BaseDataCollection(algorithm.UtcTime, null, Enumerable.Empty<CoarseFundamental>()));
 
@@ -101,7 +101,8 @@ namespace QuantConnect.Tests.Algorithm
                         algorithm)),
                 algorithm,
                 algorithm.TimeKeeper,
-                marketHoursDatabase);
+                marketHoursDatabase,
+                false);
 
             var securityService = new SecurityService(
                 algorithm.Portfolio.CashBook,

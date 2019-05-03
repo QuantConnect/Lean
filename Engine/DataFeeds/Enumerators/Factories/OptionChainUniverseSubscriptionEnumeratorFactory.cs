@@ -82,7 +82,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             if (_isLiveMode)
             {
                 // creating trade bar builder enumerator to model underlying price change
-                var underlyingEnumerator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
+                var underlyingEnumerator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider, _isLiveMode);
 
                 // configuring the enumerator
                 var subscriptionConfiguration = GetSubscriptionConfigurations(request).First();

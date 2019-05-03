@@ -46,6 +46,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             = new ConcurrentDictionary<SubscriptionDataConfig, SubscriptionDataConfig>();
 
         /// <summary>
+        /// Event fired when a new subscription is added
+        /// </summary>
+        public event EventHandler<Subscription> SubscriptionAdded;
+
+        /// <summary>
+        /// Event fired when an existing subscription is removed
+        /// </summary>
+        public event EventHandler<Subscription> SubscriptionRemoved;
+
+        /// <summary>
         /// Creates a new instance of the DataManager
         /// </summary>
         public DataManager(
@@ -53,7 +63,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             UniverseSelection universeSelection,
             IAlgorithm algorithm,
             ITimeKeeper timeKeeper,
-            MarketHoursDatabase marketHoursDatabase)
+            MarketHoursDatabase marketHoursDatabase,
+            bool liveMode)
         {
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
@@ -62,7 +73,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             AvailableDataTypes = SubscriptionManager.DefaultDataTypes();
             _timeKeeper = timeKeeper;
             _marketHoursDatabase = marketHoursDatabase;
-            _liveMode = algorithm.LiveMode;
+            _liveMode = liveMode;
 
             var liveStart = DateTime.UtcNow;
             // wire ourselves up to receive notifications when universes are added/removed
@@ -170,6 +181,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             }
 
+            if (_liveMode)
+            {
+                OnSubscriptionAdded(subscription);
+            }
+
             LiveDifferentiatedLog($"DataManager.AddSubscription(): Added {request.Configuration}." +
                 $" Start: {request.StartTimeUtc}. End: {request.EndTimeUtc}");
             return DataFeedSubscriptions.TryAdd(subscription);
@@ -200,6 +216,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     _dataFeed.RemoveSubscription(subscription);
 
+                    if (_liveMode)
+                    {
+                        OnSubscriptionRemoved(subscription);
+                    }
+
                     subscription.Dispose();
 
                     RemoveSubscriptionDataConfig(subscription);
@@ -209,6 +230,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="SubscriptionAdded"/> event
+        /// </summary>
+        /// <param name="subscription">The added subscription</param>
+        private void OnSubscriptionAdded(Subscription subscription)
+        {
+            SubscriptionAdded?.Invoke(this, subscription);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="SubscriptionRemoved"/> event
+        /// </summary>
+        /// <param name="subscription">The removed subscription</param>
+        private void OnSubscriptionRemoved(Subscription subscription)
+        {
+            SubscriptionRemoved?.Invoke(this, subscription);
         }
 
         #endregion
