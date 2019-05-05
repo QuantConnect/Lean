@@ -31,7 +31,6 @@ from QuantConnect.Algorithm.Framework.Selection import *
 from datetime import timedelta
 import numpy as np
 import pandas as pd
-import ptvsd; ptvsd.enable_attach(); ptvsd.wait_for_attach(); 
 
 ### <summary>
 ### CapmAlphaRankingFrameworkAlgorithm: example of custom scheduled universe selection model
@@ -89,7 +88,6 @@ class CapmAlphaRankingUniverseSelectionModel(UniverseSelectionModel):
     def SelectPair(self, algorithm, date):
         '''Selects the pair (two stocks) with the highest alpha'''
         dictionary = dict()
-        ptvsd.break_into_debugger()
         benchmark = self._getReturns(algorithm, self.benchmark)
         ones = np.ones(len(benchmark))
 
