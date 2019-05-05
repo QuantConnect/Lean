@@ -103,7 +103,13 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <exception cref="T:System.ArgumentException">The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1" /> is greater than the available space from <paramref name="arrayIndex" /> to the end of the destination <paramref name="array" />.</exception>
         public void CopyTo(Insight[] array, int arrayIndex)
         {
-            var copy = this.ToList();
+            // Avoid calling `ToList` on insights to avoid potential infinite loop (issue #3168)
+            var copy = new List<Insight>(Count);
+
+            foreach (var insight in this)
+            {
+                copy.Add(insight);
+            }
             copy.CopyTo(array, arrayIndex);
         }
 
