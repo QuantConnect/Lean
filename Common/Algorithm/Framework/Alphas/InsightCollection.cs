@@ -104,13 +104,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public void CopyTo(Insight[] array, int arrayIndex)
         {
             // Avoid calling `ToList` on insights to avoid potential infinite loop (issue #3168)
-            var copy = new List<Insight>(Count);
-
-            foreach (var insight in this)
-            {
-                copy.Add(insight);
-            }
-            copy.CopyTo(array, arrayIndex);
+            Array.Copy(_insights.SelectMany(kvp => kvp.Value).ToArray(), 0, array, arrayIndex, Count);
         }
 
         /// <summary>Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
