@@ -333,21 +333,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // tick subscriptions can pass right through
                     var tickEnumerator = new EnqueueableEnumerator<BaseData>();
-                    _exchange.SetDataHandler(request.Configuration.Symbol, data =>
+
+                    _exchange.AddDataHandler(request.Configuration.Symbol, data =>
                     {
-                        tickEnumerator.Enqueue(data);
-
-                        subscription.OnNewDataAvailable();
-
-                        if (data.DataType != MarketDataType.Auxiliary)
+                        var tick = data as Tick;
+                        if (tick.TickType == request.Configuration.TickType)
                         {
-                            UpdateSubscriptionRealTimePrice(
-                                subscription,
-                                timeZoneOffsetProvider,
-                                request.Security.Exchange.Hours,
-                                data);
+                            tickEnumerator.Enqueue(data);
+                            subscription.OnNewDataAvailable();
+                            if (data.DataType != MarketDataType.Auxiliary && tick.TickType != TickType.OpenInterest)
+                            {
+                                UpdateSubscriptionRealTimePrice(
+                                    subscription,
+                                    timeZoneOffsetProvider,
+                                    request.Security.Exchange.Hours,
+                                    data);
+                            }
                         }
                     });
+
                     enumerator = tickEnumerator;
                 }
 
