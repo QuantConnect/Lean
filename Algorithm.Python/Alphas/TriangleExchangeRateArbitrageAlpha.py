@@ -85,7 +85,7 @@ class ForexTriangleArbitrageAlphaModel(AlphaModel):
     def Update(self, algorithm, data):
         ## Check to make sure all currency symbols are present
         for symbol in self.symbols:
-            if not data.Bars.ContainsKey(symbol) or symbol not in data.Keys:
+            if not data.Bars.ContainsKey(symbol.Value) or symbol not in data.Keys:
                 return []
 
         ## Extract QuoteBars for all three Forex securities
