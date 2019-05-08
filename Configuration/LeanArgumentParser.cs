@@ -87,10 +87,8 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("ib-host", CommandOptionType.SingleValue),
                 new CommandLineOption("ib-port", CommandOptionType.SingleValue),
                 new CommandLineOption("ib-agent-description", CommandOptionType.SingleValue),
-                new CommandLineOption("ib-use-tws", CommandOptionType.NoValue),
                 new CommandLineOption("ib-tws-dir", CommandOptionType.SingleValue),
                 new CommandLineOption("ib-trading-mode", CommandOptionType.SingleValue),
-                new CommandLineOption("ib-controller-dir", CommandOptionType.SingleValue),
 
                 // tradier configuration
                 new CommandLineOption("tradier-account-id", CommandOptionType.SingleValue),
