@@ -103,8 +103,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <exception cref="T:System.ArgumentException">The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1" /> is greater than the available space from <paramref name="arrayIndex" /> to the end of the destination <paramref name="array" />.</exception>
         public void CopyTo(Insight[] array, int arrayIndex)
         {
-            var copy = this.ToList();
-            copy.CopyTo(array, arrayIndex);
+            // Avoid calling `ToList` on insights to avoid potential infinite loop (issue #3168)
+            Array.Copy(_insights.SelectMany(kvp => kvp.Value).ToArray(), 0, array, arrayIndex, Count);
         }
 
         /// <summary>Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
