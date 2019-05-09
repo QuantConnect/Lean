@@ -49,7 +49,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
         private readonly IBAutomater.IBAutomater _ibAutomater;
-        private readonly ManualResetEvent _ibAutomaterInitializeEvent = new ManualResetEvent(false);
+        private readonly AutoResetEvent _ibAutomaterInitializeEvent = new AutoResetEvent(false);
         private bool _existingSessionDetected;
         private bool _securityDialogDetected;
 
@@ -236,8 +236,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _ibAutomater.Exited += OnIbAutomaterExited;
             _ibAutomater.Start(false);
 
-            // wait a few seconds for IB to start up
-            _ibAutomaterInitializeEvent.WaitOne(TimeSpan.FromSeconds(30));
+            // wait for IB to start up
+            if (!_ibAutomaterInitializeEvent.WaitOne(TimeSpan.FromSeconds(60)))
+            {
+                Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): IB Automater initialization timeout.");
+            }
 
             Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): IB Automater initialized.");
 
@@ -1155,6 +1158,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Restarting IB Gateway...");
             _ibAutomater.Start(false);
+
+            // wait for IB to start up
+            if (!_ibAutomaterInitializeEvent.WaitOne(TimeSpan.FromSeconds(60)))
+            {
+                Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): IB Automater initialization timeout.");
+            }
 
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Reconnecting...");
             Connect();
@@ -2823,6 +2832,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (e.Data.Contains("Second Factor Authentication") || e.Data.Contains("Security Code Card Authentication"))
             {
                 _securityDialogDetected = true;
+                _ibAutomaterInitializeEvent.Set();
+            }
+
+            // initialization completed
+            if (e.Data.Contains("Configuration settings updated"))
+            {
                 _ibAutomaterInitializeEvent.Set();
             }
         }
