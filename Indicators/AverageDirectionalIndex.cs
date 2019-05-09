@@ -27,7 +27,7 @@ namespace QuantConnect.Indicators
     /// Computation source:
     /// https://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:average_directional_index_adx
     /// </summary>
-    public class AverageDirectionalIndex : BarIndicator
+    public class AverageDirectionalIndex : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly int _period;
         private readonly IndicatorBase<IBaseDataBar> _trueRange;
@@ -61,6 +61,20 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> NegativeDirectionalIndex { get; }
 
         /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => _period * 2;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AverageDirectionalIndex"/> class.
+        /// </summary>
+        /// <param name="period">The period.</param>
+        public AverageDirectionalIndex(int period)
+            : this($"ADX({period})", period)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AverageDirectionalIndex"/> class.
         /// </summary>
         /// <param name="name">The name.</param>
@@ -71,17 +85,17 @@ namespace QuantConnect.Indicators
             _period = period;
 
             _trueRange = new FunctionalIndicator<IBaseDataBar>(name + "_TrueRange",
-                input => ComputeTrueRange(input),
+                ComputeTrueRange,
                 isReady => _previousInput != null
                 );
 
             _directionalMovementPlus = new FunctionalIndicator<IBaseDataBar>(name + "_PositiveDirectionalMovement",
-                input => ComputePositiveDirectionalMovement(input),
+                ComputePositiveDirectionalMovement,
                 isReady => _previousInput != null
                 );
 
             _directionalMovementMinus = new FunctionalIndicator<IBaseDataBar>(name + "_NegativeDirectionalMovement",
-                input => ComputeNegativeDirectionalMovement(input),
+                ComputeNegativeDirectionalMovement,
                 isReady => _previousInput != null
                 );
 

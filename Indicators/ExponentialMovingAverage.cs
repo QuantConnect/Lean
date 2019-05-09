@@ -58,7 +58,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period of the EMA</param>
         public ExponentialMovingAverage(int period)
-            : this("EMA" + period, period)
+            : this($"EMA({period})", period)
         {
         }
 
@@ -68,7 +68,7 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the EMA</param>
         /// <param name="smoothingFactor">The percentage of data from the previous value to be carried into the next value</param>
         public ExponentialMovingAverage(int period, decimal smoothingFactor)
-            : this("EMA" + period, period, smoothingFactor)
+            : this($"EMA({period},{smoothingFactor})", period, smoothingFactor)
         {
         }
 

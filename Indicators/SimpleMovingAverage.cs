@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -21,8 +20,10 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class SimpleMovingAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
-        /// <summary>A rolling sum for computing the average for the given period</summary>
-        public IndicatorBase<IndicatorDataPoint> RollingSum { get; private set; }
+        /// <summary>
+        /// A rolling sum for computing the average for the given period
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> RollingSum { get; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -54,7 +55,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period of the SMA</param>
         public SimpleMovingAverage(int period)
-            : this("SMA" + period, period)
+            : this($"SMA({period})", period)
         {
         }
 
@@ -73,6 +74,6 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => 1 + Period;
+        public int WarmUpPeriod => Period;
     }
 }

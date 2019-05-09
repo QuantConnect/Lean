@@ -55,6 +55,43 @@ namespace QuantConnect.Tests.Indicators
                 throw new NotSupportedException("ResetsProperly: Unsupported indicator data type: " + typeof(T));
         }
 
+        [Test]
+        public virtual void WarmsUpProperly()
+        {
+            var indicator = CreateIndicator();
+            var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
+
+            if (!period.HasValue) return;
+
+            var startDate = new DateTime(2019,1,1);
+
+            for (var i = 0; i < period.Value; i++)
+            {
+                var input = GetInput(startDate, i);
+                indicator.Update(input);
+                Assert.AreEqual(i == period.Value - 1, indicator.IsReady);
+            }
+        }
+
+        private static IBaseData GetInput(DateTime startDate, int value)
+        {
+            if (typeof(T) == typeof(IndicatorDataPoint))
+            {
+                return new IndicatorDataPoint(startDate.AddDays(value), 100m);
+            }
+
+            return new TradeBar(
+                startDate.AddDays(value),
+                Symbols.SPY,
+                100m + value,
+                105m + value,
+                95m + value,
+                100m + value,
+                100m,
+                Time.OneDay
+            );
+        }
+
         public PyObject GetIndicatorAsPyObject()
         {
             using (Py.GIL())
@@ -71,11 +108,26 @@ namespace QuantConnect.Tests.Indicators
         protected virtual void RunTestIndicator(IndicatorBase<T> indicator)
         {
             if (indicator is IndicatorBase<IndicatorDataPoint>)
-                TestHelper.TestIndicator(indicator as IndicatorBase<IndicatorDataPoint>, TestFileName, TestColumnName, Assertion as Action<IndicatorBase<IndicatorDataPoint>, double>);
+                TestHelper.TestIndicator(
+                    indicator as IndicatorBase<IndicatorDataPoint>,
+                    TestFileName,
+                    TestColumnName,
+                    Assertion as Action<IndicatorBase<IndicatorDataPoint>, double>
+                );
             else if (indicator is IndicatorBase<IBaseDataBar>)
-                TestHelper.TestIndicator(indicator as IndicatorBase<IBaseDataBar>, TestFileName, TestColumnName, Assertion as Action<IndicatorBase<IBaseDataBar>, double>);
+                TestHelper.TestIndicator(
+                    indicator as IndicatorBase<IBaseDataBar>,
+                    TestFileName,
+                    TestColumnName,
+                    Assertion as Action<IndicatorBase<IBaseDataBar>, double>
+                );
             else if (indicator is IndicatorBase<TradeBar>)
-                TestHelper.TestIndicator(indicator as IndicatorBase<TradeBar>, TestFileName, TestColumnName, Assertion as Action<IndicatorBase<TradeBar>, double>);
+                TestHelper.TestIndicator(
+                    indicator as IndicatorBase<TradeBar>,
+                    TestFileName,
+                    TestColumnName,
+                    Assertion as Action<IndicatorBase<TradeBar>, double>
+                );
             else
                 throw new NotSupportedException("RunTestIndicator: Unsupported indicator data type: " + typeof(T));
         }
@@ -99,7 +151,7 @@ namespace QuantConnect.Tests.Indicators
         protected abstract string TestFileName { get; }
 
         /// <summary>
-        /// Returns the name of the column of the CSV file corresponding to the precalculated data for the indicator
+        /// Returns the name of the column of the CSV file corresponding to the pre-calculated data for the indicator
         /// </summary>
         protected abstract string TestColumnName { get; }
     }
