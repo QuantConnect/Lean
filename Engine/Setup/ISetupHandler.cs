@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -28,6 +29,14 @@ namespace QuantConnect.Lean.Engine.Setup
     [InheritedExport(typeof(ISetupHandler))]
     public interface ISetupHandler : IDisposable
     {
+        /// <summary>
+        /// The worker thread instance the setup handler should use
+        /// </summary>
+        WorkerThread WorkerThread
+        {
+            set;
+        }
+
         /// <summary>
         /// Any errors from the initialization stored here:
         /// </summary>
