@@ -1165,6 +1165,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): IB Automater initialization timeout.");
             }
 
+            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): IB Automater initialized.");
+            CheckIbAutomaterErrors();
+
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Reconnecting...");
             Connect();
 
