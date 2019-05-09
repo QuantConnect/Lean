@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Util
 {
@@ -28,6 +29,7 @@ namespace QuantConnect.Util
     {
         private readonly BlockingCollection<Action> _blockingCollection;
         private readonly CancellationTokenSource _threadCancellationTokenSource;
+        private readonly Thread _workerThread;
 
         /// <summary>
         /// Will be set when the worker thread finishes a work item
@@ -43,7 +45,7 @@ namespace QuantConnect.Util
             _threadCancellationTokenSource = new CancellationTokenSource();
             FinishedWorkItem = new AutoResetEvent(false);
             _blockingCollection = new BlockingCollection<Action>();
-            var thread = new Thread(() =>
+            _workerThread = new Thread(() =>
             {
                 try
                 {
@@ -60,7 +62,7 @@ namespace QuantConnect.Util
                 }
             })
             { IsBackground = true, Name = "Isolator Thread" };
-            thread.Start();
+            _workerThread.Start();
         }
 
         /// <summary>
@@ -79,8 +81,16 @@ namespace QuantConnect.Util
         /// so it won't block the process from terminating even if not disposed</remarks>
         public void Dispose()
         {
-            _blockingCollection.CompleteAdding();
-            _threadCancellationTokenSource.Cancel();
+            try
+            {
+                _blockingCollection.CompleteAdding();
+                _threadCancellationTokenSource.Cancel();
+                _workerThread.Join(50);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+            }
         }
     }
 }
