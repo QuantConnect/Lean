@@ -48,8 +48,7 @@ namespace QuantConnect.Tests.Algorithm
             var transactionHandler = new BrokerageTransactionHandler();
 
             transactionHandler.Initialize(algorithm, brokerage, new LiveTradingResultHandler());
-            new Thread(transactionHandler.Run) { IsBackground = true }.Start();
-            Thread.Sleep(2000);
+            Thread.Sleep(250);
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
             var symbol = security.Symbol;

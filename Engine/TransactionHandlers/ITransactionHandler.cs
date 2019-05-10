@@ -61,11 +61,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler);
 
         /// <summary>
-        /// Primary thread entry point to launch the transaction thread.
-        /// </summary>
-        void Run();
-
-        /// <summary>
         /// Signal a end of thread request to stop montioring the transactions.
         /// </summary>
         void Exit();

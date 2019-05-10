@@ -15,7 +15,6 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Brokerages.Backtesting;
@@ -95,7 +94,6 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             var transactionHandler = new BacktestingTransactionHandler();
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new TestResultHandler(Console.WriteLine));
-            Task.Run(() => transactionHandler.Run());
 
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
