@@ -530,6 +530,29 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates an FisherTransform indicator for the symbol.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose FisherTransform we want</param>
+        /// <param name="period">The period of the FisherTransform</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The FisherTransform for the given parameters</returns>
+        public FisherTransform FISH(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"FISH{period}", resolution);
+            var fish = new FisherTransform(name, period);
+            RegisterIndicator(symbol, fish, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, fish, resolution);
+            }
+
+            return fish;
+        }
+
+        /// <summary>
         /// Creates an FractalAdaptiveMovingAverage (FRAMA) indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
