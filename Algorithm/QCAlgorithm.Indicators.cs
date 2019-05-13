@@ -622,9 +622,15 @@ namespace QuantConnect.Algorithm
         /// <returns>A new IchimokuKinkoHyo indicator with the specified periods and delays</returns>
         public IchimokuKinkoHyo ICHIMOKU(Symbol symbol, int tenkanPeriod, int kijunPeriod, int senkouAPeriod, int senkouBPeriod, int senkouADelayPeriod, int senkouBDelayPeriod, Resolution? resolution = null)
         {
-            var name = CreateIndicatorName(symbol, string.Format("ICHIMOKU({0},{1})", tenkanPeriod, kijunPeriod), resolution);
+            var name = CreateIndicatorName(symbol, $"ICHIMOKU_{tenkanPeriod}_{kijunPeriod}_{senkouAPeriod}_{senkouBPeriod}_{senkouADelayPeriod}_{senkouBDelayPeriod}", resolution);
             var ichimoku = new IchimokuKinkoHyo(name, tenkanPeriod, kijunPeriod, senkouAPeriod, senkouBPeriod, senkouADelayPeriod, senkouBDelayPeriod);
             RegisterIndicator(symbol, ichimoku, resolution);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, ichimoku, resolution);
+            }
+
             return ichimoku;
         }
 
