@@ -21,7 +21,10 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class CoppockCurveTests : CommonIndicatorTests<IndicatorDataPoint>
     {
-        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator() { return new CoppockCurve(); }
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        {
+            return new CoppockCurve();
+        }
 
         protected override string TestFileName => "spy_coppock_curve.csv";
         protected override string TestColumnName => "CoppockCurve";

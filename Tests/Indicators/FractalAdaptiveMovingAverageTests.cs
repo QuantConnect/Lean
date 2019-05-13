@@ -21,12 +21,25 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class FractalAdaptiveMovingAverageTests
+    public class FractalAdaptiveMovingAverageTests : CommonIndicatorTests<IBaseDataBar>
     {
+        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
+        {
+            return new FractalAdaptiveMovingAverage(16);
+        }
+
+        protected override string TestFileName => "frama.txt";
+
+        protected override string TestColumnName => "Filt";
+
+        protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion =>
+            (indicator, expected) =>
+                Assert.AreEqual(expected, (double) indicator.Current.Value, 0.006);
+
         [Test]
         public void ResetsProperly()
         {
-            var frama = new FractalAdaptiveMovingAverage(6, 198);
+            var frama = new FractalAdaptiveMovingAverage(6);
 
             foreach (var data in TestHelper.GetDataStream(7))
             {
@@ -39,23 +52,6 @@ namespace QuantConnect.Tests.Indicators
             frama.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(frama);
-        }
-
-        [Test]
-        public void ComparesAgainstExternalData()
-        {
-            var indicator = new FractalAdaptiveMovingAverage(16, 198);
-            RunTestIndicator(indicator);
-        }
-
-        private static void RunTestIndicator(BarIndicator indicator)
-        {
-            TestHelper.TestIndicator(indicator, "frama.txt", "Filt", (actual, expected) => {AssertResult(expected, actual.Current.Value);});
-        }
-
-        private static void AssertResult(double expected, decimal actual)
-        {
-            Assert.IsTrue(Math.Abs((decimal)expected - actual) < 0.006m);
         }
     }
 }

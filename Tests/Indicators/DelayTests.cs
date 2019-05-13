@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -49,9 +50,9 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void DelayTakesPeriodPlus2UpdatesToEmitNonInitialPoint()
         {
-            int start = 1;
-            int count = 10;
-            for (int i = start; i < count+start; i++)
+            const int start = 1;
+            const int count = 10;
+            for (var i = start; i < count+start; i++)
             {
                 TestDelayTakesPeriodPlus2UpdatesToEmitNonInitialPoint(i);
             }
@@ -60,7 +61,7 @@ namespace QuantConnect.Tests.Indicators
         private void TestDelayTakesPeriodPlus2UpdatesToEmitNonInitialPoint(int period)
         {
             var delay = new Delay(period);
-            for (int i = 0; i < period + 2; i++)
+            for (var i = 0; i < period + 2; i++)
             {
                 Assert.AreEqual(0m, delay.Current.Value);
                 delay.Update(new IndicatorDataPoint(DateTime.Today.AddSeconds(i), i));
@@ -83,6 +84,20 @@ namespace QuantConnect.Tests.Indicators
             delay.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(delay);
+        }
+
+        [Test]
+        public void WarmsUpProperly()
+        {
+            var delay = new Delay(20);
+            var count = ((IIndicatorWarmUpPeriodProvider) delay).WarmUpPeriod;
+            var dataArray = TestHelper.GetDataStream(count).ToArray();
+
+            for (var i = 0; i < count; i++)
+            {
+                delay.Update(dataArray[i]);
+                Assert.AreEqual(i == count - 1, delay.IsReady);
+            }
         }
     }
 }

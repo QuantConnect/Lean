@@ -20,27 +20,41 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class BollingerBandsTests
+    public class BollingerBandsTests : CommonIndicatorTests<IndicatorDataPoint>
     {
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        {
+            return new BollingerBands(20, 2.0m);
+        }
+
+        protected override string TestFileName => "spy_bollinger_bands.txt";
+
+        protected override string TestColumnName => "Bollinger Bands® 20 2 Bottom";
+
+        protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion =>
+            (indicator, expected) =>
+                Assert.AreEqual(expected, (double) ((BollingerBands) indicator).LowerBand.Current.Value, 1e-3);
+
         [Test]
         public void ComparesWithExternalDataMiddleBand()
         {
-            var bb = new BollingerBands(20, 2.0m, MovingAverageType.Simple);
-            TestHelper.TestIndicator(bb, "spy_bollinger_bands.txt", "Moving Average 20", (BollingerBands ind) => (double)ind.MiddleBand.Current.Value);
+            TestHelper.TestIndicator(
+                CreateIndicator() as BollingerBands,
+                TestFileName,
+                "Moving Average 20",
+                ind => (double) ind.MiddleBand.Current.Value
+            );
         }
 
         [Test]
         public void ComparesWithExternalDataUpperBand()
         {
-            var bb = new BollingerBands(20, 2.0m, MovingAverageType.Simple);
-            TestHelper.TestIndicator(bb, "spy_bollinger_bands.txt", "Bollinger Bands® 20 2 Top", (BollingerBands ind) => (double)ind.UpperBand.Current.Value);
-        }
-
-        [Test]
-        public void ComparesWithExternalDataLowerBand()
-        {
-            var bb = new BollingerBands(20, 2.0m, MovingAverageType.Simple);
-            TestHelper.TestIndicator(bb, "spy_bollinger_bands.txt", "Bollinger Bands® 20 2 Bottom", (BollingerBands ind) => (double)ind.LowerBand.Current.Value);
+            TestHelper.TestIndicator(
+                CreateIndicator() as BollingerBands,
+                TestFileName,
+                "Bollinger Bands® 20 2 Top",
+                ind => (double) ind.UpperBand.Current.Value
+            );
         }
 
         [Test]
