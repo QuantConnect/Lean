@@ -36,12 +36,6 @@ RUN wget http://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-lin
     wget -O ~/Jts/jts.ini http://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v974.4g.jts.ini && \
     rm ibgateway-latest-standalone-linux-x64-v974.4g.sh
 
-# Install IB Controller: Installs to ~/IBController
-RUN wget http://cdn.quantconnect.com/interactive/IBController-QuantConnect-3.2.0.5.zip && \
-    unzip IBController-QuantConnect-3.2.0.5.zip -d ~/IBController && \
-    chmod -R 777 ~/IBController && \
-    rm IBController-QuantConnect-3.2.0.5.zip
-
 # Mono C# for LEAN:
 # From https://github.com/mono/docker/blob/master/
 RUN apt-get update && rm -rf /var/lib/apt/lists/*
