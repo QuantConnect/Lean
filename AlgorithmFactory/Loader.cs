@@ -24,6 +24,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Python;
+using QuantConnect.Util;
 
 namespace QuantConnect.AlgorithmFactory
 {
@@ -41,6 +42,9 @@ namespace QuantConnect.AlgorithmFactory
 
         // Defines how we resolve a list of type names into a single type name to be instantiated
         private readonly Func<List<string>, string> _multipleTypeNameResolverFunction;
+
+        // The worker thread instance the loader will use if not null
+        private readonly WorkerThread _workerThread;
 
         /// <summary>
         /// Memory space of the user algorithm
@@ -84,10 +88,11 @@ namespace QuantConnect.AlgorithmFactory
         /// for the QuantConnect.Algorithm assembly in this solution.  In order to pick the correct type, consumers must specify how to pick the type,
         /// that's what this function does, it picks the correct type from the list of types found within the assembly.
         /// </param>
-        public Loader(Language language, TimeSpan loaderTimeLimit, Func<List<string>, string> multipleTypeNameResolverFunction)
+        /// <param name="workerThread">The worker thread instance the loader should use</param>
+        public Loader(Language language, TimeSpan loaderTimeLimit, Func<List<string>, string> multipleTypeNameResolverFunction, WorkerThread workerThread = null)
         {
             _language = language;
-
+            _workerThread = workerThread;
             if (multipleTypeNameResolverFunction == null)
             {
                 throw new ArgumentNullException("multipleTypeNameResolverFunction");
@@ -348,7 +353,7 @@ namespace QuantConnect.AlgorithmFactory
             var complete = isolator.ExecuteWithTimeLimit(_loaderTimeLimit, () =>
             {
                 success = TryCreateAlgorithmInstance(assemblyPath, out instance, out error);
-            }, ramLimit, sleepIntervalMillis:50);
+            }, ramLimit, sleepIntervalMillis:50, workerThread:_workerThread);
 
             algorithmInstance = instance;
             errorMessage = error;

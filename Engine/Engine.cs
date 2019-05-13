@@ -104,6 +104,7 @@ namespace QuantConnect.Lean.Engine
                 Thread threadResults = null;
                 Thread threadRealTime = null;
                 Thread threadAlphas = null;
+                WorkerThread workerThread = null;
 
                 //-> Initialize messaging system
                 _systemHandlers.Notify.SetAuthentication(job);
@@ -122,6 +123,10 @@ namespace QuantConnect.Lean.Engine
                     // we get the mhdb before creating the algorithm instance,
                     // since the algorithm constructor will use it
                     var marketHoursDatabase = marketHoursDatabaseTask.Result;
+
+                    // start worker thread
+                    workerThread = new WorkerThread();
+                    _algorithmHandlers.Setup.WorkerThread = workerThread;
 
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(job, assemblyPath);
@@ -342,7 +347,7 @@ namespace QuantConnect.Lean.Engine
                             }
 
                             Log.Trace("Engine.Run(): Exiting Algorithm Manager");
-                        }, job.Controls.RamAllocation);
+                        }, job.Controls.RamAllocation, workerThread:workerThread);
 
                         if (!complete)
                         {
@@ -447,6 +452,7 @@ namespace QuantConnect.Lean.Engine
                     _algorithmHandlers.RealTime.Exit();
                     _algorithmHandlers.Alphas.Exit();
                     dataManager?.RemoveAllSubscriptions();
+                    workerThread?.Dispose();
                 }
 
                 //Close result handler:
