@@ -324,10 +324,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void Unsubscribes()
         {
-            var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
             FuncDataQueueHandler dataQueueHandler;
             var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
             _algorithm.AddData<CustomMockedFileBaseData>("CustomMockedFileBaseData");
+            var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
 
             var emittedData = false;
             var currentSubscriptionCount = 0;
@@ -359,10 +359,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             _algorithm.SetFinishedWarmingUp();
             _algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
-            var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
             FuncDataQueueHandler dataQueueHandler;
             var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
             _algorithm.AddData<CustomMockedFileBaseData>("CustomMockedFileBaseData");
+            var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
 
             var emittedData = false;
             var currentSubscriptionCount = 0;
@@ -466,12 +466,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 stopwatch.Stop();
                 if (ts.Slice.Count == 0) return;
 
-                emittedData = true;
+                Assert.AreEqual(100, ts.Slice.Count);
+
                 count++;
-                // make sure within 2 seconds
+                emittedData = true;
+
+                // make sure within 3 seconds
                 var delta = DateTime.Now.Subtract(previousTime);
                 previousTime = DateTime.Now;
-                Assert.IsTrue(delta <= TimeSpan.FromSeconds(2), delta.ToString());
+                Assert.IsTrue(delta <= TimeSpan.FromSeconds(3), delta.ToString());
                 ConsoleWriteLine("TimeProvider now: " + _manualTimeProvider.GetUtcNow() + " Count: "
                                   + ts.Slice.Count + ". Delta (ms): "
                                   + ((decimal)delta.TotalMilliseconds).SmartRounding() + Environment.NewLine);
@@ -480,7 +483,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Console.WriteLine("Count: " + count);
             Console.WriteLine("Spool up time: " + stopwatch.Elapsed);
 
-            Assert.That(count, Is.GreaterThan(5));
             Assert.IsTrue(emittedData);
         }
 
@@ -488,10 +490,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void HandlesRestApi()
         {
             var resolution = Resolution.Second;
-            var symbol = SymbolCache.GetSymbol("RestApi");
             FuncDataQueueHandler dqgh;
             var feed = RunDataFeed(out dqgh);
             _algorithm.AddData<RestApiBaseData>("RestApi", resolution);
+            var symbol = SymbolCache.GetSymbol("RestApi");
 
             var count = 0;
             var receivedData = false;
