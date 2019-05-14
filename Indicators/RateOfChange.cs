@@ -19,14 +19,19 @@ namespace QuantConnect.Indicators
     /// This indicator computes the n-period rate of change in a value using the following:
     /// (value_0 - value_n) / value_n
     /// </summary>
-    public class RateOfChange : WindowIndicator<IndicatorDataPoint>
+    public class RateOfChange : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => Period;
+
         /// <summary>
         /// Creates a new RateOfChange indicator with the specified period
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
         public RateOfChange(int period)
-            : base("ROC" + period, period)
+            : base($"ROC({period})", period)
         {
         }
 
@@ -49,7 +54,7 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
             // if we're not ready just grab the first input point in the window
-            decimal denominator = window.Samples <= window.Size ? window[window.Count - 1] : window.MostRecentlyRemoved;
+            var denominator = window.Samples <= window.Size ? window[window.Count - 1] : window.MostRecentlyRemoved;
 
             if (denominator == 0)
             {

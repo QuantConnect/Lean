@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,16 +20,18 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// The AverageTrueRange indicator is a measure of volatility introduced by Welles Wilder in his
-    /// book: New Concepts in Technical Trading Systems.  This indicator computes the TrueRange and then
+    /// book: New Concepts in Technical Trading Systems. This indicator computes the TrueRange and then
     /// smoothes the TrueRange over a given period.
-    /// 
+    ///
     /// TrueRange is defined as the maximum of the following:
     ///   High - Low
     ///   ABS(High - PreviousClose)
-    ///   ABS(Low  - PreviousClose)
+    ///   ABS(Low - PreviousClose)
     /// </summary>
     public class AverageTrueRange : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
+        private IBaseDataBar _previous;
+
         /// <summary>This indicator is used to smooth the TrueRange computation</summary>
         /// <remarks>This is not exposed publicly since it is the same value as this indicator, meaning
         /// that this '_smoother' computers the ATR directly, so exposing it publicly would be duplication</remarks>
@@ -38,15 +40,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the true range which is the more volatile calculation to be smoothed by this indicator
         /// </summary>
-        public IndicatorBase<IBaseDataBar> TrueRange { get; private set; } 
+        public IndicatorBase<IBaseDataBar> TrueRange { get; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return _smoother.IsReady; }
-        }
+        public override bool IsReady => _smoother.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -64,14 +63,13 @@ namespace QuantConnect.Indicators
         {
             WarmUpPeriod = period;
 
-            _smoother = movingAverageType.AsIndicator(string.Format("{0}_{1}", name, movingAverageType), period);
+            _smoother = movingAverageType.AsIndicator($"{name}_{movingAverageType}", period);
 
-            IBaseDataBar previous = null;
             TrueRange = new FunctionalIndicator<IBaseDataBar>(name + "_TrueRange", currentBar =>
             {
                 // in our ComputeNextValue function we'll just call the ComputeTrueRange
-                var nextValue = ComputeTrueRange(previous, currentBar);
-                previous = currentBar;
+                var nextValue = ComputeTrueRange(_previous, currentBar);
+                _previous = currentBar;
                 return nextValue;
             }   // in our IsReady function we just need at least one sample
             , trueRangeIndicator => trueRangeIndicator.Samples >= 1
@@ -84,17 +82,17 @@ namespace QuantConnect.Indicators
         /// <param name="period">The smoothing period used to smooth the true range values</param>
         /// <param name="movingAverageType">The type of smoothing used to smooth the true range values</param>
         public AverageTrueRange(int period, MovingAverageType movingAverageType = MovingAverageType.Wilders)
-            : this("ATR" + period, period, movingAverageType)
+            : this($"ATR({period})", period, movingAverageType)
         {
         }
 
         /// <summary>
         /// Computes the TrueRange from the current and previous trade bars
-        /// 
+        ///
         /// TrueRange is defined as the maximum of the following:
         ///   High - Low
         ///   ABS(High - PreviousClose)
-        ///   ABS(Low  - PreviousClose)
+        ///   ABS(Low - PreviousClose)
         /// </summary>
         /// <param name="previous">The previous trade bar</param>
         /// <param name="current">The current trade bar</param>
@@ -132,6 +130,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
+            _previous = null;
             _smoother.Reset();
             TrueRange.Reset();
             base.Reset();

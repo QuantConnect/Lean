@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -22,87 +23,50 @@ namespace QuantConnect.Tests.Indicators
     [TestFixture]
     public class LinearWeightedMovingAverageTests
     {
-        [Test]
-        public void Lwma4ComputesCorrectly()
-        {
-            const int period = 4;
-            decimal[] values = { 1m, 2m, 3m, 4m };
-
-            var lwma = new LinearWeightedMovingAverage(period);
-
-            decimal current = 0m;
-            for (int i = 0; i < values.Length; i++)
-            {
-                lwma.Update(new IndicatorDataPoint(DateTime.UtcNow.AddSeconds(i), values[i]));
-            }
-            current = ((4 * .4m) + (3 * .3m) + (2 * .2m) + (1 * .1m));
-            Assert.AreEqual(current, lwma.Current.Value);
-        }
-        [Test]
-        public void Lwma1ComputesCorrectly()
-        {
-            const int period = 1;
-            decimal[] values = { 1m };
-
-            var lwma = new LinearWeightedMovingAverage(period);
-
-            decimal current = 0m;
-            for (int i = 0; i < values.Length; i++)
-            {
-                lwma.Update(new IndicatorDataPoint(DateTime.UtcNow.AddSeconds(i), values[i]));
-            }
-            current = 1m;
-            Assert.AreEqual(current, lwma.Current.Value);
-        }
-        [Test]
-        public void Lwma2ComputesCorrectly()
-        {
-            const int period = 2;
-            decimal[] values = { 1m, 2m };
-
-            var lwma = new LinearWeightedMovingAverage(period);
-
-            decimal current = 0m;
-            for (int i = 0; i < values.Length; i++)
-            {
-                lwma.Update(new IndicatorDataPoint(DateTime.UtcNow.AddSeconds(i), values[i]));
-            }
-            current = ((2 * 2m) + (1 * 1m)) / 3;
-            Assert.AreEqual(current, lwma.Current.Value);
-        }
-        [Test]
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
         // See http://en.wikipedia.org/wiki/Moving_average
         // for the formula and the numbers in this test.
-        public void Lwma5ComputesCorrectly()
+        public void ComputesCorrectly(int period)
         {
-            const int period = 5;
-            decimal[] values = { 77m, 79m, 79m, 81m, 83m };
+            var values = new[] {77m, 79m, 79m, 81m, 83m};
+            var weights = Enumerable.Range(1, period).ToArray();
+            var current = weights.Sum(i => i * values[i - 1]) / weights.Sum();
 
             var lwma = new LinearWeightedMovingAverage(period);
+            var time = DateTime.UtcNow;
 
-            decimal current = 0m;
-            for (int i = 0; i < values.Length; i++)
+            for (var i = 0; i < period; i++)
             {
-                lwma.Update(new IndicatorDataPoint(DateTime.UtcNow.AddSeconds(i), values[i]));
-
+                lwma.Update(time.AddSeconds(i), values[i]);
             }
-            current = 83 * (5m / 15) + 81 * (4m / 15) + 79 * (3m / 15) + 79 * (2m / 15) + 77 * (1m / 15);
             Assert.AreEqual(current, lwma.Current.Value);
         }
 
-        [Test]
-        public void ResetsProperly()
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        // See http://en.wikipedia.org/wiki/Moving_average
+        // for the formula and the numbers in this test.
+        public void ResetsProperly(int period)
         {
-            const int period = 4;
-            decimal[] values = { 1m, 2m, 3m, 4m, 5m };
+            var values = new[] { 77m, 79m, 79m, 81m, 83m };
+            var weights = Enumerable.Range(1, period).ToArray();
+            var current = weights.Sum(i => i * values[i - 1]) / weights.Sum();
 
             var lwma = new LinearWeightedMovingAverage(period);
+            var time = DateTime.UtcNow;
 
-
-            for (int i = 0; i < values.Length; i++)
+            for (var i = 0; i < period; i++)
             {
-                lwma.Update(new IndicatorDataPoint(DateTime.UtcNow.AddSeconds(i), values[i]));
+                lwma.Update(time.AddSeconds(i), values[i]);
             }
+            Assert.AreEqual(current, lwma.Current.Value);
             Assert.IsTrue(lwma.IsReady);
             Assert.AreNotEqual(0m, lwma.Current.Value);
             Assert.AreNotEqual(0, lwma.Samples);
@@ -112,5 +76,30 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.AssertIndicatorIsInDefaultState(lwma);
         }
 
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        // See http://en.wikipedia.org/wiki/Moving_average
+        // for the formula and the numbers in this test.
+        public void WarmsUpProperly(int period)
+        {
+            var values = new[] { 77m, 79m, 79m, 81m, 83m };
+            var weights = Enumerable.Range(1, period).ToArray();
+            var current = weights.Sum(i => i * values[i - 1]) / weights.Sum();
+
+            var lwma = new LinearWeightedMovingAverage(period);
+            var time = DateTime.UtcNow;
+
+            var warmUpPeriod = (lwma as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
+
+            for (var i = 0; i < warmUpPeriod; i++)
+            {
+                lwma.Update(time.AddSeconds(i), values[i]);
+                Assert.AreEqual(i == warmUpPeriod - 1, lwma.IsReady);
+            }
+            Assert.AreEqual(current, lwma.Current.Value);
+        }
     }
 }

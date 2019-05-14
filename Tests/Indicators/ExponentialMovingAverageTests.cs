@@ -20,10 +20,21 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class ExponentialMovingAverageTests
+    public class ExponentialMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        {
+            return new ExponentialMovingAverage(14);
+        }
+
+        protected override string TestFileName => "spy_with_indicators.txt";
+
+        protected override string TestColumnName => "EMA14";
+
+        protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion => TestHelper.AssertDeltaDecreases(2.5e-2);
+
         [Test]
-        public void EMAComputesCorrectly()
+        public void EmaComputesCorrectly()
         {
             const int period = 4;
             decimal[] values = {1m, 10m, 100m, 1000m};
@@ -48,7 +59,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ResetsProperly()
+        public override void ResetsProperly()
         {
             // ema reset is just setting the value and samples back to 0
             var ema = new ExponentialMovingAverage(3);
@@ -64,13 +75,6 @@ namespace QuantConnect.Tests.Indicators
             ema.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(ema);
-        }
-
-        [Test]
-        public void ComparesAgainstExternalData()
-        {
-            var ema = new ExponentialMovingAverage(14);
-            TestHelper.TestIndicator(ema, "spy_with_indicators.txt", "EMA14", TestHelper.AssertDeltaDecreases(2.5e-2));
         }
     }
 }

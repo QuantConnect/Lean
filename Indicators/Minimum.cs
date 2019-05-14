@@ -18,9 +18,9 @@ using System.Linq;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Represents an indictor capable of tracking the minimum value and how many periods ago it occurred
+    /// Represents an indicator capable of tracking the minimum value and how many periods ago it occurred
     /// </summary>
-    public class Minimum : WindowIndicator<IndicatorDataPoint>
+    public class Minimum : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// The number of periods since the minimum value was encountered
@@ -30,17 +30,19 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return Samples >= Period; }
-        }
+        public override bool IsReady => Samples >= Period;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => Period;
 
         /// <summary>
         /// Creates a new Minimum indicator with the specified period
         /// </summary>
         /// <param name="period">The period over which to look back</param>
         public Minimum(int period)
-            : base("MIN" + period, period)
+            : base($"MIN({period})", period)
         {
         }
 

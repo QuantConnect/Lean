@@ -22,10 +22,24 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class SimpleMovingAverageTests
+    public class SimpleMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
+        {
+            return new SimpleMovingAverage(14);
+        }
+
+        protected override string TestFileName => "spy_with_indicators.txt";
+
+        protected override string TestColumnName => "SMA14";
+
+        protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion
+        {
+            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-2); }
+        }
+
         [Test]
-        public void SMAComputesCorrectly()
+        public void SmaComputesCorrectly()
         {
             var sma = new SimpleMovingAverage(4);
             var data = new[] {1m, 10m, 100m, 1000m, 10000m, 1234m, 56789m};
@@ -53,7 +67,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ResetsProperly()
+        public override void ResetsProperly()
         {
             var sma = new SimpleMovingAverage(3);
 
@@ -69,13 +83,6 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.AssertIndicatorIsInDefaultState(sma.RollingSum);
             sma.Update(DateTime.UtcNow, 2.0m);
             Assert.AreEqual(sma.Current.Value, 2.0m);
-        }
-
-        [Test]
-        public void CompareAgainstExternalData()
-        {
-            var sma = new SimpleMovingAverage(14);
-            TestHelper.TestIndicator(sma, "SMA14", 1e-2); // test file only has
         }
     }
 }

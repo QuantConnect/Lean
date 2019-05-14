@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,9 +18,9 @@ using System.Linq;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Represents an indictor capable of tracking the maximum value and how many periods ago it occurred
+    /// Represents an indicator capable of tracking the maximum value and how many periods ago it occurred
     /// </summary>
-    public class Maximum : WindowIndicator<IndicatorDataPoint>
+    public class Maximum : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// The number of periods since the maximum value was encountered
@@ -30,17 +30,19 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return Samples >= Period; }
-        }
+        public override bool IsReady => Samples >= Period;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => Period;
 
         /// <summary>
         /// Creates a new Maximum indicator with the specified period
         /// </summary>
         /// <param name="period">The period over which to look back</param>
         public Maximum(int period)
-            : base("MAX" + period, period)
+            : base($"MAX({period})", period)
         {
         }
 
