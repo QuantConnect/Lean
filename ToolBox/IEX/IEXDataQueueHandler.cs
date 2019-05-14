@@ -423,7 +423,7 @@ namespace QuantConnect.ToolBox.IEX
 
                     Interlocked.Increment(ref _dataPointCount);
 
-                    if (item["open"] == null)
+                    if (item["open"].Type == JTokenType.Null)
                     {
                         continue;
                     }
