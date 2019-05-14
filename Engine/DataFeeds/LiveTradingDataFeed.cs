@@ -254,7 +254,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 var tick = data as Tick;
 
-                                if (tick.TickType == TickType.Quote)
+                                if (tick?.TickType == TickType.Quote && !tick.Suspicious)
                                 {
                                     quoteBarAggregator.ProcessData(tick);
 
@@ -290,7 +290,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 else
                                 {
                                     var tick = data as Tick;
-                                    if (tick.TickType == TickType.Trade)
+                                    if (tick?.TickType == TickType.Trade && !tick.Suspicious)
                                     {
                                         tradeBarAggregator.ProcessData(tick);
 
@@ -320,7 +320,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 var tick = data as Tick;
 
-                                if (tick.TickType == TickType.OpenInterest)
+                                if (tick?.TickType == TickType.OpenInterest && !tick.Suspicious)
                                 {
                                     oiAggregator.ProcessData(tick);
                                 }

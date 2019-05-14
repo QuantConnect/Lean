@@ -863,6 +863,85 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(emittedData);
         }
 
+        [Test]
+        public void SuspiciousTicksAreNotFilteredAtTickResolution()
+        {
+            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+
+            var feed = RunDataFeed(
+                Resolution.Tick,
+                equities: new List<string> { symbol.Value },
+                getNextTicksFunction: dqh => Enumerable.Range(0, 1)
+                    .Select(
+                        x => new Tick
+                        {
+                            Symbol = symbol,
+                            TickType = TickType.Trade,
+                            Suspicious = x % 2 == 0
+                        })
+                    .ToList());
+
+            var emittedData = false;
+            var suspiciousTicksReceived = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(3), true, ts =>
+            {
+                if (ts.Slice.HasData)
+                {
+                    emittedData = true;
+
+                    foreach (var kvp in ts.Slice.Ticks)
+                    {
+                        foreach (var tick in kvp.Value)
+                        {
+                            if (tick.Suspicious) suspiciousTicksReceived = true;
+                        }
+                    }
+                }
+            });
+
+            Assert.IsTrue(emittedData);
+            Assert.IsTrue(suspiciousTicksReceived);
+        }
+
+        [TestCase(SecurityType.Equity, TickType.Trade)]
+        [TestCase(SecurityType.Forex, TickType.Quote)]
+        [TestCase(SecurityType.Crypto, TickType.Trade)]
+        [TestCase(SecurityType.Crypto, TickType.Quote)]
+        public void SuspiciousTicksAreFilteredAtNonTickResolution(SecurityType securityType, TickType tickType)
+        {
+            var lastTime = _manualTimeProvider.GetUtcNow();
+            var feed = RunDataFeed(
+                resolution: Resolution.Minute,
+                equities: securityType == SecurityType.Equity ? new List<string> { Symbols.SPY } : new List<string>(),
+                forex: securityType == SecurityType.Forex ? new List<string> { Symbols.EURUSD } : new List<string>(),
+                crypto: securityType == SecurityType.Crypto ? new List<string> { Symbols.BTCUSD } : new List<string>(),
+                getNextTicksFunction: (fdqh =>
+                {
+                    var time = _manualTimeProvider.GetUtcNow();
+                    if (time == lastTime) return Enumerable.Empty<BaseData>();
+                    lastTime = time;
+                    var tickTime = lastTime.AddMinutes(-1).ConvertFromUtc(TimeZones.NewYork);
+                    return fdqh.Subscriptions.Where(symbol => !_algorithm.UniverseManager.ContainsKey(symbol)) // its not a universe
+                        .Select(symbol => new Tick(tickTime, symbol, 1, 2)
+                        {
+                            Quantity = 1,
+                            TickType = tickType,
+                            Suspicious = true
+                        }).ToList();
+                }));
+
+            var emittedData = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(2), true, ts =>
+            {
+                if (ts.Slice.HasData)
+                {
+                    emittedData = true;
+                }
+            });
+
+            Assert.IsFalse(emittedData);
+        }
+
         private IDataFeed RunDataFeed(Resolution resolution = Resolution.Second,
                                     List<string> equities = null,
                                     List<string> forex = null,
