@@ -25,23 +25,18 @@ namespace QuantConnect.Indicators
     /// Source: Harris, Michael. "Momersion Indicator." Price Action Lab.,
     ///             13 Aug. 2015. Web. http://www.priceactionlab.com/Blog/2015/08/momersion-indicator/.
     /// </summary>
-    public class MomersionIndicator : WindowIndicator<IndicatorDataPoint>
+    public class MomersionIndicator : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// The minimum observations needed to consider the indicator ready. After that observation
         /// number is reached, the indicator will continue gathering data until the full period.
         /// </summary>
-        private int? _minPeriod;
-
-        /// <summary>
-        /// The final full period used to estimate the indicator.
-        /// </summary>
-        private int _fullPeriod;
+        private readonly int? _minPeriod;
 
         /// <summary>
         /// The rolling window used to store the momentum.
         /// </summary>
-        private RollingWindow<decimal> _multipliedDiffWindow;
+        private readonly RollingWindow<decimal> _multipliedDiffWindow;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MomersionIndicator"/> class.
@@ -51,15 +46,15 @@ namespace QuantConnect.Indicators
         /// <param name="fullPeriod">The full period.</param>
         /// <exception cref="System.ArgumentException">The minimum period should be greater of 3.;minPeriod</exception>
         public MomersionIndicator(string name, int? minPeriod, int fullPeriod)
-            : base(name, 3)
+            : base(name, fullPeriod)
         {
-            _fullPeriod = fullPeriod;
-            _multipliedDiffWindow = new RollingWindow<decimal>(fullPeriod);
             if (minPeriod < 4)
             {
-                throw new ArgumentException("The minimum period should be greater of 3.", "minPeriod");
+                throw new ArgumentException("The minimum period should be 4.", "minPeriod");
             }
             _minPeriod = minPeriod;
+            _multipliedDiffWindow = new RollingWindow<decimal>(fullPeriod);
+            WarmUpPeriod = (minPeriod + 2) ?? (fullPeriod + 3);
         }
 
         /// <summary>
@@ -67,8 +62,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="minPeriod">The minimum period.</param>
         /// <param name="fullPeriod">The full period.</param>
-        public MomersionIndicator(int minPeriod, int fullPeriod)
-            : this("Momersion_" + fullPeriod, minPeriod, fullPeriod)
+        public MomersionIndicator(int? minPeriod, int fullPeriod)
+            : this($"Momersion({minPeriod},{fullPeriod})", minPeriod, fullPeriod)
         {
         }
 
@@ -77,10 +72,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="fullPeriod">The full period.</param>
         public MomersionIndicator(int fullPeriod)
-            : this("Momersion_" + fullPeriod, null, fullPeriod)
+            : this(null, fullPeriod)
         {
         }
-        
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -93,12 +87,14 @@ namespace QuantConnect.Indicators
                 {
                     return _multipliedDiffWindow.Count >= _minPeriod;
                 }
-                else
-                {
-                    return _multipliedDiffWindow.Samples > _multipliedDiffWindow.Size;
-                }
+                return _multipliedDiffWindow.Samples > _multipliedDiffWindow.Size;
             }
         }
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Resets this indicator to its initial state
@@ -108,7 +104,6 @@ namespace QuantConnect.Indicators
             base.Reset();
             _multipliedDiffWindow.Reset();
         }
-
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -120,22 +115,20 @@ namespace QuantConnect.Indicators
         /// </returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            int Mc = 0;
-            int MRc = 0;
-            decimal momersion = 50m;
-
-            if (window.Count >= 3) _multipliedDiffWindow.Add((window[0] - window[1]) * (window[1] - window[2]));
+            if (window.Count >= 3)
+            {
+                _multipliedDiffWindow.Add((window[0] - window[1]) * (window[1] - window[2]));
+            }
 
             // Estimate the indicator if less than 50% of observation are zero. Avoid division by
             // zero and estimations with few real observations in case of forward filled data.
-            if (this.IsReady &&
-                _multipliedDiffWindow.Count(obs => obs == 0) < 0.5 * _multipliedDiffWindow.Count)
+            if (IsReady && _multipliedDiffWindow.Count(obs => obs == 0) < 0.5 * _multipliedDiffWindow.Count)
             {
-                Mc = _multipliedDiffWindow.Count(obs => obs > 0);
-                MRc = _multipliedDiffWindow.Count(obs => obs < 0);
-                momersion = 100m * Mc / (Mc + MRc);
+                var mc = _multipliedDiffWindow.Count(obs => obs > 0);
+                var mRc = _multipliedDiffWindow.Count(obs => obs < 0);
+                return 100m * mc / (mc + mRc);
             }
-            return momersion;
+            return 50m;
         }
     }
 }

@@ -61,7 +61,11 @@ namespace QuantConnect.Tests.Indicators
             var indicator = CreateIndicator();
             var period = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
 
-            if (!period.HasValue) return;
+            if (!period.HasValue)
+            {
+                Assert.Ignore($"{indicator.Name} is not IIndicatorWarmUpPeriodProvider");
+                return;
+            }
 
             var startDate = new DateTime(2019,1,1);
 

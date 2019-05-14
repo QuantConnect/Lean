@@ -588,6 +588,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, "HA", resolution);
             var ha = new HeikinAshi(name);
             RegisterIndicator(symbol, ha, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, ha, resolution);
+            }
+
             return ha;
         }
 
@@ -604,6 +610,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, "HMA" + period, resolution);
             var hma = new HullMovingAverage(name, period);
             RegisterIndicator(symbol, hma, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, hma, resolution);
+            }
+
             return hma;
         }
 
@@ -659,7 +671,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A new Identity indicator for the specified symbol and selector</returns>
         public Identity Identity(Symbol symbol, Resolution resolution, Func<IBaseData, decimal> selector = null, string fieldName = null)
         {
-            string name = CreateIndicatorName(symbol, fieldName ?? "close", resolution);
+            var name = CreateIndicatorName(symbol, fieldName ?? "close", resolution);
             var identity = new Identity(name);
             RegisterIndicator(symbol, identity, resolution, selector);
             return identity;
@@ -676,7 +688,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A new Identity indicator for the specified symbol and selector</returns>
         public Identity Identity(Symbol symbol, TimeSpan resolution, Func<IBaseData, decimal> selector = null, string fieldName = null)
         {
-            string name = string.Format("{0}({1}_{2})", symbol, fieldName ?? "close", resolution);
+            var name = $"{symbol}({fieldName ?? "close"},{resolution})";
             var identity = new Identity(name);
             RegisterIndicator(symbol, identity, ResolveConsolidator(symbol, resolution), selector);
             return identity;
@@ -692,9 +704,15 @@ namespace QuantConnect.Algorithm
         /// <returns>The KaufmanAdaptiveMovingAverage indicator for the requested symbol over the specified period</returns>
         public KaufmanAdaptiveMovingAverage KAMA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, "KAMA" + period, resolution);
+            var name = CreateIndicatorName(symbol, $"KAMA{period}", resolution);
             var kama = new KaufmanAdaptiveMovingAverage(name, period);
             RegisterIndicator(symbol, kama, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, kama, resolution);
+            }
+
             return kama;
         }
 
@@ -711,10 +729,16 @@ namespace QuantConnect.Algorithm
         /// <returns>The Keltner Channel indicator for the requested symbol.</returns>
         public KeltnerChannels KCH(Symbol symbol, int period, decimal k, MovingAverageType movingAverageType = MovingAverageType.Simple, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, "KCH", resolution);
-            var keltnerChannels = new KeltnerChannels(name, period, k, movingAverageType);
-            RegisterIndicator(symbol, keltnerChannels, resolution, selector);
-            return keltnerChannels;
+            var name = CreateIndicatorName(symbol, $"KCH_{period}_{k}", resolution);
+            var kch = new KeltnerChannels(name, period, k, movingAverageType);
+            RegisterIndicator(symbol, kch, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, kch, resolution);
+            }
+
+            return kch;
         }
 
         /// <summary>
@@ -727,9 +751,15 @@ namespace QuantConnect.Algorithm
         /// <returns>log return indicator for the requested symbol.</returns>
         public LogReturn LOGR(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            string name = CreateIndicatorName(symbol, "LOGR", resolution);
+            var name = CreateIndicatorName(symbol, $"LOGR({period})", resolution);
             var logr = new LogReturn(name, period);
             RegisterIndicator(symbol, logr, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, logr, resolution);
+            }
+
             return logr;
         }
 
@@ -743,9 +773,15 @@ namespace QuantConnect.Algorithm
         /// <returns>A LeastSquaredMovingAverage configured with the specified period</returns>
         public LeastSquaresMovingAverage LSMA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, "LSMA" + period, resolution);
+            var name = CreateIndicatorName(symbol, $"LSMA{period}", resolution);
             var lsma = new LeastSquaresMovingAverage(name, period);
             RegisterIndicator(symbol, lsma, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, lsma, resolution);
+            }
+
             return lsma;
         }
 
@@ -760,8 +796,14 @@ namespace QuantConnect.Algorithm
         /// <returns></returns>
         public LinearWeightedMovingAverage LWMA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            string name = CreateIndicatorName(symbol, "LWMA" + period, resolution);
+            var name = CreateIndicatorName(symbol, $"LWMA{period}", resolution);
             var lwma = new LinearWeightedMovingAverage(name, period);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, lwma, resolution);
+            }
+
             RegisterIndicator(symbol, lwma, resolution, selector);
             return lwma;
         }
@@ -801,9 +843,15 @@ namespace QuantConnect.Algorithm
         /// <returns>The MeanAbsoluteDeviation indicator for the requested symbol over the specified period</returns>
         public MeanAbsoluteDeviation MAD(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, "MAD" + period, resolution);
+            var name = CreateIndicatorName(symbol, $"MAD{period}", resolution);
             var mad = new MeanAbsoluteDeviation(name, period);
             RegisterIndicator(symbol, mad, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, mad, resolution);
+            }
+
             return mad;
         }
 
@@ -856,9 +904,14 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, "MFI" + period, resolution);
             var mfi = new MoneyFlowIndex(name, period);
             RegisterIndicator(symbol, mfi, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, mfi, resolution);
+            }
+
             return mfi;
         }
-
 
         /// <summary>
         /// Creates a new Mass Index indicator. The indicator will be automatically
@@ -872,10 +925,16 @@ namespace QuantConnect.Algorithm
         /// <returns>The Mass Index indicator for the requested symbol over the specified period</returns>
         public MassIndex MASS(Symbol symbol, int emaPeriod = 9, int sumPeriod = 25, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, "MII" + emaPeriod + sumPeriod, resolution);
-            var mi = new MassIndex(name, emaPeriod, sumPeriod);
-            RegisterIndicator(symbol, mi, resolution, selector);
-            return mi;
+            var name = CreateIndicatorName(symbol, $"MASS_{emaPeriod}_{sumPeriod}", resolution);
+            var mass = new MassIndex(name, emaPeriod, sumPeriod);
+            RegisterIndicator(symbol, mass, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, mass, resolution);
+            }
+
+            return mass;
         }
 
         /// <summary>
@@ -888,9 +947,15 @@ namespace QuantConnect.Algorithm
         /// <returns>The MidPoint indicator for the requested symbol over the specified period</returns>
         public MidPoint MIDPOINT(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, "MIDPOINT" + period, resolution);
+            var name = CreateIndicatorName(symbol, $"MIDPOINT{period}", resolution);
             var midpoint = new MidPoint(name, period);
             RegisterIndicator(symbol, midpoint, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, midpoint, resolution);
+            }
+
             return midpoint;
         }
 
@@ -904,9 +969,15 @@ namespace QuantConnect.Algorithm
         /// <returns>The MidPrice indicator for the requested symbol over the specified period</returns>
         public MidPrice MIDPRICE(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, "MIDPRICE" + period, resolution);
+            var name = CreateIndicatorName(symbol, $"MIDPRICE{period}", resolution);
             var midprice = new MidPrice(name, period);
             RegisterIndicator(symbol, midprice, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, midprice, resolution);
+            }
+
             return midprice;
         }
 
@@ -956,26 +1027,38 @@ namespace QuantConnect.Algorithm
         /// <returns>The momentum indicator for the requested symbol over the specified period</returns>
         public Momentum MOM(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            string name = CreateIndicatorName(symbol, "MOM" + period, resolution);
-            var momentum = new Momentum(name, period);
-            RegisterIndicator(symbol, momentum, resolution, selector);
-            return momentum;
+            var name = CreateIndicatorName(symbol, $"MOM{period}", resolution);
+            var mom = new Momentum(name, period);
+            RegisterIndicator(symbol, mom, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, mom, resolution);
+            }
+
+            return mom;
         }
 
         /// <summary>
         /// Creates a new Momersion indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose Momersion we want</param>
-        /// <param name="minPeriod">The minimum period over which to compute the Momersion</param>
+        /// <param name="minPeriod">The minimum period over which to compute the Momersion. Must be greater than 3. If null, only full period will be used in computations.</param>
         /// <param name="fullPeriod">The full period over which to compute the Momersion</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>The Momersion indicator for the requested symbol over the specified period</returns>
-        public MomersionIndicator MOMERSION(Symbol symbol, int minPeriod, int fullPeriod, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        public MomersionIndicator MOMERSION(Symbol symbol, int? minPeriod, int fullPeriod, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, string.Format("MOMERSION({0},{1})", minPeriod, fullPeriod), resolution);
+            var name = CreateIndicatorName(symbol, $"MOMERSION_{minPeriod}_{fullPeriod}", resolution);
             var momersion = new MomersionIndicator(name, minPeriod, fullPeriod);
             RegisterIndicator(symbol, momersion, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, momersion, resolution);
+            }
+
             return momersion;
         }
 
@@ -990,10 +1073,16 @@ namespace QuantConnect.Algorithm
         /// <returns>The momentum indicator for the requested symbol over the specified period</returns>
         public MomentumPercent MOMP(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            string name = CreateIndicatorName(symbol, "MOMP" + period, resolution);
-            var momentum = new MomentumPercent(name, period);
-            RegisterIndicator(symbol, momentum, resolution, selector);
-            return momentum;
+            var name = CreateIndicatorName(symbol, $"MOMP{period}", resolution);
+            var momp = new MomentumPercent(name, period);
+            RegisterIndicator(symbol, momp, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, momp, resolution);
+            }
+
+            return momp;
         }
 
         /// <summary>
@@ -1093,10 +1182,16 @@ namespace QuantConnect.Algorithm
         /// <returns>The RateOfChange indicator for the requested symbol over the specified period</returns>
         public RateOfChange ROC(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            string name = CreateIndicatorName(symbol, "ROC" + period, resolution);
-            var rateofchange = new RateOfChange(name, period);
-            RegisterIndicator(symbol, rateofchange, resolution, selector);
-            return rateofchange;
+            var name = CreateIndicatorName(symbol, $"ROC{period}", resolution);
+            var roc = new RateOfChange(name, period);
+            RegisterIndicator(symbol, roc, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, roc, resolution);
+            }
+
+            return roc;
         }
 
         /// <summary>
@@ -1110,10 +1205,16 @@ namespace QuantConnect.Algorithm
         /// <returns>The RateOfChangePercent indicator for the requested symbol over the specified period</returns>
         public RateOfChangePercent ROCP(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            string name = CreateIndicatorName(symbol, "ROCP" + period, resolution);
-            var rateofchangepercent = new RateOfChangePercent(name, period);
-            RegisterIndicator(symbol, rateofchangepercent, resolution, selector);
-            return rateofchangepercent;
+            var name = CreateIndicatorName(symbol, $"ROCP{period}", resolution);
+            var rocp = new RateOfChangePercent(name, period);
+            RegisterIndicator(symbol, rocp, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, rocp, resolution);
+            }
+
+            return rocp;
         }
 
         /// <summary>
@@ -1129,6 +1230,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, "ROCR" + period, resolution);
             var rocr = new RateOfChangeRatio(name, period);
             RegisterIndicator(symbol, rocr, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, rocr, resolution);
+            }
+
             return rocr;
         }
 
