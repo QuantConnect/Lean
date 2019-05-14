@@ -129,11 +129,41 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
+        /// Reads and writes each <see cref="MapFileRow"/>
+        /// </summary>
+        /// <returns>Enumerable of csv lines</returns>
+        public IEnumerable<string> ToCsvLines()
+        {
+            foreach (var mapRow in _data.Values)
+            {
+                yield return mapRow.ToCsv();
+            }
+        }
+
+        /// <summary>
         /// Reads in an entire map file for the requested symbol from the DataFolder
         /// </summary>
         public static MapFile Read(string permtick, string market)
         {
             return new MapFile(permtick, MapFileRow.Read(permtick, market));
+        }
+
+        /// <summary>
+        /// Writes the map file to a CSV file
+        /// </summary>
+        /// <param name="market">The market to save the MapFile to</param>
+        public void WriteToCsv(string market) 
+        {
+            var filePath = GetMapFilePath(Permtick, market);
+            var fileDir = Path.GetDirectoryName(filePath);
+
+            if (!Directory.Exists(fileDir))
+            {
+                Directory.CreateDirectory(fileDir);
+                Log.Trace($"Created directory for map file: {fileDir}");
+            }
+
+            File.WriteAllLines(filePath, ToCsvLines());
         }
 
         /// <summary>

@@ -242,15 +242,9 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>An enumerable of lines representing this factor file</returns>
         public IEnumerable<string> ToCsvLines()
         {
-            if (FactorFileMinimumDate != null)
-            {
-                var min = SortedFactorFileData.First().Value;
-                yield return $"{FactorFileMinimumDate:yyyyMMdd},{min.PriceFactor},{min.SplitFactor}";
-            }
-
             foreach (var kvp in SortedFactorFileData)
             {
-                yield return $"{kvp.Key:yyyyMMdd},{kvp.Value.PriceFactor},{kvp.Value.SplitFactor}";
+                yield return kvp.Value.ToCsv();
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 
@@ -34,6 +35,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             };
 
             var current = _settings.Start;
+
+            // There is a possibility that even though this succeeds, the DateTime
+            // generated may be the same as the starting DateTime, although the probability
+            // of this happening diminishes the longer the period we're generating data for is
+            if (_random.NextBool(_settings.HasIpoPercentage))
+            {
+                current = _random.NextDate(_settings.Start, _settings.End, null);
+                Console.WriteLine($"\tSymbol: {symbol} has delayed IPO at date {current:yyyy MMMM dd}");
+            }
 
             // creates a max deviation that scales parabolically as resolution decreases (lower frequency)
             var deviation = GetMaximumDeviation(_settings.Resolution);
