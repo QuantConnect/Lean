@@ -79,7 +79,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period of the three moving average (middle, upper and lower band).</param>
         public AccelerationBands(int period)
-            : this($"ABANDS({period},4)", period, 4)
+            : this(period, 4)
         {
         }
 

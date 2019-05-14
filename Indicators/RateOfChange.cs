@@ -56,7 +56,12 @@ namespace QuantConnect.Indicators
             // if we're not ready just grab the first input point in the window
             var denominator = window.Samples <= window.Size ? window[window.Count - 1] : window.MostRecentlyRemoved;
 
-            return denominator != 0 ? input / denominator - 1 : 0m;
+            if (denominator == 0)
+            {
+                return 0;
+            }
+
+            return (input - denominator) / denominator;
         }
     }
 }

@@ -50,10 +50,7 @@ namespace QuantConnect.Indicators
         public ArnaudLegouxMovingAverage(string name, int period, int sigma = 6, decimal offset = 0.85m)
             : base(name, period)
         {
-            if (offset < 0 || offset > 1)
-            {
-                throw new ArgumentException($"Offset parameter range is [0,1]. Value: {offset}", "offset");
-            }
+            if (offset < 0 || offset > 1) throw new ArgumentException($"Offset parameter range is [0,1]. Value: {offset}", "offset");
 
             var m = Math.Floor(offset * (period - 1));
             var s = period * 1m / sigma;
@@ -90,7 +87,7 @@ namespace QuantConnect.Indicators
         /// Average. The range for this parameter is [0, 1]. It affects the weight vector skewness.
         /// </param>
         public ArnaudLegouxMovingAverage(int period, int sigma, decimal offset = 0.85m)
-            : this($"ALMA_{period}_{sigma}_{offset}", period, sigma, offset)
+            : this($"ALMA({period},{sigma},{offset})", period, sigma, offset)
         {
         }
 

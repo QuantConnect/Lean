@@ -61,7 +61,7 @@ namespace QuantConnect.Indicators
         /// <param name="signalPeriod">The signal period</param>
         /// <param name="type">The type of moving averages to use</param>
         public MovingAverageConvergenceDivergence(int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType type = MovingAverageType.Exponential)
-            : this($"MACD({fastPeriod},{slowPeriod})", fastPeriod, slowPeriod, signalPeriod, type)
+            : this($"MACD({fastPeriod},{slowPeriod},{signalPeriod})", fastPeriod, slowPeriod, signalPeriod, type)
         {
         }
 
