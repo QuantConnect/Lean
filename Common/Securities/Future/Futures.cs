@@ -515,7 +515,7 @@ namespace QuantConnect.Securities
             public const string DubaiCrudeOilPlattsFinancial = "DCB";
             
             /// <summary>
-            /// Japan C&F Naphtha (Platts) BALMO Futures
+            /// Japan C&amp;F Naphtha (Platts) BALMO Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string JapanCnFNaphthaPlattsBALMO = "E6";

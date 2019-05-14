@@ -1310,7 +1310,7 @@ namespace QuantConnect.Securities.Future
                     return lastBusinessDay;
                 })
             },
-            // JJapan C&F Naphtha (Platts) BALMO (E6): https://www.cmegroup.com/trading/energy/refined-products/japan-naphtha-balmo-swap-futures_contract_specifications.html
+            // Japan C&amp;F Naphtha (Platts) BALMO (E6): https://www.cmegroup.com/trading/energy/refined-products/japan-naphtha-balmo-swap-futures_contract_specifications.html
             {Futures.Energies.JapanCnFNaphthaPlattsBALMO, (time =>
                 {
                     // Trading shall cease on the last business day of the contract month. 
