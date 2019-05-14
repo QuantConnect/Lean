@@ -1227,7 +1227,7 @@ namespace QuantConnect.Securities.Future
                     return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                 })
             },
-            // TODO: Clearbrook Bakken Sweet Crude Oil Monthly Index (Net Energy) (CSW): https://www.cmegroup.com/trading/energy/crude-oil/clearbrook-bakken-crude-oil-index-net-energy_contract_specifications.html
+            // Clearbrook Bakken Sweet Crude Oil Monthly Index (Net Energy) (CSW): https://www.cmegroup.com/trading/energy/crude-oil/clearbrook-bakken-crude-oil-index-net-energy_contract_specifications.html
             {Futures.Energies.ClearbrookBakkenSweetCrudeOilMonthlyIndexNetEnergy, (time =>
                 {
                     // Trading terminates one Canadian business day prior to the Notice of Shipments (NOS) date on the Enbridge Pipeline. The NOS date occurs on or about the 20th calendar day of the month, subject to confirmation by Enbridge Pipeline. The official schedule for the NOS dates will be made publicly available by Enbridge. 
@@ -1454,7 +1454,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Dairy Group
-            // TODO Cash-settled Butter (CB): https://www.cmegroup.com/trading/agricultural/dairy/cash-settled-butter_contract_specifications.html
+            // Cash-settled Butter (CB): https://www.cmegroup.com/trading/agricultural/dairy/cash-settled-butter_contract_specifications.html
             {Futures.Dairy.CashSettledButter, (time =>
                 {
                     // Trading shall terminate on the business day immediately preceding the day on which the USDA announces the Butter price for that contract month. (LTD 12:10 p.m.)
