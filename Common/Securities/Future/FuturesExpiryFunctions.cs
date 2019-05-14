@@ -1331,6 +1331,9 @@ namespace QuantConnect.Securities.Future
                     
                     while (daysCounted < 3)
                     {
+                        // The asset continues trading on days contained within `USHoliday.Dates`, but
+                        // the last trade date is affected by those holidays. We check for 
+                        // both MHDB entries and holidays to get accurate business days
                         if (holidays.Contains(currentDay) || USHoliday.Dates.Contains(currentDay))
                         {
                             // Catches edge case where first day is on a friday
