@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// The Ultimate Oscillator is calculated as explained here:
     /// http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:ultimate_oscillator
     /// </summary>
-    public class UltimateOscillator : BarIndicator
+    public class UltimateOscillator : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly int _period;
         private IBaseDataBar _previousInput;
@@ -42,7 +42,7 @@ namespace QuantConnect.Indicators
         /// <param name="period2">The second period</param>
         /// <param name="period3">The third period</param>
         public UltimateOscillator(int period1, int period2, int period3)
-            : this(string.Format("ULTOSC({0},{1},{2})", period1, period2, period3), period1, period2, period3)
+            : this($"ULTOSC({period1},{period2},{period3})", period1, period2, period3)
         {
         }
 
@@ -69,10 +69,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return Samples > _period; }
-        }
+        public override bool IsReady => Samples > _period;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => _period + 1;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
