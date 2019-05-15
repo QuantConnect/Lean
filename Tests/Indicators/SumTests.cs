@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,13 +17,14 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
-namespace QuantConnect.Tests.Indicators {
-
+namespace QuantConnect.Tests.Indicators
+{
     [TestFixture]
-    public class SumTests {
-
+    public class SumTests
+    {
         [Test]
-        public void ComputesCorrectly() {
+        public void ComputesCorrectly()
+        {
             var sum = new Sum(2);
             var time = DateTime.UtcNow;
 
@@ -35,7 +36,8 @@ namespace QuantConnect.Tests.Indicators {
         }
 
         [Test]
-        public void ResetsCorrectly() {
+        public void ResetsCorrectly()
+        {
             var sum = new Sum(2);
             var time = DateTime.UtcNow;
 
@@ -51,6 +53,20 @@ namespace QuantConnect.Tests.Indicators {
             Assert.AreEqual(sum.Current.Value, 0m);
             sum.Update(time.AddDays(1), 1);
             Assert.AreEqual(sum.Current.Value, 1m);
+        }
+
+        [Test]
+        public void WarmsUpProperly()
+        {
+            var indicator = new Sum(2);
+            var time = DateTime.UtcNow;
+            var period = ((IIndicatorWarmUpPeriodProvider)indicator).WarmUpPeriod;
+
+            for (var i = 0; i < period; i++)
+            {
+                indicator.Update(time.AddMinutes(i), i);
+                Assert.AreEqual(i == period - 1, indicator.IsReady);
+            }
         }
     }
 }
