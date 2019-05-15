@@ -145,6 +145,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 throw new ArgumentNullException("brokerage");
             }
+            // multi threaded queue, used for live deployments
             _orderRequestQueue = new BusyBlockingCollection<OrderRequest>();
             // we don't need to do this today because we just initialized/synced
             _resultHandler = resultHandler;
@@ -254,8 +255,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // wait for the transaction handler to set the order reference into the new order ticket,
                 // so we can ensure the order has already been added to the open orders,
                 // before returning the ticket to the algorithm.
-
-                WaitForOrderToBeProcess(ticket);
+                WaitForOrderSubmission(ticket);
             }
             else
             {
@@ -276,16 +276,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// For backtesting we will process the order ourselves
+        /// Wait for the order to be handled by the <see cref="_processingThread"/>
         /// </summary>
-        /// <param name="ticket">The <see cref="OrderTicket"/> expecting to be processed</param>
-        protected virtual void WaitForOrderToBeProcess(OrderTicket ticket)
+        /// <param name="ticket">The <see cref="OrderTicket"/> expecting to be submitted</param>
+        protected virtual void WaitForOrderSubmission(OrderTicket ticket)
         {
             var orderSetTimeout = Time.OneSecond;
             if (!ticket.OrderSet.WaitOne(orderSetTimeout))
             {
-                Log.Error("BrokerageTransactionHandler.ProcessRequest(): " +
-                    $"The order request (Id={ticket.OrderId}) was not processed within {orderSetTimeout.TotalSeconds} second(s).");
+                Log.Error("BrokerageTransactionHandler.WaitForOrderSubmission(): " +
+                    $"The order request (Id={ticket.OrderId}) was not submitted within {orderSetTimeout.TotalSeconds} second(s).");
             }
         }
 
@@ -718,28 +718,25 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Signal a end of thread request to stop montioring the transactions.
+        /// Signal a end of thread request to stop monitoring the transactions.
         /// </summary>
         public void Exit()
         {
-            var timeout = TimeSpan.FromSeconds(60);
-            if (!_orderRequestQueue.WaitHandle.WaitOne(timeout))
-            {
-                Log.Error("BrokerageTransactionHandler.Exit(): Exceed timeout: " + (int)(timeout.TotalSeconds) + " seconds.");
-            }
-            _cancellationTokenSource.Cancel();
             if (_processingThread != null)
             {
-                if (_processingThread.IsAlive)
+                // only wait if the processing thread is running
+                var timeout = TimeSpan.FromSeconds(60);
+                if (_orderRequestQueue.IsBusy && !_orderRequestQueue.WaitHandle.WaitOne(timeout))
                 {
-                    _processingThread.Abort();
+                    Log.Error("BrokerageTransactionHandler.Exit(): Exceed timeout: " + (int)(timeout.TotalSeconds) + " seconds.");
                 }
-
             }
-            else
+            _cancellationTokenSource.Cancel();
+            if (_processingThread != null && _processingThread.IsAlive)
             {
-                IsActive = false;
+                _processingThread.Abort();
             }
+            IsActive = false;
         }
 
         /// <summary>

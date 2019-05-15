@@ -17,6 +17,7 @@ using System;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Util;
 
@@ -77,19 +78,21 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// For backtesting we will process the order ourselves
+        /// For backtesting we will submit the order ourselves
         /// </summary>
-        /// <param name="ticket">The <see cref="OrderTicket"/> expecting to be processed</param>
-        protected override void WaitForOrderToBeProcess(OrderTicket ticket)
+        /// <param name="ticket">The <see cref="OrderTicket"/> expecting to be submitted</param>
+        protected override void WaitForOrderSubmission(OrderTicket ticket)
         {
-            // we process the order request our selves
+            // we submit the order request our selves
             Run();
 
             if (!ticket.OrderSet.WaitOne(0))
             {
-                // this shouldn't happen, but just in case...
-                throw new Exception("BacktestingTransactionHandler.ProcessRequest(): " +
-                    $"The order request (Id={ticket.OrderId}) was not processed.");
+                // this could happen if there was some error handling the order
+                // and it was not set
+                Log.Error("BacktestingTransactionHandler.WaitForOrderSubmission(): " +
+                    $"The order request (Id={ticket.OrderId}) was not submitted. " +
+                    "See the OrderRequest.Response for more information");
             }
         }
 

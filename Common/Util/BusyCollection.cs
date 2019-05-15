@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -29,6 +30,7 @@ namespace QuantConnect.Util
     {
         private readonly ConcurrentQueue<T> _collection = new ConcurrentQueue<T>();
         private readonly ManualResetEventSlim _processingCompletedEvent = new ManualResetEventSlim(true);
+        private bool _completedAdding;
 
         /// <summary>
         /// Gets a wait handle that can be used to wait until this instance is done
@@ -62,9 +64,19 @@ namespace QuantConnect.Util
         /// <param name="cancellationToken">A cancellation token to observer</param>
         public void Add(T item, CancellationToken cancellationToken)
         {
-            // we're adding work to be done, mark us as busy
-            _processingCompletedEvent.Reset();
-            _collection.Enqueue(item);
+            if (_completedAdding)
+            {
+                throw new InvalidOperationException("Collection has already been marked as not " +
+                    $"accepting more additions, see {nameof(CompleteAdding)}");
+            }
+
+            // locking to avoid race condition with GetConsumingEnumerable()
+            lock (_processingCompletedEvent)
+            {
+                // we're adding work to be done, mark us as busy
+                _processingCompletedEvent.Reset();
+                _collection.Enqueue(item);
+            }
         }
 
         /// <summary>
@@ -88,7 +100,15 @@ namespace QuantConnect.Util
             {
                 yield return item;
             }
-            _processingCompletedEvent.Set();
+
+            // locking to avoid race condition with Add()
+            lock (_processingCompletedEvent)
+            {
+                if (!_collection.TryPeek(out item))
+                {
+                    _processingCompletedEvent.Set();
+                }
+            }
         }
 
         /// <summary>
@@ -106,6 +126,7 @@ namespace QuantConnect.Util
         /// </summary>
         public void CompleteAdding()
         {
+            _completedAdding = true;
         }
     }
 }
