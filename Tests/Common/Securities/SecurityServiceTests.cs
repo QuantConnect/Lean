@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "symbol can't be found in csv")]
+        [ExpectedException(typeof(ArgumentException), MatchType = MessageMatch.Contains, ExpectedMessage = "Symbol can't be found in the Symbol Properties Database")]
         public void ThrowOnCreateCryptoNotDescribedInCSV()
         {
             var symbol = Symbol.Create("ABCDEFG", SecurityType.Crypto, Market.GDAX);

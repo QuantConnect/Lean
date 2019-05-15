@@ -69,7 +69,7 @@ namespace QuantConnect.Securities
 
             if (symbol.ID.SecurityType == SecurityType.Crypto && !_symbolPropertiesDatabase.ContainsKey(symbol.ID.Market, symbol, symbol.ID.SecurityType))
             {
-                throw new ArgumentException($"symbol can't be found in csv: {symbol.Value}");
+                throw new ArgumentException($"Symbol can't be found in the Symbol Properties Database: {symbol.Value}");
             }
 
             var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.ID.SecurityType, defaultQuoteCurrency);
