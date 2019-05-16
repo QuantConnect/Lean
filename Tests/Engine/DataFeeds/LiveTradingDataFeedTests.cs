@@ -458,7 +458,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var previousTime = DateTime.Now;
             Console.WriteLine("start: " + previousTime.ToString("o"));
-            ConsumeBridge(feed, TimeSpan.FromSeconds(5), false, ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(3), false, ts =>
             {
                 // because this is a remote file we may skip data points while the newest
                 // version of the file is downloading [internet speed] and also we decide
@@ -466,19 +466,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 stopwatch.Stop();
                 if (ts.Slice.Count == 0) return;
 
-                Assert.AreEqual(100, ts.Slice.Count);
-
                 count++;
                 emittedData = true;
 
                 // make sure within 3 seconds
                 var delta = DateTime.Now.Subtract(previousTime);
                 previousTime = DateTime.Now;
-                Assert.IsTrue(delta <= TimeSpan.FromSeconds(3), delta.ToString());
+                Assert.IsTrue(delta <= TimeSpan.FromSeconds(2), delta.ToString());
                 ConsoleWriteLine("TimeProvider now: " + _manualTimeProvider.GetUtcNow() + " Count: "
                                   + ts.Slice.Count + ". Delta (ms): "
                                   + ((decimal)delta.TotalMilliseconds).SmartRounding() + Environment.NewLine);
             });
+
+            Assert.That(count, Is.GreaterThan(5));
 
             Console.WriteLine("Count: " + count);
             Console.WriteLine("Spool up time: " + stopwatch.Elapsed);
