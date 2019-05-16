@@ -324,10 +324,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void Unsubscribes()
         {
-            var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
             FuncDataQueueHandler dataQueueHandler;
             var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
             _algorithm.AddData<CustomMockedFileBaseData>("CustomMockedFileBaseData");
+            var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
 
             var emittedData = false;
             var currentSubscriptionCount = 0;
@@ -359,10 +359,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             _algorithm.SetFinishedWarmingUp();
             _algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
-            var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
             FuncDataQueueHandler dataQueueHandler;
             var feed = RunDataFeed(out dataQueueHandler, equities: new List<string> { "SPY" }, forex: new List<string> { "EURUSD" });
             _algorithm.AddData<CustomMockedFileBaseData>("CustomMockedFileBaseData");
+            var customMockedFileBaseData = SymbolCache.GetSymbol("CustomMockedFileBaseData");
 
             var emittedData = false;
             var currentSubscriptionCount = 0;
@@ -458,7 +458,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var previousTime = DateTime.Now;
             Console.WriteLine("start: " + previousTime.ToString("o"));
-            ConsumeBridge(feed, TimeSpan.FromSeconds(5), false, ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(3), false, ts =>
             {
                 // because this is a remote file we may skip data points while the newest
                 // version of the file is downloading [internet speed] and also we decide
@@ -468,6 +468,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                 emittedData = true;
                 count++;
+
                 // make sure within 2 seconds
                 var delta = DateTime.Now.Subtract(previousTime);
                 previousTime = DateTime.Now;
@@ -488,10 +489,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void HandlesRestApi()
         {
             var resolution = Resolution.Second;
-            var symbol = SymbolCache.GetSymbol("RestApi");
             FuncDataQueueHandler dqgh;
             var feed = RunDataFeed(out dqgh);
             _algorithm.AddData<RestApiBaseData>("RestApi", resolution);
+            var symbol = SymbolCache.GetSymbol("RestApi");
 
             var count = 0;
             var receivedData = false;
