@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using ICSharpCode.SharpZipLib.Tar;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.CoinApiDataConverter
 {
@@ -29,6 +30,15 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
     /// </summary>
     public static class CoinApiDataConverterProgram
     {
+        /// <summary>
+        /// List of supported exchanges
+        /// </summary>
+        private static readonly HashSet<string> SupportedMarkets = new[]
+        {
+            Market.GDAX,
+            Market.Bitfinex
+        }.ToHashSet();
+
         /// <summary>
         /// CoinAPI data converter entry point.
         /// </summary>
@@ -79,6 +89,12 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         private static void ProcessEntry(CoinApiDataReader coinapiDataReader, TarInputStream tar, TarEntry entry)
         {
             var entryData = coinapiDataReader.GetCoinApiEntryData(tar, entry);
+
+            if (!SupportedMarkets.Contains(entryData.Symbol.ID.Market))
+            {
+                // only convert data for supported exchanges
+                return;
+            }
 
             // materialize the enumerable into a list, since we need to enumerate over it twice
             var ticks = coinapiDataReader.ProcessCoinApiEntry(tar, entryData).ToList();
