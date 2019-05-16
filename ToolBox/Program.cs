@@ -33,6 +33,7 @@ using QuantConnect.ToolBox.KaikoDataConverter;
 using QuantConnect.ToolBox.KrakenDownloader;
 using QuantConnect.ToolBox.NseMarketDataConverter;
 using QuantConnect.ToolBox.OandaDownloader;
+using QuantConnect.ToolBox.PsychSignalDataConverter;
 using QuantConnect.ToolBox.QuandlBitfinexDownloader;
 using QuantConnect.ToolBox.QuantQuoteConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
@@ -175,6 +176,14 @@ namespace QuantConnect.ToolBox
                             GetParameterOrDefault(optionsObject, "splits-percentage", "15.0"),
                             GetParameterOrDefault(optionsObject, "dividends-percentage", "60.0"),
                             GetParameterOrDefault(optionsObject, "dividend-every-quarter-percentage", "30.0")
+                        );
+                        break;
+                    case "psdc":
+                    case "psychsignaldataconverter":
+                        PsychSignalDataConverterProgram.PsychSignalDataConverter(
+                            GetParameterOrExit(optionsObject, "data-path"),
+                            GetParameterOrDefault(optionsObject, "security-type", "equity"),
+                            GetParameterOrDefault(optionsObject, "market", Market.USA)
                         );
                         break;
                     default:
