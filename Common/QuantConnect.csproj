@@ -244,6 +244,7 @@
     <Compile Include="Data\Custom\Estimize\EstimizeConsensus.cs" />
     <Compile Include="Data\Custom\Estimize\EstimizeEstimate.cs" />
     <Compile Include="Data\Custom\Estimize\EstimizeRelease.cs" />
+    <Compile Include="Data\Custom\PsychSignal\PsychSignalSentimentData.cs" />
     <Compile Include="Data\Custom\USEnergyInformation.cs" />
     <Compile Include="Data\Fundamental\AssetClassificationHelper.cs" />
     <Compile Include="Data\HistoryProviderBase.cs" />

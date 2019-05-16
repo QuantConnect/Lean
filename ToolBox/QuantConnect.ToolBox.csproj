@@ -249,6 +249,9 @@
     <Compile Include="IQFeedDownloader\IQFeedDownloaderProgram.cs" />
     <Compile Include="IVolatilityEquityConverter\IVolatilityEquityConverterProgram.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="PsychSignalDataConverter\PsychSignalDataConverterProgram.cs" />
+    <Compile Include="PsychSignalDataConverter\PsychSignalDataConverter.cs" />
+    <Compile Include="PsychSignalDataConverter\PsychSignalDataDownloader.cs" />
     <Compile Include="RandomDataGenerator\DividendSplitMapGenerator.cs" />
     <Compile Include="RandomDataGenerator\ConsoleLeveledOutput.cs" />
     <Compile Include="RandomDataGenerator\DataDensity.cs" />

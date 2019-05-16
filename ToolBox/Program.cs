@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.IO;
 using QuantConnect.Configuration;
@@ -37,6 +38,7 @@ using QuantConnect.ToolBox.KaikoDataConverter;
 using QuantConnect.ToolBox.KrakenDownloader;
 using QuantConnect.ToolBox.NseMarketDataConverter;
 using QuantConnect.ToolBox.OandaDownloader;
+using QuantConnect.ToolBox.PsychSignalDataConverter;
 using QuantConnect.ToolBox.QuandlBitfinexDownloader;
 using QuantConnect.ToolBox.QuantQuoteConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
@@ -142,6 +144,17 @@ namespace QuantConnect.ToolBox
                     case "estimizereleasedownloader":
                         EstimizeReleaseDataDownloaderProgram.EstimizeReleaseDataDownloader();
                         break;
+
+                    case "psdl":
+                    case "psychsignaldownloader":
+                        PsychSignalDataConverterProgram.PsychSignalDataDownloader(
+                            fromDate, 
+                            toDate,
+                            GetParameterOrDefault(optionsObject, "destination-dir", Path.Combine(Globals.DataFolder, "alternative", "psychsignal", "raw-psychsignal")),
+                            GetParameterOrExit(optionsObject, "api-key"),
+                            GetParameterOrDefault(optionsObject, "data-source", "twitter_enhanced_withretweets,stocktwits"));
+                        break;
+
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
                         break;
@@ -220,6 +233,13 @@ namespace QuantConnect.ToolBox
                             GetParameterOrExit(optionsObject, "source-dir"),
                             GetParameterOrDefault(optionsObject, "destination-dir", Globals.DataFolder),
                             start);
+                        break;
+                    case "psdc":
+                    case "psychsignaldataconverter":
+                        PsychSignalDataConverterProgram.PsychSignalDataConverter(
+                            GetParameterOrDefault(optionsObject, "source-dir", Path.Combine(Globals.DataFolder, "alternative", "psychsignal", "raw-psychsignal")),
+                            GetParameterOrDefault(optionsObject, "destination-dir", Path.Combine(Globals.DataFolder, "alternative", "psychsignal")),
+                            GetParameterOrDefault(optionsObject, "source-meta-dir", Path.Combine(Globals.DataFolder, "equity", "usa", "daily")));
                         break;
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
