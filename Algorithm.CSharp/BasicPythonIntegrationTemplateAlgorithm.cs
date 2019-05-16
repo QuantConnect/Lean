@@ -20,6 +20,8 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class BasicPythonIntegrationTemplateAlgorithm : QCAlgorithm
     {
+        // Create class field for numpy library
+        private dynamic _numpy;
 
         public override void Initialize()
         {
@@ -28,14 +30,20 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);             //Set Strategy Cash
             AddEquity("SPY", Resolution.Minute);
 
+            // Assign numpy library
+            using (Py.GIL())
+            {
+                _numpy = Py.Import("numpy");
+            }
+
         }
 
         private decimal ComputeSin(decimal value)
         {
+            // Calculate python sin(10)
             using (Py.GIL())
             {
-                dynamic np = Py.Import("numpy");
-                return (decimal)np.sin(value);
+                return (decimal)_numpy.sin(value);
             }
         }
 
@@ -47,9 +55,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
             	SetHoldings("SPY", 1);
             	var sin = ComputeSin(10);
+
+                // Calculate C# sin(10)
             	var sinOfTen = Math.Sin(10);
-            	Log($"According to Python, the value of sin(10) is: {sin}");
-            	Log($"According to C#, the value of sin(10) is: {sinOfTen}");
+            	Debug($"According to Python, the value of sin(10) is: {sin}");
+            	Debug($"According to C#, the value of sin(10) is: {sinOfTen}");
             }
         }
     }

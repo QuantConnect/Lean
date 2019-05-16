@@ -26,14 +26,12 @@ import numpy as np
 class BasicCSharpIntegrationTemplateAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2013,10, 7)  #Set Start Date
-        self.SetEndDate(2013,10,11)    #Set End Date
+        self.SetStartDate(2018, 11, 10)  #Set Start Date
+        self.SetEndDate(2013,12, 1)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         
         self.AddEquity("SPY", Resolution.Second)
-        self.Debug(f'According to Python, the value of sin(10) is {np.sin(10)}')
-        self.Debug(f'According to C#, the value of sin(10) is {Math.Sin(10)}')
-
+        
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
@@ -42,3 +40,7 @@ class BasicCSharpIntegrationTemplateAlgorithm(QCAlgorithm):
         '''
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
+
+            ## Calculate value of sin(10) for both python and C#
+            self.Debug(f'According to Python, the value of sin(10) is {np.sin(10)}')
+            self.Debug(f'According to C#, the value of sin(10) is {Math.Sin(10)}')
