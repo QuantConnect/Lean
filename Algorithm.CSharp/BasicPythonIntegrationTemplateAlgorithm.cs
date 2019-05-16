@@ -25,8 +25,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2018, 11, 10);  //Set Start Date
-            SetEndDate(2018, 12, 1);
+            SetStartDate(2013, 10, 7);  // Set Start Date
+            SetEndDate(2013, 10, 11);  // Set End Date
             SetCash(100000);             //Set Strategy Cash
             AddEquity("SPY", Resolution.Minute);
 

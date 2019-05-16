@@ -26,8 +26,9 @@ import numpy as np
 class BasicCSharpIntegrationTemplateAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2018, 11, 10)  #Set Start Date
-        self.SetEndDate(2013,12, 1)    #Set End Date
+
+        self.SetStartDate(2013,10, 7)  #Set Start Date
+        self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         
         self.AddEquity("SPY", Resolution.Second)
