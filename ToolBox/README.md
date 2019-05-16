@@ -47,6 +47,8 @@ Example: --app=GoogleDownloader --tickers=SPY,AAPL --resolution=Minute --from-da
 		- **'--date=yyyyMMdd'** reference date.
 	- AlgoSeekOptionsConverter or ASOC
 		- **'--date=yyyyMMdd'** reference date.
+	- CoinApiDataConverter or CADC
+		- **'--source-dir='** path to the raw CoinAPI data.
 	- IVolatilityEquityConverter or IVEC
 		- **'--source-dir='** source archived IVolatility data.
 		- **'--source-meta-dir='** source archived IVolatility meta data.
