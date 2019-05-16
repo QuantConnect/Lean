@@ -466,10 +466,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 stopwatch.Stop();
                 if (ts.Slice.Count == 0) return;
 
-                count++;
                 emittedData = true;
+                count++;
 
-                // make sure within 3 seconds
+                // make sure within 2 seconds
                 var delta = DateTime.Now.Subtract(previousTime);
                 previousTime = DateTime.Now;
                 Assert.IsTrue(delta <= TimeSpan.FromSeconds(2), delta.ToString());
@@ -478,11 +478,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                   + ((decimal)delta.TotalMilliseconds).SmartRounding() + Environment.NewLine);
             });
 
-            Assert.That(count, Is.GreaterThan(5));
-
             Console.WriteLine("Count: " + count);
             Console.WriteLine("Spool up time: " + stopwatch.Elapsed);
 
+            Assert.That(count, Is.GreaterThan(5));
             Assert.IsTrue(emittedData);
         }
 
