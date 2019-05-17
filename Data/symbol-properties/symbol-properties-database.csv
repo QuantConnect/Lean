@@ -169,7 +169,7 @@ usa,D1N,future,,USD,1000,0.001,1
 usa,DC,future,,USD,200000,0.0001,1
 usa,DCB,future,,USD,1000,0.001,1
 usa,DY,future,,USD,44000,0.00025,1
-usa,GDK,future,,USD,200000,0.0001
+usa,GDK,future,,USD,200000,0.0001,1
 usa,GNF,future,,USD,44000,0.00025,1
 usa,E6,future,,USD,1000,0.001,1
 usa,E7,future,,USD,62500,0.0001,1
@@ -192,7 +192,6 @@ usa,HH,future,,USD,10000,0.001,1
 usa,HO,future,,USD,42000,0.0001,1
 usa,HP,future,,USD,10000,0.001,1
 usa,HTT,future,,USD,1000,0.01,1
-
 usa,RB,future,,USD,42000,0.0001,1
 usa,NG,future,,USD,10000,0.001,1
 usa,AC,future,,USD,29000,0.001,1
