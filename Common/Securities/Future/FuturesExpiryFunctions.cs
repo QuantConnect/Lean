@@ -39,6 +39,179 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
+        /// The USDA publishes a report containing contract prices for the contract month.
+        /// You can generate the report dates here: https://mpr.datamart.ams.usda.gov/menu.do?path=Products\Dairy\All%20Dairy\(DY_CL102)%20National%20Dairy%20Products%20Prices%20-%20Monthly
+        /// And you can see future publication dates at https://usda.library.cornell.edu/concern/publications/zs25x847n
+        /// These dates are erratic and requires maintenance of a separate list instead of using holiday entries in MHDB.
+        /// </summary>
+        /// <remarks>We only report the publication date of the report. In order to get accurate last trade dates, subtract one (plus holidays) from the value's date</remarks>
+        public static Dictionary<DateTime, DateTime> DairyReportDates = new Dictionary<DateTime, DateTime>()
+        {
+            {new DateTime(2012, 3, 1), new DateTime(2012, 4, 2) },
+            {new DateTime(2012, 4, 1), new DateTime(2012, 5, 2) },
+            {new DateTime(2012, 5, 1), new DateTime(2012, 5, 31) },
+            {new DateTime(2012, 6, 1), new DateTime(2012, 7, 5) },
+            {new DateTime(2012, 7, 1), new DateTime(2012, 8, 1) },
+            {new DateTime(2012, 8, 1), new DateTime(2012, 8, 29) },
+            {new DateTime(2012, 9, 1), new DateTime(2012, 10, 3) },
+            {new DateTime(2012, 10, 1), new DateTime(2012, 10, 31) },
+            {new DateTime(2012, 11, 1), new DateTime(2012, 12, 5) },
+            {new DateTime(2012, 12, 1), new DateTime(2013, 1, 3) },
+            {new DateTime(2013, 1, 1), new DateTime(2013, 1, 30) },
+            {new DateTime(2013, 2, 1), new DateTime(2013, 2, 27) },
+            {new DateTime(2013, 3, 1), new DateTime(2013, 4, 3) },
+            {new DateTime(2013, 4, 1), new DateTime(2013, 5, 1) },
+            {new DateTime(2013, 5, 1), new DateTime(2013, 6, 5) },
+            {new DateTime(2013, 6, 1), new DateTime(2013, 7, 3) },
+            {new DateTime(2013, 7, 1), new DateTime(2013, 7, 31) },
+            {new DateTime(2013, 8, 1), new DateTime(2013, 9, 5) },
+            {new DateTime(2013, 9, 1), new DateTime(2013, 10, 18) },
+            {new DateTime(2013, 10, 1), new DateTime(2013, 10, 30) },
+            {new DateTime(2013, 11, 1), new DateTime(2013, 12, 4) },
+            {new DateTime(2013, 12, 1), new DateTime(2014, 1, 2) },
+            {new DateTime(2014, 1, 1), new DateTime(2014, 2, 5) },
+            {new DateTime(2014, 2, 1), new DateTime(2014, 3, 5) },
+            {new DateTime(2014, 3, 1), new DateTime(2014, 4, 2) },
+            {new DateTime(2014, 4, 1), new DateTime(2014, 4, 30) },
+            {new DateTime(2014, 5, 1), new DateTime(2014, 6, 4) },
+            {new DateTime(2014, 6, 1), new DateTime(2014, 7, 2) },
+            {new DateTime(2014, 7, 1), new DateTime(2014, 7, 30) },
+            {new DateTime(2014, 8, 1), new DateTime(2014, 9, 4) },
+            {new DateTime(2014, 9, 1), new DateTime(2014, 10, 1) },
+            {new DateTime(2014, 10, 1), new DateTime(2014, 11, 5) },
+            {new DateTime(2014, 11, 1), new DateTime(2014, 12, 3) },
+            {new DateTime(2014, 12, 1), new DateTime(2014, 12, 31) },
+            {new DateTime(2015, 1, 1), new DateTime(2015, 2, 4) },
+            {new DateTime(2015, 2, 1), new DateTime(2015, 3, 4) },
+            {new DateTime(2015, 3, 1), new DateTime(2015, 4, 1) },
+            {new DateTime(2015, 4, 1), new DateTime(2015, 4, 29) },
+            {new DateTime(2015, 5, 1), new DateTime(2015, 6, 3) },
+            {new DateTime(2015, 6, 1), new DateTime(2015, 7, 1) },
+            {new DateTime(2015, 7, 1), new DateTime(2015, 8, 5) },
+            {new DateTime(2015, 8, 1), new DateTime(2015, 9, 2) },
+            {new DateTime(2015, 9, 1), new DateTime(2015, 9, 30) },
+            {new DateTime(2015, 10, 1), new DateTime(2015, 11, 4) },
+            {new DateTime(2015, 11, 1), new DateTime(2015, 12, 2) },
+            {new DateTime(2015, 12, 1), new DateTime(2015, 12, 30) },
+            {new DateTime(2016, 1, 1), new DateTime(2016, 2, 3) },
+            {new DateTime(2016, 2, 1), new DateTime(2016, 3, 2) },
+            {new DateTime(2016, 3, 1), new DateTime(2016, 3, 30) },
+            {new DateTime(2016, 4, 1), new DateTime(2016, 5, 4) },
+            {new DateTime(2016, 5, 1), new DateTime(2016, 6, 2) },
+            {new DateTime(2016, 6, 1), new DateTime(2016, 6, 29) },
+            {new DateTime(2016, 7, 1), new DateTime(2016, 8, 3) },
+            {new DateTime(2016, 8, 1), new DateTime(2016, 8, 31) },
+            {new DateTime(2016, 9, 1), new DateTime(2016, 10, 5) },
+            {new DateTime(2016, 10, 1), new DateTime(2016, 11, 2) },
+            {new DateTime(2016, 11, 1), new DateTime(2016, 11, 30) },
+            {new DateTime(2016, 12, 1), new DateTime(2017, 1, 5) },
+            {new DateTime(2017, 1, 1), new DateTime(2017, 2, 1) },
+            {new DateTime(2017, 2, 1), new DateTime(2017, 3, 1) },
+            {new DateTime(2017, 3, 1), new DateTime(2017, 4, 5) },
+            {new DateTime(2017, 4, 1), new DateTime(2017, 5, 3) },
+            {new DateTime(2017, 5, 1), new DateTime(2017, 6, 1) },
+            {new DateTime(2017, 6, 1), new DateTime(2017, 6, 28) },
+            {new DateTime(2017, 7, 1), new DateTime(2017, 8, 2) },
+            {new DateTime(2017, 8, 1), new DateTime(2017, 8, 30) },
+            {new DateTime(2017, 9, 1), new DateTime(2017, 10, 4) },
+            {new DateTime(2017, 10, 1), new DateTime(2017, 11, 1) },
+            {new DateTime(2017, 11, 1), new DateTime(2017, 11, 29) },
+            {new DateTime(2017, 12, 1), new DateTime(2018, 1, 4) },
+            {new DateTime(2018, 1, 1), new DateTime(2018, 1, 31) },
+            {new DateTime(2018, 2, 1), new DateTime(2018, 2, 28) },
+            {new DateTime(2018, 3, 1), new DateTime(2018, 4, 4) },
+            {new DateTime(2018, 4, 1), new DateTime(2018, 5, 2) },
+            {new DateTime(2018, 5, 1), new DateTime(2018, 5, 31) },
+            {new DateTime(2018, 6, 1), new DateTime(2018, 7, 5) },
+            {new DateTime(2018, 7, 1), new DateTime(2018, 8, 1) },
+            {new DateTime(2018, 8, 1), new DateTime(2018, 8, 29) },
+            {new DateTime(2018, 9, 1), new DateTime(2018, 10, 3) },
+            {new DateTime(2018, 10, 1), new DateTime(2018, 10, 31) },
+            {new DateTime(2018, 11, 1), new DateTime(2018, 12, 5) },
+            {new DateTime(2018, 12, 1), new DateTime(2019, 1, 3) },
+            {new DateTime(2019, 1, 1), new DateTime(2019, 1, 30) },
+            {new DateTime(2019, 2, 1), new DateTime(2019, 2, 27) },
+            {new DateTime(2019, 3, 1), new DateTime(2019, 4, 3) },
+            {new DateTime(2019, 4, 1), new DateTime(2019, 5, 1) },
+            {new DateTime(2019, 5, 1), new DateTime(2019, 6, 5) },
+            {new DateTime(2019, 6, 1), new DateTime(2019, 7, 3) },
+            {new DateTime(2019, 7, 1), new DateTime(2019, 7, 31) },
+            {new DateTime(2019, 8, 1), new DateTime(2019, 9, 5) },
+            {new DateTime(2019, 9, 1), new DateTime(2019, 10, 2) },
+            {new DateTime(2019, 10, 1), new DateTime(2019, 10, 30) },
+            {new DateTime(2019, 11, 1), new DateTime(2019, 12, 4) },
+            {new DateTime(2019, 12, 1), new DateTime(2020, 1, 2) },
+            {new DateTime(2020, 1, 1), new DateTime(2020, 2, 5) },
+            {new DateTime(2020, 2, 1), new DateTime(2020, 3, 4) },
+            {new DateTime(2020, 3, 1), new DateTime(2020, 4, 1) },
+            {new DateTime(2020, 4, 1), new DateTime(2020, 4, 29) },
+            {new DateTime(2020, 5, 1), new DateTime(2020, 6, 3) },
+            {new DateTime(2020, 6, 1), new DateTime(2020, 7, 1) },
+            {new DateTime(2020, 7, 1), new DateTime(2020, 8, 5) },
+            {new DateTime(2020, 8, 1), new DateTime(2020, 9, 2) },
+            {new DateTime(2020, 9, 1), new DateTime(2020, 9, 30) },
+            {new DateTime(2020, 10, 1), new DateTime(2020, 11, 4) },
+            {new DateTime(2020, 11, 1), new DateTime(2020, 12, 2) },
+            {new DateTime(2020, 12, 1), new DateTime(2020, 12, 30) },
+            {new DateTime(2021, 1, 1), new DateTime(2021, 2, 3) },
+            {new DateTime(2021, 2, 1), new DateTime(2021, 3, 3) },
+            {new DateTime(2021, 3, 1), new DateTime(2021, 3, 31) },
+            {new DateTime(2021, 4, 1), new DateTime(2021, 5, 5) },
+            {new DateTime(2021, 5, 1), new DateTime(2021, 6, 3) },
+        };
+
+        /// <summary>
+        /// Enbridge's Notice of Shipment report dates. Used to calculate the last trade date for CSW
+        /// </summary>
+        /// <remarks>Subtract a day from the value's date in order to get the last trade date</remarks>
+        public static Dictionary<DateTime, DateTime> EnbridgeNoticeOfShipmentDates = new Dictionary<DateTime, DateTime>()
+        {
+            {new DateTime(2019, 6, 1), new DateTime(2019, 5, 17) },
+            {new DateTime(2019, 7, 1), new DateTime(2019, 6, 15) },
+            {new DateTime(2019, 8, 1), new DateTime(2019, 7, 17) },
+            {new DateTime(2019, 9, 1), new DateTime(2019, 8, 16) },
+            {new DateTime(2019, 10, 1), new DateTime(2019, 9, 14) },
+            {new DateTime(2019, 11, 1), new DateTime(2019, 10, 17) },
+            {new DateTime(2019, 12, 1), new DateTime(2019, 11, 15) },
+            {new DateTime(2020, 1, 1), new DateTime(2019, 12, 14) },
+            {new DateTime(2020, 2, 1), new DateTime(2020, 1, 22) },
+            {new DateTime(2020, 3, 1), new DateTime(2020, 2, 21) },
+            {new DateTime(2020, 4, 1), new DateTime(2020, 3, 21) },
+            {new DateTime(2020, 5, 1), new DateTime(2020, 4, 21) },
+            {new DateTime(2020, 6, 1), new DateTime(2020, 5, 21) },
+            {new DateTime(2020, 7, 1), new DateTime(2020, 6, 23) },
+            {new DateTime(2020, 8, 1), new DateTime(2020, 7, 21) },
+            {new DateTime(2020, 9, 1), new DateTime(2020, 8, 21) },
+            {new DateTime(2020, 10, 1), new DateTime(2020, 9, 22) },
+            {new DateTime(2020, 11, 1), new DateTime(2020, 10, 21) },
+            {new DateTime(2020, 12, 1), new DateTime(2020, 11, 21) },
+            {new DateTime(2021, 1, 1), new DateTime(2020, 12, 22) },
+            {new DateTime(2021, 2, 1), new DateTime(2021, 1, 21) },
+            {new DateTime(2021, 3, 1), new DateTime(2021, 2, 23) },
+            {new DateTime(2021, 4, 1), new DateTime(2021, 3, 23) },
+            {new DateTime(2021, 5, 1), new DateTime(2021, 4, 21) },
+            {new DateTime(2021, 6, 1), new DateTime(2021, 5, 21) },
+            {new DateTime(2021, 7, 1), new DateTime(2021, 6, 22) },
+            {new DateTime(2021, 8, 1), new DateTime(2021, 7, 21) },
+            {new DateTime(2021, 9, 1), new DateTime(2021, 8, 21) },
+            {new DateTime(2021, 10, 1), new DateTime(2021, 9, 21) },
+            {new DateTime(2021, 11, 1), new DateTime(2021, 10, 21) },
+            {new DateTime(2021, 12, 1), new DateTime(2021, 11, 23) },
+            {new DateTime(2022, 1, 1), new DateTime(2021, 12, 21) },
+            {new DateTime(2022, 2, 1), new DateTime(2022, 1, 21) },
+            {new DateTime(2022, 3, 1), new DateTime(2022, 2, 23) },
+            {new DateTime(2022, 4, 1), new DateTime(2022, 3, 22) },
+            {new DateTime(2022, 5, 1), new DateTime(2022, 4, 21) },
+            {new DateTime(2022, 6, 1), new DateTime(2022, 5, 21) },
+            {new DateTime(2022, 7, 1), new DateTime(2022, 6, 21) },
+            {new DateTime(2022, 8, 1), new DateTime(2022, 7, 21) },
+            {new DateTime(2022, 9, 1), new DateTime(2022, 8, 23) },
+            {new DateTime(2022, 10, 1), new DateTime(2022, 9, 21) },
+            {new DateTime(2022, 11, 1), new DateTime(2022, 10, 21) },
+            {new DateTime(2022, 12, 1), new DateTime(2022, 11, 22) },
+        };
+
+        /// <summary>
         /// Dictionary of the Functions that calculates the expiry for a given year and month.
         /// It does not matter what the day and time of day are passed into the Functions.
         /// The Functions is responsible for calculating the day and time of day given a year and month
@@ -77,6 +250,24 @@ namespace QuantConnect.Securities.Future
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
                         .GetEntry("usa", Futures.Metals.AluminumMWUSTransactionPremiumPlatts25MT, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Aluminium European Premium Duty-Paid (Metal Bulletin) (EDP): https://www.cmegroup.com/trading/metals/base/aluminium-european-premium-duty-paid-metal-bulletin_contract_specifications.html
+            {Futures.Metals.AluminiumEuropeanPremiumDutyPaidMetalBulletin, (time =>
+                {
+                    // Trading terminates on the last business day of the contract month
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry("usa", Futures.Metals.AluminiumEuropeanPremiumDutyPaidMetalBulletin, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
 
@@ -159,7 +350,7 @@ namespace QuantConnect.Securities.Future
                         .GetEntry("usa", Futures.Indices.BloombergCommodityIndex, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
-                    
+
                     while (holidays.Contains(thirdWednesday))
                     {
                         thirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -1);
@@ -240,6 +431,24 @@ namespace QuantConnect.Securities.Future
                 {
                     // Trading terminates on the last business day of the contract month which is also a Platts publication date for the price assessment.
                     return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                })
+            },
+            // Black Sea Wheat Financially Settled (Platts) (BWF): https://www.cmegroup.com/trading/agricultural/grain-and-oilseed/black-sea-wheat-financially-settled-platts_contract_specifications.html
+            {Futures.Grains.BlackSeaWheatFinanciallySettledPlatts, (time =>
+                {
+                    // Trading terminates on the last business day of the contract month which is also a Platts publication date for the price assessment.
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry("usa", Futures.Currencies.AUDNZD, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
                 })
             },
             // Currencies group
@@ -432,6 +641,122 @@ namespace QuantConnect.Securities.Future
                     return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
                 })
             },
+            // Bitcoin (BTC): https://www.cmegroup.com/trading/equity-index/us-index/bitcoin_contract_specifications.html
+            {Futures.Currencies.BTC, (time =>
+                {
+                    // Trading terminates at 4:00 p.m. London time on the last Friday of the contract month. If that day is not a business day in both the U.K. and the US, trading terminates on the preceding day that is a business day for both the U.K. and the U.S..
+                    var lastFriday = (from day in Enumerable.Range(1, DateTime.DaysInMonth(time.Year, time.Month))
+                                      where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Friday
+                                      select new DateTime(time.Year, time.Month, day)).Last();
+
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry("usa", Futures.Currencies.AUDNZD, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastFriday))
+                    {
+                        lastFriday = FuturesExpiryUtilityFunctions.AddBusinessDays(lastFriday, -1);
+                    }
+
+                    return lastFriday.Add(new TimeSpan(15, 0, 0));
+                })
+            },
+            // Canadian Dollar/Japanese Yen (CJY): https://www.cmegroup.com/trading/fx/g10/canadian-dollar-japanese-yen_contract_specifications.html
+            {Futures.Currencies.CADJPY, (time =>
+                {
+                    // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday).
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry("usa", Futures.Currencies.CADJPY, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
+                })
+            },
+            // Standard-Size USD/Offshore RMB (CNH) (CNH): https://www.cmegroup.com/trading/fx/emerging-market/usd-cnh_contract_specifications.html
+            {Futures.Currencies.StandardSizeUSDOffshoreRMBCNH, (time =>
+                {
+                    // Trading terminates on the second Hong Kong business day prior to the third Wednesday of the contract month at 11:00 a.m. Hong Kong local time.
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = thirdWednesday.AddDays(-2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry("usa", Futures.Currencies.StandardSizeUSDOffshoreRMBCNH, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday) || !secondBusinessDayPrecedingThirdWednesday.IsCommonBusinessDay())
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = secondBusinessDayPrecedingThirdWednesday.AddDays(-1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(3,0,0));
+                })
+            },
+            // E-mini Euro FX (E7): https://www.cmegroup.com/trading/fx/g10/e-mini-euro-fx_contract_specifications.html
+            {Futures.Currencies.EuroFXEmini, (time =>
+                {
+                    // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday). 
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry("usa", Futures.Currencies.EuroFXEmini, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
+                })
+            },
+            // Euro/Australian Dollar (EAD): https://www.cmegroup.com/trading/fx/g10/euro-fx-australian-dollar_contract_specifications.html
+            {Futures.Currencies.EURAUD, (time =>
+                {
+                    // 9:16 a.m. Central Time (CT) on the second business day immediately preceding the third Wednesday of the contract month (usually Monday). 
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry("usa", Futures.Currencies.EURAUD, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
+                })
+            },
+            // Euro/Canadian Dollar (ECD): https://www.cmegroup.com/trading/fx/g10/euro-fx-canadian-dollar_contract_specifications.html
+            {Futures.Currencies.EURCAD, (time =>
+                {
+                    // Trading terminates at 9:16 a.m. CT on the second business day prior to the third Wednesday of the contract month. 
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(thirdWednesday, -2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry("usa", Futures.Currencies.EURCAD, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(secondBusinessDayPrecedingThirdWednesday))
+                    {
+                        secondBusinessDayPrecedingThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondBusinessDayPrecedingThirdWednesday, -1);
+                    }
+
+                    return secondBusinessDayPrecedingThirdWednesday.Add(new TimeSpan(14, 16, 0));
+                })
+            },
             // Financials group
             // Y30TreasuryBond (ZB): http://www.cmegroup.com/trading/interest-rates/us-treasury/30-year-us-treasury-bond_contract_specifications.html
             {Futures.Financials.Y30TreasuryBond, (time =>
@@ -509,7 +834,7 @@ namespace QuantConnect.Securities.Future
                     // Trading shall cease on the last business day of the contract month.
                     // Special case exists where the last trade occurs on US holiday, but not an exchange holiday (markets closed)
                     // In order to fix that case, we will start from the last day of the month and go backwards checking if it's a weekday and a holiday
-                    var lastDay = new DateTime(time.Year, time.Month, DateTime.DaysInMonth(time.Year, time.Month)); 
+                    var lastDay = new DateTime(time.Year, time.Month, DateTime.DaysInMonth(time.Year, time.Month));
                     var holidays = MarketHoursDatabase.FromDataFolder()
                         .GetEntry("usa", Futures.Energies.MiniSingaporeFuelOil180CstPlatts, SecurityType.Future)
                         .ExchangeHours
@@ -552,7 +877,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Premium Unleaded Gasoline 10 ppm FOB MED (Platts) Futures (A3G): https://www.cmegroup.com/trading/energy/refined-products/premium-unleaded-10-ppm-platts-fob-med-swap_contract_specifications.html
-            {Futures.Energies.PremiumUnleadedGasoline10ppmFOBMEDPlatts, (time => 
+            {Futures.Energies.PremiumUnleadedGasoline10ppmFOBMEDPlatts, (time =>
                 {
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                     var holidays = MarketHoursDatabase.FromDataFolder()
@@ -583,7 +908,7 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Mont Belvieu Natural Gasoline (OPIS) Futures (A7Q): https://www.cmegroup.com/trading/energy/petrochemicals/mont-belvieu-natural-gasoline-5-decimal-opis-swap_contract_specifications.html
-            {Futures.Energies.MontBelvieuNaturalGasolineOPIS, (time => 
+            {Futures.Energies.MontBelvieuNaturalGasolineOPIS, (time =>
                 {
                     // Trading shall cease on the last business day of the contract month
                     return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
@@ -719,7 +1044,7 @@ namespace QuantConnect.Securities.Future
                         .GetEntry("usa", Futures.Energies.ArgusLLSvsWTIArgusTradeMonth, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
-                    
+
                     while (!twentyFifthDay.IsCommonBusinessDay() || holidays.Contains(twentyFifthDay))
                     {
                         twentyFifthDay = FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifthDay, -1);
@@ -737,7 +1062,7 @@ namespace QuantConnect.Securities.Future
                         .GetEntry("usa", Futures.Energies.SingaporeGasoilPlattsVsLowSulphurGasoilFutures, SecurityType.Future)
                         .ExchangeHours
                         .Holidays;
-                    
+
                     while (holidays.Contains(lastBusinessDay))
                     {
                         lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
@@ -937,6 +1262,35 @@ namespace QuantConnect.Securities.Future
                     return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
                 })
             },
+            // Brent Last Day Financial (BZ): https://www.cmegroup.com/trading/energy/crude-oil/brent-crude-oil-last-day_contract_specifications.html
+            {Futures.Energies.BrentLastDayFinancial, (time =>
+                {
+                    // Trading terminates the last London business day of the month, 2 months prior to the contract month except for the February contract month which terminates the 2nd last London business day of the month, 2 months prior to the contract month.
+                    var twoMonthsPriorToContractMonth = time.AddMonths(-2);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry("usa", Futures.Energies.BrentLastDayFinancial, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    DateTime lastBusinessDay;
+
+                    if (twoMonthsPriorToContractMonth.Month == 2)
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(twoMonthsPriorToContractMonth, 1);
+                    }
+                    else
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(twoMonthsPriorToContractMonth, 1);
+                    }
+
+                    while (holidays.Contains(lastBusinessDay))
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
             // CrudeOilWTI (CL): http://www.cmegroup.com/trading/energy/crude-oil/light-sweet-crude_contract_specifications.html
             {Futures.Energies.CrudeOilWTI, (time =>
                 {
@@ -952,6 +1306,150 @@ namespace QuantConnect.Securities.Future
                         var lastBuisnessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(twentyFifth,-1);
                         return FuturesExpiryUtilityFunctions.AddBusinessDays(lastBuisnessDay,-3);
                     }
+                })
+            },
+            // Gulf Coast CBOB Gasoline A2 (Platts) vs. RBOB Gasoline (CRB): https://www.cmegroup.com/trading/energy/refined-products/gulf-coast-cbob-gasoline-a2-platts-vs-rbob-spread-swap_contract_specifications.html
+            {Futures.Energies.GulfCoastCBOBGasolineA2PlattsVsRBOBGasoline, (time =>
+                {
+                    // Trading shall cease on the last business day of the contract month.
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                })
+            },
+            // Clearbrook Bakken Sweet Crude Oil Monthly Index (Net Energy) (CSW): https://www.cmegroup.com/trading/energy/crude-oil/clearbrook-bakken-crude-oil-index-net-energy_contract_specifications.html
+            {Futures.Energies.ClearbrookBakkenSweetCrudeOilMonthlyIndexNetEnergy, (time =>
+                {
+                    // Trading terminates one Canadian business day prior to the Notice of Shipments (NOS) date on the Enbridge Pipeline. The NOS date occurs on or about the 20th calendar day of the month, subject to confirmation by Enbridge Pipeline. The official schedule for the NOS dates will be made publicly available by Enbridge. 
+                    // This report is behind a portal that requires registration (privately). As such, we cannot access the notice of shipment dates, but we can keep track
+                    // of the CME group's website in order to discover the NOS dates
+                    // Publication dates are also erratic. We must maintain a separate list from MHDB in order to keep track of these days
+                    DateTime publicationDate;
+
+                    if (!EnbridgeNoticeOfShipmentDates.TryGetValue(time, out publicationDate))
+                    {
+                        publicationDate = new DateTime(time.Year, time.Month, 21).AddMonths(-1);
+                    }
+                    do
+                    {
+                        publicationDate = publicationDate.AddDays(-1);
+                    }
+                    while (!publicationDate.IsCommonBusinessDay());
+
+                    return publicationDate;
+                })
+            },
+            // WTI Financial (CSX): https://www.cmegroup.com/trading/energy/crude-oil/west-texas-intermediate-wti-crude-oil-calendar-swap-futures_contract_specifications.html
+            {Futures.Energies.WTIFinancial, (time =>
+                {
+                    // Trading shall cease on the last business day of the contract month
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry("usa", Futures.Energies.WTIFinancial, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay) || !lastBusinessDay.IsCommonBusinessDay())
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Chicago Ethanol (Platts) (CU): https://www.cmegroup.com/trading/energy/ethanol/chicago-ethanol-platts-swap_contract_specifications.html a
+            {Futures.Energies.ChicagoEthanolPlatts, (time =>
+                {
+                    // Trading terminates on the last business day of the contract month
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                })
+            },
+            // Singapore Mogas 92 Unleaded (Platts) Brent Crack Spread (D1N): https://www.cmegroup.com/trading/energy/refined-products/singapore-mogas-92-unleaded-platts-brent-crack-spread-swap-futures_contract_specifications.html
+            {Futures.Energies.SingaporeMogas92UnleadedPlattsBrentCrackSpread, (time =>
+                {
+                    // Trading shall cease on the last business day of the contract month
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry("usa", Futures.Energies.SingaporeMogas92UnleadedPlattsBrentCrackSpread, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay) || !lastBusinessDay.IsCommonBusinessDay())
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Dubai Crude Oil (Platts) Financial (DCB): https://www.cmegroup.com/trading/energy/crude-oil/dubai-crude-oil-calendar-swap-futures_contract_specifications.html
+            {Futures.Energies.DubaiCrudeOilPlattsFinancial, (time =>
+                {
+                    // Trading shall cease on the last London and Singapore business day of the contract month
+                    var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry("usa", Futures.Energies.DubaiCrudeOilPlattsFinancial, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    while (holidays.Contains(lastBusinessDay) || !lastBusinessDay.IsCommonBusinessDay())
+                    {
+                        lastBusinessDay = FuturesExpiryUtilityFunctions.AddBusinessDays(lastBusinessDay, -1);
+                    }
+
+                    return lastBusinessDay;
+                })
+            },
+            // Japan C&amp;F Naphtha (Platts) BALMO (E6): https://www.cmegroup.com/trading/energy/refined-products/japan-naphtha-balmo-swap-futures_contract_specifications.html
+            {Futures.Energies.JapanCnFNaphthaPlattsBALMO, (time =>
+                {
+                    // Trading shall cease on the last business day of the contract month. 
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 1);
+                })
+            },
+            // Ethanol (EH): https://www.cmegroup.com/trading/energy/ethanol/cbot-ethanol_contract_specifications.html
+            {Futures.Energies.Ethanol, (time =>
+                {
+                    // Trading terminates on 3rd business day of the contract month in "ctm"
+                    var currentDay = time;
+                    var daysCounted = time.IsCommonBusinessDay() ? 1 : 0;
+                    var i = 0;
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry("usa", Futures.Energies.Ethanol, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+                    
+                    while (daysCounted < 3)
+                    {
+                        // The asset continues trading on days contained within `USHoliday.Dates`, but
+                        // the last trade date is affected by those holidays. We check for 
+                        // both MHDB entries and holidays to get accurate business days
+                        if (holidays.Contains(currentDay) || USHoliday.Dates.Contains(currentDay))
+                        {
+                            // Catches edge case where first day is on a friday
+                            if (i == 0 && currentDay.DayOfWeek == DayOfWeek.Friday)
+                            {
+                                daysCounted = 0;
+                            }
+
+                            currentDay = currentDay.AddDays(1);
+
+                            if (i != 0 && currentDay.IsCommonBusinessDay())
+                            {
+                                daysCounted++;
+                            }
+                            i++;
+                            continue;
+                        }
+
+                        currentDay = currentDay.AddDays(1);
+
+                        if (!holidays.Contains(currentDay) && FuturesExpiryUtilityFunctions.NotHoliday(currentDay))
+                        {
+                            daysCounted++;
+                        }
+                        i++;
+                    }
+
+                    return currentDay;
                 })
             },
             // HeatingOil (HO): http://www.cmegroup.com/trading/energy/refined-products/heating-oil_contract_specifications.html
@@ -1045,7 +1543,104 @@ namespace QuantConnect.Securities.Future
                     var precedingMonth = time.AddMonths(-1);
                     return FuturesExpiryUtilityFunctions.NthLastBusinessDay(precedingMonth, 1);
                 })
-            }
+            },
+            // Dairy Group
+            // Cash-settled Butter (CB): https://www.cmegroup.com/trading/agricultural/dairy/cash-settled-butter_contract_specifications.html
+            {Futures.Dairy.CashSettledButter, (time =>
+                {
+                    // Trading shall terminate on the business day immediately preceding the day on which the USDA announces the Butter price for that contract month. (LTD 12:10 p.m.)
+                    DateTime publicationDate;
+                    if (DairyReportDates.TryGetValue(time, out publicationDate))
+                    {
+                        do
+                        {
+                            publicationDate = publicationDate.AddDays(-1);
+                        }
+                        while (!FuturesExpiryUtilityFunctions.NotHoliday(publicationDate));
+                    }
+                    else
+                    {
+                        publicationDate = time;
+                    }
+
+                    // The USDA price announcements are erratic in their publication date. You can view the calendar the USDA announces prices here: https://www.ers.usda.gov/calendar/
+                    // More specifically, the report you should be looking for has the name "National Dairy Products Sales Report"
+
+                    return publicationDate.Add(new TimeSpan(17, 10, 0));
+                })
+            },
+            // Cash-Settled Cheese (CSC): https://www.cmegroup.com/trading/agricultural/dairy/cheese_contract_specifications.html
+            {Futures.Dairy.CashSettledCheese, (time =>
+                {
+                    // Trading shall terminate on the business day immediately preceding the release date for the USDA monthly weighted average price in the U.S. for cheese. LTD close is at 12:10 p.m. Central Time 
+                    DateTime publicationDate;
+                    if (DairyReportDates.TryGetValue(time, out publicationDate))
+                    {
+                        do
+                        {
+                            publicationDate = publicationDate.AddDays(-1);
+                        }
+                        while (!FuturesExpiryUtilityFunctions.NotHoliday(publicationDate));
+                    }
+                    else
+                    {
+                        publicationDate = time;
+                    }
+
+                    // The USDA price announcements are erratic in their publication date. You can view the calendar the USDA announces prices here: https://www.ers.usda.gov/calendar/
+                    // More specifically, the report you should be looking for has the name "National Dairy Products Sales Report"
+
+                    return publicationDate.Add(new TimeSpan(17, 10, 0));
+                })
+            },
+            // Class III Milk (DC): https://www.cmegroup.com/trading/agricultural/dairy/class-iii-milk_contract_specifications.html
+            {Futures.Dairy.ClassIIIMilk, (time =>
+                {
+                    // Trading shall terminate on the business day immediately preceding the day on which the USDA announces the Class III price for that contract month (LTD 12:10 p.m.)
+                    DateTime publicationDate;
+                    if (DairyReportDates.TryGetValue(time, out publicationDate))
+                    {
+                        do
+                        {
+                            publicationDate = publicationDate.AddDays(-1);
+                        }
+                        while (!FuturesExpiryUtilityFunctions.NotHoliday(publicationDate));
+                    }
+                    else
+                    {
+                        publicationDate = time;
+                    }
+
+                    // The USDA price announcements are erratic in their publication date. You can view the calendar the USDA announces prices here: https://www.ers.usda.gov/calendar/
+                    // More specifically, the report you should be looking for has the name "National Dairy Products Sales Report"
+
+                    return publicationDate.Add(new TimeSpan(17, 10, 0));
+                })
+            },
+            // Dry Whey (DY): https://www.cmegroup.com/trading/agricultural/dairy/dry-whey_contract_specifications.html
+            {Futures.Dairy.DryWhey, (time =>
+                {
+                    // Trading shall terminate on the business day immediately preceding the day on which the USDA announces the Dry Whey price for that contract month. (LTD 12:10 p.m.) 
+                    DateTime publicationDate;
+                    if (DairyReportDates.TryGetValue(time, out publicationDate))
+                    {
+                        do
+                        {
+                            publicationDate = publicationDate.AddDays(-1);
+                        }
+                        while (!FuturesExpiryUtilityFunctions.NotHoliday(publicationDate));
+                    }
+                    else
+                    {
+                        publicationDate = time;
+                    }
+
+                    // The USDA price announcements are erratic in their publication date. You can view the calendar the USDA announces prices here: https://www.ers.usda.gov/calendar/
+                    // More specifically, the report you should be looking for has the name "National Dairy Products Sales Report"
+
+                    return publicationDate.Add(new TimeSpan(17, 10, 0));
+                })
+            },
         };
     }
 }
