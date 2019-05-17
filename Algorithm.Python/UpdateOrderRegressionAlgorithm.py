@@ -134,4 +134,4 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
             self.Log("FILLED:: {0} FILL PRICE:: {1}".format(self.Transactions.GetOrderById(orderEvent.OrderId), orderEvent.FillPrice))
         else:
             self.Log(orderEvent.ToString())
-            self.Log("TICKET:: {0}".format(self.tickets[-1]))
+            self.Log("TICKET:: {0}".format(ticket))

@@ -168,7 +168,7 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 Log(orderEvent.ToString());
-                Log("TICKET:: " + _tickets.Last());
+                Log("TICKET:: " + ticket);
             }
         }
 

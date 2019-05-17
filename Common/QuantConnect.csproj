@@ -230,6 +230,7 @@
     <Compile Include="Indicators\IIndicatorWarmUpPeriodProvider.cs" />
     <Compile Include="Interfaces\IAccountCurrencyProvider.cs" />
     <Compile Include="Interfaces\IAlgorithmSubscriptionManager.cs" />
+    <Compile Include="Interfaces\IBusyCollection.cs" />
     <Compile Include="Interfaces\IHistoryProvider.cs" />
     <Compile Include="Interfaces\IOptionPrice.cs" />
     <Compile Include="Interfaces\ISecurityInitializerProvider.cs" />
@@ -666,6 +667,7 @@
     <Compile Include="TradingCalendar.cs" />
     <Compile Include="TradingDay.cs" />
     <Compile Include="Util\BusyBlockingCollection.cs" />
+    <Compile Include="Util\BusyCollection.cs" />
     <Compile Include="Util\CircularQueue.cs" />
     <Compile Include="Util\Composer.cs" />
     <Compile Include="Util\DateTimeJsonConverter.cs" />

@@ -61,7 +61,6 @@ namespace QuantConnect.Tests.Common.Securities
             _transactionHandler = new BacktestingTransactionHandler();
             _brokerage = new BacktestingBrokerage(_algorithm);
             _transactionHandler.Initialize(_algorithm, _brokerage, new TestResultHandler());
-            new Thread(_transactionHandler.Run) { IsBackground = true }.Start();
 
             _algorithm.Transactions.SetOrderProcessor(_transactionHandler);
 
