@@ -21,6 +21,7 @@ using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
 using QuantConnect.ToolBox.BitfinexDownloader;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
+using QuantConnect.ToolBox.CoinApiDataConverter;
 using QuantConnect.ToolBox.CryptoiqDownloader;
 using QuantConnect.ToolBox.DukascopyDownloader;
 using QuantConnect.ToolBox.FxcmDownloader;
@@ -141,6 +142,10 @@ namespace QuantConnect.ToolBox
                         KaikoDataConverterProgram.KaikoDataConverter(GetParameterOrExit(optionsObject, "source-dir"),
                                                                      GetParameterOrExit(optionsObject, "date"),
                                                                      GetParameterOrDefault(optionsObject, "exchange", string.Empty));
+                        break;
+                    case "cadc":
+                    case "coinapidataconverter":
+                        CoinApiDataConverterProgram.CoinApiDataConverter(GetParameterOrExit(optionsObject, "source-dir"));
                         break;
                     case "nmdc":
                     case "nsemarketdataconverter":
