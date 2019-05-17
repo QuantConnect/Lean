@@ -21,7 +21,6 @@ using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages.InteractiveBrokers;
-using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
@@ -33,7 +32,7 @@ using QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests;
 namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
 {
     [TestFixture]
-    [Ignore("These tests require the IBController and IB TraderWorkstation to be installed.")]
+    [Ignore("These tests require the IBGateway to be installed.")]
     public class InteractiveBrokersBrokerageTests
     {
         private readonly List<Order> _orders = new List<Order>();
@@ -44,14 +43,6 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         [SetUp]
         public void InitializeBrokerage()
         {
-            InteractiveBrokersGatewayRunner.Start(Config.Get("ib-controller-dir"),
-                Config.Get("ib-tws-dir"),
-                Config.Get("ib-user-name"),
-                Config.Get("ib-password"),
-                Config.Get("ib-trading-mode"),
-                Config.GetBool("ib-use-tws")
-                );
-
             // grabs account info from configuration
             var securityProvider = new SecurityProvider();
             securityProvider[Symbols.USDJPY] = new Security(
@@ -130,13 +121,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 Log.Trace("InteractiveBrokersBrokerageTests.Teardown(): Account holdings: " + string.Join(", ", holdingsText));
                 //Assert.AreEqual(0, holdingsCount, "Failed to verify that there are zero account holdings.");
 
-                _interactiveBrokersBrokerage.Dispose();
-                _interactiveBrokersBrokerage = null;
                 _orders.Clear();
             }
             finally
             {
-                InteractiveBrokersGatewayRunner.Stop();
+                _interactiveBrokersBrokerage?.Dispose();
             }
         }
 
@@ -167,10 +156,6 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             Assert.IsTrue(ib.IsConnected);
 
             ib.ResetGatewayConnection();
-            Assert.IsTrue(InteractiveBrokersGatewayRunner.IsRunning());
-            Assert.IsTrue(ib.IsConnected);
-
-            ib.CheckIbGateway();
             Assert.IsTrue(ib.IsConnected);
         }
 
@@ -481,9 +466,11 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
                 Console.WriteLine(holding.Value);
             }
 
-            Log.Trace("Quantity: " + previousHoldings[Symbols.USDJPY].Quantity);
-
-            bool hasSymbol = previousHoldings.ContainsKey(Symbols.USDJPY);
+            var hasSymbol = previousHoldings.ContainsKey(Symbols.USDJPY);
+            if (hasSymbol)
+            {
+                Log.Trace("Quantity: " + previousHoldings[Symbols.USDJPY].Quantity);
+            }
 
             // wait for order to complete before request account holdings
             var orderResetEvent = new ManualResetEvent(false);

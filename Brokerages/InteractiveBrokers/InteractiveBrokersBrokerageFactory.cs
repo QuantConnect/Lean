@@ -19,8 +19,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 using QuantConnect.Util;
-using QuantConnect.Logging;
-using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
@@ -44,27 +42,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// The implementation of this property will create the brokerage data dictionary required for
         /// running live jobs. See <see cref="IJobQueueHandler.NextJob"/>
         /// </remarks>
-        public override Dictionary<string, string> BrokerageData
+        public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
-            get
-            {
-                var data = new Dictionary<string, string>();
-                data.Add("ib-account", Config.Get("ib-account"));
-                data.Add("ib-user-name", Config.Get("ib-user-name"));
-                data.Add("ib-password", Config.Get("ib-password"));
-                data.Add("ib-trading-mode", Config.Get("ib-trading-mode"));
-                data.Add("ib-agent-description", Config.Get("ib-agent-description"));
-                return data;
-            }
-        }
+            { "ib-account", Config.Get("ib-account") },
+            { "ib-user-name", Config.Get("ib-user-name") },
+            { "ib-password", Config.Get("ib-password") },
+            { "ib-trading-mode", Config.Get("ib-trading-mode") },
+            { "ib-agent-description", Config.Get("ib-agent-description") }
+        };
 
         /// <summary>
         /// Gets a new instance of the <see cref="InteractiveBrokersBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel
-        {
-            get { return new InteractiveBrokersBrokerageModel(); }
-        }
+        public override IBrokerageModel BrokerageModel => new InteractiveBrokersBrokerageModel();
 
         /// <summary>
         /// Creates a new IBrokerage instance and set ups the environment for the brokerage
@@ -77,11 +67,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var errors = new List<string>();
 
             // read values from the brokerage datas
-            var useTws = Config.GetBool("ib-use-tws");
             var port = Config.GetInt("ib-port", 4001);
             var host = Config.Get("ib-host", "127.0.0.1");
             var twsDirectory = Config.Get("ib-tws-dir", "C:\\Jts");
-            var ibControllerDirectory = Config.Get("ib-controller-dir", "C:\\IBController");
+            var ibVersion = Config.Get("ib-version", "974");
 
             var account = Read<string>(job.BrokerageData, "ib-account", errors);
             var userId = Read<string>(job.BrokerageData, "ib-user-name", errors);
@@ -100,10 +89,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new Exception("No trading mode selected. Please select either 'paper' or 'live' trading.");
             }
 
-            // launch the IB gateway
-            InteractiveBrokersGatewayRunner.Start(ibControllerDirectory, twsDirectory, userId, password, tradingMode, useTws);
-
-            var ib = new InteractiveBrokersBrokerage(algorithm, algorithm.Transactions, algorithm.Portfolio, account, host, port, agentDescription);
+            var ib = new InteractiveBrokersBrokerage(
+                algorithm,
+                algorithm.Transactions,
+                algorithm.Portfolio,
+                account,
+                host,
+                port,
+                twsDirectory,
+                ibVersion,
+                userId,
+                password,
+                tradingMode,
+                agentDescription);
             Composer.Instance.AddPart<IDataQueueHandler>(ib);
 
             return ib;
@@ -116,7 +114,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <filterpriority>2</filterpriority>
         public override void Dispose()
         {
-            InteractiveBrokersGatewayRunner.Stop();
         }
     }
 }
