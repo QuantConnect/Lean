@@ -20,30 +20,34 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class SumTests
+    public class SumTests : CommonIndicatorTests<IndicatorDataPoint>
     {
-        [Test]
-        public void ComputesCorrectly()
+        protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            var sum = new Sum(2);
+            return new Sum(2);
+        }
+
+        protected override string TestFileName => "";
+
+        protected override string TestColumnName => "";
+
+        protected override void RunTestIndicator(IndicatorBase<IndicatorDataPoint> indicator)
+        {
             var time = DateTime.UtcNow;
 
-            sum.Update(time.AddDays(1), 1m);
-            sum.Update(time.AddDays(1), 2m);
-            sum.Update(time.AddDays(1), 3m);
+            foreach (var i in new[] {1, 2, 3})
+            {
+                indicator.Update(time.AddDays(i), i);
+            }
 
-            Assert.AreEqual(sum.Current.Value, 2m + 3m);
+            Assert.AreEqual(indicator.Current.Value, 2m + 3m);
         }
 
         [Test]
-        public void ResetsCorrectly()
+        public override void ResetsProperly()
         {
-            var sum = new Sum(2);
-            var time = DateTime.UtcNow;
-
-            sum.Update(time.AddDays(1), 1m);
-            sum.Update(time.AddDays(1), 2m);
-            sum.Update(time.AddDays(1), 3m);
+            var sum = (Sum) CreateIndicator();
+            RunTestIndicator(sum);
 
             Assert.IsTrue(sum.IsReady);
 
@@ -51,22 +55,8 @@ namespace QuantConnect.Tests.Indicators
 
             TestHelper.AssertIndicatorIsInDefaultState(sum);
             Assert.AreEqual(sum.Current.Value, 0m);
-            sum.Update(time.AddDays(1), 1);
+            sum.Update(DateTime.UtcNow, 1);
             Assert.AreEqual(sum.Current.Value, 1m);
-        }
-
-        [Test]
-        public void WarmsUpProperly()
-        {
-            var indicator = new Sum(2);
-            var time = DateTime.UtcNow;
-            var period = ((IIndicatorWarmUpPeriodProvider)indicator).WarmUpPeriod;
-
-            for (var i = 0; i < period; i++)
-            {
-                indicator.Update(time.AddMinutes(i), i);
-                Assert.AreEqual(i == period - 1, indicator.IsReady);
-            }
         }
     }
 }
