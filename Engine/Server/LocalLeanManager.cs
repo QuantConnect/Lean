@@ -23,6 +23,8 @@ namespace QuantConnect.Lean.Engine.Server
     /// </summary>
     public class LocalLeanManager : ILeanManager
     {
+        private LeanEngineSystemHandlers _systemHandlers;
+
         /// <summary>
         /// Empty implementation of the ILeanManager interface
         /// </summary>
@@ -32,7 +34,7 @@ namespace QuantConnect.Lean.Engine.Server
         /// <param name="algorithmManager">The Algorithm manager</param>
         public void Initialize(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, AlgorithmNodePacket job, AlgorithmManager algorithmManager)
         {
-            // NOP
+            _systemHandlers = systemHandlers;
         }
 
         /// <summary>
@@ -41,7 +43,7 @@ namespace QuantConnect.Lean.Engine.Server
         /// <param name="algorithm">The IAlgorithm instance being run</param>
         public void SetAlgorithm(IAlgorithm algorithm)
         {
-            // NOP
+            algorithm.SetApi(_systemHandlers.Api);
         }
 
         /// <summary>
