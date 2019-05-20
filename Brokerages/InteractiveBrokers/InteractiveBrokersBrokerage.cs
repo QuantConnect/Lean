@@ -2833,14 +2833,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // an existing session was detected and IBAutomater clicked the "Exit Application" button
-            if (e.Data.Contains("Existing session detected"))
+            else if (e.Data.Contains("Existing session detected"))
             {
                 _existingSessionDetected = true;
                 _ibAutomaterInitializeEvent.Set();
             }
 
             // a security dialog (2FA/code card) was detected by IBAutomater
-            if (e.Data.Contains("Second Factor Authentication") ||
+            else if (e.Data.Contains("Second Factor Authentication") ||
                 e.Data.Contains("Security Code Card Authentication") ||
                 e.Data.Contains("Enter security code"))
             {
@@ -2849,7 +2849,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // initialization completed
-            if (e.Data.Contains("Configuration settings updated"))
+            else if (e.Data.Contains("Configuration settings updated"))
             {
                 _ibAutomaterInitializeEvent.Set();
             }
