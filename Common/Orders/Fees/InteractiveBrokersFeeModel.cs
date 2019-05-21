@@ -153,8 +153,8 @@ namespace QuantConnect.Orders.Fees
                     break;
 
                 default:
-                    // return zero fee for unsupported security types
-                    return OrderFee.Zero;
+                    // unsupported security type
+                    throw new ArgumentException($"Unsupported security type: {security.Type}");
             }
 
             return new OrderFee(new CashAmount(

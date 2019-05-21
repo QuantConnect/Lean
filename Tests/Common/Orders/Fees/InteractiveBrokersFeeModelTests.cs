@@ -161,27 +161,28 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         }
 
         [Test]
-        public void ReturnsZeroForUnsupportedSecurityType()
+        public void GetOrderFeeThrowsForUnsupportedSecurityType()
         {
-            var tz = TimeZones.NewYork;
-            var security = new Cfd(
-                SecurityExchangeHours.AlwaysOpen(tz),
-                new Cash("EUR", 0, 0),
-                new SubscriptionDataConfig(typeof(QuoteBar), Symbols.DE30EUR, Resolution.Minute, tz, tz, true, false, false),
-                new SymbolProperties("DE30EUR", "EUR", 1, 0.01m, 1m),
-                ErrorCurrencyConverter.Instance
-            );
-            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 12000, 12000));
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    var tz = TimeZones.NewYork;
+                    var security = new Cfd(
+                        SecurityExchangeHours.AlwaysOpen(tz),
+                        new Cash("EUR", 0, 0),
+                        new SubscriptionDataConfig(typeof(QuoteBar), Symbols.DE30EUR, Resolution.Minute, tz, tz, true, false, false),
+                        new SymbolProperties("DE30EUR", "EUR", 1, 0.01m, 1m),
+                        ErrorCurrencyConverter.Instance
+                    );
+                    security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 12000, 12000));
 
-            var fee = _feeModel.GetOrderFee(
-                new OrderFeeParameters(
-                    security,
-                    new MarketOrder(security.Symbol, 1, DateTime.UtcNow)
-                )
-            );
-
-            Assert.AreEqual(Currencies.NullCurrency, fee.Value.Currency);
-            Assert.AreEqual(0m, fee.Value.Amount);
+                    _feeModel.GetOrderFee(
+                        new OrderFeeParameters(
+                            security,
+                            new MarketOrder(security.Symbol, 1, DateTime.UtcNow)
+                        )
+                    );
+                });
         }
     }
 }
