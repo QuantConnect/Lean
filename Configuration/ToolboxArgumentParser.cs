@@ -36,7 +36,7 @@ namespace QuantConnect.Configuration
                                                      "[REQUIRED] Target tool, CASE INSENSITIVE: GDAXDownloader or GDAXDL/CryptoiqDownloader or CDL"
                                                      + "/DukascopyDownloader or DDL/IEXDownloader or IEXDL"
                                                      + "/FxcmDownloader or FDL/FxcmVolumeDownload or FVDL/GoogleDownloader or GDL/IBDownloader or IBDL"
-                                                     + "/KrakenDownloader or KDL/OandaDownloader or ODL/QuandlBitfinexDownloader or QBDL"
+                                                     + "/KrakenDownloader or KDL/OandaDownloader or ODL/QuandlBitfinexDownloader or QBDL or SECDownloader or SECDL"
                                                      + "/YahooDownloader or YDL/AlgoSeekFuturesConverter or ASFC/AlgoSeekOptionsConverter or ASOC"
                                                      + "/IVolatilityEquityConverter or IVEC/KaikoDataConverter or KDC/NseMarketDataConverter or NMDC"
                                                      + "/QuantQuoteConverter or QQC/CoarseUniverseGenerator or CUG/CoinApiDataConverter or CADC\n"
@@ -44,9 +44,9 @@ namespace QuantConnect.Configuration
                                                      + "Example 1: --app=DDL\n"
                                                      + "Example 2: --app=NseMarketDataConverter\n"
                                                      + "Example 3: --app=RDG"),
-                new CommandLineOption("tickers", CommandOptionType.MultipleValue, "[REQUIRED ALL downloaders (except QBDL)] "
+                new CommandLineOption("tickers", CommandOptionType.MultipleValue, "[REQUIRED ALL downloaders (except QBDL, SECDL)] "
                                                                                   + "--tickers=SPY,AAPL,etc"),
-                new CommandLineOption("resolution", CommandOptionType.SingleValue, "[REQUIRED ALL downloaders (except QBDL, CDL) and IVolatilityEquityConverter,"
+                new CommandLineOption("resolution", CommandOptionType.SingleValue, "[REQUIRED ALL downloaders (except QBDL, CDL, SECDL) and IVolatilityEquityConverter,"
                                                                                    + " QuantQuoteConverter] *Not all downloaders support all resolutions. Send empty for more information.*"
                                                                                    + " CASE SENSITIVE: --resolution=Tick/Second/Minute/Hour/Daily/All" +Environment.NewLine+
                                                                                    "[OPTIONAL for RandomDataGenerator - same format as downloaders, Options only support Minute"),
@@ -58,10 +58,10 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("date", CommandOptionType.SingleValue, "[REQUIRED for AlgoSeekFuturesConverter, AlgoSeekOptionsConverter, KaikoDataConverter] "
                                                                              + "Date for the option bz files: --date=yyyyMMdd"),
                 new CommandLineOption("source-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter, KaikoDataConverter,"
-                                                                                   + " CoinApiDataConverter, NseMarketDataConverter, QuantQuoteConverter]"),
+                                                                                   + " CoinApiDataConverter, NseMarketDataConverter, QuantQuoteConverter, SECDownloader]"),
                 new CommandLineOption("destination-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter, "
-                                                                                        + "NseMarketDataConverter, QuantQuoteConverter]"),
-                new CommandLineOption("source-meta-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter]"),
+                                                                                        + "NseMarketDataConverter, QuantQuoteConverter, SECDownloader]"),
+                new CommandLineOption("source-meta-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter, SECDownloader. For SECDownloader, this is the path to the known equities folder (i.e. equity daily folder)]"),
                 new CommandLineOption("start", CommandOptionType.SingleValue, "[REQUIRED for RandomDataGenerator. Format yyyyMMdd Example: --start=20010101]"),
                 new CommandLineOption("end", CommandOptionType.SingleValue, "[REQUIRED for RandomDataGenerator. Format yyyyMMdd Example: --end=20020101]"),
                 new CommandLineOption("market", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Market of generated symbols. Defaults to default market for security type: Example: --market=usa]"),

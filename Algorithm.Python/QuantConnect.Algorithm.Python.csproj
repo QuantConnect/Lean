@@ -54,6 +54,7 @@
     <Content Include="Alphas\VIXDualThrustAlpha.py" />
     <Content Include="BasicCSharpIntegrationTemplateAlgorithm.py" />
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
+    <Content Include="SECReportDataAlgorithm.py" />
     <Content Include="USEnergyInformationAdministrationAlgorithm.py" />
     <None Include="RawPricesUniverseRegressionAlgorithm.py" />
     <None Include="CapmAlphaRankingFrameworkAlgorithm.py" />

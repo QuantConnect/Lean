@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.IO;
 using QuantConnect.Configuration;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
@@ -37,6 +38,7 @@ using QuantConnect.ToolBox.OandaDownloader;
 using QuantConnect.ToolBox.QuandlBitfinexDownloader;
 using QuantConnect.ToolBox.QuantQuoteConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
+using QuantConnect.ToolBox.SECDataDownloader;
 using QuantConnect.ToolBox.YahooDownloader;
 using QuantConnect.Util;
 
@@ -113,9 +115,27 @@ namespace QuantConnect.ToolBox
                     case "bitfinexdownloader":
                         BitfinexDownloaderProgram.BitfinexDownloader(tickers, resolution, fromDate, toDate);
                         break;
+                    case "secdl":
+                    case "secdownloader":
+                        var equityFolder = Path.Combine(Globals.DataFolder, "equity", Market.USA);
+                        var secFolder = Path.Combine(equityFolder, "alternative", "sec");
+
+                        SECDataDownloaderProgram.SECDataDownloader(
+                            GetParameterOrDefault(optionsObject, "source-dir", Path.Combine(secFolder, "raw_data")),
+                            GetParameterOrDefault(optionsObject, "destination-dir", secFolder),
+                            fromDate,
+                            toDate,
+                            GetParameterOrDefault(
+                                optionsObject,
+                                "source-meta-dir",
+                                Path.Combine(equityFolder, "daily")
+                            )
+                        );
+                        break;
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
                         break;
+
                 }
             }
             else
