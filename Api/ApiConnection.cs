@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Net;
 using Newtonsoft.Json;
 using QuantConnect.API;
 using QuantConnect.Configuration;
@@ -88,6 +89,7 @@ namespace QuantConnect.Api
                 var timestamp = (int)Time.TimeStamp();
                 var hash = Api.CreateSecureHash(timestamp, _token);
                 request.AddHeader("Timestamp", timestamp.ToString());
+
                 Client.Authenticator = new HttpBasicAuthenticator(_userId, hash);
 
                 // Execute the authenticated REST API Call

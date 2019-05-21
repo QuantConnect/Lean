@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Net;
 using QuantConnect.Api;
 using QuantConnect.API;
 using QuantConnect.Data.Market;
@@ -309,5 +310,15 @@ namespace QuantConnect.Interfaces
         /// <param name="to">The last date to get dividend for</param>
         /// <returns>A list of all dividend in the specified range</returns>
         List<Data.Market.Dividend> GetDividends(DateTime from, DateTime to);
+
+        /// <summary>
+        /// Local implementation for downloading data to algorithms
+        /// </summary>
+        /// <param name="address">URL to download</param>
+        /// <param name="headers">KVP headers</param>
+        /// <param name="userName">Username for basic authentication</param>
+        /// <param name="password">Password for basic authentication</param>
+        /// <returns></returns>
+        string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
     }
 }

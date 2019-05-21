@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using Newtonsoft.Json;
 using QuantConnect.API;
 using QuantConnect.Data.Market;
@@ -749,6 +750,34 @@ namespace QuantConnect.Api
                 s.DividendPerShare,
                 s.ReferencePrice)
             ).ToList();
+        }
+
+
+        /// <summary>
+        /// Local implementation for downloading data to algorithms
+        /// </summary>
+        /// <param name="address">URL to download</param>
+        /// <param name="headers">KVP headers</param>
+        /// <param name="userName">Username for basic authentication</param>
+        /// <param name="password">Password for basic authentication</param>
+        /// <returns></returns>
+        public virtual string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
+        {
+            using (var client = new WebClient { Credentials = new NetworkCredential(userName, password) })
+            {
+                client.Proxy = WebRequest.GetSystemWebProxy();
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                    {
+                        client.Headers.Add(header.Key, header.Value);
+                    }
+                }
+                // Add a user agent header in case the requested URI contains a query.
+                client.Headers.Add("user-agent", "QCAlgorithm.Download(): User Agent Header");
+
+                return client.DownloadString(address);
+            }
         }
 
         /// <summary>

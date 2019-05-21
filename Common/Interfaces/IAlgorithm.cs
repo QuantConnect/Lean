@@ -663,6 +663,12 @@ namespace QuantConnect.Interfaces
         void SetCurrentSlice(Slice slice);
 
         /// <summary>
+        /// Provide the API for the algorithm.
+        /// </summary>
+        /// <param name="api">Initiated API</param>
+        void SetApi(IApi api);
+
+        /// <summary>
         /// Sets the order event provider
         /// </summary>
         /// <param name="newOrderEvent">The order event provider</param>

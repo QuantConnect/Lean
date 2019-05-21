@@ -888,6 +888,12 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetCurrentSlice(Slice slice) => _baseAlgorithm.SetCurrentSlice(slice);
 
         /// <summary>
+        /// Provide the API for the algorithm.
+        /// </summary>
+        /// <param name="api">Initiated API</param>
+        public void SetApi(IApi api) => _baseAlgorithm.SetApi(api);
+
+        /// <summary>
         /// Sets the order event provider
         /// </summary>
         /// <param name="newOrderEvent">The order event provider</param>
