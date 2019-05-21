@@ -52,6 +52,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _manualTimeProvider = new ManualTimeProvider();
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
             _algorithm = new AlgorithmStub(false);
+            TestCustomData.ReaderCallsCount = 0;
+            TestCustomData.ReturnNull = false;
+            TestCustomData.ThrowException = false;
         }
 
         [Test]
@@ -483,6 +486,63 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.That(count, Is.GreaterThan(5));
             Assert.IsTrue(emittedData);
+        }
+
+        [TestCase(FileFormat.Csv)]
+        [TestCase(FileFormat.Collection)]
+        public void RestCustomDataReturningNullDoNotInfinitelyPoll(FileFormat fileFormat)
+        {
+            TestCustomData.FileFormat = fileFormat;
+
+            var feed = RunDataFeed();
+
+            _algorithm.AddData<TestCustomData>("Pinocho", Resolution.Minute, fillDataForward: false);
+
+            TestCustomData.ReturnNull = true;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(2), false, ts =>
+            {
+                Console.WriteLine("Emitted data");
+            });
+
+            Assert.AreEqual(TestCustomData.ReaderCallsCount, 1);
+        }
+
+        [TestCase(FileFormat.Csv)]
+        [TestCase(FileFormat.Collection)]
+        public void RestCustomDataReturningOldDataDoesNotInfinitelyPoll(FileFormat fileFormat)
+        {
+            TestCustomData.FileFormat = fileFormat;
+
+            var feed = RunDataFeed();
+
+            _algorithm.AddData<TestCustomData>("Pinocho", Resolution.Hour, fillDataForward: false);
+
+            TestCustomData.ReturnNull = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(2), false, ts =>
+            {
+                Console.WriteLine("Emitted data");
+            });
+
+            Assert.AreEqual(TestCustomData.ReaderCallsCount, 1);
+        }
+
+        [TestCase(FileFormat.Csv)]
+        [TestCase(FileFormat.Collection)]
+        public void RestCustomDataThrowingExceptionDoesNotInfinitelyPoll(FileFormat fileFormat)
+        {
+            TestCustomData.FileFormat = fileFormat;
+
+            var feed = RunDataFeed();
+
+            _algorithm.AddData<TestCustomData>("Pinocho", Resolution.Hour, fillDataForward: false);
+
+            TestCustomData.ThrowException = true;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(2), false, ts =>
+            {
+                Console.WriteLine("Emitted data");
+            });
+
+            Assert.AreEqual(TestCustomData.ReaderCallsCount, 1);
         }
 
         [Test, Ignore("These tests depend on a remote server")]
@@ -965,6 +1025,67 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         protected override ITimeProvider GetTimeProvider()
         {
             return _timeProvider;
+        }
+    }
+
+    internal class TestCustomData : BaseData
+    {
+        public static int ReaderCallsCount { get; set; }
+
+        public static bool ReturnNull { get; set; }
+
+        public static bool ThrowException { get; set; }
+
+        public static FileFormat FileFormat { get; set; }
+
+        static TestCustomData()
+        {
+            ReaderCallsCount = 0;
+            FileFormat = FileFormat.Csv;
+        }
+
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        {
+            ReaderCallsCount++;
+            if (ThrowException)
+            {
+                throw new Exception("Custom data Reader threw exception");
+            }
+            else if(ReturnNull)
+            {
+                return null;
+            }
+            else
+            {
+                var data = new TestCustomData
+                {
+                    // return not null but 'old data' -> there is no data yet available for today
+                    Time = date.AddHours(-100),
+                    Value = 1,
+                    Symbol = config.Symbol
+                };
+
+                if (FileFormat == FileFormat.Collection)
+                {
+                    return new BaseDataCollection
+                    {
+                        Time = date.AddHours(-100),
+                        // return not null but 'old data' -> there is no data yet available for today
+                        EndTime = date.AddHours(-99),
+                        Value = 1,
+                        Symbol = config.Symbol,
+                        Data = new List<BaseData> { data }
+                    };
+                }
+                return data;
+            }
+        }
+
+        public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        {
+            return new SubscriptionDataSource("localhost:1232/fake",
+                SubscriptionTransportMedium.Rest,
+                FileFormat);
         }
     }
 }

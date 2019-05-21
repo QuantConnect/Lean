@@ -138,6 +138,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 yield return instance;
                             }
                         }
+                        else if (reader.RateLimit)
+                        {
+                            yield return instance;
+                        }
                     }
                 }
 

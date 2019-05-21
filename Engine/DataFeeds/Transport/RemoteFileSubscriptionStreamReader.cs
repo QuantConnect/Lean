@@ -31,6 +31,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         private readonly IStreamReader _streamReader;
 
         /// <summary>
+        /// Gets whether or not this stream reader should be rate limited
+        /// </summary>
+        public bool RateLimit => false;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="RemoteFileSubscriptionStreamReader"/> class.
         /// </summary>
         /// <param name="dataCacheProvider">The <see cref="IDataCacheProvider"/> used to retrieve a stream of data</param>

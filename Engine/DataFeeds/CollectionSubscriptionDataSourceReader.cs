@@ -100,13 +100,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var raw = "";
                 while (!reader.EndOfStream)
                 {
-                    BaseDataCollection instances;
+                    BaseDataCollection instances = null;
                     try
                     {
                         raw = reader.ReadLine();
                         var result = _factory.Reader(_config, raw, _date, _isLiveMode);
                         instances = result as BaseDataCollection;
-                        if (instances == null)
+                        if (instances == null && !reader.RateLimit)
                         {
                             OnInvalidSource(source, new Exception("Reader must generate a BaseDataCollection with the FileFormat.Collection"));
                             continue;
@@ -115,7 +115,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     catch (Exception err)
                     {
                         OnReaderError(raw, err);
-                        continue;
+                        if (!reader.RateLimit)
+                        {
+                            continue;
+                        }
                     }
 
                     if (_isLiveMode)
