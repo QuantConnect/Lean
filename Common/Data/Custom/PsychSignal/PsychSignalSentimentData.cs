@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Globalization;
 using System.IO;
 
 namespace QuantConnect.Data.Custom.PsychSignal
@@ -103,12 +104,12 @@ namespace QuantConnect.Data.Custom.PsychSignal
                 var timestamp = new DateTime(date.Year, date.Month, date.Day).AddMilliseconds(
                     Convert.ToDouble(csv[0])
                 );
-                var bullIntensity = Convert.ToDecimal(csv[1]);
-                var bearIntensity = Convert.ToDecimal(csv[2]);
-                var bullMinusBear = Convert.ToDecimal(csv[3]);
+                var bullIntensity = Convert.ToDecimal(csv[1], CultureInfo.InvariantCulture);
+                var bearIntensity = Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture);
+                var bullMinusBear = Convert.ToDecimal(csv[3], CultureInfo.InvariantCulture);
                 var bullScoredMessages = Convert.ToInt32(csv[4]);
                 var bearScoredMessages = Convert.ToInt32(csv[5]);
-                var bullBearMessageRatio = Convert.ToDecimal(csv[6]);
+                var bullBearMessageRatio = Convert.ToDecimal(csv[6], CultureInfo.InvariantCulture);
                 var totalScannedMessages = Convert.ToInt32(csv[7]);
                 
                 return new PsychSignalSentimentData
