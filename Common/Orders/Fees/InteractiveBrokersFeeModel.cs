@@ -80,8 +80,8 @@ namespace QuantConnect.Orders.Fees
                 }
             }
 
-            decimal feeResult = 0;
-            var feeCurrency = "";
+            decimal feeResult;
+            string feeCurrency;
             var market = security.Symbol.ID.Market;
             switch (security.Type)
             {
@@ -93,6 +93,7 @@ namespace QuantConnect.Orders.Fees
                     // IB Forex fees are all in USD
                     feeCurrency = Currencies.USD;
                     break;
+
                 case SecurityType.Option:
                     Func<decimal, decimal, CashAmount> optionsCommissionFunc;
                     if (!_optionFee.TryGetValue(market, out optionsCommissionFunc))
@@ -104,6 +105,7 @@ namespace QuantConnect.Orders.Fees
                     feeResult = optionFee.Amount;
                     feeCurrency = optionFee.Currency;
                     break;
+
                 case SecurityType.Future:
                     if (market == Market.Globex || market == Market.NYMEX
                         || market == Market.CBOT || market == Market.ICE
@@ -121,6 +123,7 @@ namespace QuantConnect.Orders.Fees
                     feeResult = order.AbsoluteQuantity * feeRatePerContract.Amount;
                     feeCurrency = feeRatePerContract.Currency;
                     break;
+
                 case SecurityType.Equity:
                     EquityFee equityFee;
                     if (!_equityFee.TryGetValue(market, out equityFee))
@@ -148,6 +151,10 @@ namespace QuantConnect.Orders.Fees
                     //Always return a positive fee.
                     feeResult = Math.Abs(tradeFee);
                     break;
+
+                default:
+                    // return zero fee for unsupported security types
+                    return OrderFee.Zero;
             }
 
             return new OrderFee(new CashAmount(

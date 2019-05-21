@@ -20,6 +20,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
@@ -28,7 +29,7 @@ using QuantConnect.Tests.Common.Securities;
 namespace QuantConnect.Tests.Common.Orders.Fees
 {
     [TestFixture]
-    class InteractiveBrokersFeeModelTests
+    public class InteractiveBrokersFeeModelTests
     {
         private readonly IFeeModel _feeModel = new InteractiveBrokersFeeModel();
 
@@ -136,7 +137,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         }
 
         [Test]
-        public void  ForexFee_NonUSD()
+        public void ForexFee_NonUSD()
         {
             var tz = TimeZones.NewYork;
             var security = new Forex(
@@ -157,6 +158,30 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
             Assert.AreEqual(2m, fee.Value.Amount);
+        }
+
+        [Test]
+        public void ReturnsZeroForUnsupportedSecurityType()
+        {
+            var tz = TimeZones.NewYork;
+            var security = new Cfd(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new Cash("EUR", 0, 0),
+                new SubscriptionDataConfig(typeof(QuoteBar), Symbols.DE30EUR, Resolution.Minute, tz, tz, true, false, false),
+                new SymbolProperties("DE30EUR", "EUR", 1, 0.01m, 1m),
+                ErrorCurrencyConverter.Instance
+            );
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 12000, 12000));
+
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 1, DateTime.UtcNow)
+                )
+            );
+
+            Assert.AreEqual(Currencies.NullCurrency, fee.Value.Currency);
+            Assert.AreEqual(0m, fee.Value.Amount);
         }
     }
 }
