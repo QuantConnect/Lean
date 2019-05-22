@@ -16,7 +16,6 @@
 
 using System.IO;
 using Ionic.Zip;
-using System.IO.Compression;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <summary>
         /// Gets whether or not this stream reader should be rate limited
         /// </summary>
-        public bool RateLimit => false;
+        public bool ShouldBeRateLimited => false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.

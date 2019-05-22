@@ -490,7 +490,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         [TestCase(FileFormat.Csv)]
         [TestCase(FileFormat.Collection)]
-        public void RestCustomDataReturningNullDoNotInfinitelyPoll(FileFormat fileFormat)
+        public void RestCustomDataReturningNullDoesNotInfinitelyPoll(FileFormat fileFormat)
         {
             TestCustomData.FileFormat = fileFormat;
 

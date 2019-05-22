@@ -41,6 +41,6 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets whether or not this stream reader should be rate limited
         /// </summary>
-        bool RateLimit { get; }
+        bool ShouldBeRateLimited { get; }
     }
 }

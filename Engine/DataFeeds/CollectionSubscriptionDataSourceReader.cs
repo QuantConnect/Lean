@@ -106,7 +106,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         raw = reader.ReadLine();
                         var result = _factory.Reader(_config, raw, _date, _isLiveMode);
                         instances = result as BaseDataCollection;
-                        if (instances == null && !reader.RateLimit)
+                        if (instances == null && !reader.ShouldBeRateLimited)
                         {
                             OnInvalidSource(source, new Exception("Reader must generate a BaseDataCollection with the FileFormat.Collection"));
                             continue;
@@ -115,13 +115,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     catch (Exception err)
                     {
                         OnReaderError(raw, err);
-                        if (!reader.RateLimit)
+                        if (!reader.ShouldBeRateLimited)
                         {
                             continue;
                         }
                     }
 
-                    if (_isLiveMode)
+                    if (_isLiveMode
+                        // this shouldn't happen, rest reader is the only one to be rate limited
+                        // and in live mode, but just in case...
+                        || instances == null && reader.ShouldBeRateLimited)
                     {
                         yield return instances;
                     }

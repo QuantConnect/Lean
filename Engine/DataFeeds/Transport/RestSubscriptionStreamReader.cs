@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <summary>
         /// Gets whether or not this stream reader should be rate limited
         /// </summary>
-        public bool RateLimit => _isLiveMode;
+        public bool ShouldBeRateLimited => _isLiveMode;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RestSubscriptionStreamReader"/> class.
