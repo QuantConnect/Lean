@@ -98,6 +98,9 @@ namespace QuantConnect.Tests
                             string algorithmPath;
                             var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
                             ((BacktestNodePacket)job).BacktestId = algorithm;
+
+                            systemHandlers.LeanManager.Initialize(systemHandlers, algorithmHandlers, job, algorithmManager);
+
                             engine.Run(job, algorithmManager, algorithmPath);
                             ordersLogFile = ((RegressionResultHandler)algorithmHandlers.Results).OrdersLogFilePath;
                         }
