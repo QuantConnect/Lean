@@ -132,7 +132,6 @@
     <Compile Include="Alphas\ShareClassMeanReversionAlpha.cs" />
     <Compile Include="Alphas\SykesShortMicroCapAlpha.cs" />
     <Compile Include="Alphas\GlobalEquityMeanReversionIBSAlpha.cs" />
-    <Compile Include="Alphas\ForexCalendarAlpha.cs" />
     <Compile Include="Alphas\MeanReversionLunchBreakAlpha.cs" />
     <Compile Include="Alphas\RebalancingLeveragedETFAlpha.cs" />
     <Compile Include="Alphas\TriangleExchangeRateArbitrageAlpha.cs" />
@@ -216,7 +215,6 @@
     <Compile Include="OptionRenameRegressionAlgorithm.cs" />
     <Compile Include="OptionSplitRegressionAlgorithm.cs" />
     <Compile Include="PortfolioOptimizationNumericsAlgorithm.cs" />
-    <Compile Include="DailyFxAlgorithm.cs" />
     <Compile Include="BasicTemplateForexAlgorithm.cs" />
     <Compile Include="BasicTemplateAlgorithm.cs" />
     <Compile Include="BasicTemplateOptionsAlgorithm.cs" />
