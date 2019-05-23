@@ -63,7 +63,6 @@
     <Compile Include="CustomModelsAlgorithm.py" />
     <Compile Include="CustomSecurityInitializerAlgorithm.py" />
     <Compile Include="DailyAlgorithm.py" />
-    <Compile Include="DailyFxAlgorithm.py" />
     <Compile Include="DataConsolidationAlgorithm.py" />
     <Compile Include="DelistingEventsAlgorithm.py" />
     <Compile Include="DisplacedMovingAverageRibbon.py" />
