@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using ikvm.extensions;
 using ICSharpCode.SharpZipLib.Tar;
 using Ionic.Zlib;
 using QuantConnect.Data.Market;
@@ -37,39 +38,24 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// <param name="tar">The tar input stream</param>
         /// <param name="entry">The tar entry</param>
         /// <returns>A new instance of type <see cref="CoinApiEntryData"/></returns>
-        public CoinApiEntryData GetCoinApiEntryData(TarInputStream tar, TarEntry entry)
+        public CoinApiEntryData GetCoinApiEntryData(FileInfo file, DateTime processingDate, string market)
         {
-            var gzipFileName = entry.Name;
-            Log.Trace($"CoinApiDataReader.ProcessTarEntry(): Processing entry: {gzipFileName}");
+            // crypto/<market>/<date>/<ticktype>-563-BITFINEX_SPOT_BTC_USD.csv.gz
 
-            // datatype-exchange-date-symbol/trades/COINBASE/2019/05/07/27781-COINBASE_SPOT_LTC_BTC.csv.gz
-            var parts = gzipFileName.Split('/');
-            if (parts.Length != 7)
-            {
-                throw new Exception($"CoinApiDataReader.ProcessTarEntry(): Unexpected entry path in tar file: {gzipFileName}");
-            }
+            var tickType = file.Name.Split('-').First() == "trades" ? TickType.Trade : TickType.Quote;
 
-            var tickType = parts[1] == "trades" ? TickType.Trade : TickType.Quote;
-            var market = parts[2] == "COINBASE" ? Market.GDAX : parts[2].ToLower();
-            var year = Convert.ToInt32(parts[3]);
-            var month = Convert.ToInt32(parts[4]);
-            var day = Convert.ToInt32(parts[5]);
-            var date = new DateTime(year, month, day);
+            var filenameParts = Path.GetFileNameWithoutExtension(file.Name).Split('_');
+            var pairs = filenameParts.Skip(filenameParts.Length - 2).ToArray();
 
-            var nameParts = Path.GetFileNameWithoutExtension(parts[6].Substring(0, parts[6].IndexOf('.'))).Split('_');
-            if (nameParts.Length != 4)
-            {
-                throw new Exception($"CoinApiDataReader.ProcessTarEntry(): Unexpected entry name in tar file: {gzipFileName}");
-            }
-            var ticker = nameParts[2] + nameParts[3];
+            var ticker = pairs[0] + pairs[1];
             var symbol = Symbol.Create(ticker, SecurityType.Crypto, market);
 
             return new CoinApiEntryData
             {
-                Name = gzipFileName,
+                Name = file.Name,
                 Symbol = symbol,
                 TickType = tickType,
-                Date = date
+                Date = processingDate
             };
         }
 
@@ -79,7 +65,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// <param name="tar">The tar input stream</param>
         /// <param name="entryData">The entry data</param>
         /// <returns>An <see cref="IEnumerable{Tick}"/> for the ticks read from the entry</returns>
-        public IEnumerable<Tick> ProcessCoinApiEntry(TarInputStream tar, CoinApiEntryData entryData)
+        public IEnumerable<Tick> ProcessCoinApiEntry(CoinApiEntryData entryData, FileInfo file)
         {
             Log.Trace("CoinApiDataReader.ProcessTarEntry(): Processing " +
                       $"{entryData.Symbol.ID.Market}-{entryData.Symbol.Value}-{entryData.TickType} " +
