@@ -25,6 +25,22 @@ namespace QuantConnect
     public class AlgorithmSettings : IAlgorithmSettings
     {
         /// <summary>
+        /// The absolute maximum valid total portfolio value target percentage
+        /// </summary>
+        /// <remarks>This setting is currently being used to filter out undesired target percent values,
+        /// caused by the <see cref="IPortfolioConstructionModel"/> implementation being used.
+        /// For example rounding errors, math operations</remarks>
+        public decimal MaxAbsolutePortfolioTargetPercentage { get; set; }
+
+        /// <summary>
+        /// The absolute minimum valid total portfolio value target percentage
+        /// </summary>
+        /// <remarks>This setting is currently being used to filter out undesired target percent values,
+        /// caused by the <see cref="IPortfolioConstructionModel"/> implementation being used.
+        /// For example rounding errors, math operations</remarks>
+        public decimal MinAbsolutePortfolioTargetPercentage { get; set; }
+
+        /// <summary>
         /// Gets/sets the maximum number of concurrent market data subscriptions available
         /// </summary>
         /// <remarks>
@@ -65,6 +81,8 @@ namespace QuantConnect
             LiquidateEnabled = true;
             FreePortfolioValuePercentage = 0.0025m;
             StalePriceTimeSpan = Time.OneHour;
+            MaxAbsolutePortfolioTargetPercentage = 1000000000;
+            MinAbsolutePortfolioTargetPercentage = 0.0000000001m;
         }
     }
 }

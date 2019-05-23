@@ -82,6 +82,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
             _pendingRemoval.Clear();
 
+            insights = FilterInvalidInsightMagnitude(algorithm, insights);
+
             var symbols = insights.Select(x => x.Symbol).Distinct();
             if (symbols.Count() == 0 || insights.All(x => x.Magnitude == 0))
             {
@@ -102,7 +104,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                                 "Please checkout the selected Alpha Model specifications: " + insight.SourceModel));
                         continue;
                     }
-                    data.Add(algorithm.Time, (decimal)insight.Magnitude.Value);
+                    data.Add(algorithm.Time, insight.Magnitude.Value.SafeDecimalCast());
                 }
             }
 
@@ -125,7 +127,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 int sidx = 0;
                 foreach (var symbol in symbols)
                 {
-                    var weight = (decimal)W[sidx];
+                    var weight = W[sidx].SafeDecimalCast();
 
                     var target = PortfolioTarget.Percent(algorithm, symbol, weight);
                     if (target != null)

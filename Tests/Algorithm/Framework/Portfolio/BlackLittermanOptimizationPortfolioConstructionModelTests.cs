@@ -149,6 +149,54 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             }
         }
 
+        [Test]
+        [TestCase(Language.CSharp, 11, true)]
+        [TestCase(Language.CSharp, -11, true)]
+        [TestCase(Language.CSharp, 0.001d, true)]
+        [TestCase(Language.CSharp, -0.001d, true)]
+        [TestCase(Language.CSharp, 0.1, false)]
+        [TestCase(Language.CSharp, -0.1, false)]
+        [TestCase(Language.CSharp, 0.011d, false)]
+        [TestCase(Language.CSharp, -0.011d, false)]
+        [TestCase(Language.CSharp, 0, true)]
+        [TestCase(Language.Python, 0, true)]
+        [TestCase(Language.Python, 11, true)]
+        [TestCase(Language.Python, -11, true)]
+        [TestCase(Language.Python, 0.001d, true)]
+        [TestCase(Language.Python, -0.001d, true)]
+        [TestCase(Language.Python, 0.1, false)]
+        [TestCase(Language.Python, -0.1, false)]
+        [TestCase(Language.Python, 0.011d, false)]
+        [TestCase(Language.Python, -0.011d, false)]
+        public void IgnoresInsightsWithInvalidMagnitudeValue(Language language, double magnitude, bool expectZero)
+        {
+            SetPortfolioConstruction(language);
+            _algorithm.Settings.MaxAbsolutePortfolioTargetPercentage = 10;
+            _algorithm.Settings.MinAbsolutePortfolioTargetPercentage = 0.01m;
+
+            var insights = new[]
+            {
+                GetInsight("View 1", "AUS", magnitude),
+                GetInsight("View 1", "CAN", magnitude),
+                GetInsight("View 1", "FRA", magnitude),
+                GetInsight("View 1", "GER", magnitude),
+                GetInsight("View 1", "JAP", magnitude),
+                GetInsight("View 1", "UK" , magnitude),
+                GetInsight("View 1", "USA", magnitude)
+            };
+
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
+
+            if (expectZero)
+            {
+                Assert.AreEqual(0, actualTargets.Count());
+            }
+            else
+            {
+                Assert.AreNotEqual(0, actualTargets.Count());
+            }
+        }
+
         private Security GetSecurity(Symbol symbol, Resolution resolution)
         {
             var timezone = _algorithm.TimeZone;

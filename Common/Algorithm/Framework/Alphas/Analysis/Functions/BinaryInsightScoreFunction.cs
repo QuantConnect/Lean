@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Functions
                     var deltaPercent = Math.Abs(currentValue - startingValue)/startingValue;
                     if (insight.Magnitude.HasValue)
                     {
-                        return Math.Abs(deltaPercent) < (decimal) Math.Abs(insight.Magnitude.Value) ? 1 : 0;
+                        return Math.Abs(deltaPercent) < Math.Abs(insight.Magnitude.Value).SafeDecimalCast() ? 1 : 0;
                     }
 
                     // this is pretty much impossible, I suppose unless the ticks are large and/or volumes are small

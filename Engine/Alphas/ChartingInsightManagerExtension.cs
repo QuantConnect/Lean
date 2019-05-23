@@ -115,7 +115,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                         foreach (var scoreType in InsightManager.ScoreTypes)
                         {
                             var score = 100 * _statisticsManager.Statistics.RollingAveragedPopulationScore.GetScore(scoreType);
-                            _insightScoreSeriesByScoreType[scoreType].AddPoint(frontierTimeUtc, (decimal)score);
+                            _insightScoreSeriesByScoreType[scoreType].AddPoint(frontierTimeUtc, score.SafeDecimalCast());
                         }
                         _nextChartSampleAlgorithmTimeUtc = frontierTimeUtc + SampleInterval;
                     }

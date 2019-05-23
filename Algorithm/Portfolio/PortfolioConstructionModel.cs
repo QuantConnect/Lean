@@ -13,9 +13,12 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -42,6 +45,40 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public virtual void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
+        }
+
+        /// <summary>
+        /// Helper class that can be used by the different <see cref="IPortfolioConstructionModel"/>
+        /// implementations to filter <see cref="Insight"/> instances with an invalid
+        /// <see cref="Insight.Magnitude"/> value based on the <see cref="IAlgorithmSettings"/>
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="insights">The insight collection to filter</param>
+        /// <returns>Returns a new array of insights removing invalid ones</returns>
+        public static Insight[] FilterInvalidInsightMagnitude(QCAlgorithm algorithm, Insight[] insights)
+        {
+            var result = insights.Where(insight =>
+            {
+                if (!insight.Magnitude.HasValue || insight.Magnitude == 0)
+                {
+                    return true;
+                }
+
+                var absoluteMagnitude = Math.Abs(insight.Magnitude.Value);
+                if (absoluteMagnitude > (double)algorithm.Settings.MaxAbsolutePortfolioTargetPercentage
+                    || absoluteMagnitude < (double)algorithm.Settings.MinAbsolutePortfolioTargetPercentage)
+                {
+                    algorithm.Error("PortfolioConstructionModel.FilterInvalidInsightMagnitude():" +
+                        $"The insight target Magnitude: {insight.Magnitude}, will not comply with the current " +
+                        $"'Algorithm.Settings' 'MaxAbsolutePortfolioTargetPercentage': {algorithm.Settings.MaxAbsolutePortfolioTargetPercentage}" +
+                        $" or 'MinAbsolutePortfolioTargetPercentage': {algorithm.Settings.MinAbsolutePortfolioTargetPercentage}. Skipping insight."
+                    );
+                    return false;
+                }
+
+                return true;
+            });
+            return result.ToArray();
         }
     }
 }

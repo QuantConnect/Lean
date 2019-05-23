@@ -95,6 +95,8 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             self.removedSymbols is None):
             return targets
 
+        insights = PortfolioConstructionModel.FilterInvalidInsightMagnitude(algorithm, insights)
+
         self.insightCollection.AddRange(insights)
 
         # Create flatten target for each security that was removed from the universe

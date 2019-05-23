@@ -91,5 +91,41 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             Assert.IsNull(target);
         }
+
+        [TestCase(-3, true)]
+        [TestCase(3, true)]
+        [TestCase(2, false)]
+        [TestCase(-2, false)]
+        [TestCase(0.01, true)]
+        [TestCase(-0.01, true)]
+        [TestCase(0.1, false)]
+        [TestCase(-0.1, false)]
+        [TestCase(0, false)]
+        public void PercentIgnoresExtremeValuesBasedOnSettings(double value, bool shouldBeNull)
+        {
+            var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
+            algorithm.Settings.MaxAbsolutePortfolioTargetPercentage = 2;
+            algorithm.Settings.MinAbsolutePortfolioTargetPercentage = 0.1m;
+            algorithm.Initialize();
+            algorithm.PostInitialize();
+            var security = algorithm.Securities.Single().Value;
+            security.SetMarketPrice(new Tick { Value = 1m });
+
+            var buyingPowerMock = new Mock<IBuyingPowerModel>();
+            buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetValue(It.IsAny<GetMaximumOrderQuantityForTargetValueParameters>()))
+                .Returns(new GetMaximumOrderQuantityForTargetValueResult(1, null, false));
+            security.BuyingPowerModel = buyingPowerMock.Object;
+
+            var target = PortfolioTarget.Percent(algorithm, security.Symbol, value);
+
+            if (shouldBeNull)
+            {
+                Assert.IsNull(target);
+            }
+            else
+            {
+                Assert.IsNotNull(target);
+            }
+        }
     }
 }
