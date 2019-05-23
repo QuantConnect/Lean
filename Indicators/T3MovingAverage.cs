@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,14 +16,14 @@
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// This indicator computes the T3 Moving Average (T3). 
+    /// This indicator computes the T3 Moving Average (T3).
     /// The T3 Moving Average is calculated with the following formula:
     /// EMA1(x, Period) = EMA(x, Period)
     /// EMA2(x, Period) = EMA(EMA1(x, Period),Period)
     /// GD(x, Period, volumeFactor) = (EMA1(x, Period)*(1+volumeFactor)) - (EMA2(x, Period)* volumeFactor)
     /// T3 = GD(GD(GD(t, Period, volumeFactor), Period, volumeFactor), Period, volumeFactor);
     /// </summary>
-    public class T3MovingAverage : IndicatorBase<IndicatorDataPoint>
+    public class T3MovingAverage : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         private readonly int _period;
         private readonly DoubleExponentialMovingAverage _gd1;
@@ -51,17 +51,19 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the T3MovingAverage</param>
         /// <param name="volumeFactor">The volume factor of the T3MovingAverage (value must be in the [0,1] range, defaults to 0.7)</param>
         public T3MovingAverage(int period, decimal volumeFactor = 0.7m)
-            : this(string.Format("T3({0},{1})", period, volumeFactor), period, volumeFactor)
+            : this($"T3({period},{volumeFactor})", period, volumeFactor)
         {
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return Samples > 6 * (_period - 1); }
-        }
+        public override bool IsReady => Samples > 6 * (_period - 1);
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => 1 + 6 * (_period - 1);
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
