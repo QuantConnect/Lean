@@ -42,7 +42,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         {
             // crypto/<market>/<date>/<ticktype>-563-BITFINEX_SPOT_BTC_USD.csv.gz
 
-            var tickType = file.Name.Split('-').First() == "trades" ? TickType.Trade : TickType.Quote;
+            var tickType = file.FullName.Contains("trades") ? TickType.Trade : TickType.Quote;
 
             var filenameParts = Path.GetFileNameWithoutExtension(file.Name).Split('_');
             var pairs = filenameParts.Skip(filenameParts.Length - 2).ToArray();
@@ -71,32 +71,26 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                       $"{entryData.Symbol.ID.Market}-{entryData.Symbol.Value}-{entryData.TickType} " +
                       $"for {entryData.Date:yyyy-MM-dd}");
 
-            using (var gzipStream = new MemoryStream())
+            var innerStream = StreamProvider.ForExtension(file.Extension).Open(file.FullName).First();
+
+            using (innerStream)
+            using (var reader = new StreamReader(innerStream))
             {
-                tar.CopyEntryContents(gzipStream);
-                gzipStream.Seek(0, SeekOrigin.Begin);
-
-                using (var innerStream = new GZipStream(gzipStream, CompressionMode.Decompress))
+                var headerLine = reader.ReadLine();
+                if (headerLine == null)
                 {
-                    using (var reader = new StreamReader(innerStream))
-                    {
-                        var headerLine = reader.ReadLine();
-                        if (headerLine == null)
-                        {
-                            throw new Exception($"CoinApiDataReader.ProcessTarEntry(): CSV header not found for entry name: {entryData.Name}");
-                        }
+                    throw new Exception($"CoinApiDataReader.ProcessTarEntry(): CSV header not found for entry name: {entryData.Name}");
+                }
 
-                        var headerParts = headerLine.Split(';').ToList();
+                var headerParts = headerLine.Split(';').ToList();
 
-                        var ticks = entryData.TickType == TickType.Trade
-                            ? ParseTradeData(entryData.Symbol, reader, headerParts)
-                            : ParseQuoteData(entryData.Symbol, reader, headerParts);
+                var ticks = entryData.TickType == TickType.Trade
+                    ? ParseTradeData(entryData.Symbol, reader, headerParts)
+                    : ParseQuoteData(entryData.Symbol, reader, headerParts);
 
-                        foreach (var tick in ticks)
-                        {
-                            yield return tick;
-                        }
-                    }
+                foreach (var tick in ticks)
+                {
+                    yield return tick;
                 }
             }
         }

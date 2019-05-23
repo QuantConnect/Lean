@@ -207,6 +207,7 @@
     <Compile Include="BitfinexDownloader\BitfinexDataDownloader.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDownloaderProgram.cs" />
     <Compile Include="CoinApiDataConverter\CoinApiDataConverterProgram.cs" />
+    <Compile Include="CoinApiDataConverter\CoinApiDataConverter.cs" />
     <Compile Include="CoinApiDataConverter\CoinApiDataReader.cs" />
     <Compile Include="CoinApiDataConverter\CoinApiEntryData.cs" />
     <Compile Include="GDAXDownloader\GDAXDownloader.cs" />
