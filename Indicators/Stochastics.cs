@@ -64,20 +64,20 @@ namespace QuantConnect.Indicators
             FastStoch = new FunctionalIndicator<IBaseDataBar>(name + "_FastStoch",
                 input => ComputeFastStoch(period, input),
                 fastStoch => _maximum.IsReady,
-                ResetPrivateIndicators
+                () => { }
                 );
 
             StochK = new FunctionalIndicator<IBaseDataBar>(name + "_StochK",
                 input => ComputeStochK(period, kPeriod, input),
                 stochK => _maximum.IsReady,
-                ResetPrivateIndicators
-                );
+                () => { }
+            );
 
             StochD = new FunctionalIndicator<IBaseDataBar>(
                 name + "_StochD",
                 input => ComputeStochD(period, kPeriod, dPeriod),
                 stochD => _maximum.IsReady,
-                ResetPrivateIndicators
+                () => { }
             );
 
             WarmUpPeriod = period;
@@ -176,16 +176,11 @@ namespace QuantConnect.Indicators
             FastStoch.Reset();
             StochK.Reset();
             StochD.Reset();
-            ResetPrivateIndicators();
-            base.Reset();
-        }
-
-        private void ResetPrivateIndicators()
-        {
             _maximum.Reset();
             _minimum.Reset();
             _sumFastK.Reset();
             _sumSlowK.Reset();
+            base.Reset();
         }
     }
 }

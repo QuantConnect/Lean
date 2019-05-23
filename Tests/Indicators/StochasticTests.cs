@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
-        public void ResetsProperly()
+        public new void ResetsProperly()
         {
             var stochastics = CreateIndicator() as Stochastic;
 
