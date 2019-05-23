@@ -16,14 +16,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
-using ikvm.extensions;
-using ICSharpCode.SharpZipLib.Tar;
-using Ionic.Zlib;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using SevenZip;
+using CompressionMode = System.IO.Compression.CompressionMode;
 
 namespace QuantConnect.ToolBox.CoinApiDataConverter
 {
@@ -42,9 +43,9 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         {
             // crypto/<market>/<date>/<ticktype>-563-BITFINEX_SPOT_BTC_USD.csv.gz
 
-            var tickType = file.FullName.Contains("trades") ? TickType.Trade : TickType.Quote;
+            var tickType = file.FullName.Contains("trade") ? TickType.Trade : TickType.Quote;
 
-            var filenameParts = Path.GetFileNameWithoutExtension(file.Name).Split('_');
+            var filenameParts = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(file.Name)).Split('_');
             var pairs = filenameParts.Skip(filenameParts.Length - 2).ToArray();
 
             var ticker = pairs[0] + pairs[1];
@@ -71,35 +72,72 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                       $"{entryData.Symbol.ID.Market}-{entryData.Symbol.Value}-{entryData.TickType} " +
                       $"for {entryData.Date:yyyy-MM-dd}");
 
-            var innerStream = StreamProvider.ForExtension(file.Extension).Open(file.FullName).First();
 
-            using (innerStream)
+            var tickList = new List<Tick>();
+
+            var csv = ExtractFile(file);
+
+            using (var innerStream = csv.OpenRead())
             using (var reader = new StreamReader(innerStream))
             {
                 var headerLine = reader.ReadLine();
                 if (headerLine == null)
                 {
-                    throw new Exception($"CoinApiDataReader.ProcessTarEntry(): CSV header not found for entry name: {entryData.Name}");
+                    throw new Exception($"CoinApiDataReader.ProcessCoinApiEntry(): CSV header not found for entry name: {entryData.Name}");
                 }
 
                 var headerParts = headerLine.Split(';').ToList();
 
-                var ticks = entryData.TickType == TickType.Trade
+                tickList = entryData.TickType == TickType.Trade
                     ? ParseTradeData(entryData.Symbol, reader, headerParts)
                     : ParseQuoteData(entryData.Symbol, reader, headerParts);
-
-                foreach (var tick in ticks)
-                {
-                    yield return tick;
-                }
             }
+
+            csv.Delete();
+
+            return tickList;
         }
 
-        private IEnumerable<Tick> ParseTradeData(Symbol symbol, StreamReader reader, List<string> headerParts)
+        private FileInfo ExtractFile(FileInfo source)
+        {
+            var zipper = OS.IsWindows ? "C:/Program Files/7-Zip/7z.exe" : "7z";
+            var csvFileInfo = new FileInfo(Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(source.Name)));
+
+            Log.Trace("CoinApiDataReader.ProcessCoinApiEntry(): Extracting " + source);
+            var psi = new ProcessStartInfo(zipper, " e " + source.FullName + " -o" + Path.GetTempPath())
+            {
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = false,
+                RedirectStandardOutput = false
+            };
+
+            var process = new Process();
+            process.StartInfo = psi;
+            process.Start();
+
+            if (!process.WaitForExit(20 * 1000))
+            {
+                Log.Error("7Zip timed out: " + source.Name);
+            }
+            else
+            {
+                if (process.ExitCode > 0)
+                {
+                    Log.Error("7Zip Exited Unsuccessfully: " + source.Name);
+                }
+            }
+
+            return csvFileInfo;
+        }
+
+        private List<Tick> ParseTradeData(Symbol symbol, StreamReader reader, List<string> headerParts)
         {
             var columnTime = headerParts.FindIndex(x => x == "time_exchange");
             var columnPrice = headerParts.FindIndex(x => x == "price");
             var columnQuantity = headerParts.FindIndex(x => x == "base_amount");
+
+            var tickList = new List<Tick>();
 
             string line;
             while ((line = reader.ReadLine()) != null)
@@ -110,24 +148,29 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                 var price = lineParts[columnPrice].ToDecimal();
                 var quantity = lineParts[columnQuantity].ToDecimal();
 
-                yield return new Tick
+
+                tickList.Add(new Tick
                 {
                     Symbol = symbol,
                     Time = time,
                     Value = price,
                     Quantity = quantity,
                     TickType = TickType.Trade
-                };
+                });
             }
+
+            return tickList;
         }
 
-        private IEnumerable<Tick> ParseQuoteData(Symbol symbol, StreamReader reader, List<string> headerParts)
+        private List<Tick> ParseQuoteData(Symbol symbol, StreamReader reader, List<string> headerParts)
         {
             var columnTime = headerParts.FindIndex(x => x == "time_exchange");
             var columnAskPrice = headerParts.FindIndex(x => x == "ask_px");
             var columnAskSize = headerParts.FindIndex(x => x == "ask_sx");
             var columnBidPrice = headerParts.FindIndex(x => x == "bid_px");
             var columnBidSize = headerParts.FindIndex(x => x == "bid_sx");
+
+            var tickList = new List<Tick>();
 
             string line;
             while ((line = reader.ReadLine()) != null)
@@ -140,7 +183,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                 var bidPrice = lineParts[columnBidPrice].ToDecimal();
                 var bidSize = lineParts[columnBidSize].ToDecimal();
 
-                yield return new Tick
+                tickList.Add(new Tick
                 {
                     Symbol = symbol,
                     Time = time,
@@ -149,8 +192,10 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                     BidPrice = bidPrice,
                     BidSize = bidSize,
                     TickType = TickType.Quote
-                };
+                });
             }
+
+            return tickList;
         }
     }
 }

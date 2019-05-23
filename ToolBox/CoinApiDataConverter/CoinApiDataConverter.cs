@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using ICSharpCode.SharpZipLib.Tar;
+using System.Threading.Tasks;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
@@ -45,12 +45,12 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         private string _market;
 
         /// <summary>
-        /// 
+        /// CoinAPI data converter.
         /// </summary>
-        /// <param name="date"></param>
-        /// <param name="market"></param>
-        /// <param name="rawDataFolder"></param>
-        /// <param name="destinationFolder"></param>
+        /// <param name="date">the processing date.</param>
+        /// <param name="market">the exchange/market.</param>
+        /// <param name="rawDataFolder">path to the folder containing the raw files to be converted.</param>
+        /// <param name="destinationFolder">destination of the newly generated files.</param>
         public CoinApiDataConverter(DateTime date, string market, string rawDataFolder, string destinationFolder)
         {
             _market = market;
@@ -66,39 +66,44 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
 
             if (!SupportedMarkets.Contains(market.ToLower()))
             {
-                throw new ArgumentException($"CoinApiDataConverter(): Market/Exchangue {market} not supported, yet. Supported Markets/Exchangues are {string.Join(" ", SupportedMarkets)}", market);
+                throw new ArgumentException($"CoinApiDataConverter(): Market/Exchangue {market} not supported, yet. Supported Markets/Exchanges are {string.Join(" ", SupportedMarkets)}", market);
             }
         }
 
         /// <summary>
-        /// CoinAPI data converter entry point.
+        /// Runs this instance.
         /// </summary>
-        /// <param name="sourceDirectory">The source directory where all CoinAPI raw files are stored.</param>
-        /// <exception cref="ArgumentException">Source folder does not exists.</exception>
-        /// <remarks>This converter will automatically convert data for every exchange, date and tick type contained in each raw data file in the sourceDirectory</remarks>
+        /// <returns></returns>
         public bool Run()
         {
             var stopwatch = Stopwatch.StartNew();
-            var coinapiDataReader = new CoinApiDataReader();
 
-            foreach (var file in _rawDataFolder.EnumerateFiles("*.gz"))
-            {
-                Log.Trace($"CoinApiDataConverter(): Starting data conversion from source file: {file.Name}...");
-                try
+            var success = true;
+            Parallel.ForEach(_rawDataFolder.EnumerateFiles("*.gz"),(file, loopState) =>
                 {
-                    ProcessEntry(coinapiDataReader, file);
+                    Log.Trace($"CoinApiDataConverter(): Starting data conversion from source file: {file.Name}...");
+                    try
+                    {
+                        ProcessEntry(new CoinApiDataReader(), file);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, $"CoinApiDataConverter(): Error processing entry: {file.Name}");
+                        success = false;
+                        loopState.Break();
+                    }
                 }
-                catch (Exception e)
-                {
-                    Log.Error(e, $"CoinApiDataConverter(): Error processing entry: {file.Name}");
-                    return false;
-                }
-            }
+            );
 
             Log.Trace($"CoinApiDataConverter(): Finished in {stopwatch.Elapsed}");
-            return true;
+            return success;
         }
 
+        /// <summary>
+        /// Processes the entry.
+        /// </summary>
+        /// <param name="coinapiDataReader">The coinapi data reader.</param>
+        /// <param name="file">The file.</param>
         private void ProcessEntry(CoinApiDataReader coinapiDataReader, FileInfo file)
         {
             var entryData = coinapiDataReader.GetCoinApiEntryData(file, _processingDate, _market);
@@ -145,7 +150,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
 
             foreach (var consolidator in consolidators)
             {
-                writer = new LeanDataWriter(consolidator.Resolution, entryData.Symbol, Globals.DataFolder, entryData.TickType);
+                writer = new LeanDataWriter(consolidator.Resolution, entryData.Symbol, _destinationFolder.FullName, entryData.TickType);
                 writer.Write(consolidator.Flush());
             }
         }
