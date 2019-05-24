@@ -29,6 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     public class RemoteFileSubscriptionStreamReader : IStreamReader
     {
         private readonly IStreamReader _streamReader;
+        private static IDownloadProvider _downloader;
 
         /// <summary>
         /// Gets whether or not this stream reader should be rate limited
@@ -47,23 +48,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             // create a hash for a new filename
             var filename = Guid.NewGuid() + source.GetExtension();
             var destination = Path.Combine(downloadDirectory, filename);
-
-            using (var client = new WebClient())
-            {
-                client.Proxy = WebRequest.GetSystemWebProxy();
-                if (headers != null)
-                {
-                    foreach (var header in headers)
-                    {
-                        client.Headers.Add(header.Key, header.Value);
-                    }
-                }
-
-                client.DownloadFile(source, destination);
-            }
+            var contents = _downloader.Download(source, headers, string.Empty, string.Empty);
+            File.WriteAllText(destination, contents);
 
             // Send the file to the dataCacheProvider so it is available when the streamReader asks for it
-            dataCacheProvider.Store(destination, File.ReadAllBytes(destination));
+            dataCacheProvider.Store(destination, System.Text.Encoding.UTF8.GetBytes(contents));
 
             // now we can just use the local file reader
             _streamReader = new LocalFileSubscriptionStreamReader(dataCacheProvider, destination);
@@ -99,6 +88,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         public void Dispose()
         {
             _streamReader.Dispose();
+        }
+
+        /// <summary>
+        /// Save reference to the download system.
+        /// </summary>
+        /// <param name="downloader">Downloader provider for the remote file fetching.</param>
+        public static void SetDownloadProvider(IDownloadProvider downloader)
+        {
+            _downloader = downloader;
         }
     }
 }

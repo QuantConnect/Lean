@@ -32,7 +32,7 @@ namespace QuantConnect.Api
     /// <summary>
     /// QuantConnect.com Interaction Via API.
     /// </summary>
-    public class Api : IApi
+    public class Api : IApi, IDownloadProvider
     {
         private string _dataFolder;
 

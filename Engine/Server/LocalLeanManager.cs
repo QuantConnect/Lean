@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Lean.Engine.Server
@@ -44,6 +45,7 @@ namespace QuantConnect.Lean.Engine.Server
         public void SetAlgorithm(IAlgorithm algorithm)
         {
             algorithm.SetApi(_systemHandlers.Api);
+            RemoteFileSubscriptionStreamReader.SetDownloadProvider((Api.Api)_systemHandlers.Api);
         }
 
         /// <summary>
