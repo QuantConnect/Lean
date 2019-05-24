@@ -49,13 +49,13 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// </summary>
         /// <param name="date">the processing date.</param>
         /// <param name="market">the exchange/market.</param>
-        /// <param name="rawDataFolder">path to the folder containing the raw files to be converted.</param>
+        /// <param name="rawDataFolder">path to the raw data folder.</param>
         /// <param name="destinationFolder">destination of the newly generated files.</param>
         public CoinApiDataConverter(DateTime date, string market, string rawDataFolder, string destinationFolder)
         {
             _market = market;
             _processingDate = date;
-            _rawDataFolder = new DirectoryInfo(Path.Combine(rawDataFolder));
+            _rawDataFolder = new DirectoryInfo(Path.Combine(rawDataFolder, SecurityType.Crypto.ToLower(), market.ToLower(), date.ToString(DateFormat.EightCharacter)));
             if (!_rawDataFolder.Exists)
             {
                 throw new ArgumentException($"CoinApiDataConverter(): Source folder not found: {_rawDataFolder.FullName}");
