@@ -64,7 +64,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         {
             Log.Trace("AlgoSeekFuturesConverter.Convert(): Copying remote raw data files locally.");
             //Get the list of available raw files, copy from its remote location to a local folder and then for each file open a separate streamer.
-            var files = _remote.EnumerateFiles("*")
+
+            var files = GetFilesInRawFolder()
                 .Where(f => (f.Extension == ".gz" || f.Extension == ".bz2") && !f.Name.Contains("option"))
                 .Select(remote => remote.CopyTo(Path.Combine(Path.GetTempPath(), remote.Name), true))
                 .ToList();
@@ -195,10 +196,50 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         }
 
         /// <summary>
+        /// Gets the files in raw folder.
+        /// </summary>
+        /// <returns>List of files in source folder</returns>
+        private IEnumerable<FileInfo> GetFilesInRawFolder()
+        {
+            var files = new List<FileInfo>();
+
+            var command = OS.IsLinux ? "ls" : "dir";
+            var arguments = OS.IsWindows ? "/b /a-d" : string.Empty;
+
+            var processStartInfo = new ProcessStartInfo(command, arguments)
+            {
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                WorkingDirectory = _remote.FullName
+            };
+
+            using (var process = new Process())
+            {
+
+                process.StartInfo = processStartInfo;
+                process.Start();
+
+                while (!process.StandardOutput.EndOfStream)
+                {
+                    var line = process.StandardOutput.ReadLine();
+                    if (line != null)
+                    {
+                        files.Add(new FileInfo(Path.Combine(_remote.FullName, line)));
+                    }
+                }
+                process.WaitForExit();
+            }
+
+            return files;
+
+        }
+
+        /// <summary>
         /// Private method loads symbol multipliers from algoseek csv file
         /// </summary>
         /// <returns></returns>
-
         private Dictionary<string, decimal> LoadSymbolMultipliers()
         {
             const int columnsCount = 4;
