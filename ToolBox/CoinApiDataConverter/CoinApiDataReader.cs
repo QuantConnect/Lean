@@ -16,14 +16,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
-using SevenZip;
 using CompressionMode = System.IO.Compression.CompressionMode;
 
 namespace QuantConnect.ToolBox.CoinApiDataConverter
@@ -34,15 +32,15 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
     public class CoinApiDataReader
     {
         /// <summary>
-        /// Gets the data for the given CoinAPI tar entry
+        /// Gets the coin API entry data.
         /// </summary>
-        /// <param name="tar">The tar input stream</param>
-        /// <param name="entry">The tar entry</param>
-        /// <returns>A new instance of type <see cref="CoinApiEntryData"/></returns>
+        /// <param name="file">The source file.</param>
+        /// <param name="processingDate">The processing date.</param>
+        /// <param name="market">The market/exchange.</param>
+        /// <returns></returns>
         public CoinApiEntryData GetCoinApiEntryData(FileInfo file, DateTime processingDate, string market)
         {
             // crypto/<market>/<date>/<ticktype>-563-BITFINEX_SPOT_BTC_USD.csv.gz
-
             var tickType = file.FullName.Contains("trade") ? TickType.Trade : TickType.Quote;
 
             var filenameParts = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(file.Name)).Split('_');
@@ -61,11 +59,12 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         }
 
         /// <summary>
-        /// Gets an enumerable of ticks for the given CoinAPI tar entry
+        /// Gets an list of ticks for a given CoinAPI source file.
         /// </summary>
-        /// <param name="tar">The tar input stream</param>
-        /// <param name="entryData">The entry data</param>
-        /// <returns>An <see cref="IEnumerable{Tick}"/> for the ticks read from the entry</returns>
+        /// <param name="entryData">The entry data.</param>
+        /// <param name="file">The file.</param>
+        /// <returns></returns>
+        /// <exception cref="Exception">CoinApiDataReader.ProcessCoinApiEntry(): CSV header not found for entry name: {entryData.Name}</exception>
         public IEnumerable<Tick> ProcessCoinApiEntry(CoinApiEntryData entryData, FileInfo file)
         {
             Log.Trace("CoinApiDataReader.ProcessTarEntry(): Processing " +
@@ -75,10 +74,8 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
 
             var tickList = new List<Tick>();
 
-            var csv = ExtractFile(file);
-
-            using (var innerStream = csv.OpenRead())
-            using (var reader = new StreamReader(innerStream))
+            using (var stream = new GZipStream(file.OpenRead(), CompressionMode.Decompress))
+            using (var reader = new StreamReader(stream))
             {
                 var headerLine = reader.ReadLine();
                 if (headerLine == null)
@@ -92,45 +89,16 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                     ? ParseTradeData(entryData.Symbol, reader, headerParts)
                     : ParseQuoteData(entryData.Symbol, reader, headerParts);
             }
-
-            csv.Delete();
-
             return tickList;
         }
 
-        private FileInfo ExtractFile(FileInfo source)
-        {
-            var zipper = OS.IsWindows ? "C:/Program Files/7-Zip/7z.exe" : "7z";
-            var csvFileInfo = new FileInfo(Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(source.Name)));
-
-            Log.Trace("CoinApiDataReader.ProcessCoinApiEntry(): Extracting " + source);
-            var psi = new ProcessStartInfo(zipper, " e " + source.FullName + " -o" + Path.GetTempPath())
-            {
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                UseShellExecute = false,
-                RedirectStandardOutput = false
-            };
-
-            var process = new Process();
-            process.StartInfo = psi;
-            process.Start();
-
-            if (!process.WaitForExit(20 * 1000))
-            {
-                Log.Error("7Zip timed out: " + source.Name);
-            }
-            else
-            {
-                if (process.ExitCode > 0)
-                {
-                    Log.Error("7Zip Exited Unsuccessfully: " + source.Name);
-                }
-            }
-
-            return csvFileInfo;
-        }
-
+        /// <summary>
+        /// Parses CoinAPI trade data.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <param name="reader">The reader.</param>
+        /// <param name="headerParts">The header parts.</param>
+        /// <returns></returns>
         private List<Tick> ParseTradeData(Symbol symbol, StreamReader reader, List<string> headerParts)
         {
             var columnTime = headerParts.FindIndex(x => x == "time_exchange");
@@ -162,6 +130,13 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             return tickList;
         }
 
+        /// <summary>
+        /// Parses CoinAPI quote data.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <param name="reader">The reader.</param>
+        /// <param name="headerParts">The header parts.</param>
+        /// <returns></returns>
         private List<Tick> ParseQuoteData(Symbol symbol, StreamReader reader, List<string> headerParts)
         {
             var columnTime = headerParts.FindIndex(x => x == "time_exchange");

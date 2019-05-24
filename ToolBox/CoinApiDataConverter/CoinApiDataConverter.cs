@@ -39,10 +39,10 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             Market.Bitfinex
         }.ToHashSet();
 
-        private DirectoryInfo _rawDataFolder;
-        private DirectoryInfo _destinationFolder;
-        private DateTime _processingDate;
-        private string _market;
+        private readonly DirectoryInfo _rawDataFolder;
+        private readonly DirectoryInfo _destinationFolder;
+        private readonly DateTime _processingDate;
+        private readonly string _market;
 
         /// <summary>
         /// CoinAPI data converter.
@@ -66,7 +66,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
 
             if (!SupportedMarkets.Contains(market.ToLower()))
             {
-                throw new ArgumentException($"CoinApiDataConverter(): Market/Exchangue {market} not supported, yet. Supported Markets/Exchanges are {string.Join(" ", SupportedMarkets)}", market);
+                throw new ArgumentException($"CoinApiDataConverter(): Market/Exchange {market} not supported, yet. Supported Markets/Exchanges are {string.Join(" ", SupportedMarkets)}", market);
             }
         }
 
