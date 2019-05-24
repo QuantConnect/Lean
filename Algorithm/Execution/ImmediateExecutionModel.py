@@ -41,7 +41,7 @@ class ImmediateExecutionModel(ExecutionModel):
         self.targetsCollection.AddRange(targets)
 
         for target in self.targetsCollection.OrderByMarginImpact(algorithm):
-            open_quantity = sum([x.Quantity for x in algorithm.Transactions.GetOpenOrders(target.Symbol)])
+            open_quantity = sum([x.Quantity - x.QuantityFilled for x in algorithm.Transactions.GetOpenOrderTickets(target.Symbol)])
             existing = algorithm.Securities[target.Symbol].Holdings.Quantity + open_quantity
             quantity = target.Quantity - existing
             if quantity != 0:
