@@ -2853,6 +2853,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 _ibAutomaterInitializeEvent.Set();
             }
+
+            // the IB session was disconnected by the user logging in from another location
+            else if (e.Data.Contains("Re-login is required"))
+            {
+                const string message = "A new competing session was started from another location and the current session has been terminated.";
+
+                _algorithm.Error("Brokerage Error: " + message);
+                _algorithm.RunTimeError = new Exception(message);
+            }
         }
 
         private void OnIbAutomaterErrorDataReceived(object sender, ErrorDataReceivedEventArgs e)
