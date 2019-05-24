@@ -334,8 +334,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     PortfolioTarget = x,
                     TargetQuantity = x.Quantity,
                     ExistingQuantity = algorithm.Portfolio[x.Symbol].Quantity
-                                       + algorithm.Transactions.GetOpenOrders(o => o.Symbol == x.Symbol)
-                                           .Aggregate(0m, (d, o) => d + o.Quantity),
+                                       + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
+                                           .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
                     Price = algorithm.Securities[x.Symbol].Price
                 })
                 .Select(x => new {

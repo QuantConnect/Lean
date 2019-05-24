@@ -146,7 +146,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         }
 
         [Test]
-        public void OrderByMarginImpactDoesNotReturnTargetsForWhichUnorderdQuantityIsZeroBecauseTargetIsZero()
+        public void OrderByMarginImpactDoesNotReturnTargetsForWhichUnorderedQuantityIsZeroBecauseTargetIsZero()
         {
             var algorithm = new FakeAlgorithm();
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
@@ -164,7 +164,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         }
 
         [Test]
-        public void OrderByMarginImpactDoesNotReturnTargetsForWhichUnorderdQuantityIsZeroBecauseTargetReached()
+        public void OrderByMarginImpactDoesNotReturnTargetsForWhichUnorderedQuantityIsZeroBecauseTargetReached()
         {
             var algorithm = new FakeAlgorithm();
             algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
@@ -184,7 +184,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         }
 
         [Test]
-        public void OrderByMarginImpactDoesNotReturnTargetsForWhichUnorderdQuantityIsZeroBecauseOpenOrder()
+        public void OrderByMarginImpactDoesNotReturnTargetsForWhichUnorderedQuantityIsZeroBecauseOpenOrder()
         {
             var algorithm = new FakeAlgorithm();
             var orderProcessor = new FakeOrderProcessor();
@@ -195,7 +195,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var collection = new PortfolioTargetCollection();
             var target = new PortfolioTarget(symbol, 1);
             collection.Add(target);
+
+            var openOrderRequest = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, DateTime.UtcNow, "");
+            openOrderRequest.SetOrderId(1);
+            var openOrderTicket = new OrderTicket(algorithm.Transactions, openOrderRequest);
+
             orderProcessor.AddOrder(new MarketOrder(symbol, 1, DateTime.UtcNow));
+            orderProcessor.AddTicket(openOrderTicket);
 
             var targets = collection.OrderByMarginImpact(algorithm);
             Assert.AreEqual(collection.Count, 1);

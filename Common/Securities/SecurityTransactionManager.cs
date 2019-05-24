@@ -230,7 +230,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets and enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// Gets an enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
         /// </summary>
         /// <param name="filter">The filter predicate used to find the required order tickets</param>
         /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
@@ -240,7 +240,17 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets and enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// Get an enumerable of open <see cref="OrderTicket"/> for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol for which to return the order tickets</param>
+        /// <returns>An enumerable of open <see cref="OrderTicket"/>.</returns>
+        public IEnumerable<OrderTicket> GetOpenOrderTickets(Symbol symbol)
+        {
+            return GetOpenOrderTickets(x => x.Symbol == symbol);
+        }
+
+        /// <summary>
+        /// Gets an enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
         /// </summary>
         /// <param name="filter">The filter predicate used to find the required order tickets</param>
         /// <returns>An enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
