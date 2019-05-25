@@ -28,7 +28,7 @@ namespace QuantConnect.Interfaces
         /// <param name="headers">Headers to pass to the site</param>
         /// <param name="userName">Username for basic authentication</param>
         /// <param name="password">Password for basic authentication</param>
-        /// <returns></returns>
+        /// <returns>String contents of file</returns>
         string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
     }
 }
