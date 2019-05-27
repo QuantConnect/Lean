@@ -87,7 +87,6 @@
   </Choose>
   <ItemGroup>
     <Compile Include="BasicTemplateAlgorithm.fs" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">

@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -9,7 +8,8 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.Algorithm.Python</RootNamespace>
     <AssemblyName>QuantConnect.Algorithm.Python</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <FileAlignment>512</FileAlignment>
     <LangVersion>6</LangVersion>
     <TargetFrameworkProfile />
@@ -67,7 +67,6 @@
     <Content Include="ExpiryHelperAlphaModelFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateFuturesFrameworkAlgorithm.py" />
     <Content Include="BasicTemplateOptionsFrameworkAlgorithm.py" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="InsightWeightingFrameworkAlgorithm.py" />
     <None Include="CompositeRiskManagementModelFrameworkAlgorithm.py" />
     <None Include="BlackLittermanPortfolioOptimizationFrameworkAlgorithm.py" />
@@ -242,7 +241,6 @@
       </ItemGroup>
     </When>
   </Choose>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' ">
       build
@@ -256,7 +254,7 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.20\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.20\build\QuantConnect.pythonnet.targets'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.20\build\QuantConnect.pythonnet.targets') And !Exists('..\packages\QuantConnect.pythonnet\1.0.5.20\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.20\build\QuantConnect.pythonnet.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -14,14 +14,14 @@
 */
 
 using System;
-using System.ComponentModel.Composition;
+using System.Composition.Hosting;
 
 namespace QuantConnect.Logging
 {
     /// <summary>
     /// Interface for redirecting log output
     /// </summary>
-    [InheritedExport(typeof(ILogHandler))]
+    //[InheritedExport(typeof(ILogHandler))]
     public interface ILogHandler : IDisposable
     {
         /// <summary>

@@ -14,7 +14,6 @@
  *
 */
 
-using System.ComponentModel.Composition;
 using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Interfaces
@@ -22,7 +21,6 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// Provides instances of <see cref="MapFileResolver"/> at run time
     /// </summary>
-    [InheritedExport(typeof(IMapFileProvider))]
     public interface IMapFileProvider
     {
         /// <summary>

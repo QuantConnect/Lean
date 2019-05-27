@@ -132,7 +132,12 @@ namespace Oanda.RestV20.Client
             // add file parameter, if any
             foreach(var param in fileParams)
             {
-                request.AddFile(param.Value.Name, param.Value.Writer, param.Value.FileName, param.Value.ContentType);
+                // For .NET Core, otherwise we get an error saying 'Cannot convert from Action<Stream> to byte[]'
+                var p = param.Value.Writer;
+                var buf = new MemoryStream();
+                p.Invoke(buf);
+
+                request.AddFile(param.Value.Name, buf.ToArray(), param.Value.FileName, param.Value.ContentType);
             }
 
             if (postBody != null) // http body (model or byte[]) parameter

@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Composition;
 using System.IO;
 using QuantConnect.Configuration;
 using QuantConnect.Orders;
@@ -26,6 +27,7 @@ namespace QuantConnect.Lean.Engine.Results
     /// Provides a wrapper over the <see cref="BacktestingResultHandler"/> that logs all order events
     /// to a separate file
     /// </summary>
+    [Export(typeof(IResultHandler))]
     public class RegressionResultHandler : BacktestingResultHandler
     {
         private Language Language => Config.GetValue<Language>("algorithm-language");

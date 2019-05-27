@@ -16,7 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
+using System.ComponentModel;
 using System.Net;
 using QuantConnect.Api;
 using QuantConnect.API;
@@ -27,7 +27,6 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// API for QuantConnect.com
     /// </summary>
-    [InheritedExport(typeof(IApi))]
     public interface IApi : IDisposable
     {
         /// <summary>

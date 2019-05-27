@@ -16,7 +16,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using QuantConnect.Securities;
-
+using QuantConnect.Algorithm;
 using System.Globalization;
 using QuantConnect.Data.Market;
 

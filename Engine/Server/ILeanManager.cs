@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
@@ -23,7 +22,6 @@ namespace QuantConnect.Lean.Engine.Server
     /// <summary>
     /// Provides scope into Lean that is convenient for managing a lean instance
     /// </summary>
-    [InheritedExport(typeof(ILeanManager))]
     public interface ILeanManager : IDisposable
     {
         /// <summary>

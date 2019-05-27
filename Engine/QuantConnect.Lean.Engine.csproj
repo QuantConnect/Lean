@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
@@ -10,7 +10,8 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantConnect.Lean.Engine</RootNamespace>
     <AssemblyName>QuantConnect.Lean.Engine</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -145,140 +146,10 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="AlgorithmManager.cs" />
-    <Compile Include="Alphas\ChartingInsightManagerExtension.cs" />
-    <Compile Include="Alphas\StatisticsInsightManagerExtension.cs" />
-    <Compile Include="DataFeeds\ApiDataProvider.cs" />
-    <Compile Include="DataFeeds\BacktestingFutureChainProvider.cs" />
-    <Compile Include="DataFeeds\BacktestingOptionChainProvider.cs" />
-    <Compile Include="DataFeeds\CachingFutureChainProvider.cs" />
-    <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
-    <Compile Include="DataFeeds\CurrencySubscriptionDataConfigManager.cs" />
-    <Compile Include="DataFeeds\DataManager.cs" />
-    <Compile Include="DataFeeds\Enumerators\DelistingEventProvider.cs" />
-    <Compile Include="DataFeeds\Enumerators\DividendEventProvider.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\CorporateEventEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\ITradableDateEventProvider.cs" />
-    <Compile Include="DataFeeds\Enumerators\ITradableDatesNotifier.cs" />
-    <Compile Include="DataFeeds\Enumerators\LiveEquityDataSynchronizingEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\MappingEventProvider.cs" />
-    <Compile Include="DataFeeds\Enumerators\LiveAuxiliaryDataEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\PriceScaleFactorEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\SplitEventProvider.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\QuoteBarFillForwardEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\AuxiliaryDataEnumerator.cs" />
-    <Compile Include="DataFeeds\IDataFeedSubscriptionManager.cs" />
-    <Compile Include="DataFeeds\IDataFeedTimeProvider.cs" />
-    <Compile Include="DataFeeds\IDataManager.cs" />
-    <Compile Include="DataFeeds\ISubscriptionSynchronizer.cs" />
-    <Compile Include="DataFeeds\ISynchronizer.cs" />
-    <Compile Include="DataFeeds\LiveFutureChainProvider.cs" />
-    <Compile Include="DataFeeds\LiveOptionChainProvider.cs" />
-    <Compile Include="DataFeeds\NullDataFeed.cs" />
-    <Compile Include="DataFeeds\PendingRemovalsManager.cs" />
-    <Compile Include="DataFeeds\RealTimeScheduleEventService.cs" />
-    <Compile Include="DataFeeds\PredicateTimeProvider.cs" />
-    <Compile Include="DataFeeds\SubscriptionDataReaderEvents.cs" />
-    <Compile Include="DataFeeds\SubscriptionFrontierTimeProvider.cs" />
-    <Compile Include="DataFeeds\SingleEntryDataCacheProvider.cs" />
-    <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\EnqueueableEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\BaseDataCollectionSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\BaseDataSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\DataQueueFuturesChainUniverseDataCollectionEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\DataQueueOptionChainUniverseDataCollectionEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\FineFundamentalSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\FuturesChainUniverseSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\OptionChainUniverseSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\SubscriptionDataReaderSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\TimeTriggeredUniverseSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\FastForwardEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\FillForwardEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\FrontierAwareEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\LiveFillForwardEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\FuturesChainUniverseDataCollectionAggregatorEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\OptionChainUniverseDataCollectionEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\OptionChainUniverseDataCollectionAggregatorEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\OpenInterestEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\RateLimitEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\RefreshEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\SubscriptionFilterEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\SynchronizingEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\QuoteBarBuilderEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\TradeBarBuilderEnumerator.cs" />
-    <Compile Include="DataFeeds\DefaultDataProvider.cs" />
-    <Compile Include="DataFeeds\ISubscriptionDataSourceReader.cs" />
-    <Compile Include="DataFeeds\ITimeProvider.cs" />
-    <Compile Include="DataFeeds\CollectionSubscriptionDataSourceReader.cs" />
-    <Compile Include="DataFeeds\ManualTimeProvider.cs" />
-    <Compile Include="DataFeeds\RealTimeProvider.cs" />
-    <Compile Include="DataFeeds\DataFeedPacket.cs" />
-    <Compile Include="DataFeeds\SubscriptionCollection.cs" />
-    <Compile Include="DataFeeds\SubscriptionData.cs" />
-    <Compile Include="DataFeeds\LiveSynchronizer.cs" />
-    <Compile Include="DataFeeds\Synchronizer.cs" />
-    <Compile Include="DataFeeds\TextSubscriptionDataSourceReader.cs" />
-    <Compile Include="DataFeeds\CreateStreamReaderErrorEventArgs.cs" />
-    <Compile Include="DataFeeds\BaseDataExchange.cs" />
-    <Compile Include="DataFeeds\LiveTradingDataFeed.cs" />
-    <Compile Include="DataFeeds\SubscriptionSynchronizer.cs" />
-    <Compile Include="DataFeeds\Subscription.cs" />
-    <Compile Include="DataFeeds\InvalidSourceEventArgs.cs" />
-    <Compile Include="DataFeeds\SubscriptionDataSourceReader.cs" />
-    <Compile Include="DataFeeds\Queues\DataQueue.cs" />
-    <Compile Include="DataFeeds\Queues\FakeDataQueue.cs" />
-    <Compile Include="DataFeeds\ReaderErrorEventArgs.cs" />
-    <Compile Include="DataFeeds\SubscriptionDataReader.cs" />
-    <Compile Include="DataFeeds\TimeSlice.cs" />
-    <Compile Include="DataFeeds\TimeSliceFactory.cs" />
-    <Compile Include="DataFeeds\Transport\LocalFileSubscriptionStreamReader.cs" />
-    <Compile Include="DataFeeds\Transport\RemoteFileSubscriptionStreamReader.cs" />
-    <Compile Include="DataFeeds\Transport\RestSubscriptionStreamReader.cs" />
-    <Compile Include="DataFeeds\UniverseSelection.cs" />
-    <Compile Include="DataFeeds\UpdateData.cs" />
-    <Compile Include="DataFeeds\ZipDataCacheProvider.cs" />
-    <Compile Include="DataFeeds\ZipEntryNameSubscriptionDataSourceReader.cs" />
-    <Compile Include="HistoricalData\SineHistoryProvider.cs" />
-    <Compile Include="RealTime\BaseRealTimeHandler.cs" />
-    <Compile Include="Results\BaseResultsHandler.cs" />
-    <Compile Include="Results\RegressionResultHandler.cs" />
-    <Compile Include="Server\LocalLeanManager.cs" />
-    <Compile Include="HistoricalData\BrokerageHistoryProvider.cs" />
-    <Compile Include="HistoricalData\SubscriptionDataReaderHistoryProvider.cs" />
-    <Compile Include="HistoricalData\SynchronizingHistoryProvider.cs" />
-    <Compile Include="Server\ILeanManager.cs" />
-    <Compile Include="LeanEngineAlgorithmHandlers.cs" />
-    <Compile Include="LeanEngineSystemHandlers.cs" />
-    <Compile Include="RealTime\LiveTradingRealTimeHandler.cs" />
-    <Compile Include="RealTime\BacktestingRealTimeHandler.cs" />
-    <Compile Include="RealTime\IRealTimeHandler.cs" />
-    <Compile Include="RealTime\ScheduledEventFactory.cs" />
-    <Compile Include="Results\DesktopResultHandler.cs" />
-    <Compile Include="Results\IResultHandler.cs" />
-    <Compile Include="Setup\AlgorithmSetupException.cs" />
-    <Compile Include="Setup\BaseSetupHandler.cs" />
-    <Compile Include="Setup\BrokerageSetupHandler.cs" />
-    <Compile Include="Setup\ConsoleSetupHandler.cs" />
-    <Compile Include="Setup\BacktestingSetupHandler.cs" />
-    <Compile Include="Setup\ISetupHandler.cs" />
     <None Include="app.config" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
-    <Compile Include="Results\BacktestingResultHandler.cs" />
-    <Compile Include="DataFeeds\FileSystemDataFeed.cs" />
-    <Compile Include="Alphas\DefaultAlphaHandler.cs" />
-    <Compile Include="Alphas\IAlphaHandler.cs" />
-    <Compile Include="Setup\SetupHandlerParameters.cs" />
-    <Compile Include="TransactionHandlers\BacktestingTransactionHandler.cs" />
-    <Compile Include="TransactionHandlers\BrokerageTransactionHandler.cs" />
-    <Compile Include="TransactionHandlers\CancelPendingOrders.cs" />
-    <Compile Include="TransactionHandlers\ITransactionHandler.cs" />
-    <Compile Include="DataFeeds\IDataFeed.cs" />
-    <Compile Include="Results\LiveTradingResultHandler.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Engine.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj">
@@ -339,8 +210,10 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.Caching" Version="4.6.0-preview4.19164.7" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.5.1" />
+  </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <PropertyGroup>
     <PostBuildEvent>

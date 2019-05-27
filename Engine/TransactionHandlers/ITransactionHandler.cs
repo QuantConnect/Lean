@@ -15,7 +15,6 @@
 */
 
 using System.Collections.Concurrent;
-using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Orders;
@@ -27,7 +26,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// Transaction handlers define how the transactions are processed and set the order fill information.
     /// The pass this information back to the algorithm portfolio and ensure the cash and portfolio are synchronized.
     /// </summary>
-    [InheritedExport(typeof(ITransactionHandler))]
     public interface ITransactionHandler : IOrderProcessor, IOrderEventProvider
     {
         /// <summary>

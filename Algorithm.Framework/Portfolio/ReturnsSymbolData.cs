@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Indicators;
-using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {

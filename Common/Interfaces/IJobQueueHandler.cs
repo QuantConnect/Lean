@@ -14,7 +14,6 @@
  *
 */
 
-using System.ComponentModel.Composition;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Interfaces
@@ -22,7 +21,6 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// Task requestor interface with cloud system
     /// </summary>
-    [InheritedExport(typeof(IJobQueueHandler))]
     public interface IJobQueueHandler
     {
         /// <summary>

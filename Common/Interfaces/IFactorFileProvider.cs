@@ -14,7 +14,6 @@
  *
 */
 
-using System.ComponentModel.Composition;
 using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Interfaces
@@ -22,7 +21,6 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// Provides instances of <see cref="FactorFile"/> at run time
     /// </summary>
-    [InheritedExport(typeof(IFactorFileProvider))]
     public interface IFactorFileProvider
     {
         /// <summary>

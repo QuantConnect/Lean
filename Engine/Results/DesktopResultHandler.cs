@@ -28,12 +28,14 @@ using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using System.Diagnostics;
 using QuantConnect.Securities;
+using System.Composition;
 
 namespace QuantConnect.Lean.Engine.Results
 {
     /// <summary>
     /// Desktop Result Handler - Desktop GUI Result Handler for Piping Results to WinForms:
     /// </summary>
+    [Export(typeof(IResultHandler))]
     public class DesktopResultHandler : BaseResultsHandler, IResultHandler
     {
         private bool _exitTriggered;

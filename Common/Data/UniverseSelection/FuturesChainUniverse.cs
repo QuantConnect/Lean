@@ -20,7 +20,6 @@ using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
-using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {

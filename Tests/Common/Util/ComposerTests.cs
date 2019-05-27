@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System.ComponentModel.Composition;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Util;
@@ -68,13 +67,11 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(instance1, instance2);
         }
 
-        [InheritedExport(typeof(IExport))]
         interface IExport
         {
             int Id { get; }
         }
 
-        [InheritedExport(typeof(IOneMoreExport))]
         interface IOneMoreExport
         {
             decimal Export { get; }

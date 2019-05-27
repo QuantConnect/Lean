@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using System.Linq;
 using System.Collections;
-using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect
@@ -28,8 +29,6 @@ namespace QuantConnect
     /// <remarks>Good design should remove the need for this function. Over time it should disappear.</remarks>
     public static class OS
     {
-        private static PerformanceCounter _cpuUsageCounter;
-
         /// <summary>
         /// Global Flag :: Operating System
         /// </summary>
@@ -123,23 +122,22 @@ namespace QuantConnect
         {
             get
             {
-                if (_cpuUsageCounter == null)
-                {
-                    try
-                    {
-                        _cpuUsageCounter = new PerformanceCounter(
-                            "Process",
-                            "% Processor Time",
-                            IsWindows ? Process.GetCurrentProcess().ProcessName : Process.GetCurrentProcess().Id.ToString());
-                    }
-                    catch (Exception exception)
-                    {
-                        Log.Error(exception);
-                        return 0;
-                    }
-                }
+                var startTime = DateTime.UtcNow;
+                var startCpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
+                
+                // Let some time pass before we try and get the TotalProcessorTime
+                Thread.Sleep(1);
 
-                return (decimal) _cpuUsageCounter.NextValue();
+                var endTime = DateTime.UtcNow;
+                var endCpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
+
+                var cpuUsedMs = (endCpuUsage - startCpuUsage).TotalMilliseconds;
+                var totalMsPassed = (endTime - startTime).TotalMilliseconds;
+
+                var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
+                
+                // No need to set culture info
+                return Convert.ToDecimal(cpuUsageTotal);
             }
         }
 

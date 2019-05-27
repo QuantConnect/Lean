@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Setup;
@@ -33,7 +32,6 @@ namespace QuantConnect.Lean.Engine.Results
     /// Handle the results of the backtest: where should we send the profit, portfolio updates:
     /// Backtester or the Live trading platform:
     /// </summary>
-    [InheritedExport(typeof(IResultHandler))]
     public interface IResultHandler
     {
         /// <summary>

@@ -23,6 +23,7 @@ using Ionic.Zip;
 using Ionic.Zlib;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
+using System.Text;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -57,6 +58,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public Stream Fetch(string key)
         {
+            // Will throw while trying to read ZIP file if this line is not included
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             string entryName = null; // default to all entries
             var filename = key;
             var hashIndex = key.LastIndexOf("#", StringComparison.Ordinal);

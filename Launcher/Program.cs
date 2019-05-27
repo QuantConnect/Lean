@@ -15,13 +15,10 @@
 */
 
 using System;
-using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using System.Windows.Forms;
 using QuantConnect.Configuration;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -79,7 +76,7 @@ namespace QuantConnect.Lean.Launcher
             {
                 leanEngineSystemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
             }
-            catch (CompositionException compositionException)
+            catch (Exception compositionException)
             {
                 Log.Error("Engine.Main(): Failed to load library: " + compositionException);
                 throw;
@@ -102,7 +99,7 @@ namespace QuantConnect.Lean.Launcher
             {
                 leanEngineAlgorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
             }
-            catch (CompositionException compositionException)
+            catch (Exception compositionException)
             {
                 Log.Error("Engine.Main(): Failed to load library: " + compositionException);
                 throw;

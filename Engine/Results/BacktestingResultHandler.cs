@@ -31,12 +31,14 @@ using QuantConnect.Util;
 using System.IO;
 using QuantConnect.Lean.Engine.Alphas;
 using QuantConnect.Securities;
+using System.Composition;
 
 namespace QuantConnect.Lean.Engine.Results
 {
     /// <summary>
     /// Backtesting result handler passes messages back from the Lean to the User.
     /// </summary>
+    [Export(typeof(IResultHandler))]
     public class BacktestingResultHandler : BaseResultsHandler, IResultHandler
     {
         // used for resetting out/error upon completion

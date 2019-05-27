@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -40,6 +41,7 @@ namespace QuantConnect.Lean.Engine.Results
     /// Live trading result handler implementation passes the messages to the QC live trading interface.
     /// </summary>
     /// <remarks>Live trading result handler is quite busy. It sends constant price updates, equity updates and order/holdings updates.</remarks>
+    [Export(typeof(IResultHandler))]
     public class LiveTradingResultHandler : BaseResultsHandler, IResultHandler
     {
         private readonly DateTime _launchTimeUtc = DateTime.UtcNow;

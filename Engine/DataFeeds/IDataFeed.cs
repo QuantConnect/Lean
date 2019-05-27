@@ -14,7 +14,6 @@
  *
 */
 
-using System.ComponentModel.Composition;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -25,7 +24,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Datafeed interface for creating custom datafeed sources.
     /// </summary>
-    [InheritedExport(typeof(IDataFeed))]
     public interface IDataFeed
     {
         /// <summary>

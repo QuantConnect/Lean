@@ -365,7 +365,8 @@ namespace QuantConnect
         /// Getting datafeed from a QC-Live-Cloud
         LiveTrading,
         /// Database
-        Database
+        Database,
+        Tradier
     }
 
     /// <summary>

@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using QuantConnect.Brokerages;
 using QuantConnect.Packets;
 
@@ -24,7 +23,6 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// Defines factory types for brokerages. Every IBrokerage is expected to also implement an IBrokerageFactory.
     /// </summary>
-    [InheritedExport(typeof(IBrokerageFactory))]
     public interface IBrokerageFactory : IDisposable
     {
         /// <summary>

@@ -16,11 +16,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 
 namespace QuantConnect
 {
+    using QuantConnect.Interfaces;
     using QuantConnect.Securities;
     
 
@@ -36,7 +38,7 @@ namespace QuantConnect
             AddSecurity(SecurityType.Equity, symbol, Resolution.Minute);
         }
 
-        public override void OnTradeBar(Dictionary<string, TradeBar> data)
+        public void OnTradeBar(Dictionary<string, TradeBar> data)
         {
             if (Portfolio.HoldStock == false)
             {

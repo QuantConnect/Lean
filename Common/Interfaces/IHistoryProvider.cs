@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using NodaTime;
 using QuantConnect.Data;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
@@ -25,7 +24,6 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// Provides historical data to an algorithm at runtime
     /// </summary>
-    [InheritedExport(typeof(IHistoryProvider))]
     public interface IHistoryProvider
     {
         /// <summary>

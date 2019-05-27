@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.ComponentModel.Composition;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alpha;

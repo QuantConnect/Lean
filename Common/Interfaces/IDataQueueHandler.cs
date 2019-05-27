@@ -15,7 +15,6 @@
 */
 
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using QuantConnect.Data;
 using QuantConnect.Packets;
 
@@ -24,7 +23,6 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// Task requestor interface with cloud system
     /// </summary>
-    [InheritedExport(typeof(IDataQueueHandler))]
     public interface IDataQueueHandler
     {
         /// <summary>

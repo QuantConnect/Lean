@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Scheduling
 {

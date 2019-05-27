@@ -17,9 +17,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {

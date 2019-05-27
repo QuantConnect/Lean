@@ -14,7 +14,6 @@
  *
 */
 
-using System.ComponentModel.Composition;
 using QuantConnect.Notifications;
 using QuantConnect.Packets;
 
@@ -24,7 +23,6 @@ namespace QuantConnect.Interfaces
     /// Messaging System Plugin Interface. 
     /// Provides a common messaging pattern between desktop and cloud implementations of QuantConnect.
     /// </summary>
-    [InheritedExport(typeof(IMessagingHandler))]
     public interface IMessagingHandler
     {
         /// <summary>

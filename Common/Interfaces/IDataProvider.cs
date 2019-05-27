@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.ComponentModel.Composition;
 using System.IO;
 
 namespace QuantConnect.Interfaces
@@ -23,7 +22,6 @@ namespace QuantConnect.Interfaces
     /// Fetches a remote file for a security.
     /// Must save the file to Globals.DataFolder.
     /// </summary>
-    [InheritedExport(typeof(IDataProvider))]
     public interface IDataProvider
     {
         /// <summary>
