@@ -228,6 +228,14 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
+        /// Gets the current defined risk free annual return rate
+        /// </summary>
+        public static decimal GetRiskFreeRate()
+        {
+            return RiskFreeRate;
+        }
+
+        /// <summary>
         /// Annual compounded returns statistic based on the final-starting capital and years.
         /// </summary>
         /// <param name="startingCapital">Algorithm starting capital</param>

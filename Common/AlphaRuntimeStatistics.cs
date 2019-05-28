@@ -80,6 +80,12 @@ namespace QuantConnect
         public decimal TotalAccumulatedEstimatedAlphaValue { get; set; }
 
         /// <summary>
+        /// Score of the strategy's performance, and suitability for the Alpha Stream Market
+        /// </summary>
+        /// <remarks>See https://www.quantconnect.com/research/3bc40ecee68d36a9424fbd1b338eb227 </remarks>
+        public decimal FitnessScore { get; set; }
+
+        /// <summary>
         /// Suggested Value of the Alpha On A Monthly Basis For Licensing
         /// </summary>
         [JsonProperty]
@@ -125,6 +131,7 @@ namespace QuantConnect
 
             return new Dictionary<string, string>
             {
+                {"Fitness Score", $"{FitnessScore}"},
                 {"Total Insights Generated", $"{TotalInsightsGenerated}"},
                 {"Total Insights Closed", $"{TotalInsightsClosed}"},
                 {"Total Insights Analysis Completed", $"{TotalInsightsAnalysisCompleted}"},

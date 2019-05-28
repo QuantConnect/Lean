@@ -28,6 +28,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alpha;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Statistics;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Alphas
@@ -42,6 +43,8 @@ namespace QuantConnect.Lean.Engine.Alphas
         private ChartingInsightManagerExtension _charting;
         private ISecurityValuesProvider _securityValuesProvider;
         private CancellationTokenSource _cancellationTokenSource;
+        private FitnessScore _fitnessScore;
+        private DateTime _lastFitnessScoreCalculation;
         private readonly object _lock = new object();
 
         /// <summary>
@@ -98,6 +101,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             Algorithm = algorithm;
             MessagingHandler = messagingHandler;
 
+            _fitnessScore = new FitnessScore();
             _securityValuesProvider = new AlgorithmSecurityValuesProvider(algorithm);
 
             InsightManager = CreateInsightManager();
@@ -122,6 +126,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         public void OnAfterAlgorithmInitialized(IAlgorithm algorithm)
         {
+            _fitnessScore.Initialize(algorithm);
             // send date ranges to extensions for initialization -- this data wasn't available when the handler was
             // initialzied, so we need to invoke it here
             InsightManager.InitializeExtensionsForRange(algorithm.StartDate, algorithm.EndDate, algorithm.UtcTime);
@@ -136,6 +141,12 @@ namespace QuantConnect.Lean.Engine.Alphas
             if (_lastSecurityValuesSnapshotTime != Algorithm.UtcTime)
             {
                 InsightManager.Step(Algorithm.UtcTime, CreateSecurityValuesSnapshot(), new GeneratedInsightsCollection(Algorithm.UtcTime, Enumerable.Empty<Insight>()));
+            }
+
+            if (_lastFitnessScoreCalculation.Date != Algorithm.UtcTime.Date)
+            {
+                _lastFitnessScoreCalculation = Algorithm.UtcTime.Date;
+                RuntimeStatistics.FitnessScore = _fitnessScore.GetFitnessScore();
             }
         }
 
