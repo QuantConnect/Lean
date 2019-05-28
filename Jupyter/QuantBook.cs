@@ -33,6 +33,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Jupyter
 {
@@ -66,6 +67,13 @@ namespace QuantConnect.Jupyter
                 // Initialize History Provider
                 var composer = new Composer();
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
+                var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
+                systemHandlers.LeanManager.Initialize(systemHandlers,
+                    algorithmHandlers,
+                    new BacktestNodePacket(),
+                    new AlgorithmManager(false));
+                systemHandlers.LeanManager.SetAlgorithm(this);
+
                 _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
 
                 var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
