@@ -21,6 +21,7 @@ using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Tests.Common.Data.Custom
 {
@@ -31,7 +32,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
         public void QuandlDownloadDoesNotThrow()
         {
             Quandl.SetAuthCode("WyAazVXnq7ATy_fefTqm");
-
+            RemoteFileSubscriptionStreamReader.SetDownloadProvider(new Api.Api());
             var data = new HistoryAlgorithm.QuandlFuture();
 
             const string ticker = "CHRIS/CME_SP1";

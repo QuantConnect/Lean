@@ -48,7 +48,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             // create a hash for a new filename
             var filename = Guid.NewGuid() + source.GetExtension();
             var destination = Path.Combine(downloadDirectory, filename);
-            var contents = _downloader.Download(source, headers, string.Empty, string.Empty);
+            var contents = _downloader.Download(source, headers, null, null);
             File.WriteAllText(destination, contents);
 
             // Send the file to the dataCacheProvider so it is available when the streamReader asks for it

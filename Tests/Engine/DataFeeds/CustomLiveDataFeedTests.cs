@@ -32,6 +32,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -48,6 +49,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void EmitsDailyQuandlFutureDataOverWeekends()
         {
+            RemoteFileSubscriptionStreamReader.SetDownloadProvider(new Api.Api());
             var tickers = new[] { "CHRIS/CME_ES1", "CHRIS/CME_ES2" };
             var startDate = new DateTime(2018, 4, 1);
             var endDate = new DateTime(2018, 4, 20);
