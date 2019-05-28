@@ -110,6 +110,12 @@ namespace QuantConnect.Lean.Launcher
 
             if (environment.EndsWith("-desktop"))
             {
+                if (!File.Exists(Config.Get("desktop-exe")))
+                {
+                    var message = $"desktop-exe path ({Config.Get("desktop-exe")}) does not exist. You may need to update this path with the build configuration (currently ${mode})";
+                    Log.Error(message);
+                    throw new FileNotFoundException(message);
+                }
                 var info = new ProcessStartInfo
                 {
                     UseShellExecute = false,
