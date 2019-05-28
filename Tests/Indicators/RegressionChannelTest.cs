@@ -69,6 +69,21 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void WarmsUpProperly()
+        {
+            var indicator = new RegressionChannel(20, 2);
+            var period = ((IIndicatorWarmUpPeriodProvider)indicator).WarmUpPeriod;
+            var prices = LeastSquaresMovingAverageTest.Prices;
+            var time = DateTime.Now;
+
+            for (var i = 0; i < period; i++)
+            {
+                indicator.Update(time.AddMinutes(i), prices[i]);
+                Assert.AreEqual(i == period - 1, indicator.IsReady);
+            }
+        }
+
+        [Test]
         public void LowerUpperChannelUpdateOnce()
         {
             var regressionChannel = new RegressionChannel(2, 2m);
