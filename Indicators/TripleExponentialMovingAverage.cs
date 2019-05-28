@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// EMA3 = EMA(EMA(EMA(t,period),period),period)
     /// TEMA = 3 * EMA1 - 3 * EMA2 + EMA3
     /// </summary>
-    public class TripleExponentialMovingAverage : IndicatorBase<IndicatorDataPoint>
+    public class TripleExponentialMovingAverage : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         private readonly int _period;
         private readonly ExponentialMovingAverage _ema1;
@@ -49,17 +49,19 @@ namespace QuantConnect.Indicators
         /// </summary> 
         /// <param name="period">The period of the TEMA</param>
         public TripleExponentialMovingAverage(int period)
-            : this("TEMA" + period, period)
+            : this($"TEMA({period})", period)
         {
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return Samples > 3 * (_period - 1); }
-        }
+        public override bool IsReady => _ema3.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => 3 * (_period - 1) + 1;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -70,10 +72,10 @@ namespace QuantConnect.Indicators
         {
             _ema1.Update(input);
 
-            if (Samples > _period - 1)
+            if (_ema1.IsReady)
                 _ema2.Update(_ema1.Current);
 
-            if (Samples > 2 * (_period - 1))
+            if (_ema2.IsReady)
                 _ema3.Update(_ema2.Current);
 
             return IsReady ? 3m * _ema1 - 3m * _ema2 + _ema3 : 0m;
