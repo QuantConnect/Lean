@@ -101,6 +101,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return targets;
             }
 
+            insights = FilterInvalidInsightMagnitude(algorithm, insights);
+
             _insightCollection.AddRange(insights);
 
             // Create flatten target for each security that was removed from the universe
@@ -134,7 +136,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                         {
                             algorithm.SetRunTimeError(new ArgumentNullException("BlackLittermanOptimizationPortfolioConstructionModel does not accept \'null\' as Insight.Magnitude. Please make sure your Alpha Model is generating Insights with the Magnitude property set."));
                         }
-                        symbolData.Add(algorithm.Time, (decimal)insight.Magnitude);
+                        symbolData.Add(algorithm.Time, insight.Magnitude.Value.SafeDecimalCast());
                     }
                 }
                 // Get symbols' returns
@@ -152,7 +154,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 var sidx = 0;
                 foreach (var symbol in symbols)
                 {
-                    var weight = (decimal)W[sidx];
+                    var weight = W[sidx].SafeDecimalCast();
 
                     var target = PortfolioTarget.Percent(algorithm, symbol, weight);
                     if (target != null)

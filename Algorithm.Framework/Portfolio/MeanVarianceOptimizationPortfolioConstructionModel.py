@@ -68,6 +68,8 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             targets.append(PortfolioTarget.Percent(algorithm, symbol, 0))
         self.pendingRemoval.clear()
 
+        insights = PortfolioConstructionModel.FilterInvalidInsightMagnitude(algorithm, insights)
+
         symbols = [insight.Symbol for insight in insights]
         if len(symbols) == 0 or all([insight.Magnitude == 0 for insight in insights]):
             return targets

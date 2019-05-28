@@ -23,6 +23,22 @@ namespace QuantConnect.Interfaces
     public interface IAlgorithmSettings
     {
         /// <summary>
+        /// The absolute maximum valid total portfolio value target percentage
+        /// </summary>
+        /// <remarks>This setting is currently being used to filter out undesired target percent values,
+        /// caused by the <see cref="IPortfolioConstructionModel"/> implementation being used.
+        /// For example rounding errors, math operations</remarks>
+        decimal MaxAbsolutePortfolioTargetPercentage { get; set; }
+
+        /// <summary>
+        /// The absolute minimum valid total portfolio value target percentage
+        /// </summary>
+        /// <remarks>This setting is currently being used to filter out undesired target percent values,
+        /// caused by the <see cref="IPortfolioConstructionModel"/> implementation being used.
+        /// For example rounding errors, math operations</remarks>
+        decimal MinAbsolutePortfolioTargetPercentage { get; set; }
+
+        /// <summary>
         /// Gets/sets the SetHoldings buffers value.
         /// The buffer is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
         /// </summary>
