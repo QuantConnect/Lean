@@ -27,6 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class StopLossOnOrderEventRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
+        private bool _alreadyTraded;
 
         public override void Initialize()
         {
@@ -42,14 +43,15 @@ namespace QuantConnect.Algorithm.CSharp
             if (order.Tag == "Entry" && orderEvent.Status == OrderStatus.Filled)
             {
                 Debug("Enter short at " + orderEvent.FillPrice + " set STOPLOSS at 151.0m");
-                StopMarketOrder(order.Symbol, order.Quantity, 151.0m, "StopLoss");
+                StopMarketOrder(order.Symbol, -order.Quantity, 151.0m, "StopLoss");
             }
         }
 
         public override void OnData(Slice data)
         {
-            if (!Portfolio.Invested)
+            if (!Portfolio.Invested && !_alreadyTraded)
             {
+                _alreadyTraded = true;
                 MarketOrder(_spy, -100, false, "Entry");
                 Debug("Purchased Stock");
             }
@@ -71,23 +73,23 @@ namespace QuantConnect.Algorithm.CSharp
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Trades", "2"},
-            {"Average Win", "0%"},
+            {"Average Win", "0.00%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-43.065%"},
-            {"Drawdown", "1.000%"},
+            {"Compounding Annual Return", "0.273%"},
+            {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
-            {"Net Profit", "-0.718%"},
-            {"Sharpe Ratio", "-7.226"},
+            {"Net Profit", "0.003%"},
+            {"Sharpe Ratio", "7.099"},
             {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
+            {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.005"},
-            {"Beta", "-32.327"},
-            {"Annual Standard Deviation", "0.05"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "-7.431"},
-            {"Tracking Error", "0.05"},
-            {"Treynor Ratio", "0.011"},
+            {"Alpha", "0.009"},
+            {"Beta", "-0.636"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-14.596"},
+            {"Tracking Error", "0.001"},
+            {"Treynor Ratio", "-0.003"},
             {"Total Fees", "$2.00"}
         };
     }
