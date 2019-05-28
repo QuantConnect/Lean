@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -23,27 +24,27 @@ namespace QuantConnect.Indicators
     /// multiplied by 100. Once the Fast Stochastics %K is calculated the Slow Stochastic %K is calculated by the average/smoothed price of
     /// of the Fast %K with the given period. The Slow Stochastics %D is then derived from the Slow Stochastics %K with the given period.
     /// </summary>
-    public class Stochastic : BarIndicator
+    public class Stochastic : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly IndicatorBase<IndicatorDataPoint> _maximum;
-        private readonly IndicatorBase<IndicatorDataPoint> _mininum;
+        private readonly IndicatorBase<IndicatorDataPoint> _minimum;
         private readonly IndicatorBase<IndicatorDataPoint> _sumFastK;
         private readonly IndicatorBase<IndicatorDataPoint> _sumSlowK;
 
         /// <summary>
         /// Gets the value of the Fast Stochastics %K given Period.
         /// </summary>
-        public IndicatorBase<IBaseDataBar> FastStoch { get; private set; }
+        public IndicatorBase<IBaseDataBar> FastStoch { get; }
 
         /// <summary>
         /// Gets the value of the Slow Stochastics given Period K.
         /// </summary>
-        public IndicatorBase<IBaseDataBar> StochK { get; private set; }
+        public IndicatorBase<IBaseDataBar> StochK { get; }
 
         /// <summary>
         /// Gets the value of the Slow Stochastics given Period D.
         /// </summary>
-        public IndicatorBase<IBaseDataBar> StochD { get; private set; }
+        public IndicatorBase<IBaseDataBar> StochD { get; }
 
         /// <summary>
         /// Creates a new Stochastics Indicator from the specified periods.
@@ -56,27 +57,30 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _maximum = new Maximum(name + "_Max", period);
-            _mininum = new Minimum(name + "_Min", period);
+            _minimum = new Minimum(name + "_Min", period);
             _sumFastK = new Sum(name + "_SumFastK", kPeriod);
             _sumSlowK = new Sum(name + "_SumD", dPeriod);
 
             FastStoch = new FunctionalIndicator<IBaseDataBar>(name + "_FastStoch",
                 input => ComputeFastStoch(period, input),
                 fastStoch => _maximum.IsReady,
-                () => _maximum.Reset()
+                () => { }
                 );
 
             StochK = new FunctionalIndicator<IBaseDataBar>(name + "_StochK",
                 input => ComputeStochK(period, kPeriod, input),
                 stochK => _maximum.IsReady,
-                () => _maximum.Reset()
-                );
+                () => { }
+            );
 
-            StochD = new FunctionalIndicator<IBaseDataBar>(name + "_StochD",
+            StochD = new FunctionalIndicator<IBaseDataBar>(
+                name + "_StochD",
                 input => ComputeStochD(period, kPeriod, dPeriod),
                 stochD => _maximum.IsReady,
-                () => _maximum.Reset()
-                );
+                () => { }
+            );
+
+            WarmUpPeriod = period;
         }
 
         /// <summary>
@@ -86,17 +90,20 @@ namespace QuantConnect.Indicators
         /// <param name="kPeriod">The K period given to calculated the Slow %K</param>
         /// <param name="dPeriod">The D period given to calculated the Slow %D</param>
         public Stochastic(int period, int kPeriod, int dPeriod)
-            : this("STO" + period, period, kPeriod, dPeriod)
+            : this($"STO({period},{kPeriod},{dPeriod})", period, kPeriod, dPeriod)
         {
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return FastStoch.IsReady && StochK.IsReady && StochD.IsReady; }
-        }
+        public override bool IsReady => FastStoch.IsReady && StochK.IsReady && StochD.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
+
         /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
@@ -104,10 +111,11 @@ namespace QuantConnect.Indicators
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
             _maximum.Update(input.Time, input.High);
-            _mininum.Update(input.Time, input.Low);
+            _minimum.Update(input.Time, input.Low);
             FastStoch.Update(input);
             StochK.Update(input);
             StochD.Update(input);
+
             return FastStoch;
         }
 
@@ -119,18 +127,17 @@ namespace QuantConnect.Indicators
         /// <returns>The Fast Stochastics %K value.</returns>
         private decimal ComputeFastStoch(int period, IBaseDataBar input)
         {
-            var denominator = (_maximum - _mininum);
-            var numerator = (input.Close - _mininum);
-            decimal fastStoch;
+            var denominator = _maximum - _minimum;
+            
+            // if there's no range, just return constant zero
             if (denominator == 0m)
             {
-                // if there's no range, just return constant zero
-                fastStoch = 0m;
+                return 0m;
             }
-            else
-            {
-                fastStoch = _maximum.Samples >= period ? numerator/denominator : new decimal(0.0);
-            }
+
+            var numerator = input.Close - _minimum;
+            var fastStoch = _maximum.Samples >= period ? numerator / denominator : decimal.Zero;
+
             _sumFastK.Update(input.Time, fastStoch);
             return fastStoch * 100;
         }
@@ -142,9 +149,9 @@ namespace QuantConnect.Indicators
         /// <param name="constantK">The constant k.</param>
         /// <param name="input">The input.</param>
         /// <returns>The Slow Stochastics %K value.</returns>
-        private decimal ComputeStochK(int period, int constantK, IBaseDataBar input)
+        private decimal ComputeStochK(int period, int constantK, IBaseData input)
         {
-            var stochK = _maximum.Samples >= (period + constantK - 1) ? _sumFastK / constantK : new decimal(0.0);
+            var stochK = _maximum.Samples >= (period + constantK - 1) ? _sumFastK / constantK : decimal.Zero;
             _sumSlowK.Update(input.Time, stochK);
             return stochK * 100;
         }
@@ -158,7 +165,7 @@ namespace QuantConnect.Indicators
         /// <returns>The Slow Stochastics %D value.</returns>
         private decimal ComputeStochD(int period, int constantK, int constantD)
         {
-            var stochD = _maximum.Samples >= (period + constantK + constantD - 2) ? _sumSlowK / constantD : new decimal(0.0);
+            var stochD = _maximum.Samples >= (period + constantK + constantD - 2) ? _sumSlowK / constantD : decimal.Zero;
             return stochD * 100;
         }
         /// <summary>
@@ -169,6 +176,8 @@ namespace QuantConnect.Indicators
             FastStoch.Reset();
             StochK.Reset();
             StochD.Reset();
+            _maximum.Reset();
+            _minimum.Reset();
             _sumFastK.Reset();
             _sumSlowK.Reset();
             base.Reset();
