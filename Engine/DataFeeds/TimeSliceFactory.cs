@@ -140,6 +140,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // don't add internal feed data to ticks/bars objects
                     if (baseData.DataType != MarketDataType.Auxiliary)
                     {
+                        var tick = baseData as Tick;
+
                         if (!packet.Configuration.IsInternalFeed)
                         {
                             PopulateDataDictionaries(baseData, ticks, tradeBars, quoteBars, optionChains, futuresChains);
@@ -171,12 +173,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             }
 
                             // this is data used to update consolidators
-                            consolidatorUpdate.Add(baseData);
+                            // do not add it if it is a Suspicious tick
+                            if (tick == null || !tick.Suspicious)
+                            {
+                                consolidatorUpdate.Add(baseData);
+                            }
                         }
 
                         // this is the data used set market prices
                         // do not add it if it is a Suspicious tick
-                        var tick = baseData as Tick;
                         if (tick != null && tick.Suspicious) continue;
 
                         securityUpdate.Add(baseData);

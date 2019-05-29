@@ -172,6 +172,43 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
+        [Test]
+        public void SuspiciousTicksAreNotAddedToConsolidatorUpdateData()
+        {
+            var symbol = Symbols.SPY;
+
+            var subscriptionDataConfig = new SubscriptionDataConfig(
+                typeof(Tick), symbol, Resolution.Tick, TimeZones.Utc, TimeZones.Utc, true, true, false);
+
+            var security = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                subscriptionDataConfig,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance
+            );
+
+            var timeSlice = _timeSliceFactory.Create(DateTime.UtcNow,
+                new List<DataFeedPacket>
+                {
+                    new DataFeedPacket(security, subscriptionDataConfig, new List<BaseData>
+                    {
+                        new Tick(DateTime.UtcNow, symbol, 280, 0, 0),
+                        new Tick(DateTime.UtcNow, symbol, 500, 0, 0) { Suspicious = true },
+                        new Tick(DateTime.UtcNow, symbol, 281, 0, 0)
+                    })
+                },
+                new SecurityChanges(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                new Dictionary<Universe, BaseDataCollection>());
+
+            Assert.AreEqual(1, timeSlice.ConsolidatorUpdateData.Count);
+
+            var data = timeSlice.ConsolidatorUpdateData[0].Data;
+            Assert.AreEqual(2, data.Count);
+            Assert.AreEqual(280, data[0].Value);
+            Assert.AreEqual(281, data[1].Value);
+        }
+
         private IEnumerable<Slice> GetSlices(Symbol symbol, int initialVolume)
         {
             var subscriptionDataConfig = new SubscriptionDataConfig(typeof(ZipEntryName), symbol, Resolution.Second, TimeZones.Utc, TimeZones.Utc, true, true, false);
