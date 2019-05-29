@@ -206,6 +206,7 @@
   <ItemGroup>
     <Compile Include="BitfinexDownloader\BitfinexDataDownloader.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDownloaderProgram.cs" />
+    <Compile Include="CoinApiDataConverter\CoinApiBitfinexSymbolMapper.cs" />
     <Compile Include="CoinApiDataConverter\CoinApiDataConverterProgram.cs" />
     <Compile Include="CoinApiDataConverter\CoinApiDataConverter.cs" />
     <Compile Include="CoinApiDataConverter\CoinApiDataReader.cs" />

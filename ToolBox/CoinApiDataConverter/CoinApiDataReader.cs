@@ -46,8 +46,11 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             var filenameParts = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(file.Name)).Split('_');
             var pairs = filenameParts.Skip(filenameParts.Length - 2).ToArray();
 
-            var ticker = pairs[0] + pairs[1];
-            var symbol = Symbol.Create(ticker, SecurityType.Crypto, market);
+            var ticker = string.Join("_", pairs);
+
+            var mapper = new CoinApiBitfinexSymbolMapper();
+
+            var symbol = mapper.GetLeanSymbol(ticker, SecurityType.Crypto, market);
 
             return new CoinApiEntryData
             {
@@ -82,7 +85,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                 {
                     throw new Exception($"CoinApiDataReader.ProcessCoinApiEntry(): CSV header not found for entry name: {entryData.Name}");
                 }
-
+                    
                 var headerParts = headerLine.Split(';').ToList();
 
                 tickList = entryData.TickType == TickType.Trade
