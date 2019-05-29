@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
@@ -43,16 +42,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="source">The remote url to be downloaded via web client</param>
         /// <param name="downloadDirectory">The local directory and destination of the download</param>
         /// <param name="headers">Defines header values to add to the request</param>
-        public RemoteFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string downloadDirectory, IEnumerable<KeyValuePair<string, string>> headers)
+        /// <param name="liveMode">True if running in live mode</param>
+        public RemoteFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string downloadDirectory, IEnumerable<KeyValuePair<string, string>> headers, bool liveMode)
         {
-            // create a hash for a new filename
-            var filename = Guid.NewGuid() + source.GetExtension();
-            var destination = Path.Combine(downloadDirectory, filename);
-            var contents = _downloader.Download(source, headers, null, null);
-            File.WriteAllText(destination, contents);
+            // for live mode we don't want to cache
+            var doNotUseCache = dataCacheProvider.IsDataEphemeral // will be true for live history requests
+                || liveMode; // will be false for live history requests but true for live subscriptions
 
-            // Send the file to the dataCacheProvider so it is available when the streamReader asks for it
-            dataCacheProvider.Store(destination, System.Text.Encoding.UTF8.GetBytes(contents));
+            // create a hash for a new filename
+            var filename = doNotUseCache ? Guid.NewGuid().ToString() : source.ToMD5() + source.GetExtension();
+            var destination = Path.Combine(downloadDirectory, filename);
+
+            if (doNotUseCache || !File.Exists(destination))
+            {
+                var contents = _downloader.Download(source, headers, null, null);
+                File.WriteAllText(destination, contents);
+
+                // Send the file to the dataCacheProvider so it is available when the streamReader asks for it
+                dataCacheProvider.Store(destination, System.Text.Encoding.UTF8.GetBytes(contents));
+            }
 
             // now we can just use the local file reader
             _streamReader = new LocalFileSubscriptionStreamReader(dataCacheProvider, destination);
