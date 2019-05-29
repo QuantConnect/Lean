@@ -432,8 +432,9 @@ namespace QuantConnect.Brokerages.Backtesting
                     }
                 }
 
-                // if we didn't fill then we need to continue to scan
-                _needsScan = stillNeedsScan;
+                // if we didn't fill then we need to continue to scan or
+                // if there are still pending orders
+                _needsScan = stillNeedsScan || !_pending.IsEmpty;
             }
         }
 
