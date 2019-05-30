@@ -20,6 +20,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using QuantConnect.Brokerages;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using CompressionMode = System.IO.Compression.CompressionMode;
@@ -31,6 +32,17 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
     /// </summary>
     public class CoinApiDataReader
     {
+        private readonly ISymbolMapper _symbolMapper;
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="CoinApiDataReader"/> class
+        /// </summary>
+        /// <param name="symbolMapper">The symbol mapper</param>
+        public CoinApiDataReader(ISymbolMapper symbolMapper)
+        {
+            _symbolMapper = symbolMapper;
+        }
+
         /// <summary>
         /// Gets the coin API entry data.
         /// </summary>
@@ -43,14 +55,9 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             // crypto/<market>/<date>/<ticktype>-563-BITFINEX_SPOT_BTC_USD.csv.gz
             var tickType = file.FullName.Contains("trade") ? TickType.Trade : TickType.Quote;
 
-            var filenameParts = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(file.Name)).Split('_');
-            var pairs = filenameParts.Skip(filenameParts.Length - 2).ToArray();
+            var symbolId = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(file.Name)).Split('-').Last();
 
-            var ticker = string.Join("_", pairs);
-
-            var mapper = new CoinApiBitfinexSymbolMapper();
-
-            var symbol = mapper.GetLeanSymbol(ticker, SecurityType.Crypto, market);
+            var symbol = _symbolMapper.GetLeanSymbol(symbolId, SecurityType.Crypto, market);
 
             return new CoinApiEntryData
             {
@@ -85,7 +92,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                 {
                     throw new Exception($"CoinApiDataReader.ProcessCoinApiEntry(): CSV header not found for entry name: {entryData.Name}");
                 }
-                    
+
                 var headerParts = headerLine.Split(';').ToList();
 
                 tickList = entryData.TickType == TickType.Trade

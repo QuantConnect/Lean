@@ -15,21 +15,22 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.ToolBox.CoinApiDataConverter;
+using QuantConnect.ToolBox.CoinApi;
 
 namespace QuantConnect.Tests.ToolBox
 {
-    [TestFixture]
-    class CoinApiBitfinexSymbolMapperTest
+    [TestFixture, Ignore("These tests require a CoinAPI api key.")]
+    public class CoinApiSymbolMapperTests
     {
         [Test]
         public void ReturnsCorrectLeanSymbol()
         {
-            var brokerageSymbol = "ANIO_USD";
+            const string symbolId = "BITFINEX_SPOT_ANIO_USD";
 
-            var mapper = new CoinApiBitfinexSymbolMapper();
+            var mapper = new CoinApiSymbolMapper();
 
-            var symbol = mapper.GetLeanSymbol(brokerageSymbol, SecurityType.Crypto, Market.Bitfinex);
+            var symbol = mapper.GetLeanSymbol(symbolId, SecurityType.Crypto, string.Empty);
+
             Assert.AreEqual("NIOUSD", symbol.Value);
             Assert.AreEqual(SecurityType.Crypto, symbol.ID.SecurityType);
             Assert.AreEqual(Market.Bitfinex, symbol.ID.Market);
@@ -38,12 +39,13 @@ namespace QuantConnect.Tests.ToolBox
         [Test]
         public void ReturnsCorrectBrokerageSymbol()
         {
-            var symbol = Symbol.Create("QTMUST", SecurityType.Crypto, Market.Bitfinex);
+            var symbol = Symbol.Create("QTMUSD", SecurityType.Crypto, Market.Bitfinex);
 
-            var mapper = new CoinApiBitfinexSymbolMapper();
-            var coinApiSymbol = mapper.GetBrokerageSymbol(symbol);
+            var mapper = new CoinApiSymbolMapper();
 
-            Assert.AreEqual("QTUM_USDT", coinApiSymbol);
+            var symbolId = mapper.GetBrokerageSymbol(symbol);
+
+            Assert.AreEqual("BITFINEX_SPOT_QTUM_USD", symbolId);
         }
     }
 }
