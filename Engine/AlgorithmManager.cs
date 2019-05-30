@@ -75,7 +75,17 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public TimeSpan CurrentTimeStepElapsed
         {
-            get { return _currentTimeStepTime == DateTime.MinValue ? TimeSpan.Zero : DateTime.UtcNow - _currentTimeStepTime; }
+            get {
+                if (_currentTimeStepTime == DateTime.MinValue)
+                {
+                    _currentTimeStepTime = DateTime.UtcNow;
+                    return TimeSpan.Zero;
+                }
+                else
+                {
+                   return DateTime.UtcNow - _currentTimeStepTime;
+                }
+            }
         }
 
         /// <summary>
@@ -199,7 +209,7 @@ namespace QuantConnect.Lean.Engine
             foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
             {
                 // reset our timer on each loop
-                _currentTimeStepTime = DateTime.UtcNow;
+                _currentTimeStepTime = DateTime.MinValue;
 
                 //Check this backtest is still running:
                 if (_algorithm.Status != AlgorithmStatus.Running)
@@ -231,8 +241,10 @@ namespace QuantConnect.Lean.Engine
                     {
                         SampleBenchmark(algorithm, results, _previousTime.Date);
 
+                        var currentPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
+
                         //Sample the portfolio value over time for chart.
-                        results.SampleEquity(_previousTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
+                        results.SampleEquity(_previousTime, Math.Round(currentPortfolioValue, 4));
 
                         //Check for divide by zero
                         if (portfolioValue == 0m)
@@ -241,9 +253,9 @@ namespace QuantConnect.Lean.Engine
                         }
                         else
                         {
-                            results.SamplePerformance(_previousTime.Date, Math.Round((algorithm.Portfolio.TotalPortfolioValue - portfolioValue) * 100 / portfolioValue, 10));
+                            results.SamplePerformance(_previousTime.Date, Math.Round((currentPortfolioValue - portfolioValue) * 100 / portfolioValue, 10));
                         }
-                        portfolioValue = algorithm.Portfolio.TotalPortfolioValue;
+                        portfolioValue = currentPortfolioValue;
                     }
 
                     if (portfolioValue <= 0)
@@ -537,23 +549,26 @@ namespace QuantConnect.Lean.Engine
                 //Update registered consolidators for this symbol index
                 try
                 {
-                    foreach (var update in timeSlice.ConsolidatorUpdateData)
+                    if (timeSlice.ConsolidatorUpdateData.Count > 0)
                     {
-                        var consolidators = update.Target.Consolidators;
-                        foreach (var consolidator in consolidators)
+                        var timeKeeper = algorithm.TimeKeeper;
+                        foreach (var update in timeSlice.ConsolidatorUpdateData)
                         {
-                            foreach (var dataPoint in update.Data)
+                            var consolidators = update.Target.Consolidators;
+                            foreach (var consolidator in consolidators)
                             {
-                                // only push data into consolidators on the native, subscribed to resolution
-                                if (EndTimeIsInNativeResolution(update.Target, dataPoint.EndTime))
+                                foreach (var dataPoint in update.Data)
                                 {
-                                    consolidator.Update(dataPoint);
+                                    // only push data into consolidators on the native, subscribed to resolution
+                                    if (EndTimeIsInNativeResolution(update.Target, dataPoint.EndTime))
+                                    {
+                                        consolidator.Update(dataPoint);
+                                    }
                                 }
-                            }
 
-                            // scan for time after we've pumped all the data through for this consolidator
-                            var localTime = time.ConvertFromUtc(update.Target.ExchangeTimeZone);
-                            consolidator.Scan(localTime);
+                                // scan for time after we've pumped all the data through for this consolidator
+                                consolidator.Scan(timeKeeper.GetLocalTimeKeeper(update.Target.ExchangeTimeZone).LocalTime);
+                            }
                         }
                     }
                 }
@@ -1256,7 +1271,13 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         private static bool EndTimeIsInNativeResolution(SubscriptionDataConfig config, DateTime dataPointEndTime)
         {
-            if (config.Increment == TimeSpan.Zero)
+            if (config.Resolution == Resolution.Tick
+                ||
+                // time zones don't change seconds or milliseconds so we can
+                // shortcut timezone conversions
+                (config.Resolution == Resolution.Second
+                || config.Resolution == Resolution.Minute)
+                && dataPointEndTime.Ticks % config.Increment.Ticks == 0)
             {
                 return true;
             }

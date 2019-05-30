@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var delayedSubscriptionFinished = false;
             var changes = SecurityChanges.None;
-            var data = new List<DataFeedPacket>();
+            var data = new List<DataFeedPacket>(1);
             // NOTE: Tight coupling in UniverseSelection.ApplyUniverseSelection
             var universeData = new Dictionary<Universe, BaseDataCollection>();
             var universeDataForTimeSliceCreate = new Dictionary<Universe, BaseDataCollection>();
@@ -113,10 +113,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    var packet = new DataFeedPacket(subscription.Security, subscription.Configuration, subscription.RemovedFromUniverse);
+                    DataFeedPacket packet = null;
 
                     while (subscription.Current != null && subscription.Current.EmitTimeUtc <= frontierUtc)
                     {
+                        if (packet == null)
+                        {
+                            // for performance, lets be selfish about creating a new instance
+                            packet = new DataFeedPacket(
+                                subscription.Security,
+                                subscription.Configuration,
+                                subscription.RemovedFromUniverse
+                            );
+                        }
                         packet.Add(subscription.Current.Data);
 
                         if (!subscription.MoveNext())
@@ -126,7 +135,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    if (packet.Count > 0)
+                    if (packet != null && packet.Count > 0)
                     {
                         // we have new universe data to select based on, store the subscription data until the end
                         if (!subscription.IsUniverseSelectionSubscription)

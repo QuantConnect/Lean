@@ -76,11 +76,11 @@ namespace QuantConnect.Securities
             {
                 return new List<SubmitOrderRequest>();
             }
+            var totalPortfolioValue = Portfolio.TotalPortfolioValue;
 
-            var marginRemaining = Portfolio.MarginRemaining;
+            var marginRemaining = Portfolio.GetMarginRemaining(totalPortfolioValue);
 
             // issue a margin warning when we're down to 5% margin remaining
-            var totalPortfolioValue = Portfolio.TotalPortfolioValue;
             if (marginRemaining <= totalPortfolioValue * 0.05m)
             {
                 issueMarginCallWarning = true;

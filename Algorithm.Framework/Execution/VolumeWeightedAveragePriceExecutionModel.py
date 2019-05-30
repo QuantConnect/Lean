@@ -55,37 +55,37 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
 
         # update the complete set of portfolio targets with the new targets
         self.targetsCollection.AddRange(targets)
+        if self.targetsCollection.Count > 0:
+            for target in self.targetsCollection.OrderByMarginImpact(algorithm):
+                symbol = target.Symbol
 
-        for target in self.targetsCollection.OrderByMarginImpact(algorithm):
-            symbol = target.Symbol
+                # calculate remaining quantity to be ordered
+                unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target)
 
-            # calculate remaining quantity to be ordered
-            unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target)
+                # fetch our symbol data containing our VWAP indicator
+                data = self.symbolData.get(symbol, None)
+                if data is None: return
 
-            # fetch our symbol data containing our VWAP indicator
-            data = self.symbolData.get(symbol, None)
-            if data is None: return
+                # check order entry conditions
+                if self.PriceIsFavorable(data, unorderedQuantity):
+                    # get the maximum order size based on total order value
+                    maxOrderSize = OrderSizing.PercentVolume(data.Security, self.MaximumOrderQuantityPercentVolume)
+                    orderSize = np.min([maxOrderSize, np.abs(unorderedQuantity)])
 
-            # check order entry conditions
-            if self.PriceIsFavorable(data, unorderedQuantity):
-                # get the maximum order size based on total order value
-                maxOrderSize = OrderSizing.PercentVolume(data.Security, self.MaximumOrderQuantityPercentVolume)
-                orderSize = np.min([maxOrderSize, np.abs(unorderedQuantity)])
+                    remainder = orderSize % data.Security.SymbolProperties.LotSize
+                    missingForLotSize = data.Security.SymbolProperties.LotSize - remainder
+                    # if the amount we are missing for +1 lot size is 1M part of a lot size
+                    # we suppose its due to floating point error and round up
+                    # Note: this is required to avoid a diff with C# equivalent
+                    if missingForLotSize < (data.Security.SymbolProperties.LotSize / 1000000):
+                        remainder -= data.Security.SymbolProperties.LotSize
 
-                remainder = orderSize % data.Security.SymbolProperties.LotSize
-                missingForLotSize = data.Security.SymbolProperties.LotSize - remainder
-                # if the amount we are missing for +1 lot size is 1M part of a lot size
-                # we suppose its due to floating point error and round up
-                # Note: this is required to avoid a diff with C# equivalent
-                if missingForLotSize < (data.Security.SymbolProperties.LotSize / 1000000):
-                    remainder -= data.Security.SymbolProperties.LotSize
+                    # round down to even lot size
+                    orderSize -= remainder
+                    if orderSize != 0:
+                        algorithm.MarketOrder(symbol, np.sign(unorderedQuantity) * orderSize)
 
-                # round down to even lot size
-                orderSize -= remainder
-                if orderSize != 0:
-                    algorithm.MarketOrder(symbol, np.sign(unorderedQuantity) * orderSize)
-
-        self.targetsCollection.ClearFulfilled(algorithm)
+            self.targetsCollection.ClearFulfilled(algorithm)
 
 
     def OnSecuritiesChanged(self, algorithm, changes):

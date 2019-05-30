@@ -39,12 +39,12 @@ class ImmediateExecutionModel(ExecutionModel):
             targets: The portfolio targets to be ordered'''
 
         self.targetsCollection.AddRange(targets)
+        if self.targetsCollection.Count > 0:
+            for target in self.targetsCollection.OrderByMarginImpact(algorithm):
+                open_quantity = sum([x.Quantity - x.QuantityFilled for x in algorithm.Transactions.GetOpenOrderTickets(target.Symbol)])
+                existing = algorithm.Securities[target.Symbol].Holdings.Quantity + open_quantity
+                quantity = target.Quantity - existing
+                if quantity != 0:
+                    algorithm.MarketOrder(target.Symbol, quantity)
 
-        for target in self.targetsCollection.OrderByMarginImpact(algorithm):
-            open_quantity = sum([x.Quantity - x.QuantityFilled for x in algorithm.Transactions.GetOpenOrderTickets(target.Symbol)])
-            existing = algorithm.Securities[target.Symbol].Holdings.Quantity + open_quantity
-            quantity = target.Quantity - existing
-            if quantity != 0:
-                algorithm.MarketOrder(target.Symbol, quantity)
-
-        self.targetsCollection.ClearFulfilled(algorithm)
+            self.targetsCollection.ClearFulfilled(algorithm)

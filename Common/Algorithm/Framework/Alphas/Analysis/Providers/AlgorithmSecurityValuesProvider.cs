@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
@@ -55,15 +54,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers
         /// <returns>The insight target values for all the algorithm securities</returns>
         public ReadOnlySecurityValuesCollection GetAllValues()
         {
-            var values = new Dictionary<Symbol, SecurityValues>();
-            foreach (var kvp in _algorithm.Securities)
-            {
-                var security = kvp.Value;
-                var volume = security.Cache.GetData<TradeBar>()?.Volume ?? 0;
-                var value = new SecurityValues(security.Symbol, _algorithm.UtcTime, security.Exchange.Hours, security.Price, security.VolatilityModel.Volatility, volume, security.QuoteCurrency.ConversionRate);
-                values[security.Symbol] = value;
-            }
-            return new ReadOnlySecurityValuesCollection(values);
+            // lets be lazy creating the SecurityValues
+            return new ReadOnlySecurityValuesCollection(
+                symbol =>
+                {
+                    var security = _algorithm.Securities[symbol];
+                    var volume = security.Cache.GetData<TradeBar>()?.Volume ?? 0;
+                    return new SecurityValues(security.Symbol, _algorithm.UtcTime, security.Exchange.Hours, security.Price, security.VolatilityModel.Volatility, volume, security.QuoteCurrency.ConversionRate);
+                });
         }
     }
 }

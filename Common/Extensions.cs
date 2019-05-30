@@ -529,7 +529,13 @@ namespace QuantConnect
                 // divide by zero exception
                 return dateTime;
             }
-            return dateTime.AddTicks(-(dateTime.Ticks % interval.Ticks));
+
+            var amount = dateTime.Ticks % interval.Ticks;
+            if (amount > 0)
+            {
+                return dateTime.AddTicks(-amount);
+            }
+            return dateTime;
         }
 
         /// <summary>

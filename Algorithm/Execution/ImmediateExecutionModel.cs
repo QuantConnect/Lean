@@ -35,20 +35,22 @@ namespace QuantConnect.Algorithm.Framework.Execution
         public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
             _targetsCollection.AddRange(targets);
-
-            foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
+            if (_targetsCollection.Count > 0)
             {
-                var existing = algorithm.Securities[target.Symbol].Holdings.Quantity
-                    + algorithm.Transactions.GetOpenOrderTickets(target.Symbol)
-                        .Aggregate(0m, (d, ticket) => d + ticket.Quantity - ticket.QuantityFilled);
-                var quantity = target.Quantity - existing;
-                if (quantity != 0)
+                foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
                 {
-                    algorithm.MarketOrder(target.Symbol, quantity);
+                    var existing = algorithm.Securities[target.Symbol].Holdings.Quantity
+                        + algorithm.Transactions.GetOpenOrderTickets(target.Symbol)
+                            .Aggregate(0m, (d, ticket) => d + ticket.Quantity - ticket.QuantityFilled);
+                    var quantity = target.Quantity - existing;
+                    if (quantity != 0)
+                    {
+                        algorithm.MarketOrder(target.Symbol, quantity);
+                    }
                 }
-            }
 
-            _targetsCollection.ClearFulfilled(algorithm);
+                _targetsCollection.ClearFulfilled(algorithm);
+            }
         }
 
         /// <summary>

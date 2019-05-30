@@ -318,11 +318,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="algorithm">The algorithm instance</param>
         public IEnumerable<IPortfolioTarget> OrderByMarginImpact(IAlgorithm algorithm)
         {
-            if (Count == 0)
-            {
-                // shortcut for performance
-                return Enumerable.Empty<IPortfolioTarget>();
-            }
             return _targets
                 .Select(x => x.Value)
                 .Where(x => {
