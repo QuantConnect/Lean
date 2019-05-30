@@ -216,9 +216,10 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var tick = GetTick(holding.Symbol);
                 holding.MarketPrice = tick.Value;
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                Log.Trace($"BitfinexBrokerage.ConvertHolding(): failed to set {holding.Symbol} market price: {exception}");
+                Log.Error($"BitfinexBrokerage.ConvertHolding(): failed to set {holding.Symbol} market price");
+                throw;
             }
 
             return holding;
