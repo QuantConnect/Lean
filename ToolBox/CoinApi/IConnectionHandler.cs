@@ -12,62 +12,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 
-namespace QuantConnect.Brokerages
+namespace QuantConnect.ToolBox.CoinApi
 {
-
     /// <summary>
-    /// Wrapper for WebSocket4Net to enhance testability
+    /// Provides handling of a brokerage or data feed connection
     /// </summary>
-    public interface IWebSocket
+    public interface IConnectionHandler
     {
+        /// <summary>
+        /// Event that fires when a connection loss is detected
+        /// </summary>
+        event EventHandler ConnectionLost;
 
         /// <summary>
-        /// Wraps constructor
+        /// Event that fires when a lost connection is restored
         /// </summary>
-        /// <param name="url"></param>
-        void Initialize(string url);
+        event EventHandler ConnectionRestored;
 
         /// <summary>
-        /// Wraps send method
+        /// Event that fires when a reconnection attempt is required
         /// </summary>
-        /// <param name="data"></param>
-        void Send(string data);
+        event EventHandler ReconnectRequested;
 
         /// <summary>
-        /// Wraps Connect method
+        /// Initializes the connection handler
         /// </summary>
-        void Connect();
+        void Initialize();
 
         /// <summary>
-        /// Wraps Close method
+        /// Enables/disables monitoring of the connection
         /// </summary>
-        void Close();
+        void EnableMonitoring(bool isEnabled);
 
         /// <summary>
-        /// Wraps IsOpen
+        /// Notifies the connection handler that new data was received
         /// </summary>
-        bool IsOpen { get; }
-
-        /// <summary>
-        /// on message event
-        /// </summary>
-        event EventHandler<WebSocketMessage> Message;
-
-        /// <summary>
-        /// On error event
-        /// </summary>
-        event EventHandler<WebSocketError> Error;
-
-        /// <summary>
-        /// On Open event
-        /// </summary>
-        event EventHandler Open;
-
-        /// <summary>
-        /// On Close event
-        /// </summary>
-        event EventHandler Closed;
+        void KeepAlive();
     }
 }

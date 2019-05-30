@@ -212,6 +212,14 @@
     <Compile Include="CoinApiDataConverter\CoinApiEntryData.cs" />
     <Compile Include="CoinApi\CoinApiSymbol.cs" />
     <Compile Include="CoinApi\CoinApiSymbolMapper.cs" />
+    <Compile Include="CoinApi\CoinApiDataQueueHandler.cs" />
+    <Compile Include="CoinApi\DefaultConnectionHandler.cs" />
+    <Compile Include="CoinApi\IConnectionHandler.cs" />
+    <Compile Include="CoinApi\Messages\ErrorMessage.cs" />
+    <Compile Include="CoinApi\Messages\QuoteMessage.cs" />
+    <Compile Include="CoinApi\Messages\TradeMessage.cs" />
+    <Compile Include="CoinApi\Messages\BaseMessage.cs" />
+    <Compile Include="CoinApi\Messages\HelloMessage.cs" />
     <Compile Include="GDAXDownloader\GDAXDownloader.cs" />
     <Compile Include="GDAXDownloader\GDAXDownloaderProgram.cs" />
     <Compile Include="GzipStreamProvider.cs" />
