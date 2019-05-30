@@ -210,6 +210,8 @@
     <Compile Include="CoinApiDataConverter\CoinApiDataConverter.cs" />
     <Compile Include="CoinApiDataConverter\CoinApiDataReader.cs" />
     <Compile Include="CoinApiDataConverter\CoinApiEntryData.cs" />
+    <Compile Include="CoinApi\CoinApiSymbol.cs" />
+    <Compile Include="CoinApi\CoinApiSymbolMapper.cs" />
     <Compile Include="GDAXDownloader\GDAXDownloader.cs" />
     <Compile Include="GDAXDownloader\GDAXDownloaderProgram.cs" />
     <Compile Include="GzipStreamProvider.cs" />
