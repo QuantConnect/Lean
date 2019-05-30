@@ -201,7 +201,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
         private Holding ConvertHolding(Messages.Position position)
         {
-            return new Holding()
+            var holding = new Holding
             {
                 Symbol = _symbolMapper.GetLeanSymbol(position.Symbol),
                 AveragePrice = position.AveragePrice,
@@ -210,6 +210,19 @@ namespace QuantConnect.Brokerages.Bitfinex
                 CurrencySymbol = "$",
                 Type = SecurityType.Crypto
             };
+
+            try
+            {
+                var tick = GetTick(holding.Symbol);
+                holding.MarketPrice = tick.Value;
+            }
+            catch (Exception)
+            {
+                Log.Error($"BitfinexBrokerage.ConvertHolding(): failed to set {holding.Symbol} market price");
+                throw;
+            }
+
+            return holding;
         }
 
         private Func<Messages.Order, bool> OrderFilter(AccountType accountType)
