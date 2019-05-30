@@ -61,9 +61,6 @@ namespace QuantConnect.ToolBox.CoinApi
                 }
             };
 
-        private static readonly Dictionary<string, Dictionary<string, string>> LeanToCoinApiCurrencyMappings =
-            CoinApiToLeanCurrencyMappings.ToDictionary(x => x.Key, x => x.Value.ToDictionary(kvp => kvp.Value, kvp => kvp.Key));
-
         // map LEAN symbols to CoinAPI symbol ids
         private Dictionary<Symbol, string> _symbolMap = new Dictionary<Symbol, string>();
 
@@ -167,21 +164,6 @@ namespace QuantConnect.ToolBox.CoinApi
         {
             Dictionary<string, string> mappings;
             if (CoinApiToLeanCurrencyMappings.TryGetValue(market, out mappings))
-            {
-                string mappedCurrency;
-                if (mappings.TryGetValue(currency, out mappedCurrency))
-                {
-                    currency = mappedCurrency;
-                }
-            }
-
-            return currency;
-        }
-
-        private static string ConvertLeanCurrencyToCoinApiCurrency(string currency, string market)
-        {
-            Dictionary<string, string> mappings;
-            if (LeanToCoinApiCurrencyMappings.TryGetValue(market, out mappings))
             {
                 string mappedCurrency;
                 if (mappings.TryGetValue(currency, out mappedCurrency))
