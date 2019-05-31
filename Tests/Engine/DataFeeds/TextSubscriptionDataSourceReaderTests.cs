@@ -207,7 +207,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 true,
                 false);
             var reader = new TextSubscriptionDataSourceReader(
-                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                new SingleEntryDataCacheProvider(new DefaultDataProvider(), isDataEphemeral: false),
                 _config,
                 new DateTime(2013, 10, 07),
                 false);

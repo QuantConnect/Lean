@@ -51,7 +51,7 @@ namespace QuantConnect.ToolBox.IQFeed
         private const string NewLine = "\r\n";
         private const char Tabulation = '\t';
 
-        private IDataCacheProvider _dataCacheProvider = new ZipDataCacheProvider(new DefaultDataProvider());
+        private IDataCacheProvider _dataCacheProvider = new ZipDataCacheProvider(new DefaultDataProvider(), isDataEphemeral:true);
 
         // Database of all symbols
         // We store symbol data in memory by default (e.g. Equity, FX),

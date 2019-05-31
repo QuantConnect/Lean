@@ -46,7 +46,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="mapFileProvider">The map file provider</param>
         /// <param name="factorFileProvider">The factor file provider</param>
         /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="isLiveMode">True if runnig live algorithm, false otherwise</param>
         /// <param name="includeAuxiliaryData">True to check for auxiliary data, false otherwise</param>
         /// <param name="tradableDaysProvider">Function used to provide the tradable dates to be enumerator.
         /// Specify null to default to <see cref="SubscriptionRequest.TradableDays"/></param>
@@ -54,7 +53,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             IDataProvider dataProvider,
-            bool isLiveMode,
             bool includeAuxiliaryData,
             Func<SubscriptionRequest, IEnumerable<DateTime>> tradableDaysProvider = null
             )
@@ -62,8 +60,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _resultHandler = resultHandler;
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
-            _zipDataCacheProvider = new ZipDataCacheProvider(dataProvider);
-            _isLiveMode = isLiveMode;
+            _zipDataCacheProvider = new ZipDataCacheProvider(dataProvider, isDataEphemeral: false);
+            _isLiveMode = false;
             _includeAuxiliaryData = includeAuxiliaryData;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
         }

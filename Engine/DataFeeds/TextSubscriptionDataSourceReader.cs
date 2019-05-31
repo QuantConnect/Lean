@@ -251,7 +251,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             try
             {
                 // this will fire up a web client in order to download the 'source' file to the cache
-                return new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache, source.Headers, _isLiveMode);
+                return new RemoteFileSubscriptionStreamReader(_dataCacheProvider, source.Source, Globals.Cache, source.Headers);
             }
             catch (Exception err)
             {

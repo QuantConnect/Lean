@@ -79,7 +79,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _mapFileProvider,
                 _factorFileProvider,
                 _dataProvider,
-                isLiveMode: false,
                 includeAuxiliaryData: true);
 
             IsActive = true;

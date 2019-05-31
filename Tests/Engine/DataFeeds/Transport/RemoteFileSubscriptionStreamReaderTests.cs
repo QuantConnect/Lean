@@ -17,7 +17,6 @@
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
@@ -44,82 +43,53 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             }
         }
 
-        [Test]
-        public void LiveModeIsNotCached()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SingleEntryDataCacheProviderEphemeralDataIsRespected(bool isDataEphemeral)
         {
             var remoteReader = new RemoteFileSubscriptionStreamReader(
-                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                new SingleEntryDataCacheProvider(new DefaultDataProvider(), isDataEphemeral: isDataEphemeral),
                 @"https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
                 Globals.Cache,
-                null,
-                liveMode: true);
+                null);
 
             Assert.IsFalse(remoteReader.EndOfStream);
             Assert.AreEqual(1, TestDownloadProvider.DownloadCount);
 
             var remoteReader2 = new RemoteFileSubscriptionStreamReader(
-                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                new SingleEntryDataCacheProvider(new DefaultDataProvider(), isDataEphemeral: isDataEphemeral),
                 @"https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
                 Globals.Cache,
-                null,
-                liveMode: true);
+                null);
 
             Assert.IsFalse(remoteReader.EndOfStream);
-            Assert.AreEqual(2, TestDownloadProvider.DownloadCount);
+            Assert.AreEqual(isDataEphemeral ? 2 : 1, TestDownloadProvider.DownloadCount);
 
             remoteReader.Dispose();
             remoteReader2.Dispose();
         }
 
-        [Test]
-        public void BacktestingIsCached()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void ZipDataCacheProviderEphemeralDataIsRespected(bool isDataEphemeral)
         {
             var remoteReader = new RemoteFileSubscriptionStreamReader(
-                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                new ZipDataCacheProvider(new DefaultDataProvider(), isDataEphemeral: isDataEphemeral),
                 @"https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
                 Globals.Cache,
-                null,
-                liveMode: false);
+                null);
 
             Assert.IsFalse(remoteReader.EndOfStream);
             Assert.AreEqual(1, TestDownloadProvider.DownloadCount);
 
             var remoteReader2 = new RemoteFileSubscriptionStreamReader(
-                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
+                new ZipDataCacheProvider(new DefaultDataProvider(), isDataEphemeral: isDataEphemeral),
                 @"https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
                 Globals.Cache,
-                null,
-                liveMode: false);
+                null);
 
             Assert.IsFalse(remoteReader.EndOfStream);
-            Assert.AreEqual(1, TestDownloadProvider.DownloadCount);
-
-            remoteReader.Dispose();
-            remoteReader2.Dispose();
-        }
-
-        [Test]
-        public void EphemeralDataSourceIsNeverCached()
-        {
-            var remoteReader = new RemoteFileSubscriptionStreamReader(
-                new CustomEphemeralDataCacheProvider{IsDataEphemeral = true, Data = ""},
-                @"https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
-                Globals.Cache,
-                null,
-                liveMode: false);
-
-            Assert.IsFalse(remoteReader.EndOfStream);
-            Assert.AreEqual(1, TestDownloadProvider.DownloadCount);
-
-            var remoteReader2 = new RemoteFileSubscriptionStreamReader(
-                new CustomEphemeralDataCacheProvider { IsDataEphemeral = true, Data = "" },
-                @"https://www.quantconnect.com/api/v2/proxy/quandl/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc&api_key=WyAazVXnq7ATy_fefTqm",
-                Globals.Cache,
-                null,
-                liveMode: false);
-
-            Assert.IsFalse(remoteReader.EndOfStream);
-            Assert.AreEqual(2, TestDownloadProvider.DownloadCount);
+            Assert.AreEqual(isDataEphemeral ? 2 : 1, TestDownloadProvider.DownloadCount);
 
             remoteReader.Dispose();
             remoteReader2.Dispose();
@@ -136,23 +106,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             {
                 DownloadCount++;
                 return base.Download(address, headers, userName, password);
-            }
-        }
-
-        private class CustomEphemeralDataCacheProvider : IDataCacheProvider
-        {
-            public string Data { set; get; }
-            public bool IsDataEphemeral { set; get; }
-
-            public Stream Fetch(string key)
-            {
-                return new FileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
-            }
-            public void Store(string key, byte[] data)
-            {
-            }
-            public void Dispose()
-            {
             }
         }
     }
