@@ -43,7 +43,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         private ChartingInsightManagerExtension _charting;
         private ISecurityValuesProvider _securityValuesProvider;
         private CancellationTokenSource _cancellationTokenSource;
-        private FitnessScore _fitnessScore;
+        private FitnessScoreManager _fitnessScore;
         private DateTime _lastFitnessScoreCalculation;
         private readonly object _lock = new object();
 
@@ -101,7 +101,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             Algorithm = algorithm;
             MessagingHandler = messagingHandler;
 
-            _fitnessScore = new FitnessScore();
+            _fitnessScore = new FitnessScoreManager();
             _securityValuesProvider = new AlgorithmSecurityValuesProvider(algorithm);
 
             InsightManager = CreateInsightManager();
@@ -146,7 +146,12 @@ namespace QuantConnect.Lean.Engine.Alphas
             if (_lastFitnessScoreCalculation.Date != Algorithm.UtcTime.Date)
             {
                 _lastFitnessScoreCalculation = Algorithm.UtcTime.Date;
-                RuntimeStatistics.FitnessScore = _fitnessScore.GetFitnessScore();
+                _fitnessScore.UpdateScores();
+
+                RuntimeStatistics.FitnessScore = _fitnessScore.FitnessScore;
+                RuntimeStatistics.PortfolioTurnOver = _fitnessScore.PortfolioTurnOver;
+                RuntimeStatistics.SortinoRatio = _fitnessScore.SortinoRatio;
+                RuntimeStatistics.ReturnOverMaxDrawdown = _fitnessScore.ReturnOverMaxDrawdown;
             }
         }
 

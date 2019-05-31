@@ -29,7 +29,7 @@ namespace QuantConnect.Statistics
     /// is statistically significant
     /// </summary>
     /// <remarks>See https://www.quantconnect.com/research/3bc40ecee68d36a9424fbd1b338eb227 </remarks>
-    public class FitnessScore
+    public class FitnessScoreManager
     {
         private DateTime _startUtcTime;
         private IAlgorithm _algorithm;
@@ -38,17 +38,17 @@ namespace QuantConnect.Statistics
         private decimal _startingPortfolioValue;
 
         // sortino ratio
-        private List<double> _losses;
-        private int _previousClosedTradeIndex;
+        private List<double> _negativeDailyDeltaPortfolioValue;
         private double _profitLossDownsideDeviation;
+        private decimal _previousPortfolioValue;
 
         // return over max drawdown
         private decimal _maxPortfolioValue;
         private decimal _maxDrawdown;
 
         // portfolio turn over
-        private Dictionary<DateTime, decimal> _saleVolumes;
-        private Dictionary<DateTime, decimal> _portfolioValue;
+        private List<Tuple<DateTime, decimal>> _saleVolumes;
+        private List<Tuple<DateTime, decimal>> _portfolioValue;
         private decimal _previousSaleVolume;
 
         /// <summary>
@@ -68,16 +68,40 @@ namespace QuantConnect.Statistics
                     " algorithms starting portfolio value is 0.");
             }
 
-            _losses = new List<double>();
-            _saleVolumes = new Dictionary<DateTime, decimal>();
-            _portfolioValue = new Dictionary<DateTime, decimal>();
+            _negativeDailyDeltaPortfolioValue = new List<double>();
+            _saleVolumes = new List<Tuple<DateTime, decimal>>();
+            _portfolioValue = new List<Tuple<DateTime, decimal>>();
             _riskFreeRate = PortfolioStatistics.GetRiskFreeRate();
         }
 
         /// <summary>
+        /// Score of the strategy's performance, and suitability for the Alpha Stream Market
+        /// </summary>
+        public decimal FitnessScore { get; private set; }
+
+        /// <summary>
+        /// Measurement of the strategies trading activity with respect to the portfolio value.
+        /// Calculated as the annual sales volume with respect to the annual average total portfolio value.
+        /// </summary>
+        public decimal PortfolioTurnOver { get; private set; }
+
+        /// <summary>
+        /// Gives a relative picture of the strategy volatility.
+        /// It is calculated by taking a portfolio's annualized rate of return and subtracting the risk free rate of return.
+        /// </summary>
+        public decimal SortinoRatio { get; private set; }
+
+        /// <summary>
+        /// Provides a risk adjusted way to factor in the returns and drawdown of the strategy.
+        /// It is calculated by dividing the Portfolio Annualized Return by the Maximum Drawdown seen during the backtest.
+        /// </summary>
+        public decimal ReturnOverMaxDrawdown { get; private set; }
+
+
+        /// <summary>
         /// Gets the fitness score value for the algorithms current state
         /// </summary>
-        public decimal GetFitnessScore()
+        public void UpdateScores()
         {
             try
             {
@@ -87,68 +111,55 @@ namespace QuantConnect.Statistics
 
                     // calculate portfolio annualized return
                     var currentPortfolioReturn = (currentPortfolioValue - _startingPortfolioValue) / _startingPortfolioValue;
-                    var annualFactor = (_algorithm.UtcTime - _startUtcTime).TotalDays.SafeDecimalCast() / 365;
+                    var annualFactor = (_algorithm.UtcTime - _startUtcTime).TotalDays / 252;
 
                     // just in case...
-                    if (annualFactor == 0)
+                    if (annualFactor <= 0)
                     {
-                        return 0;
+                        return;
                     }
 
-                    var portfolioAnnualizedReturn = currentPortfolioReturn / annualFactor;
+                    var portfolioAnnualizedReturn = (Math.Pow((double)currentPortfolioReturn + 1, 1 / annualFactor) - 1).SafeDecimalCast();
 
-                    var sortinoRatio = GetSortinoRatio(portfolioAnnualizedReturn);
+                    var scaledSortinoRatio = GetScaledSortinoRatio(currentPortfolioValue, portfolioAnnualizedReturn);
 
-                    var returnOverMaxDrawdown = GetReturnOverMaxDrawdown(currentPortfolioValue, portfolioAnnualizedReturn);
+                    var scaledReturnOverMaxDrawdown = GetScaledReturnOverMaxDrawdown(currentPortfolioValue, portfolioAnnualizedReturn);
 
-                    var portfolioTurnover = GetPortfolioTurnover(currentPortfolioValue);
+                    var scaledPortfolioTurnover = GetScaledPortfolioTurnover(currentPortfolioValue);
 
-                    var rawFitnessScore = portfolioTurnover * (returnOverMaxDrawdown + sortinoRatio);
+                    var rawFitnessScore = scaledPortfolioTurnover * (scaledReturnOverMaxDrawdown + scaledSortinoRatio);
 
-                    return Math.Round(ScaleToRange(rawFitnessScore, maximumValue: 10, minimumValue: -10), 3);
+                    FitnessScore = Math.Round(ScaleToRange(rawFitnessScore, maximumValue: 10, minimumValue: -10), 3);
                 }
             }
             catch (Exception exception)
             {
                 Log.Error(exception);
             }
-
-            return 0;
         }
 
-        private decimal GetSortinoRatio(decimal portfolioAnnualizedReturn)
+        private decimal GetScaledSortinoRatio(decimal currentPortfolioValue, decimal portfolioAnnualizedReturn)
         {
-            var closedTrades = _algorithm.TradeBuilder.ClosedTrades;
-            if (_previousClosedTradeIndex < closedTrades.Count)
+            var portfolioValueDelta = (double) (currentPortfolioValue - _previousPortfolioValue);
+            _previousPortfolioValue = currentPortfolioValue;
+            if (portfolioValueDelta < 0)
             {
-                var updateStandardDeviation = false;
-                for (; _previousClosedTradeIndex < closedTrades.Count; _previousClosedTradeIndex++)
-                {
-                    if (closedTrades[_previousClosedTradeIndex].ProfitLoss < 0)
-                    {
-                        updateStandardDeviation = true;
-                        _losses.Add((double)closedTrades[_previousClosedTradeIndex].ProfitLoss);
-                    }
-                }
-
-                // we update the profit loss downside deviation only when a new loss trade was closed
-                if (updateStandardDeviation)
-                {
-                    var variance = _losses.Variance();
-                    _profitLossDownsideDeviation = Math.Sqrt(variance);
-                }
+                _negativeDailyDeltaPortfolioValue.Add(portfolioValueDelta);
+                var variance = _negativeDailyDeltaPortfolioValue.Variance();
+                _profitLossDownsideDeviation = Math.Sqrt(variance);
             }
 
-            var sortinoRatio = decimal.MaxValue;
-            if (_losses.Count > 1)
+            SortinoRatio = decimal.MaxValue;
+            // we need at least 2 samples to calculate the _profitLossDownsideDeviation
+            if (_negativeDailyDeltaPortfolioValue.Count > 1)
             {
-                sortinoRatio = (portfolioAnnualizedReturn - _riskFreeRate) / (decimal)_profitLossDownsideDeviation;
+                SortinoRatio = (portfolioAnnualizedReturn - _riskFreeRate) / (decimal)_profitLossDownsideDeviation;
             }
 
-            return SigmoidalScale(sortinoRatio);
+            return SigmoidalScale(SortinoRatio);
         }
 
-        private decimal GetReturnOverMaxDrawdown(decimal currentPortfolioValue, decimal portfolioAnnualizedReturn)
+        private decimal GetScaledReturnOverMaxDrawdown(decimal currentPortfolioValue, decimal portfolioAnnualizedReturn)
         {
             if (currentPortfolioValue > _maxPortfolioValue)
             {
@@ -159,16 +170,16 @@ namespace QuantConnect.Statistics
 
             _maxDrawdown = currentDrawdown < _maxDrawdown ? currentDrawdown : _maxDrawdown;
 
-            var returnOverMaxDrawdown = decimal.MaxValue;
+            ReturnOverMaxDrawdown = decimal.MaxValue;
             if (_maxDrawdown != 0)
             {
-                returnOverMaxDrawdown = portfolioAnnualizedReturn / Math.Abs(_maxDrawdown);
+                ReturnOverMaxDrawdown = portfolioAnnualizedReturn / Math.Abs(_maxDrawdown);
             }
 
-            return SigmoidalScale(returnOverMaxDrawdown);
+            return SigmoidalScale(ReturnOverMaxDrawdown);
         }
 
-        private decimal GetPortfolioTurnover(decimal currentPortfolioValue)
+        private decimal GetScaledPortfolioTurnover(decimal currentPortfolioValue)
         {
             var totalSalesVolume = _algorithm.Portfolio.TotalSaleVolume;
 
@@ -176,28 +187,32 @@ namespace QuantConnect.Statistics
             var salesDelta = totalSalesVolume - _previousSaleVolume;
             if (salesDelta > 0)
             {
-                _saleVolumes[_algorithm.Time] = salesDelta;
+                _saleVolumes.Add(new Tuple<DateTime, decimal>(_algorithm.Time, salesDelta));
             }
             _previousSaleVolume = totalSalesVolume;
             // save current portfolio value so we use the annual average
-            _portfolioValue[_algorithm.Time] = currentPortfolioValue;
+            _portfolioValue.Add(new Tuple<DateTime, decimal>(_algorithm.Time, currentPortfolioValue));
 
             // remove old values
             var year = TimeSpan.FromDays(365);
-            _saleVolumes = _saleVolumes
-                .Where(pair => (_algorithm.Time - pair.Key) < year)
-                .ToDictionary(pair => pair.Key, pair => pair.Value);
-            _portfolioValue = _portfolioValue
-                .Where(pair => (_algorithm.Time - pair.Key) < year)
-                .ToDictionary(pair => pair.Key, pair => pair.Value);
+            var index = _saleVolumes.FindIndex(tuple => _algorithm.Time - tuple.Item1 < year);
+            if (index != -1 && index != 0)
+            {
+                _saleVolumes.RemoveRange(0, index);
+            }
+            index = _portfolioValue.FindIndex(tuple => _algorithm.Time - tuple.Item1 < year);
+            if (index != -1 && index != 0)
+            {
+                _portfolioValue.RemoveRange(0, index);
+            }
 
-            var averagePortfolioValue = _portfolioValue.Values.Average();
-            var saleVolume = _saleVolumes.Values.Sum();
+            var averagePortfolioValue = _portfolioValue.Average(tuple => tuple.Item2);
+            var saleVolume = _saleVolumes.Sum(tuple => tuple.Item2);
 
-            var rawPortfolioTurnOver = saleVolume / averagePortfolioValue;
+            PortfolioTurnOver = saleVolume / averagePortfolioValue;
 
             // from 0 to 1 max
-            return rawPortfolioTurnOver > 1 ? 1 : rawPortfolioTurnOver;
+            return PortfolioTurnOver > 1 ? 1 : PortfolioTurnOver;
         }
 
         private decimal SigmoidalScale(decimal valueToScale)

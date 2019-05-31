@@ -14,19 +14,17 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 using QuantConnect.Statistics;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Statistics
 {
     [TestFixture]
-    public class FitnessScoreTests
+    public class FitnessScoreManagerTests
     {
         [TestCase(10)]
         [TestCase(100000)]
@@ -37,14 +35,15 @@ namespace QuantConnect.Tests.Common.Statistics
             algorithm.SetStartDate(initialDate);
             algorithm.SetCash(initialCash);
 
-            var fitnessScore = new FitnessScore();
+            var fitnessScore = new FitnessScoreManager();
             fitnessScore.Initialize(algorithm);
 
             decimal score = 0;
             for (var i = 0; i < 50; i++)
             {
                 algorithm.SetDateTime(initialDate.AddDays(i));
-                score = fitnessScore.GetFitnessScore();
+                fitnessScore.UpdateScores();
+                score = fitnessScore.FitnessScore;
             }
             Assert.AreEqual(0.5m, score);
         }
@@ -57,14 +56,15 @@ namespace QuantConnect.Tests.Common.Statistics
             algorithm.SetStartDate(initialDate);
             algorithm.SetCash(0);
 
-            var fitnessScore = new FitnessScore();
+            var fitnessScore = new FitnessScoreManager();
             fitnessScore.Initialize(algorithm);
 
             decimal score = 0;
             for (var i = 0; i < 10; i++)
             {
                 algorithm.SetDateTime(initialDate.AddDays(i));
-                score = fitnessScore.GetFitnessScore();
+                fitnessScore.UpdateScores();
+                score = fitnessScore.FitnessScore;
             }
             Assert.AreEqual(0m, score);
         }
@@ -77,46 +77,32 @@ namespace QuantConnect.Tests.Common.Statistics
             algorithm.SetStartDate(initialDate);
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.AddEquity("SPY");
-            var fitnessScore = new FitnessScore();
+            var fitnessScore = new FitnessScoreManager();
             fitnessScore.Initialize(algorithm);
-            var testTradeBuilder = new TestTradeBuilder();
-            algorithm.SetTradeBuilder(testTradeBuilder);
 
             algorithm.SetDateTime(initialDate.AddDays(1));
             IncreaseCashAmount(algorithm, 0.05);
-            IncreaseSalesVolumeAmount(algorithm, 0.05);
+            IncreaseSalesVolumeAmount(algorithm);
 
-            var score = fitnessScore.GetFitnessScore();
-            // return 0.05 -> 5% for 1 day
-            // anually 23.05263 -> 2305.2%
-            // Sortino Ratio 5 -> no closed trades
-            // RoMaD -> 5 no drawdown
-            // turnover -> 0.05
-            Assert.AreEqual(0.525m, score);
+            fitnessScore.UpdateScores();
+            var score = fitnessScore.FitnessScore;
+            // FitnessScore: 0.5 * (5 + 5)
+            Assert.AreEqual(0.75m, score);
 
             algorithm.SetDateTime(initialDate.AddDays(1));
-            // Lets add two closed losing trades
-            testTradeBuilder.ClosedTrades = new List<Trade>
-            {
-                new Trade { ProfitLoss = -1000 },
-                new Trade { ProfitLoss = -2000 }
-            };
-            // some drawdown
+            IncreaseCashAmount(algorithm, -0.20);
+            fitnessScore.UpdateScores();
+            algorithm.SetDateTime(initialDate.AddDays(1));
             IncreaseCashAmount(algorithm, -0.20);
 
-            // return -0.160
-            // annually -73.7684
-            // Raw Sortino: -0.10432 -> scaled -0.1648
-            // return over drawdown: -368.84 -> scaled -4.999
-            // Portfolio turn over: 0.0625
-            // Raw fitnessScore: -0.32279 = 0.0625 (-0.1648 + -4.999)
-            // scaled result = (-0.32279 + 10) / 20
-            score = fitnessScore.GetFitnessScore();
-            Assert.AreEqual(0.484m, score);
+            // FitnessScore: 0.78125 * (-3.299 + -0.00053)
+            fitnessScore.UpdateScores();
+            score = fitnessScore.FitnessScore;
+            Assert.AreEqual(0.399m, score);
         }
 
         [TestCase(2)]
-        [TestCase(-2)]
+        [TestCase(-0.5)]
         public void ExtremePerformanceAlgorithm(double returnFactor)
         {
             var algorithm = new QCAlgorithm();
@@ -124,18 +110,19 @@ namespace QuantConnect.Tests.Common.Statistics
             algorithm.SetStartDate(initialDate);
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             algorithm.AddEquity("SPY");
-            var fitnessScore = new FitnessScore();
+            var fitnessScore = new FitnessScoreManager();
             fitnessScore.Initialize(algorithm);
 
             decimal score = 0;
             for (var i = 0; i < 10; i++)
             {
                 algorithm.SetDateTime(initialDate.AddDays(i));
-                score = fitnessScore.GetFitnessScore();
+                fitnessScore.UpdateScores();
+                score = fitnessScore.FitnessScore;
                 IncreaseCashAmount(algorithm, returnFactor);
-                IncreaseSalesVolumeAmount(algorithm, returnFactor);
+                IncreaseSalesVolumeAmount(algorithm);
             }
-            Assert.AreEqual(returnFactor < 1 ? 0 : 1m, score);
+            Assert.AreEqual(returnFactor < 1 ? 0.424m : 1m, score);
         }
 
         private void IncreaseCashAmount(IAlgorithm algorithm, double factor)
@@ -144,32 +131,10 @@ namespace QuantConnect.Tests.Common.Statistics
             cash.AddAmount(cash.Amount * (decimal)factor);
         }
 
-        private void IncreaseSalesVolumeAmount(IAlgorithm algorithm, double factor)
+        private void IncreaseSalesVolumeAmount(IAlgorithm algorithm)
         {
             var security = algorithm.Securities.First().Value;
-            security.Holdings.AddNewSale(algorithm.Portfolio.TotalPortfolioValue * (decimal)factor);
-        }
-
-        private class TestTradeBuilder : ITradeBuilder
-        {
-            public TestTradeBuilder()
-            {
-                ClosedTrades = new List<Trade>();
-            }
-            public void SetLiveMode(bool live)
-            {
-            }
-            public List<Trade> ClosedTrades { get; set; }
-            public bool HasOpenPosition(Symbol symbol)
-            {
-                return false;
-            }
-            public void SetMarketPrice(Symbol symbol, decimal price)
-            {
-            }
-            public void ProcessFill(OrderEvent fill, decimal securityConversionRate, decimal feeInAccountCurrency, decimal multiplier = 1m)
-            {
-            }
+            security.Holdings.AddNewSale(algorithm.Portfolio.TotalPortfolioValue * (decimal)0.5);
         }
     }
 }

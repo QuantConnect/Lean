@@ -86,6 +86,24 @@ namespace QuantConnect
         public decimal FitnessScore { get; set; }
 
         /// <summary>
+        /// Measurement of the strategies trading activity with respect to the portfolio value.
+        /// Calculated as the annual sales volume with respect to the annual average total portfolio value.
+        /// </summary>
+        public decimal PortfolioTurnOver { get; set; }
+
+        /// <summary>
+        /// Provides a risk adjusted way to factor in the returns and drawdown of the strategy.
+        /// It is calculated by dividing the Portfolio Annualized Return by the Maximum Drawdown seen during the backtest.
+        /// </summary>
+        public decimal ReturnOverMaxDrawdown { get; set; }
+
+        /// <summary>
+        /// Gives a relative picture of the strategy volatility.
+        /// It is calculated by taking a portfolio's annualized rate of return and subtracting the risk free rate of return.
+        /// </summary>
+        public decimal SortinoRatio { get; set; }
+
+        /// <summary>
         /// Suggested Value of the Alpha On A Monthly Basis For Licensing
         /// </summary>
         [JsonProperty]
