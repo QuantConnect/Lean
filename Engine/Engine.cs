@@ -185,7 +185,7 @@ namespace QuantConnect.Lean.Engine
                         (historyProvider as BrokerageHistoryProvider).SetBrokerage(brokerage);
                     }
 
-                    var historyDataCacheProvider = new ZipDataCacheProvider(_algorithmHandlers.DataProvider);
+                    var historyDataCacheProvider = new ZipDataCacheProvider(_algorithmHandlers.DataProvider, isDataEphemeral:_liveMode);
                     historyProvider.Initialize(
                         new HistoryProviderInitializeParameters(
                             job,

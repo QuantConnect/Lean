@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Transport
@@ -30,6 +29,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
     {
         private readonly IStreamReader _streamReader;
         private static IDownloadProvider _downloader;
+        // lock for multi thread scenarios where we are sharing the same cached file
+        private static readonly object _fileSystemLock = new object();
 
         /// <summary>
         /// Gets whether or not this stream reader should be rate limited
@@ -45,14 +46,37 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="headers">Defines header values to add to the request</param>
         public RemoteFileSubscriptionStreamReader(IDataCacheProvider dataCacheProvider, string source, string downloadDirectory, IEnumerable<KeyValuePair<string, string>> headers)
         {
-            // create a hash for a new filename
-            var filename = Guid.NewGuid() + source.GetExtension();
-            var destination = Path.Combine(downloadDirectory, filename);
-            var contents = _downloader.Download(source, headers, null, null);
-            File.WriteAllText(destination, contents);
+            // don't use cache if data is ephemeral
+            // will be false for live history requests and live subscriptions
+            var useCache = !dataCacheProvider.IsDataEphemeral;
 
-            // Send the file to the dataCacheProvider so it is available when the streamReader asks for it
-            dataCacheProvider.Store(destination, System.Text.Encoding.UTF8.GetBytes(contents));
+            // create a hash for a new filename
+            var filename = (useCache ? source.ToMD5() : Guid.NewGuid().ToString())  + source.GetExtension();
+            var destination = Path.Combine(downloadDirectory, filename);
+
+            string contents = null;
+            if (useCache)
+            {
+                lock (_fileSystemLock)
+                {
+                    if (!File.Exists(destination))
+                    {
+                        contents = _downloader.Download(source, headers, null, null);
+                        File.WriteAllText(destination, contents);
+                    }
+                }
+            }
+            else
+            {
+                contents = _downloader.Download(source, headers, null, null);
+                File.WriteAllText(destination, contents);
+            }
+
+            if (contents != null)
+            {
+                // Send the file to the dataCacheProvider so it is available when the streamReader asks for it
+                dataCacheProvider.Store(destination, System.Text.Encoding.UTF8.GetBytes(contents));
+            }
 
             // now we can just use the local file reader
             _streamReader = new LocalFileSubscriptionStreamReader(dataCacheProvider, destination);

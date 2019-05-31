@@ -41,13 +41,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Property indicating the data is temporary in nature and should not be cached.
         /// </summary>
-        public bool IsDataEphemeral => false;
+        public bool IsDataEphemeral { get; }
 
         /// <summary>
         /// Constructor that sets the <see cref="IDataProvider"/> used to retrieve data
         /// </summary>
-        public ZipDataCacheProvider(IDataProvider dataProvider)
+        public ZipDataCacheProvider(IDataProvider dataProvider, bool isDataEphemeral = true)
         {
+            IsDataEphemeral = isDataEphemeral;
             _dataProvider = dataProvider;
         }
 

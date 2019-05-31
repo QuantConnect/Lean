@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return null;
             }
 
-            return new FileStream(key, FileMode.Open, FileAccess.Read);
+            return new FileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
 
         /// <summary>
