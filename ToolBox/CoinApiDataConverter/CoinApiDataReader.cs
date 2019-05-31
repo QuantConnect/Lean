@@ -82,8 +82,6 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                       $"for {entryData.Date:yyyy-MM-dd}");
 
 
-            var tickList = new List<Tick>();
-
             using (var stream = new GZipStream(file.OpenRead(), CompressionMode.Decompress))
             using (var reader = new StreamReader(stream))
             {
@@ -95,11 +93,15 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
 
                 var headerParts = headerLine.Split(';').ToList();
 
-                tickList = entryData.TickType == TickType.Trade
+                var tickList = entryData.TickType == TickType.Trade
                     ? ParseTradeData(entryData.Symbol, reader, headerParts)
                     : ParseQuoteData(entryData.Symbol, reader, headerParts);
+
+                foreach (var tick in tickList)
+                {
+                    yield return tick;
+                }
             }
-            return tickList;
         }
 
         /// <summary>
@@ -109,13 +111,11 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// <param name="reader">The reader.</param>
         /// <param name="headerParts">The header parts.</param>
         /// <returns></returns>
-        private List<Tick> ParseTradeData(Symbol symbol, StreamReader reader, List<string> headerParts)
+        private IEnumerable<Tick> ParseTradeData(Symbol symbol, StreamReader reader, List<string> headerParts)
         {
             var columnTime = headerParts.FindIndex(x => x == "time_exchange");
             var columnPrice = headerParts.FindIndex(x => x == "price");
             var columnQuantity = headerParts.FindIndex(x => x == "base_amount");
-
-            var tickList = new List<Tick>();
 
             string line;
             while ((line = reader.ReadLine()) != null)
@@ -126,18 +126,15 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                 var price = lineParts[columnPrice].ToDecimal();
                 var quantity = lineParts[columnQuantity].ToDecimal();
 
-
-                tickList.Add(new Tick
+                yield return new Tick
                 {
                     Symbol = symbol,
                     Time = time,
                     Value = price,
                     Quantity = quantity,
                     TickType = TickType.Trade
-                });
+                };
             }
-
-            return tickList;
         }
 
         /// <summary>
@@ -147,7 +144,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         /// <param name="reader">The reader.</param>
         /// <param name="headerParts">The header parts.</param>
         /// <returns></returns>
-        private List<Tick> ParseQuoteData(Symbol symbol, StreamReader reader, List<string> headerParts)
+        private IEnumerable<Tick> ParseQuoteData(Symbol symbol, StreamReader reader, List<string> headerParts)
         {
             var columnTime = headerParts.FindIndex(x => x == "time_exchange");
             var columnAskPrice = headerParts.FindIndex(x => x == "ask_px");
@@ -155,7 +152,8 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             var columnBidPrice = headerParts.FindIndex(x => x == "bid_px");
             var columnBidSize = headerParts.FindIndex(x => x == "bid_sx");
 
-            var tickList = new List<Tick>();
+            var previousAskPrice = 0m;
+            var previousBidPrice = 0m;
 
             string line;
             while ((line = reader.ReadLine()) != null)
@@ -168,7 +166,16 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                 var bidPrice = lineParts[columnBidPrice].ToDecimal();
                 var bidSize = lineParts[columnBidSize].ToDecimal();
 
-                tickList.Add(new Tick
+                if (askPrice == previousAskPrice && bidPrice == previousBidPrice)
+                {
+                    // only save quote if bid price or ask price changed
+                    continue;
+                }
+
+                previousAskPrice = askPrice;
+                previousBidPrice = bidPrice;
+
+                yield return new Tick
                 {
                     Symbol = symbol,
                     Time = time,
@@ -177,10 +184,8 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                     BidPrice = bidPrice,
                     BidSize = bidSize,
                     TickType = TickType.Quote
-                });
+                };
             }
-
-            return tickList;
         }
     }
 }
