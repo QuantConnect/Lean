@@ -127,7 +127,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void OnOpen()
         {
-            Log.Trace($"WebSocketWrapper.OnOpen(): Connection opened IsOpen:{IsOpen}): {_url}");
+            Log.Trace($"WebSocketWrapper.OnOpen(): Connection opened (IsOpen:{IsOpen}): {_url}");
             Open?.Invoke(this, EventArgs.Empty);
         }
 

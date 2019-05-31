@@ -337,7 +337,15 @@ namespace QuantConnect.ToolBox.CoinApi
 
         private void OnReconnectRequested(object sender, EventArgs e)
         {
-            _webSocket.Connect();
+            if (!_webSocket.IsOpen)
+            {
+                _webSocket.Connect();
+            }
+
+            if (!_webSocket.IsOpen)
+            {
+                return;
+            }
 
             if (_subscribedExchanges.Count > 0)
             {

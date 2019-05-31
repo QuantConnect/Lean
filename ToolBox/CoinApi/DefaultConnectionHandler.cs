@@ -82,22 +82,22 @@ namespace QuantConnect.ToolBox.CoinApi
 
                         if (!_isEnabled) continue;
 
-                        TimeSpan elapsed;
-                        lock (_lockerConnectionMonitor)
+                        try
                         {
-                            elapsed = DateTime.UtcNow - _lastDataReceivedTime;
-                        }
+                            TimeSpan elapsed;
+                            lock (_lockerConnectionMonitor)
+                            {
+                                elapsed = DateTime.UtcNow - _lastDataReceivedTime;
+                            }
 
-                        if (!_connectionLost && elapsed > _maximumIdleTimeSpan)
-                        {
-                            _connectionLost = true;
-                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+                            if (!_connectionLost && elapsed > _maximumIdleTimeSpan)
+                            {
+                                _connectionLost = true;
+                                nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
 
-                            OnConnectionLost();
-                        }
-                        else if (_connectionLost)
-                        {
-                            try
+                                OnConnectionLost();
+                            }
+                            else if (_connectionLost)
                             {
                                 if (elapsed <= _maximumIdleTimeSpan)
                                 {
@@ -110,23 +110,18 @@ namespace QuantConnect.ToolBox.CoinApi
                                 {
                                     if (DateTime.UtcNow > nextReconnectionAttemptUtcTime)
                                     {
-                                        try
-                                        {
-                                            OnReconnectRequested();
-                                        }
-                                        catch (Exception)
-                                        {
-                                            // double the interval between attempts (capped to 1 minute)
-                                            nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, _maximumSecondsForNextReconnectionAttempt);
-                                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
-                                        }
+                                        // double the interval between attempts (capped to 1 minute)
+                                        nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, _maximumSecondsForNextReconnectionAttempt);
+                                        nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
+
+                                        OnReconnectRequested();
                                     }
                                 }
                             }
-                            catch (Exception exception)
-                            {
-                                Log.Error(exception);
-                            }
+                        }
+                        catch (Exception exception)
+                        {
+                            Log.Error($"Error in DefaultConnectionHandler: {exception}");
                         }
                     }
                 }
@@ -146,6 +141,8 @@ namespace QuantConnect.ToolBox.CoinApi
         /// </summary>
         public void EnableMonitoring(bool isEnabled)
         {
+            if (_isEnabled) return;
+
             _isEnabled = isEnabled;
 
             KeepAlive();
