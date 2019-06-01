@@ -89,7 +89,7 @@ namespace QuantConnect
         /// Measurement of the strategies trading activity with respect to the portfolio value.
         /// Calculated as the annual sales volume with respect to the annual average total portfolio value.
         /// </summary>
-        public decimal PortfolioTurnOver { get; set; }
+        public decimal PortfolioTurnover { get; set; }
 
         /// <summary>
         /// Provides a risk adjusted way to factor in the returns and drawdown of the strategy.
@@ -150,6 +150,9 @@ namespace QuantConnect
             return new Dictionary<string, string>
             {
                 {"Fitness Score", $"{FitnessScore}"},
+                {"Sortino Ratio", $"{SortinoRatio}"},
+                {"Return Over Maximum Drawdown", $"{ReturnOverMaxDrawdown}"},
+                {"Portfolio Turnover", $"{PortfolioTurnover}"},
                 {"Total Insights Generated", $"{TotalInsightsGenerated}"},
                 {"Total Insights Closed", $"{TotalInsightsClosed}"},
                 {"Total Insights Analysis Completed", $"{TotalInsightsAnalysisCompleted}"},

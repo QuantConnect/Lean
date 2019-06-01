@@ -95,10 +95,10 @@ namespace QuantConnect.Tests.Common.Statistics
             algorithm.SetDateTime(initialDate.AddDays(1));
             IncreaseCashAmount(algorithm, -0.20);
 
-            // FitnessScore: 0.78125 * (-3.299 + -0.00053)
+            // FitnessScore: 0.614 * (-3.299 + -5)
             fitnessScore.UpdateScores();
             score = fitnessScore.FitnessScore;
-            Assert.AreEqual(0.399m, score);
+            Assert.AreEqual(0.245m, score);
         }
 
         [TestCase(2)]
@@ -122,7 +122,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 IncreaseCashAmount(algorithm, returnFactor);
                 IncreaseSalesVolumeAmount(algorithm);
             }
-            Assert.AreEqual(returnFactor < 1 ? 0.424m : 1m, score);
+            Assert.AreEqual(returnFactor < 1 ? 0.174m : 1m, score);
         }
 
         private void IncreaseCashAmount(IAlgorithm algorithm, double factor)

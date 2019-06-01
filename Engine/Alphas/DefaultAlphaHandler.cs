@@ -149,7 +149,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                 _fitnessScore.UpdateScores();
 
                 RuntimeStatistics.FitnessScore = _fitnessScore.FitnessScore;
-                RuntimeStatistics.PortfolioTurnOver = _fitnessScore.PortfolioTurnOver;
+                RuntimeStatistics.PortfolioTurnover = _fitnessScore.PortfolioTurnover;
                 RuntimeStatistics.SortinoRatio = _fitnessScore.SortinoRatio;
                 RuntimeStatistics.ReturnOverMaxDrawdown = _fitnessScore.ReturnOverMaxDrawdown;
             }
