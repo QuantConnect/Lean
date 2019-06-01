@@ -49,20 +49,23 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
             if (endUtc < startUtc)
                 throw new ArgumentException("The end date must be greater or equal than the start date.");
 
+            var dataType = resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar);
+            var tickType = resolution == Resolution.Tick ? TickType.Quote : TickType.Trade;
+
             var slices = _historyPort.ProcessHistoryRequests(
                 new HistoryRequest(
                     startUtc,
                     endUtc,
-                    typeof(TradeBar),
+                    dataType,
                     symbol,
                     resolution,
                     SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                     TimeZones.NewYork,
-                    Resolution.Minute,
-                    false,
+                    resolution,
+                    true,
                     false,
                     DataNormalizationMode.Adjusted,
-                    TickType.Quote)).ToList();
+                    tickType)).ToList();
 
             switch (resolution)
             {
