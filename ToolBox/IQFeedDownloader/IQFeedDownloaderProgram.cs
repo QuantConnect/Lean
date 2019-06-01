@@ -13,11 +13,13 @@
  * limitations under the License.
 */
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.IQFeedDownloader
 {
@@ -29,26 +31,22 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
         /// <summary>
         /// Primary entry point to the program. This program only supports EQUITY for now.
         /// </summary>
-        private static void Main(string[] args)
+        public static void IQFeedDownloader(IList<string> tickers, string resolution, DateTime fromDate, DateTime toDate)
         {
-            if (args.Length != 4)
+            if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
-                Console.WriteLine("Usage: IQFeedDownloader SYMBOLS RESOLUTION FROMDATE TODATE");
-                Console.WriteLine("SYMBOLS      = eg SPY,AAPL");
-                Console.WriteLine("RESOLUTION   = Tick/Second/Minute/Hour/Daily/All");
-                Console.WriteLine("FROMDATE     = yyyymmdd");
-                Console.WriteLine("TODATE       = yyyymmdd");
+                Console.WriteLine("IQFeedDownloader ERROR: '--tickers=' or '--resolution=' parameter is missing");
+                Console.WriteLine("--tickers=eg SPY,AAPL");
+                Console.WriteLine("--resolution=Tick/Second/Minute/Hour/Daily/All");
                 Environment.Exit(1);
             }
-
             try
             {
                 // Load settings from command line
-                var tickers = args[0].Split(',');
-                var allResolutions = args[1].ToLower() == "all";
-                var resolution = allResolutions ? Resolution.Tick : (Resolution)Enum.Parse(typeof(Resolution), args[1]);
-                var startDate = DateTime.ParseExact(args[2], "yyyyMMdd", CultureInfo.InvariantCulture);
-                var endDate = DateTime.ParseExact(args[3], "yyyyMMdd", CultureInfo.InvariantCulture);
+                var allResolutions = resolution.ToLower() == "all";
+                var castResolution = allResolutions ? Resolution.Tick : (Resolution)Enum.Parse(typeof(Resolution), resolution);
+                var startDate = fromDate.ConvertToUtc(TimeZones.NewYork);
+                var endDate = toDate.ConvertToUtc(TimeZones.NewYork);
                 endDate = endDate.AddDays(1).AddMilliseconds(-1);
 
                 // Load settings from config.json
@@ -66,14 +64,14 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
                 {
                     // Download the data
                     var symbol = Symbol.Create(ticker, SecurityType.Equity, market);
-                    var data = downloader.Get(symbol, resolution, startDate, endDate);
+                    var data = downloader.Get(symbol, castResolution, startDate, endDate);
 
                     if (allResolutions)
                     {
                         var ticks = data.Cast<Tick>().ToList();
 
                         // Save the data (tick resolution)
-                        var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
+                        var writer = new LeanDataWriter(castResolution, symbol, dataDirectory);
                         writer.Write(ticks);
 
                         // Save the data (other resolutions)
@@ -88,7 +86,7 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
                     else
                     {
                         // Save the data (single resolution)
-                        var writer = new LeanDataWriter(resolution, symbol, dataDirectory);
+                        var writer = new LeanDataWriter(castResolution, symbol, dataDirectory);
                         writer.Write(data);
                     }
                 }
