@@ -68,7 +68,8 @@ namespace QuantConnect.Statistics
 
             _negativeDailyDeltaPortfolioValue = new List<double>();
             _portfolioValue = new List<decimal>();
-            _riskFreeRate = PortfolioStatistics.GetRiskFreeRate();
+            // assume a minimum of 2
+            _riskFreeRate = Math.Max(2, PortfolioStatistics.GetRiskFreeRate());
         }
 
         /// <summary>
@@ -141,6 +142,8 @@ namespace QuantConnect.Statistics
             _previousPortfolioValue = currentPortfolioValue;
             if (portfolioValueDelta < 0)
             {
+                // this is daily negative return so we annualize it:
+                portfolioValueDelta = Math.Pow(portfolioValueDelta + 1, 252) - 1;
                 _negativeDailyDeltaPortfolioValue.Add(Math.Abs(portfolioValueDelta));
                 var variance = _negativeDailyDeltaPortfolioValue.Variance();
                 _profitLossDownsideDeviation = Math.Sqrt(variance);
