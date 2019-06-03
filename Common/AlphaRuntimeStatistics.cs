@@ -87,7 +87,7 @@ namespace QuantConnect
 
         /// <summary>
         /// Measurement of the strategies trading activity with respect to the portfolio value.
-        /// Calculated as the annual sales volume with respect to the annual average total portfolio value.
+        /// Calculated as the sales volume with respect to the average total portfolio value.
         /// </summary>
         public decimal PortfolioTurnover { get; set; }
 

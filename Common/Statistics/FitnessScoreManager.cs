@@ -47,9 +47,7 @@ namespace QuantConnect.Statistics
         private decimal _maxDrawdown;
 
         // portfolio turn over
-        private List<Tuple<DateTime, decimal>> _saleVolumes;
-        private List<Tuple<DateTime, decimal>> _portfolioValue;
-        private decimal _previousSaleVolume;
+        private List<decimal> _portfolioValue;
 
         /// <summary>
         /// Initializes the fitness score instance and sets the initial portfolio value
@@ -69,8 +67,7 @@ namespace QuantConnect.Statistics
             }
 
             _negativeDailyDeltaPortfolioValue = new List<double>();
-            _saleVolumes = new List<Tuple<DateTime, decimal>>();
-            _portfolioValue = new List<Tuple<DateTime, decimal>>();
+            _portfolioValue = new List<decimal>();
             _riskFreeRate = PortfolioStatistics.GetRiskFreeRate();
         }
 
@@ -81,7 +78,7 @@ namespace QuantConnect.Statistics
 
         /// <summary>
         /// Measurement of the strategies trading activity with respect to the portfolio value.
-        /// Calculated as the annual sales volume with respect to the annual average total portfolio value.
+        /// Calculated as the sales volume with respect to the average total portfolio value.
         /// </summary>
         public decimal PortfolioTurnover { get; private set; }
 
@@ -188,35 +185,12 @@ namespace QuantConnect.Statistics
 
         private decimal GetScaledPortfolioTurnover(decimal currentPortfolioValue)
         {
-            var totalSalesVolume = _algorithm.Portfolio.TotalSaleVolume;
+            // save current portfolio value so we use the average
+            _portfolioValue.Add(currentPortfolioValue);
 
-            // save the delta sales volume so we can take into account just the last year
-            var salesDelta = totalSalesVolume - _previousSaleVolume;
-            if (salesDelta > 0)
-            {
-                _saleVolumes.Add(new Tuple<DateTime, decimal>(_algorithm.Time, salesDelta));
-            }
-            _previousSaleVolume = totalSalesVolume;
-            // save current portfolio value so we use the annual average
-            _portfolioValue.Add(new Tuple<DateTime, decimal>(_algorithm.Time, currentPortfolioValue));
+            var averagePortfolioValue = _portfolioValue.Average();
 
-            // remove old values
-            var year = TimeSpan.FromDays(365);
-            var index = _saleVolumes.FindIndex(tuple => _algorithm.Time - tuple.Item1 < year);
-            if (index != -1 && index != 0)
-            {
-                _saleVolumes.RemoveRange(0, index);
-            }
-            index = _portfolioValue.FindIndex(tuple => _algorithm.Time - tuple.Item1 < year);
-            if (index != -1 && index != 0)
-            {
-                _portfolioValue.RemoveRange(0, index);
-            }
-
-            var averagePortfolioValue = _portfolioValue.Average(tuple => tuple.Item2);
-            var saleVolume = _saleVolumes.Sum(tuple => tuple.Item2);
-
-            PortfolioTurnover = saleVolume / averagePortfolioValue;
+            PortfolioTurnover = _algorithm.Portfolio.TotalSaleVolume / averagePortfolioValue;
 
             // from 0 to 1 max
             return PortfolioTurnover > 1 ? 1 : PortfolioTurnover;
