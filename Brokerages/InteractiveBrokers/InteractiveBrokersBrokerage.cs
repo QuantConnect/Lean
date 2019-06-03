@@ -586,8 +586,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     // if message processing thread is still running, wait until it terminates
                     Disconnect();
 
-                    // There is socket exception happening when reconnecting right away. Testing showed 10 ms is enough, using 50ms to be on the safe side.
-                    Thread.Sleep(50);
+                    // At initial startup or after a gateway restart, we need to wait for the gateway to be ready for a connect request.
+                    // Attempting to connect to the socket too early will get a SocketException: Connection refused.
+                    if (attempt == 1)
+                    {
+                        Thread.Sleep(2500);
+                    }
 
                     // we're going to try and connect several times, if successful break
                     _client.ClientSocket.eConnect(_host, _port, _clientId);
