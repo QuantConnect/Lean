@@ -80,9 +80,18 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             var stopwatch = Stopwatch.StartNew();
 
             var symbolMapper = new CoinApiSymbolMapper();
-
             var success = true;
-            Parallel.ForEach(_rawDataFolder.EnumerateFiles("*.gz"),(file, loopState) =>
+
+            var fileToProcess = _rawDataFolder.EnumerateFiles("*.gz")
+                .DistinctBy(
+                    x =>
+                    {
+                        var parts = x.Name.Split('-').Take(2);
+                        return string.Join("-", parts);
+                    }
+                );
+
+            Parallel.ForEach(fileToProcess,(file, loopState) =>
                 {
                     Log.Trace($"CoinApiDataConverter(): Starting data conversion from source file: {file.Name}...");
                     try
