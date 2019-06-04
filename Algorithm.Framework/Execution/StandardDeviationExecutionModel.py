@@ -63,6 +63,8 @@ class StandardDeviationExecutionModel(ExecutionModel):
            algorithm: The algorithm instance
            targets: The portfolio targets'''
         self.targetsCollection.AddRange(targets)
+
+        # for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
         if self.targetsCollection.Count > 0:
             for target in self.targetsCollection.OrderByMarginImpact(algorithm):
                 symbol = target.Symbol

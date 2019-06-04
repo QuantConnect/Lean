@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
@@ -74,6 +73,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         {
             _targetsCollection.AddRange(targets);
 
+            // for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
             if (_targetsCollection.Count > 0)
             {
                 foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))

@@ -55,6 +55,8 @@ class VolumeWeightedAveragePriceExecutionModel(ExecutionModel):
 
         # update the complete set of portfolio targets with the new targets
         self.targetsCollection.AddRange(targets)
+
+        # for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
         if self.targetsCollection.Count > 0:
             for target in self.targetsCollection.OrderByMarginImpact(algorithm):
                 symbol = target.Symbol

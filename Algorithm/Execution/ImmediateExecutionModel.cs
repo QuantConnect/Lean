@@ -35,6 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         public override void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets)
         {
             _targetsCollection.AddRange(targets);
+            // for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
             if (_targetsCollection.Count > 0)
             {
                 foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))

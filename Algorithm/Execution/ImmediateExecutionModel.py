@@ -38,6 +38,7 @@ class ImmediateExecutionModel(ExecutionModel):
             algorithm: The algorithm instance
             targets: The portfolio targets to be ordered'''
 
+        # for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
         self.targetsCollection.AddRange(targets)
         if self.targetsCollection.Count > 0:
             for target in self.targetsCollection.OrderByMarginImpact(algorithm):

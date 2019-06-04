@@ -51,6 +51,8 @@ namespace QuantConnect.Algorithm.Framework.Execution
         {
             // update the complete set of portfolio targets with the new targets
             _targetsCollection.AddRange(targets);
+
+            // for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
             if (_targetsCollection.Count > 0)
             {
                 foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
