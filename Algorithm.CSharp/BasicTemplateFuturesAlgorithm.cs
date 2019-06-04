@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -125,7 +124,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "-24.985"},
             {"Tracking Error", "0.414"},
             {"Treynor Ratio", "10.413"},
-            {"Total Fees", "$15207.00"}
+            {"Total Fees", "$15207.00"},
+            {"Fitness Score", "0.034"}
         };
     }
 }
