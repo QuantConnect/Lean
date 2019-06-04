@@ -81,9 +81,9 @@ namespace QuantConnect.Securities
         /// <param name="conversionRate">The initial conversion rate of this currency into the <see cref="AccountCurrency"/></param>
         public Cash(string symbol, decimal amount, decimal conversionRate)
         {
-            if (symbol == null || symbol.Length != 3)
+            if (string.IsNullOrEmpty(symbol))
             {
-                throw new ArgumentException("Cash symbols must be exactly 3 characters.");
+                throw new ArgumentException("Cash symbols cannot be null or empty.");
             }
             Amount = amount;
             ConversionRate = conversionRate;

@@ -1392,5 +1392,23 @@ namespace QuantConnect
         {
             task.ConfigureAwait(false).GetAwaiter().GetResult();
         }
+
+        /// <summary>
+        /// Returns a new string in which specified ending in the current instance is removed.
+        /// </summary>
+        /// <param name="s">original string value</param>
+        /// <param name="ending">the string to be removed</param>
+        /// <returns></returns>
+        public static string RemoveFromEnd(this string s, string ending)
+        {
+            if (s.EndsWith(ending))
+            {
+                return s.Substring(0, s.Length - ending.Length);
+            }
+            else
+            {
+                return s;
+            }
+        }
     }
 }

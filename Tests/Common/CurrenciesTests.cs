@@ -25,13 +25,24 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void HasCurrencySymbolForEachPair()
         {
-            var allPairs = Currencies.CurrencyPairs.Concat(Currencies.CfdCurrencyPairs).Concat(Currencies.CryptoCurrencyPairs);
+            var allPairs = Currencies.CurrencyPairs.Concat(Currencies.CfdCurrencyPairs);
             foreach (var currencyPair in allPairs)
             {
                 string quotec, basec;
                 Forex.DecomposeCurrencyPair(currencyPair, out basec, out quotec);
                 Assert.IsTrue(Currencies.CurrencySymbols.ContainsKey(basec), "Missing currency symbol for: " + basec);
                 Assert.IsTrue(Currencies.CurrencySymbols.ContainsKey(quotec), "Missing currency symbol for: " + quotec);
+            }
+        }
+
+        [Test]
+        public void HasCryptoCurrencySymbolForEachPair()
+        {
+            var allPairs = Currencies.CryptoCurrencyPairs;
+            foreach (var currencyPair in allPairs)
+            {
+                Assert.IsTrue(Currencies.CurrencySymbols.Keys.Any(c => currencyPair.StartsWith(c)), "Missing currency symbol for: " + currencyPair);
+                Assert.IsTrue(Currencies.CurrencySymbols.Keys.Any(c => currencyPair.EndsWith(c)), "Missing currency symbol for: " + currencyPair);
             }
         }
     }
