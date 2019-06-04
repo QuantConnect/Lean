@@ -135,7 +135,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    if (packet != null && packet.Count > 0)
+                    if (packet?.Count > 0)
                     {
                         // we have new universe data to select based on, store the subscription data until the end
                         if (!subscription.IsUniverseSelectionSubscription)

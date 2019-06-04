@@ -75,7 +75,8 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public TimeSpan CurrentTimeStepElapsed
         {
-            get {
+            get
+            {
                 if (_currentTimeStepTime == DateTime.MinValue)
                 {
                     _currentTimeStepTime = DateTime.UtcNow;

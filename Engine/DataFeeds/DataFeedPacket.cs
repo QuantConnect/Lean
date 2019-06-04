@@ -68,7 +68,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public DataFeedPacket(ISecurityPrice security, SubscriptionDataConfig configuration, IReadOnlyRef<bool> isSubscriptionRemoved = null)
             : this(security,
                 configuration,
-                new List<BaseData>(1), // performance: by default the list has 0 capacity, so lets initialize it with at least 1
+                new List<BaseData>(4), // performance: by default the list has 0 capacity, so lets initialize it with at least 4 (which is the default)
                 isSubscriptionRemoved)
         {
         }
