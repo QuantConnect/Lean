@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void SurvivesRoundTripSerializationUsingJsonConvert()
         {
             var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
-            var insight = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2, "source-model");
+            var insight = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2, "source-model", 1);
             Insight.Group(insight);
             var serialized = JsonConvert.SerializeObject(insight);
             var deserialized = JsonConvert.DeserializeObject<Insight>(serialized);
@@ -61,6 +61,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
             Assert.AreEqual(insight.Score.IsFinalScore, deserialized.Score.IsFinalScore);
             Assert.AreEqual(insight.Symbol, deserialized.Symbol);
             Assert.AreEqual(insight.Type, deserialized.Type);
+            Assert.AreEqual(insight.Weight, deserialized.Weight);
         }
 
         [Test]
@@ -83,7 +84,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
         public void SurvivesRoundTripCopy()
         {
             var time = new DateTime(2000, 01, 02, 03, 04, 05, 06);
-            var original = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2, "source-model");
+            var original = new Insight(time, Symbols.SPY, Time.OneMinute, InsightType.Volatility, InsightDirection.Up, 1, 2, "source-model", 1);
             Insight.Group(original);
 
             var copy = original.Clone();
@@ -104,6 +105,7 @@ namespace QuantConnect.Tests.Algorithm.Framework
             Assert.AreEqual(original.Score.IsFinalScore, copy.Score.IsFinalScore);
             Assert.AreEqual(original.Symbol, copy.Symbol);
             Assert.AreEqual(original.Type, copy.Type);
+            Assert.AreEqual(original.Weight, copy.Weight);
         }
 
         [Test]

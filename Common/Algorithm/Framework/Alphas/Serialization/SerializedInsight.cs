@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using Newtonsoft.Json;
 using QuantConnect.Util;
 
@@ -109,6 +108,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         public double? Confidence { get; set; }
 
         /// <summary>
+        /// See <see cref="Insight.Weight"/>
+        /// </summary>
+        [JsonProperty("weight", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public double? Weight { get; set; }
+
+        /// <summary>
         /// See <see cref="InsightScore.IsFinalScore"/>
         /// </summary>
         [JsonProperty("score-final", DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -165,6 +170,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
             ScoreMagnitude = insight.Score.Magnitude;
             ScoreDirection = insight.Score.Direction;
             EstimatedValue = insight.EstimatedValue;
+            Weight = insight.Weight;
         }
     }
 }

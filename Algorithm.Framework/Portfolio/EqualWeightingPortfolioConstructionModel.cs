@@ -45,6 +45,36 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         }
 
         /// <summary>
+        /// Method that will determine if the portfolio construction model should create a
+        /// target for this insight
+        /// </summary>
+        /// <param name="insight">The insight to create a target for</param>
+        /// <returns>True if the portfolio should create a target for the insight</returns>
+        public virtual bool ShouldCreateTargetForInsight(Insight insight)
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// Will determine the target percent for each insight
+        /// </summary>
+        /// <param name="activeInsights">The active insights to generate a target for</param>
+        /// <returns>A target percent for each insight</returns>
+        public virtual Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
+        {
+            var result = new Dictionary<Insight, double>();
+
+            // give equal weighting to each security
+            var count = activeInsights.Count(x => x.Direction != InsightDirection.Flat);
+            var percent = count == 0 ? 0 : 1m / count;
+            foreach (var insight in activeInsights)
+            {
+                result[insight] = (double)((int)insight.Direction * percent);
+            }
+            return result;
+        }
+
+        /// <summary>
         /// Create portfolio targets from the specified insights
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
@@ -62,7 +92,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return targets;
             }
 
-            _insightCollection.AddRange(insights);
+            // Validate we should create a target for this insight
+            _insightCollection.AddRange(insights.Where(ShouldCreateTargetForInsight));
 
             // Create flatten target for each security that was removed from the universe
             if (_removedSymbols != null)
@@ -76,19 +107,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             var activeInsights = _insightCollection.GetActiveInsights(algorithm.UtcTime);
 
             // Get the last generated active insight for each symbol
-            var lastActiveInsights = from insight in activeInsights
-                                     group insight by insight.Symbol into g
-                                     select g.OrderBy(x => x.GeneratedTimeUtc).Last();
-
-            // give equal weighting to each security
-            var count = lastActiveInsights.Count(x => x.Direction != InsightDirection.Flat);
-            var percent = count == 0 ? 0 : 1m / count;
+            var lastActiveInsights = (from insight in activeInsights
+                                      group insight by insight.Symbol into g
+                                      select g.OrderBy(x => x.GeneratedTimeUtc).Last()).ToList();
 
             var errorSymbols = new HashSet<Symbol>();
 
+            // Determine target percent for the given insights
+            var percents = DetermineTargetPercent(lastActiveInsights);
+
             foreach (var insight in lastActiveInsights)
             {
-                var target = PortfolioTarget.Percent(algorithm, insight.Symbol, (int) insight.Direction * percent);
+                var target = PortfolioTarget.Percent(algorithm, insight.Symbol, percents[insight]);
                 if (target != null)
                 {
                     targets.Add(target);
