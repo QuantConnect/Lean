@@ -28,7 +28,7 @@ namespace QuantConnect
     {
         private DateTime _utcDateTime;
 
-        private readonly Dictionary<DateTimeZone, LocalTimeKeeper> _localTimeKeepers;
+        private readonly Dictionary<string, LocalTimeKeeper> _localTimeKeepers;
 
         /// <summary>
         /// Gets the current time in UTC
@@ -60,7 +60,7 @@ namespace QuantConnect
         public TimeKeeper(DateTime utcDateTime, IEnumerable<DateTimeZone> timeZones)
         {
             _utcDateTime = utcDateTime;
-            _localTimeKeepers = timeZones.Distinct().Select(x => new LocalTimeKeeper(utcDateTime, x)).ToDictionary(x => x.TimeZone);
+            _localTimeKeepers = timeZones.Distinct().Select(x => new LocalTimeKeeper(utcDateTime, x)).ToDictionary(x => x.TimeZone.Id);
         }
 
         /// <summary>
@@ -95,10 +95,10 @@ namespace QuantConnect
         public LocalTimeKeeper GetLocalTimeKeeper(DateTimeZone timeZone)
         {
             LocalTimeKeeper localTimeKeeper;
-            if (!_localTimeKeepers.TryGetValue(timeZone, out localTimeKeeper))
+            if (!_localTimeKeepers.TryGetValue(timeZone.Id, out localTimeKeeper))
             {
                 localTimeKeeper = new LocalTimeKeeper(UtcTime, timeZone);
-                _localTimeKeepers[timeZone] = localTimeKeeper;
+                _localTimeKeepers[timeZone.Id] = localTimeKeeper;
             }
             return localTimeKeeper;
         }
@@ -109,9 +109,9 @@ namespace QuantConnect
         /// <param name="timeZone"></param>
         public void AddTimeZone(DateTimeZone timeZone)
         {
-            if (!_localTimeKeepers.ContainsKey(timeZone))
+            if (!_localTimeKeepers.ContainsKey(timeZone.Id))
             {
-                _localTimeKeepers[timeZone] = new LocalTimeKeeper(_utcDateTime, timeZone);
+                _localTimeKeepers[timeZone.Id] = new LocalTimeKeeper(_utcDateTime, timeZone);
             }
         }
     }

@@ -814,36 +814,49 @@ namespace QuantConnect.Lean.Engine.Results
                 }
             }
 
-            //Send out the debug messages:
-            var endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
-            while (Algorithm.DebugMessages.Count > 0 && DateTime.UtcNow.Ticks < endTime)
+            long endTime;
+            // avoid calling utcNow if not required
+            if (Algorithm.DebugMessages.Count > 0)
             {
-                string message;
-                if (Algorithm.DebugMessages.TryDequeue(out message))
+                //Send out the debug messages:
+                endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
+                while (Algorithm.DebugMessages.Count > 0 && DateTime.UtcNow.Ticks < endTime)
                 {
-                    DebugMessage(message);
+                    string message;
+                    if (Algorithm.DebugMessages.TryDequeue(out message))
+                    {
+                        DebugMessage(message);
+                    }
                 }
             }
 
-            //Send out the error messages:
-            endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
-            while (Algorithm.ErrorMessages.Count > 0 && DateTime.UtcNow.Ticks < endTime)
+            // avoid calling utcNow if not required
+            if (Algorithm.ErrorMessages.Count > 0)
             {
-                string message;
-                if (Algorithm.ErrorMessages.TryDequeue(out message))
+                //Send out the error messages:
+                endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
+                while (Algorithm.ErrorMessages.Count > 0 && DateTime.UtcNow.Ticks < endTime)
                 {
-                    ErrorMessage(message);
+                    string message;
+                    if (Algorithm.ErrorMessages.TryDequeue(out message))
+                    {
+                        ErrorMessage(message);
+                    }
                 }
             }
 
-            //Send out the log messages:
-            endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
-            while (Algorithm.LogMessages.Count > 0 && DateTime.UtcNow.Ticks < endTime)
+            // avoid calling utcNow if not required
+            if (Algorithm.LogMessages.Count > 0)
             {
-                string message;
-                if (Algorithm.LogMessages.TryDequeue(out message))
+                //Send out the log messages:
+                endTime = DateTime.UtcNow.AddMilliseconds(250).Ticks;
+                while (Algorithm.LogMessages.Count > 0 && DateTime.UtcNow.Ticks < endTime)
                 {
-                    LogMessage(message);
+                    string message;
+                    if (Algorithm.LogMessages.TryDequeue(out message))
+                    {
+                        LogMessage(message);
+                    }
                 }
             }
 

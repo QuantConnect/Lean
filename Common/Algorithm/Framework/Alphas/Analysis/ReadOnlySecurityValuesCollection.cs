@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
@@ -25,7 +26,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
     /// </summary>
     public class ReadOnlySecurityValuesCollection
     {
-        private readonly Dictionary<Symbol, SecurityValues> _securityValuesBySymbol;
+        private Dictionary<Symbol, SecurityValues> _securityValuesBySymbol;
+        private readonly Func<Symbol, SecurityValues> _securityValuesBySymbolFunc;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReadOnlySecurityValuesCollection"/> class
@@ -34,6 +36,21 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         public ReadOnlySecurityValuesCollection(Dictionary<Symbol, SecurityValues> securityValuesBySymbol)
         {
             _securityValuesBySymbol = securityValuesBySymbol;
+            _securityValuesBySymbolFunc = null;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReadOnlySecurityValuesCollection"/> class
+        /// </summary>
+        /// <remarks>This constructor has performance in mind. Only create the <see cref="SecurityValues"/>
+        /// for a <see cref="Symbol"/> if requested by a consumer.</remarks>
+        /// <param name="securityValuesBySymbolFunc">Function used to get the
+        /// <see cref="SecurityValues"/> for a specified <see cref="Symbol"/></param>
+        public ReadOnlySecurityValuesCollection(Func<Symbol, SecurityValues> securityValuesBySymbolFunc)
+        {
+            _securityValuesBySymbolFunc = securityValuesBySymbolFunc;
+            // lets be lazy for constructing the dictionary too!
+            _securityValuesBySymbol = null;
         }
 
         /// <summary>
@@ -41,6 +58,27 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <returns>The security values for the specified symbol</returns>
-        public SecurityValues this[Symbol symbol] => _securityValuesBySymbol[symbol];
+        public SecurityValues this[Symbol symbol]
+        {
+            get
+            {
+                if (_securityValuesBySymbol == null)
+                {
+                    _securityValuesBySymbol = new Dictionary<Symbol, SecurityValues>();
+                }
+
+                SecurityValues result;
+                if(!_securityValuesBySymbol.TryGetValue(symbol, out result))
+                {
+                    if (_securityValuesBySymbolFunc == null)
+                    {
+                        throw new Exception($"SecurityValues for symbol {symbol} was not found");
+                    }
+                    result = _securityValuesBySymbolFunc(symbol);
+                    _securityValuesBySymbol[symbol] = result;
+                }
+                return result;
+            }
+        }
     }
 }

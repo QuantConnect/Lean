@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
@@ -74,37 +73,41 @@ namespace QuantConnect.Algorithm.Framework.Execution
         {
             _targetsCollection.AddRange(targets);
 
-            foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
+            // for performance we check count value, OrderByMarginImpact and ClearFulfilled are expensive to call
+            if (_targetsCollection.Count > 0)
             {
-                var symbol = target.Symbol;
-
-                // calculate remaining quantity to be ordered
-                var unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target);
-
-                // fetch our symbol data containing our STD/SMA indicators
-                SymbolData data;
-                if (!_symbolData.TryGetValue(symbol, out data))
+                foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
                 {
-                    continue;
-                }
+                    var symbol = target.Symbol;
 
-                // check order entry conditions
-                if (data.STD.IsReady && PriceIsFavorable(data, unorderedQuantity))
-                {
-                    // get the maximum order size based on total order value
-                    var maxOrderSize = OrderSizing.Value(data.Security, MaximumOrderValue);
-                    var orderSize = Math.Min(maxOrderSize, Math.Abs(unorderedQuantity));
+                    // calculate remaining quantity to be ordered
+                    var unorderedQuantity = OrderSizing.GetUnorderedQuantity(algorithm, target);
 
-                    // round down to even lot size
-                    orderSize -= orderSize % data.Security.SymbolProperties.LotSize;
-                    if (orderSize != 0)
+                    // fetch our symbol data containing our STD/SMA indicators
+                    SymbolData data;
+                    if (!_symbolData.TryGetValue(symbol, out data))
                     {
-                        algorithm.MarketOrder(symbol, Math.Sign(unorderedQuantity) * orderSize);
+                        continue;
+                    }
+
+                    // check order entry conditions
+                    if (data.STD.IsReady && PriceIsFavorable(data, unorderedQuantity))
+                    {
+                        // get the maximum order size based on total order value
+                        var maxOrderSize = OrderSizing.Value(data.Security, MaximumOrderValue);
+                        var orderSize = Math.Min(maxOrderSize, Math.Abs(unorderedQuantity));
+
+                        // round down to even lot size
+                        orderSize -= orderSize % data.Security.SymbolProperties.LotSize;
+                        if (orderSize != 0)
+                        {
+                            algorithm.MarketOrder(symbol, Math.Sign(unorderedQuantity) * orderSize);
+                        }
                     }
                 }
-            }
 
-            _targetsCollection.ClearFulfilled(algorithm);
+                _targetsCollection.ClearFulfilled(algorithm);
+            }
         }
 
         /// <summary>

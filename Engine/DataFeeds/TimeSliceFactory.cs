@@ -32,6 +32,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly DateTimeZone _timeZone;
 
+        // performance: these collections are not always used so keep a reference to an empty
+        // instance to use and avoid unnecessary constructors and allocations
+        private readonly List<UpdateData<ISecurityPrice>> _emptyCustom = new List<UpdateData<ISecurityPrice>>();
+        private readonly TradeBars _emptyTradeBars = new TradeBars();
+        private readonly QuoteBars _emptyQuoteBars = new QuoteBars();
+        private readonly Ticks _emptyTicks = new Ticks();
+        private readonly Splits _emptySplits = new Splits();
+        private readonly Dividends _emptyDividends = new Dividends();
+        private readonly Delistings _emptyDelistings = new Delistings();
+        private readonly OptionChains _emptyOptionChains = new OptionChains();
+        private readonly FuturesChains _emptyFuturesChains = new FuturesChains();
+        private readonly SymbolChangedEvents _emptySymbolChangedEvents = new SymbolChangedEvents();
+
         /// <summary>
         /// Creates a new instance
         /// </summary>
@@ -55,9 +68,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Dictionary<Universe, BaseDataCollection> universeData)
         {
             int count = 0;
-            var security = new List<UpdateData<ISecurityPrice>>();
-            var custom = new List<UpdateData<ISecurityPrice>>();
-            var consolidator = new List<UpdateData<SubscriptionDataConfig>>();
+            var security = new List<UpdateData<ISecurityPrice>>(data.Count);
+            List<UpdateData<ISecurityPrice>> custom = null;
+            var consolidator = new List<UpdateData<SubscriptionDataConfig>>(data.Count);
             var allDataForAlgorithm = new List<BaseData>(data.Count);
             var optionUnderlyingUpdates = new Dictionary<Symbol, BaseData>();
 
@@ -73,15 +86,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var sliceFuture = new Lazy<Slice>(() => slice);
 
             var algorithmTime = utcDateTime.ConvertFromUtc(_timeZone);
-            var tradeBars = new TradeBars(algorithmTime);
-            var quoteBars = new QuoteBars(algorithmTime);
-            var ticks = new Ticks(algorithmTime);
-            var splits = new Splits(algorithmTime);
-            var dividends = new Dividends(algorithmTime);
-            var delistings = new Delistings(algorithmTime);
-            var optionChains = new OptionChains(algorithmTime);
-            var futuresChains = new FuturesChains(algorithmTime);
-            var symbolChanges = new SymbolChangedEvents(algorithmTime);
+            TradeBars tradeBars = null;
+            QuoteBars quoteBars = null;
+            Ticks ticks = null;
+            Splits splits = null;
+            Dividends dividends = null;
+            Delistings delistings = null;
+            OptionChains optionChains = null;
+            FuturesChains futuresChains = null;
+            SymbolChangedEvents symbolChanges = null;
+
+            UpdateEmptyCollections(algorithmTime);
 
             if (universeData.Count > 0)
             {
@@ -123,6 +138,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (!packet.Configuration.IsInternalFeed && packet.Configuration.IsCustomData)
                 {
+                    if (custom == null)
+                    {
+                        custom = new List<UpdateData<ISecurityPrice>>(1);
+                    }
                     // This is all the custom data
                     custom.Add(new UpdateData<ISecurityPrice>(packet.Security, packet.Configuration.Type, list));
                 }
@@ -144,11 +163,58 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                         if (!packet.Configuration.IsInternalFeed)
                         {
-                            PopulateDataDictionaries(baseData, ticks, tradeBars, quoteBars, optionChains, futuresChains);
+                            // populate data dictionaries
+                            switch (baseData.DataType)
+                            {
+                                case MarketDataType.Tick:
+                                    if (ticks == null)
+                                    {
+                                        ticks = new Ticks(algorithmTime);
+                                    }
+                                    ticks.Add(baseData.Symbol, (Tick)baseData);
+                                    break;
+
+                                case MarketDataType.TradeBar:
+                                    if (tradeBars == null)
+                                    {
+                                        tradeBars = new TradeBars(algorithmTime);
+                                    }
+                                    tradeBars[baseData.Symbol] = (TradeBar)baseData;
+                                    break;
+
+                                case MarketDataType.QuoteBar:
+                                    if (quoteBars == null)
+                                    {
+                                        quoteBars = new QuoteBars(algorithmTime);
+                                    }
+                                    quoteBars[baseData.Symbol] = (QuoteBar)baseData;
+                                    break;
+
+                                case MarketDataType.OptionChain:
+                                    if (optionChains == null)
+                                    {
+                                        optionChains = new OptionChains(algorithmTime);
+                                    }
+                                    optionChains[baseData.Symbol] = (OptionChain)baseData;
+                                    break;
+
+                                case MarketDataType.FuturesChain:
+                                    if (futuresChains == null)
+                                    {
+                                        futuresChains = new FuturesChains(algorithmTime);
+                                    }
+                                    futuresChains[baseData.Symbol] = (FuturesChain)baseData;
+                                    break;
+                            }
 
                             // special handling of options data to build the option chain
                             if (symbol.SecurityType == SecurityType.Option)
                             {
+                                if (optionChains == null)
+                                {
+                                    optionChains = new OptionChains(algorithmTime);
+                                }
+
                                 if (baseData.DataType == MarketDataType.OptionChain)
                                 {
                                     optionChains[baseData.Symbol] = (OptionChain)baseData;
@@ -162,6 +228,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // special handling of futures data to build the futures chain
                             if (symbol.SecurityType == SecurityType.Future)
                             {
+                                if (futuresChains == null)
+                                {
+                                    futuresChains = new FuturesChains(algorithmTime);
+                                }
                                 if (baseData.DataType == MarketDataType.FuturesChain)
                                 {
                                     futuresChains[baseData.Symbol] = (FuturesChain)baseData;
@@ -195,18 +265,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // include checks for various aux types so we don't have to construct the dictionaries in Slice
                     else if ((delisting = baseData as Delisting) != null)
                     {
+                        if (delistings == null)
+                        {
+                            delistings = new Delistings(algorithmTime);
+                        }
                         delistings[symbol] = delisting;
                     }
                     else if ((dividend = baseData as Dividend) != null)
                     {
+                        if (dividends == null)
+                        {
+                            dividends = new Dividends(algorithmTime);
+                        }
                         dividends[symbol] = dividend;
                     }
                     else if ((split = baseData as Split) != null)
                     {
+                        if (splits == null)
+                        {
+                            splits = new Splits(algorithmTime);
+                        }
                         splits[symbol] = split;
                     }
                     else if ((symbolChange = baseData as SymbolChangedEvent) != null)
                     {
+                        if (symbolChanges == null)
+                        {
+                            symbolChanges = new SymbolChangedEvents(algorithmTime);
+                        }
                         // symbol changes is keyed by the requested symbol
                         symbolChanges[packet.Configuration.Symbol] = symbolChange;
                     }
@@ -222,41 +308,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars, quoteBars, ticks, optionChains, futuresChains, splits, dividends, delistings, symbolChanges, allDataForAlgorithm.Count > 0);
+            slice = new Slice(algorithmTime, allDataForAlgorithm, tradeBars ?? _emptyTradeBars, quoteBars ?? _emptyQuoteBars, ticks ?? _emptyTicks, optionChains ?? _emptyOptionChains, futuresChains ?? _emptyFuturesChains, splits ?? _emptySplits, dividends ?? _emptyDividends, delistings ?? _emptyDelistings, symbolChanges ?? _emptySymbolChangedEvents, allDataForAlgorithm.Count > 0);
 
-            return new TimeSlice(utcDateTime, count, slice, data, security, consolidator, custom, changes, universeData);
+            return new TimeSlice(utcDateTime, count, slice, data, security, consolidator, custom ?? _emptyCustom, changes, universeData);
         }
 
-        /// <summary>
-        /// Adds the specified <see cref="BaseData"/> instance to the appropriate <see cref="DataDictionary{T}"/>
-        /// </summary>
-        private void PopulateDataDictionaries(BaseData baseData, Ticks ticks, TradeBars tradeBars, QuoteBars quoteBars, OptionChains optionChains, FuturesChains futuresChains)
+        private void UpdateEmptyCollections(DateTime algorithmTime)
         {
-            var symbol = baseData.Symbol;
+            // just in case
+            _emptyTradeBars.Clear();
+            _emptyQuoteBars.Clear();
+            _emptyTicks.Clear();
+            _emptySplits.Clear();
+            _emptyDividends.Clear();
+            _emptyDelistings.Clear();
+            _emptyOptionChains.Clear();
+            _emptyFuturesChains.Clear();
+            _emptySymbolChangedEvents.Clear();
 
-            // populate data dictionaries
-            switch (baseData.DataType)
-            {
-                case MarketDataType.Tick:
-                    ticks.Add(symbol, (Tick)baseData);
-                    break;
-
-                case MarketDataType.TradeBar:
-                    tradeBars[symbol] = (TradeBar)baseData;
-                    break;
-
-                case MarketDataType.QuoteBar:
-                    quoteBars[symbol] = (QuoteBar)baseData;
-                    break;
-
-                case MarketDataType.OptionChain:
-                    optionChains[symbol] = (OptionChain)baseData;
-                    break;
-
-                case MarketDataType.FuturesChain:
-                    futuresChains[symbol] = (FuturesChain)baseData;
-                    break;
-            }
+            _emptyTradeBars.Time
+                = _emptyQuoteBars.Time
+                = _emptyTicks.Time
+                = _emptySplits.Time
+                = _emptyDividends.Time
+                = _emptyDelistings.Time
+                = _emptyOptionChains.Time
+                = _emptyFuturesChains.Time
+                = _emptySymbolChangedEvents.Time = algorithmTime;
         }
 
         private bool HandleOptionData(DateTime algorithmTime, BaseData baseData, OptionChains optionChains, ISecurityPrice security, Lazy<Slice> sliceFuture, IReadOnlyDictionary<Symbol, BaseData> optionUnderlyingUpdates)

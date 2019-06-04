@@ -66,7 +66,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="configuration">The subscription configuration that produced this data</param>
         /// <param name="isSubscriptionRemoved">Reference to whether or not the subscription has since been removed, defaults to false</param>
         public DataFeedPacket(ISecurityPrice security, SubscriptionDataConfig configuration, IReadOnlyRef<bool> isSubscriptionRemoved = null)
-            : this(security, configuration, new List<BaseData>(), isSubscriptionRemoved)
+            : this(security,
+                configuration,
+                new List<BaseData>(4), // performance: by default the list has 0 capacity, so lets initialize it with at least 4 (which is the default)
+                isSubscriptionRemoved)
         {
         }
 
