@@ -47,7 +47,8 @@ namespace QuantConnect.Statistics
         private decimal _maxDrawdown;
 
         // portfolio turn over
-        private List<decimal> _portfolioValue;
+        private List<decimal> _dailyPortfolioTurnovers;
+        private decimal _previousSalesVolume;
 
         /// <summary>
         /// Initializes the fitness score instance and sets the initial portfolio value
@@ -67,7 +68,7 @@ namespace QuantConnect.Statistics
             }
 
             _negativeDailyDeltaPortfolioValue = new List<double>();
-            _portfolioValue = new List<decimal>();
+            _dailyPortfolioTurnovers = new List<decimal>();
             _riskFreeRate = PortfolioStatistics.GetRiskFreeRate();
         }
 
@@ -186,12 +187,13 @@ namespace QuantConnect.Statistics
 
         private decimal GetScaledPortfolioTurnover(decimal currentPortfolioValue)
         {
-            // save current portfolio value so we use the average
-            _portfolioValue.Add(currentPortfolioValue);
+            var currentTotalSaleVolume = _algorithm.Portfolio.TotalSaleVolume;
 
-            var averagePortfolioValue = _portfolioValue.Average();
+            var todayPortfolioTurnOver = (currentTotalSaleVolume - _previousSalesVolume) / currentPortfolioValue;
+            _previousSalesVolume = currentTotalSaleVolume;
 
-            PortfolioTurnover = _algorithm.Portfolio.TotalSaleVolume / averagePortfolioValue;
+            _dailyPortfolioTurnovers.Add(todayPortfolioTurnOver);
+            PortfolioTurnover = _dailyPortfolioTurnovers.Average();
 
             // from 0 to 1 max
             return PortfolioTurnover > 1 ? 1 : PortfolioTurnover;

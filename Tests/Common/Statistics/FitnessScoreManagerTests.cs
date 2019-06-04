@@ -86,8 +86,8 @@ namespace QuantConnect.Tests.Common.Statistics
 
             fitnessScore.UpdateScores();
             var score = fitnessScore.FitnessScore;
-            // FitnessScore: 0.5 * (5 + 5)
-            Assert.AreEqual(0.75m, score);
+            // FitnessScore: 1 * (5 + 5)
+            Assert.AreEqual(1m, score);
 
             algorithm.SetDateTime(initialDate.AddDays(1));
             IncreaseCashAmount(algorithm, -0.20);
@@ -95,10 +95,10 @@ namespace QuantConnect.Tests.Common.Statistics
             algorithm.SetDateTime(initialDate.AddDays(1));
             IncreaseCashAmount(algorithm, -0.20);
 
-            // FitnessScore: 0.614 * (-3.299 + -5)
+            // FitnessScore: 0.333 * (-3.299 + -5)
             fitnessScore.UpdateScores();
             score = fitnessScore.FitnessScore;
-            Assert.AreEqual(0.245m, score);
+            Assert.AreEqual(0.362m, score);
         }
 
         [TestCase(2)]
@@ -134,7 +134,7 @@ namespace QuantConnect.Tests.Common.Statistics
         private void IncreaseSalesVolumeAmount(IAlgorithm algorithm)
         {
             var security = algorithm.Securities.First().Value;
-            security.Holdings.AddNewSale(algorithm.Portfolio.TotalPortfolioValue * (decimal)0.5);
+            security.Holdings.AddNewSale(algorithm.Portfolio.TotalPortfolioValue);
         }
     }
 }
