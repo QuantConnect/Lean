@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -56,6 +55,8 @@ namespace QuantConnect.ToolBox.CoinApi
         private DateTime _nextHelloMessageUtcTime = DateTime.MinValue;
 
         private List<string> _subscribedExchanges = new List<string>();
+
+        private readonly Dictionary<Symbol, Tick> _previousQuotes = new Dictionary<Symbol, Tick>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CoinApiDataQueueHandler"/> class
@@ -307,7 +308,7 @@ namespace QuantConnect.ToolBox.CoinApi
 
                             lock (_locker)
                             {
-                                _ticks.Add(new Tick
+                                var tick = new Tick
                                 {
                                     Symbol = _symbolMapper.GetLeanSymbol(quote.SymbolId, SecurityType.Crypto, string.Empty),
                                     Time = quote.TimeExchange,
@@ -316,7 +317,17 @@ namespace QuantConnect.ToolBox.CoinApi
                                     BidPrice = quote.BidPrice,
                                     BidSize = quote.BidSize,
                                     TickType = TickType.Quote
-                                });
+                                };
+
+                                // only emit quote ticks if bid price or ask price changed
+                                Tick previousQuote;
+                                if (!_previousQuotes.TryGetValue(tick.Symbol, out previousQuote) ||
+                                    tick.AskPrice != previousQuote.AskPrice ||
+                                    tick.BidPrice != previousQuote.BidPrice)
+                                {
+                                    _previousQuotes[tick.Symbol] = tick;
+                                    _ticks.Add(tick);
+                                }
                             }
 
                             _connectionHandler.KeepAlive(quote.TimeExchange);
