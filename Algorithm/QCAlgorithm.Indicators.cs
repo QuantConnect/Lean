@@ -821,7 +821,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The moving average convergence divergence between the fast and slow averages</returns>
         public MovingAverageConvergenceDivergence MACD(Symbol symbol, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType type = MovingAverageType.Exponential, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"MACD({fastPeriod},{slowPeriod},{slowPeriod})", resolution);
+            var name = CreateIndicatorName(symbol, $"MACD({fastPeriod},{slowPeriod},{signalPeriod})", resolution);
             var movingAverageConvergenceDivergence = new MovingAverageConvergenceDivergence(name, fastPeriod, slowPeriod, signalPeriod, type);
             RegisterIndicator(symbol, movingAverageConvergenceDivergence, resolution, selector);
 
