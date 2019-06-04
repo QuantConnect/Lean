@@ -100,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.195"},
             {"Treynor Ratio", "0.011"},
             {"Total Fees", "$9.77"},
-            {"Fitness Score", "0.874"},
+            {"Fitness Score", "0.747"},
             {"Total Insights Generated", "100"},
             {"Total Insights Closed", "99"},
             {"Total Insights Analysis Completed", "99"},

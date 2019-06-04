@@ -127,7 +127,7 @@ namespace QuantConnect.Statistics
 
                     var rawFitnessScore = scaledPortfolioTurnover * (scaledReturnOverMaxDrawdown + scaledSortinoRatio);
 
-                    FitnessScore = Math.Round(ScaleToRange(rawFitnessScore, maximumValue: 10, minimumValue: -10), 3);
+                    FitnessScore = Math.Round(ScaleToRange(rawFitnessScore, maximumValue: 20, minimumValue: 0), 3);
                 }
             }
             catch (Exception exception)
@@ -199,17 +199,20 @@ namespace QuantConnect.Statistics
             return PortfolioTurnover > 1 ? 1 : PortfolioTurnover;
         }
 
-        private decimal SigmoidalScale(decimal valueToScale)
+        /// <summary>
+        /// Adjusts the input value to a range of 0 to 10 based on a sigmoidal scale
+        /// </summary>
+        public static decimal SigmoidalScale(decimal valueToScale)
         {
             if (valueToScale == decimal.MaxValue)
             {
-                return 5;
+                return 10;
             }
             else if(valueToScale == decimal.MinValue)
             {
-                return -5;
+                return 0;
             }
-            return 5 * valueToScale / (decimal)Math.Sqrt(10 + Math.Pow((double)valueToScale, 2));
+            return 5 * valueToScale / (decimal)Math.Sqrt(10 + Math.Pow((double)valueToScale, 2)) + 5;
         }
 
         private decimal ScaleToRange(decimal valueToScale,

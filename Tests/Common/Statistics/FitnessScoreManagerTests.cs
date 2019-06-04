@@ -45,7 +45,15 @@ namespace QuantConnect.Tests.Common.Statistics
                 fitnessScore.UpdateScores();
                 score = fitnessScore.FitnessScore;
             }
-            Assert.AreEqual(0.5m, score);
+            Assert.AreEqual(0m, score);
+        }
+
+        [TestCase(-1000, 0.00)]
+        [TestCase(1000, 10)]
+        public void SigmoidalScaleWorks(decimal input, decimal expectedResult)
+        {
+            var result = FitnessScoreManager.SigmoidalScale(input);
+            Assert.AreEqual(expectedResult, Math.Round(result, 2));
         }
 
         [Test]
@@ -98,7 +106,7 @@ namespace QuantConnect.Tests.Common.Statistics
             // FitnessScore: 0.333 * (-3.299 + -5)
             fitnessScore.UpdateScores();
             score = fitnessScore.FitnessScore;
-            Assert.AreEqual(0.362m, score);
+            Assert.AreEqual(0.028m, score);
         }
 
         [TestCase(2)]
