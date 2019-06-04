@@ -45,11 +45,13 @@ namespace QuantConnect.ToolBox.CoinApi
         /// <summary>
         /// Enables/disables monitoring of the connection
         /// </summary>
+        /// <param name="isEnabled">True to enable monitoring, false otherwise</param>
         void EnableMonitoring(bool isEnabled);
 
         /// <summary>
         /// Notifies the connection handler that new data was received
         /// </summary>
-        void KeepAlive();
+        /// <param name="lastDataReceivedTime">The UTC timestamp of the last data point received</param>
+        void KeepAlive(DateTime lastDataReceivedTime);
     }
 }

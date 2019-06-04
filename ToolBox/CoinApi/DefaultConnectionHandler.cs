@@ -139,23 +139,27 @@ namespace QuantConnect.ToolBox.CoinApi
         /// <summary>
         /// Enables/disables monitoring of the connection
         /// </summary>
+        /// <param name="isEnabled">True to enable monitoring, false otherwise</param>
         public void EnableMonitoring(bool isEnabled)
         {
-            if (_isEnabled) return;
+            // if we are switching to enabled, initialize the last data received time
+            if (!_isEnabled && isEnabled)
+            {
+                KeepAlive(DateTime.UtcNow);
+            }
 
             _isEnabled = isEnabled;
-
-            KeepAlive();
         }
 
         /// <summary>
         /// Notifies the connection handler that new data was received
         /// </summary>
-        public void KeepAlive()
+        /// <param name="lastDataReceivedTime">The UTC timestamp of the last data point received</param>
+        public void KeepAlive(DateTime lastDataReceivedTime)
         {
             lock (_lockerConnectionMonitor)
             {
-                _lastDataReceivedTime = DateTime.UtcNow;
+                _lastDataReceivedTime = lastDataReceivedTime;
             }
         }
 

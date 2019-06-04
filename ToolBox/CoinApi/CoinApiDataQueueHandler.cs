@@ -52,6 +52,9 @@ namespace QuantConnect.ToolBox.CoinApi
         private DateTime _lastSubscribeRequestUtcTime = DateTime.MinValue;
         private bool _subscriptionsPending;
 
+        private readonly TimeSpan _minimumTimeBetweenHelloMessages = TimeSpan.FromSeconds(5);
+        private DateTime _nextHelloMessageUtcTime = DateTime.MinValue;
+
         private List<string> _subscribedExchanges = new List<string>();
 
         /// <summary>
@@ -104,7 +107,7 @@ namespace QuantConnect.ToolBox.CoinApi
                 Log.Trace($"CoinApiDataQueueHandler.Subscribe(): {string.Join(",", symbolsToSubscribe.Select(x => x.Value))}");
 
                 // CoinAPI requires at least 5 seconds between subscription requests so we need to batch them
-                _subscribedSymbols = symbolsToSubscribe.Union(_subscribedSymbols).ToHashSet();
+                _subscribedSymbols = symbolsToSubscribe.Concat(_subscribedSymbols).ToHashSet();
 
                 ProcessSubscriptionRequest();
             }
@@ -153,21 +156,11 @@ namespace QuantConnect.ToolBox.CoinApi
         /// <param name="markets">List of LEAN markets (exchanges) to subscribe</param>
         public void SubscribeMarkets(List<string> markets)
         {
-            if (markets.Count == 0) return;
-
             Log.Trace($"CoinApiDataQueueHandler.SubscribeMarkets(): {string.Join(",", markets)}");
 
             _subscribedExchanges = markets.ToList();
 
-            var message = JsonConvert.SerializeObject(new HelloMessage
-            {
-                ApiKey = _apiKey,
-                Heartbeat = true,
-                SubscribeDataType = new[] { "trade", "quote" },
-                SubscribeFilterSymbolId = markets.Select(x => _symbolMapper.GetExchangeId(x)).ToArray()
-            });
-
-            _webSocket.Send(message);
+            SendHelloMessage(markets.Select(x => _symbolMapper.GetExchangeId(x)));
 
             _connectionHandler.EnableMonitoring(true);
         }
@@ -179,7 +172,7 @@ namespace QuantConnect.ToolBox.CoinApi
             _lastSubscribeRequestUtcTime = DateTime.UtcNow;
             _subscriptionsPending = true;
 
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 while (true)
                 {
@@ -188,12 +181,22 @@ namespace QuantConnect.ToolBox.CoinApi
                     lock (_lockerSubscriptions)
                     {
                         requestTime = _lastSubscribeRequestUtcTime.Add(_subscribeDelay);
+
+                        // CoinAPI requires at least 5 seconds between hello messages
+                        if (_nextHelloMessageUtcTime != DateTime.MinValue && requestTime < _nextHelloMessageUtcTime)
+                        {
+                            requestTime = _nextHelloMessageUtcTime;
+                        }
+
                         symbolsToSubscribe = _subscribedSymbols.ToList();
                     }
 
-                    if (DateTime.UtcNow > requestTime)
+                    var timeToWait = requestTime - DateTime.UtcNow;
+
+                    int delayMilliseconds;
+                    if (timeToWait <= TimeSpan.Zero)
                     {
-                        // minimum delay has passed since last subscribe request, send the subscribe request
+                        // minimum delay has passed since last subscribe request, send the Hello message
                         SubscribeSymbols(symbolsToSubscribe);
 
                         lock (_lockerSubscriptions)
@@ -206,9 +209,15 @@ namespace QuantConnect.ToolBox.CoinApi
                                 break;
                             }
                         }
+
+                        delayMilliseconds = _subscribeDelay.Milliseconds;
+                    }
+                    else
+                    {
+                        delayMilliseconds = timeToWait.Milliseconds;
                     }
 
-                    Thread.Sleep(200);
+                    await Task.Delay(delayMilliseconds).ConfigureAwait(false);
                 }
             });
         }
@@ -232,27 +241,39 @@ namespace QuantConnect.ToolBox.CoinApi
         /// <param name="symbolsToSubscribe">The list of symbols to subscribe</param>
         private void SubscribeSymbols(List<Symbol> symbolsToSubscribe)
         {
-            if (symbolsToSubscribe.Count == 0) return;
-
             Log.Trace($"CoinApiDataQueueHandler.SubscribeSymbols(): {string.Join(",", symbolsToSubscribe)}");
+
+            SendHelloMessage(_subscribedSymbols.Select(_symbolMapper.GetBrokerageSymbol));
+
+            _connectionHandler.EnableMonitoring(true);
+        }
+
+        private void SendHelloMessage(IEnumerable<string> subscribeFilter)
+        {
+            var list = subscribeFilter.ToList();
+            if (list.Count == 0)
+            {
+                // If we use a null or empty filter in the CoinAPI hello message
+                // we will be subscribing to all symbols for all active exchanges!
+                // Only option is requesting an invalid symbol as filter.
+                list.Add("$no_symbol_requested$");
+            }
 
             var message = JsonConvert.SerializeObject(new HelloMessage
             {
                 ApiKey = _apiKey,
                 Heartbeat = true,
                 SubscribeDataType = new[] { "trade", "quote" },
-                SubscribeFilterSymbolId = _subscribedSymbols.Select(_symbolMapper.GetBrokerageSymbol).ToArray()
+                SubscribeFilterSymbolId = list.ToArray()
             });
 
             _webSocket.Send(message);
 
-            _connectionHandler.EnableMonitoring(true);
+            _nextHelloMessageUtcTime = DateTime.UtcNow.Add(_minimumTimeBetweenHelloMessages);
         }
 
         private void OnMessage(object sender, WebSocketMessage e)
         {
-            //Log.Trace(e.Message);
-
             try
             {
                 var jObject = JObject.Parse(e.Message);
@@ -276,7 +297,7 @@ namespace QuantConnect.ToolBox.CoinApi
                                 });
                             }
 
-                            _connectionHandler.KeepAlive();
+                            _connectionHandler.KeepAlive(trade.TimeExchange);
                             break;
                         }
 
@@ -298,13 +319,15 @@ namespace QuantConnect.ToolBox.CoinApi
                                 });
                             }
 
-                            _connectionHandler.KeepAlive();
+                            _connectionHandler.KeepAlive(quote.TimeExchange);
                             break;
                         }
 
                     // not a typo :)
                     case "hearbeat":
-                        _connectionHandler.KeepAlive();
+                    // just in case the typo will be fixed in the future
+                    case "heartbeat":
+                        _connectionHandler.KeepAlive(DateTime.UtcNow);
                         break;
 
                     case "error":
