@@ -910,7 +910,12 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 _exitTriggered = true;
                 _cancellationTokenSource.Cancel();
-                ProcessSynchronousEvents(true);
+
+                if (_algorithm != null)
+                {
+                    ProcessSynchronousEvents(true);
+                }
+
                 lock (_logStoreLock)
                 {
                     StoreLog(_logStore);
