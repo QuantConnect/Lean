@@ -15,11 +15,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using Newtonsoft.Json;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
+using QuantConnect.Logging;
 
 namespace QuantConnect.ToolBox.CoinApi
 {
@@ -31,7 +33,10 @@ namespace QuantConnect.ToolBox.CoinApi
     {
         private const string RestUrl = "https://rest.coinapi.io";
         private readonly string _apiKey = Config.Get("coinapi-api-key");
+        private readonly bool _useLocalSymbolList = Config.GetBool("coinapi-use-local-symbol-list");
 
+        private readonly FileInfo _coinApiSymbolsListFile = new FileInfo(
+            Config.Get("coinapi-default-symbol-list-file", "CoinApiSymbols.json"));
         // LEAN market <-> CoinAPI exchange id maps
         private static readonly Dictionary<string, string> MapMarketsToExchangeIds = new Dictionary<string, string>
         {
@@ -63,6 +68,7 @@ namespace QuantConnect.ToolBox.CoinApi
 
         // map LEAN symbols to CoinAPI symbol ids
         private Dictionary<Symbol, string> _symbolMap = new Dictionary<Symbol, string>();
+
 
         /// <summary>
         /// Creates a new instance of the <see cref="CoinApiSymbolMapper"/> class
@@ -137,27 +143,41 @@ namespace QuantConnect.ToolBox.CoinApi
         private void LoadSymbolMap(string[] exchangeIds)
         {
             var list = string.Join(",", exchangeIds);
+            var json = string.Empty;
 
-            using (var wc = new WebClient())
+            if (_useLocalSymbolList)
             {
-                var url = $"{RestUrl}/v1/symbols?filter_symbol_id={list}&apiKey={_apiKey}";
-                var json = wc.DownloadString(url);
-                var result = JsonConvert.DeserializeObject<List<CoinApiSymbol>>(json);
-
-                _symbolMap = result
-                    .Where(x => x.SymbolType == "SPOT")
-                    .ToDictionary(
-                        x =>
-                        {
-                            var market = MapExchangeIdsToMarkets[x.ExchangeId];
-                            return Symbol.Create(
-                                ConvertCoinApiCurrencyToLeanCurrency(x.AssetIdBase, market) +
-                                ConvertCoinApiCurrencyToLeanCurrency(x.AssetIdQuote, market),
-                                SecurityType.Crypto,
-                                market);
-                        },
-                        x => x.SymbolId);
+                if (!_coinApiSymbolsListFile.Exists)
+                {
+                    throw new Exception($"CoinApiSymbolMapper.LoadSymbolMap(): File not found: {_coinApiSymbolsListFile.FullName}, please " +
+                                        $"download the latest symbol list from CoinApi.");
+                }
+                json = File.ReadAllText(_coinApiSymbolsListFile.FullName);
             }
+            else
+            {
+                using (var wc = new WebClient())
+                {
+                    var url = $"{RestUrl}/v1/symbols?filter_symbol_id={list}&apiKey={_apiKey}";
+                    json = wc.DownloadString(url);
+                }
+            }
+
+            var result = JsonConvert.DeserializeObject<List<CoinApiSymbol>>(json);
+
+            _symbolMap = result
+                .Where(x => x.SymbolType == "SPOT")
+                .ToDictionary(
+                    x =>
+                    {
+                        var market = MapExchangeIdsToMarkets[x.ExchangeId];
+                        return Symbol.Create(
+                            ConvertCoinApiCurrencyToLeanCurrency(x.AssetIdBase, market) +
+                            ConvertCoinApiCurrencyToLeanCurrency(x.AssetIdQuote, market),
+                            SecurityType.Crypto,
+                            market);
+                    },
+                    x => x.SymbolId);
         }
 
         private static string ConvertCoinApiCurrencyToLeanCurrency(string currency, string market)
