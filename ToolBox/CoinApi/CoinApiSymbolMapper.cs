@@ -33,8 +33,10 @@ namespace QuantConnect.ToolBox.CoinApi
     {
         private const string RestUrl = "https://rest.coinapi.io";
         private readonly string _apiKey = Config.Get("coinapi-api-key");
-        private readonly bool _useLocalSymbolList = Config.GetBool("coinapi-use-local-symbol-list", false);
-        private readonly FileInfo _coinApiSymbolsListFile = new FileInfo("CoinApiSymbols.json");
+        private readonly bool _useLocalSymbolList = Config.GetBool("coinapi-use-local-symbol-list");
+
+        private readonly FileInfo _coinApiSymbolsListFile = new FileInfo(
+            Config.Get("coinapi-default-symbol-list-file", "CoinApiSymbols.json"));
         // LEAN market <-> CoinAPI exchange id maps
         private static readonly Dictionary<string, string> MapMarketsToExchangeIds = new Dictionary<string, string>
         {
@@ -143,8 +145,13 @@ namespace QuantConnect.ToolBox.CoinApi
             var list = string.Join(",", exchangeIds);
             var json = string.Empty;
 
-            if (_useLocalSymbolList && _coinApiSymbolsListFile.Exists && _coinApiSymbolsListFile.CreationTimeUtc.Date < DateTime.UtcNow.Date.AddDays(-1))
+            if (_useLocalSymbolList)
             {
+                if (!_coinApiSymbolsListFile.Exists)
+                {
+                    throw new Exception($"CoinApiSymbolMapper.LoadSymbolMap(): File not found: {_coinApiSymbolsListFile.FullName}, please " +
+                                        $"download the latest symbol list from CoinApi.");
+                }
                 json = File.ReadAllText(_coinApiSymbolsListFile.FullName);
             }
             else
@@ -154,8 +161,6 @@ namespace QuantConnect.ToolBox.CoinApi
                     var url = $"{RestUrl}/v1/symbols?filter_symbol_id={list}&apiKey={_apiKey}";
                     json = wc.DownloadString(url);
                 }
-
-                if (_useLocalSymbolList) File.WriteAllText(_coinApiSymbolsListFile.FullName, json);
             }
 
             var result = JsonConvert.DeserializeObject<List<CoinApiSymbol>>(json);
