@@ -111,7 +111,7 @@ namespace QuantConnect.Data.Auxiliary
         public MapFile GetByPermtick(string permtick)
         {
             MapFile mapFile;
-            _mapFilesByPermtick.TryGetValue(permtick.ToUpper(), out mapFile);
+            _mapFilesByPermtick.TryGetValue(permtick.LazyToUpper(), out mapFile);
             return mapFile;
         }
 

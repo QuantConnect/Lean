@@ -42,7 +42,7 @@ namespace QuantConnect.Data.Auxiliary
         public MapFileRow(DateTime date, string mappedSymbol)
         {
             Date = date;
-            MappedSymbol = mappedSymbol.ToUpper();
+            MappedSymbol = mappedSymbol.LazyToUpper();
         }
 
         /// <summary>

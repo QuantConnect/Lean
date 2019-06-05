@@ -161,7 +161,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             // Find the first data point 10 days (just in case) before the desired date
             // and subtract one item (just in case there was a time gap and data.Time is after _date)
-            var index = cache.FindIndex(data => data.Time.AddDays(10) > _date);
+            var frontier = _date.AddDays(-10);
+            var index = cache.FindIndex(data => data.Time > frontier);
             index = index > 0 ? (index - 1) : 0;
             foreach (var data in cache.Skip(index))
             {

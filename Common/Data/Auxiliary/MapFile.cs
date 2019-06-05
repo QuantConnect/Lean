@@ -57,7 +57,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public MapFile(string permtick, IEnumerable<MapFileRow> data)
         {
-            Permtick = permtick.ToUpper();
+            Permtick = permtick.LazyToUpper();
             _data = new SortedDictionary<DateTime, MapFileRow>(data.Distinct().ToDictionary(x => x.Date));
 
             // for performance we set first and last date on ctr
@@ -152,7 +152,7 @@ namespace QuantConnect.Data.Auxiliary
         /// Writes the map file to a CSV file
         /// </summary>
         /// <param name="market">The market to save the MapFile to</param>
-        public void WriteToCsv(string market) 
+        public void WriteToCsv(string market)
         {
             var filePath = GetMapFilePath(Permtick, market);
             var fileDir = Path.GetDirectoryName(filePath);

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -39,6 +40,8 @@ namespace QuantConnect
     {
         #region Empty, DefaultDate Fields
 
+        private static readonly ConcurrentDictionary<string, SecurityIdentifier> SecurityIdentifierCache
+            = new ConcurrentDictionary<string, SecurityIdentifier>();
         private static readonly string MapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
         private static readonly char[] InvalidCharacters = {'|', ' '};
         private static IMapFileProvider _mapFileProvider;
@@ -460,7 +463,7 @@ namespace QuantConnect
 
             // normalize input strings
             market = market.ToLower();
-            symbol = symbol.ToUpper();
+            symbol = symbol.LazyToUpper();
 
             var marketIdentifier = QuantConnect.Market.Encode(market);
             if (!marketIdentifier.HasValue)
@@ -629,12 +632,20 @@ namespace QuantConnect
         private static bool TryParseProperties(string value, out Exception exception, out SecurityIdentifier identifier)
         {
             exception = null;
-            identifier = Empty;
 
             if (string.IsNullOrWhiteSpace(value))
             {
+                identifier = Empty;
                 return true;
             }
+
+            // for performance, we first verify if we already have parsed this SecurityIdentifier
+            if (SecurityIdentifierCache.TryGetValue(value, out identifier))
+            {
+                return true;
+            }
+            // after calling TryGetValue because if it failed it will set identifier to default
+            identifier = Empty;
 
             try
             {
@@ -664,6 +675,7 @@ namespace QuantConnect
                 return false;
             }
 
+            SecurityIdentifierCache.TryAdd(value, identifier);
             return true;
         }
 

@@ -1061,7 +1061,7 @@ namespace QuantConnect.Algorithm
         public void SetBenchmark(string symbol)
         {
             // check existence
-            symbol = symbol.ToUpper();
+            symbol = symbol.LazyToUpper();
             var security = Securities.FirstOrDefault(x => x.Key.Value == symbol).Value;
             if (security == null)
             {

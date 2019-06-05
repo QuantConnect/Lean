@@ -365,20 +365,21 @@ namespace QuantConnect
                 var currentInTimeZone = currentExchangeTime.ConvertTo(exchange.TimeZone, timeZone);
                 var currentInTimeZoneEod = currentInTimeZone.Date.AddDays(1);
 
+                var currentExchangeTimeEod = currentInTimeZoneEod.ConvertTo(timeZone, exchange.TimeZone);
+
                 // don't pass the end
-                if (currentInTimeZoneEod.ConvertTo(timeZone, exchange.TimeZone) > thru)
+                if (currentExchangeTimeEod > thru)
                 {
-                    currentInTimeZoneEod = thru.ConvertTo(exchange.TimeZone, timeZone);
+                    currentExchangeTimeEod = thru;
                 }
 
                 // perform market open checks in the exchange time zone
-                var currentExchangeTimeEod = currentInTimeZoneEod.ConvertTo(timeZone, exchange.TimeZone);
                 if (exchange.IsOpen(currentExchangeTime, currentExchangeTimeEod, includeExtendedMarketHours))
                 {
                     yield return currentInTimeZone.Date;
                 }
 
-                currentExchangeTime = currentInTimeZoneEod.ConvertTo(timeZone, exchange.TimeZone);
+                currentExchangeTime = currentExchangeTimeEod;
             }
         }
 

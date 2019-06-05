@@ -368,22 +368,25 @@ namespace QuantConnect.Securities
         {
             get
             {
-                // we can't include forex in this calculation since we would be double accounting with respect to the cash book
-                // we also exclude futures and CFD as they are calculated separately
                 decimal totalHoldingsValueWithoutForexCryptoFutureCfd = 0;
+                decimal totalFuturesAndCfdHoldingsValue = 0;
                 foreach (var kvp in Securities)
                 {
                     var position = kvp.Value;
-                    if (position.Type != SecurityType.Forex && position.Type != SecurityType.Crypto &&
-                        position.Type != SecurityType.Future && position.Type != SecurityType.Cfd)
+                    var securityType = position.Type;
+                    // we can't include forex in this calculation since we would be double accounting with respect to the cash book
+                    // we also exclude futures and CFD as they are calculated separately
+                    if (securityType != SecurityType.Forex && securityType != SecurityType.Crypto &&
+                        securityType != SecurityType.Future && securityType != SecurityType.Cfd)
                     {
                         totalHoldingsValueWithoutForexCryptoFutureCfd += position.Holdings.HoldingsValue;
                     }
-                }
 
-                var totalFuturesAndCfdHoldingsValue = Securities
-                    .Where(x => x.Value.Type == SecurityType.Future || x.Value.Type == SecurityType.Cfd)
-                    .Aggregate(0m, (d, pair) => d + pair.Value.Holdings.UnrealizedProfit);
+                    if (securityType == SecurityType.Future || securityType == SecurityType.Cfd)
+                    {
+                        totalFuturesAndCfdHoldingsValue += position.Holdings.UnrealizedProfit;
+                    }
+                }
 
                 return CashBook.TotalValueInAccountCurrency +
                        UnsettledCashBook.TotalValueInAccountCurrency +
@@ -515,7 +518,7 @@ namespace QuantConnect.Securities
                     "Cannot change AccountCurrency after setting cash. " +
                     "Please move SetAccountCurrency() before SetCash().");
             }
-            accountCurrency = accountCurrency.ToUpper();
+            accountCurrency = accountCurrency.LazyToUpper();
 
             Log.Trace("SecurityPortfolioManager.SetAccountCurrency():" +
                 $" setting account currency to {accountCurrency}");
