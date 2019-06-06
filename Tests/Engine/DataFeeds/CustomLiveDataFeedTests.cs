@@ -82,70 +82,79 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var timer = Ref.Create<Timer>(null);
             timer.Value = new Timer(state =>
             {
-                var currentTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
-
-                if (currentTime.Date > endDate.Date)
+                try
                 {
-                    Log.Trace($"Total data points emitted: {dataPointsEmitted}");
+                    var currentTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
 
-                    _feed.Exit();
-                    cancellationTokenSource.Cancel();
-                    return;
-                }
-
-                if (currentTime.Date > lastFileWriteDate.Date)
-                {
-                    foreach (var ticker in tickers)
+                    if (currentTime.Date > endDate.Date)
                     {
-                        var source = TestableQuandlFuture.GetLocalFileName(ticker, "csv");
+                        Log.Trace($"Total data points emitted: {dataPointsEmitted}");
 
-                        // write new local file including only rows up to current date
-                        var outputFileName = TestableQuandlFuture.GetLocalFileName(ticker, "test");
+                        _feed.Exit();
+                        cancellationTokenSource.Cancel();
+                        return;
+                    }
 
-                        var sb = new StringBuilder();
+                    if (currentTime.Date > lastFileWriteDate.Date)
+                    {
+                        foreach (var ticker in tickers)
                         {
-                            using (var reader = new StreamReader(source))
+                            var source = TestableQuandlFuture.GetLocalFileName(ticker, "csv");
+
+                            // write new local file including only rows up to current date
+                            var outputFileName = TestableQuandlFuture.GetLocalFileName(ticker, "test");
+
+                            var sb = new StringBuilder();
                             {
-                                var firstLine = true;
-                                string line;
-                                while ((line = reader.ReadLine()) != null)
+                                using (var reader = new StreamReader(source))
                                 {
-                                    if (firstLine)
+                                    var firstLine = true;
+                                    string line;
+                                    while ((line = reader.ReadLine()) != null)
                                     {
+                                        if (firstLine)
+                                        {
+                                            sb.AppendLine(line);
+                                            firstLine = false;
+                                            continue;
+                                        }
+
+                                        var csv = line.Split(',');
+                                        var time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                                        if (time.Date >= currentTime.Date)
+                                            break;
+
                                         sb.AppendLine(line);
-                                        firstLine = false;
-                                        continue;
                                     }
-
-                                    var csv = line.Split(',');
-                                    var time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-                                    if (time.Date >= currentTime.Date)
-                                        break;
-
-                                    sb.AppendLine(line);
                                 }
+                            }
+
+                            if (currentTime.Date.DayOfWeek != DayOfWeek.Saturday && currentTime.Date.DayOfWeek != DayOfWeek.Sunday)
+                            {
+                                File.WriteAllText(outputFileName, sb.ToString());
+
+                                Log.Trace($"Time:{currentTime} - Ticker:{ticker} - Files written:{++_countFilesWritten}");
                             }
                         }
 
-                        if (currentTime.Date.DayOfWeek != DayOfWeek.Saturday && currentTime.Date.DayOfWeek != DayOfWeek.Sunday)
-                        {
-                            File.WriteAllText(outputFileName, sb.ToString());
-
-                            Log.Trace($"Time:{currentTime} - Ticker:{ticker} - Files written:{++_countFilesWritten}");
-                        }
+                        lastFileWriteDate = currentTime;
                     }
 
-                    lastFileWriteDate = currentTime;
+                    // 30 minutes is the check interval for daily remote files, so we choose a smaller one to advance time
+                    timeProvider.Advance(TimeSpan.FromMinutes(20));
+
+                    //Log.Trace($"Time advanced to: {timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork)}");
+
+                    // restart the timer
+                    timer.Value.Change(timerInterval.Milliseconds, Timeout.Infinite);
+
                 }
-
-                // 30 minutes is the check interval for daily remote files, so we choose a smaller one to advance time
-                timeProvider.Advance(TimeSpan.FromMinutes(20));
-
-                //Log.Trace($"Time advanced to: {timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork)}");
-
-                // restart the timer
-                timer.Value.Change(timerInterval.Milliseconds, Timeout.Infinite);
-
+                catch (Exception exception)
+                {
+                    Log.Error(exception);
+                    _feed.Exit();
+                    cancellationTokenSource.Cancel();
+                }
             }, null, timerInterval.Milliseconds, Timeout.Infinite);
 
             try
