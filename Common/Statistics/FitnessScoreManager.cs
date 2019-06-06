@@ -116,7 +116,7 @@ namespace QuantConnect.Statistics
                         return;
                     }
 
-                    var portfolioAnnualizedReturn = Statistics.CompoundingAnnualPerformance(_startingPortfolioValue, currentPortfolioValue, annualFactor); ;
+                    var portfolioAnnualizedReturn = Statistics.CompoundingAnnualPerformance(_startingPortfolioValue, currentPortfolioValue, annualFactor);
 
                     var scaledSortinoRatio = GetScaledSortinoRatio(currentPortfolioValue, portfolioAnnualizedReturn);
 
