@@ -111,7 +111,8 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
                         Open = g.First().LastPrice,
                         High = g.Max(t => t.LastPrice),
                         Low = g.Min(t => t.LastPrice),
-                        Close = g.Last().LastPrice
+                        Close = g.Last().LastPrice,
+                        Volume = g.Sum(t => t.Quantity)
                     });
         }
     }

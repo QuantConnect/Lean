@@ -724,7 +724,7 @@ namespace QuantConnect.ToolBox.IQFeed
                     case LookupType.REQ_HST_TCK:
                         var t = (LookupTickEventArgs)e;
                         var time = isEquity ? t.DateTimeStamp : t.DateTimeStamp.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                        return new Tick(time, requestData.Symbol, (decimal)t.Last, (decimal)t.Bid, (decimal)t.Ask);
+                        return new Tick(time, requestData.Symbol, (decimal)t.Last, (decimal)t.Bid, (decimal)t.Ask) { Quantity = t.LastSize };
                     case LookupType.REQ_HST_INT:
                         var i = (LookupIntervalEventArgs)e;
                         if (i.DateTimeStamp == DateTime.MinValue) return null;
