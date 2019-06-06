@@ -764,6 +764,13 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(order.SecurityType, orderTicket.SecurityType);
         }
 
+        [Test]
+        public void DecimalTruncateTo3DecimalPlaces()
+        {
+            var value = 10.999999m;
+            Assert.AreEqual(10.999m, value.TruncateTo3DecimalPlaces());
+        }
+
         private PyObject ConvertToPyObject(object value)
         {
             using (Py.GIL())

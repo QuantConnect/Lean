@@ -108,8 +108,7 @@ namespace QuantConnect.Statistics
                     var currentPortfolioValue = _algorithm.Portfolio.TotalPortfolioValue;
 
                     // calculate portfolio annualized return
-                    var currentPortfolioReturn = (currentPortfolioValue - _startingPortfolioValue) / _startingPortfolioValue;
-                    var annualFactor = (_algorithm.UtcTime - _startUtcTime).TotalDays / 365;
+                    var annualFactor = (decimal)(_algorithm.UtcTime - _startUtcTime).TotalDays / 365m;
 
                     // just in case...
                     if (annualFactor <= 0)
@@ -117,7 +116,7 @@ namespace QuantConnect.Statistics
                         return;
                     }
 
-                    var portfolioAnnualizedReturn = (Math.Pow((double)currentPortfolioReturn + 1, 1 / annualFactor) - 1).SafeDecimalCast();
+                    var portfolioAnnualizedReturn = Statistics.CompoundingAnnualPerformance(_startingPortfolioValue, currentPortfolioValue, annualFactor); ;
 
                     var scaledSortinoRatio = GetScaledSortinoRatio(currentPortfolioValue, portfolioAnnualizedReturn);
 
@@ -127,7 +126,7 @@ namespace QuantConnect.Statistics
 
                     var rawFitnessScore = scaledPortfolioTurnover * (scaledReturnOverMaxDrawdown + scaledSortinoRatio);
 
-                    FitnessScore = Math.Round(ScaleToRange(rawFitnessScore, maximumValue: 20, minimumValue: 0), 3);
+                    FitnessScore = ScaleToRange(rawFitnessScore, maximumValue: 20, minimumValue: 0);
                 }
             }
             catch (Exception exception)
