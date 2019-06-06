@@ -110,7 +110,7 @@
         public static int UtilitiesRegulated = 20744;
         public static int CommunicationServices = 30845;
         public static int OilAndGasDrilling = 30946;
-        public static int OilAndGasExplorationAndPropection = 30947;
+        public static int OilAndGasExplorationAndProduction = 30947;
         public static int OilAndGasIntegrated = 30948;
         public static int OilAndGasMidstream = 30949;
         public static int OilAndGasRefiningAndMarketing = 30950;
