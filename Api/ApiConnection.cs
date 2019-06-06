@@ -104,7 +104,7 @@ namespace QuantConnect.Api
                 //Verify success
                 if (restsharpResponse.ErrorException != null)
                 {
-                    Log.Error(restsharpResponse.ErrorException);
+                    Log.Error($"ApiConnection.TryRequest({request.Resource}): Error: {restsharpResponse.ErrorException.Message}");
                     result = null;
                     return false;
                 }
@@ -119,7 +119,7 @@ namespace QuantConnect.Api
             }
             catch (Exception err)
             {
-                Log.Error($"Api.ApiConnection.TryRequest({request.Resource}): Failed to make REST request. Response content: {responseContent}, Error: {err}");
+                Log.Error($"ApiConnection.TryRequest({request.Resource}): Error: {err.Message}, Response content: {responseContent}");
                 result = null;
                 return false;
             }
