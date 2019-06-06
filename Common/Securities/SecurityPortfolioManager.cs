@@ -35,6 +35,8 @@ namespace QuantConnect.Securities
     {
         // flips to true when the user called SetCash(), if true, SetAccountCurrency will throw
         private bool _setCashWasCalled;
+        private bool _isTotalPortfolioValueValid;
+        private decimal _totalPortfolioValue;
 
         /// <summary>
         /// Local access to the securities collection for the portfolio summation.
@@ -368,31 +370,47 @@ namespace QuantConnect.Securities
         {
             get
             {
-                decimal totalHoldingsValueWithoutForexCryptoFutureCfd = 0;
-                decimal totalFuturesAndCfdHoldingsValue = 0;
-                foreach (var kvp in Securities)
+                if (!_isTotalPortfolioValueValid)
                 {
-                    var position = kvp.Value;
-                    var securityType = position.Type;
-                    // we can't include forex in this calculation since we would be double accounting with respect to the cash book
-                    // we also exclude futures and CFD as they are calculated separately
-                    if (securityType != SecurityType.Forex && securityType != SecurityType.Crypto &&
-                        securityType != SecurityType.Future && securityType != SecurityType.Cfd)
+                    decimal totalHoldingsValueWithoutForexCryptoFutureCfd = 0;
+                    decimal totalFuturesAndCfdHoldingsValue = 0;
+                    foreach (var kvp in Securities)
                     {
-                        totalHoldingsValueWithoutForexCryptoFutureCfd += position.Holdings.HoldingsValue;
+                        var position = kvp.Value;
+                        var securityType = position.Type;
+                        // we can't include forex in this calculation since we would be double accounting with respect to the cash book
+                        // we also exclude futures and CFD as they are calculated separately
+                        if (position.Type != SecurityType.Forex && position.Type != SecurityType.Crypto &&
+                            position.Type != SecurityType.Future && position.Type != SecurityType.Cfd)
+                        {
+                            totalHoldingsValueWithoutForexCryptoFutureCfd += position.Holdings.HoldingsValue;
+                        }
+
+                        if (securityType == SecurityType.Future || securityType == SecurityType.Cfd)
+                        {
+                            totalFuturesAndCfdHoldingsValue += position.Holdings.UnrealizedProfit;
+                        }
                     }
 
-                    if (securityType == SecurityType.Future || securityType == SecurityType.Cfd)
-                    {
-                        totalFuturesAndCfdHoldingsValue += position.Holdings.UnrealizedProfit;
-                    }
-                }
-
-                return CashBook.TotalValueInAccountCurrency +
+                    _totalPortfolioValue = CashBook.TotalValueInAccountCurrency +
                        UnsettledCashBook.TotalValueInAccountCurrency +
                        totalHoldingsValueWithoutForexCryptoFutureCfd +
                        totalFuturesAndCfdHoldingsValue;
+
+                    _isTotalPortfolioValueValid = true;
+                }
+
+                return _totalPortfolioValue;
             }
+        }
+
+        /// <summary>
+        /// Will flag the current <see cref="TotalPortfolioValue"/> as invalid
+        /// so it is recalculated when gotten
+        /// </summary>
+        public void InvalidateTotalPortfolioValue()
+        {
+            _isTotalPortfolioValueValid = false;
         }
 
         /// <summary>
@@ -528,6 +546,7 @@ namespace QuantConnect.Securities
 
             _baseCurrencyCash = CashBook[accountCurrency];
             _baseCurrencyUnsettledCash = UnsettledCashBook[accountCurrency];
+            InvalidateTotalPortfolioValue();
         }
 
         /// <summary>
@@ -538,6 +557,7 @@ namespace QuantConnect.Securities
         {
             _setCashWasCalled = true;
             _baseCurrencyCash.SetAmount(cash);
+            InvalidateTotalPortfolioValue();
         }
 
         /// <summary>
@@ -559,6 +579,7 @@ namespace QuantConnect.Securities
             {
                 CashBook.Add(symbol, cash, conversionRate);
             }
+            InvalidateTotalPortfolioValue();
         }
 
         /// <summary>
@@ -598,6 +619,7 @@ namespace QuantConnect.Securities
         {
             var security = Securities[fill.Symbol];
             security.PortfolioModel.ProcessFill(this, security, fill);
+            InvalidateTotalPortfolioValue();
         }
 
         /// <summary>
@@ -625,6 +647,7 @@ namespace QuantConnect.Securities
 
                 // assuming USD, we still need to add Currency to the security object
                 _baseCurrencyCash.AddAmount(total);
+                InvalidateTotalPortfolioValue();
             }
         }
 
@@ -669,6 +692,7 @@ namespace QuantConnect.Securities
                 // will cause this to return null, in this case we can't possibly
                 // have any holdings or price to set since we haven't received
                 // data yet, so just do nothing
+                InvalidateTotalPortfolioValue();
                 return;
             }
             next.Value *= split.SplitFactor;
@@ -691,6 +715,7 @@ namespace QuantConnect.Securities
             }
 
             security.SetMarketPrice(next);
+            InvalidateTotalPortfolioValue();
         }
 
         /// <summary>
@@ -752,6 +777,7 @@ namespace QuantConnect.Securities
 
                         // update settled cashbook
                         CashBook[item.Currency].AddAmount(item.Amount);
+                        InvalidateTotalPortfolioValue();
                     }
                 }
             }
