@@ -29,10 +29,17 @@ namespace QuantConnect.Securities
     /// </summary>
     public class Cash
     {
+        private decimal _conversionRate;
         private bool _isBaseCurrency;
         private bool _invertRealTimePrice;
 
         private readonly object _locker = new object();
+
+        /// <summary>
+        /// Event fired when this instance is updated
+        /// <see cref="AddAmount"/>, <see cref="SetAmount"/>, <see cref="Update"/>
+        /// </summary>
+        public event EventHandler Updated;
 
         /// <summary>
         /// Gets the symbol of the security required to provide conversion rates.
@@ -61,7 +68,18 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the conversion rate into account currency
         /// </summary>
-        public decimal ConversionRate { get; internal set; }
+        public decimal ConversionRate
+        {
+            get
+            {
+                return _conversionRate;
+            }
+            internal set
+            {
+                _conversionRate = value;
+                OnUpdate();
+            }
+        }
 
         /// <summary>
         /// The symbol of the currency, such as $
@@ -105,6 +123,7 @@ namespace QuantConnect.Securities
                 rate = 1/rate;
             }
             ConversionRate = rate;
+            OnUpdate();
         }
 
         /// <summary>
@@ -118,8 +137,9 @@ namespace QuantConnect.Securities
             lock (_locker)
             {
                 Amount += amount;
-                return Amount;
             }
+            OnUpdate();
+            return Amount;
         }
 
         /// <summary>
@@ -132,6 +152,7 @@ namespace QuantConnect.Securities
             {
                 Amount = amount;
             }
+            OnUpdate();
         }
 
         /// <summary>
@@ -263,6 +284,13 @@ namespace QuantConnect.Securities
             }
 
             return QuantConnect.Symbol.Create(crypto, securityType, market);
+        }
+
+        private void OnUpdate()
+        {
+            // copy for thread safety
+            var handler = Updated;
+            handler?.Invoke(this, EventArgs.Empty);
         }
     }
 }

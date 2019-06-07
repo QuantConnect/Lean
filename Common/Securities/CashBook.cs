@@ -36,6 +36,12 @@ namespace QuantConnect.Securities
         private string _accountCurrency;
 
         /// <summary>
+        /// Event fired when a <see cref="Cash"/> instance is added or removed, and when
+        /// the <see cref="Cash.Updated"/> is triggered for the currently hold instances
+        /// </summary>
+        public event EventHandler Updated;
+
+        /// <summary>
         /// Gets the base currency used
         /// </summary>
         public string AccountCurrency
@@ -238,13 +244,19 @@ namespace QuantConnect.Securities
             {
                 return;
             }
+            // we link our Updated event with underlying cash instances
+            // so interested listeners just subscribe to our event
+            value.Updated += OnCashUpdate;
 
-            var alreadyExisted = _currencies.ContainsKey(symbol);
+            var alreadyExisted = Remove(symbol, calledInternally: true);
+
             _currencies.AddOrUpdate(symbol, value);
             if (!alreadyExisted)
             {
                 OnCashAdded(value);
             }
+
+            OnUpdate();
         }
 
         /// <summary>
@@ -253,6 +265,7 @@ namespace QuantConnect.Securities
         public void Clear()
         {
             _currencies.Clear();
+            OnUpdate();
         }
 
         /// <summary>
@@ -261,13 +274,7 @@ namespace QuantConnect.Securities
         /// <param name="symbol">The symbolto be removed</param>
         public bool Remove(string symbol)
         {
-            Cash cash = null;
-            var removed = _currencies.TryRemove(symbol, out cash);
-            if (!removed)
-            {
-                Log.Error(string.Format("CashBook.Remove(): Failed to remove the cash book record for symbol {0}", symbol));
-            }
-            return removed;
+            return Remove(symbol, calledInternally: false);
         }
 
         /// <summary>
@@ -276,13 +283,7 @@ namespace QuantConnect.Securities
         /// <param name="item">Item.</param>
         public bool Remove(KeyValuePair<string, Cash> item)
         {
-            Cash cash = null;
-            var removed = _currencies.TryRemove(item.Key, out cash);
-            if (!removed)
-            {
-                Log.Error(string.Format("CashBook.Remove(): Failed to remove the cash book record for symbol {0} - {1}", item.Key, item.Value != null ? item.Value.ToString() : "(null)"));
-            }
-            return removed;
+            return Remove(item.Key);
         }
 
         /// <summary>
@@ -407,6 +408,40 @@ namespace QuantConnect.Securities
         {
             var handler = CashAdded;
             handler?.Invoke(this, cash);
+        }
+
+        private bool Remove(string symbol, bool calledInternally)
+        {
+            Cash cash = null;
+            var removed = _currencies.TryRemove(symbol, out cash);
+            if (!removed)
+            {
+                if (!calledInternally)
+                {
+                    Log.Error($"CashBook.Remove(): Failed to remove the cash book record for symbol {symbol}");
+                }
+            }
+            else
+            {
+                cash.Updated -= OnCashUpdate;
+                if (!calledInternally)
+                {
+                    OnUpdate();
+                }
+            }
+            return removed;
+        }
+
+        private void OnCashUpdate(object sender, EventArgs eventArgs)
+        {
+            OnUpdate();
+        }
+
+        private void OnUpdate()
+        {
+            // copy for thread safety
+            var handler = Updated;
+            handler?.Invoke(this, EventArgs.Empty);
         }
     }
 }

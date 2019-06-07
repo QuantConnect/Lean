@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -124,6 +125,173 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 var symbol = new CashBook()[Currencies.NullCurrency].Symbol;
             });
+        }
+
+        [Test]
+        public void OnCashAddedCalledOnlyForNewSymbols()
+        {
+            var cashBook = new CashBook();
+            var called = false;
+            var cash = new Cash("SPY", 1, 1);
+            cashBook.Add(cash.Symbol, cash);
+            cashBook.CashAdded += (sender, args) =>
+            {
+                called = true;
+            };
+            cashBook.Add(cash.Symbol, cash);
+
+            Assert.IsFalse(called);
+        }
+
+        [Test]
+        public void OnCashAddedCalled()
+        {
+            var cashBook = new CashBook();
+            var called = false;
+            var cash = new Cash("SPY", 1, 1);
+            cashBook.CashAdded += (sender, args) =>
+            {
+                called = true;
+            };
+            cashBook.Add(cash.Symbol, cash);
+
+            Assert.IsTrue(called);
+        }
+
+        [Test]
+        public void UpdateEventCalledForCashUpdates()
+        {
+            var cashBook = new CashBook();
+            var called = false;
+            var cash = new Cash("SPY", 1, 1);
+            cashBook.Add(cash.Symbol, cash);
+            cashBook.Updated += (sender, args) =>
+            {
+                called = true;
+            };
+            cash.Update(new Tick { Value = 10 });
+
+            Assert.IsTrue(called);
+        }
+
+        [Test]
+        public void UpdateEventCalledForAddMethod()
+        {
+            var cashBook = new CashBook();
+            var called = false;
+            var cash = new Cash("SPY", 1, 1);
+            cashBook.Updated += (sender, args) =>
+            {
+                called = true;
+            };
+            cashBook.Add(cash.Symbol, cash);
+
+            Assert.IsTrue(called);
+        }
+
+        [Test]
+        public void UpdateEventCalledForAdd()
+        {
+            var cashBook = new CashBook();
+            var called = false;
+            var cash = new Cash("SPY", 1, 1);
+            cashBook.Updated += (sender, args) =>
+            {
+                called = true;
+            };
+
+            cashBook[cash.Symbol] = cash;
+
+            Assert.IsTrue(called);
+        }
+
+        [Test]
+        public void UpdateEventCalledForRemove()
+        {
+            var cashBook = new CashBook();
+            var called = false;
+            var cash = new Cash("SPY", 1, 1);
+            cashBook.Add(cash.Symbol, cash);
+            cashBook.Updated += (sender, args) =>
+            {
+                called = true;
+            };
+
+            cashBook.Remove("SPY");
+
+            Assert.IsTrue(called);
+        }
+
+        [Test]
+        public void UpdateEventNotCalledForCashUpdatesAfterRemoved()
+        {
+            var cashBook = new CashBook();
+            var called = false;
+            var cash = new Cash("SPY", 1, 1);
+            cashBook.Add(cash.Symbol, cash);
+            cashBook.Remove("SPY");
+            cashBook.Updated += (sender, args) =>
+            {
+                called = true;
+            };
+            cash.Update(new Tick { Value = 10 });
+
+            Assert.IsFalse(called);
+        }
+
+        [Test]
+        public void UpdateEventNotCalledForCashUpdatesAfterSteppedOn()
+        {
+            var cashBook = new CashBook();
+            var called = false;
+            var cash = new Cash("SPY", 1, 1);
+            var cash2 = new Cash("SPY", 1, 1);
+            cashBook.Add(cash.Symbol, cash);
+            cashBook.Add(cash.Symbol, cash2);
+
+            cashBook.Updated += (sender, args) =>
+            {
+                called = true;
+            };
+            cash.Update(new Tick { Value = 10 });
+            Assert.IsFalse(called);
+
+            cash2.Update(new Tick { Value = 10 });
+            Assert.IsTrue(called);
+        }
+
+        [Test]
+        public void UpdateEventCalledForAddExistingValueCalledOnce()
+        {
+            var cashBook = new CashBook();
+            var called = 0;
+            var cash = new Cash("SPY", 1, 1);
+            cashBook.Add(cash.Symbol, cash);
+            cashBook.Updated += (sender, args) =>
+            {
+                called++;
+            };
+
+            cashBook.Add(cash.Symbol, cash);
+
+            Assert.AreEqual(1, called);
+        }
+
+        [Test]
+        public void UpdateEventCalledForClear()
+        {
+            var cashBook = new CashBook();
+            var called = false;
+            var cash = new Cash("SPY", 1, 1);
+            cashBook.Add(cash.Symbol, cash);
+            cashBook.Updated += (sender, args) =>
+            {
+                called = true;
+            };
+
+            cashBook.Clear();
+
+            Assert.IsTrue(called);
         }
     }
 }

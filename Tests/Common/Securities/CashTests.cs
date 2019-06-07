@@ -503,6 +503,45 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void UpdateEventCalledForUpdateMethod()
+        {
+            var called = false;
+            var cash = new Cash("SPY", 1, 1);
+            cash.Updated += (sender, args) =>
+            {
+                called = true;
+            };
+            cash.Update(new Tick { Value = 10 } );
+            Assert.IsTrue(called);
+        }
+
+        [Test]
+        public void UpdateEventCalledForSetAmountMethod()
+        {
+            var called = false;
+            var cash = new Cash("SPY", 1, 1);
+            cash.Updated += (sender, args) =>
+            {
+                called = true;
+            };
+            cash.SetAmount(10m);
+            Assert.IsTrue(called);
+        }
+
+        [Test]
+        public void UpdateEventCalledForAddAmountMethod()
+        {
+            var called = false;
+            var cash = new Cash("SPY", 1, 1);
+            cash.Updated += (sender, args) =>
+            {
+                called = true;
+            };
+            cash.AddAmount(10m);
+            Assert.IsTrue(called);
+        }
+
+        [Test]
         public void CashBookWithUsdCanBeSerializedAfterEnsureCurrencyDataFeed()
         {
             var book = new CashBook
