@@ -205,8 +205,18 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string EURCAD = "ECD";
+            
+            /// <summary>
+            /// Euro/Swedish Krona Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string EURSEK = "ESK";
 
-
+            /// <summary>
+            /// E-mini Japanese Yen Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string JapaneseYenEmini = "J7";
         }
 
         /// <summary>
@@ -527,10 +537,93 @@ namespace QuantConnect.Securities
             public const string Ethanol = "EH";
 
             /// <summary>
+            /// European Naphtha (Platts) Crack Spread Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string EuropeanNaphthaPlattsCrackSpread = "EN";
+
+            /// <summary>
+            /// European Propane CIF ARA (Argus) vs. Naphtha Cargoes CIF NWE (Platts) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string EuropeanPropaneCIFARAArgusVsNaphthaCargoesCIFNWEPlatts = "EPN";
+
+            /// <summary>
+            /// Singapore Fuel Oil 380 cst (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string SingaporeFuelOil380cstPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts = "EVC";
+
+            /// <summary>
+            /// East-West Gasoline Spread (Platts-Argus) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string EastWestGasolineSpreadPlattsArgus = "EWG";
+
+            /// <summary>
+            /// East-West Naphtha: Japan C&amp;F vs. Cargoes CIF NWE Spread (Platts) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string EastWestNaphthaJapanCFvsCargoesCIFNWESpreadPlatts = "EWN";
+
+            /// <summary>
+            /// RBOB Gasoline vs. Euro-bob Oxy NWE Barges (Argus) (350,000 gallons) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string RBOBGasolineVsEurobobOxyNWEBargesArgusThreeHundredFiftyThousandGallons = "EXR";
+
+            /// <summary>
+            /// 3.5% Fuel Oil Barges FOB Rdam (Platts) Crack Spread Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string ThreePointFivePercentFuelOilBargesFOBRdamPlattsCrackSpread = "FO";
+
+            /// <summary>
+            /// Freight Route TC14 (Baltic) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string FreightRouteTC14Baltic = "FRC";
+
+            /// <summary>
+            /// 1% Fuel Oil Cargoes FOB NWE (Platts) vs. 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string OnePercentFuelOilCargoesFOBNWEPlattsVsThreePointFivePercentFuelOilBargesFOBRdamPlatts = "FSS";
+
+            /// <summary>
+            /// Gulf Coast HSFO (Platts) vs. European 3.5% Fuel Oil Barges FOB Rdam (Platts) Futures
+            /// </summary>
+            public const string GulfCoastHSFOPlattsVsEuropeanThreePointFivePercentFuelOilBargesFOBRdamPlatts = "GCU";
+
+            /// <summary>
+            /// WTI Houston Crude Oil Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string WTIHoustonCrudeOil = "HCL";
+
+            /// <summary>
+            /// Natural Gas (Henry Hub) Last-day Financial Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string NaturalGasHenryHubLastDayFinancial = "HH";
+
+            /// <summary>
             /// Heating Oil Futures
             /// </summary>
             /// <returns>The symbol</returns>
             public const string HeatingOil = "HO";
+
+            /// <summary>
+            /// Natural Gas (Henry Hub) Penultimate Financial Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string NaturalGasHenryHubPenultimateFinancial = "HP";
+
+            /// <summary>
+            /// WTI Houston (Argus) vs. WTI Trade Month Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string WTIHoustonArgusVsWTITradeMonth = "HTT";
 
             /// <summary>
             /// Gasoline RBOB Futures
@@ -579,6 +672,12 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string EuroDollar = "GE";
+
+            /// <summary>
+            /// 5-Year USD MAC Swap Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string FiveYearUSDMACSwap = "F1U";
         }
 
         /// <summary>
@@ -633,6 +732,30 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string NASDAQ100BiotechnologyEMini = "BIO";
+
+            /// <summary>
+            /// E-mini FTSE Emerging Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string FTSEEmergingEmini = "EI";
+
+            /// <summary>
+            /// E-mini S&amp;P MidCap 400 Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string SP400MidCapEmini = "EMD";
+
+            /// <summary>
+            /// S&amp;P-GSCI Commodity Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string SPGSCICommodity = "GD";
+
+            /// <summary>
+            /// USD-Denominated Ibovespa Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string USDDenominatedIbovespa = "IBV";
         }
 
         /// <summary>
@@ -700,6 +823,18 @@ namespace QuantConnect.Securities
             /// <returns>The symbol</returns>
             /// <remarks>This symbol spells element Al using European spelling</remarks>
             public const string AluminiumEuropeanPremiumDutyPaidMetalBulletin = "EDP";
+            
+            /// <summary>
+            /// Copper Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Copper = "HG";
+
+            /// <summary>
+            /// U.S. Midwest Domestic Hot-Rolled Coil Steel (CRU) Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string USMidwestDomesticHotRolledCoilSteelCRUIndex = "HRC";
         }
 
         /// <summary>
@@ -772,6 +907,18 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string DryWhey = "DY";
+
+            /// <summary>
+            /// Class IV Milk Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string ClassIVMilk = "GDK";
+
+            /// <summary>
+            /// Non-fat Dry Milk Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string NonfatDryMilk = "GNF";
         }
     }
 }
