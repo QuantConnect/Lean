@@ -87,7 +87,7 @@ namespace QuantConnect.Securities
             }
             Amount = amount;
             ConversionRate = conversionRate;
-            Symbol = symbol.ToUpper();
+            Symbol = symbol.LazyToUpper();
             CurrencySymbol = Currencies.GetCurrencySymbol(Symbol);
         }
 

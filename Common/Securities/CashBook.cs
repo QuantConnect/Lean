@@ -54,7 +54,7 @@ namespace QuantConnect.Securities
                 }
 
                 // add new account currency using same amount as previous
-                _accountCurrency = value.ToUpper();
+                _accountCurrency = value.LazyToUpper();
                 Add(_accountCurrency, new Cash(_accountCurrency, amount, 1.0m));
             }
         }

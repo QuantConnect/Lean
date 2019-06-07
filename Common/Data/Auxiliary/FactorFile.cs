@@ -69,7 +69,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public FactorFile(string permtick, IEnumerable<FactorFileRow> data, DateTime? factorFileMinimumDate = null)
         {
-            Permtick = permtick.ToUpper();
+            Permtick = permtick.LazyToUpper();
 
             var dictionary = new Dictionary<DateTime, FactorFileRow>();
             foreach (var row in data)

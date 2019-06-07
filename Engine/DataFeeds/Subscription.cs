@@ -180,7 +180,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // if the security is no longer a member of the universe, then mark the subscription properly
                 // universe may be null for internal currency conversion feeds
                 // TODO : Put currency feeds in their own internal universe
-                if (!removedUniverses.Any(x => x.Members.ContainsKey(Configuration.Symbol)))
+                if (!removedUniverses.Any(x => x.Securities.ContainsKey(Configuration.Symbol)))
                 {
                     MarkAsRemovedFromUniverse();
                 }
