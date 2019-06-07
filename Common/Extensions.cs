@@ -224,6 +224,22 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Will truncate the provided decimal, without rounding, to 3 decimal places
+        /// </summary>
+        /// <param name="value">The value to truncate</param>
+        /// <returns>New instance with just 3 decimal places</returns>
+        public static decimal TruncateTo3DecimalPlaces(this decimal value)
+        {
+            if (value == decimal.MaxValue
+                || value == decimal.MinValue
+                || value == 0)
+            {
+                return value;
+            }
+            return Math.Truncate(1000 * value) / 1000;
+        }
+
+        /// <summary>
         /// Provides global smart rounding, numbers larger than 1000 will round to 4 decimal places,
         /// while numbers smaller will round to 7 significant digits
         /// </summary>

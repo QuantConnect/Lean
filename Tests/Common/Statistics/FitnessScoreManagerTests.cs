@@ -106,7 +106,7 @@ namespace QuantConnect.Tests.Common.Statistics
             // FitnessScore: 0.333 * (-3.299 + -5)
             fitnessScore.UpdateScores();
             score = fitnessScore.FitnessScore;
-            Assert.AreEqual(0.028m, score);
+            Assert.AreEqual(0.028m, score.TruncateTo3DecimalPlaces());
         }
 
         [TestCase(2)]
@@ -130,7 +130,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 IncreaseCashAmount(algorithm, returnFactor);
                 IncreaseSalesVolumeAmount(algorithm);
             }
-            Assert.AreEqual(returnFactor < 1 ? 0.174m : 1m, score);
+            Assert.AreEqual(returnFactor < 1 ? 0.174m : 1m, score.TruncateTo3DecimalPlaces());
         }
 
         private void IncreaseCashAmount(IAlgorithm algorithm, double factor)

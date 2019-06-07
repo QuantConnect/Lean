@@ -49,19 +49,9 @@ namespace QuantConnect.Securities
             try
             {
                 // apply sales value to holdings in the account currency
-                if (security.Type == SecurityType.Future || security.Type == SecurityType.Cfd)
-                {
-                    // for futures/CFDs, we measure volume of sales, not notionals
-                    var saleValueInQuoteCurrency = fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity);
-                    var saleValue = saleValueInQuoteCurrency * quoteCash.ConversionRate;
-                    security.Holdings.AddNewSale(saleValue);
-                }
-                else
-                {
-                    var saleValueInQuoteCurrency = fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity) * security.SymbolProperties.ContractMultiplier;
-                    var saleValue = saleValueInQuoteCurrency * quoteCash.ConversionRate;
-                    security.Holdings.AddNewSale(saleValue);
-                }
+                var saleValueInQuoteCurrency = fill.FillPrice * Convert.ToDecimal(fill.AbsoluteFillQuantity) * security.SymbolProperties.ContractMultiplier;
+                var saleValue = saleValueInQuoteCurrency * quoteCash.ConversionRate;
+                security.Holdings.AddNewSale(saleValue);
 
                 // subtract transaction fees from the portfolio
                 var feeInAccountCurrency = 0m;

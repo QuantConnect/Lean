@@ -125,7 +125,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.414"},
             {"Treynor Ratio", "10.413"},
             {"Total Fees", "$15207.00"},
-            {"Fitness Score", "0.034"}
+            {"Fitness Score", "0.033"}
         };
     }
 }

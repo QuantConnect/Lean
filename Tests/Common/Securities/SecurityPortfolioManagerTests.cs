@@ -529,12 +529,13 @@ namespace QuantConnect.Tests.Common.Securities
             var fillBuy = new OrderEvent(1, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Buy, 100, 100, OrderFee.Zero);
             portfolio.ProcessFill(fillBuy);
 
-            Assert.AreEqual(100 * 100, securities[Symbols.Fut_SPY_Feb19_2016].Holdings.TotalSaleVolume);
+            var security = securities[Symbols.Fut_SPY_Feb19_2016];
+            Assert.AreEqual(100 * 100 * security.SymbolProperties.ContractMultiplier, security.Holdings.TotalSaleVolume);
 
             var fillSell = new OrderEvent(2, Symbols.Fut_SPY_Feb19_2016, DateTime.MinValue, OrderStatus.Filled, OrderDirection.Sell, 100, -100, OrderFee.Zero);
             portfolio.ProcessFill(fillSell);
 
-            Assert.AreEqual(2 * 100 * 100, securities[Symbols.Fut_SPY_Feb19_2016].Holdings.TotalSaleVolume);
+            Assert.AreEqual(2 * 100 * 100 * security.SymbolProperties.ContractMultiplier, security.Holdings.TotalSaleVolume);
         }
 
         [Test]

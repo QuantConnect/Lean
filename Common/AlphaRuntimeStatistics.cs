@@ -32,6 +32,10 @@ namespace QuantConnect
         // this is only used when deserializing to this type since it represents a computed property dependent on internal state
         private decimal _overrideEstimatedMonthlyAlphaValue;
         private readonly IAccountCurrencyProvider _accountCurrencyProvider;
+        private decimal _fitnessScore;
+        private decimal _portfolioTurnover;
+        private decimal _returnOverMaxDrawdown;
+        private decimal _sortinoRatio;
 
         /// <summary>
         /// Creates a new instance
@@ -82,26 +86,70 @@ namespace QuantConnect
         /// <summary>
         /// Score of the strategy's performance, and suitability for the Alpha Stream Market
         /// </summary>
-        /// <remarks>See https://www.quantconnect.com/research/3bc40ecee68d36a9424fbd1b338eb227 </remarks>
-        public decimal FitnessScore { get; set; }
+        /// <remarks>See https://www.quantconnect.com/research/3bc40ecee68d36a9424fbd1b338eb227.
+        /// For performance we only truncate when the value is gotten</remarks>
+        public decimal FitnessScore
+        {
+            get
+            {
+                return _fitnessScore.TruncateTo3DecimalPlaces();
+            }
+            set
+            {
+                _fitnessScore = value;
+            }
+        }
 
         /// <summary>
         /// Measurement of the strategies trading activity with respect to the portfolio value.
         /// Calculated as the sales volume with respect to the average total portfolio value.
         /// </summary>
-        public decimal PortfolioTurnover { get; set; }
+        /// <remarks>For performance we only truncate when the value is gotten</remarks>
+        public decimal PortfolioTurnover
+        {
+            get
+            {
+                return _portfolioTurnover.TruncateTo3DecimalPlaces();
+            }
+            set
+            {
+                _portfolioTurnover = value;
+            }
+        }
 
         /// <summary>
         /// Provides a risk adjusted way to factor in the returns and drawdown of the strategy.
         /// It is calculated by dividing the Portfolio Annualized Return by the Maximum Drawdown seen during the backtest.
         /// </summary>
-        public decimal ReturnOverMaxDrawdown { get; set; }
+        /// <remarks>For performance we only truncate when the value is gotten</remarks>
+        public decimal ReturnOverMaxDrawdown
+        {
+            get
+            {
+                return _returnOverMaxDrawdown.TruncateTo3DecimalPlaces();
+            }
+            set
+            {
+                _returnOverMaxDrawdown = value;
+            }
+        }
 
         /// <summary>
         /// Gives a relative picture of the strategy volatility.
         /// It is calculated by taking a portfolio's annualized rate of return and subtracting the risk free rate of return.
         /// </summary>
-        public decimal SortinoRatio { get; set; }
+        /// <remarks>For performance we only truncate when the value is gotten</remarks>
+        public decimal SortinoRatio
+        {
+            get
+            {
+                return _sortinoRatio.TruncateTo3DecimalPlaces();
+            }
+            set
+            {
+                _sortinoRatio = value;
+            }
+        }
 
         /// <summary>
         /// Suggested Value of the Alpha On A Monthly Basis For Licensing

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -108,13 +108,13 @@ namespace QuantConnect.Statistics
         /// <param name="totalTrades">Total number of orders executed.</param>
         /// <param name="tradingDaysPerYear">Number of trading days per year</param>
         /// <returns>Statistics Array, Broken into Annual Periods</returns>
-        public static Dictionary<string, string> Generate(IEnumerable<ChartPoint> pointsEquity, 
-            SortedDictionary<DateTime, decimal> profitLoss, 
-            IEnumerable<ChartPoint> pointsPerformance, 
-            Dictionary<DateTime, decimal> unsortedBenchmark, 
-            decimal startingCash, 
-            decimal totalFees, 
-            decimal totalTrades, 
+        public static Dictionary<string, string> Generate(IEnumerable<ChartPoint> pointsEquity,
+            SortedDictionary<DateTime, decimal> profitLoss,
+            IEnumerable<ChartPoint> pointsPerformance,
+            Dictionary<DateTime, decimal> unsortedBenchmark,
+            decimal startingCash,
+            decimal totalFees,
+            decimal totalTrades,
             double tradingDaysPerYear = 252
             )
         {
@@ -321,7 +321,7 @@ namespace QuantConnect.Statistics
                 if (profitLossRatio == -1) profitLossRatioHuman = "0";
 
                 //Add the over all results first, break down by year later:
-                statistics = new Dictionary<string, string> { 
+                statistics = new Dictionary<string, string> {
                     { "Total Trades", Math.Round(totalTrades, 0).ToString(CultureInfo.InvariantCulture) },
                     { "Average Win", Math.Round(averageWin * 100, 2) + "%"  },
                     { "Average Loss", Math.Round(averageLoss * 100, 2) + "%" },
@@ -331,7 +331,7 @@ namespace QuantConnect.Statistics
                     { "Net Profit", Math.Round(totalNetProfit * 100, 3) + "%"},
                     { "Sharpe Ratio", Math.Round(SharpeRatio(listPerformance, riskFreeRate), 3).ToString(CultureInfo.InvariantCulture) },
                     { "Loss Rate", Math.Round(lossRate * 100) + "%" },
-                    { "Win Rate", Math.Round(winRate * 100) + "%" }, 
+                    { "Win Rate", Math.Round(winRate * 100) + "%" },
                     { "Profit-Loss Ratio", profitLossRatioHuman },
                     { "Alpha", Math.Round(Alpha(listPerformance, listBenchmark, riskFreeRate), 3).ToString(CultureInfo.InvariantCulture) },
                     { "Beta", Math.Round(Beta(listPerformance, listBenchmark), 3).ToString(CultureInfo.InvariantCulture) },
@@ -441,7 +441,7 @@ namespace QuantConnect.Statistics
         /// <returns>Decimal fraction for annual compounding performance</returns>
         public static decimal CompoundingAnnualPerformance(decimal startingCapital, decimal finalCapital, decimal years)
         {
-            return (Math.Pow((double)finalCapital / (double)startingCapital, (1 / (double)years)) - 1).SafeDecimalCast();
+            return (years == 0 ? 0d : Math.Pow((double)finalCapital / (double)startingCapital, 1 / (double)years) - 1).SafeDecimalCast();
         }
 
         /// <summary>
@@ -482,7 +482,7 @@ namespace QuantConnect.Statistics
         {
             return Math.Sqrt(performance.Variance() * tradingDaysPerYear);
         }
-        
+
         /// <summary>
         /// Algorithm "beta" statistic - the covariance between the algorithm and benchmark performance, divided by benchmark's variance
         /// </summary>
@@ -519,7 +519,7 @@ namespace QuantConnect.Statistics
             return Math.Sqrt(AnnualVariance(algoPerformance) - 2 * Correlation.Pearson(algoPerformance, benchmarkPerformance) * AnnualStandardDeviation(algoPerformance) * AnnualStandardDeviation(benchmarkPerformance) + AnnualVariance(benchmarkPerformance));
         }
 
-        
+
         /// <summary>
         /// Information ratio - risk adjusted return
         /// </summary>
