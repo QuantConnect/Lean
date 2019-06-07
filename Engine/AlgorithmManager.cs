@@ -261,8 +261,8 @@ namespace QuantConnect.Lean.Engine
 
                     if (portfolioValue <= 0)
                     {
-                        string logMessage = "AlgorithmManager.Run(): Portfolio value is less than or equal to zero";
-                        Log.Trace(logMessage);
+                        string logMessage = "AlgorithmManager.Run(): Portfolio value is less than or equal to zero, stopping algorithm.";
+                        Log.Error(logMessage);
                         results.SystemDebugMessage(logMessage);
                         break;
                     }
@@ -366,6 +366,8 @@ namespace QuantConnect.Lean.Engine
                         cash.Update(updateData);
                     }
                 }
+                // security prices got updated
+                algorithm.Portfolio.InvalidateTotalPortfolioValue();
 
                 // sample alpha charts now that we've updated time/price information but BEFORE we receive new insights
                 alphas.ProcessSynchronousEvents();

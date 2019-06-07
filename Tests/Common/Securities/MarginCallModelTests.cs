@@ -171,6 +171,7 @@ namespace QuantConnect.Tests.Common.Securities
             time = time.AddDays(1);
             const decimal highPrice = buyPrice * 2;
             security.SetMarketPrice(new Tick(time, Symbols.AAPL, highPrice, highPrice));
+            portfolio.InvalidateTotalPortfolioValue();
 
             Assert.AreEqual(quantity, portfolio.MarginRemaining);
             Assert.AreEqual(quantity, portfolio.TotalMarginUsed);
@@ -185,6 +186,7 @@ namespace QuantConnect.Tests.Common.Securities
             time = time.AddDays(1);
             const decimal lowPrice = buyPrice/2;
             security.SetMarketPrice(new Tick(time, Symbols.AAPL, lowPrice, lowPrice));
+            portfolio.InvalidateTotalPortfolioValue();
 
             Assert.AreEqual(-quantity/2m, portfolio.MarginRemaining);
             Assert.AreEqual(quantity, portfolio.TotalMarginUsed);
@@ -202,6 +204,7 @@ namespace QuantConnect.Tests.Common.Securities
             // Stock price increase by minimum variation
             const decimal newPrice = lowPrice + 0.01m;
             security.SetMarketPrice(new Tick(time, Symbols.AAPL, newPrice, newPrice));
+            portfolio.InvalidateTotalPortfolioValue();
 
             // this would not cause a margin call, only a margin call warning
             marginCallOrders = portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
@@ -210,6 +213,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Price drops again to previous low, margin call orders will be issued
             security.SetMarketPrice(new Tick(time, Symbols.AAPL, lowPrice, lowPrice));
+            portfolio.InvalidateTotalPortfolioValue();
 
             order = new MarketOrder(Symbols.AAPL, quantity, time) { Price = buyPrice };
             fill = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)

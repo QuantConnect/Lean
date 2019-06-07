@@ -372,6 +372,7 @@ namespace QuantConnect.Tests.Algorithm
 
             //Price rises to $50.
             Update(algo.Portfolio.CashBook, security, 50);
+            algo.Portfolio.InvalidateTotalPortfolioValue();
 
             Assert.AreEqual(150000, algo.Portfolio.TotalPortfolioValue);
 
