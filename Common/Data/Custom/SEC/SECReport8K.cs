@@ -22,6 +22,12 @@ using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Custom.SEC
 {
+    /// <summary>
+    /// SEC 8-K report (important investor notices) <see cref="BaseData"/> implementation.
+    /// Using this class, you can retrieve SEC report data for a security if it exists.
+    /// If the ticker you want no longer trades, you can also use the CIK of the company
+    /// you want data for as well except for currently traded stocks. This may change in the future.
+    /// </summary>
     public class SECReport8K : BaseData, ISECReport
     {
         /// <summary>

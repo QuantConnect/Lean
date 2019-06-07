@@ -221,9 +221,9 @@
     <Compile Include="Data\Consolidators\FilteredIdentityDataConsolidator.cs" />
     <Compile Include="Data\Custom\FxcmVolume.cs" />
     <Compile Include="Data\Custom\SEC\ISECReport.cs" />
-    <Compile Include="Data\Custom\SEC\SECReportConverters.cs" />
     <Compile Include="Data\Custom\SEC\SECReportBusinessAddress.cs" />
     <Compile Include="Data\Custom\SEC\SECReportCompanyData.cs" />
+    <Compile Include="Data\Custom\SEC\SECReportConverters.cs" />
     <Compile Include="Data\Custom\SEC\SECReportDocument.cs" />
     <Compile Include="Data\Custom\SEC\SECReportFiler.cs" />
     <Compile Include="Data\Custom\SEC\SECReportFilingValues.cs" />

@@ -15,12 +15,16 @@
 
 namespace QuantConnect.Data.Custom.SEC
 {
+    /// <summary>
+    /// Base interface for all SEC report types.
+    /// Using an interface, we can retrieve all report types with a single
+    /// call to <see cref="Slice.Get{T}()"/>
+    /// </summary>
     public interface ISECReport : IBaseData
     {
         /// <summary>
         /// Contents of the actual SEC report
         /// </summary>
-        
         SECReportSubmission Report { get; }
     }
 }

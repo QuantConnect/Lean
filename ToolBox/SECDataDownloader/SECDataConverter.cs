@@ -85,14 +85,17 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 .ForEach(
                     tickerCik =>
                     {
+                        // tickerCik[0] = symbol, tickerCik[1] = CIK
                         var cikFormatted = tickerCik[1].PadLeft(10, '0');
 
-                        if (!CikTicker.ContainsKey(cikFormatted))
+                        List<string> symbol;
+                        if (!CikTicker.TryGetValue(cikFormatted, out symbol))
                         {
-                            CikTicker[cikFormatted] = new List<string>();
+                            symbol = new List<string>();
+                            CikTicker[cikFormatted] = symbol;
                         }
 
-                        CikTicker[cikFormatted].Add(tickerCik[0]);
+                        symbol.Add(tickerCik[0]);
                     }
                 );
             
@@ -160,7 +163,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             foreach (var line in File.ReadLines(rawReportFilePath))
                             {
                                 var newTextLine = line;
-                                var currentTagName = factory.GetTagNameFromLine(newTextLine);
+                                var currentTagName = GetTagNameFromLine(newTextLine);
 
                                 // This tag is present rarely in SEC reports, but is unclosed without value when encountered.
                                 // Verified by searching with ripgrep for "CONFIRMING-COPY"
@@ -184,10 +187,10 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 
                                 // Encode all contents inside tags to prevent errors in XML parsing.
                                 // The json deserializer will convert these values back to their original form
-                                if (!parsingText && factory.HasValue(newTextLine))
+                                if (!parsingText && HasValue(newTextLine))
                                 {
                                     newTextLine =
-                                        $"<{currentTagName}>{SecurityElement.Escape(factory.GetTagValueFromLine(newTextLine))}</{currentTagName}>";
+                                        $"<{currentTagName}>{SecurityElement.Escape(GetTagValueFromLine(newTextLine))}</{currentTagName}>";
                                 }
                                 // Escape all contents inside TEXT tags
                                 else if (parsingText)
@@ -355,6 +358,51 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 .Where(publication => publication.FileType == "folder.gif")
                 .DistinctBy(publication => publication.Name)
                 .ToDictionary(publication => publication.Name, publication => publication.LastModified);
+        }
+
+        /// <summary>
+        /// Determines if the given line has a value associated with the tag
+        /// </summary>
+        /// <param name="line">Line of text from SEC report</param>
+        /// <returns>Boolean indicating whether the line contains a value</returns>
+        public static bool HasValue(string line)
+        {
+            var tagEnd = line.IndexOf(">", StringComparison.Ordinal);
+
+            if (!line.StartsWith("<") || tagEnd == -1)
+            {
+                return false;
+            }
+
+            return line.Length > tagEnd + 1;
+        }
+
+        /// <summary>
+        /// Gets the line's value (if there is one)
+        /// </summary>
+        /// <param name="line">Line of text from SEC report</param>
+        /// <returns>Value associated with the tag</returns>
+        public static string GetTagValueFromLine(string line)
+        {
+            return line.Substring(line.IndexOf(">", StringComparison.Ordinal) + 1);
+        }
+
+        /// <summary>
+        /// Gets the tag name from a given line
+        /// </summary>
+        /// <param name="line">Line of text from SEC report</param>
+        /// <returns>Tag name from the line</returns>
+        public static string GetTagNameFromLine(string line)
+        {
+            var start = line.IndexOf("<", StringComparison.Ordinal) + 1;
+            var length = line.IndexOf(">", StringComparison.Ordinal) - start;
+
+            if (start == -1 || length <= 0)
+            {
+                return string.Empty;
+            }
+
+            return line.Substring(start, length);
         }
     }
 }

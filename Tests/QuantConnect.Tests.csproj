@@ -200,7 +200,7 @@
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
     <Compile Include="Common\Data\CalendarConsolidatorsTests.cs" />
-    <Compile Include="Common\Data\Custom\SECReportFactoryTests.cs" />
+    <Compile Include="Common\Data\Custom\SECReportTests.cs" />
     <Compile Include="Common\Data\Fundamental\MultiPeriodFieldTests.cs" />
     <Compile Include="Common\Data\MockSubscriptionDataConfigProvider.cs" />
     <Compile Include="Common\IsolatorTests.cs" />

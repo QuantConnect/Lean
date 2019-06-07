@@ -22,6 +22,12 @@ using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Data.Custom.SEC
 {
+    /// <summary>
+    /// SEC 10-Q report (quarterly earnings) <see cref="BaseData"/> implementation.
+    /// Using this class, you can retrieve SEC report data for a security if it exists.
+    /// If the ticker you want no longer trades, you can also use the CIK of the company
+    /// you want data for as well except for currently traded stocks. This may change in the future.
+    /// </summary>
     public class SECReport10Q : BaseData, ISECReport
     {
         /// <summary>

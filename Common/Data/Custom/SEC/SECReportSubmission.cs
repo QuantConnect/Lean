@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Custom.SEC
 {
@@ -48,7 +49,7 @@ namespace QuantConnect.Data.Custom.SEC
         /// <summary>
         /// Identifies 1 or more items declared in 8-K filings. Optional &amp; Repeatable.
         /// </summary>
-        [JsonProperty("ITEMS"), JsonConverter(typeof(PossibleListConverter<string>))]
+        [JsonProperty("ITEMS"), JsonConverter(typeof(SingleValueListConverter<string>))]
         public List<string> Items = new List<string>();
 
         /// <summary>
@@ -73,13 +74,13 @@ namespace QuantConnect.Data.Custom.SEC
         /// <summary>
         /// Contains information regarding who the filer of the report is
         /// </summary>
-        [JsonProperty("FILER"), JsonConverter(typeof(PossibleListConverter<SECReportFiler>))]
+        [JsonProperty("FILER"), JsonConverter(typeof(SingleValueListConverter<SECReportFiler>))]
         public List<SECReportFiler> Filers = new List<SECReportFiler>();
 
         /// <summary>
         /// Attachments/content associated with the report
         /// </summary>
-        [JsonProperty("DOCUMENT"), JsonConverter(typeof(PossibleListConverter<SECReportDocument>))]
+        [JsonProperty("DOCUMENT"), JsonConverter(typeof(SingleValueListConverter<SECReportDocument>))]
         public List<SECReportDocument> Documents = new List<SECReportDocument>();
     }
 }

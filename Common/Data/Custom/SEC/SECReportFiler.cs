@@ -15,6 +15,7 @@
 
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Custom.SEC
 {
@@ -35,19 +36,19 @@ namespace QuantConnect.Data.Custom.SEC
         /// <summary>
         /// Information related to the business' address
         /// </summary>
-        [JsonProperty("BUSINESS-ADDRESS"), JsonConverter(typeof(PossibleListConverter<SECReportBusinessAddress>))]
+        [JsonProperty("BUSINESS-ADDRESS"), JsonConverter(typeof(SingleValueListConverter<SECReportBusinessAddress>))]
         public List<SECReportBusinessAddress> BusinessAddress;
 
         /// <summary>
         /// Company mailing address information
         /// </summary>
-        [JsonProperty("MAIL-ADDRESS"), JsonConverter(typeof(PossibleListConverter<SECReportMailAddress>))]
+        [JsonProperty("MAIL-ADDRESS"), JsonConverter(typeof(SingleValueListConverter<SECReportMailAddress>))]
         public List<SECReportMailAddress> MailingAddress;
 
         /// <summary>
         /// Former company names
         /// </summary>
-        [JsonProperty("FORMER-COMPANY"), JsonConverter(typeof(PossibleListConverter<SECReportFormerCompany>))]
+        [JsonProperty("FORMER-COMPANY"), JsonConverter(typeof(SingleValueListConverter<SECReportFormerCompany>))]
         public List<SECReportFormerCompany> FormerCompanies;
     }
 }

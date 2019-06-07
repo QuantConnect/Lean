@@ -49,50 +49,5 @@ namespace QuantConnect.Data.Custom.SEC
                     throw new DataException($"SEC form type {formType} is not supported at this time");
             }
         }
-
-        /// <summary>
-        /// Determines if the given line has a value associated with the tag
-        /// </summary>
-        /// <param name="line">Line of text from SEC report</param>
-        /// <returns>Boolean indicating whether the line contains a value</returns>
-        public bool HasValue(string line)
-        {
-            var tagEnd = line.IndexOf(">", StringComparison.Ordinal);
-
-            if (!line.StartsWith("<") || tagEnd == -1)
-            {
-                return false;
-            }
-
-            return line.Length > tagEnd + 1;
-        }
-        
-        /// <summary>
-        /// Gets the line's value (if there is one)
-        /// </summary>
-        /// <param name="line">Line of text from SEC report</param>
-        /// <returns>Value associated with the tag</returns>
-        public string GetTagValueFromLine(string line)
-        {
-            return line.Substring(line.IndexOf(">", StringComparison.Ordinal) + 1);
-        }
-
-        /// <summary>
-        /// Gets the tag name from a given line
-        /// </summary>
-        /// <param name="line">Line of text from SEC report</param>
-        /// <returns>Tag name from the line</returns>
-        public string GetTagNameFromLine(string line)
-        {
-            var start = line.IndexOf("<", StringComparison.Ordinal) + 1;
-            var length = line.IndexOf(">", StringComparison.Ordinal) - start;
-
-            if (start == -1 || length <= 0)
-            {
-                return string.Empty;
-            }
-
-            return line.Substring(start, length);
-        }
     }
 }
