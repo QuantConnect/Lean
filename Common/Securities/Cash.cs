@@ -288,9 +288,7 @@ namespace QuantConnect.Securities
 
         private void OnUpdate()
         {
-            // copy for thread safety
-            var handler = Updated;
-            handler?.Invoke(this, EventArgs.Empty);
+            Updated?.Invoke(this, EventArgs.Empty);
         }
     }
 }

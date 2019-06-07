@@ -506,7 +506,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void UpdateEventCalledForUpdateMethod()
         {
             var called = false;
-            var cash = new Cash("SPY", 1, 1);
+            var cash = new Cash(Currencies.USD, 1, 1);
             cash.Updated += (sender, args) =>
             {
                 called = true;
@@ -519,7 +519,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void UpdateEventCalledForSetAmountMethod()
         {
             var called = false;
-            var cash = new Cash("SPY", 1, 1);
+            var cash = new Cash(Currencies.USD, 1, 1);
             cash.Updated += (sender, args) =>
             {
                 called = true;
@@ -532,7 +532,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void UpdateEventCalledForAddAmountMethod()
         {
             var called = false;
-            var cash = new Cash("SPY", 1, 1);
+            var cash = new Cash(Currencies.USD, 1, 1);
             cash.Updated += (sender, args) =>
             {
                 called = true;

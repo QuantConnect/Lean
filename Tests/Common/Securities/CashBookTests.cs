@@ -128,15 +128,18 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void OnCashAddedCalledOnlyForNewSymbols()
+        public void UpdatedAddedCalledOnlyForNewSymbols()
         {
             var cashBook = new CashBook();
             var called = false;
-            var cash = new Cash("SPY", 1, 1);
+            var cash = new Cash(Currencies.USD, 1, 1);
             cashBook.Add(cash.Symbol, cash);
-            cashBook.CashAdded += (sender, args) =>
+            cashBook.Updated += (sender, updateType) =>
             {
-                called = true;
+                if (updateType == CashBook.UpdateType.Added)
+                {
+                    called = true;
+                }
             };
             cashBook.Add(cash.Symbol, cash);
 
@@ -144,30 +147,18 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void OnCashAddedCalled()
-        {
-            var cashBook = new CashBook();
-            var called = false;
-            var cash = new Cash("SPY", 1, 1);
-            cashBook.CashAdded += (sender, args) =>
-            {
-                called = true;
-            };
-            cashBook.Add(cash.Symbol, cash);
-
-            Assert.IsTrue(called);
-        }
-
-        [Test]
         public void UpdateEventCalledForCashUpdates()
         {
             var cashBook = new CashBook();
             var called = false;
-            var cash = new Cash("SPY", 1, 1);
+            var cash = new Cash(Currencies.USD, 1, 1);
             cashBook.Add(cash.Symbol, cash);
-            cashBook.Updated += (sender, args) =>
+            cashBook.Updated += (sender, updateType) =>
             {
-                called = true;
+                if (updateType == CashBook.UpdateType.Updated)
+                {
+                    called = true;
+                }
             };
             cash.Update(new Tick { Value = 10 });
 
@@ -178,11 +169,16 @@ namespace QuantConnect.Tests.Common.Securities
         public void UpdateEventCalledForAddMethod()
         {
             var cashBook = new CashBook();
+            // we remove default USD cash
+            cashBook.Clear();
             var called = false;
-            var cash = new Cash("SPY", 1, 1);
-            cashBook.Updated += (sender, args) =>
+            var cash = new Cash(Currencies.USD, 1, 1);
+            cashBook.Updated += (sender, updateType) =>
             {
-                called = true;
+                if (updateType == CashBook.UpdateType.Added)
+                {
+                    called = true;
+                }
             };
             cashBook.Add(cash.Symbol, cash);
 
@@ -193,11 +189,16 @@ namespace QuantConnect.Tests.Common.Securities
         public void UpdateEventCalledForAdd()
         {
             var cashBook = new CashBook();
+            // we remove default USD cash
+            cashBook.Clear();
             var called = false;
-            var cash = new Cash("SPY", 1, 1);
-            cashBook.Updated += (sender, args) =>
+            var cash = new Cash(Currencies.USD, 1, 1);
+            cashBook.Updated += (sender, updateType) =>
             {
-                called = true;
+                if (updateType == CashBook.UpdateType.Added)
+                {
+                    called = true;
+                }
             };
 
             cashBook[cash.Symbol] = cash;
@@ -210,14 +211,17 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var cashBook = new CashBook();
             var called = false;
-            var cash = new Cash("SPY", 1, 1);
+            var cash = new Cash(Currencies.USD, 1, 1);
             cashBook.Add(cash.Symbol, cash);
-            cashBook.Updated += (sender, args) =>
+            cashBook.Updated += (sender, updateType) =>
             {
-                called = true;
+                if (updateType == CashBook.UpdateType.Removed)
+                {
+                    called = true;
+                }
             };
 
-            cashBook.Remove("SPY");
+            cashBook.Remove(Currencies.USD);
 
             Assert.IsTrue(called);
         }
@@ -227,9 +231,9 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var cashBook = new CashBook();
             var called = false;
-            var cash = new Cash("SPY", 1, 1);
+            var cash = new Cash(Currencies.USD, 1, 1);
             cashBook.Add(cash.Symbol, cash);
-            cashBook.Remove("SPY");
+            cashBook.Remove(Currencies.USD);
             cashBook.Updated += (sender, args) =>
             {
                 called = true;
@@ -244,20 +248,22 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var cashBook = new CashBook();
             var called = false;
-            var cash = new Cash("SPY", 1, 1);
-            var cash2 = new Cash("SPY", 1, 1);
+            var updatedCalled = false;
+            var cash = new Cash(Currencies.USD, 1, 1);
+            var cash2 = new Cash(Currencies.USD, 1, 1);
             cashBook.Add(cash.Symbol, cash);
             cashBook.Add(cash.Symbol, cash2);
 
-            cashBook.Updated += (sender, args) =>
+            cashBook.Updated += (sender, updateType) =>
             {
                 called = true;
+                updatedCalled = updateType == CashBook.UpdateType.Updated;
             };
             cash.Update(new Tick { Value = 10 });
             Assert.IsFalse(called);
 
             cash2.Update(new Tick { Value = 10 });
-            Assert.IsTrue(called);
+            Assert.IsTrue(updatedCalled);
         }
 
         [Test]
@@ -265,16 +271,19 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var cashBook = new CashBook();
             var called = 0;
-            var cash = new Cash("SPY", 1, 1);
+            var calledUpdated = false;
+            var cash = new Cash(Currencies.USD, 1, 1);
             cashBook.Add(cash.Symbol, cash);
-            cashBook.Updated += (sender, args) =>
+            cashBook.Updated += (sender, updateType) =>
             {
                 called++;
+                calledUpdated = updateType == CashBook.UpdateType.Updated;
             };
 
             cashBook.Add(cash.Symbol, cash);
 
             Assert.AreEqual(1, called);
+            Assert.IsTrue(calledUpdated);
         }
 
         [Test]
@@ -282,11 +291,11 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var cashBook = new CashBook();
             var called = false;
-            var cash = new Cash("SPY", 1, 1);
+            var cash = new Cash(Currencies.USD, 1, 1);
             cashBook.Add(cash.Symbol, cash);
-            cashBook.Updated += (sender, args) =>
+            cashBook.Updated += (sender, updateType) =>
             {
-                called = true;
+                called = updateType == CashBook.UpdateType.Removed;
             };
 
             cashBook.Clear();

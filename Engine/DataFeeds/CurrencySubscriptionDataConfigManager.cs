@@ -53,7 +53,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             ISecurityService securityService,
             IBrokerageModel brokerageModel)
         {
-            cashBook.CashAdded += (sender, cash) => _ensureCurrencyDataFeeds = true;
+            cashBook.Updated += (sender, updateType) =>
+            {
+                if (updateType == CashBook.UpdateType.Added)
+                {
+                    _ensureCurrencyDataFeeds = true;
+                }
+            };
 
             _pendingSubscriptionDataConfigs = false;
             _securityManager = securityManager;
