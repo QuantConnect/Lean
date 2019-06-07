@@ -51,12 +51,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the cash book that keeps track of all currency holdings (only settled cash)
         /// </summary>
-        public CashBook CashBook { get; private set; }
+        public CashBook CashBook { get; }
 
         /// <summary>
         /// Gets the cash book that keeps track of all currency holdings (only unsettled cash)
         /// </summary>
-        public CashBook UnsettledCashBook { get; private set; }
+        public CashBook UnsettledCashBook { get; }
 
         /// <summary>
         /// The list of pending funds waiting for settlement time
@@ -88,6 +88,9 @@ namespace QuantConnect.Securities
 
             // default to $100,000.00
             _baseCurrencyCash.SetAmount(100000);
+
+            CashBook.Updated += (sender, args) => InvalidateTotalPortfolioValue();
+            UnsettledCashBook.Updated += (sender, args) => InvalidateTotalPortfolioValue();
         }
 
         #region IDictionary Implementation
@@ -380,8 +383,8 @@ namespace QuantConnect.Securities
                         var securityType = position.Type;
                         // we can't include forex in this calculation since we would be double accounting with respect to the cash book
                         // we also exclude futures and CFD as they are calculated separately
-                        if (position.Type != SecurityType.Forex && position.Type != SecurityType.Crypto &&
-                            position.Type != SecurityType.Future && position.Type != SecurityType.Cfd)
+                        if (securityType != SecurityType.Forex && securityType != SecurityType.Crypto &&
+                            securityType != SecurityType.Future && securityType != SecurityType.Cfd)
                         {
                             totalHoldingsValueWithoutForexCryptoFutureCfd += position.Holdings.HoldingsValue;
                         }
@@ -546,7 +549,6 @@ namespace QuantConnect.Securities
 
             _baseCurrencyCash = CashBook[accountCurrency];
             _baseCurrencyUnsettledCash = UnsettledCashBook[accountCurrency];
-            InvalidateTotalPortfolioValue();
         }
 
         /// <summary>
@@ -557,7 +559,6 @@ namespace QuantConnect.Securities
         {
             _setCashWasCalled = true;
             _baseCurrencyCash.SetAmount(cash);
-            InvalidateTotalPortfolioValue();
         }
 
         /// <summary>
@@ -579,7 +580,6 @@ namespace QuantConnect.Securities
             {
                 CashBook.Add(symbol, cash, conversionRate);
             }
-            InvalidateTotalPortfolioValue();
         }
 
         /// <summary>
@@ -647,7 +647,6 @@ namespace QuantConnect.Securities
 
                 // assuming USD, we still need to add Currency to the security object
                 _baseCurrencyCash.AddAmount(total);
-                InvalidateTotalPortfolioValue();
             }
         }
 
@@ -692,7 +691,6 @@ namespace QuantConnect.Securities
                 // will cause this to return null, in this case we can't possibly
                 // have any holdings or price to set since we haven't received
                 // data yet, so just do nothing
-                InvalidateTotalPortfolioValue();
                 return;
             }
             next.Value *= split.SplitFactor;
@@ -715,6 +713,7 @@ namespace QuantConnect.Securities
             }
 
             security.SetMarketPrice(next);
+            // security price updated
             InvalidateTotalPortfolioValue();
         }
 
@@ -777,7 +776,6 @@ namespace QuantConnect.Securities
 
                         // update settled cashbook
                         CashBook[item.Currency].AddAmount(item.Amount);
-                        InvalidateTotalPortfolioValue();
                     }
                 }
             }

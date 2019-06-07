@@ -685,7 +685,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         _algorithm.Portfolio.CashBook[cash.Symbol].SetAmount(0);
                     }
                 }
-                _algorithm.Portfolio.InvalidateTotalPortfolioValue();
                 _syncedLiveBrokerageCashToday = true;
                 _lastSyncTimeTicks = CurrentTimeUtc.Ticks;
             }

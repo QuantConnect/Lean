@@ -95,7 +95,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 }
             });
 
-            algorithm.Portfolio.InvalidateTotalPortfolioValue();
             Log.Trace("BaseSetupHandler.SetupCurrencyConversions():" +
                 $"{Environment.NewLine}{algorithm.Portfolio.CashBook}");
         }

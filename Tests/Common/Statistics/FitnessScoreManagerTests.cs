@@ -137,7 +137,6 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             var cash = algorithm.Portfolio.CashBook[algorithm.AccountCurrency];
             cash.AddAmount(cash.Amount * (decimal)factor);
-            algorithm.Portfolio.InvalidateTotalPortfolioValue();
         }
 
         private void IncreaseSalesVolumeAmount(IAlgorithm algorithm)
