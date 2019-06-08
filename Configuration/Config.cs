@@ -182,6 +182,44 @@ namespace QuantConnect.Configuration
         }
 
         /// <summary>
+        /// Sets new configuration value at the specified path. If some of the properties
+        /// that constitute a path do not exist method will create them.
+        /// </summary>
+        /// <param name="path">Json value path. A path could be multi-levelled (separated by commas).</param>
+        /// <param name="value">Value to set.</param>
+        public static void SetValue(string path, string value)
+        {
+            // value token at given path
+            var token = Settings.Value.SelectToken(path);
+
+            // if do not exist - we need to create the missing properties
+            if (token == null)
+            {
+                // Going down a multi-level path we will create the missing properties
+                // Current json object will hold the inner JObject that resides by the current path
+                var currentJObject = Settings.Value;
+                foreach (var word in path.Split('.'))
+                {
+                    if (currentJObject[word] == null)
+                    {
+                        currentJObject.Add(word, new JObject());
+                    }
+
+                    // Move an object one step down
+                    currentJObject = (JObject)currentJObject[word];
+                }
+
+                // Now as we made sure the token for given path does exist - populate the token with given value
+                currentJObject.Replace(value);
+            }
+            else
+            {
+                // If path token does exist - just populate with given value
+                token.Replace(value);
+            }
+        }
+
+        /// <summary>
         /// Get a boolean value configuration setting by a configuration key.
         /// </summary>
         /// <param name="key">String value of the configuration key.</param>
