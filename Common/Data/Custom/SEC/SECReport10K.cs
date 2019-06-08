@@ -68,8 +68,6 @@ namespace QuantConnect.Data.Custom.SEC
             return new SubscriptionDataSource(
                 Path.Combine(
                     Globals.DataFolder,
-                    "equity",
-                    QuantConnect.Market.USA,
                     "alternative",
                     "sec",
                     config.Symbol.Value.ToLower(),

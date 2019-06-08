@@ -77,6 +77,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             Destination = destination;
             
             var data = File.ReadAllText(Path.Combine(RawSource, "cik-ticker-mappings.txt")).Trim();
+            var rankAndFileData = File.ReadAllText(Path.Combine(RawSource, "cik-ticker-mappings-rankandfile.txt")).Trim();
             
             // Process data into dictionary of CIK -> List{T} of tickers
             data.Split('\n')
@@ -86,6 +87,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     tickerCik =>
                     {
                         // tickerCik[0] = symbol, tickerCik[1] = CIK
+                        // Note that SEC tickers come lowercase, so we don't have to alter the ticker
                         var cikFormatted = tickerCik[1].PadLeft(10, '0');
 
                         List<string> symbol;
@@ -99,6 +101,29 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     }
                 );
             
+            // Merge both data sources to a single CIK -> List{T} of tickers
+            rankAndFileData.Split('\n')
+                .Select(x => x.Split('|'))
+                .ToList()
+                .ForEach(
+                    tickerInfo =>
+                    {
+                        var companyCik = tickerInfo[0].PadLeft(10, '0');
+                        var companyTicker = tickerInfo[1].ToLower();
+
+                        List<string> symbol;
+                        if (!CikTicker.TryGetValue(companyCik, out symbol))
+                        {
+                            symbol = new List<string>() {companyTicker};
+                            CikTicker[companyCik] = symbol;
+                        }
+                        else if (!symbol.Contains(companyTicker))
+                        {
+                            symbol.Add(companyTicker);
+                        }
+                    }
+                );
+
             KnownEquities = Directory.GetFiles(knownEquityFolder)
                 .Select(x => Path.GetFileNameWithoutExtension(x).ToLower())
                 .ToList();
@@ -227,10 +252,11 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             var companyCik = report.Report.Filers.First().CompanyData.Cik;
 
                             // Some companies can operate under two tickers, but have the same CIK.
+                            // Don't bother continuing if we don't find any tickers for the given CIK
                             List<string> tickers;
                             if (!CikTicker.TryGetValue(companyCik, out tickers))
                             {
-                                tickers = new List<string>();
+                                return;
                             }
 
                             try
@@ -240,12 +266,12 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             }
                             catch (Exception e)
                             {
-                                Log.Error(e);
+                                Log.Error(e, $"Index file not found for company {companyCik}");
                             }
 
                             // Default to company CIK if no known ticker is found.
-                            // We will write a file for every ticker that exists under the CIK to ensure consistency
-                            foreach (var ticker in tickers.Where(KnownEquities.Contains).DefaultIfEmpty(companyCik))
+                            // If we don't find a known equity in our list, the equity is probably not worth our time
+                            foreach (var ticker in tickers.Where(KnownEquities.Contains))
                             {
                                 var tickerReports = Reports.GetOrAdd(
                                     ticker,

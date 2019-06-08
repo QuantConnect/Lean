@@ -109,6 +109,9 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             var cikTickerListPath = Path.Combine(rawDestination, "cik-ticker-mappings.txt");
             var cikTickerListTempPath = $"{cikTickerListPath}.tmp";
 
+            var cikRankAndFileTickerListPath = Path.Combine(rawDestination, "cik-ticker-mappings-rankandfile.txt");
+            var cikRankAndFileTickerListTempPath = $"{cikRankAndFileTickerListPath}.tmp";
+
             // Download master list of CIKs from SEC website and store on disk
             var cikLookupPath = Path.Combine(rawDestination, "cik-lookup-data.txt");
             var cikLookupTempPath = $"{cikLookupPath}.tmp";
@@ -122,7 +125,13 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     File.Move(cikTickerListTempPath, cikTickerListPath);
                     File.Delete(cikTickerListTempPath);
                 }
-
+                if (!File.Exists(cikRankAndFileTickerListPath))
+                {
+                    Log.Trace("SECDataDownloader.Download(): Downloading ticker-CIK mappings list from rankandfile");
+                    client.DownloadFile("http://rankandfiled.com/static/export/cik_ticker.csv", cikRankAndFileTickerListTempPath);
+                    File.Move(cikRankAndFileTickerListTempPath, cikRankAndFileTickerListPath);
+                    File.Delete(cikRankAndFileTickerListTempPath);
+                }
                 if (!File.Exists(cikLookupPath))
                 {
                     Log.Trace("SECDataDownloader.Download(): Downloading CIK lookup data");

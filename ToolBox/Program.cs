@@ -118,10 +118,10 @@ namespace QuantConnect.ToolBox
                     case "secdl":
                     case "secdownloader":
                         var equityFolder = Path.Combine(Globals.DataFolder, "equity", Market.USA);
-                        var secFolder = Path.Combine(equityFolder, "alternative", "sec");
+                        var secFolder = Path.Combine(Globals.DataFolder, "alternative", "sec");
 
                         SECDataDownloaderProgram.SECDataDownloader(
-                            GetParameterOrDefault(optionsObject, "source-dir", Path.Combine(secFolder, "raw_data")),
+                            GetParameterOrDefault(optionsObject, "source-dir", Path.Combine(secFolder, "raw-sec")),
                             GetParameterOrDefault(optionsObject, "destination-dir", secFolder),
                             fromDate,
                             toDate,
