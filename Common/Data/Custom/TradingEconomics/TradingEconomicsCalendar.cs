@@ -149,8 +149,8 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// <summary>
         /// Unique symbol used by Trading Economics
         /// </summary>
-        [JsonProperty(PropertyName = "Symbol"), JsonConverter(typeof(TradingEconomicsSymbolJsonConverter))]
-        public Symbol TradingEconomicsSymbol { get; set; }
+        [JsonProperty(PropertyName = "Symbol")]
+        public string Symbol { get; set; }
 
         /// <summary>
         /// Return the Subscription Data Source gained from the URL
@@ -168,7 +168,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
 
             var symbol = config.Symbol.Value.ToLower();
             symbol = symbol.Substring(0, symbol.Length - 2);
-            var source = Path.Combine(Globals.DataFolder, "trading-economics", "world", "daily", $"{symbol}_calendar.zip");
+            var source = Path.Combine(Globals.DataFolder, "alternative", "trading-economics", $"{symbol}_calendar.zip");
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Collection);
         }
 
@@ -201,7 +201,8 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// </summary>
         public override string ToString()
         {
-            return $"{TradingEconomicsSymbol.Value} ({Country} - {Category}): {Event} : Importance.{Importance}";
+            var symbol = string.IsNullOrWhiteSpace(Symbol) ? Symbol : Ticker;
+            return $"{symbol} ({Country} - {Category}): {Event} : Importance.{Importance}";
         }
     }
 

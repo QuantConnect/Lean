@@ -85,7 +85,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
 
             var symbol = config.Symbol.Value.ToLower();
             symbol = symbol.Substring(0, symbol.Length - 2);
-            var source = Path.Combine(Globals.DataFolder, "trading-economics", "world", "daily", $"{symbol}_indicator.zip");
+            var source = Path.Combine(Globals.DataFolder, "alternative", "trading-economics", $"{symbol}_indicator.zip");
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Collection);
         }
 

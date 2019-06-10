@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 {
@@ -37,7 +38,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         {
             _fromDate = new DateTime(1998, 1, 1);
             _toDate = DateTime.Now;
-            _destinationFolder = Path.Combine(destinationFolder, "usa", "daily");
+            _destinationFolder = Path.Combine(destinationFolder, "earnings");
             Directory.CreateDirectory(_destinationFolder);
         }
 
@@ -56,8 +57,8 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                 try
                 {
                     var endUtc = startUtc.AddMonths(1).AddDays(-1);
-                    var collection = Get(startUtc, endUtc)
-                        .SelectMany(JsonConvert.DeserializeObject<List<TradingEconomicsEarnings>>);
+                    var content = Get(startUtc, endUtc).Result;
+                    var collection = JsonConvert.DeserializeObject<List<TradingEconomicsEarnings>>(content);
 
                     data.AddRange(collection);
 
@@ -100,16 +101,16 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         /// </summary>
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
-        /// <returns>Enumerable of string representing data for this date range</returns>
-        public override IEnumerable<string> Get(DateTime startUtc, DateTime endUtc)
+        /// <returns>String representing data for this date range</returns>
+        public override Task<string> Get(DateTime startUtc, DateTime endUtc)
         {
             var url = $"/earnings/country/united states/?type=earnings&d1={startUtc:yyyy-MM-dd}&d2={endUtc:yyyy-MM-dd}";
-            yield return HttpRequester(url).Result;
+            return HttpRequester(url);
         }
 
         private string GetFileName(TradingEconomicsEarnings tradingEconomicsEarnings)
         {
-            var ticker = tradingEconomicsEarnings.TradingEconomicsSymbol;
+            var ticker = tradingEconomicsEarnings.Symbol;
             return ticker.Replace(":", "-").ToLower() + ".json";
         }
     }

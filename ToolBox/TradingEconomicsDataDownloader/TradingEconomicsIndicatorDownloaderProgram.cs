@@ -27,8 +27,8 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         public static void TradingEconomicsIndicatorsDownloader(DateTime fromDate, DateTime toDate)
         {
             // Load settings from config.json
-            var dataDirectory = Config.Get("data-directory", "../../../Data");
-            var destinationFolder = Path.Combine(dataDirectory, "trading-economics");
+            var dataDirectory = Config.Get("data-directory", Globals.DataFolder);
+            var destinationFolder = Path.Combine(dataDirectory, "alternative", "trading-economics");
 
             // Create an instance of the downloader
             var downloader = new TradingEconomicsIndicatorDownloader(fromDate, toDate, destinationFolder);

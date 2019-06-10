@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data;
 using QuantConnect.Data.Custom.TradingEconomics;
 
 namespace QuantConnect.Algorithm.CSharp

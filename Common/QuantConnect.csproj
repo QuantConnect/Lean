@@ -241,7 +241,6 @@
     <Compile Include="Data\Custom\TradingEconomics\TradingEconomicsIndicator.cs" />
     <Compile Include="Data\Custom\TradingEconomics\TradingEconomicsDateTimeConverter.cs" />
     <Compile Include="Data\Custom\TradingEconomics\TradingEconomicsCalendar.cs" />
-    <Compile Include="Data\Custom\TradingEconomics\TradingEconomicsSymbolJsonConverter.cs" />
     <Compile Include="Data\Custom\USEnergyInformation.cs" />
     <Compile Include="Data\Fundamental\AssetClassificationHelper.cs" />
     <Compile Include="Data\HistoryProviderBase.cs" />

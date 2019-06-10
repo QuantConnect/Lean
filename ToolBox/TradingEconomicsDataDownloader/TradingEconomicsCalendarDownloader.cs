@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 {
@@ -37,7 +38,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         {
             _fromDate = new DateTime(2000, 10, 01);
             _toDate = DateTime.Now;
-            _destinationFolder = Path.Combine(destinationFolder, "world", "daily");
+            _destinationFolder = destinationFolder;
             Directory.CreateDirectory(_destinationFolder);
         }
 
@@ -56,8 +57,8 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                 try
                 {
                     var endUtc = startUtc.AddMonths(1).AddDays(-1);
-                    var collection = Get(startUtc, endUtc)
-                        .SelectMany(JsonConvert.DeserializeObject<List<TradingEconomicsCalendar>>);
+                    var content = Get(startUtc, endUtc).Result;
+                    var collection = JsonConvert.DeserializeObject<List<TradingEconomicsCalendar>>(content);
 
                     data.AddRange(collection);
 
@@ -100,11 +101,11 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         /// </summary>
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
-        /// <returns>Enumerable of string representing data for this date range</returns>
-        public override IEnumerable<string> Get(DateTime startUtc, DateTime endUtc)
+        /// <returns>String representing data for this date range</returns>
+        public override Task<string> Get(DateTime startUtc, DateTime endUtc)
         {
             var url = $"/calendar/country/all/{startUtc:yyyy-MM-dd}/{endUtc:yyyy-MM-dd}";
-            yield return HttpRequester(url).Result;
+            return HttpRequester(url);
         }
 
         private string GetFileName(TradingEconomicsCalendar tradingEconomicsCalendar)

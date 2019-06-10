@@ -13,12 +13,11 @@
  * limitations under the License.
 */
 
+using QuantConnect.Configuration;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 {
@@ -44,8 +43,8 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         /// </summary>
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
-        /// <returns>Enumerable of string representing data for this date range</returns>
-        public abstract IEnumerable<string> Get(DateTime startUtc, DateTime endUtc);
+        /// <returns>String representing data for this date range</returns>
+        public abstract Task<string> Get(DateTime startUtc, DateTime endUtc);
 
         public async Task<string> HttpRequester(string url)
         {
@@ -72,7 +71,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
             }
             catch (Exception e)
             {
-                throw new Exception($"Error at HttpRequester with msg: {e}", e);
+                throw new Exception($"Error at HttpRequester with msg: {e.Message}", e);
             }
         }
     }

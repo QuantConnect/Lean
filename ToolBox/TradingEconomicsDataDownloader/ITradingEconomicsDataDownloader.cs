@@ -14,7 +14,7 @@
 */
 
 using System;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 {
@@ -34,7 +34,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         /// </summary>
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
-        /// <returns>Enumerable of string representing data for this date range</returns>
-        IEnumerable<string> Get(DateTime startUtc, DateTime endUtc);
+        /// <returns>String representing data for this date range</returns>
+        Task<string> Get(DateTime startUtc, DateTime endUtc);
     }
 }

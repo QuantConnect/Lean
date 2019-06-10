@@ -35,7 +35,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// Unique symbol used by Trading Economics
         /// </summary>
         [JsonProperty(PropertyName = "Symbol")]
-        public string TradingEconomicsSymbol { get; set; }
+        public string Symbol { get; set; }
 
         /// <summary>
         /// Earnings type: earnings, ipo, dividends
