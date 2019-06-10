@@ -67,12 +67,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // handles zip files
-            if (filename.GetExtension() == ".zip")
+            if (filename.EndsWith(".zip"))
             {
                 Stream stream = null;
 
                 // scan the cache once every 3 seconds
-                if (_lastCacheScan == DateTime.MinValue || _lastCacheScan < DateTime.Now.AddSeconds(-3))
+                if (_lastCacheScan == DateTime.MinValue || _lastCacheScan < DateTime.UtcNow.AddSeconds(-3))
                 {
                     CleanCache();
                 }
@@ -172,7 +172,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         private void CleanCache()
         {
-            var clearCacheIfOlderThan = DateTime.Now.AddSeconds(-CacheSeconds);
+            var clearCacheIfOlderThan = DateTime.UtcNow.AddSeconds(-CacheSeconds);
 
             // clean all items that that are older than CacheSeconds than the current date
             foreach (var zip in _zipFileCache)
@@ -189,7 +189,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            _lastCacheScan = DateTime.Now;
+            _lastCacheScan = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -256,7 +256,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
 
-                entry.OpenReader().CopyTo(stream);
+                entry.Extract(stream);
                 stream.Position = 0;
                 return stream;
             }
@@ -303,7 +303,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 EntryCache[entry.FileName] = entry;
             }
             Key = key;
-            _dateCached = DateTime.Now;
+            _dateCached = DateTime.UtcNow;
         }
 
         /// <summary>

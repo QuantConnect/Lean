@@ -102,6 +102,7 @@ namespace QuantConnect
         private readonly ulong _properties;
         private readonly SidBox _underlying;
         private readonly int _hashCode;
+        private decimal _strikePrice;
 
         #endregion
 
@@ -202,10 +203,15 @@ namespace QuantConnect
                 {
                     throw new InvalidOperationException("OptionType is only defined for SecurityType.Option");
                 }
-                var scale = ExtractFromProperties(StrikeScaleOffset, StrikeScaleWidth);
-                var unscaled = ExtractFromProperties(StrikeOffset, StrikeWidth);
-                var pow = Math.Pow(10, (int)scale - StrikeDefaultScale);
-                return unscaled * (decimal)pow;
+
+                if (_strikePrice == -1)
+                {
+                    var scale = ExtractFromProperties(StrikeScaleOffset, StrikeScaleWidth);
+                    var unscaled = ExtractFromProperties(StrikeOffset, StrikeWidth);
+                    var pow = Math.Pow(10, (int)scale - StrikeDefaultScale);
+                    _strikePrice = unscaled * (decimal)pow;
+                }
+                return _strikePrice;
             }
         }
 
@@ -266,6 +272,7 @@ namespace QuantConnect
             _symbol = symbol;
             _properties = properties;
             _underlying = null;
+            _strikePrice = -1;
             SecurityType = (SecurityType)ExtractFromProperties(SecurityTypeOffset, SecurityTypeWidth, properties);
             _hashCode = unchecked (symbol.GetHashCode() * 397) ^ properties.GetHashCode();
         }
@@ -286,7 +293,7 @@ namespace QuantConnect
             }
             _symbol = symbol;
             _properties = properties;
-            if (underlying != Empty)
+            if (!underlying.Equals(Empty))
             {
                 _underlying = new SidBox(underlying);
             }

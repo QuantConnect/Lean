@@ -272,7 +272,14 @@ namespace QuantConnect.Data.Market
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var csvLength = line.Split(',').Length;
+            var csvLength = 0;
+            for (var i = 0; i < line.Length && csvLength <= 5; i++)
+            {
+                if (line[i] == ',')
+                {
+                    csvLength++;
+                }
+            }
 
             try
             {
