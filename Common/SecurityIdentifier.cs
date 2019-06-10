@@ -808,7 +808,7 @@ namespace QuantConnect
         public override string ToString()
         {
             var props = EncodeBase36(_properties);
-            props = props.IsNullOrEmpty() ? "0" : props;
+            props = props.Length == 0 ? "0" : props;
             if (HasUnderlying)
             {
                 return _symbol + ' ' + props + '|' + _underlying.SecurityIdentifier;

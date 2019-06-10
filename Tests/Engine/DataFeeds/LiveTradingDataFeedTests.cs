@@ -879,7 +879,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.AddUniverse(new ConstituentsUniverse(
                 Symbol.Create("constituents-universe-qctest", SecurityType.Equity, Market.USA),
                 _algorithm.UniverseSettings));
-            ConsumeBridge(feed, TimeSpan.FromSeconds(10), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
                 if (ts.UniverseData.Count > 0)
                 {
@@ -898,7 +898,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         yieldedData = true;
                     }
                 }
-            }, secondsTimeStep: 60 * 5, // 5 minutes time step
+            }, secondsTimeStep: 60 * 60 * 8, // 8 hour time step
                 alwaysInvoke:true,
                 endDate: endDate);
 

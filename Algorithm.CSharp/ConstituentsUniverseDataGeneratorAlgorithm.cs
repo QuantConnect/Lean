@@ -32,6 +32,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     /// <remarks>The data produced by this algorithm is the one used by the
     /// <see cref="ConstituentsUniverseRegressionAlgorithm"/></remarks>
+    /// <remarks>In the cloud, users can implement their own <see cref="ConstituentsUniverseData"/>
+    /// (not using <see cref="SubscriptionTransportMedium.LocalFile"/>) that can fetch the files
+    /// generated from this algorithm</remarks>
     public class ConstituentsUniverseDataGeneratorAlgorithm : QCAlgorithm
     {
         private readonly HashSet<Symbol> _currentSelection = new HashSet<Symbol>();
@@ -104,8 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
                 File.Delete(path);
                 if (_currentSelection.Count == 0)
                 {
-                    using (StreamWriter constituentsUniverseFile
-                        = new StreamWriter(path, append:true))
+                    using (StreamWriter constituentsUniverseFile = new StreamWriter(path, append:true))
                     {
                         constituentsUniverseFile.WriteLine(
                             $"{QuantConnect.Symbol.None.ID.ToString()},{QuantConnect.Symbol.None.Value}");
@@ -115,8 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     foreach (var symbol in _currentSelection)
                     {
-                        using (StreamWriter constituentsUniverseFile
-                            = new StreamWriter(path, append: true))
+                        using (StreamWriter constituentsUniverseFile = new StreamWriter(path, append: true))
                         {
                             constituentsUniverseFile.WriteLine($"{symbol.ID.ToString()},{symbol.Value}");
                         }
