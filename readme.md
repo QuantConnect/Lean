@@ -1,7 +1,7 @@
 ![alt tag](https://cdn.quantconnect.com/web/i/20180601-1615-lean-logo-small.png)
 =========
 
-[![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean) &nbsp;&nbsp;&nbsp; [![Google Group](https://img.shields.io/badge/debug-Google%20Group-53c82b.svg)](https://groups.google.com/forum/#!forum/lean-engine) &nbsp;&nbsp;&nbsp; [![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
+[![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean) &nbsp;&nbsp;&nbsp; [![LEAN Forum](https://img.shields.io/badge/debug-LEAN%20Forum-53c82b.svg)](https://www.quantconnect.com/forum) &nbsp;&nbsp;&nbsp; [![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
 
 
 [Lean Home - https://www.quantconnect.com/lean][1] | [Documentation][2] | [Download Zip][3]
@@ -11,9 +11,9 @@
 Join the team and solve some of the most difficult challenges in quantitative finance. If you are passionate about algorithmic trading we'd like to hear from you. The following roles are open for our **Seattle, WA** office:
 
 
-- [**Developer Advocate**](https://www.indeed.com/viewjob?jk=e5691f056eb5e2c4&q=developer+advocate): How can we educate 77,000 quants at scale? Strategize and create video content, documentation, interactive tutorials, and other content to empower the community.
+- [**Developer Advocate**](https://www.indeed.com/viewjob?jk=e5691f056eb5e2c4&q=developer+advocate): How can we educate 80k+ quants at scale? Strategize and create video content, documentation, interactive tutorials, and other content to empower the community.
 
-- [**Quantitative Developer**](https://www.indeed.com/cmp/QuantConnect/jobs/Quantitative-Developer-1d27ef48eda95210): Work daily with a brilliant community of developers, scientists, mathematicians, and traders as you enable them to bring their strategies to life.
+- [**Quantitative Developer**](https://www.indeed.com/viewjob?t=quantitative+developer&jk=ec111ccc63730500&_ga=2.110607745.587290046.1560181815-1738808679.1551121684): Work daily with a brilliant community of developers, scientists, mathematicians, and traders as you enable them to bring their strategies to life.
 
 - [**Quantitative Development Intern**](https://www.indeed.com/cmp/QuantConnect/jobs/Quantitative-Development-Intern-b4b2572decd2e602): If you are a recent or current graduate with a knack for quantitative finance, consider applying for an internship!
 
