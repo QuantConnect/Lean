@@ -153,7 +153,7 @@ namespace QuantConnect.Algorithm
             // universe selection
             UniverseManager = new UniverseManager();
             Universe = new UniverseDefinitions(this);
-            UniverseSettings = new UniverseSettings(Resolution.Minute, 2m, true, false, TimeSpan.FromDays(1));
+            UniverseSettings = new UniverseSettings(Resolution.Minute, 2m, true, false, TimeSpan.Zero);
 
             // initialize our scheduler, this acts as a liason to the real time handler
             Schedule = new ScheduleManager(Securities, TimeZone);
