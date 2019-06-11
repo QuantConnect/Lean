@@ -208,8 +208,7 @@ namespace QuantConnect.Securities
                 _uniqueStrikes = _allSymbols
                     .DistinctBy(x => x.ID.StrikePrice)
                     .OrderBy(x => x.ID.StrikePrice)
-                    .Select(symbol => symbol.ID.StrikePrice)
-                    .ToList();
+                    .ToList(symbol => symbol.ID.StrikePrice);
 
                 _uniqueStrikesResolveDate = _underlying.Time.Date;
             }
@@ -281,14 +280,9 @@ namespace QuantConnect.Securities
             var minPrice = _uniqueStrikes[indexMinPrice];
             var maxPrice = _uniqueStrikes[indexMaxPrice];
 
-            var filtered =
-                    from symbol in _allSymbols
-                    let contract = symbol.ID
-                    where contract.StrikePrice >= minPrice
-                        && contract.StrikePrice <= maxPrice
-                    select symbol;
-
-            _allSymbols = filtered.ToList();
+            _allSymbols = _allSymbols
+                .Where(symbol => symbol.ID.StrikePrice >= minPrice && symbol.ID.StrikePrice <= maxPrice)
+                .ToList();
 
             return this;
         }
@@ -313,14 +307,9 @@ namespace QuantConnect.Securities
             var minExpiryToDate = _underlying.Time.Date + minExpiry;
             var maxExpiryToDate = _underlying.Time.Date + maxExpiry;
 
-            var filtered =
-                   from symbol in _allSymbols
-                   let contract = symbol.ID
-                   where contract.Date >= minExpiryToDate
-                      && contract.Date <= maxExpiryToDate
-                   select symbol;
-
-            _allSymbols = filtered.ToList();
+            _allSymbols = _allSymbols
+                .Where(symbol => symbol.ID.Date >= minExpiryToDate && symbol.ID.Date <= maxExpiryToDate)
+                .ToList();
 
             return this;
         }

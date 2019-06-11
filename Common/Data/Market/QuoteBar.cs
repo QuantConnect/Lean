@@ -272,37 +272,27 @@ namespace QuantConnect.Data.Market
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var csvLength = line.Split(',').Length;
-
             try
             {
-                // "Scaffold" code - simple check to see how the data is formatted and decide how to parse appropriately
-                // TODO: Once all FX is reprocessed to QuoteBars, remove this check
-                if (csvLength > 5)
+                switch (config.SecurityType)
                 {
-                    switch (config.SecurityType)
-                    {
-                        case SecurityType.Equity:
-                            return ParseEquity(config, line, date);
+                    case SecurityType.Equity:
+                        return ParseEquity(config, line, date);
 
-                        case SecurityType.Forex:
-                        case SecurityType.Crypto:
-                            return ParseForex(config, line, date);
+                    case SecurityType.Forex:
+                    case SecurityType.Crypto:
+                        return ParseForex(config, line, date);
 
-                        case SecurityType.Cfd:
-                            return ParseCfd(config, line, date);
+                    case SecurityType.Cfd:
+                        return ParseCfd(config, line, date);
 
-                        case SecurityType.Option:
-                            return ParseOption(config, line, date);
+                    case SecurityType.Option:
+                        return ParseOption(config, line, date);
 
-                        case SecurityType.Future:
-                            return ParseFuture(config, line, date);
+                    case SecurityType.Future:
+                        return ParseFuture(config, line, date);
 
-                    }
                 }
-
-                // Parse as trade
-                return ParseTradeAsQuoteBar(config, date, line);
             }
             catch (Exception err)
             {
