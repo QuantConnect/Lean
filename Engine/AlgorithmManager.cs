@@ -369,9 +369,6 @@ namespace QuantConnect.Lean.Engine
                 // security prices got updated
                 algorithm.Portfolio.InvalidateTotalPortfolioValue();
 
-                // sample alpha charts now that we've updated time/price information but BEFORE we receive new insights
-                alphas.ProcessSynchronousEvents();
-
                 // fire real time events after we've updated based on the new data
                 realtime.SetTime(timeSlice.Time);
 
@@ -689,6 +686,10 @@ namespace QuantConnect.Lean.Engine
                 //If its the historical/paper trading models, wait until market orders have been "filled"
                 // Manually trigger the event handler to prevent thread switch.
                 transactions.ProcessSynchronousEvents();
+
+                // sample alpha charts now that we've updated time/price information and after transactions
+                // are processed so that insights closed because of new order based insights get updated
+                alphas.ProcessSynchronousEvents();
 
                 //Save the previous time for the sample calculations
                 _previousTime = time;
