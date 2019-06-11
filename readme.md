@@ -1,7 +1,7 @@
 ![alt tag](https://cdn.quantconnect.com/web/i/20180601-1615-lean-logo-small.png)
 =========
 
-[![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean) &nbsp;&nbsp;&nbsp; [![Google Group](https://img.shields.io/badge/debug-Google%20Group-53c82b.svg)](https://groups.google.com/forum/#!forum/lean-engine) &nbsp;&nbsp;&nbsp; [![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
+[![Build Status](https://travis-ci.org/QuantConnect/Lean.svg?branch=feature%2Fremove-web-socket-4-net)](https://travis-ci.org/QuantConnect/Lean) &nbsp;&nbsp;&nbsp; [![LEAN Forum](https://img.shields.io/badge/debug-LEAN%20Forum-53c82b.svg)](https://www.quantconnect.com/forum) &nbsp;&nbsp;&nbsp; [![Slack Chat](https://img.shields.io/badge/chat-Slack-53c82b.svg)](https://www.quantconnect.com/slack)
 
 
 [Lean Home - https://www.quantconnect.com/lean][1] | [Documentation][2] | [Download Zip][3]
@@ -13,6 +13,17 @@
 Lean Engine is an open-source algorithmic trading engine built for easy strategy research, backtesting and live trading. We integrate with common data providers and brokerages so you can quickly deploy algorithmic trading strategies.
 
 The core of the LEAN Engine is written in C#; but it operates seamlessly on Linux, Mac and Windows operating systems. It supports algorithms written in Python 3.6, C# or F#. Lean drives the web based algorithmic trading platform [QuantConnect][4].
+
+
+## QuantConnect is Hiring! ##
+Join the team and solve some of the most difficult challenges in quantitative finance. If you are passionate about algorithmic trading we'd like to hear from you. The below roles are open in our Seattle, WA office. When applying, make sure to mention you came through GitHub:
+
+
+- [**Developer Advocate**](https://www.indeed.com/viewjob?jk=e5691f056eb5e2c4&q=developer+advocate): How can we educate 80k+ quants at scale? Strategize and create video content, documentation, interactive tutorials, and other content to empower the community.
+
+- [**Quantitative Developer**](https://www.indeed.com/viewjob?t=quantitative+developer&jk=ec111ccc63730500&_ga=2.110607745.587290046.1560181815-1738808679.1551121684): Work daily with a brilliant community of developers, scientists, mathematicians, and traders as you enable them to bring their strategies to life.
+
+- [**Quantitative Development Intern**](https://www.indeed.com/cmp/QuantConnect/jobs/Quantitative-Development-Intern-b4b2572decd2e602): If you are a recent or current graduate with a knack for quantitative finance, consider applying for an internship!
 
 ## System Overview ##
 
@@ -146,7 +157,7 @@ Please submit bugs and feature requests as an issue to the [Lean Repository][5].
 
 ## Mailing List ## 
 
-The mailing list for the project can be found on [Google Groups][6]. Please use this to request assistance with your installations and setup questions.
+The mailing list for the project can be found on [LEAN Forum][6]. Please use this to request assistance with your installations and setup questions.
 
 ## Contributors and Pull Requests ##
 
@@ -166,6 +177,6 @@ Ryan H, Pravin B, Jimmie B, Nick C, Sam C, Mattias S, Michael H, Mark M, Madhan,
   [3]: https://github.com/QuantConnect/Lean/archive/master.zip
   [4]: https://www.quantconnect.com "QuantConnect"
   [5]: https://github.com/QuantConnect/Lean/issues
-  [6]: https://groups.google.com/forum/#!forum/lean-engine
+  [6]: https://www.quantconnect.com/forum/discussions/1/lean
   [7]: https://github.com/QuantConnect/Lean/blob/master/CONTRIBUTING.md
   [8]: https://github.com/QuantConnect/Lean/blob/master/VisualStudioPlugin/readme.md
