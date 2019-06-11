@@ -16,11 +16,11 @@
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using System;
 using System.Linq;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -81,6 +81,24 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(symbol, security.Symbol);
             Assert.AreEqual(spy, security);
             Assert.AreEqual(expected, security.DataNormalizationMode);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void LiveCoarseUniverseMinimumTimeIsSetToZeroIfMoreThanOneDay(bool liveMode)
+        {
+            var algorithm = new QCAlgorithm
+            {
+                UniverseSettings = { MinimumTimeInUniverse = TimeSpan.FromDays(1) }
+            };
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm, new MockDataFeed()));
+            algorithm.SetLiveMode(liveMode);
+
+            algorithm.AddUniverse(coarse => Enumerable.Empty<Symbol>());
+
+            Assert.AreEqual(
+                liveMode ? TimeSpan.Zero : TimeSpan.FromDays(1),
+                algorithm.UniverseSettings.MinimumTimeInUniverse);
         }
 
         private Tuple<QCAlgorithm, DataManager> GetAlgorithmAndDataManager()

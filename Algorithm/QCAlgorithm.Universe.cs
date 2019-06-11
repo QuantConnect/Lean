@@ -373,6 +373,8 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Defines an initial coarse selection</param>
         public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
         {
+            CheckLiveCoarseUniverseSettings();
+
             AddUniverse(new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, selector));
         }
 
@@ -384,6 +386,8 @@ namespace QuantConnect.Algorithm
         /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
         public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
         {
+            CheckLiveCoarseUniverseSettings();
+
             var coarse = new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, coarseSelector);
 
             AddUniverse(new FineFundamentalFilteredUniverse(coarse, fineSelector));
@@ -539,6 +543,22 @@ namespace QuantConnect.Algorithm
             if (security.VolatilityModel == VolatilityModel.Null)
             {
                 security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(periods: 30);
+            }
+        }
+
+        /// <summary>
+        /// Checks the UniverseSettings.MinimumTimeInUniverse and if it's one day or more it updates it to be TimeSpan.Zero.
+        /// A warning message is also displayed to the user.
+        /// </summary>
+        private void CheckLiveCoarseUniverseSettings()
+        {
+            if (_liveMode && UniverseSettings.MinimumTimeInUniverse >= TimeSpan.FromDays(1))
+            {
+                Debug("Warning: Coarse universe selection in Live mode does not always happen at the same time. " +
+                      "The current setting of UniverseSettings.MinimumTimeInUniverse (one day or more) could cause unexpected universe members. " +
+                      "For this reason the setting has been updated to TimeSpan.Zero.");
+
+                UniverseSettings.MinimumTimeInUniverse = TimeSpan.Zero;
             }
         }
 
