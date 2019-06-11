@@ -16,7 +16,7 @@ The core of the LEAN Engine is written in C#; but it operates seamlessly on Linu
 
 
 ## QuantConnect is Hiring! ##
-Join the team and solve some of the most difficult challenges in quantitative finance. If you are passionate about algorithmic trading we'd like to hear from you. The following roles are open for our **Seattle, WA** office:
+Join the team and solve some of the most difficult challenges in quantitative finance. If you are passionate about algorithmic trading we'd like to hear from you. When you apply to any of the following open roles in our **Seattle, WA** office, make sure you mention that you came through GitHub:
 
 
 - [**Developer Advocate**](https://www.indeed.com/viewjob?jk=e5691f056eb5e2c4&q=developer+advocate): How can we educate 80k+ quants at scale? Strategize and create video content, documentation, interactive tutorials, and other content to empower the community.
