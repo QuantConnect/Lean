@@ -25,6 +25,7 @@ using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.CoinApiDataConverter;
 using QuantConnect.ToolBox.CryptoiqDownloader;
 using QuantConnect.ToolBox.DukascopyDownloader;
+using QuantConnect.ToolBox.EstimizeDataDownloader;
 using QuantConnect.ToolBox.FxcmDownloader;
 using QuantConnect.ToolBox.FxcmVolumeDownload;
 using QuantConnect.ToolBox.GDAXDownloader;
@@ -115,6 +116,35 @@ namespace QuantConnect.ToolBox
                     case "bfxdl":
                     case "bitfinexdownloader":
                         BitfinexDownloaderProgram.BitfinexDownloader(tickers, resolution, fromDate, toDate);
+                        break;
+                    case "secdl":
+                    case "secdownloader":
+                        var equityFolder = Path.Combine(Globals.DataFolder, "equity", Market.USA);
+                        var secFolder = Path.Combine(Globals.DataFolder, "alternative", "sec");
+
+                        SECDataDownloaderProgram.SECDataDownloader(
+                            GetParameterOrDefault(optionsObject, "source-dir", Path.Combine(secFolder, "raw-sec")),
+                            GetParameterOrDefault(optionsObject, "destination-dir", secFolder),
+                            fromDate,
+                            toDate,
+                            GetParameterOrDefault(
+                                optionsObject,
+                                "source-meta-dir",
+                                Path.Combine(equityFolder, "daily")
+                            )
+                        );
+                        break;
+                    case "ecdl":
+                    case "estimizeconsensusdownloader":
+                        EstimizeConsensusDataDownloaderProgram.EstimizeConsensusDataDownloader();
+                        break;
+                    case "eedl":
+                    case "estimizeestimatedownloader":
+                        EstimizeEstimateDataDownloaderProgram.EstimizeEstimateDataDownloader();
+                        break;
+                    case "erdl":
+                    case "estimizereleasedownloader":
+                        EstimizeReleaseDataDownloaderProgram.EstimizeReleaseDataDownloader();
                         break;
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
