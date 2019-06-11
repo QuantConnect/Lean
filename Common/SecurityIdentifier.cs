@@ -204,6 +204,7 @@ namespace QuantConnect
                     throw new InvalidOperationException("OptionType is only defined for SecurityType.Option");
                 }
 
+                // performance: lets calculate strike price once
                 if (_strikePrice == -1)
                 {
                     var scale = ExtractFromProperties(StrikeScaleOffset, StrikeScaleWidth);
@@ -293,6 +294,7 @@ namespace QuantConnect
             }
             _symbol = symbol;
             _properties = properties;
+            // performance: directly call Equals(SecurityIdentifier other), shortcuts Equals(object other)
             if (!underlying.Equals(Empty))
             {
                 _underlying = new SidBox(underlying);

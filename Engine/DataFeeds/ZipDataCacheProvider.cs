@@ -256,6 +256,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
 
+                // extract directly into the stream
                 entry.Extract(stream);
                 stream.Position = 0;
                 return stream;
