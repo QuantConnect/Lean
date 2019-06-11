@@ -7,6 +7,14 @@
 [Lean Home - https://www.quantconnect.com/lean][1] | [Documentation][2] | [Download Zip][3]
 
 ----------
+
+## Introduction ##
+
+Lean Engine is an open-source algorithmic trading engine built for easy strategy research, backtesting and live trading. We integrate with common data providers and brokerages so you can quickly deploy algorithmic trading strategies.
+
+The core of the LEAN Engine is written in C#; but it operates seamlessly on Linux, Mac and Windows operating systems. It supports algorithms written in Python 3.6, C# or F#. Lean drives the web based algorithmic trading platform [QuantConnect][4].
+
+
 ## QuantConnect is Hiring! ##
 Join the team and solve some of the most difficult challenges in quantitative finance. If you are passionate about algorithmic trading we'd like to hear from you. The following roles are open for our **Seattle, WA** office:
 
@@ -16,12 +24,6 @@ Join the team and solve some of the most difficult challenges in quantitative fi
 - [**Quantitative Developer**](https://www.indeed.com/viewjob?t=quantitative+developer&jk=ec111ccc63730500&_ga=2.110607745.587290046.1560181815-1738808679.1551121684): Work daily with a brilliant community of developers, scientists, mathematicians, and traders as you enable them to bring their strategies to life.
 
 - [**Quantitative Development Intern**](https://www.indeed.com/cmp/QuantConnect/jobs/Quantitative-Development-Intern-b4b2572decd2e602): If you are a recent or current graduate with a knack for quantitative finance, consider applying for an internship!
-
-## Introduction ##
-
-Lean Engine is an open-source algorithmic trading engine built for easy strategy research, backtesting and live trading. We integrate with common data providers and brokerages so you can quickly deploy algorithmic trading strategies.
-
-The core of the LEAN Engine is written in C#; but it operates seamlessly on Linux, Mac and Windows operating systems. It supports algorithms written in Python 3.6, C# or F#. Lean drives the web based algorithmic trading platform [QuantConnect][4].
 
 ## System Overview ##
 
