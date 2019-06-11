@@ -7,7 +7,15 @@
 [Lean Home - https://www.quantconnect.com/lean][1] | [Documentation][2] | [Download Zip][3]
 
 ----------
-## Hire Me! ##
+## QuantConnect is Hiring! ##
+Join the team and solve some of the most difficult challenges in quantitative finance. If you are passionate about algorithmic trading we'd like to hear from you. The following roles are open for our **Seattle, WA** office:
+
+
+- [**Developer Advocate**](https://www.indeed.com/viewjob?jk=e5691f056eb5e2c4&q=developer+advocate): How can we educate 77,000 quants at scale? Strategize and create video content, documentation, interactive tutorials, and other content to empower the community.
+
+- [**Quantitative Developer**](https://www.indeed.com/cmp/QuantConnect/jobs/Quantitative-Developer-1d27ef48eda95210): Work daily with a brilliant community of developers, scientists, mathematicians, and traders as you enable them to bring their strategies to life.
+
+- [**Quantitative Development Intern**](https://www.indeed.com/cmp/QuantConnect/jobs/Quantitative-Development-Intern-b4b2572decd2e602): If you are a recent or current graduate with a knack for quantitative finance, consider applying for an internship!
 
 ## Introduction ##
 
