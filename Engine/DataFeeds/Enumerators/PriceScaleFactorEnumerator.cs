@@ -32,7 +32,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     {
         private readonly IEnumerator<BaseData> _rawDataEnumerator;
         private readonly SubscriptionDataConfig _config;
-        private readonly FactorFile _factorFile;
+        private readonly Lazy<FactorFile> _factorFile;
         private DateTime _lastTradableDate;
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public PriceScaleFactorEnumerator(
             IEnumerator<BaseData> rawDataEnumerator,
             SubscriptionDataConfig config,
-            FactorFile factorFile)
+            Lazy<FactorFile> factorFile)
         {
             _lastTradableDate = DateTime.MinValue;
             _config = config;
@@ -201,11 +201,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 case DataNormalizationMode.TotalReturn:
                 case DataNormalizationMode.SplitAdjusted:
-                    _config.PriceScaleFactor = _factorFile.GetSplitFactor(date);
+                    _config.PriceScaleFactor = _factorFile.Value.GetSplitFactor(date);
                     break;
 
                 case DataNormalizationMode.Adjusted:
-                    _config.PriceScaleFactor = _factorFile.GetPriceScaleFactor(date);
+                    _config.PriceScaleFactor = _factorFile.Value.GetPriceScaleFactor(date);
                     break;
 
                 default:

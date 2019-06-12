@@ -321,8 +321,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 EnsureCurrencyDataFeeds(securityChanges);
             }
 
-            if (securityChanges != SecurityChanges.None)
+            if (securityChanges != SecurityChanges.None && Log.DebuggingEnabled)
             {
+                // for performance lets not create the message string if debugging is not enabled
+                // this can be executed many times and its in the algorithm thread
                 Log.Debug("UniverseSelection.ApplyUniverseSelection(): " + dateTimeUtc + ": " + securityChanges);
             }
 

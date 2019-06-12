@@ -31,6 +31,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
     public class AuxiliaryDataEnumerator : IEnumerator<BaseData>
     {
         private readonly Queue<BaseData> _auxiliaryData;
+        private bool _initialized;
 
         /// <summary>
         /// Creates a new instance
@@ -43,24 +44,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
         public AuxiliaryDataEnumerator(
             SubscriptionDataConfig config,
-            FactorFile factorFile,
-            MapFile mapFile,
+            Lazy<FactorFile> factorFile,
+            Lazy<MapFile> mapFile,
             ITradableDateEventProvider []tradableDateEventProviders,
             ITradableDatesNotifier tradableDayNotifier,
             bool includeAuxiliaryData)
         {
             _auxiliaryData = new Queue<BaseData>();
 
-            foreach (var tradableDateEventProvider in tradableDateEventProviders)
-            {
-                tradableDateEventProvider.Initialize(
-                    config,
-                    factorFile,
-                    mapFile);
-            }
-
             tradableDayNotifier.NewTradableDate += (sender, eventArgs) =>
             {
+                if (!_initialized)
+                {
+                    Initialize(config, factorFile, mapFile, tradableDateEventProviders);
+                }
+
                 foreach (var tradableDateEventProvider in tradableDateEventProviders)
                 {
                     // Call implementation
@@ -76,6 +74,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     }
                 }
             };
+        }
+
+        /// <summary>
+        /// Late initialization so it is performed in the data feed stack
+        /// and not in the algorithm thread
+        /// </summary>
+        private void Initialize(SubscriptionDataConfig config,
+            Lazy<FactorFile> factorFile,
+            Lazy<MapFile> mapFile,
+            ITradableDateEventProvider[] tradableDateEventProviders)
+        {
+            _initialized = true;
+            foreach (var tradableDateEventProvider in tradableDateEventProviders)
+            {
+                tradableDateEventProvider.Initialize(
+                    config,
+                    factorFile?.Value,
+                    mapFile?.Value);
+            }
         }
 
 

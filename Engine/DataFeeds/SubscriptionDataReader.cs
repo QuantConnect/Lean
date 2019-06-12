@@ -306,6 +306,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (!_initialized)
             {
+                // Late initialization so it is performed in the data feed stack
+                // and not in the algorithm thread
                 Initialize();
             }
 

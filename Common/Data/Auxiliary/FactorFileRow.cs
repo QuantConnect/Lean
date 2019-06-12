@@ -29,6 +29,9 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class FactorFileRow
     {
+        private decimal _splitFactor;
+        private decimal _priceFactor;
+
         /// <summary>
         /// Gets the date associated with this data
         /// </summary>
@@ -37,17 +40,40 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Gets the price factor associated with this data
         /// </summary>
-        public decimal PriceFactor { get; set; }
+        public decimal PriceFactor
+        {
+            get
+            {
+                return _priceFactor;
+
+            }
+            set
+            {
+                _priceFactor = value;
+                UpdatePriceScaleFactor();
+            }
+        }
 
         /// <summary>
         /// Gets the split factor associated with the date
         /// </summary>
-        public decimal SplitFactor { get; set; }
+        public decimal SplitFactor
+        {
+            get
+            {
+                return _splitFactor;
+            }
+            set
+            {
+                _splitFactor = value;
+                UpdatePriceScaleFactor();
+            }
+        }
 
         /// <summary>
         /// Gets the combined factor used to create adjusted prices from raw prices
         /// </summary>
-        public decimal PriceScaleFactor => PriceFactor*SplitFactor;
+        public decimal PriceScaleFactor { get; private set; }
 
         /// <summary>
         /// Gets the raw closing value from the trading date before the updated factor takes effect
@@ -283,6 +309,15 @@ namespace QuantConnect.Data.Auxiliary
         public override string ToString()
         {
             return $"{Date:yyyy-MM-dd}: {PriceScaleFactor:0.0000} {SplitFactor:0.0000}";
+        }
+
+        /// <summary>
+        /// For performance we update <see cref="PriceScaleFactor"/> when underlying
+        /// values are updated to avoid decimal multiplication on each get operation.
+        /// </summary>
+        private void UpdatePriceScaleFactor()
+        {
+            PriceScaleFactor = _priceFactor * _splitFactor;
         }
     }
 }

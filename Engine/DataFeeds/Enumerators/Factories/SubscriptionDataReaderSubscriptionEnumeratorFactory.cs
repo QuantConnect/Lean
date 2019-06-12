@@ -102,9 +102,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 mapFileResolver,
                 _includeAuxiliaryData);
 
-            // has to be initialized after adding all the enumerators since it will execute a MoveNext
-            dataReader.Initialize();
-
             return result;
         }
 
