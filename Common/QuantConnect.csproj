@@ -333,7 +333,6 @@
     <Compile Include="Brokerages\InteractiveBrokersBrokerageModel.cs" />
     <Compile Include="Brokerages\OandaBrokerageModel.cs" />
     <Compile Include="Brokerages\TradierBrokerageModel.cs" />
-    <Compile Include="Data\Custom\FxcmVolume.cs" />
     <Compile Include="Data\Market\IBaseDataBar.cs" />
     <Compile Include="Data\Consolidators\OpenInterestConsolidator.cs" />
     <Compile Include="Data\Market\OpenInterest.cs" />
