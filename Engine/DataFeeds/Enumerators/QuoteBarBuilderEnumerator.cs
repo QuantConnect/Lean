@@ -17,7 +17,6 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -35,13 +34,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly ITimeProvider _timeProvider;
         private readonly ConcurrentQueue<QuoteBar> _queue;
         private readonly bool _liveMode;
-        private readonly Timer _timer;
+        private readonly RealTimeScheduleEventService _realTimeScheduleEventService;
         private readonly EventHandler _newDataAvailableHandler;
-
-        /// <summary>
-        /// Event fired when a new data point is available
-        /// </summary>
-        public event EventHandler NewDataAvailable;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuoteBarBuilderEnumerator"/> class
@@ -51,7 +45,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="timeProvider">The time provider instance used to determine when bars are completed and
         /// can be emitted</param>
         /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
-        /// <param name="newDataAvailableHandler">The event handler for the <see cref="NewDataAvailable"/> event</param>
+        /// <param name="newDataAvailableHandler">The event handler for a new available data point</param>
         public QuoteBarBuilderEnumerator(TimeSpan barSize, DateTimeZone timeZone, ITimeProvider timeProvider, bool liveMode, EventHandler newDataAvailableHandler = null)
         {
             _barSize = barSize;
@@ -63,14 +57,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             if (liveMode)
             {
-                NewDataAvailable += _newDataAvailableHandler;
-
-                _timer = new Timer(
-                    o =>
-                    {
-                        OnNewDataAvailable();
-                        _timer.Change(Timeout.Infinite, Timeout.Infinite);
-                    });
+                _realTimeScheduleEventService = new RealTimeScheduleEventService(timeProvider);
+                _realTimeScheduleEventService.NewEvent += _newDataAvailableHandler;
             }
         }
 
@@ -93,7 +81,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             if (!_queue.TryPeek(out working))
             {
                 // the consumer took the working bar, or time ticked over into next bar
-                var currentLocalTime = _timeProvider.GetUtcNow().ConvertFromUtc(_timeZone);
+                var utcNow = _timeProvider.GetUtcNow();
+                var currentLocalTime = utcNow.ConvertFromUtc(_timeZone);
                 var barStartTime = currentLocalTime.RoundDown(_barSize);
                 working = new QuoteBar();
                 working.Update(data.Value, bidPrice, askPrice, qty, bidSize, askSize);
@@ -104,7 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 if (_liveMode)
                 {
-                    _timer.Change(_barSize.Subtract(currentLocalTime - barStartTime), Timeout.InfiniteTimeSpan);
+                    _realTimeScheduleEventService.ScheduleEvent(_barSize.Subtract(currentLocalTime - barStartTime), utcNow);
                 }
             }
             else
@@ -178,17 +167,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             if (_liveMode)
             {
-                _timer?.DisposeSafely();
-                NewDataAvailable -= _newDataAvailableHandler;
+                _realTimeScheduleEventService.NewEvent -= _newDataAvailableHandler;
+                _realTimeScheduleEventService.DisposeSafely();
             }
-        }
-
-        /// <summary>
-        /// Event invocator for the <see cref="NewDataAvailable"/> event
-        /// </summary>
-        private void OnNewDataAvailable()
-        {
-            NewDataAvailable?.Invoke(this, EventArgs.Empty);
         }
     }
 }
