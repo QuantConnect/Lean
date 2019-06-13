@@ -85,7 +85,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             Lazy<MapFile> mapFile,
             ITradableDateEventProvider[] tradableDateEventProviders)
         {
-            _initialized = true;
             foreach (var tradableDateEventProvider in tradableDateEventProviders)
             {
                 tradableDateEventProvider.Initialize(
@@ -93,6 +92,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     factorFile?.Value,
                     mapFile?.Value);
             }
+            _initialized = true;
         }
 
 
