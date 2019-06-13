@@ -184,10 +184,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (_liveMode)
             {
                 OnSubscriptionAdded(subscription);
+                Log.Trace($"DataManager.AddSubscription(): Added {request.Configuration}." +
+                    $" Start: {request.StartTimeUtc}. End: {request.EndTimeUtc}");
+            }
+            else if(Log.DebuggingEnabled)
+            {
+                // for performance lets not create the message string if debugging is not enabled
+                // this can be executed many times and its in the algorithm thread
+                Log.Debug($"DataManager.AddSubscription(): Added {request.Configuration}." +
+                    $" Start: {request.StartTimeUtc}. End: {request.EndTimeUtc}");
             }
 
-            LiveDifferentiatedLog($"DataManager.AddSubscription(): Added {request.Configuration}." +
-                $" Start: {request.StartTimeUtc}. End: {request.EndTimeUtc}");
             return DataFeedSubscriptions.TryAdd(subscription);
         }
 
@@ -225,7 +232,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     RemoveSubscriptionDataConfig(subscription);
 
-                    LiveDifferentiatedLog($"DataManager.RemoveSubscription(): Removed {configuration}");
+                    if (_liveMode)
+                    {
+                        Log.Trace($"DataManager.RemoveSubscription(): Removed {configuration}");
+                    }
+                    else if(Log.DebuggingEnabled)
+                    {
+                        // for performance lets not create the message string if debugging is not enabled
+                        // this can be executed many times and its in the algorithm thread
+                        Log.Debug($"DataManager.RemoveSubscription(): Removed {configuration}");
+                    }
                     return true;
                 }
             }
@@ -274,8 +290,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var config = _subscriptionManagerSubscriptions.GetOrAdd(newConfig, newConfig);
 
             // if the reference is not the same, means it was already there and we did not add anything new
-            if (!ReferenceEquals(config, newConfig))
+            if (!ReferenceEquals(config, newConfig) && Log.DebuggingEnabled)
             {
+                // for performance lets not create the message string if debugging is not enabled
+                // this can be executed many times and its in the algorithm thread
                 Log.Debug("DataManager.SubscriptionManagerGetOrAdd(): subscription already added: " + config);
             }
             else
@@ -473,17 +491,5 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public UniverseSelection UniverseSelection { get; }
 
         #endregion
-
-        private void LiveDifferentiatedLog(string message)
-        {
-            if (_liveMode)
-            {
-                Log.Trace(message);
-            }
-            else
-            {
-                Log.Debug(message);
-            }
-        }
     }
 }

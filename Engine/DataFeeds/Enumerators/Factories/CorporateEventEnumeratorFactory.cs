@@ -50,13 +50,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             MapFileResolver mapFileResolver,
             bool includeAuxiliaryData)
         {
-            var mapFileToUse = GetMapFileToUse(config, mapFileResolver);
-            var factorFile = GetFactorFileToUse(config, factorFileProvider);
+            var lazyFactorFile =
+                new Lazy<FactorFile>(() => GetFactorFileToUse(config, factorFileProvider));
 
             var enumerator = new AuxiliaryDataEnumerator(
                 config,
-                factorFile,
-                mapFileToUse,
+                lazyFactorFile,
+                new Lazy<MapFile>(() => GetMapFileToUse(config, mapFileResolver)),
                 new ITradableDateEventProvider[]
                 {
                     new MappingEventProvider(),
@@ -70,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             var priceScaleFactorEnumerator = new PriceScaleFactorEnumerator(
                 rawDataEnumerator,
                 config,
-                factorFile);
+                lazyFactorFile);
 
             return new SynchronizingEnumerator(priceScaleFactorEnumerator, enumerator);
         }

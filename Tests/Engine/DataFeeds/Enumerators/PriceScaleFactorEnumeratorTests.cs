@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var enumerator = new PriceScaleFactorEnumerator(
                 _rawDataEnumerator,
                 _config,
-                _factorFile);
+                new Lazy<FactorFile>(() => _factorFile));
             _rawDataEnumerator.CurrentValue = new TradeBar(
                 new DateTime(2018, 1, 1),
                 _config.Symbol,
@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var enumerator = new PriceScaleFactorEnumerator(
                 _rawDataEnumerator,
                 _config,
-                _factorFile);
+                new Lazy<FactorFile>(() => _factorFile));
             _rawDataEnumerator.CurrentValue = new QuoteBar(
                 new DateTime(2018, 1, 1),
                 _config.Symbol,
@@ -121,7 +121,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var enumerator = new PriceScaleFactorEnumerator(
                 _rawDataEnumerator,
                 _config,
-                _factorFile);
+                new Lazy<FactorFile>(() => _factorFile));
             _rawDataEnumerator.CurrentValue = new Tick(
                 new DateTime(2018, 1, 1),
                 _config.Symbol,
@@ -162,7 +162,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var enumerator = new PriceScaleFactorEnumerator(
                 _rawDataEnumerator,
                 _config,
-                _factorFile);
+                new Lazy<FactorFile>(() => _factorFile));
             _rawDataEnumerator.CurrentValue = new Tick(
                 new DateTime(2018, 1, 1),
                 _config.Symbol,
@@ -180,7 +180,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var enumerator = new PriceScaleFactorEnumerator(
                 _rawDataEnumerator,
                 _config,
-                _factorFile);
+                new Lazy<FactorFile>(() => _factorFile));
             _rawDataEnumerator.CurrentValue = null;
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
@@ -196,7 +196,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var enumerator = new PriceScaleFactorEnumerator(
                 _rawDataEnumerator,
                 _config,
-                _factorFile);
+                new Lazy<FactorFile>(() => _factorFile));
 
             // Before factor file update date (2018, 3, 15)
             _rawDataEnumerator.CurrentValue = new Tick(
