@@ -35,7 +35,7 @@ namespace QuantConnect
 
         /// <summary>
         /// Provides a convience method for creating a Symbol for most security types.
-        /// This method currently does not support Option, Commodity, and Future
+        /// This method currently does not support Commodities
         /// </summary>
         /// <param name="ticker">The string ticker symbol</param>
         /// <param name="securityType">The security type of the ticker. If securityType == Option, then a canonical symbol is created</param>

@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm
             MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, symbol, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
-            var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA), symbol);
+            var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA, SubscriptionDataConfig.MapFileTypes.Contains(dataType)), symbol);
 
             //Add this new generic data as a tradeable security:
             var config = SubscriptionManager.SubscriptionDataConfigService.Add(dataType,

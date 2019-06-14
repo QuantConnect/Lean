@@ -253,7 +253,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void DeserializesFromSimpleStringWithinContainerClass()
         {
-            var sid = new Container{sid =SPY};
+            var sid = new Container { sid = SPY };
             var str =
 @"
 {
@@ -302,6 +302,32 @@ namespace QuantConnect.Tests.Common.Securities
         public void ThrowsOnInvalidSymbolCharacters(string input)
         {
             new SecurityIdentifier(input, 0);
+        }
+
+        [Test]
+        public void GenerateEquityWithTickerUsingMapFile()
+        {
+            var expectedFirstDate = new DateTime(1998, 1, 2);
+            var sid = SecurityIdentifier.GenerateWithFirstDate("TWX", Market.USA, SecurityType.Equity, true);
+
+            Assert.AreEqual(sid.Date, expectedFirstDate);
+            Assert.AreEqual(sid.Symbol, "AOL");
+        }
+        
+        [Test]
+        public void GenerateBaseDataWithTickerUsingMapFile()
+        {
+            var expectedFirstDate = new DateTime(1998, 1, 2);
+            var sid = SecurityIdentifier.GenerateWithFirstDate("TWX", Market.USA, SecurityType.Base);
+
+            Assert.AreEqual(sid.Date, expectedFirstDate);
+            Assert.AreEqual(sid.Symbol, "AOL");
+        }
+        
+        [Test]
+        public void AttemptToGenerateFromMapFileWithNotSupportedSecurityType()
+        {
+            Assert.Throws<ArgumentException>(() => { SecurityIdentifier.GenerateWithFirstDate("CL", Market.USA, SecurityType.Future); });
         }
 
         class Container

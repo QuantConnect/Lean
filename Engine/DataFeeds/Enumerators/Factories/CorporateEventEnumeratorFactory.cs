@@ -80,34 +80,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             MapFileResolver mapFileResolver)
         {
             var mapFileToUse = new MapFile(config.Symbol.Value, new List<MapFileRow>());
+            var hasUnderlying = config.Symbol.HasUnderlying;
 
-            // load up the map and factor files for equities
-            if (!config.IsCustomData && config.SecurityType == SecurityType.Equity)
+            // load up the map and factor files for equities, options, and custom data
+            if (config.UsesMapFiles)
             {
                 try
                 {
-                    var mapFile = mapFileResolver.ResolveMapFile(
-                        config.Symbol.ID.Symbol,
-                        config.Symbol.ID.Date);
+                    var symbol = hasUnderlying ? config.Symbol.Underlying.ID.Symbol : config.Symbol.ID.Symbol;
+                    var date = hasUnderlying ? config.Symbol.Underlying.ID.Date : config.Symbol.ID.Date;
 
-                    // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
-                    if (mapFile.Any()) mapFileToUse = mapFile;
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "CorporateEventEnumeratorFactory.GetMapFileToUse():" +
-                        " Map File: " + config.Symbol.ID + ": ");
-                }
-            }
-
-            // load up the map and factor files for underlying of equity option
-            if (!config.IsCustomData && config.SecurityType == SecurityType.Option)
-            {
-                try
-                {
-                    var mapFile = mapFileResolver.ResolveMapFile(
-                        config.Symbol.Underlying.ID.Symbol,
-                        config.Symbol.Underlying.ID.Date);
+                    var mapFile = mapFileResolver.ResolveMapFile(symbol, date);
 
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) mapFileToUse = mapFile;

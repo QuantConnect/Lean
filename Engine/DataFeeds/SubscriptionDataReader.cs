@@ -221,33 +221,41 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _factorFile = new FactorFile(_config.Symbol.Value, new List<FactorFileRow>());
             _mapFile = new MapFile(_config.Symbol.Value, new List<MapFileRow>());
 
-            // load up the map and factor files for equities
-            if (!_config.IsCustomData && _config.SecurityType == SecurityType.Equity)
+            // load up the map files for equities, options, and custom data if it supports it.
+            // Only load up factor files for equities
+            if (_config.UsesMapFiles)
             {
                 try
                 {
-                    var mapFile = _mapFileResolver.ResolveMapFile(_config.Symbol.ID.Symbol, _config.Symbol.ID.Date);
+                    // Load the symbol and date to complete the mapFile checks in one statement
+                    var symbol = _config.Symbol.HasUnderlying ? _config.Symbol.Underlying.ID.Symbol : _config.Symbol.ID.Symbol;
+                    var date = _config.Symbol.HasUnderlying ? _config.Symbol.Underlying.ID.Date : _config.Symbol.ID.Date;
+
+                    var mapFile = _mapFileResolver.ResolveMapFile(symbol, date);
 
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
 
-                    var factorFile = _factorFileProvider.Get(_config.Symbol);
-                    _hasScaleFactors = factorFile != null;
-                    if (_hasScaleFactors)
+                    if (!_config.IsCustomData && _config.SecurityType != SecurityType.Option)
                     {
-                        _factorFile = factorFile;
-
-                        // if factor file has minimum date, update start period if before minimum date
-                        if (!_isLiveMode && _factorFile != null && _factorFile.FactorFileMinimumDate.HasValue)
+                        var factorFile = _factorFileProvider.Get(_config.Symbol);
+                        _hasScaleFactors = factorFile != null;
+                        if (_hasScaleFactors)
                         {
-                            if (_periodStart < _factorFile.FactorFileMinimumDate.Value)
-                            {
-                                _periodStart = _factorFile.FactorFileMinimumDate.Value;
+                            _factorFile = factorFile;
 
-                                OnNumericalPrecisionLimited(
-                                    new NumericalPrecisionLimitedEventArgs(
-                                        $"Data for symbol {_config.Symbol.Value} has been limited due to numerical precision issues in the factor file. " +
-                                        $"The starting date has been set to {_factorFile.FactorFileMinimumDate.Value.ToShortDateString()}."));
+                            // if factor file has minimum date, update start period if before minimum date
+                            if (!_isLiveMode && _factorFile != null && _factorFile.FactorFileMinimumDate.HasValue)
+                            {
+                                if (_periodStart < _factorFile.FactorFileMinimumDate.Value)
+                                {
+                                    _periodStart = _factorFile.FactorFileMinimumDate.Value;
+
+                                    OnNumericalPrecisionLimited(
+                                        new NumericalPrecisionLimitedEventArgs(
+                                            $"Data for symbol {_config.Symbol.Value} has been limited due to numerical precision issues in the factor file. " +
+                                            $"The starting date has been set to {_factorFile.FactorFileMinimumDate.Value.ToShortDateString()}."));
+                                }
                             }
                         }
                     }
@@ -255,22 +263,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 catch (Exception err)
                 {
                     Log.Error(err, "Fetching Price/Map Factors: " + _config.Symbol.ID + ": ");
-                }
-            }
-
-            // load up the map and factor files for underlying of equity option
-            if (!_config.IsCustomData && _config.SecurityType == SecurityType.Option)
-            {
-                try
-                {
-                    var mapFile = _mapFileResolver.ResolveMapFile(_config.Symbol.Underlying.ID.Symbol, _config.Symbol.Underlying.ID.Date);
-
-                    // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
-                    if (mapFile.Any()) _mapFile = mapFile;
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "Map Factors: " + _config.Symbol.ID + ": ");
                 }
             }
 
