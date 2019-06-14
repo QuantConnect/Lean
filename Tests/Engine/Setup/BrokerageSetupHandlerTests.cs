@@ -191,6 +191,50 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.AreEqual(symbol, security.Symbol);
         }
 
+        [Test]
+        public void AlgorithmTimeIsSetToUtcNowBeforePostInitialize()
+        {
+            var time = DateTime.UtcNow;
+            TestAlgorithm algorithm = null;
+
+            algorithm = new TestAlgorithm(() =>
+            {
+                Assert.That(algorithm.UtcTime > time);
+            });
+
+            Assert.AreEqual(new DateTime(1998, 1, 1), algorithm.UtcTime);
+
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = new LiveNodePacket
+            {
+                UserId = 1,
+                ProjectId = 1,
+                DeployId = "1",
+                Brokerage = "PaperBrokerage",
+                DataQueueHandler = "none"
+            };
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>());
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object)));
+
+            Assert.Greater(algorithm.UtcTime, time);
+        }
+
         public TestCaseData[] GetExistingHoldingsAndOrdersTestCaseData()
         {
             return new[]
@@ -329,12 +373,21 @@ namespace QuantConnect.Tests.Engine.Setup
 
         private class TestAlgorithm : QCAlgorithm
         {
-            public TestAlgorithm()
+            private readonly Action _beforePostInitializeAction;
+
+            public TestAlgorithm(Action beforePostInitializeAction = null)
             {
+                _beforePostInitializeAction = beforePostInitializeAction;
                 SubscriptionManager.SetDataManager(new DataManagerStub(this, new MockDataFeed()));
             }
 
             public override void Initialize() { }
+
+            public override void PostInitialize()
+            {
+                _beforePostInitializeAction?.Invoke();
+                base.PostInitialize();
+            }
         }
 
         private class NonDequeingTestResultsHandler : TestResultHandler
