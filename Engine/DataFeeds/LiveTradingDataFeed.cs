@@ -336,18 +336,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     _exchange.AddDataHandler(request.Configuration.Symbol, data =>
                     {
-                        var tick = data as Tick;
-                        if (tick.TickType == request.Configuration.TickType)
+                        if (data.DataType == MarketDataType.Auxiliary)
                         {
                             tickEnumerator.Enqueue(data);
                             subscription.OnNewDataAvailable();
-                            if (data.DataType != MarketDataType.Auxiliary && tick.TickType != TickType.OpenInterest)
+                        }
+                        else
+                        {
+                            var tick = data as Tick;
+                            if (tick?.TickType == request.Configuration.TickType)
                             {
-                                UpdateSubscriptionRealTimePrice(
-                                    subscription,
-                                    timeZoneOffsetProvider,
-                                    request.Security.Exchange.Hours,
-                                    data);
+                                tickEnumerator.Enqueue(data);
+                                subscription.OnNewDataAvailable();
+                                if (tick.TickType != TickType.OpenInterest)
+                                {
+                                    UpdateSubscriptionRealTimePrice(
+                                        subscription,
+                                        timeZoneOffsetProvider,
+                                        request.Security.Exchange.Hours,
+                                        data);
+                                }
                             }
                         }
                     });

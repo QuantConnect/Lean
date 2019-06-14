@@ -942,6 +942,45 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsFalse(emittedData);
         }
 
+        [Test]
+        public void HandlesAuxiliaryDataAtTickResolution()
+        {
+            var symbol = Symbols.AAPL;
+
+            var feed = RunDataFeed(
+                Resolution.Tick,
+                equities: new List<string> { symbol.Value },
+                getNextTicksFunction: delegate
+                {
+                    return Enumerable.Range(0, 2)
+                        .Select(
+                            x => x % 2 == 0
+                                ? (BaseData) new Tick { Symbol = symbol, TickType = TickType.Trade }
+                                : new Dividend { Symbol = symbol, Value = x })
+                        .ToList();
+                });
+
+            var emittedTicks = false;
+            var emittedAuxData = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(1), true, ts =>
+            {
+                if (ts.Slice.HasData)
+                {
+                    if (ts.Slice.Ticks.ContainsKey(symbol))
+                    {
+                        emittedTicks = true;
+                    }
+                    if (ts.Slice.Dividends.ContainsKey(symbol))
+                    {
+                        emittedAuxData = true;
+                    }
+                }
+            });
+
+            Assert.IsTrue(emittedTicks);
+            Assert.IsTrue(emittedAuxData);
+        }
+
         private IDataFeed RunDataFeed(Resolution resolution = Resolution.Second,
                                     List<string> equities = null,
                                     List<string> forex = null,
