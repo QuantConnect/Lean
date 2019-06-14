@@ -51,9 +51,10 @@ namespace QuantConnect.Data.UniverseSelection
         {
             var universe = config.MappedSymbol.Substring(config.MappedSymbol.LastIndexOf('-') + 1).ToLowerInvariant();
 
-            // we get yesterdays file
-            date = date.AddDays(-1);
-
+            if (isLiveMode)
+            {
+                date = date.AddDays(-1);
+            }
             var path = Path.Combine(Globals.DataFolder,
                 config.SecurityType.SecurityTypeToLower(),
                 config.Market,
@@ -65,11 +66,9 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Reader converts each line of the data source into BaseData objects. Each data type
-        /// creates its own factory method, and returns a new instance of the object each time it is called.
+        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
+        /// each time it is called.
         /// </summary>
-        /// <remarks>We will emit data as Time=Yesterday and EndTime=Today same as
-        /// <see cref="CoarseFundamental"/> and <see cref="BaseDataCollectionSubscriptionEnumeratorFactory"/></remarks>
         /// <param name="config">Subscription data config setup object</param>
         /// <param name="line">Line of the source document</param>
         /// <param name="date">Date of the requested data</param>
@@ -83,7 +82,7 @@ namespace QuantConnect.Data.UniverseSelection
                 var preselected = new ConstituentsUniverseData
                 {
                     Symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]),
-                    Time = date.AddDays(-1)
+                    Time = isLiveMode ? date.AddDays(-1) : date
                 };
 
                 return preselected;

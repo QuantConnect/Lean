@@ -101,6 +101,13 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_skippedFirst && Time > _currentDateTime)
             {
+                if (Time.DayOfWeek == DayOfWeek.Sunday
+                    || Time.DayOfWeek == DayOfWeek.Monday)
+                {
+                    // we generate files from Tue to Saturday using current selected securities
+                    return;
+                }
+                // files are for Mon to Friday
                 _currentDateTime = Time.Date.AddDays(-1);
 
                 var path = Path.Combine(_dataPath, $"{_currentDateTime:yyyyMMdd}.csv");
