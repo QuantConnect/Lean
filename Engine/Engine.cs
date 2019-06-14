@@ -456,16 +456,21 @@ namespace QuantConnect.Lean.Engine
                 _algorithmHandlers.Results.Exit();
 
                 //Wait for the threads to complete:
-                var ts = Stopwatch.StartNew();
+                var millisecondInterval = 10;
+                var millisecondTotalWait = 0;
                 while ((_algorithmHandlers.Results.IsActive
                     || (_algorithmHandlers.Transactions != null && _algorithmHandlers.Transactions.IsActive)
                     || (_algorithmHandlers.DataFeed != null && _algorithmHandlers.DataFeed.IsActive)
                     || (_algorithmHandlers.RealTime != null && _algorithmHandlers.RealTime.IsActive)
                     || (_algorithmHandlers.Alphas != null && _algorithmHandlers.Alphas.IsActive))
-                    && ts.ElapsedMilliseconds < 30*1000)
+                    && millisecondTotalWait < 30*1000)
                 {
-                    Thread.Sleep(100);
-                    Log.Trace("Waiting for threads to exit...");
+                    Thread.Sleep(millisecondInterval);
+                    if (millisecondTotalWait % (millisecondInterval * 10) == 0)
+                    {
+                        Log.Trace("Waiting for threads to exit...");
+                    }
+                    millisecondTotalWait += millisecondInterval;
                 }
 
                 //Terminate threads still in active state.
