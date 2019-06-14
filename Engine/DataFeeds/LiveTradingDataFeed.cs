@@ -467,7 +467,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     subscription.OnNewDataAvailable();
 
                 });
-                enumerator = enqueable;
+
+                enumerator = GetConfiguredFrontierAwareEnumerator(enqueable, tzOffsetProvider);
             }
             else if (request.Universe is OptionChainUniverse)
             {
@@ -500,7 +501,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
-                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
+                enumerator = GetConfiguredFrontierAwareEnumerator(enumerator, tzOffsetProvider);
             }
             else if (request.Universe is FuturesChainUniverse)
             {
@@ -515,7 +516,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
-                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
+                enumerator = GetConfiguredFrontierAwareEnumerator(enumerator, tzOffsetProvider);
             }
             else
             {
@@ -583,6 +584,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             Log.Trace("LiveTradingDataFeed.GetNextTicksEnumerator(): Exiting enumerator thread...");
+        }
+
+        /// <summary>
+        /// Will wrap the provided enumerator with a <see cref="FrontierAwareEnumerator"/>
+        /// using a <see cref="StepTimeProvider"/> that will advance time based on the provided
+        /// function
+        /// </summary>
+        /// <remarks>Won't advance time if now: bigger than 23pm, less than 6am or Saturday</remarks>
+        private IEnumerator<BaseData> GetConfiguredFrontierAwareEnumerator(IEnumerator<BaseData> enumerator,
+            TimeZoneOffsetProvider tzOffsetProvider)
+        {
+            var stepTimeProvider = new StepTimeProvider(_frontierTimeProvider,
+                // advance time if before 23pm or after 6am and not on Saturdays
+                time => time.Hour < 23 && time.Hour > 6 && time.DayOfWeek != DayOfWeek.Saturday);
+
+            return new FrontierAwareEnumerator(enumerator, stepTimeProvider, tzOffsetProvider);
         }
 
         /// <summary>
