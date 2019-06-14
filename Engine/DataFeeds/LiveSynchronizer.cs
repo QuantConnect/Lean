@@ -31,6 +31,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly AutoResetEvent _newLiveDataEmitted = new AutoResetEvent(false);
 
         /// <summary>
+        /// Maximum time to wait for new live data before synchronizing the data feed subscriptions
+        /// </summary>
+        protected virtual TimeSpan NewLiveDataTimeout { get; } = TimeSpan.FromMilliseconds(500);
+
+        /// <summary>
         /// Initializes the instance of the Synchronizer class
         /// </summary>
         public override void Initialize(
@@ -66,7 +71,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                _newLiveDataEmitted.WaitOne(TimeSpan.FromMilliseconds(500));
+                _newLiveDataEmitted.WaitOne(NewLiveDataTimeout);
 
                 TimeSlice timeSlice;
                 try
