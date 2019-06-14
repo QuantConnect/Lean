@@ -75,7 +75,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _marketHoursDatabase = marketHoursDatabase;
             _liveMode = liveMode;
 
-            var liveStart = DateTime.UtcNow;
             // wire ourselves up to receive notifications when universes are added/removed
             algorithm.UniverseManager.CollectionChanged += (sender, args) =>
             {
@@ -85,7 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         foreach (var universe in args.NewItems.OfType<Universe>())
                         {
                             var config = universe.Configuration;
-                            var start = algorithm.LiveMode ? liveStart : algorithm.UtcTime;
+                            var start = algorithm.UtcTime;
 
                             var end = algorithm.LiveMode ? Time.EndOfTime
                                 : algorithm.EndDate.ConvertToUtc(algorithm.TimeZone);
