@@ -144,6 +144,7 @@
     <Compile Include="CapmAlphaRankingFrameworkAlgorithm.cs" />
     <Compile Include="OnEndOfDayRegressionAlgorithm.cs" />
     <Compile Include="SECReportDataAlgorithm.cs" />
+    <Compile Include="CustomDataUsingMapFileRegressionAlgorithm.cs" />
     <Compile Include="G10CurrencySelectionModelFrameworkAlgorithm.cs" />
     <Compile Include="ExpiryHelperAlphaModelFrameworkAlgorithm.cs" />
     <Compile Include="CfdTimeZonesRegressionAlgorithm.cs" />
