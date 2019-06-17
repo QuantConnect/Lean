@@ -596,8 +596,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             TimeZoneOffsetProvider tzOffsetProvider)
         {
             var stepTimeProvider = new StepTimeProvider(_frontierTimeProvider,
-                // advance time if before 23pm or after 6am and not on Saturdays
-                time => time.Hour < 23 && time.Hour > 6 && time.DayOfWeek != DayOfWeek.Saturday);
+                // advance time if before 23pm or after 5am and not on Saturdays
+                time => time.Hour < 23 && time.Hour > 5 && time.DayOfWeek != DayOfWeek.Saturday);
 
             return new FrontierAwareEnumerator(enumerator, stepTimeProvider, tzOffsetProvider);
         }

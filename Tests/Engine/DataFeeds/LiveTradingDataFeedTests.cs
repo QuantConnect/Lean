@@ -591,7 +591,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             BaseDataCollection list = null;
             var timer = new Timer(state =>
             {
-                var currentTime = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
+                var currentTime = _manualTimeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
                 lock (state)
                 {
                     list = new BaseDataCollection { Symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false) };
@@ -636,6 +636,68 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }, sendUniverseData: true);
 
             timer.Dispose();
+            Assert.IsTrue(yieldedUniverseData);
+            Assert.IsTrue(receivedCoarseData);
+        }
+        [Test]
+        public void CoarseFundamentalDataIsHoldUntilTimeIsRight()
+        {
+            var startDate = new DateTime(2018, 08, 1, 23, 0, 0);
+            _manualTimeProvider.SetCurrentTimeUtc(startDate);
+            Console.WriteLine($"StartTime {_manualTimeProvider.GetUtcNow()}");
+
+            // we just want to emit one single coarse data packet
+            var yieldUniverseData = false;
+            var yieldedUniverseData = false;
+            var feed = RunDataFeed(getNextTicksFunction: fdqh =>
+            {
+                // just once
+                if (yieldUniverseData)
+                {
+                    yieldedUniverseData = true;
+                    var currentTime = _manualTimeProvider.GetUtcNow();
+                    var data = new BaseDataCollection(currentTime, CoarseFundamental.CreateUniverseSymbol(Market.USA, false),
+                        new []{new CoarseFundamental
+                        {
+                            Symbol = Symbols.SPY,
+                            Time = currentTime - Time.OneDay
+                        }});
+                    Console.WriteLine($"Emitted BaseDataCollection {data.Time} {data.EndTime}");
+                    yieldUniverseData = false;
+
+                    // Assert data gets emitted in an 'invalid' time
+                    Assert.IsTrue(data.Time.Hour > 23 || data.Time.Hour < 5);
+                    return new[] { data };
+                }
+                return Enumerable.Empty<BaseData>();
+            });
+
+            _algorithm.AddUniverse(coarse => coarse.Take(10).Select(x => x.Symbol));
+
+            var receivedCoarseData = false;
+            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
+            {
+                if (!yieldedUniverseData)
+                {
+                    yieldUniverseData = true;
+                }
+                if (ts.UniverseData.Count > 0 &&
+                    ts.UniverseData.First().Value.Data.First() is CoarseFundamental)
+                {
+                    var now = _manualTimeProvider.GetUtcNow();
+                    Console.WriteLine($"Received BaseDataCollection {now}");
+
+                    // Assert data got hold until time was right
+                    Assert.IsTrue(now.Hour < 23 && now.Hour > 5);
+                    receivedCoarseData = true;
+                }
+            }, sendUniverseData: true,
+                alwaysInvoke:true,
+                secondsTimeStep: 3600,
+                endDate: startDate.AddDays(1));
+
+            Console.WriteLine($"EndTime {_manualTimeProvider.GetUtcNow()}");
+
             Assert.IsTrue(yieldedUniverseData);
             Assert.IsTrue(receivedCoarseData);
         }
@@ -1045,9 +1107,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             return feed;
         }
 
-        private void ConsumeBridge(IDataFeed feed, TimeSpan timeout, Action<TimeSlice> handler, bool sendUniverseData = false)
+        private void ConsumeBridge(IDataFeed feed, TimeSpan timeout, Action<TimeSlice> handler, bool sendUniverseData = false,
+            int secondsTimeStep = 1, bool alwaysInvoke = false, DateTime endDate = default(DateTime))
         {
-            ConsumeBridge(feed, timeout, false, handler, sendUniverseData: sendUniverseData);
+            ConsumeBridge(feed, timeout, alwaysInvoke, handler, sendUniverseData: sendUniverseData, secondsTimeStep: secondsTimeStep, endDate: endDate);
         }
 
         private void ConsumeBridge(IDataFeed feed,
@@ -1055,7 +1118,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             bool alwaysInvoke,
             Action<TimeSlice> handler,
             bool noOutput = true,
-            bool sendUniverseData = false)
+            bool sendUniverseData = false,
+            int secondsTimeStep = 1,
+            DateTime endDate = default(DateTime))
         {
             var endTime = DateTime.UtcNow.Add(timeout);
             bool startedReceivingata = false;
@@ -1079,9 +1144,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     handler(timeSlice);
                 }
                 _algorithm.OnEndOfTimeStep();
-                _manualTimeProvider.AdvanceSeconds(1);
+                _manualTimeProvider.AdvanceSeconds(secondsTimeStep);
                 Thread.Sleep(1);
-                if (endTime <= DateTime.UtcNow)
+                if (endDate != default(DateTime) && _manualTimeProvider.GetUtcNow() > endDate
+                    || endTime <= DateTime.UtcNow)
                 {
                     feed.Exit();
                     cancellationTokenSource.Cancel();
