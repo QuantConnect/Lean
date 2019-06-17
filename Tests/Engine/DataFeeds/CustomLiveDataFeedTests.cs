@@ -131,7 +131,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                             if (currentTime.Date.DayOfWeek != DayOfWeek.Saturday && currentTime.Date.DayOfWeek != DayOfWeek.Sunday)
                             {
-                                File.WriteAllText(outputFileName, sb.ToString());
+                                var fileContent = sb.ToString();
+                                try
+                                {
+                                    File.WriteAllText(outputFileName, fileContent);
+                                }
+                                catch (IOException)
+                                {
+                                    Log.Error("IOException: will sleep 200ms and retry once more");
+                                    // lets sleep 200ms and retry once more, consumer could be reading the file
+                                    // this exception happens in travis intermittently, GH issue 3273
+                                    Thread.Sleep(200);
+                                    File.WriteAllText(outputFileName, fileContent);
+                                }
 
                                 Log.Trace($"Time:{currentTime} - Ticker:{ticker} - Files written:{++_countFilesWritten}");
                             }
