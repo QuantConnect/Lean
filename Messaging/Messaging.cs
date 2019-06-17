@@ -121,10 +121,9 @@ namespace QuantConnect.Messaging
                             UpdateRegressionStatisticsInSourceFile(result);
                         }
 
-                        foreach (var pair in result.Results.Statistics)
-                        {
-                            Log.Trace($"STATISTICS:: {pair.Key} {pair.Value}");
-                        }
+                        var statisticsStr = $"{Environment.NewLine}" +
+                            $"{string.Join(Environment.NewLine,result.Results.Statistics.Select(x => $"STATISTICS:: {x.Key} {x.Value}"))}";
+                        Log.Trace(statisticsStr);
                     }
                     break;
             }
