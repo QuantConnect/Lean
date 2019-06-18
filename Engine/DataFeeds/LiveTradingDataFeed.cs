@@ -588,14 +588,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         /// <summary>
         /// Will wrap the provided enumerator with a <see cref="FrontierAwareEnumerator"/>
-        /// using a <see cref="StepTimeProvider"/> that will advance time based on the provided
+        /// using a <see cref="PredicateTimeProvider"/> that will advance time based on the provided
         /// function
         /// </summary>
-        /// <remarks>Won't advance time if now: bigger than 23pm, less than 6am or Saturday</remarks>
+        /// <remarks>Won't advance time if now.Hour is bigger or equal than 23pm, less or equal than 5am or Saturday.
+        /// This is done to prevent universe selection occurring in those hours so that the subscription changes
+        /// are handled correctly.</remarks>
         private IEnumerator<BaseData> GetConfiguredFrontierAwareEnumerator(IEnumerator<BaseData> enumerator,
             TimeZoneOffsetProvider tzOffsetProvider)
         {
-            var stepTimeProvider = new StepTimeProvider(_frontierTimeProvider,
+            var stepTimeProvider = new PredicateTimeProvider(_frontierTimeProvider,
                 // advance time if before 23pm or after 5am and not on Saturdays
                 time => time.Hour < 23 && time.Hour > 5 && time.DayOfWeek != DayOfWeek.Saturday);
 

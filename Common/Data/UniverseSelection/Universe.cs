@@ -29,6 +29,10 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public abstract class Universe : IDisposable
     {
+        /// <summary>
+        /// Used to round the members time in universe <see cref="CanRemoveMember"/>, this is
+        /// done because we can not guarantee exact selection time in live mode, see GH issue 3287
+        /// </summary>
         private TimeSpan? _minimumTimeInUniverseRoundingInterval;
 
         /// <summary>
@@ -160,6 +164,7 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 if (_minimumTimeInUniverseRoundingInterval == null)
                 {
+                    // lets set _minimumTimeInUniverseRoundingInterval once
                     _minimumTimeInUniverseRoundingInterval = UniverseSettings.MinimumTimeInUniverse;
                     AdjustMinimumTimeInUniverseRoundingInterval();
                 }

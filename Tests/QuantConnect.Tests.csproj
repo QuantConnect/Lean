@@ -236,7 +236,7 @@
     <Compile Include="Engine\DataFeeds\LiveCoarseUniverseTests.cs" />
     <Compile Include="Engine\DataFeeds\MockDataFeed.cs" />
     <Compile Include="Engine\DataFeeds\PendingRemovalsManagerTests.cs" />
-    <Compile Include="Engine\DataFeeds\StepTimeProviderTests.cs" />
+    <Compile Include="Engine\DataFeeds\PredicateTimeProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\TextSubscriptionDataSourceReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\Transport\RemoteFileSubscriptionStreamReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\UniverseSelectionTests.cs" />

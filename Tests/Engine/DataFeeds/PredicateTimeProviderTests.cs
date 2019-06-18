@@ -21,14 +21,14 @@ using QuantConnect.Lean.Engine.DataFeeds;
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
     [TestFixture]
-    public class StepTimeProviderTests
+    public class PredicateTimeProviderTests
     {
         [Test]
         public void RespectsCustomStepEvaluator()
         {
             var startTime = new DateTime(2018, 1, 1);
             var manualTimeProvider = new ManualTimeProvider(startTime);
-            var stepTimeProvider = new StepTimeProvider(manualTimeProvider,
+            var stepTimeProvider = new PredicateTimeProvider(manualTimeProvider,
                 // only step when minute is a pair number
                 time => time.Minute % 2 == 0);
 

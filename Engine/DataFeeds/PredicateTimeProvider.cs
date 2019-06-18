@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// Provided step evaluator should return true when the next time step
     /// is valid and time can advance
     /// </summary>
-    public class StepTimeProvider : ITimeProvider
+    public class PredicateTimeProvider : ITimeProvider
     {
         private readonly ITimeProvider _underlyingTimeProvider;
         private readonly Func<DateTime, bool> _customStepEvaluator;
@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="customStepEvaluator">Function to evaluate whether or not
         /// to advance time. Should return true if provided <see cref="DateTime"/> is a
         /// valid new next time. False will avoid time advancing</param>
-        public StepTimeProvider(ITimeProvider underlyingTimeProvider,
+        public PredicateTimeProvider(ITimeProvider underlyingTimeProvider,
             Func<DateTime, bool> customStepEvaluator)
         {
             _underlyingTimeProvider = underlyingTimeProvider;
