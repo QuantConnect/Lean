@@ -17,7 +17,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using com.fxcm.external.api.transport;
 using com.fxcm.external.api.transport.listeners;
@@ -103,9 +102,6 @@ namespace QuantConnect.Brokerages.Fxcm
 
             HistoryResponseTimeout = 5000;
             MaximumHistoryRetryAttempts = 1;
-
-            // FXCM requires TLS 1.2 since 6/16/2019
-            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
         }
 
         #region IBrokerage implementation
