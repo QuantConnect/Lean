@@ -132,6 +132,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="BasicCSharpQuantBookTemplate.ipynb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
