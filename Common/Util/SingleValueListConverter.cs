@@ -53,6 +53,7 @@ namespace QuantConnect.Util
         {
             switch (reader.TokenType)
             {
+                case JsonToken.String:
                 case JsonToken.StartObject:
                     return new List<T> {serializer.Deserialize<T>(reader)};
                 case JsonToken.StartArray:

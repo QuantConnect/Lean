@@ -240,6 +240,9 @@
     <Compile Include="RandomDataGenerator\SymbolGenerator.cs" />
     <Compile Include="RandomDataGenerator\TickGenerator.cs" />
     <Compile Include="RandomDataGenerator\TooManyFailedAttemptsException.cs" />
+    <Compile Include="SECDataDownloader\SECDataDownloader.cs" />
+    <Compile Include="SECDataDownloader\SECDataConverter.cs" />
+    <Compile Include="SECDataDownloader\SECDataDownloaderProgram.cs" />
     <Compile Include="TickAggregator.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />
