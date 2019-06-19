@@ -46,9 +46,10 @@ namespace QuantConnect.Data.Custom.SEC
         public List<SECReportMailAddress> MailingAddress;
 
         /// <summary>
-        /// Former company names
+        /// Former company names. Default to empty list in order to not have null values 
+        /// in the case that the company has never had a former name
         /// </summary>
         [JsonProperty("FORMER-COMPANY"), JsonConverter(typeof(SingleValueListConverter<SECReportFormerCompany>))]
-        public List<SECReportFormerCompany> FormerCompanies;
+        public List<SECReportFormerCompany> FormerCompanies = new List<SECReportFormerCompany>();
     }
 }
