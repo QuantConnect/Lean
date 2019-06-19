@@ -17,6 +17,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using com.fxcm.external.api.transport;
 using com.fxcm.external.api.transport.listeners;
@@ -78,6 +79,15 @@ namespace QuantConnect.Brokerages.Fxcm
         /// Set to true in parallel downloaders to avoid loading accounts, orders, positions etc. at connect time
         /// </summary>
         public bool EnableOnlyHistoryRequests { get; set; }
+
+        /// <summary>
+        /// Static constructor for the <see cref="FxcmBrokerage"/> class
+        /// </summary>
+        static FxcmBrokerage()
+        {
+            // FXCM requires TLS 1.2 since 6/16/2019
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+        }
 
         /// <summary>
         /// Creates a new instance of the <see cref="FxcmBrokerage"/> class
