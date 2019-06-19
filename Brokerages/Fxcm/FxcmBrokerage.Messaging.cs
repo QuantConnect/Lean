@@ -381,7 +381,8 @@ namespace QuantConnect.Brokerages.Fxcm
                     // existing order
                     if (!OrderIsBeingProcessed(orderStatus.getCode()))
                     {
-                        order.PriceCurrency = message.getCurrency();
+                        var security = _securityProvider.GetSecurity(order.Symbol);
+                        order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
 
                         var orderEvent = new OrderEvent(order,
                             DateTime.UtcNow,
@@ -395,7 +396,6 @@ namespace QuantConnect.Brokerages.Fxcm
                         // we're catching the first fill so we apply the fees only once
                         if ((int)message.getCumQty() == (int)message.getLastQty() && message.getLastQty() > 0)
                         {
-                            var security = _securityProvider.GetSecurity(order.Symbol);
                             orderEvent.OrderFee = security.FeeModel.GetOrderFee(
                                 new OrderFeeParameters(security, order));
                         }
@@ -407,7 +407,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 {
                     _mapFxcmOrderIdsToOrders[orderId] = order;
                     order.BrokerId.Add(orderId);
-                    order.PriceCurrency = message.getCurrency();
+                    order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
                     // new order
                     var orderEvent = new OrderEvent(order,
