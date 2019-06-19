@@ -13,15 +13,9 @@
  * limitations under the License.
 */
 
-using System;
-using System.Linq;
-using NodaTime;
+using System.IO;
 using NUnit.Framework;
-using QuantConnect.Algorithm.CSharp;
-using QuantConnect.Data;
-using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.SEC;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.ToolBox.SECDataDownloader;
 
 namespace QuantConnect.Tests.Common.Data.Custom
@@ -72,6 +66,17 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var factory = new SECReportFactory();
 
             Assert.AreEqual(expected, SECDataConverter.GetTagNameFromLine(line));
+        }
+        
+        [Test]
+        public void SECDataConvert_ShouldParseSingleOrMultipleFilingValuesFields()
+        {
+            var single = File.ReadAllText(Path.Combine("TestData", "sec_report_raw_single.xml"));
+            var multiple = File.ReadAllText(Path.Combine("TestData", "sec_report_raw_multiple.xml"));
+            var factory = new SECReportFactory();
+
+            Assert.DoesNotThrow(() => factory.CreateSECReport(single));
+            Assert.DoesNotThrow(() => factory.CreateSECReport(multiple));
         }
     }
 }
