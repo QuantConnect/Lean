@@ -41,7 +41,7 @@ namespace QuantConnect.Data.Custom.SEC
         public string PublicDocumentCount;
 
         /// <summary>
-        /// End  date of reporting period of filing. Optional.
+        /// End date of reporting period of filing. Optional.
         /// </summary>
         [JsonProperty("PERIOD"), JsonConverter(typeof(SECReportDateTimeConverter))]
         public DateTime Period;
@@ -50,7 +50,7 @@ namespace QuantConnect.Data.Custom.SEC
         /// Identifies 1 or more items declared in 8-K filings. Optional &amp; Repeatable.
         /// </summary>
         [JsonProperty("ITEMS"), JsonConverter(typeof(SingleValueListConverter<string>))]
-        public List<string> Items = new List<string>();
+        public List<string> Items;
 
         /// <summary>
         /// Date report was filed with the SEC
@@ -70,17 +70,17 @@ namespace QuantConnect.Data.Custom.SEC
         /// </summary>
         [JsonProperty("MADE-AVAILABLE-AT")]
         public DateTime MadeAvailableAt;
-        
+
         /// <summary>
-        /// Contains information regarding who the filer of the report is
+        /// Contains information regarding who the filer of the report is.
         /// </summary>
         [JsonProperty("FILER"), JsonConverter(typeof(SingleValueListConverter<SECReportFiler>))]
-        public List<SECReportFiler> Filers = new List<SECReportFiler>();
+        public List<SECReportFiler> Filers;
 
         /// <summary>
         /// Attachments/content associated with the report
         /// </summary>
         [JsonProperty("DOCUMENT"), JsonConverter(typeof(SingleValueListConverter<SECReportDocument>))]
-        public List<SECReportDocument> Documents = new List<SECReportDocument>();
+        public List<SECReportDocument> Documents;
     }
 }

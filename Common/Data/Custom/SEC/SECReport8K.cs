@@ -88,10 +88,13 @@ namespace QuantConnect.Data.Custom.SEC
         /// <returns></returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var reportSubmissions = JsonConvert.DeserializeObject<List<SECReportSubmission>>(line);
+            var reportSubmissions = JsonConvert.DeserializeObject<List<SECReportSubmission>>(line, new JsonSerializerSettings()
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            });
             var reports = reportSubmissions.Select(report => new SECReport8K(report)
             {
-                Symbol = config.Symbol,
+                Symbol = config.Symbol
             });
 
             return new BaseDataCollection(date, config.Symbol, reports);

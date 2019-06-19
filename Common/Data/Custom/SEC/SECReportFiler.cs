@@ -32,7 +32,7 @@ namespace QuantConnect.Data.Custom.SEC
         /// </summary>
         [JsonProperty("FILING-VALUES"), JsonConverter(typeof(SingleValueListConverter<SECReportFilingValues>))]
         public List<SECReportFilingValues> Values;
-        
+
         /// <summary>
         /// Information related to the business' address
         /// </summary>
@@ -50,6 +50,6 @@ namespace QuantConnect.Data.Custom.SEC
         /// in the case that the company has never had a former name
         /// </summary>
         [JsonProperty("FORMER-COMPANY"), JsonConverter(typeof(SingleValueListConverter<SECReportFormerCompany>))]
-        public List<SECReportFormerCompany> FormerCompanies = new List<SECReportFormerCompany>();
+        public List<SECReportFormerCompany> FormerCompanies;
     }
 }
