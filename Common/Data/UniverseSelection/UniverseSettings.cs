@@ -46,6 +46,9 @@ namespace QuantConnect.Data.UniverseSelection
         /// Defines the minimum amount of time a security must be in
         /// the universe before being removed.
         /// </summary>
+        /// <remarks>When selection takes place, the actual members time in the universe
+        /// will be rounded based on this TimeSpan, so that relative small differences do not
+        /// cause an unexpected behavior <see cref="Universe.CanRemoveMember"/></remarks>
         public TimeSpan MinimumTimeInUniverse;
 
         /// <summary>

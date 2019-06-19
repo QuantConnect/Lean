@@ -203,6 +203,7 @@
     <Compile Include="Common\Data\Custom\SECReportTests.cs" />
     <Compile Include="Common\Data\Fundamental\MultiPeriodFieldTests.cs" />
     <Compile Include="Common\Data\MockSubscriptionDataConfigProvider.cs" />
+    <Compile Include="Common\Data\UniverseSelection\UniverseTests.cs" />
     <Compile Include="Common\IsolatorTests.cs" />
     <Compile Include="Common\Orders\Fees\BackwardsCompatibilityFeeModelTests.cs" />
     <Compile Include="Common\Orders\Fees\BitfinexFeeModelTests.cs" />
@@ -233,8 +234,10 @@
     <Compile Include="Engine\DataFeeds\Enumerators\Factories\FuturesChainUniverseSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\AuxiliaryDataEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\PriceScaleFactorEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\LiveCoarseUniverseTests.cs" />
     <Compile Include="Engine\DataFeeds\MockDataFeed.cs" />
     <Compile Include="Engine\DataFeeds\PendingRemovalsManagerTests.cs" />
+    <Compile Include="Engine\DataFeeds\PredicateTimeProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\TextSubscriptionDataSourceReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\Transport\RemoteFileSubscriptionStreamReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\UniverseSelectionTests.cs" />

@@ -175,6 +175,7 @@
     <Compile Include="DataFeeds\NullDataFeed.cs" />
     <Compile Include="DataFeeds\PendingRemovalsManager.cs" />
     <Compile Include="DataFeeds\RealTimeScheduleEventService.cs" />
+    <Compile Include="DataFeeds\PredicateTimeProvider.cs" />
     <Compile Include="DataFeeds\SubscriptionDataReaderEvents.cs" />
     <Compile Include="DataFeeds\SubscriptionFrontierTimeProvider.cs" />
     <Compile Include="DataFeeds\SingleEntryDataCacheProvider.cs" />

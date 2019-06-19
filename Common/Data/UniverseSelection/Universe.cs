@@ -30,6 +30,12 @@ namespace QuantConnect.Data.UniverseSelection
     public abstract class Universe : IDisposable
     {
         /// <summary>
+        /// Used to round the members time in universe <see cref="CanRemoveMember"/>, this is
+        /// done because we can not guarantee exact selection time in live mode, see GH issue 3287
+        /// </summary>
+        private TimeSpan? _minimumTimeInUniverseRoundingInterval;
+
+        /// <summary>
         /// Gets a value indicating that no change to the universe should be made
         /// </summary>
         public static readonly UnchangedUniverse Unchanged = UnchangedUniverse.Instance;
@@ -156,8 +162,16 @@ namespace QuantConnect.Data.UniverseSelection
             Member member;
             if (Securities.TryGetValue(security.Symbol, out member))
             {
+                if (_minimumTimeInUniverseRoundingInterval == null)
+                {
+                    // lets set _minimumTimeInUniverseRoundingInterval once
+                    _minimumTimeInUniverseRoundingInterval = UniverseSettings.MinimumTimeInUniverse;
+                    AdjustMinimumTimeInUniverseRoundingInterval();
+                }
+
                 var timeInUniverse = utcTime - member.Added;
-                if (timeInUniverse >= UniverseSettings.MinimumTimeInUniverse)
+                if (timeInUniverse.Round(_minimumTimeInUniverseRoundingInterval.Value)
+                    >= UniverseSettings.MinimumTimeInUniverse)
                 {
                     return true;
                 }
@@ -344,6 +358,30 @@ namespace QuantConnect.Data.UniverseSelection
             IEnumerator<Symbol> IEnumerable<Symbol>.GetEnumerator() { yield break; }
             IEnumerator<string> IEnumerable<string>.GetEnumerator() { yield break; }
             IEnumerator IEnumerable.GetEnumerator() { yield break; }
+        }
+
+        /// <summary>
+        /// Will adjust the <see cref="_minimumTimeInUniverseRoundingInterval"/>
+        /// so rounding is performed as expected
+        /// </summary>
+        private void AdjustMinimumTimeInUniverseRoundingInterval()
+        {
+            if (_minimumTimeInUniverseRoundingInterval >= Time.OneDay)
+            {
+                _minimumTimeInUniverseRoundingInterval = Time.OneDay;
+            }
+            else if (_minimumTimeInUniverseRoundingInterval >= Time.OneHour)
+            {
+                _minimumTimeInUniverseRoundingInterval = Time.OneHour;
+            }
+            else if (_minimumTimeInUniverseRoundingInterval >= Time.OneMinute)
+            {
+                _minimumTimeInUniverseRoundingInterval = Time.OneMinute;
+            }
+            else if (_minimumTimeInUniverseRoundingInterval >= Time.OneSecond)
+            {
+                _minimumTimeInUniverseRoundingInterval = Time.OneSecond;
+            }
         }
 
         internal sealed class Member
