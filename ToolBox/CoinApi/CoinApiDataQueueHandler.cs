@@ -298,7 +298,7 @@ namespace QuantConnect.ToolBox.CoinApi
                                 });
                             }
 
-                            _connectionHandler.KeepAlive(trade.TimeExchange);
+                            _connectionHandler.KeepAlive(DateTime.UtcNow);
                             break;
                         }
 
@@ -330,7 +330,7 @@ namespace QuantConnect.ToolBox.CoinApi
                                 }
                             }
 
-                            _connectionHandler.KeepAlive(quote.TimeExchange);
+                            _connectionHandler.KeepAlive(DateTime.UtcNow);
                             break;
                         }
 
@@ -371,22 +371,28 @@ namespace QuantConnect.ToolBox.CoinApi
 
         private void OnReconnectRequested(object sender, EventArgs e)
         {
+            Log.Trace("CoinApiDataQueueHandler.OnReconnectRequested(): CoinAPI reconnection requested.");
+
             if (!_webSocket.IsOpen)
             {
+                Log.Trace("CoinApiDataQueueHandler.OnReconnectRequested(): Websocket connecting.");
                 _webSocket.Connect();
             }
 
             if (!_webSocket.IsOpen)
             {
+                Log.Trace("CoinApiDataQueueHandler.OnReconnectRequested(): Websocket not open.");
                 return;
             }
 
             if (_subscribedExchanges.Count > 0)
             {
+                Log.Trace("CoinApiDataQueueHandler.OnReconnectRequested(): Subscribe markets.");
                 SubscribeMarkets(_subscribedExchanges);
             }
             else if (_subscribedSymbols.Count > 0)
             {
+                Log.Trace("CoinApiDataQueueHandler.OnReconnectRequested(): Subscribe symbols.");
                 SubscribeSymbols(_subscribedSymbols.ToList());
             }
         }
