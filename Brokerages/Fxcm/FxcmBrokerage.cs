@@ -81,6 +81,15 @@ namespace QuantConnect.Brokerages.Fxcm
         public bool EnableOnlyHistoryRequests { get; set; }
 
         /// <summary>
+        /// Static constructor for the <see cref="FxcmBrokerage"/> class
+        /// </summary>
+        static FxcmBrokerage()
+        {
+            // FXCM requires TLS 1.2 since 6/16/2019
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+        }
+
+        /// <summary>
         /// Creates a new instance of the <see cref="FxcmBrokerage"/> class
         /// </summary>
         /// <param name="orderProvider">The order provider</param>
@@ -103,9 +112,6 @@ namespace QuantConnect.Brokerages.Fxcm
 
             HistoryResponseTimeout = 5000;
             MaximumHistoryRetryAttempts = 1;
-
-            // FXCM requires TLS 1.2 since 6/16/2019
-            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
         }
 
         #region IBrokerage implementation
