@@ -30,8 +30,8 @@ namespace QuantConnect.Data.Custom.SEC
         /// <summary>
         /// Information regarding the filing itself
         /// </summary>
-        [JsonProperty("FILING-VALUES")]
-        public SECReportFilingValues Values;
+        [JsonProperty("FILING-VALUES"), JsonConverter(typeof(SingleValueListConverter<SECReportFilingValues>))]
+        public List<SECReportFilingValues> Values;
         
         /// <summary>
         /// Information related to the business' address
