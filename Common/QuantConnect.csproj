@@ -23,7 +23,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>$(SelectedOptimization)</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -137,6 +137,7 @@
     <Message Text="IsOSX $(IsOSX)" Importance="high" />
     <Message Text="IsLinux $(IsLinux)" Importance="high" />
     <Message Text="ForceLinuxBuild $(ForceLinuxBuild)" Importance="high" />
+    <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
   </Target>
   <Choose>
     <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
