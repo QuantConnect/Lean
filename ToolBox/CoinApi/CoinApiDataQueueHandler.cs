@@ -371,7 +371,7 @@ namespace QuantConnect.ToolBox.CoinApi
 
         private void OnReconnectRequested(object sender, EventArgs e)
         {
-            Log.Trace("CoinApiDataQueueHandler.OnReconnectRequested(): CoinAPI reconnection requested.");
+            Log.Trace($"CoinApiDataQueueHandler.OnReconnectRequested(): CoinAPI reconnection requested: IsOpen:{_webSocket.IsOpen} ReadyState:{_webSocket.ReadyState}");
 
             if (!_webSocket.IsOpen)
             {
@@ -381,9 +381,11 @@ namespace QuantConnect.ToolBox.CoinApi
 
             if (!_webSocket.IsOpen)
             {
-                Log.Trace("CoinApiDataQueueHandler.OnReconnectRequested(): Websocket not open.");
+                Log.Trace($"CoinApiDataQueueHandler.OnReconnectRequested(): Websocket not open: IsOpen:{_webSocket.IsOpen} ReadyState:{_webSocket.ReadyState}");
                 return;
             }
+
+            Log.Trace($"CoinApiDataQueueHandler.OnReconnectRequested(): Reconnected: IsOpen:{_webSocket.IsOpen} ReadyState:{_webSocket.ReadyState}");
 
             if (_subscribedExchanges.Count > 0)
             {
