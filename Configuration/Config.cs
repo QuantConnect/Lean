@@ -159,63 +159,59 @@ namespace QuantConnect.Configuration
         }
 
         /// <summary>
-        /// Sets a configuration value. This is really only used to help testing. The key heye can be
-        /// specified as {environment}.key to set a value on a specific environment
+        /// Sets a configuration value. If isEnvironmentContext is set to true (default) key can be
+        /// specified as {environment}.key to set a value on a specific environment. When false,
+        /// key is considered the full path to the meaning object.
         /// </summary>
         /// <param name="key">The key to be set</param>
         /// <param name="value">The new value</param>
-        public static void Set(string key, string value)
+        /// <param name="isEnvironmentContext">Flag indicates whether to understand key as specific environment key</param>
+        public static void Set(string key, string value, bool isEnvironmentContext = true)
         {
-            JToken environment = Settings.Value;
-            while (key.Contains("."))
+            if (isEnvironmentContext)
             {
-                var envName = key.Substring(0, key.IndexOf("."));
-                key = key.Substring(key.IndexOf(".") + 1);
-                var environments = environment["environments"];
-                if (environments == null)
+                JToken environment = Settings.Value;
+                while (key.Contains("."))
                 {
-                    environment["environments"] = environments = new JObject();
-                }
-                environment = environments[envName];
-            }
-            environment[key] = value;
-        }
-
-        /// <summary>
-        /// Sets new configuration value at the specified path. If some of the properties
-        /// that constitute a path do not exist method will create them.
-        /// </summary>
-        /// <param name="path">Json value path. A path could be multi-levelled (separated by commas).</param>
-        /// <param name="value">Value to set.</param>
-        public static void SetValue(string path, string value)
-        {
-            // value token at given path
-            var token = Settings.Value.SelectToken(path);
-
-            // if do not exist - we need to create the missing properties
-            if (token == null)
-            {
-                // Going down a multi-level path we will create the missing properties
-                // Current json object will hold the inner JObject that resides by the current path
-                var currentJObject = Settings.Value;
-                foreach (var word in path.Split('.'))
-                {
-                    if (currentJObject[word] == null)
+                    var envName = key.Substring(0, key.IndexOf(".", StringComparison.Ordinal));
+                    key = key.Substring(key.IndexOf(".", StringComparison.Ordinal) + 1);
+                    var environments = environment["environments"];
+                    if (environments == null)
                     {
-                        currentJObject.Add(word, new JObject());
+                        environment["environments"] = environments = new JObject();
                     }
-
-                    // Move an object one step down
-                    currentJObject = (JObject)currentJObject[word];
+                    environment = environments[envName];
                 }
-
-                // Now as we made sure the token for given path does exist - populate the token with given value
-                currentJObject.Replace(value);
+                environment[key] = value;
             }
             else
             {
-                // If path token does exist - just populate with given value
-                token.Replace(value);
+                // Select token provided a full path
+                var token = Settings.Value.SelectToken(key);
+
+                // If do not exist create the missing properties
+                if (token == null)
+                {
+                    // Going down a multi-level path we will create the missing properties
+                    // Current json object will hold the inner JObject that resides by the current path
+                    var currentJObject = Settings.Value;
+                    foreach (var word in key.Split('.'))
+                    {
+                        if (currentJObject[word] == null)
+                        {
+                            currentJObject.Add(word, new JObject());
+                        }
+                        // Move an object one step down
+                        currentJObject = (JObject)currentJObject[word];
+                    }
+                    // Now as we made sure the token for given path does exist - populate the token with given value
+                    currentJObject.Replace(value);
+                }
+                else
+                {
+                    // If path token does exist - just populate with given value
+                    token.Replace(value);
+                }
             }
         }
 

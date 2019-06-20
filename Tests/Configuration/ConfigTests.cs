@@ -14,8 +14,7 @@
 */
 
 using System;
-using System.IO;
-using System.Linq;
+using System.Globalization;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Configuration;
@@ -35,6 +34,20 @@ namespace QuantConnect.Tests.Configuration
 
             bool betaMode2 = Config.GetBool("beta-mode");
             Assert.AreNotEqual(betaMode, betaMode2);
+        }
+
+        [Test]
+        public void SetNestedObject()
+        {
+            string key = "A.B.C.D";
+            decimal value = 0.325m;
+
+            // Set and get
+            Config.Set(key, value.ToString(CultureInfo.InvariantCulture), isEnvironmentContext:false);
+            decimal value2 = Config.GetValue<decimal>(key);
+
+            // Assert
+            Assert.AreEqual(value, value2);
         }
 
         [Test]
