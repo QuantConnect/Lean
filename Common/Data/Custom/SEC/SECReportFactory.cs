@@ -33,7 +33,10 @@ namespace QuantConnect.Data.Custom.SEC
             secReportXml.LoadXml(xmlText);
 
             var json = JsonConvert.SerializeXmlNode(secReportXml, Formatting.None, true);
-            var secReportDocument = JsonConvert.DeserializeObject<SECReportSubmission>(json);
+            var secReportDocument = JsonConvert.DeserializeObject<SECReportSubmission>(json, new JsonSerializerSettings()
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            });
 
             var formType = secReportDocument.FormType;
 

@@ -330,7 +330,11 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 
             using (var writer = new StreamWriter(reportFile, false))
             {
-                writer.Write(JsonConvert.SerializeObject(reportSubmissions, Formatting.None));
+                writer.Write(JsonConvert.SerializeObject(reportSubmissions, new JsonSerializerSettings()
+                {
+                    Formatting = Formatting.None,
+                    NullValueHandling = NullValueHandling.Ignore
+                }));
             }
 
             Compression.ZipDirectory(reportFilePath, $"{reportFilePath}.zip", false);
