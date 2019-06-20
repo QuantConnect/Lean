@@ -84,6 +84,11 @@ namespace QuantConnect.Brokerages
         public bool IsOpen => _wrapped.IsAlive;
 
         /// <summary>
+        /// Wraps ReadyState
+        /// </summary>
+        public WebSocketState ReadyState => _wrapped.ReadyState;
+
+        /// <summary>
         /// Wraps message event
         /// </summary>
         public event EventHandler<WebSocketMessage> Message;
