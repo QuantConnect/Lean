@@ -55,6 +55,7 @@
     <Content Include="BasicCSharpIntegrationTemplateAlgorithm.py" />
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
     <Content Include="TradingEconomicsCalendarIndicatorAlgorithm.py" />
+    <Content Include="OnEndOfDayRegressionAlgorithm.py" />
     <Content Include="SECReportDataAlgorithm.py" />
     <Content Include="USEnergyInformationAdministrationAlgorithm.py" />
     <None Include="RawPricesUniverseRegressionAlgorithm.py" />

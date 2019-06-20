@@ -831,6 +831,9 @@ namespace QuantConnect.Algorithm
         /// End of a trading day event handler. This method is called at the end of the algorithm day (or multiple times if trading multiple assets).
         /// </summary>
         /// <remarks>Method is called 10 minutes before closing to allow user to close out position.</remarks>
+        /// <remarks>Deprecated because different assets have different market close times,
+        /// and because Python does not support two methods with the same name</remarks>
+        [Obsolete("This method is deprecated. Please use this overload: OnEndOfDay(Symbol symbol)")]
         public virtual void OnEndOfDay()
         {
 

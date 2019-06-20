@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
@@ -23,21 +22,15 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
     /// <summary>
     /// Pseudo realtime event processing for backtesting to simulate realtime events in fast forward.
     /// </summary>
-    public class BacktestingRealTimeHandler : IRealTimeHandler
+    public class BacktestingRealTimeHandler : BaseRealTimeHandler, IRealTimeHandler
     {
-        private IAlgorithm _algorithm;
-        private IResultHandler _resultHandler;
-        // initialize this immediately since the Initialize method gets called after IAlgorithm.Initialize,
-        // so we want to be ready to accept events as soon as possible
-        private readonly ConcurrentDictionary<ScheduledEvent, ScheduledEvent> _scheduledEvents = new ConcurrentDictionary<ScheduledEvent, ScheduledEvent>();
-
+        private bool _sortingScheduledEventsRequired;
         private List<ScheduledEvent> _scheduledEventsSortedByTime = new List<ScheduledEvent>();
 
         /// <summary>
@@ -47,29 +40,19 @@ namespace QuantConnect.Lean.Engine.RealTime
         public bool IsActive => false;
 
         /// <summary>
-        /// Intializes the real time handler for the specified algorithm and job
+        /// Initializes the real time handler for the specified algorithm and job
         /// </summary>
         public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api)
         {
             //Initialize:
-            _algorithm = algorithm;
-            _resultHandler =  resultHandler;
+            Algorithm = algorithm;
+            ResultHandler =  resultHandler;
 
             // create events for algorithm's end of tradeable dates
-            Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, _algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.AlgorithmEndOfDayDelta));
-
             // set up the events for each security to fire every tradeable date before market close
-            foreach (var kvp in _algorithm.Securities)
-            {
-                var security = kvp.Value;
+            base.Setup(Algorithm.StartDate, Algorithm.EndDate);
 
-                if (!security.IsInternalFeed())
-                {
-                    Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, algorithm.StartDate, _algorithm.EndDate, ScheduledEvent.SecurityEndOfDayDelta));
-                }
-            }
-
-            foreach (var scheduledEvent in _scheduledEventsSortedByTime)
+            foreach (var scheduledEvent in GetScheduledEventsSortedByTime())
             {
                 // zoom past old events
                 scheduledEvent.SkipEventsUntil(algorithm.UtcTime);
@@ -90,32 +73,33 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// Adds the specified event to the schedule
         /// </summary>
         /// <param name="scheduledEvent">The event to be scheduled, including the date/times the event fires and the callback</param>
-        public void Add(ScheduledEvent scheduledEvent)
+        public override void Add(ScheduledEvent scheduledEvent)
         {
-            if (_algorithm != null)
+            if (Algorithm != null)
             {
-                scheduledEvent.SkipEventsUntil(_algorithm.UtcTime);
+                scheduledEvent.SkipEventsUntil(Algorithm.UtcTime);
             }
 
-            _scheduledEvents.AddOrUpdate(scheduledEvent, scheduledEvent);
+            ScheduledEvents.AddOrUpdate(scheduledEvent, GetScheduledEventUniqueId());
 
             if (Log.DebuggingEnabled)
             {
                 scheduledEvent.IsLoggingEnabled = true;
             }
 
-            _scheduledEventsSortedByTime = GetScheduledEventsSortedByTime();
+            _sortingScheduledEventsRequired = true;
         }
 
         /// <summary>
         /// Removes the specified event from the schedule
         /// </summary>
         /// <param name="scheduledEvent">The event to be removed</param>
-        public void Remove(ScheduledEvent scheduledEvent)
+        public override void Remove(ScheduledEvent scheduledEvent)
         {
-            _scheduledEvents.TryRemove(scheduledEvent, out scheduledEvent);
+            int id;
+            ScheduledEvents.TryRemove(scheduledEvent, out id);
 
-            _scheduledEventsSortedByTime = GetScheduledEventsSortedByTime();
+            _sortingScheduledEventsRequired = true;
         }
 
         /// <summary>
@@ -125,7 +109,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         public void SetTime(DateTime time)
         {
             // poke each event to see if it has fired, be sure to invoke these in time order
-            foreach (var scheduledEvent in _scheduledEventsSortedByTime)
+            foreach (var scheduledEvent in GetScheduledEventsSortedByTime())
             {
                 scheduledEvent.Scan(time);
             }
@@ -137,11 +121,11 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <param name="time">Current time.</param>
         public void ScanPastEvents(DateTime time)
         {
-            foreach (var scheduledEvent in _scheduledEventsSortedByTime)
+            foreach (var scheduledEvent in GetScheduledEventsSortedByTime())
             {
                 while (scheduledEvent.NextEventUtcTime < time)
                 {
-                    _algorithm.SetDateTime(scheduledEvent.NextEventUtcTime);
+                    Algorithm.SetDateTime(scheduledEvent.NextEventUtcTime);
 
                     try
                     {
@@ -153,11 +137,11 @@ namespace QuantConnect.Lean.Engine.RealTime
 
                         Log.Error(scheduledEventException, errorMessage);
 
-                        _resultHandler.RuntimeError(errorMessage);
+                        ResultHandler.RuntimeError(errorMessage);
 
                         // Errors in scheduled event should be treated as runtime error
                         // Runtime errors should end Lean execution
-                        _algorithm.RunTimeError = scheduledEventException;
+                        Algorithm.RunTimeError = scheduledEventException;
                     }
                 }
             }
@@ -173,7 +157,19 @@ namespace QuantConnect.Lean.Engine.RealTime
 
         private List<ScheduledEvent> GetScheduledEventsSortedByTime()
         {
-            return _scheduledEvents.Select(x => x.Value).OrderBy(x => x.NextEventUtcTime).ToList();
+            if (_sortingScheduledEventsRequired)
+            {
+                _sortingScheduledEventsRequired = false;
+                _scheduledEventsSortedByTime = ScheduledEvents
+                     // we order by next event time
+                    .OrderBy(x => x.Key.NextEventUtcTime)
+                    // then by unique id so that for scheduled events in the same time
+                    // respect their creation order, so its deterministic
+                    .ThenBy(x => x.Value)
+                    .Select(x => x.Key).ToList();
+            }
+
+            return _scheduledEventsSortedByTime;
         }
     }
 }

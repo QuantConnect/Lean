@@ -142,6 +142,7 @@
     <Compile Include="Benchmarks\StatefulCoarseUniverseSelectionBenchmark.cs" />
     <Compile Include="Benchmarks\StatelessCoarseUniverseSelectionBenchmark.cs" />
     <Compile Include="CapmAlphaRankingFrameworkAlgorithm.cs" />
+    <Compile Include="OnEndOfDayRegressionAlgorithm.cs" />
     <Compile Include="SECReportDataAlgorithm.cs" />
     <Compile Include="G10CurrencySelectionModelFrameworkAlgorithm.cs" />
     <Compile Include="ExpiryHelperAlphaModelFrameworkAlgorithm.cs" />

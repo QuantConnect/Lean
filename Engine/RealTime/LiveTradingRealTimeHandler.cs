@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
@@ -23,7 +22,6 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
-using QuantConnect.Util;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
@@ -33,17 +31,9 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// <summary>
     /// Live trading realtime event processing.
     /// </summary>
-    public class LiveTradingRealTimeHandler : IRealTimeHandler
+    public class LiveTradingRealTimeHandler : BaseRealTimeHandler, IRealTimeHandler
     {
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        // initialize this immediately since the Initialzie method gets called after IAlgorithm.Initialize,
-        // so we want to be ready to accept events as soon as possible
-        private readonly ConcurrentDictionary<ScheduledEvent, ScheduledEvent> _scheduledEvents = new ConcurrentDictionary<ScheduledEvent, ScheduledEvent>();
-
-        //Algorithm and Handlers:
-        private IAlgorithm _algorithm;
-        private IResultHandler _resultHandler;
-
         private static MarketHoursDatabase _marketHoursDatabase;
 
         /// <summary>
@@ -52,17 +42,17 @@ namespace QuantConnect.Lean.Engine.RealTime
         public bool IsActive { get; private set; }
 
         /// <summary>
-        /// Intializes the real time handler for the specified algorithm and job
+        /// Initializes the real time handler for the specified algorithm and job
         /// </summary>
         public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api)
         {
             //Initialize:
-            _algorithm = algorithm;
-            _resultHandler = resultHandler;
+            Algorithm = algorithm;
+            ResultHandler = resultHandler;
             _cancellationTokenSource = new CancellationTokenSource();
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
-            var todayInAlgorithmTimeZone = DateTime.UtcNow.ConvertFromUtc(_algorithm.TimeZone).Date;
+            var todayInAlgorithmTimeZone = DateTime.UtcNow.ConvertFromUtc(Algorithm.TimeZone).Date;
 
             // refresh the market hours for today explicitly, and then set up an event to refresh them each day at midnight
             RefreshMarketHoursToday(todayInAlgorithmTimeZone);
@@ -70,35 +60,22 @@ namespace QuantConnect.Lean.Engine.RealTime
             // every day at midnight from tomorrow until the end of time
             var times =
                 from date in Time.EachDay(todayInAlgorithmTimeZone.AddDays(1), Time.EndOfTime)
-                select date.ConvertToUtc(_algorithm.TimeZone);
+                select date.ConvertToUtc(Algorithm.TimeZone);
 
             Add(new ScheduledEvent("RefreshMarketHours", times, (name, triggerTime) =>
             {
                 // refresh market hours from api every day
-                RefreshMarketHoursToday(triggerTime.ConvertFromUtc(_algorithm.TimeZone).Date);
+                RefreshMarketHoursToday(triggerTime.ConvertFromUtc(Algorithm.TimeZone).Date);
             }));
 
-            // add end of day events for each tradeable day
-            Add(ScheduledEventFactory.EveryAlgorithmEndOfDay(_algorithm, _resultHandler, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.AlgorithmEndOfDayDelta, DateTime.UtcNow));
+            base.Setup(todayInAlgorithmTimeZone, Time.EndOfTime, DateTime.UtcNow);
 
-            // add end of trading day events for each security
-            foreach (var kvp in _algorithm.Securities)
-            {
-                var security = kvp.Value;
-
-                if (!security.IsInternalFeed())
-                {
-                    // assumes security.Exchange has been updated with today's hours via RefreshMarketHoursToday
-                    Add(ScheduledEventFactory.EverySecurityEndOfDay(_algorithm, _resultHandler, security, todayInAlgorithmTimeZone, Time.EndOfTime, ScheduledEvent.SecurityEndOfDayDelta, DateTime.UtcNow));
-                }
-            }
-
-            foreach (var scheduledEvent in _scheduledEvents)
+            foreach (var scheduledEvent in ScheduledEvents)
             {
                 // zoom past old events
-                scheduledEvent.Value.SkipEventsUntil(algorithm.UtcTime);
+                scheduledEvent.Key.SkipEventsUntil(algorithm.UtcTime);
                 // set logging accordingly
-                scheduledEvent.Value.IsLoggingEnabled = Log.DebuggingEnabled;
+                scheduledEvent.Key.IsLoggingEnabled = Log.DebuggingEnabled;
             }
         }
 
@@ -121,12 +98,12 @@ namespace QuantConnect.Lean.Engine.RealTime
                 var delay = Convert.ToInt32((nextSecond - time).TotalMilliseconds);
                 Thread.Sleep(delay < 0 ? 1 : delay);
 
-                // poke each event to see if it should fire
-                foreach (var scheduledEvent in _scheduledEvents)
+                // poke each event to see if it should fire, we order by unique id to be deterministic
+                foreach (var scheduledEvent in ScheduledEvents.OrderBy(pair => pair.Value))
                 {
                     try
                     {
-                        scheduledEvent.Value.Scan(time);
+                        scheduledEvent.Key.Scan(time);
                     }
                     catch (ScheduledEventException scheduledEventException)
                     {
@@ -134,11 +111,11 @@ namespace QuantConnect.Lean.Engine.RealTime
 
                         Log.Error(scheduledEventException, errorMessage);
 
-                        _resultHandler.RuntimeError(errorMessage);
+                        ResultHandler.RuntimeError(errorMessage);
 
                         // Errors in scheduled event should be treated as runtime error
                         // Runtime errors should end Lean execution
-                        _algorithm.RunTimeError = new Exception(errorMessage);
+                        Algorithm.RunTimeError = new Exception(errorMessage);
                     }
                 }
             }
@@ -155,7 +132,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             date = date.Date;
 
             // update market hours for each security
-            foreach (var kvp in _algorithm.Securities)
+            foreach (var kvp in Algorithm.Securities)
             {
                 var security = kvp.Value;
 
@@ -170,23 +147,24 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// Adds the specified event to the schedule
         /// </summary>
         /// <param name="scheduledEvent">The event to be scheduled, including the date/times the event fires and the callback</param>
-        public void Add(ScheduledEvent scheduledEvent)
+        public override void Add(ScheduledEvent scheduledEvent)
         {
-            if (_algorithm != null)
+            if (Algorithm != null)
             {
-                scheduledEvent.SkipEventsUntil(_algorithm.UtcTime);
+                scheduledEvent.SkipEventsUntil(Algorithm.UtcTime);
             }
 
-            _scheduledEvents.AddOrUpdate(scheduledEvent, scheduledEvent);
+            ScheduledEvents.AddOrUpdate(scheduledEvent, GetScheduledEventUniqueId());
         }
 
         /// <summary>
         /// Removes the specified event from the schedule
         /// </summary>
         /// <param name="scheduledEvent">The event to be removed</param>
-        public void Remove(ScheduledEvent scheduledEvent)
+        public override void Remove(ScheduledEvent scheduledEvent)
         {
-            _scheduledEvents.TryRemove(scheduledEvent, out scheduledEvent);
+            int id;
+            ScheduledEvents.TryRemove(scheduledEvent, out id);
         }
 
         /// <summary>
