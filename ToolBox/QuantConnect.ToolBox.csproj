@@ -165,6 +165,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -313,6 +314,14 @@
     <Compile Include="IDataDownloader.cs" />
     <Compile Include="RawFileProcessor.cs" />
     <Compile Include="CsvDataProcessor.cs" />
+    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsEarningsDownloader.cs" />
+    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsEarningsDownloaderProgram.cs" />
+    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsIndicatorDownloaderProgram.cs" />
+    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsIndicatorDownloader.cs" />
+    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsDataDownloader.cs" />
+    <Compile Include="TradingEconomicsDataDownloader\ITradingEconomicsDataDownloader.cs" />
+    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsCalendarDownloader.cs" />
+    <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsCalendarDownloaderProgram.cs" />
     <Compile Include="YahooDownloader\Historical.cs" />
     <Compile Include="YahooDownloader\YahooDownloaderProgram.cs" />
     <Compile Include="YahooDownloader\Token.cs" />
