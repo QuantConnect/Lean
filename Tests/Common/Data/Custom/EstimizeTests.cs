@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(data.WallStreetRevenueEstimate, 31966.964);
             Assert.AreEqual(data.ConsensusRevenueEstimate, 31872.2258064516);
             Assert.AreEqual(data.ConsensusWeightedRevenueEstimate, 31966.6230263867);
-            Assert.AreEqual(data.ReleaseDate, new DateTime(2019, 10, 23, 21, 0, 0));
+            Assert.AreEqual(data.ReleaseDate, new DateTime(2019, 10, 23, 20, 0, 0).ToLocalTime());
             Assert.AreEqual(data.ReleaseDate, data.EndTime);
 
             content = content.Replace("\"eps\":null,", "\"eps\":1.2,");
@@ -110,7 +110,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
 
             var config = new SubscriptionDataConfig(
                 typeof(EstimizeRelease),
-                Symbol.Create("AAPL", SecurityType.Base, QuantConnect.Market.USA),
+                Symbol.Create("AAPL.R", SecurityType.Base, QuantConnect.Market.USA),
                 Resolution.Daily,
                 DateTimeZone.Utc,
                 DateTimeZone.Utc,
@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(data.Ticker, "AAPL");
             Assert.AreEqual(data.FiscalYear, 2020);
             Assert.AreEqual(data.FiscalQuarter, 2);
-            Assert.AreEqual(data.CreatedAt, new DateTime(2019, 6, 7, 15, 40, 36));
+            Assert.AreEqual(data.CreatedAt, new DateTime(2019, 6, 7, 14, 40, 36).ToLocalTime());
             Assert.AreEqual(data.CreatedAt, data.EndTime);
             Assert.AreEqual(data.Eps, 2.81);
             Assert.AreEqual(data.Revenue, 61413.0);
@@ -193,7 +193,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
 
             var config = new SubscriptionDataConfig(
                 typeof(EstimizeEstimate),
-                Symbol.Create("AAPL", SecurityType.Base, QuantConnect.Market.USA),
+                Symbol.Create("AAPL.E", SecurityType.Base, QuantConnect.Market.USA),
                 Resolution.Daily,
                 DateTimeZone.Utc,
                 DateTimeZone.Utc,
@@ -221,7 +221,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
 
             var config = new SubscriptionDataConfig(
                 typeof(EstimizeConsensus),
-                Symbol.Create("AAPL", SecurityType.Base, QuantConnect.Market.USA),
+                Symbol.Create("AAPL.C", SecurityType.Base, QuantConnect.Market.USA),
                 Resolution.Daily,
                 DateTimeZone.Utc,
                 DateTimeZone.Utc,

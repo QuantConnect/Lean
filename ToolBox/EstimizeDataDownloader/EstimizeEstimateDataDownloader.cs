@@ -54,6 +54,9 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                 foreach (var company in companies)
                 {
                     var ticker = company.Ticker;
+
+                    // Include tickers that are "defunct".
+                    // Remove the tag because it cannot be part of the API endpoint
                     if (ticker.IndexOf("defunct", StringComparison.OrdinalIgnoreCase) > 0)
                     {
                         var length = ticker.IndexOf('-');
@@ -70,7 +73,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                                 {
                                     if (y.IsFaulted)
                                     {
-                                        Log.Trace($"EstimizeEstimateDataDownloader.Run(): Failed to get data for {company}");
+                                        Log.Error($"EstimizeEstimateDataDownloader.Run(): Failed to get data for {company}");
                                         return;
                                     }
 

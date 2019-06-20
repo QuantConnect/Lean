@@ -70,7 +70,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
                     foreach (var kvp in Compression.Unzip(zipFile))
                     {
-                        var content = kvp.Value.FirstOrDefault();
+                        var content = kvp.Value.SingleOrDefault();
 
                         var estimates = JsonConvert.DeserializeObject<List<EstimizeEstimate>>(content);
 
