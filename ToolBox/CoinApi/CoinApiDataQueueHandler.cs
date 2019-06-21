@@ -286,16 +286,18 @@ namespace QuantConnect.ToolBox.CoinApi
                         {
                             var trade = jObject.ToObject<TradeMessage>();
 
+                            var item = new Tick
+                            {
+                                Symbol = _symbolMapper.GetLeanSymbol(trade.SymbolId, SecurityType.Crypto, string.Empty),
+                                Time = trade.TimeExchange,
+                                Value = trade.Price,
+                                Quantity = trade.Size,
+                                TickType = TickType.Trade
+                            };
+
                             lock (_locker)
                             {
-                                _ticks.Add(new Tick
-                                {
-                                    Symbol = _symbolMapper.GetLeanSymbol(trade.SymbolId, SecurityType.Crypto, string.Empty),
-                                    Time = trade.TimeExchange,
-                                    Value = trade.Price,
-                                    Quantity = trade.Size,
-                                    TickType = TickType.Trade
-                                });
+                                _ticks.Add(item);
                             }
 
                             _connectionHandler.KeepAlive(DateTime.UtcNow);
@@ -305,20 +307,19 @@ namespace QuantConnect.ToolBox.CoinApi
                     case "quote":
                         {
                             var quote = jObject.ToObject<QuoteMessage>();
+                            var tick = new Tick
+                            {
+                                Symbol = _symbolMapper.GetLeanSymbol(quote.SymbolId, SecurityType.Crypto, string.Empty),
+                                Time = quote.TimeExchange,
+                                AskPrice = quote.AskPrice,
+                                AskSize = quote.AskSize,
+                                BidPrice = quote.BidPrice,
+                                BidSize = quote.BidSize,
+                                TickType = TickType.Quote
+                            };
 
                             lock (_locker)
                             {
-                                var tick = new Tick
-                                {
-                                    Symbol = _symbolMapper.GetLeanSymbol(quote.SymbolId, SecurityType.Crypto, string.Empty),
-                                    Time = quote.TimeExchange,
-                                    AskPrice = quote.AskPrice,
-                                    AskSize = quote.AskSize,
-                                    BidPrice = quote.BidPrice,
-                                    BidSize = quote.BidSize,
-                                    TickType = TickType.Quote
-                                };
-
                                 // only emit quote ticks if bid price or ask price changed
                                 Tick previousQuote;
                                 if (!_previousQuotes.TryGetValue(tick.Symbol, out previousQuote) ||
