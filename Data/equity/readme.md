@@ -34,7 +34,7 @@ The CSV contents are as follows:
 
 ### Hour and Daily File Format
 
-Hour and Daily files are located in the equity / usa / tick folder. The file contains all bars available for this ticker. e.g. `/data/equity/usa/hour/aapl.zip`. The zip file contains 1 CSV file named the same as the ticker (`aapl.csv`). Currently this filename is not used but for consistency it should follow this pattern.
+Hour and Daily files are located in the `/equity/usa/{hour|daily}` folder. Each file contains all bars available for this ticker. e.g. `/data/equity/usa/hour/aapl.zip`. The zip file contains 1 CSV file named the same as the ticker (`aapl.csv`). Currently this filename is not used but for consistency it should follow this pattern.
 
 The CSV contents are as follows:
 
@@ -53,7 +53,7 @@ Divide prices by 10,000 to convert deci-cents to dollars.
 
 ### Tick File Format
 
-Equity tick data is stored in files are located in the equity / usa market folder. The file name uses a 8-character length date.   `/data/equity/usa/tick/ticker/YYYYMMDD_tickType.zip`.  QuantConnect currently only provides *Trade* equity ticks.
+Equity tick data is stored in files which are located in the `/equity/usa/tick` folder. The file name uses a 8-character length date.   `/data/equity/usa/tick/{ticker}/YYYYMMDD_tickType.zip`.  QuantConnect currently only provides *Trade* equity ticks.
 
 Trade tick files are stored in files named `YYYYMMDD_trade.zip`. There is one file equity tick names named after the data: `20131008_bac_Trade_Tick.csv`. The CSV contains records of each trade:
 
