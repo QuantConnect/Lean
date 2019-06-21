@@ -307,6 +307,10 @@ namespace QuantConnect.Tests.Engine
             public void Exit()
             {
             }
+
+            public void OnSecuritiesChanged(SecurityChanges changes)
+            {
+            }
         }
 
         class NullTransactionHandler : ITransactionHandler

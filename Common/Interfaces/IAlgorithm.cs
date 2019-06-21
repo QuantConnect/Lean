@@ -394,7 +394,7 @@ namespace QuantConnect.Interfaces
         void OnFrameworkData(Slice slice);
 
         /// <summary>
-        /// Event fired each time the we add/remove securities from the data feed
+        /// Event fired each time that we add/remove securities from the data feed
         /// </summary>
         /// <param name="changes">Security additions/removals for this time step</param>
         void OnSecuritiesChanged(SecurityChanges changes);
@@ -443,6 +443,9 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Call this method at the end of each day of data.
         /// </summary>
+        /// <remarks>Deprecated because different assets have different market close times,
+        /// and because Python does not support two methods with the same name</remarks>
+        [Obsolete("This method is deprecated. Please use this overload: OnEndOfDay(Symbol symbol)")]
         void OnEndOfDay();
 
         /// <summary>

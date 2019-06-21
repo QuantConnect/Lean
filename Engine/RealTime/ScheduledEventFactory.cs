@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Creates a new <see cref="ScheduledEvent"/> that will fire before market close by the specified time 
+        /// Creates a new <see cref="ScheduledEvent"/> that will fire before market close by the specified time
         /// </summary>
         /// <param name="algorithm">The algorithm instance the event is fo</param>
         /// <param name="resultHandler">The result handler, used to communicate run time errors</param>
@@ -62,6 +62,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <param name="endOfDayDelta">The time difference between the market close and the event, positive time will fire before market close</param>
         /// <param name="currentUtcTime">Specfies the current time in UTC, before which, no events will be scheduled. Specify null to skip this filter.</param>
         /// <returns>The new <see cref="ScheduledEvent"/> that will fire near market close each tradeable dat</returns>
+        [Obsolete("This method is deprecated. It will generate ScheduledEvents for the deprecated IAlgorithm.OnEndOfDay()")]
         public static ScheduledEvent EveryAlgorithmEndOfDay(IAlgorithm algorithm, IResultHandler resultHandler, DateTime start, DateTime end, TimeSpan endOfDayDelta, DateTime? currentUtcTime = null)
         {
             if (endOfDayDelta >= Time.OneDay)
@@ -99,7 +100,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Creates a new <see cref="ScheduledEvent"/> that will fire before market close by the specified time 
+        /// Creates a new <see cref="ScheduledEvent"/> that will fire before market close by the specified time
         /// </summary>
         /// <param name="algorithm">The algorithm instance the event is fo</param>
         /// <param name="resultHandler">The result handler, used to communicate run time errors</param>
