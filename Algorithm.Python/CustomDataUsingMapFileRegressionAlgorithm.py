@@ -74,5 +74,9 @@ class CustomDataUsingMapFileRegressionAlgorithm(QCAlgorithm):
     def OnEndOfAlgorithm(self):
         if not self.changed_symbol:
             raise Exception("The ticker did not rename throughout the course of its life even though it should have")
+        if not self.proper_symbol_before_rename:
+            raise Exception("The SEC report data never renamed to its old ticker")
+        if not self.proper_symbol_after_rename:
+            raise Exception("The SEC report data never renamed to its present-day ticker")
 
 
