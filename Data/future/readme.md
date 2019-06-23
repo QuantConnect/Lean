@@ -10,8 +10,6 @@ Futures data can be used with the following Resolutions:
 * Tick
 * Second
 * Minute
-* Hour
-* Daily
 
 The markets we currently support are:
 
