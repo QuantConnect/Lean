@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -57,6 +58,9 @@ namespace QuantConnect.ToolBox.CoinApi
         private List<string> _subscribedExchanges = new List<string>();
 
         private readonly Dictionary<Symbol, Tick> _previousQuotes = new Dictionary<Symbol, Tick>();
+        private readonly Queue<WebSocketMessage> _processingQueue = new Queue<WebSocketMessage>();
+        private readonly AutoResetEvent _processingEvent = new AutoResetEvent(false);
+        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CoinApiDataQueueHandler"/> class
@@ -71,9 +75,59 @@ namespace QuantConnect.ToolBox.CoinApi
 
             _webSocket.Initialize(WebSocketUrl);
 
-            _webSocket.Message += OnMessage;
+            _webSocket.Message += (s, m) => EnqueueMessage(m);
 
             _webSocket.Connect();
+
+            new Thread(new ThreadStart(MessagesProcessorThread)).Start();
+        }
+
+        private void MessagesProcessorThread()
+        {
+            while (!_cts.IsCancellationRequested)
+            {
+                // wait for the messages
+                _processingEvent.WaitOne();
+
+                // process messages until there is at least one on the Q
+                while (!_cts.IsCancellationRequested)
+                {
+                    // get the message if possible
+                    WebSocketMessage msg = null;
+                    lock (_processingQueue)
+                    {
+                        if (_processingQueue.Count > 0)
+                        {
+                            msg = _processingQueue.Dequeue();
+                        }
+                    }
+
+                    if (msg == null)
+                    {
+                        // no more messages
+                        break;
+                    }
+
+                    // process message
+                    try
+                    {
+                        OnMessage(this, msg);
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error($"Error processing message: {msg.Message} - Error: {exception}");
+                    }
+                }
+            }
+        }
+
+        private void EnqueueMessage(WebSocketMessage msg)
+        {
+            lock (_processingQueue)
+            {
+                _processingQueue.Enqueue(msg);
+            }
+            _processingEvent.Set();
         }
 
         /// <summary>
@@ -143,6 +197,9 @@ namespace QuantConnect.ToolBox.CoinApi
         /// </summary>
         public void Dispose()
         {
+            _cts.Cancel();
+            _cts.Dispose();
+
             _connectionHandler.DisposeSafely();
 
             if (_webSocket.IsOpen)
@@ -275,87 +332,81 @@ namespace QuantConnect.ToolBox.CoinApi
 
         private void OnMessage(object sender, WebSocketMessage e)
         {
-            try
+            var jObject = JObject.Parse(e.Message);
+
+            var type = jObject["type"].ToString();
+            switch (type)
             {
-                var jObject = JObject.Parse(e.Message);
+                case "trade":
+                    {
+                        var trade = jObject.ToObject<TradeMessage>();
 
-                var type = jObject["type"].ToString();
-                switch (type)
-                {
-                    case "trade":
+                        var item = new Tick
                         {
-                            var trade = jObject.ToObject<TradeMessage>();
+                            Symbol = _symbolMapper.GetLeanSymbol(trade.SymbolId, SecurityType.Crypto, string.Empty),
+                            Time = trade.TimeExchange,
+                            Value = trade.Price,
+                            Quantity = trade.Size,
+                            TickType = TickType.Trade
+                        };
 
-                            lock (_locker)
-                            {
-                                _ticks.Add(new Tick
-                                {
-                                    Symbol = _symbolMapper.GetLeanSymbol(trade.SymbolId, SecurityType.Crypto, string.Empty),
-                                    Time = trade.TimeExchange,
-                                    Value = trade.Price,
-                                    Quantity = trade.Size,
-                                    TickType = TickType.Trade
-                                });
-                            }
-
-                            _connectionHandler.KeepAlive(DateTime.UtcNow);
-                            break;
+                        lock (_locker)
+                        {
+                            _ticks.Add(item);
                         }
 
-                    case "quote":
-                        {
-                            var quote = jObject.ToObject<QuoteMessage>();
-
-                            lock (_locker)
-                            {
-                                var tick = new Tick
-                                {
-                                    Symbol = _symbolMapper.GetLeanSymbol(quote.SymbolId, SecurityType.Crypto, string.Empty),
-                                    Time = quote.TimeExchange,
-                                    AskPrice = quote.AskPrice,
-                                    AskSize = quote.AskSize,
-                                    BidPrice = quote.BidPrice,
-                                    BidSize = quote.BidSize,
-                                    TickType = TickType.Quote
-                                };
-
-                                // only emit quote ticks if bid price or ask price changed
-                                Tick previousQuote;
-                                if (!_previousQuotes.TryGetValue(tick.Symbol, out previousQuote) ||
-                                    tick.AskPrice != previousQuote.AskPrice ||
-                                    tick.BidPrice != previousQuote.BidPrice)
-                                {
-                                    _previousQuotes[tick.Symbol] = tick;
-                                    _ticks.Add(tick);
-                                }
-                            }
-
-                            _connectionHandler.KeepAlive(DateTime.UtcNow);
-                            break;
-                        }
-
-                    // not a typo :)
-                    case "hearbeat":
-                    // just in case the typo will be fixed in the future
-                    case "heartbeat":
                         _connectionHandler.KeepAlive(DateTime.UtcNow);
                         break;
+                    }
 
-                    case "error":
+                case "quote":
+                    {
+                        var quote = jObject.ToObject<QuoteMessage>();
+                        var tick = new Tick
                         {
-                            var error = jObject.ToObject<ErrorMessage>();
-                            Log.Error(error.Message);
-                            break;
+                            Symbol = _symbolMapper.GetLeanSymbol(quote.SymbolId, SecurityType.Crypto, string.Empty),
+                            Time = quote.TimeExchange,
+                            AskPrice = quote.AskPrice,
+                            AskSize = quote.AskSize,
+                            BidPrice = quote.BidPrice,
+                            BidSize = quote.BidSize,
+                            TickType = TickType.Quote
+                        };
+
+                        lock (_locker)
+                        {
+                            // only emit quote ticks if bid price or ask price changed
+                            Tick previousQuote;
+                            if (!_previousQuotes.TryGetValue(tick.Symbol, out previousQuote) ||
+                                tick.AskPrice != previousQuote.AskPrice ||
+                                tick.BidPrice != previousQuote.BidPrice)
+                            {
+                                _previousQuotes[tick.Symbol] = tick;
+                                _ticks.Add(tick);
+                            }
                         }
 
-                    default:
-                        Log.Trace(e.Message);
+                        _connectionHandler.KeepAlive(DateTime.UtcNow);
                         break;
-                }
-            }
-            catch (Exception exception)
-            {
-                Log.Error($"Error processing message: {e.Message} - Error: {exception}");
+                    }
+
+                // not a typo :)
+                case "hearbeat":
+                // just in case the typo will be fixed in the future
+                case "heartbeat":
+                    _connectionHandler.KeepAlive(DateTime.UtcNow);
+                    break;
+
+                case "error":
+                    {
+                        var error = jObject.ToObject<ErrorMessage>();
+                        Log.Error(error.Message);
+                        break;
+                    }
+
+                default:
+                    Log.Trace(e.Message);
+                    break;
             }
         }
 
