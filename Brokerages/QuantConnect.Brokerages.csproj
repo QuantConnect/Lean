@@ -150,7 +150,7 @@
     </Reference>
     <Reference Include="QuantConnect.IBAutomater, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath Condition="Exists('..\packages\QuantConnect.IBAutomater.1.0.1')">..\packages\QuantConnect.IBAutomater.1.0.1\lib\net45\QuantConnect.IBAutomater.exe</HintPath>
-      <HintPath Condition="Exists('..\packages\QuantConnect.IBAutomater')">..\packages\QuantConnect.IBAutomater\1.0.1\lib\net45\QuantConnect.IBAutomater.exe</HintPath>
+      <HintPath Condition="Exists('..\packages\quantconnect.ibautomater')">..\packages\quantconnect.ibautomater\1.0.1\lib\net45\QuantConnect.IBAutomater.exe</HintPath>
     </Reference>
     <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
@@ -226,7 +226,7 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.IBAutomater.1.0.1\build\QuantConnect.IBAutomater.targets') And !Exists('..\packages\QuantConnect.IBAutomater\1.0.1\build\QuantConnect.IBAutomater.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.IBAutomater.1.0.1\build\QuantConnect.IBAutomater.targets'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.IBAutomater.1.0.1\build\QuantConnect.IBAutomater.targets') And !Exists('..\packages\quantconnect.ibautomater\1.0.1\build\QuantConnect.IBAutomater.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.IBAutomater.1.0.1\build\QuantConnect.IBAutomater.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
