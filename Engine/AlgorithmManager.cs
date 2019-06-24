@@ -52,6 +52,7 @@ namespace QuantConnect.Lean.Engine
         private string _algorithmId = "";
         private DateTime _currentTimeStepTime;
         private readonly TimeSpan _timeLoopMaximum = TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-maximum", 20));
+        private TimeSpan _timeLoopMaximumTraining;
         private long _dataPointCount;
 
         /// <summary>
@@ -90,6 +91,22 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
+        /// Represents the maximum time span a single algorithm manager loop can take.
+        /// </summary>
+        public TimeSpan TimeLoopMaximum
+        {
+            get
+            {
+                if (_algorithm != null && _algorithm.IsTraining)
+                {
+                    return _timeLoopMaximumTraining;
+                }
+
+                return _timeLoopMaximum;
+            }
+        }
+
+        /// <summary>
         /// Gets a function used with the Isolator for verifying we're not spending too much time in each
         /// algo manager timer loop
         /// </summary>
@@ -123,7 +140,7 @@ namespace QuantConnect.Lean.Engine
             TimeLoopWithinLimits = () =>
             {
                 var message = string.Empty;
-                if (CurrentTimeStepElapsed > _timeLoopMaximum)
+                if (CurrentTimeStepElapsed > TimeLoopMaximum)
                 {
                     message = $"Algorithm took longer than {_timeLoopMaximum.TotalMinutes} minutes on a single time loop.";
                 }
@@ -166,6 +183,13 @@ namespace QuantConnect.Lean.Engine
             _algorithmId = job.AlgorithmId;
             _algorithm.Status = AlgorithmStatus.Running;
             _previousTime = algorithm.StartDate.Date;
+
+            // Sets the extended timeout for model training 
+            _timeLoopMaximumTraining = TimeSpan.FromMinutes(job.Controls.TimeLoopMaximumTraining);
+            if (_timeLoopMaximumTraining < _timeLoopMaximum)
+            {
+                _timeLoopMaximumTraining = _timeLoopMaximum;
+            }
 
             //Create the method accessors to push generic types into algorithm: Find all OnData events:
 

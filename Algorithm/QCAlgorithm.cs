@@ -522,6 +522,11 @@ namespace QuantConnect.Algorithm
         public Slice CurrentSlice { get; private set; }
 
         /// <summary>
+        /// Gets whether or not this algorithm is training a model
+        /// </summary>
+        public bool IsTraining { get; private set; }
+
+        /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         /// <seealso cref="SetStartDate(DateTime)"/>
@@ -2142,6 +2147,44 @@ namespace QuantConnect.Algorithm
         public string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
         {
             return _api.Download(address, headers, userName, password);
+        }
+
+        /// <summary>
+        /// In synchronous mode, execute the work and the callback in sequence while <see cref="IsTraining"/> flag is true
+        /// to signal the algorithm is in training mode.
+        /// In asynchronous mode, queues the specified work to run on the thread pool
+        /// that must complete within a specified time interval.
+        /// If the work completes within the interval, a new action is invoked if defined.
+        /// </summary>
+        /// <param name="action">The work to execute asynchronously</param>
+        /// <param name="timeout">The time span to wait before completing the returned task, or TimeSpan.FromMilliseconds(-1) to wait indefinitely.</param>
+        /// <param name="callback">The work to execute synchronously after the first work is completed</param>
+        /// <param name="synchronous">Queue the work synchronously (true). Otherwise we'll block until it is completed</param>
+        public void Train(Action action, TimeSpan? timeout = null, Action callback = null, bool synchronous = true)
+        {
+            IsTraining = true;
+
+            if (synchronous)
+            {
+                action();
+                callback?.Invoke();
+                IsTraining = false;
+                return;
+            }
+
+            var task = action.TimeoutAfterAndContinue(timeout, callback);
+
+            task.ContinueWith(
+                x =>
+                {
+                    IsTraining = false;
+
+                    if (x.IsFaulted)
+                    {
+                        SetRunTimeError(x.Exception);
+                    }
+                }
+            );
         }
 
         /// <summary>

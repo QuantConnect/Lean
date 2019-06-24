@@ -792,6 +792,39 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// In synchronous mode, execute the work and the callback in sequence while <see cref="IsTraining"/> flag is true
+        /// to signal the algorithm is in training mode.
+        /// In asynchronous mode, queues the specified work to run on the thread pool
+        /// that must complete within a specified time interval.
+        /// If the work completes within the interval, a new action is invoked if defined.
+        /// </summary>
+        /// <param name="action">The work to execute asynchronously</param>
+        /// <param name="timeout">The time span to wait before completing the returned task, or TimeSpan.FromMilliseconds(-1) to wait indefinitely.</param>
+        /// <param name="callback">The work to execute synchronously after the first work is completed</param>
+        /// <param name="synchronous">Queue the work synchronously (true). Otherwise we'll block until it is completed</param>
+        public void Train(PyObject action, TimeSpan? timeout = null, PyObject callback = null, bool synchronous = true)
+        {
+            Train(
+                () =>
+                {
+                    using (Py.GIL())
+                    {
+                        action.Invoke();
+                    }
+                },
+                timeout,
+                () =>
+                {
+                    using (Py.GIL())
+                    {
+                        callback?.Invoke();
+                    }
+                },
+                synchronous
+            );
+        }
+
+        /// <summary>
         /// Gets Enumerable of <see cref="Symbol"/> from a PyObject
         /// </summary>
         /// <param name="pyObject">PyObject containing Symbol or Array of Symbol</param>

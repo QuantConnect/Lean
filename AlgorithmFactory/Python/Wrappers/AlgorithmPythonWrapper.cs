@@ -176,6 +176,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         }
 
         /// <summary>
+        /// Gets whether or not this algorithm is training a model
+        /// </summary>
+        public bool IsTraining => _baseAlgorithm.IsTraining;
+
+        /// <summary>
         /// Gets whether or not this algorithm is still warming up
         /// </summary>
         public bool IsWarmingUp => _baseAlgorithm.IsWarmingUp;

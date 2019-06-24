@@ -88,7 +88,8 @@ namespace QuantConnect.Queues
                 SecondLimit = Config.GetInt("symbol-second-limit", 10000),
                 TickLimit = Config.GetInt("symbol-tick-limit", 10000),
                 RamAllocation = int.MaxValue,
-                MaximumDataPointsPerChartSeries =  Config.GetInt("maximum-data-points-per-chart-series", 4000)
+                MaximumDataPointsPerChartSeries = Config.GetInt("maximum-data-points-per-chart-series", 4000),
+                TimeLoopMaximumTraining = Config.GetInt("training-model-custom-loop-timeout", 30)
             };
 
             //If this isn't a backtesting mode/request, attempt a live job.

@@ -78,6 +78,12 @@ namespace QuantConnect.Packets
         public int MaximumDataPointsPerChartSeries;
 
         /// <summary>
+        /// Maximum number of minutes, accurate to the nearest millisecond, to wait before completing a work in the thread pool
+        /// </summary>
+        [JsonProperty(PropertyName = "iTimeLoopMaximumTraining")]
+        public int TimeLoopMaximumTraining;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
         public Controls()
@@ -91,6 +97,7 @@ namespace QuantConnect.Packets
             RemainingLogAllowance = 10000;
             BacktestingMaxInsights = 10000;
             MaximumDataPointsPerChartSeries = 4000;
+            TimeLoopMaximumTraining = 30;
         }
 
         /// <summary>

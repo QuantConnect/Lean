@@ -157,6 +157,14 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets whether or not this algorithm is training a model
+        /// </summary>
+        bool IsTraining
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets whether or not this algorithm is still warming up
         /// </summary>
         bool IsWarmingUp
