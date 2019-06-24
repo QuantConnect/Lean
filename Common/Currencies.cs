@@ -41,27 +41,38 @@ namespace QuantConnect
         /// </remarks>
         public static readonly IReadOnlyList<string> CryptoCurrencyPairs = new List<string>
         {
-            //fiat
+            // USD
             "BTCUSD",
             "BCHUSD",
             "LTCUSD",
             "ETHUSD",
+            "XRPUSD",
+            "EOSUSD",
+            "XLMUSD",
+            "ETCUSD",
+            "ZRXUSD",
+            // EUR
             "BTCEUR",
             "BCHEUR",
             "LTCEUR",
             "ETHEUR",
+            "XRPEUR",
+            "EOSEUR",
+            "XLMEUR",
+            "ETCEUR",
+            "ZRXEUR",
+            // JPY
             "BTCJPY",
             "BCHJPY",
             "LTCJPY",
             "ETHJPY",
+            // GBP
             "BTCGBP",
             "BCHGBP",
             "LTCGBP",
             "ETHGBP",
 
             //bitfinex
-            "EOSUSD",
-            "EOSEUR",
             "EOSGBP",
             "EOSJPY",
 
@@ -69,7 +80,12 @@ namespace QuantConnect
             "LTCBTC",
             "ETHBTC",
             "EOSBTC",
-            "EOSETH"
+            "EOSETH",
+            "XRPBTC",
+            "EOSBTC",
+            "XLMBTC",
+            "ETCBTC",
+            "ZRXBTC"
         };
 
         /// <summary>
@@ -325,7 +341,11 @@ namespace QuantConnect
             {"LTC", "Ł"},
             {"ETH", "Ξ"},
 
-            {"EOS", "EOS"}
+            {"EOS", "EOS"},
+            {"XRP", "XRP"},
+            {"XLM", "XLM"},
+            {"ETC", "ETC"},
+            {"ZRX", "ZRX"}
         };
 
         /// <summary>

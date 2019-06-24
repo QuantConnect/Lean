@@ -49,7 +49,27 @@ namespace QuantConnect.Brokerages
             { "LTCUSD", 0.1m },
             { "LTCEUR", 0.1m },
             { "LTCGBP", 0.1m },
-            { "LTCBTC", 0.1m }
+            { "LTCBTC", 0.1m },
+
+            { "XRPUSD", 1m },
+            { "XRPEUR", 1m },
+            { "XRPBTC", 1m },
+
+            { "EOSUSD", 0.1m },
+            { "EOSEUR", 0.1m },
+            { "EOSBTC", 0.1m },
+
+            { "XLMUSD", 1m },
+            { "XLMEUR", 1m },
+            { "XLMBTC", 1m },
+
+            { "ETCUSD", 0.1m },
+            { "ETCEUR", 0.1m },
+            { "ETCBTC", 0.1m },
+
+            { "ZRXUSD", 1m },
+            { "ZRXEUR", 1m },
+            { "ZRXBTC", 1m }
         };
 
         // https://blog.coinbase.com/coinbase-pro-market-structure-update-fbd9d49f43d7
