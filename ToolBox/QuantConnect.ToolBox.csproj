@@ -245,8 +245,6 @@
     <Compile Include="GzipStreamProvider.cs" />
     <Compile Include="IBDownloader\IBDataDownloader.cs" />
     <Compile Include="IBDownloader\IBDownloaderProgram.cs" />
-    <Compile Include="IEX\IEXDataDownloader.cs" />
-    <Compile Include="IEX\IEXDownloaderProgram.cs" />
     <Compile Include="IVolatilityEquityConverter\IVolatilityEquityConverterProgram.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="RandomDataGenerator\DividendSplitMapGenerator.cs" />
@@ -291,7 +289,6 @@
     <Compile Include="FxcmDownloader\FxcmDataDownloader.cs" />
     <Compile Include="FxcmDownloader\FxcmDownloaderProgram.cs" />
     <Compile Include="IDataProcessor.cs" />
-    <Compile Include="IEX\IEXDataQueueHandler.cs" />
     <Compile Include="IQFeed\IQFeedDataQueueHandler.cs" />
     <Compile Include="IQFeed\IQFeedDataQueueUniverseProvider.cs" />
     <Compile Include="IQFeed\IQ\DataStructures.cs" />

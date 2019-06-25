@@ -17,7 +17,7 @@ Each tool requires a different set of parameters, the only **required argument i
 
 Help information is available using the '--help' parameter.
 
-Example: --app=IEXDownloader --tickers=SPY,AAPL --resolution=Minute --from-date=yyyyMMdd-HH:mm:ss --to-date=yyyyMMdd-HH:mm:ss
+Example: --app=YahooDownloader --tickers=NFLX --resolution=Daily --from-date=20180101-00:00:00 --to-date=20181231-00:00:00
 
 #### Available downloaders
 
@@ -32,7 +32,6 @@ Example: --app=IEXDownloader --tickers=SPY,AAPL --resolution=Minute --from-date=
 	- OandaDownloader or ODL
 	- QuandlBitfinexDownloader or QBDL
 	- YahooDownloader or YDL
-	- IEXDownloader or IEXDL
 	- BitfinexDownloader or BFXDL
 - **'--from-date=yyyyMMdd-HH:mm:ss'** required
 - **'--tickers=SPY,AAPL,etc'** required, except for QuandlBitfinexDownloader (QBDL)

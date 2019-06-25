@@ -493,7 +493,6 @@
     <Compile Include="Engine\DataFeeds\Enumerators\TradeBarBuilderEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\FileSystemDataFeedTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\FillForwardEnumeratorTests.cs" />
-    <Compile Include="Engine\DataFeeds\IEXDataQueueHandlerTests.cs" />
     <Compile Include="Engine\DataFeeds\IQFeedRealtimeDataFeedTests.cs" />
     <Compile Include="Engine\DataFeeds\CustomMockedFileBaseData.cs" />
     <Compile Include="Engine\DataFeeds\RestApiBaseData.cs" />

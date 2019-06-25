@@ -30,7 +30,6 @@ using QuantConnect.ToolBox.FxcmDownloader;
 using QuantConnect.ToolBox.FxcmVolumeDownload;
 using QuantConnect.ToolBox.GDAXDownloader;
 using QuantConnect.ToolBox.IBDownloader;
-using QuantConnect.ToolBox.IEX;
 using QuantConnect.ToolBox.IVolatilityEquityConverter;
 using QuantConnect.ToolBox.KaikoDataConverter;
 using QuantConnect.ToolBox.KrakenDownloader;
@@ -92,10 +91,6 @@ namespace QuantConnect.ToolBox
                     case "ibdl":
                     case "ibdownloader":
                         IBDownloaderProgram.IBDownloader(tickers, resolution, fromDate, toDate);
-                        break;
-                    case "iexdl":
-                    case "iexdownloader":
-                        IEXDownloaderProgram.IEXDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "kdl":
                     case "krakendownloader":
