@@ -15,7 +15,6 @@
 
 using QuantConnect.Data;
 using System;
-using System.Threading;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -26,6 +25,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using quantconnect" />
     public class TrainExampleAlgorithm : QCAlgorithm
     {
+        private string _piString;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -41,18 +42,68 @@ namespace QuantConnect.Algorithm.CSharp
                 TimeRules.AfterMarketOpen("SPY", 10),
                 () => {
                     Train(
-                        SleepTraining,
+                        () => _piString = CalculatePi(10000),
                         TimeSpan.FromSeconds(20),
-                        () => { Debug($"Callback called at {Time:O}"); }
+                        () => { Debug($"{Time:O} :: Pi: {_piString}"); }
                     );
                 }
             );
         }
 
-        private void SleepTraining()
+        public static string CalculatePi(int digits)
         {
-            Thread.Sleep(10000);
-            Debug($"Portfolio Invested: {Portfolio.Invested}.");
+            // Credit to https://stackoverflow.com/a/11679007
+            digits++;
+
+            var pi = new uint[digits];
+            var x = new uint[digits * 10 / 3 + 2];
+            var r = new uint[digits * 10 / 3 + 2];
+
+            for (var j = 0; j < x.Length; j++)
+            {
+                x[j] = 20;
+            }
+
+            for (var i = 0; i < digits; i++)
+            {
+                uint carry = 0;
+                for (var j = 0; j < x.Length; j++)
+                {
+                    var num = (uint)(x.Length - j - 1);
+                    var dem = num * 2 + 1;
+
+                    x[j] += carry;
+
+                    var q = x[j] / dem;
+                    r[j] = x[j] % dem;
+
+                    carry = q * num;
+                }
+
+
+                pi[i] = x[x.Length - 1] / 10;
+
+                r[x.Length - 1] = x[x.Length - 1] % 10;
+
+                for (var j = 0; j < x.Length; j++)
+                {
+                    x[j] = r[j] * 10;
+                }
+            }
+
+            var result = "";
+
+            uint c = 0;
+
+            for (var i = pi.Length - 1; i >= 0; i--)
+            {
+                pi[i] += c;
+                c = pi[i] / 10;
+
+                result = (pi[i] % 10) + result;
+            }
+
+            return result;
         }
 
         /// <summary>
