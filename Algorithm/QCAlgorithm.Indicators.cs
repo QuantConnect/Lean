@@ -1098,6 +1098,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"NATR({period})", resolution);
             var normalizedAverageTrueRange = new NormalizedAverageTrueRange(name, period);
             RegisterIndicator(symbol, normalizedAverageTrueRange, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, normalizedAverageTrueRange, resolution);
+            }
+
             return normalizedAverageTrueRange;
         }
 
@@ -1115,6 +1121,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, "OBV", resolution);
             var onBalanceVolume = new OnBalanceVolume(name);
             RegisterIndicator(symbol, onBalanceVolume, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, onBalanceVolume, resolution);
+            }
+
             return onBalanceVolume;
         }
 
@@ -1133,6 +1145,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"PPO({fastPeriod},{slowPeriod})", resolution);
             var percentagePriceOscillator = new PercentagePriceOscillator(name, fastPeriod, slowPeriod, movingAverageType);
             RegisterIndicator(symbol, percentagePriceOscillator, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, percentagePriceOscillator, resolution);
+            }
+
             return percentagePriceOscillator;
         }
 
@@ -1151,6 +1169,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"PSAR({afStart},{afIncrement},{afMax})", resolution);
             var parabolicStopAndReverse = new ParabolicStopAndReverse(name, afStart, afIncrement, afMax);
             RegisterIndicator(symbol, parabolicStopAndReverse, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, parabolicStopAndReverse, resolution);
+            }
+
             return parabolicStopAndReverse;
         }
 
@@ -1168,6 +1192,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"RC({period},{k})", resolution);
             var regressionChannel = new RegressionChannel(name, period, k);
             RegisterIndicator(symbol, regressionChannel, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, regressionChannel, resolution);
+            }
+
             return regressionChannel;
         }
 
@@ -1254,6 +1284,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"RSI({period},{movingAverageType})", resolution);
             var relativeStrengthIndex = new RelativeStrengthIndex(name, period, movingAverageType);
             RegisterIndicator(symbol, relativeStrengthIndex, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, relativeStrengthIndex, resolution);
+            }
+
             return relativeStrengthIndex;
         }
 
@@ -1293,6 +1329,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"STD({period})", resolution);
             var standardDeviation = new StandardDeviation(name, period);
             RegisterIndicator(symbol, standardDeviation, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, standardDeviation, resolution);
+            }
+
             return standardDeviation;
         }
         /// <summary>
@@ -1309,6 +1351,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"STO({period},{kPeriod},{dPeriod})", resolution);
             var stochastic = new Stochastic(name, period, kPeriod, dPeriod);
             RegisterIndicator(symbol, stochastic, resolution);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, stochastic, resolution);
+            }
+
             return stochastic;
         }
 
@@ -1337,6 +1385,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"SUM({period})", resolution);
             var sum = new Sum(name, period);
             RegisterIndicator(symbol, sum, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, sum, resolution);
+            }
+
             return sum;
         }
 
@@ -1356,6 +1410,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"SWISS({period},{delta},{tool})", resolution);
             var swissArmyKnife = new SwissArmyKnife(name, period, delta, tool);
             RegisterIndicator(symbol, swissArmyKnife, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, swissArmyKnife, resolution);
+            }
+
             return swissArmyKnife;
         }
 
@@ -1373,6 +1433,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"T3({period},{volumeFactor})", resolution);
             var t3MovingAverage = new T3MovingAverage(name, period, volumeFactor);
             RegisterIndicator(symbol, t3MovingAverage, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, t3MovingAverage, resolution);
+            }
+
             return t3MovingAverage;
         }
 
@@ -1389,6 +1455,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"TEMA({period})", resolution);
             var tripleExponentialMovingAverage = new TripleExponentialMovingAverage(name, period);
             RegisterIndicator(symbol, tripleExponentialMovingAverage, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, tripleExponentialMovingAverage, resolution);
+            }
+
             return tripleExponentialMovingAverage;
         }
 
@@ -1404,6 +1476,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, "TR", resolution);
             var trueRange = new TrueRange(name);
             RegisterIndicator(symbol, trueRange, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, trueRange, resolution);
+            }
+
             return trueRange;
         }
 
@@ -1420,6 +1498,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"TRIMA({period})", resolution);
             var triangularMovingAverage = new TriangularMovingAverage(name, period);
             RegisterIndicator(symbol, triangularMovingAverage, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, triangularMovingAverage, resolution);
+            }
+
             return triangularMovingAverage;
         }
 
@@ -1436,6 +1520,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"TRIX({period})", resolution);
             var trix = new Trix(name, period);
             RegisterIndicator(symbol, trix, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, trix, resolution);
+            }
+
             return trix;
         }
 
@@ -1454,6 +1544,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"ULTOSC({period1},{period2},{period3})", resolution);
             var ultimateOscillator = new UltimateOscillator(name, period1, period2, period3);
             RegisterIndicator(symbol, ultimateOscillator, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, ultimateOscillator, resolution);
+            }
+
             return ultimateOscillator;
         }
 
@@ -1470,6 +1566,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"VAR({period})", resolution);
             var variance = new Variance(name, period);
             RegisterIndicator(symbol, variance, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, variance, resolution);
+            }
+
             return variance;
         }
 
@@ -1525,6 +1627,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"WILR({period})", resolution);
             var williamsPercentR = new WilliamsPercentR(name, period);
             RegisterIndicator(symbol, williamsPercentR, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, williamsPercentR, resolution);
+            }
+
             return williamsPercentR;
         }
 
@@ -1543,6 +1651,12 @@ namespace QuantConnect.Algorithm
             var name = CreateIndicatorName(symbol, $"WWMA({period})", resolution);
             var wilderMovingAverage = new WilderMovingAverage(name, period);
             RegisterIndicator(symbol, wilderMovingAverage, resolution, selector);
+
+            if (EnableAutomaticIndicatorWarmUp)
+            {
+                WarmUpIndicator(symbol, wilderMovingAverage, resolution);
+            }
+
             return wilderMovingAverage;
         }
 
