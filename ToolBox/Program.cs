@@ -124,19 +124,10 @@ namespace QuantConnect.ToolBox
                         break;
                     case "secdl":
                     case "secdownloader":
-                        var equityFolder = Path.Combine(Globals.DataFolder, "equity", Market.USA);
-                        var secFolder = Path.Combine(Globals.DataFolder, "alternative", "sec");
-
                         SECDataDownloaderProgram.SECDataDownloader(
-                            GetParameterOrDefault(optionsObject, "source-dir", Path.Combine(secFolder, "raw-sec")),
-                            GetParameterOrDefault(optionsObject, "destination-dir", secFolder),
+                            GetParameterOrDefault(optionsObject, "destination-dir", Path.Combine(Globals.DataFolder, "alternative", "sec", "raw-sec")),
                             fromDate,
-                            toDate,
-                            GetParameterOrDefault(
-                                optionsObject,
-                                "source-meta-dir",
-                                Path.Combine(equityFolder, "daily")
-                            )
+                            toDate
                         );
                         break;
                     case "ecdl":
@@ -220,6 +211,23 @@ namespace QuantConnect.ToolBox
                             GetParameterOrDefault(optionsObject, "splits-percentage", "15.0"),
                             GetParameterOrDefault(optionsObject, "dividends-percentage", "60.0"),
                             GetParameterOrDefault(optionsObject, "dividend-every-quarter-percentage", "30.0")
+                        );
+                        break;
+                    case "seccv":
+                    case "secconverter":
+                        var secFolder = Path.Combine(Globals.DataFolder, "alternative", "sec");
+                        var equityFolder = Path.Combine(Globals.DataFolder, "equity", Market.USA);
+                        var fromDate = DateTime.ParseExact(GetParameterOrExit(optionsObject, "from-date"), "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture);
+                        var toDate = optionsObject.ContainsKey("to-date")
+                            ? DateTime.ParseExact(optionsObject["to-date"].ToString(), "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture)
+                            : DateTime.UtcNow;
+
+                        SECDataDownloaderProgram.SECDataConverter(
+                            GetParameterOrDefault(optionsObject, "source-dir", Path.Combine(secFolder, "raw-sec")),
+                            GetParameterOrDefault(optionsObject, "destination-dir", secFolder),
+                            fromDate,
+                            toDate,
+                            GetParameterOrDefault(optionsObject, "source-meta-dir", Path.Combine(equityFolder, "daily"))
                         );
                         break;
                     default:

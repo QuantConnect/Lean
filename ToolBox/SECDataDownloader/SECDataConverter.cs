@@ -142,7 +142,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 {
                     // GetFileNameWithoutExtension only strips the first extension from the name.
                     var fileDate = Path.GetFileName(rawFile).Split('.')[0];
-                    var extractDataPath = Path.Combine(RawSource, fileDate);
+                    var extractDataPath = Path.Combine(Path.GetTempPath(), fileDate);
 
                     DateTime currentDate;
                     if (!DateTime.TryParseExact(fileDate, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out currentDate))
@@ -194,7 +194,13 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                                 // Verified by searching with ripgrep for "CONFIRMING-COPY"
                                 if (currentTagName == "CONFIRMING-COPY")
                                 {
-                                    return;
+                                    continue;
+                                }
+                                
+                                // Indicates that the form is a paper submission and that the current file has no contents
+                                if (currentTagName == "PAPER")
+                                {
+                                    continue;
                                 }
 
                                 // Don't encode the closing tag
@@ -237,14 +243,19 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             {
                                 report = factory.CreateSECReport(xmlText.ToString());
                             }
-                            catch (DataException e)
+                            // Ignore unsupported form types for now
+                            catch (DataException)
                             {
-                                Log.Trace($"SECDataConverter.Process(): {e.Message}");
                                 return;
                             }
                             catch (XmlException e)
                             {
                                 Log.Error(e, $"SECDataConverter.Process(): Failed to parse XML from file path: {rawReportFilePath}");
+                                return;
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Error(e, "SECDataConverter.Process(): Unknown error encountered");
                                 return;
                             }
                             
@@ -266,7 +277,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             }
                             catch (Exception e)
                             {
-                                Log.Error(e, $"Index file not found for company {companyCik}");
+                                Log.Error(e, $"{report.Report.FilingDate:yyyy-MM-dd} - Index file not found for ticker: {tickers.FirstOrDefault()} with CIK: {companyCik}");
                             }
 
                             // Default to company CIK if no known ticker is found.
