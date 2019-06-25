@@ -226,8 +226,6 @@
     <Compile Include="CoinApi\CoinApiSymbol.cs" />
     <Compile Include="CoinApi\CoinApiSymbolMapper.cs" />
     <Compile Include="CoinApi\CoinApiDataQueueHandler.cs" />
-    <Compile Include="CoinApi\DefaultConnectionHandler.cs" />
-    <Compile Include="CoinApi\IConnectionHandler.cs" />
     <Compile Include="CoinApi\Messages\ErrorMessage.cs" />
     <Compile Include="CoinApi\Messages\QuoteMessage.cs" />
     <Compile Include="CoinApi\Messages\TradeMessage.cs" />

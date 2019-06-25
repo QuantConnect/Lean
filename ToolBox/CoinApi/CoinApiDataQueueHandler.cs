@@ -71,7 +71,7 @@ namespace QuantConnect.ToolBox.CoinApi
             _connectionHandler.ConnectionRestored += OnConnectionRestored;
             _connectionHandler.ReconnectRequested += OnReconnectRequested;
 
-            _connectionHandler.Initialize();
+            _connectionHandler.Initialize(string.Empty);
 
             _webSocket.Initialize(WebSocketUrl);
 

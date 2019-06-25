@@ -30,6 +30,9 @@ using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
+    /// <summary>
+    /// Bitfinex Brokerage implementation
+    /// </summary>
     public partial class BitfinexBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
         private readonly BitfinexSymbolMapper _symbolMapper = new BitfinexSymbolMapper();
@@ -365,6 +368,15 @@ namespace QuantConnect.Brokerages.Bitfinex
             Unsubscribe(symbols);
         }
         #endregion
+
+        /// <summary>
+        /// Event invocator for the Message event
+        /// </summary>
+        /// <param name="e">The error</param>
+        public new void OnMessage(BrokerageMessageEvent e)
+        {
+            base.OnMessage(e);
+        }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.

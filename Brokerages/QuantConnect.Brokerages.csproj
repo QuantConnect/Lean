@@ -273,12 +273,15 @@
     <Compile Include="Bitfinex\BitfinexBrokerage.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerageFactory.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.Utility.cs" />
+    <Compile Include="Bitfinex\BitfinexSubscriptionManager.cs" />
+    <Compile Include="Bitfinex\BitfinexWebSocketWrapper.cs" />
     <Compile Include="Bitfinex\Messages.cs" />
     <Compile Include="Bitfinex\BitfinexSymbolMapper.cs" />
     <Compile Include="Bitfinex\OrderBook.cs" />
     <Compile Include="Brokerage.cs" />
     <Compile Include="BrokerageException.cs" />
     <Compile Include="BrokerageFactory.cs" />
+    <Compile Include="DefaultConnectionHandler.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.DataQueueHandler.cs" />
     <Compile Include="Fxcm\FxcmBrokerage.Messaging.cs" />
@@ -294,6 +297,7 @@
     <Compile Include="GDAX\GDAXFill.cs" />
     <Compile Include="GDAX\GDAXBrokerage.Messaging.cs" />
     <Compile Include="GDAX\OrderBook.cs" />
+    <Compile Include="IConnectionHandler.cs" />
     <Compile Include="IWebSocket.cs" />
     <Compile Include="GDAX\Messages.cs" />
     <Compile Include="ApiPriceProvider.cs" />
