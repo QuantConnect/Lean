@@ -125,7 +125,7 @@ namespace QuantConnect.ToolBox
                     case "secdl":
                     case "secdownloader":
                         SECDataDownloaderProgram.SECDataDownloader(
-                            GetParameterOrDefault(optionsObject, "destination-dir", Path.Combine(Globals.DataFolder, "alternative", "sec", "raw-sec")),
+                            GetParameterOrExit(optionsObject, "destination-dir"),
                             fromDate,
                             toDate
                         );
@@ -217,16 +217,16 @@ namespace QuantConnect.ToolBox
                     case "secconverter":
                         var secFolder = Path.Combine(Globals.DataFolder, "alternative", "sec");
                         var equityFolder = Path.Combine(Globals.DataFolder, "equity", Market.USA);
-                        var fromDate = DateTime.ParseExact(GetParameterOrExit(optionsObject, "from-date"), "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture);
-                        var toDate = optionsObject.ContainsKey("to-date")
-                            ? DateTime.ParseExact(optionsObject["to-date"].ToString(), "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture)
-                            : DateTime.UtcNow;
+                        var start = DateTime.ParseExact(GetParameterOrExit(optionsObject, "start"), "yyyyMMdd", CultureInfo.InvariantCulture);
+                        var end = optionsObject.ContainsKey("end")
+                            ? DateTime.ParseExact(optionsObject["end"].ToString(), "yyyyMMdd", CultureInfo.InvariantCulture)
+                            : DateTime.UtcNow.Date;
 
                         SECDataDownloaderProgram.SECDataConverter(
-                            GetParameterOrDefault(optionsObject, "source-dir", Path.Combine(secFolder, "raw-sec")),
+                            GetParameterOrExit(optionsObject, "source-dir"),
                             GetParameterOrDefault(optionsObject, "destination-dir", secFolder),
-                            fromDate,
-                            toDate,
+                            start,
+                            end,
                             GetParameterOrDefault(optionsObject, "source-meta-dir", Path.Combine(equityFolder, "daily"))
                         );
                         break;
