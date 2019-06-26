@@ -25,10 +25,8 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// Downloads and converts the data
         /// </summary>
         /// <param name="rawDestination">Destination where raw data will be written to</param>
-        /// <param name="destination">Destination where processed data will be written to</param>
         /// <param name="start">Start date</param>
         /// <param name="end">End date</param>
-        /// <param name="knownEquityFolder">Folder to search for known equities, i.e. equities we will download data for</param>
         public static void SECDataDownloader(string rawDestination, DateTime start, DateTime end)
         {
             var download = new SECDataDownloader();
