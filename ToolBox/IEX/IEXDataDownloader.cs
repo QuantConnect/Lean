@@ -28,10 +28,12 @@ namespace QuantConnect.ToolBox.IEX
     public class IEXDataDownloader : IDataDownloader, IDisposable
     {
         private IEXDataQueueHandler _handler;
+        private readonly string _apiKey;
 
-        public IEXDataDownloader()
+        public IEXDataDownloader(string apiKey)
         {
-            _handler = new IEXDataQueueHandler(false);
+            _handler = new IEXDataQueueHandler(false, apiKey);
+            _apiKey = apiKey;
         }
         public void Dispose()
         {

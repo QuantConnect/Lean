@@ -95,7 +95,7 @@ namespace QuantConnect.ToolBox
                         break;
                     case "iexdl":
                     case "iexdownloader":
-                        IEXDownloaderProgram.IEXDownloader(tickers, resolution, fromDate, toDate);
+                        IEXDownloaderProgram.IEXDownloader(tickers, resolution, fromDate, toDate, GetParameterOrExit(optionsObject, "api-key"));
                         break;
                     case "kdl":
                     case "krakendownloader":

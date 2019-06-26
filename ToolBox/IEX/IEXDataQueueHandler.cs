@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Packets;
+using QuantConnect.Configuration;
 using Quobject.SocketIoClientDotNet.Client;
 using QuantConnect.Logging;
 using Newtonsoft.Json.Linq;
@@ -41,6 +42,7 @@ namespace QuantConnect.ToolBox.IEX
     {
         // using SocketIoClientDotNet is a temp solution until IEX implements standard WebSockets protocol
         private Socket _socket;
+        private readonly string _apiKey;
 
         private ConcurrentDictionary<string, Symbol> _symbols = new ConcurrentDictionary<string, Symbol>(StringComparer.InvariantCultureIgnoreCase);
         private Manager _manager;
@@ -60,11 +62,12 @@ namespace QuantConnect.ToolBox.IEX
             get { return _manager.ReadyState == Manager.ReadyStateEnum.OPEN; }
         }
 
-        public IEXDataQueueHandler(bool live = true)
+        public IEXDataQueueHandler(bool live = true, string apiKey = null)
         {
             Endpoint = "https://ws-api.iextrading.com/1.0/tops";
             if (live)
                 Reconnect();
+            _apiKey = apiKey;
         }
 
         internal void Reconnect()
@@ -399,7 +402,7 @@ namespace QuantConnect.ToolBox.IEX
             var client = new System.Net.WebClient();
             foreach (var suffix in suffixes)
             {
-                var response = client.DownloadString("https://api.iextrading.com/1.0/stock/" + ticker + "/chart/" + suffix);
+                var response = client.DownloadString("https://cloud.iexapis.com/v1/stock/" + ticker + "/chart/" + suffix + "?token=" + _apiKey);
                 var parsedResponse = JArray.Parse(response);
 
                 foreach (var item in parsedResponse.Children())
@@ -407,7 +410,7 @@ namespace QuantConnect.ToolBox.IEX
                     DateTime date;
                     if (item["minute"] != null)
                     {
-                        date = DateTime.ParseExact(item["date"].Value<string>(), "yyyyMMdd", CultureInfo.InvariantCulture);
+                        date = DateTime.ParseExact(item["date"].Value<string>(), "yyyy-MM-dd", CultureInfo.InvariantCulture);
                         var mins = TimeSpan.ParseExact(item["minute"].Value<string>(), "hh\\:mm", CultureInfo.InvariantCulture);
                         date += mins;
                     }

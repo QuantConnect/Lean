@@ -29,7 +29,7 @@ namespace QuantConnect.ToolBox.IEX
         /// <summary>
         /// Primary entry point to the program. This program only supports FOREX for now.
         /// </summary>
-        public static void IEXDownloader(IList<string> tickers, string resolution, DateTime fromDate, DateTime toDate)
+        public static void IEXDownloader(IList<string> tickers, string resolution, DateTime fromDate, DateTime toDate, string apiKey)
         {
             if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
@@ -38,6 +38,12 @@ namespace QuantConnect.ToolBox.IEX
                 Console.WriteLine("--resolution=Minute/Daily");
                 Environment.Exit(1);
             }
+            if (apiKey.IsNullOrEmpty())
+            {
+                Console.WriteLine("QuandlBitfinexDownloader ERROR: '--api-key=' parameter is missing");
+                Environment.Exit(1);
+            }
+
             try
             {
                 // Load settings from command line
@@ -47,12 +53,12 @@ namespace QuantConnect.ToolBox.IEX
                 var dataDirectory = Config.Get("data-directory", "../../../Data");
                 var startDate = fromDate.ConvertToUtc(TimeZones.NewYork);
                 var endDate = toDate.ConvertToUtc(TimeZones.NewYork);
-
+                
                 // Create an instance of the downloader
                 const string market = Market.USA;
                 SecurityType securityType = SecurityType.Equity;
 
-                using (var downloader = new IEXDataDownloader())
+                using (var downloader = new IEXDataDownloader(apiKey = apiKey))
                 {
                     foreach (var ticker in tickers)
                     {
