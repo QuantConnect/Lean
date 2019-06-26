@@ -17,7 +17,7 @@ Each tool requires a different set of parameters, the only **required argument i
 
 Help information is available using the '--help' parameter.
 
-Example: --app=IEXDownloader --tickers=SPY,AAPL --resolution=Minute --from-date=yyyyMMdd-HH:mm:ss --to-date=yyyyMMdd-HH:mm:ss
+Example: --app=YahooDownloader --tickers=SPY,AAPL --resolution=Daily --from-date=yyyyMMdd-HH:mm:ss --to-date=yyyyMMdd-HH:mm:ss
 
 #### Available downloaders
 
