@@ -13,7 +13,7 @@
 
 from datetime import datetime
 from json import dumps
-from requests import Request
+from requests import get as requests_get, Request
 from time import mktime
 from quantconnect import ApiConnection
 
@@ -468,7 +468,7 @@ class Api:
         # Make sure the link was successfully retrieved
         if link['success']:
             # download and save the data
-            request = requests.get(link['link'])
+            request = requests_get(link['link'])
             with open(fileName + '.zip', "wb") as code:
                 code.write(request.content)
 
