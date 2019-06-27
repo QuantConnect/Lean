@@ -468,8 +468,9 @@ class Api:
         # Make sure the link was successfully retrieved
         if link['success']:
             # download and save the data
-            request = requests_get(link['link'])
+            request = requests_get(link['link'], stream=True)
             with open(fileName + '.zip', "wb") as code:
-                code.write(request.content)
+                for chunk in request.iter_content(None):
+                    code.write(chunk)
 
         return link['success']
