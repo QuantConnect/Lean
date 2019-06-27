@@ -266,6 +266,7 @@
     <Compile Include="Interfaces\ISubscriptionDataConfigService.cs" />
     <Compile Include="Interfaces\ITimeKeeper.cs" />
     <Compile Include="IsolatorLimitResult.cs" />
+    <Compile Include="Orders\Fees\AlphaStreamsFeeModel.cs" />
     <Compile Include="Orders\Fills\Fill.cs" />
     <Compile Include="Orders\Fills\FillModelParameters.cs" />
     <Compile Include="Orders\Fees\FeeModel.cs" />
