@@ -218,16 +218,11 @@ namespace QuantConnect.ToolBox
                         var secFolder = Path.Combine(Globals.DataFolder, "alternative", "sec");
                         var equityFolder = Path.Combine(Globals.DataFolder, "equity", Market.USA);
                         var start = DateTime.ParseExact(GetParameterOrExit(optionsObject, "start"), "yyyyMMdd", CultureInfo.InvariantCulture);
-                        var end = optionsObject.ContainsKey("end")
-                            ? DateTime.ParseExact(optionsObject["end"].ToString(), "yyyyMMdd", CultureInfo.InvariantCulture)
-                            : DateTime.UtcNow.Date;
-
                         SECDataDownloaderProgram.SECDataConverter(
                             GetParameterOrExit(optionsObject, "source-dir"),
                             GetParameterOrDefault(optionsObject, "destination-dir", secFolder),
                             start,
-                            end,
-                            GetParameterOrDefault(optionsObject, "source-meta-dir", Path.Combine(equityFolder, "daily"))
+                            GetParameterOrDefault(optionsObject, "source-meta-dir", Path.Combine(equityFolder, Resolution.Tick.ToString().ToLower()))
                         );
                         break;
                     default:

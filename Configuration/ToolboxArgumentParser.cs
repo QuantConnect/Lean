@@ -63,7 +63,7 @@ namespace QuantConnect.Configuration
                                                                                         + "NseMarketDataConverter, QuantQuoteConverter, SECDataDownloader, SECDataConverter]"),
                 new CommandLineOption("source-meta-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter, SECDataConverter. For SECDataConverter, this is the path to the known equities folder (i.e. equity daily folder)]"),
                 new CommandLineOption("start", CommandOptionType.SingleValue, "[REQUIRED for RandomDataGenerator and SECDataConverter. Format yyyyMMdd Example: --start=20010101]"),
-                new CommandLineOption("end", CommandOptionType.SingleValue, "[REQUIRED for RandomDataGenerator and SECDataConverter. Format yyyyMMdd Example: --end=20020101]"),
+                new CommandLineOption("end", CommandOptionType.SingleValue, "[REQUIRED for RandomDataGenerator. Format yyyyMMdd Example: --end=20020101]"),
                 new CommandLineOption("market", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Market of generated symbols. Defaults to default market for security type: Example: --market=usa]"),
                 new CommandLineOption("symbol-count", CommandOptionType.SingleValue, "[REQUIRED for RandomDataGenerator. Number of symbols to generate data for: Example: --symbol-count=10]"),
                 new CommandLineOption("security-type", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Security type of generated symbols, defaults to Equity: Example: --security-type=Equity/Option/Forex/Future/Cfd/Crypto]"),

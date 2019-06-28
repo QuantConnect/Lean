@@ -17,7 +17,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security;
@@ -40,16 +39,11 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// Raw data source path
         /// </summary>
         public string RawSource;
-        
+
         /// <summary>
         /// Destination of formatted data
         /// </summary>
         public string Destination;
-
-        /// <summary>
-        /// Max file size in bytes we're willing to parse. Default is 50Mb
-        /// </summary>
-        public int MaxFileSize = 50000000;
 
         /// <summary>
         /// Assets keyed by CIK used to resolve underlying ticker 
@@ -66,19 +60,18 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// </summary>
         public ConcurrentDictionary<string, ConcurrentDictionary<DateTime, List<ISECReport>>> Reports = new ConcurrentDictionary<string, ConcurrentDictionary<DateTime, List<ISECReport>>>();
 
-        /// <summary>
-        /// List of known equities taken from the daily data folder
-        /// </summary>
-        public List<string> KnownEquities;
+        private DirectoryInfo _tickerFolder;
 
-        public SECDataConverter(string rawSource, string destination, string knownEquityFolder)
+        public SECDataConverter(string rawSource, string destination, string tickerFolder)
         {
             RawSource = rawSource;
             Destination = destination;
-            
+
+            _tickerFolder = new DirectoryInfo(tickerFolder);
+
             var data = File.ReadAllText(Path.Combine(RawSource, "cik-ticker-mappings.txt")).Trim();
             var rankAndFileData = File.ReadAllText(Path.Combine(RawSource, "cik-ticker-mappings-rankandfile.txt")).Trim();
-            
+
             // Process data into dictionary of CIK -> List{T} of tickers
             data.Split('\n')
                 .Select(x => x.Split('\t'))
@@ -100,7 +93,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         symbol.Add(tickerCik[0]);
                     }
                 );
-            
+
             // Merge both data sources to a single CIK -> List{T} of tickers
             rankAndFileData.Split('\n')
                 .Select(x => x.Split('|'))
@@ -114,7 +107,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         List<string> symbol;
                         if (!CikTicker.TryGetValue(companyCik, out symbol))
                         {
-                            symbol = new List<string>() {companyTicker};
+                            symbol = new List<string>() { companyTicker };
                             CikTicker[companyCik] = symbol;
                         }
                         else if (!symbol.Contains(companyTicker))
@@ -123,10 +116,6 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         }
                     }
                 );
-
-            KnownEquities = Directory.GetFiles(knownEquityFolder)
-                .Select(x => Path.GetFileNameWithoutExtension(x).ToLower())
-                .ToList();
         }
 
         /// <summary>
@@ -134,188 +123,181 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// </summary>
         /// <param name="startDate">Starting date to start process files</param>
         /// <param name="endDate">Ending date to stop processing files</param>
-        public void Process(DateTime startDate, DateTime endDate)
+        public void Process(DateTime processingDate)
         {
-            Parallel.ForEach(
-                Directory.GetFiles(RawSource, "*.nc.tar.gz", SearchOption.AllDirectories).ToList(),
-                rawFile =>
-                {
-                    // GetFileNameWithoutExtension only strips the first extension from the name.
-                    var fileDate = Path.GetFileName(rawFile).Split('.')[0];
-                    var extractDataPath = Path.Combine(Path.GetTempPath(), fileDate);
+            var formattedDate = processingDate.ToString(DateFormat.EightCharacter);
+            var remoteRawData = new FileInfo(Path.Combine(RawSource, $"{formattedDate}.nc.tar.gz"));
+            if (!remoteRawData.Exists)
+            {
+                throw new Exception($"SECDataConverter.Process(): Raw data {remoteRawData} not found. No process can be done.");
+            }
 
-                    DateTime currentDate;
-                    if (!DateTime.TryParseExact(fileDate, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out currentDate))
+            Log.Trace($"SECDataConverter.Process(): Copying raw data locally...");
+
+            var localRawData = remoteRawData.CopyTo(Path.Combine(Path.GetTempPath(), remoteRawData.Name));
+            var extractDataPath = Path.Combine(Path.GetTempPath(), formattedDate);
+
+            Log.Trace($"SECDataConverter.Process(): Extract raw data...");
+
+            using (var data = localRawData.OpenRead())
+            {
+                using (var archive = TarArchive.CreateInputTarArchive(new GZipInputStream(data)))
+                {
+                    Directory.CreateDirectory(extractDataPath);
+                    archive.ExtractContents(extractDataPath);
+
+                    Log.Trace($"SECDataConverter.Process(): Extracted SEC data to path {extractDataPath}");
+                }
+            }
+
+            var tickerList = _tickerFolder.EnumerateDirectories().AsParallel()
+                .Where(d => d.EnumerateFiles($"{formattedDate}*").Any())
+                .Select(d => d.Name);
+
+            Log.Trace($"SECDataConverter.Process(): Start processing..."); 
+            // For the meantime, let's only process .nc files, and deal with correction files later.
+            Parallel.ForEach(
+                Directory.GetFiles(extractDataPath, "*.nc", SearchOption.AllDirectories),
+                rawReportFilePath =>
+                {
+                    var factory = new SECReportFactory();
+                    var xmlText = new StringBuilder();
+
+                    // We need to escape any nested XML to ensure our deserialization happens smoothly
+                    var parsingText = false;
+
+                    foreach (var line in File.ReadLines(rawReportFilePath))
                     {
-                        throw new Exception($"Unable to parse date from file {rawFile}. Filename we attempted to parse: {fileDate}");
+                        var newTextLine = line;
+                        var currentTagName = GetTagNameFromLine(newTextLine);
+
+                        // This tag is present rarely in SEC reports, but is unclosed without value when encountered.
+                        // Verified by searching with ripgrep for "CONFIRMING-COPY"
+                        if (currentTagName == "CONFIRMING-COPY")
+                        {
+                            continue;
+                        }
+
+                        // Indicates that the form is a paper submission and that the current file has no contents
+                        if (currentTagName == "PAPER")
+                        {
+                            continue;
+                        }
+
+                        // Don't encode the closing tag
+                        if (currentTagName == "/TEXT")
+                        {
+                            parsingText = false;
+                        }
+
+                        // To ensure that we can serialize/deserialize data with hours, minutes, seconds
+                        if (currentTagName == "FILING-DATE" || currentTagName == "PERIOD" ||
+                            currentTagName == "DATE-OF-FILING-CHANGE" || currentTagName == "DATE-CHANGED")
+                        {
+                            newTextLine = $"{newTextLine.TrimEnd()} 00:00:00";
+                        }
+
+                        // Encode all contents inside tags to prevent errors in XML parsing.
+                        // The json deserializer will convert these values back to their original form
+                        if (!parsingText && HasValue(newTextLine))
+                        {
+                            newTextLine =
+                                $"<{currentTagName}>{SecurityElement.Escape(GetTagValueFromLine(newTextLine))}</{currentTagName}>";
+                        }
+                        // Escape all contents inside TEXT tags
+                        else if (parsingText)
+                        {
+                            newTextLine = SecurityElement.Escape(newTextLine);
+                        }
+
+                        // Don't encode the opening tag
+                        if (currentTagName == "TEXT")
+                        {
+                            parsingText = true;
+                        }
+
+                        xmlText.AppendLine(newTextLine);
                     }
-                    
-                    // Only process files within start and end bounds
-                    if (currentDate < startDate || currentDate > endDate)
+
+                    ISECReport report;
+                    try
+                    {
+                        report = factory.CreateSECReport(xmlText.ToString());
+                    }
+                    // Ignore unsupported form types for now
+                    catch (DataException)
+                    {
+                        return;
+                    }
+                    catch (XmlException e)
+                    {
+                        Log.Error(e, $"SECDataConverter.Process(): Failed to parse XML from file path: {rawReportFilePath}");
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "SECDataConverter.Process(): Unknown error encountered");
+                        return;
+                    }
+
+                    // First filer listed in SEC report is usually the company listed on stock exchanges
+                    var companyCik = report.Report.Filers.First().CompanyData.Cik;
+
+                    // Some companies can operate under two tickers, but have the same CIK.
+                    // Don't bother continuing if we don't find any tickers for the given CIK
+                    List<string> tickers;
+                    if (!CikTicker.TryGetValue(companyCik, out tickers))
                     {
                         return;
                     }
 
-                    using (var data = File.OpenRead(rawFile))
+                    try
                     {
-                        using (var archive = TarArchive.CreateInputTarArchive(new GZipInputStream(data)))
-                        {
-                            Directory.CreateDirectory(extractDataPath);
-                            archive.ExtractContents(extractDataPath);
-
-                            Log.Trace($"SECDataConverter.Process(): Extracted SEC data to path {extractDataPath}");
-                        }
+                        // There can potentially not be an index file present for the given CIK
+                        GetPublicationDate(report, companyCik);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, $"{report.Report.FilingDate:yyyy-MM-dd} - Index file not found for ticker: {tickers.FirstOrDefault()} with CIK: {companyCik}");
                     }
 
-                    // For the meantime, let's only process .nc files, and deal with correction files later.
-                    Parallel.ForEach(
-                        Directory.GetFiles(extractDataPath, "*.nc", SearchOption.AllDirectories),
-                        rawReportFilePath =>
-                        {
-                            // Avoid processing files greater than MaxFileSize megabytes
-                            if (MaxFileSize < new FileInfo(rawReportFilePath).Length)
-                            {
-                                Log.Trace($"SECDataConverter.Process(): File {rawReportFilePath} is too large to process. Continuing...");
-                                return;
-                            }
+                    // Default to company CIK if no known ticker is found.
+                    // If we don't find a known equity in our list, the equity is probably not worth our time
+                    foreach (var ticker in tickers.Where(tickerList.Contains))
+                    {
+                        var tickerReports = Reports.GetOrAdd(
+                            ticker,
+                            _ => new ConcurrentDictionary<DateTime, List<ISECReport>>()
+                        );
+                        var reports = tickerReports.GetOrAdd(
+                            report.Report.FilingDate.Date,
+                            _ => new List<ISECReport>()
+                        );
 
-                            var factory = new SECReportFactory();
-                            var xmlText = new StringBuilder();
-
-                            // We need to escape any nested XML to ensure our deserialization happens smoothly
-                            var parsingText = false;
-
-                            foreach (var line in File.ReadLines(rawReportFilePath))
-                            {
-                                var newTextLine = line;
-                                var currentTagName = GetTagNameFromLine(newTextLine);
-
-                                // This tag is present rarely in SEC reports, but is unclosed without value when encountered.
-                                // Verified by searching with ripgrep for "CONFIRMING-COPY"
-                                if (currentTagName == "CONFIRMING-COPY")
-                                {
-                                    continue;
-                                }
-                                
-                                // Indicates that the form is a paper submission and that the current file has no contents
-                                if (currentTagName == "PAPER")
-                                {
-                                    continue;
-                                }
-
-                                // Don't encode the closing tag
-                                if (currentTagName == "/TEXT")
-                                {
-                                    parsingText = false;
-                                }
-
-                                // To ensure that we can serialize/deserialize data with hours, minutes, seconds
-                                if (currentTagName == "FILING-DATE" || currentTagName == "PERIOD" ||
-                                    currentTagName == "DATE-OF-FILING-CHANGE" || currentTagName == "DATE-CHANGED")
-                                {
-                                    newTextLine = $"{newTextLine.TrimEnd()} 00:00:00";
-                                }
-
-                                // Encode all contents inside tags to prevent errors in XML parsing.
-                                // The json deserializer will convert these values back to their original form
-                                if (!parsingText && HasValue(newTextLine))
-                                {
-                                    newTextLine =
-                                        $"<{currentTagName}>{SecurityElement.Escape(GetTagValueFromLine(newTextLine))}</{currentTagName}>";
-                                }
-                                // Escape all contents inside TEXT tags
-                                else if (parsingText)
-                                {
-                                    newTextLine = SecurityElement.Escape(newTextLine);
-                                }
-
-                                // Don't encode the opening tag
-                                if (currentTagName == "TEXT")
-                                {
-                                    parsingText = true;
-                                }
-
-                                xmlText.AppendLine(newTextLine);
-                            }
-
-                            ISECReport report;
-                            try
-                            {
-                                report = factory.CreateSECReport(xmlText.ToString());
-                            }
-                            // Ignore unsupported form types for now
-                            catch (DataException)
-                            {
-                                return;
-                            }
-                            catch (XmlException e)
-                            {
-                                Log.Error(e, $"SECDataConverter.Process(): Failed to parse XML from file path: {rawReportFilePath}");
-                                return;
-                            }
-                            catch (Exception e)
-                            {
-                                Log.Error(e, "SECDataConverter.Process(): Unknown error encountered");
-                                return;
-                            }
-                            
-                            // First filer listed in SEC report is usually the company listed on stock exchanges
-                            var companyCik = report.Report.Filers.First().CompanyData.Cik;
-
-                            // Some companies can operate under two tickers, but have the same CIK.
-                            // Don't bother continuing if we don't find any tickers for the given CIK
-                            List<string> tickers;
-                            if (!CikTicker.TryGetValue(companyCik, out tickers))
-                            {
-                                return;
-                            }
-
-                            try
-                            {
-                                // There can potentially not be an index file present for the given CIK
-                                GetPublicationDate(report, companyCik);
-                            }
-                            catch (Exception e)
-                            {
-                                Log.Error(e, $"{report.Report.FilingDate:yyyy-MM-dd} - Index file not found for ticker: {tickers.FirstOrDefault()} with CIK: {companyCik}");
-                            }
-
-                            // Default to company CIK if no known ticker is found.
-                            // If we don't find a known equity in our list, the equity is probably not worth our time
-                            foreach (var ticker in tickers.Where(KnownEquities.Contains))
-                            {
-                                var tickerReports = Reports.GetOrAdd(
-                                    ticker,
-                                    _ => new ConcurrentDictionary<DateTime, List<ISECReport>>()
-                                );
-                                var reports = tickerReports.GetOrAdd(
-                                    report.Report.FilingDate.Date,
-                                    _ => new List<ISECReport>()
-                                );
-
-                                reports.Add(report);
-                            }
-                        }
-                    );
-
-                    Parallel.ForEach(Reports.Keys, ticker =>
-                        {
-                            List<ISECReport> reports;
-                            if (!Reports[ticker].TryRemove(currentDate, out reports))
-                            {
-                                return;
-                            }
-
-                            WriteReport(reports, ticker);
-                        }
-                    );
-
-                    // This will clean up after ourselves without having to pay
-                    // the expense of deleting every single file inside the raw_data folder
-                    Directory.Delete(extractDataPath, true);
+                        reports.Add(report);
+                    }
                 }
             );
+
+            Parallel.ForEach(
+                Reports.Keys,
+                ticker =>
+                {
+                    List<ISECReport> reports;
+                    if (!Reports[ticker].TryRemove(processingDate, out reports))
+                    {
+                        return;
+                    }
+
+                    WriteReport(reports, ticker);
+                }
+            );
+
+            // This will clean up after ourselves without having to pay
+            // the expense of deleting every single file inside the raw_data folder
+            Directory.Delete(extractDataPath, true);
         }
+
 
         /// <summary>
         /// Writes the report to disk, where it will be used by LEAN.

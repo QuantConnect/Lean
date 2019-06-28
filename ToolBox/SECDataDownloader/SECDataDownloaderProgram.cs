@@ -42,11 +42,11 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// <param name="start">Start date</param>
         /// <param name="end">End date</param>
         /// <param name="knownEquityFolder">Path to daily or hourly equity data</param>
-        public static void SECDataConverter(string rawSource, string destination, DateTime start, DateTime end, string knownEquityFolder)
+        public static void SECDataConverter(string rawSource, string destination, DateTime start, string knownEquityFolder)
         {
             var converter = new SECDataConverter(rawSource, destination, knownEquityFolder);
             Log.Trace("SecDataDownloaderProgram.SecDataDownloader(): Begin parsing raw files from disk...");
-            converter.Process(start, end);
+            converter.Process(start);
         }
     }
 }
