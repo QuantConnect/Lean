@@ -20,7 +20,6 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data.Custom.PsychSignal import PsychSignalSentimentData
-import numpy as np
 
 ### <summary>
 ### This example algorithm shows how to import and use psychsignal sentiment data
@@ -30,12 +29,12 @@ import numpy as np
 ### <meta name="tag" content="custom data" />
 ### <meta name="tag" content="psychsignal" />
 ### <meta name="tag" content="sentiment" />
-class PsychSignalSentimentAlgorithm(QCAlgorithm):
+class PsychSignalSentimentRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialize the algorithm with our custom data'''
 
-        self.SetStartDate(2014, 6, 5)
-        self.SetEndDate(2014, 6, 9)
+        self.SetStartDate(2019, 6, 3)
+        self.SetEndDate(2019, 6, 9)
         self.SetCash(100000)
 
         self.ticker = "AAPL"

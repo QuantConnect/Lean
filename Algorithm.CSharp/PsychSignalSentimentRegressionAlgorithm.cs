@@ -13,8 +13,10 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.PsychSignal;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -26,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="custom data" />
     /// <meta name="tag" content="psychsignal" />
     /// <meta name="tag" content="sentiment" />
-    public class PsychSignalSentimentAlgorithm : QCAlgorithm
+    public class PsychSignalSentimentRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string Ticker = "AAPL";
         private Symbol _symbol;
@@ -36,8 +38,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2014, 6, 5);
-            SetEndDate(2014, 6, 9);
+            SetStartDate(2019, 6, 3);
+            SetEndDate(2019, 6, 9);
             SetCash(100000);
 
             _symbol = AddEquity(Ticker).Symbol;
@@ -63,5 +65,41 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = false;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "9"},
+            {"Average Win", "0.32%"},
+            {"Average Loss", "-0.05%"},
+            {"Compounding Annual Return", "59.645%"},
+            {"Drawdown", "0.700%"},
+            {"Expectancy", "4.327"},
+            {"Net Profit", "0.901%"},
+            {"Sharpe Ratio", "6.985"},
+            {"Loss Rate", "25%"},
+            {"Win Rate", "75%"},
+            {"Profit-Loss Ratio", "6.10"},
+            {"Alpha", "-0.901"},
+            {"Beta", "98.136"},
+            {"Annual Standard Deviation", "0.041"},
+            {"Annual Variance", "0.002"},
+            {"Information Ratio", "6.725"},
+            {"Tracking Error", "0.04"},
+            {"Treynor Ratio", "0.003"},
+            {"Total Fees", "$9.00"}
+        };
     }
 }

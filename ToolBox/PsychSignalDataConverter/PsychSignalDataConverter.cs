@@ -111,6 +111,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             }
             
             FlushAll();
+            CompressData();
         }
 
         /// <summary>
@@ -136,6 +137,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             }
 
             FlushAll();
+            CompressData();   
         }
 
         /// <summary>
@@ -149,7 +151,28 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 handle.Dispose();
             }
         }
-
+        
+        /// <summary>
+        /// Utility method to compresses the data contained with the psychsignal alternative data folder 
+        /// to a structure similar to equity minute files (e.g. /[symbol]/20010101.zip#20010101.csv)
+        /// </summary>
+        private void CompressData()
+        {
+            var finalPath = Path.Combine(Globals.DataFolder, "alternative", "psychsignal");
+            foreach (var tickerFolder in Directory.GetDirectories(finalPath))
+            {
+                foreach (var dataFile in Directory.GetFiles(tickerFolder, "*.csv", SearchOption.TopDirectoryOnly))
+                {
+                    Compression.Zip(dataFile, deleteOriginal: true);
+                    Log.Trace($"PsychSignalDataConverter.CompressData(): Successfully compressed: {dataFile}");
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Handle to a file so that we don't have to open and close it every time we want
+        /// to write to a file. This helps us speed up time spent processing massively.
+        /// </summary>
         private class TickerData : IDisposable
         {
             private readonly DirectoryInfo _destinationDirectory;

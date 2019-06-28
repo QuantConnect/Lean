@@ -28,7 +28,7 @@ namespace QuantConnect.Data.Custom.PsychSignal
         public decimal BullIntensity;
 
         /// <summary>
-        /// Bearish intensity as reported by psychsignal
+        /// Bearish intensity as reported by psychsignal.
         /// </summary>
         public decimal BearIntensity;
 
@@ -38,23 +38,27 @@ namespace QuantConnect.Data.Custom.PsychSignal
         public decimal BullMinusBear;
 
         /// <summary>
-        /// Total bullish scored messages
+        /// Total bullish scored messages. 
+        /// This is the total nubmer of messages classified as bullish in a minute
         /// </summary>
         public int BullScoredMessages;
 
         /// <summary>
-        /// Total bearish scored messages
+        /// Total bearish scored messages. 
+        /// This is the total number of messages classified as bearish in a minute
         /// </summary>
         public int BearScoredMessages;
 
         /// <summary>
         /// Bull/Bear message ratio.
+        /// Calculated by dividing BullScoredMessages by BearScoredMessages
         /// </summary>
         /// <remarks>If bearish messages equals zero, then the resulting value equals zero</remarks>
         public decimal BullBearMessageRatio;
 
         /// <summary>
         /// Total messages scanned.
+        /// This includes bull/bear messages and messages that couldn't be classified
         /// </summary>
         /// <remarks>
         /// Sometimes, there will be no bull/bear rated messages, but nonetheless had messages scanned.
@@ -76,7 +80,8 @@ namespace QuantConnect.Data.Custom.PsychSignal
                     Globals.DataFolder,
                     "alternative",
                     "psychsignal",
-                    $"{config.Symbol.Value.ToLower()}.zip#{date:yyyyMMdd}.csv"
+                    $"{config.Symbol.Value.ToLower()}",
+                    $"{date:yyyyMMdd}.zip#{date:yyyyMMdd}.csv"
                 ),
                 SubscriptionTransportMedium.LocalFile,
                 FileFormat.Csv

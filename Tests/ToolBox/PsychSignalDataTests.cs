@@ -21,19 +21,17 @@ using System.Linq;
 
 namespace QuantConnect.Tests.ToolBox
 {
-    [TestFixture, Ignore("This test requires raw PsychSignal data")]
+    [TestFixture]
     public class PsychSignalDataTests
     {
-        [Test]
-        public void FileHourMatchesDataTime()
+        [Test, Ignore("This test requires raw PsychSignal data")]
+        public void FileHourMatchesDataTimeRealRawData()
         {
             var rawPath = Path.Combine(Globals.DataFolder, "alternative", "psychsignal", "raw-psychsignal");
             
             foreach (var file in Directory.GetFiles(rawPath, "*.csv", SearchOption.TopDirectoryOnly).ToList())
             {
                 var fileSplit = file.Split('_');
-                Console.WriteLine(fileSplit[fileSplit.Length - 1].Split('.')[0]);
-                Console.WriteLine(fileSplit[fileSplit.Length - 1]);
 
                 var hour = Convert.ToInt32(fileSplit[fileSplit.Length - 4]);
 
@@ -43,8 +41,19 @@ namespace QuantConnect.Tests.ToolBox
                 // SOURCE[0],SYMBOL[1],TIMESTAMP_UTC[2],BULLISH_INTENSITY[3],BEARISH_INTENSITY[4],BULL_MINUS_BEAR[5],BULL_SCORED_MESSAGES[6],BEAR_SCORED_MESSAGES[7],BULL_BEAR_MSG_RATIO[8],TOTAL_SCANNED_MESSAGES[9]
                 var date = DateTime.Parse(line[2]).ToUniversalTime();
 
-                Assert.AreEqual(date.Hour, hour);
+                Assert.AreEqual(hour, date.Hour);
             }
+        }
+
+        [Test]
+        public void FileHourMatchesFakeDataTime()
+        {
+            var line = File.ReadLines(Path.Combine("TestData", "00010101_05_example_psychsignal_testdata.csv")).Last().Split(',');
+            var hour = 5;
+
+            var date = DateTime.Parse(line[2]).ToUniversalTime();
+
+            Assert.AreEqual(hour, date.Hour);
         }
     }
 }
