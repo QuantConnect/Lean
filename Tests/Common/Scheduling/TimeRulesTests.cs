@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var rules = GetTimeRules(TimeZones.Utc);
             var rule = rules.At(TimeSpan.FromHours(12));
-            var times = rule.CreateUtcEventTimes(new[] {new DateTime(2000, 01, 01)});
+            var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 01) });
 
             int count = 0;
             foreach (var time in times)
@@ -49,13 +49,13 @@ namespace QuantConnect.Tests.Common.Scheduling
         {
             var rules = GetTimeRules(TimeZones.NewYork);
             var rule = rules.At(TimeSpan.FromHours(12));
-            var times = rule.CreateUtcEventTimes(new[] {new DateTime(2000, 01, 01)});
+            var times = rule.CreateUtcEventTimes(new[] { new DateTime(2000, 01, 01) });
 
             int count = 0;
             foreach (var time in times)
             {
                 count++;
-                Assert.AreEqual(TimeSpan.FromHours(12+5), time.TimeOfDay);
+                Assert.AreEqual(TimeSpan.FromHours(12 + 5), time.TimeOfDay);
             }
             Assert.AreEqual(1, count);
         }
@@ -167,7 +167,7 @@ namespace QuantConnect.Tests.Common.Scheduling
             foreach (var time in times)
             {
                 count++;
-                Assert.AreEqual(TimeSpan.FromHours((20 + 5)%24), time.TimeOfDay);
+                Assert.AreEqual(TimeSpan.FromHours((20 + 5) % 24), time.TimeOfDay);
             }
             Assert.AreEqual(1, count);
         }
@@ -183,9 +183,34 @@ namespace QuantConnect.Tests.Common.Scheduling
             foreach (var time in times)
             {
                 count++;
-                Assert.AreEqual(TimeSpan.FromHours((20 + 5 - .5)%24), time.TimeOfDay);
+                Assert.AreEqual(TimeSpan.FromHours((20 + 5 - .5) % 24), time.TimeOfDay);
             }
             Assert.AreEqual(1, count);
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        public void EveryValidatesTimeSpan(int timeSpanMinutes)
+        {
+            var rules = GetTimeRules(TimeZones.Utc);
+            Assert.Throws<ArgumentException>(() => rules.Every(TimeSpan.FromMinutes(timeSpanMinutes)));
+        }
+
+        [Test]
+        public void Every()
+        {
+            var rules = GetTimeRules(TimeZones.Utc);
+            var every = rules.Every(TimeSpan.FromMilliseconds(500));
+            var previous = new DateTime(2019, 6, 28);
+            var dateTimes = every.CreateUtcEventTimes(new[] { previous });
+            foreach (var dateTime in dateTimes)
+            {
+                if (previous != dateTime)
+                {
+                    Assert.Fail("Unexpected Every DateTime");
+                }
+                previous = previous.AddMilliseconds(500);
+            }
         }
 
         private static TimeRules GetTimeRules(DateTimeZone dateTimeZone)

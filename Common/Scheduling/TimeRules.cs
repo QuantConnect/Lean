@@ -119,10 +119,14 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Specifies an event should fire periodically on the requested interval
         /// </summary>
-        /// <param name="interval">The frequency with which the event should fire</param>
+        /// <param name="interval">The frequency with which the event should fire, can not be zero or less</param>
         /// <returns>A time rule that fires after each interval passes</returns>
         public ITimeRule Every(TimeSpan interval)
         {
+            if (interval <= TimeSpan.Zero)
+            {
+                throw new ArgumentException("TimeRules.Every(): time span interval can not be zero or less");
+            }
             var name = "Every " + interval.TotalMinutes.ToString("0.##") + " min";
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates => EveryIntervalIterator(dates, interval);
             return new FuncTimeRule(name, applicator);
@@ -191,8 +195,17 @@ namespace QuantConnect.Scheduling
             return security;
         }
 
+        /// <summary>
+        /// For each provided date will yield all the time intervals based on the supplied time span
+        /// </summary>
+        /// <param name="dates">The dates for which we want to create the different intervals</param>
+        /// <param name="interval">The interval value to use, can not be zero or less</param>
         private static IEnumerable<DateTime> EveryIntervalIterator(IEnumerable<DateTime> dates, TimeSpan interval)
         {
+            if (interval <= TimeSpan.Zero)
+            {
+                throw new ArgumentException("TimeRules.EveryIntervalIterator(): time span interval can not be zero or less");
+            }
             foreach (var date in dates)
             {
                 for (var time = TimeSpan.Zero; time < Time.OneDay; time += interval)
