@@ -180,7 +180,7 @@ namespace QuantConnect.Configuration
                     {
                         environment["environments"] = environments = new JObject();
                     }
-                    environment = environments[envName];
+                    environment = environments[envName] = new JObject();
                 }
                 environment[key] = value;
             }

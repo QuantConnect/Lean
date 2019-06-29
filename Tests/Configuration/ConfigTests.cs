@@ -53,11 +53,15 @@ namespace QuantConnect.Tests.Configuration
         [Test]
         public void SetNestedToSpecificEnvironment()
         {
-            Assert.Throws<NullReferenceException>(() =>
+            Assert.DoesNotThrow(() =>
                 {
                     Config.Set("mega-backtesting.setup-handler", "3285-testing");
                 }
             );
+
+            // Set new environment ->
+            Config.Set("environment", "mega-backtesting");
+            Assert.AreEqual("3285-testing", Config.Get("setup-handler"));
         }
 
         [Test]
