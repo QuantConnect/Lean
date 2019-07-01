@@ -80,11 +80,23 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             Destination = destination;
             
             _tickerFolder = new DirectoryInfo(tickerFolder);
+        }
 
+        /// <summary>
+        /// Converts the data from raw format (*.nz.tar.gz) to json files consumable by LEAN
+        /// </summary>
+        /// <param name="startDate">Starting date to start process files</param>
+        /// <param name="endDate">Ending date to stop processing files</param>
+        public void Process(DateTime processingDate)
+        {
+            if (!_tickerFolder.Exists)
+            {
+                throw new DirectoryNotFoundException("Known ticker folder does not exist.");
+            }
 
+            // Process data into dictionary of CIK -> List{T} of tickers
             foreach (var line in File.ReadLines(Path.Combine(RawSource, "cik-ticker-mappings.txt")))
             {
-                // Process data into dictionary of CIK -> List{T} of tickers
                 var tickerCik = line.Split('\t');
 
                 // tickerCik[0] = symbol, tickerCik[1] = CIK
@@ -119,19 +131,6 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 {
                     symbol.Add(companyTicker);
                 }
-            }
-        }
-
-        /// <summary>
-        /// Converts the data from raw format (*.nz.tar.gz) to json files consumable by LEAN
-        /// </summary>
-        /// <param name="startDate">Starting date to start process files</param>
-        /// <param name="endDate">Ending date to stop processing files</param>
-        public void Process(DateTime processingDate)
-        {
-            if (!_tickerFolder.Exists)
-            {
-                throw new DirectoryNotFoundException("Known ticker folder does not exist.");
             }
 
             var formattedDate = processingDate.ToString(DateFormat.EightCharacter);
