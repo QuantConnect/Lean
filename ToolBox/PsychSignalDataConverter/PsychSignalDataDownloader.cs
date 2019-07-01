@@ -73,12 +73,13 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
 
             Directory.CreateDirectory(_rawDataDestination);
             var now = DateTime.UtcNow;
+            var nowHour = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
 
-            // Makes sure we only get final, non-changing data by checking if the current hour matches the 
-            // hour of the upper date bound and subtracting an hour from it if that is the case
-            if (new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0) == new DateTime(endDateUtc.Year, endDateUtc.Month, endDateUtc.Day, endDateUtc.Hour, 0, 0))
+            // Makes sure we only get final, non-changing data by checking if the end date is greater than 
+            // or equal to the current time and setting it to an hour before the current time if the condition is met
+            if (nowHour <= new DateTime(endDateUtc.Year, endDateUtc.Month, endDateUtc.Day, endDateUtc.Hour, 0, 0))
             {
-                endDateUtc = endDateUtc.AddHours(-1);
+                endDateUtc = nowHour.AddHours(-1);
             }
             
             // PsychSignal paginates data by hour

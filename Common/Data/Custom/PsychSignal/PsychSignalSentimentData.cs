@@ -20,41 +20,46 @@ using System.IO;
 
 namespace QuantConnect.Data.Custom.PsychSignal
 {
+    /// <summary>
+    /// PsychSignal sentiment data implementation.
+    /// Created as part of a subscription request from AddData{T} 
+    /// and consumed by algorithms running on LEAN.
+    /// </summary>
     public class PsychSignalSentimentData : BaseData
     {
         /// <summary>
         /// Bullish intensity as reported by psychsignal
         /// </summary>
-        public decimal BullIntensity;
+        public decimal BullIntensity { get; set; }
 
         /// <summary>
         /// Bearish intensity as reported by psychsignal.
         /// </summary>
-        public decimal BearIntensity;
+        public decimal BearIntensity { get; set; }
 
         /// <summary>
         /// Bullish intensity minus bearish intensity
         /// </summary>
-        public decimal BullMinusBear;
+        public decimal BullMinusBear { get; set; }
 
         /// <summary>
         /// Total bullish scored messages. 
         /// This is the total nubmer of messages classified as bullish in a minute
         /// </summary>
-        public int BullScoredMessages;
+        public int BullScoredMessages { get; set; }
 
         /// <summary>
         /// Total bearish scored messages. 
         /// This is the total number of messages classified as bearish in a minute
         /// </summary>
-        public int BearScoredMessages;
+        public int BearScoredMessages { get; set; }
 
         /// <summary>
         /// Bull/Bear message ratio.
         /// Calculated by dividing BullScoredMessages by BearScoredMessages
         /// </summary>
         /// <remarks>If bearish messages equals zero, then the resulting value equals zero</remarks>
-        public decimal BullBearMessageRatio;
+        public decimal BullBearMessageRatio { get; set; }
 
         /// <summary>
         /// Total messages scanned.
@@ -64,7 +69,7 @@ namespace QuantConnect.Data.Custom.PsychSignal
         /// Sometimes, there will be no bull/bear rated messages, but nonetheless had messages scanned.
         /// This field describes the total fields that were scanned in a minute
         /// </remarks>
-        public int TotalScoredMessages;
+        public int TotalScoredMessages { get; set; }
 
         /// <summary>
         /// Retrieve Psychsignal data from disk and return it to user's custom data subscription
@@ -81,7 +86,7 @@ namespace QuantConnect.Data.Custom.PsychSignal
                     "alternative",
                     "psychsignal",
                     $"{config.Symbol.Value.ToLower()}",
-                    $"{date:yyyyMMdd}.zip#{date:yyyyMMdd}.csv"
+                    $"{date:yyyyMMdd}.zip"
                 ),
                 SubscriptionTransportMedium.LocalFile,
                 FileFormat.Csv
@@ -104,16 +109,14 @@ namespace QuantConnect.Data.Custom.PsychSignal
             {
                 var csv = line.Split(',');
 
-                var timestamp = new DateTime(date.Year, date.Month, date.Day).AddMilliseconds(
-                    Convert.ToDouble(csv[0])
-                );
+                var timestamp = date.AddMilliseconds(Convert.ToDouble(csv[0], CultureInfo.InvariantCulture));
                 var bullIntensity = Convert.ToDecimal(csv[1], CultureInfo.InvariantCulture);
                 var bearIntensity = Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture);
                 var bullMinusBear = Convert.ToDecimal(csv[3], CultureInfo.InvariantCulture);
-                var bullScoredMessages = Convert.ToInt32(csv[4]);
-                var bearScoredMessages = Convert.ToInt32(csv[5]);
+                var bullScoredMessages = Convert.ToInt32(csv[4], CultureInfo.InvariantCulture);
+                var bearScoredMessages = Convert.ToInt32(csv[5], CultureInfo.InvariantCulture);
                 var bullBearMessageRatio = Convert.ToDecimal(csv[6], CultureInfo.InvariantCulture);
-                var totalScannedMessages = Convert.ToInt32(csv[7]);
+                var totalScannedMessages = Convert.ToInt32(csv[7], CultureInfo.InvariantCulture);
                 
                 return new PsychSignalSentimentData
                 {
@@ -132,6 +135,27 @@ namespace QuantConnect.Data.Custom.PsychSignal
             {
                 return null;
             }
+        }
+        
+        /// <summary>
+        /// Clones the data into a new object. We override this method to ensure
+        /// that class properties are cloned and not set to null during a cloning event
+        /// </summary>
+        /// <returns>New BaseData derived instance containing the same data as the original object</returns>
+        public override BaseData Clone()
+        {
+            return new PsychSignalSentimentData
+            {
+                Time = Time,
+                Symbol = Symbol,
+                BullIntensity = BullIntensity,
+                BearIntensity = BearIntensity,
+                BullMinusBear = BullMinusBear,
+                BullScoredMessages = BullScoredMessages,
+                BearScoredMessages = BearScoredMessages,
+                BullBearMessageRatio = BullBearMessageRatio,
+                TotalScoredMessages = TotalScoredMessages
+            };
         }
     }
 }

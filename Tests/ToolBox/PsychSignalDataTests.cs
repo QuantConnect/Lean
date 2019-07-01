@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.ToolBox
                 var hour = Convert.ToInt32(fileSplit[fileSplit.Length - 4]);
 
                 // Read one line of the file, and compare the hour of the day to the hour on the file
-                var line = File.ReadLines(file).ToList().Last().Split(',');
+                var line = File.ReadLines(file).Last().Split(',');
 
                 // SOURCE[0],SYMBOL[1],TIMESTAMP_UTC[2],BULLISH_INTENSITY[3],BEARISH_INTENSITY[4],BULL_MINUS_BEAR[5],BULL_SCORED_MESSAGES[6],BEAR_SCORED_MESSAGES[7],BULL_BEAR_MSG_RATIO[8],TOTAL_SCANNED_MESSAGES[9]
                 var date = DateTime.Parse(line[2]).ToUniversalTime();
