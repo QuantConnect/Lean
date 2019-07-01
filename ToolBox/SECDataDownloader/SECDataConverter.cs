@@ -33,8 +33,16 @@ using Formatting = Newtonsoft.Json.Formatting;
 
 namespace QuantConnect.ToolBox.SECDataDownloader
 {
+    /// <summary>
+    /// Converts SEC data from raw format (sourced from https://www.sec.gov/Archives/edgar/feed/)
+    /// to a format usable by LEAN. We do not do any XBRL parsing of the data. We only process
+    /// the metadata of the data so that it can be loaded onto LEAN. The parsing of the data is a task
+    /// left to the consumer of the data.
+    /// </summary>
     public class SECDataConverter
     {
+        private DirectoryInfo _tickerFolder;
+
         /// <summary>
         /// Raw data source path
         /// </summary>
@@ -59,63 +67,59 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// Keyed by ticker (CIK if ticker not found); contains SEC report(s) that we pass to <see cref="WriteReport"/>
         /// </summary>
         public ConcurrentDictionary<string, ConcurrentDictionary<DateTime, List<ISECReport>>> Reports = new ConcurrentDictionary<string, ConcurrentDictionary<DateTime, List<ISECReport>>>();
-
-        private DirectoryInfo _tickerFolder;
-
+        
+        /// <summary>
+        /// Public constructor creates CIK -> Ticker list from various sources
+        /// </summary>
+        /// <param name="rawSource">Source of raw data</param>
+        /// <param name="destination">Destination of formatted data</param>
+        /// <param name="tickerFolder">Known ticker folder</param>
         public SECDataConverter(string rawSource, string destination, string tickerFolder)
         {
             RawSource = rawSource;
             Destination = destination;
-
+            
             _tickerFolder = new DirectoryInfo(tickerFolder);
 
-            var data = File.ReadAllText(Path.Combine(RawSource, "cik-ticker-mappings.txt")).Trim();
-            var rankAndFileData = File.ReadAllText(Path.Combine(RawSource, "cik-ticker-mappings-rankandfile.txt")).Trim();
 
-            // Process data into dictionary of CIK -> List{T} of tickers
-            data.Split('\n')
-                .Select(x => x.Split('\t'))
-                .ToList()
-                .ForEach(
-                    tickerCik =>
-                    {
-                        // tickerCik[0] = symbol, tickerCik[1] = CIK
-                        // Note that SEC tickers come lowercase, so we don't have to alter the ticker
-                        var cikFormatted = tickerCik[1].PadLeft(10, '0');
+            foreach (var line in File.ReadLines(Path.Combine(RawSource, "cik-ticker-mappings.txt")))
+            {
+                // Process data into dictionary of CIK -> List{T} of tickers
+                var tickerCik = line.Split('\t');
 
-                        List<string> symbol;
-                        if (!CikTicker.TryGetValue(cikFormatted, out symbol))
-                        {
-                            symbol = new List<string>();
-                            CikTicker[cikFormatted] = symbol;
-                        }
+                // tickerCik[0] = symbol, tickerCik[1] = CIK
+                // Note that SEC tickers come in lowercase, so we don't have to alter the ticker
+                var cikFormatted = tickerCik[1].PadLeft(10, '0');
 
-                        symbol.Add(tickerCik[0]);
-                    }
-                );
+                List<string> symbol;
+                if (!CikTicker.TryGetValue(cikFormatted, out symbol))
+                {
+                    symbol = new List<string>();
+                    CikTicker[cikFormatted] = symbol;
+                }
+
+                symbol.Add(tickerCik[0]);
+            }
 
             // Merge both data sources to a single CIK -> List{T} of tickers
-            rankAndFileData.Split('\n')
-                .Select(x => x.Split('|'))
-                .ToList()
-                .ForEach(
-                    tickerInfo =>
-                    {
-                        var companyCik = tickerInfo[0].PadLeft(10, '0');
-                        var companyTicker = tickerInfo[1].ToLower();
+            foreach (var line in File.ReadLines(Path.Combine(RawSource, "cik-ticker-mappings-rankandfile.txt")))
+            {
+                var tickerInfo = line.Split('|');
 
-                        List<string> symbol;
-                        if (!CikTicker.TryGetValue(companyCik, out symbol))
-                        {
-                            symbol = new List<string>() { companyTicker };
-                            CikTicker[companyCik] = symbol;
-                        }
-                        else if (!symbol.Contains(companyTicker))
-                        {
-                            symbol.Add(companyTicker);
-                        }
-                    }
-                );
+                var companyCik = tickerInfo[0].PadLeft(10, '0');
+                var companyTicker = tickerInfo[1].ToLower();
+
+                List<string> symbol;
+                if (!CikTicker.TryGetValue(companyCik, out symbol))
+                {
+                    symbol = new List<string>() { companyTicker };
+                    CikTicker[companyCik] = symbol;
+                }
+                else if (!symbol.Contains(companyTicker))
+                {
+                    symbol.Add(companyTicker);
+                }
+            }
         }
 
         /// <summary>
@@ -125,6 +129,11 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// <param name="endDate">Ending date to stop processing files</param>
         public void Process(DateTime processingDate)
         {
+            if (!_tickerFolder.Exists)
+            {
+                throw new DirectoryNotFoundException("Known ticker folder does not exist.");
+            }
+
             var formattedDate = processingDate.ToString(DateFormat.EightCharacter);
             var remoteRawData = new FileInfo(Path.Combine(RawSource, $"{formattedDate}.nc.tar.gz"));
             if (!remoteRawData.Exists)
@@ -149,10 +158,12 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     Log.Trace($"SECDataConverter.Process(): Extracted SEC data to path {extractDataPath}");
                 }
             }
-
+            
+            // Create known ticker list from the data folder on disk used by LEAN
             var tickerList = _tickerFolder.EnumerateDirectories().AsParallel()
                 .Where(d => d.EnumerateFiles($"{formattedDate}*").Any())
-                .Select(d => d.Name);
+                .Select(d => d.Name)
+                .ToHashSet();
 
             Log.Trace($"SECDataConverter.Process(): Start processing..."); 
             // For the meantime, let's only process .nc files, and deal with correction files later.
@@ -250,15 +261,20 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     {
                         return;
                     }
+                    if (!File.Exists(Path.Combine(RawSource, "indexes", $"{companyCik}.json")))
+                    {
+                        Log.Error($"SECDataConverter.Process(): Failed to find index file for ticker {tickers.FirstOrDefault()} with CIK: {companyCik}");
+                        return;
+                    }
 
                     try
                     {
-                        // There can potentially not be an index file present for the given CIK
+                        // The index file can potentially be corrupted
                         GetPublicationDate(report, companyCik);
                     }
                     catch (Exception e)
                     {
-                        Log.Error(e, $"{report.Report.FilingDate:yyyy-MM-dd} - Index file not found for ticker: {tickers.FirstOrDefault()} with CIK: {companyCik}");
+                        Log.Error(e, $"SECDataConverter.Process(): {report.Report.FilingDate:yyyy-MM-dd} - Index file lookup failed for ticker: {tickers.FirstOrDefault()} with CIK: {companyCik}");
                     }
 
                     // Default to company CIK if no known ticker is found.
@@ -364,15 +380,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// <returns><see cref="Dictionary{TKey,TValue}"/> keyed by accession number containing publication date of SEC reports</returns>
         private Dictionary<string, DateTime> GetReportPublicationTimes(string cik)
         {
-            var indexFilePath = Path.Combine(RawSource, "indexes", $"{cik}.json");
-            var indexFileExists = File.Exists(indexFilePath);
-
-            if (!indexFileExists)
-            {
-                throw new Exception($"Submission not found for CIK: {cik}");
-            }
-
-            var index = JsonConvert.DeserializeObject<SECReportIndexFile>(File.ReadAllText(indexFilePath))
+            var index = JsonConvert.DeserializeObject<SECReportIndexFile>(File.ReadAllText(Path.Combine(RawSource, "indexes", $"{cik}.json")))
                 .Directory;
 
             // Sometimes, SEC folders results are duplicated. We check for duplicates
