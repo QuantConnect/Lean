@@ -221,9 +221,7 @@ namespace QuantConnect.ToolBox
                         SECDataDownloaderProgram.SECDataConverter(
                             GetParameterOrExit(optionsObject, "source-dir"),
                             GetParameterOrDefault(optionsObject, "destination-dir", secFolder),
-                            start,
-                            GetParameterOrDefault(optionsObject, "source-meta-dir", Path.Combine(equityFolder, Resolution.Tick.ToString().ToLower()))
-                        );
+                            start);
                         break;
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");

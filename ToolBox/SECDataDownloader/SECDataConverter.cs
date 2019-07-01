@@ -26,6 +26,8 @@ using System.Xml;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using Newtonsoft.Json;
+using QuantConnect.Data;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.SEC;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -41,8 +43,6 @@ namespace QuantConnect.ToolBox.SECDataDownloader
     /// </summary>
     public class SECDataConverter
     {
-        private DirectoryInfo _tickerFolder;
-
         /// <summary>
         /// Raw data source path
         /// </summary>
@@ -74,12 +74,10 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// <param name="rawSource">Source of raw data</param>
         /// <param name="destination">Destination of formatted data</param>
         /// <param name="tickerFolder">Known ticker folder (should be low resolution tick folder)</param>
-        public SECDataConverter(string rawSource, string destination, string tickerFolder)
+        public SECDataConverter(string rawSource, string destination)
         {
             RawSource = rawSource;
             Destination = destination;
-            
-            _tickerFolder = new DirectoryInfo(tickerFolder);
         }
 
         /// <summary>
@@ -89,11 +87,6 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// <param name="endDate">Ending date to stop processing files</param>
         public void Process(DateTime processingDate)
         {
-            if (!_tickerFolder.Exists)
-            {
-                throw new DirectoryNotFoundException("Known ticker folder does not exist.");
-            }
-
             // Process data into dictionary of CIK -> List{T} of tickers
             foreach (var line in File.ReadLines(Path.Combine(RawSource, "cik-ticker-mappings.txt")))
             {
@@ -146,14 +139,9 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             var localRawData = remoteRawData.CopyTo(tempPath);
             Log.Trace($"SECDataConverter.Process(): Copied raw data from {remoteRawData.FullName} - to: {tempPath}");
 
-            // Create known ticker list from the data folder on disk used by LEAN
-            var tickerList = _tickerFolder.EnumerateDirectories().AsParallel()
-                .Where(d => d.EnumerateFiles($"{formattedDate}*").Any())
-                .Select(d => d.Name)
-                .ToHashSet();
+            Log.Trace($"SECDataConverter.Process(): Start processing...");
 
-            Log.Trace($"SECDataConverter.Process(): Start processing..."); 
-
+            var mapFileResolver = MapFileResolver.Create(Globals.DataFolder, Market.USA);
             // For the meantime, let's only process .nc files, and deal with correction files later.
             Parallel.ForEach(
                 Compression.UnTar(localRawData.OpenRead(), isTarGz: true).Where(kvp => kvp.Key.EndsWith(".nc")),
@@ -268,8 +256,11 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 
                     // Default to company CIK if no known ticker is found.
                     // If we don't find a known equity in our list, the equity is probably not worth our time
-                    foreach (var ticker in tickers.Where(tickerList.Contains))
+                    foreach (var ticker in tickers)
                     {
+                        var tickerMapFile = mapFileResolver.ResolveMapFile(ticker, processingDate);
+                        if (tickerMapFile == null) continue;
+
                         var tickerReports = Reports.GetOrAdd(
                             ticker,
                             _ => new ConcurrentDictionary<DateTime, List<ISECReport>>()
