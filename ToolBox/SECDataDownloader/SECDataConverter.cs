@@ -73,7 +73,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// </summary>
         /// <param name="rawSource">Source of raw data</param>
         /// <param name="destination">Destination of formatted data</param>
-        /// <param name="tickerFolder">Known ticker folder</param>
+        /// <param name="tickerFolder">Known ticker folder (should be low resolution tick folder)</param>
         public SECDataConverter(string rawSource, string destination, string tickerFolder)
         {
             RawSource = rawSource;
@@ -139,25 +139,13 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             {
                 throw new Exception($"SECDataConverter.Process(): Raw data {remoteRawData} not found. No process can be done.");
             }
-
-            Log.Trace($"SECDataConverter.Process(): Copying raw data locally...");
-
-            var localRawData = remoteRawData.CopyTo(Path.Combine(Path.GetTempPath(), remoteRawData.Name));
-            var extractDataPath = Path.Combine(Path.GetTempPath(), formattedDate);
-
-            Log.Trace($"SECDataConverter.Process(): Extract raw data...");
-
-            using (var data = localRawData.OpenRead())
-            {
-                using (var archive = TarArchive.CreateInputTarArchive(new GZipInputStream(data)))
-                {
-                    Directory.CreateDirectory(extractDataPath);
-                    archive.ExtractContents(extractDataPath);
-
-                    Log.Trace($"SECDataConverter.Process(): Extracted SEC data to path {extractDataPath}");
-                }
-            }
             
+            // Copy the raw data to a temp path on disk
+            Log.Trace($"SECDataConverter.Process(): Copying raw data locally...");
+            var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            var localRawData = remoteRawData.CopyTo(tempPath);
+            Log.Trace($"SECDataConverter.Process(): Copied raw data from {remoteRawData.FullName} - to: {tempPath}");
+
             // Create known ticker list from the data folder on disk used by LEAN
             var tickerList = _tickerFolder.EnumerateDirectories().AsParallel()
                 .Where(d => d.EnumerateFiles($"{formattedDate}*").Any())
@@ -165,9 +153,10 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 .ToHashSet();
 
             Log.Trace($"SECDataConverter.Process(): Start processing..."); 
+
             // For the meantime, let's only process .nc files, and deal with correction files later.
             Parallel.ForEach(
-                Directory.GetFiles(extractDataPath, "*.nc", SearchOption.AllDirectories),
+                Compression.UnTar(localRawData.OpenRead(), isTarGz: true).Where(kvp => kvp.Key.EndsWith(".nc")),
                 rawReportFilePath =>
                 {
                     var factory = new SECReportFactory();
@@ -175,8 +164,9 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 
                     // We need to escape any nested XML to ensure our deserialization happens smoothly
                     var parsingText = false;
-
-                    foreach (var line in File.ReadLines(rawReportFilePath))
+                    
+                    // SEC data is line separated by UNIX style line endings. No need to worry about a carriage line here.
+                    foreach (var line in Encoding.UTF8.GetString(rawReportFilePath.Value).Split('\n'))
                     {
                         var newTextLine = line;
                         var currentTagName = GetTagNameFromLine(newTextLine);
@@ -241,7 +231,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     }
                     catch (XmlException e)
                     {
-                        Log.Error(e, $"SECDataConverter.Process(): Failed to parse XML from file path: {rawReportFilePath}");
+                        Log.Error(e, $"SECDataConverter.Process(): Failed to parse XML from file: {rawReportFilePath.Key}");
                         return;
                     }
                     catch (Exception e)
@@ -262,7 +252,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     }
                     if (!File.Exists(Path.Combine(RawSource, "indexes", $"{companyCik}.json")))
                     {
-                        Log.Error($"SECDataConverter.Process(): Failed to find index file for ticker {tickers.FirstOrDefault()} with CIK: {companyCik}");
+                        Log.Error($"SECDataConverter.Process(): {report.Report.FilingDate:yyyy-MM-dd}:{rawReportFilePath.Key} - Failed to find index file for ticker {tickers.FirstOrDefault()} with CIK: {companyCik}");
                         return;
                     }
 
@@ -273,7 +263,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     }
                     catch (Exception e)
                     {
-                        Log.Error(e, $"SECDataConverter.Process(): {report.Report.FilingDate:yyyy-MM-dd} - Index file lookup failed for ticker: {tickers.FirstOrDefault()} with CIK: {companyCik}");
+                        Log.Error(e, $"SECDataConverter.Process(): {report.Report.FilingDate:yyyy-MM-dd}:{rawReportFilePath.Key} - Index file loading failed for ticker: {tickers.FirstOrDefault()} with CIK: {companyCik} even though it exists");
                     }
 
                     // Default to company CIK if no known ticker is found.
@@ -307,10 +297,9 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     WriteReport(reports, ticker);
                 }
             );
-
-            // This will clean up after ourselves without having to pay
-            // the expense of deleting every single file inside the raw_data folder
-            Directory.Delete(extractDataPath, true);
+            
+            // Delete the raw data we copied to the temp folder
+            File.Delete(tempPath);
         }
 
 
