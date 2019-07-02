@@ -42,7 +42,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// </summary>
         public ConcurrentDictionary<long, GDAXFill> FillSplit { get; set; }
         private readonly string _passPhrase;
-        private const string SymbolMatching = "ETH|LTC|BTC|BCH";
+        private const string SymbolMatching = "ETH|LTC|BTC|BCH|XRP|EOS|XLM|ETC|ZRX";
         private readonly IAlgorithm _algorithm;
         private readonly CancellationTokenSource _canceller = new CancellationTokenSource();
         private readonly ConcurrentQueue<WebSocketMessage> _messageBuffer = new ConcurrentQueue<WebSocketMessage>();
@@ -101,7 +101,12 @@ namespace QuantConnect.Brokerages.GDAX
                     "LTCUSD", "LTCEUR", "LTCBTC",
                     "BTCUSD", "BTCEUR", "BTCGBP",
                     "ETHBTC", "ETHUSD", "ETHEUR",
-                    "BCHBTC", "BCHUSD", "BCHEUR"
+                    "BCHBTC", "BCHUSD", "BCHEUR",
+                    "XRPUSD", "XRPEUR", "XRPBTC",
+                    "EOSUSD", "EOSEUR", "EOSBTC",
+                    "XLMUSD", "XLMEUR", "XLMBTC",
+                    "ETCUSD", "ETCEUR", "ETCBTC",
+                    "ZRXUSD", "ZRXEUR", "ZRXBTC",
                 };
                 Subscribe(tickers.Select(ticker => Symbol.Create(ticker, SecurityType.Crypto, Market.GDAX)));
             };
