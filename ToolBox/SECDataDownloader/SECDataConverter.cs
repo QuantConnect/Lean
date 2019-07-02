@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Security;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using ICSharpCode.SharpZipLib.GZip;
@@ -142,9 +143,14 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             Log.Trace($"SECDataConverter.Process(): Start processing...");
 
             var mapFileResolver = MapFileResolver.Create(Globals.DataFolder, Market.USA);
+
+            var ncFilesRead = 0;
+            var startingTime = DateTime.Now;
+            var loopStartingTime = startingTime;
             // For the meantime, let's only process .nc files, and deal with correction files later.
             Parallel.ForEach(
                 Compression.UnTar(localRawData.OpenRead(), isTarGz: true).Where(kvp => kvp.Key.EndsWith(".nc")),
+                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount / 2},
                 rawReportFilePath =>
                 {
                     var factory = new SECReportFactory();
@@ -207,6 +213,14 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         xmlText.AppendLine(newTextLine);
                     }
 
+                    var counter = Interlocked.Increment(ref ncFilesRead);
+                    if (counter % 100 == 0)
+                    {
+                        var interval = DateTime.Now - loopStartingTime;
+                        Log.Trace($"SECDataConverter.Process(): {counter} nc files read at {100 / interval.TotalMinutes:N2} files/min.");
+                        loopStartingTime = DateTime.Now;
+                    }
+
                     ISECReport report;
                     try
                     {
@@ -238,6 +252,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     {
                         return;
                     }
+
                     if (!File.Exists(Path.Combine(RawSource, "indexes", $"{companyCik}.json")))
                     {
                         Log.Error($"SECDataConverter.Process(): {report.Report.FilingDate:yyyy-MM-dd}:{rawReportFilePath.Key} - Failed to find index file for ticker {tickers.FirstOrDefault()} with CIK: {companyCik}");
@@ -274,6 +289,8 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     }
                 }
             );
+
+            Log.Trace($"SECDataConverter.Process(): {ncFilesRead} nc files read finished in {DateTime.Now - startingTime:g}.");
 
             Parallel.ForEach(
                 Reports.Keys,
