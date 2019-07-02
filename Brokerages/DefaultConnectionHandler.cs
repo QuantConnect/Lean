@@ -17,19 +17,15 @@ using System;
 using System.Threading;
 using QuantConnect.Logging;
 
-namespace QuantConnect.ToolBox.CoinApi
+namespace QuantConnect.Brokerages
 {
     /// <summary>
     /// A default implementation of <see cref="IConnectionHandler"/>
     /// which signals disconnection if no data is received for a given time span
     /// and attempts to reconnect automatically.
     /// </summary>
-    public class DefaultConnectionHandler : IConnectionHandler, IDisposable
+    public class DefaultConnectionHandler : IConnectionHandler
     {
-        private readonly TimeSpan _maximumIdleTimeSpan = TimeSpan.FromSeconds(5);
-        private readonly int _minimumSecondsForNextReconnectionAttempt = 1;
-        private readonly int _maximumSecondsForNextReconnectionAttempt = 60;
-
         private CancellationTokenSource _cancellationTokenSource;
         private Thread _connectionMonitorThread;
 
@@ -54,10 +50,33 @@ namespace QuantConnect.ToolBox.CoinApi
         public event EventHandler ReconnectRequested;
 
         /// <summary>
+        /// The elapsed time with no received data after which a connection loss is reported
+        /// </summary>
+        public TimeSpan MaximumIdleTimeSpan { get; set; } = TimeSpan.FromSeconds(5);
+
+        /// <summary>
+        /// The minimum time in seconds to wait before attempting to reconnect
+        /// </summary>
+        public int MinimumSecondsForNextReconnectionAttempt { get; set; } = 1;
+
+        /// <summary>
+        /// The maximum time in seconds to wait before attempting to reconnect
+        /// </summary>
+        public int MaximumSecondsForNextReconnectionAttempt { get; set; } = 60;
+
+        /// <summary>
+        /// The unique Id for the connection
+        /// </summary>
+        public string ConnectionId { get; private set; }
+
+        /// <summary>
         /// Initializes the connection handler
         /// </summary>
-        public void Initialize()
+        /// <param name="connectionId">The connection id</param>
+        public void Initialize(string connectionId)
         {
+            ConnectionId = connectionId;
+
             var waitHandle = new ManualResetEvent(false);
 
             _cancellationTokenSource = new CancellationTokenSource();
@@ -67,7 +86,7 @@ namespace QuantConnect.ToolBox.CoinApi
                 waitHandle.Set();
 
                 var nextReconnectionAttemptUtcTime = DateTime.UtcNow;
-                var nextReconnectionAttemptSeconds = _minimumSecondsForNextReconnectionAttempt;
+                var nextReconnectionAttemptSeconds = MinimumSecondsForNextReconnectionAttempt;
 
                 lock (_lockerConnectionMonitor)
                 {
@@ -90,7 +109,7 @@ namespace QuantConnect.ToolBox.CoinApi
                                 elapsed = DateTime.UtcNow - _lastDataReceivedTime;
                             }
 
-                            if (!_connectionLost && elapsed > _maximumIdleTimeSpan)
+                            if (!_connectionLost && elapsed > MaximumIdleTimeSpan)
                             {
                                 _connectionLost = true;
                                 nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
@@ -99,10 +118,10 @@ namespace QuantConnect.ToolBox.CoinApi
                             }
                             else if (_connectionLost)
                             {
-                                if (elapsed <= _maximumIdleTimeSpan)
+                                if (elapsed <= MaximumIdleTimeSpan)
                                 {
                                     _connectionLost = false;
-                                    nextReconnectionAttemptSeconds = _minimumSecondsForNextReconnectionAttempt;
+                                    nextReconnectionAttemptSeconds = MinimumSecondsForNextReconnectionAttempt;
 
                                     OnConnectionRestored();
                                 }
@@ -111,7 +130,7 @@ namespace QuantConnect.ToolBox.CoinApi
                                     if (DateTime.UtcNow > nextReconnectionAttemptUtcTime)
                                     {
                                         // double the interval between attempts (capped to 1 minute)
-                                        nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, _maximumSecondsForNextReconnectionAttempt);
+                                        nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, MaximumSecondsForNextReconnectionAttempt);
                                         nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
 
                                         OnReconnectRequested();
@@ -192,6 +211,8 @@ namespace QuantConnect.ToolBox.CoinApi
         /// </summary>
         public void Dispose()
         {
+            _isEnabled = false;
+
             // request and wait for thread to stop
             _cancellationTokenSource?.Cancel();
             _connectionMonitorThread?.Join();

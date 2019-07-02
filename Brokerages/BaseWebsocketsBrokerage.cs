@@ -310,7 +310,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Represents a subscription channel
         /// </summary>
-        protected class Channel
+        public class Channel
         {
             /// <summary>
             /// The name of the channel

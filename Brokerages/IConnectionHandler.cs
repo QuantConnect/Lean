@@ -15,12 +15,12 @@
 
 using System;
 
-namespace QuantConnect.ToolBox.CoinApi
+namespace QuantConnect.Brokerages
 {
     /// <summary>
     /// Provides handling of a brokerage or data feed connection
     /// </summary>
-    public interface IConnectionHandler
+    public interface IConnectionHandler : IDisposable
     {
         /// <summary>
         /// Event that fires when a connection loss is detected
@@ -40,7 +40,8 @@ namespace QuantConnect.ToolBox.CoinApi
         /// <summary>
         /// Initializes the connection handler
         /// </summary>
-        void Initialize();
+        /// <param name="connectionId">The connection id</param>
+        void Initialize(string connectionId);
 
         /// <summary>
         /// Enables/disables monitoring of the connection
