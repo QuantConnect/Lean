@@ -92,7 +92,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             foreach (var line in File.ReadLines(Path.Combine(RawSource, "cik-ticker-mappings.txt")))
             {
                 var tickerCik = line.Split('\t');
-
+                var ticker = tickerCik[0];
                 // tickerCik[0] = symbol, tickerCik[1] = CIK
                 // Note that SEC tickers come in lowercase, so we don't have to alter the ticker
                 var cikFormatted = tickerCik[1].PadLeft(10, '0');
@@ -103,8 +103,12 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     symbol = new List<string>();
                     CikTicker[cikFormatted] = symbol;
                 }
-
-                symbol.Add(tickerCik[0]);
+                
+                // SEC data list contains a null value in the ticker.txt file
+                if (!string.IsNullOrEmpty(ticker))
+                {
+                    symbol.Add(tickerCik[0]);
+                }
             }
 
             // Merge both data sources to a single CIK -> List{T} of tickers
@@ -121,7 +125,8 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     symbol = new List<string>() { companyTicker };
                     CikTicker[companyCik] = symbol;
                 }
-                else if (!symbol.Contains(companyTicker))
+                // Add null check just in case data comes malformed
+                else if (!symbol.Contains(companyTicker) && !string.IsNullOrEmpty(companyTicker))
                 {
                     symbol.Add(companyTicker);
                 }
@@ -158,7 +163,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 
                     // We need to escape any nested XML to ensure our deserialization happens smoothly
                     var parsingText = false;
-                    
+
                     // SEC data is line separated by UNIX style line endings. No need to worry about a carriage line here.
                     foreach (var line in Encoding.UTF8.GetString(rawReportFilePath.Value).Split('\n'))
                     {
@@ -167,7 +172,10 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 
                         // This tag is present rarely in SEC reports, but is unclosed without value when encountered.
                         // Verified by searching with ripgrep for "CONFIRMING-COPY"
-                        if (currentTagName == "CONFIRMING-COPY")
+                        //
+                        // Sometimes, ASSIGNED-SIC contains no value and causes errors. Check to make sure that when
+                        // we encounter that tag we check if it has a value.
+                        if (currentTagName == "CONFIRMING-COPY" || (currentTagName == "ASSIGNED-SIC" && !HasValue(line)))
                         {
                             continue;
                         }
