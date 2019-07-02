@@ -66,14 +66,15 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
         /// <param name="endDateUtc">Ending date</param>
         public void Download(DateTime startDateUtc, DateTime endDateUtc)
         {
-            if (startDateUtc < endDateUtc.AddDays(-15))
+            var now = DateTime.UtcNow;
+            var nowHour = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
+            
+            Directory.CreateDirectory(_rawDataDestination);
+
+            if (startDateUtc < now.AddDays(-15))
             {
                 throw new ArgumentException("The starting date can only be at most 15 days from now");
             }
-
-            Directory.CreateDirectory(_rawDataDestination);
-            var now = DateTime.UtcNow;
-            var nowHour = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
 
             // Makes sure we only get final, non-changing data by checking if the end date is greater than 
             // or equal to the current time and setting it to an hour before the current time if the condition is met
