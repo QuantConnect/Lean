@@ -17,6 +17,8 @@ from requests import get as requests_get, Request
 from time import mktime
 from quantconnect import ApiConnection
 
+DOWNLOAD_CHUNK_SIZE = 256 * 1024
+
 class Api:
     """QuantConnect.com Interaction Via API.
     Attributes:
@@ -470,7 +472,7 @@ class Api:
             # download and save the data
             request = requests_get(link['link'], stream=True)
             with open(fileName + '.zip', "wb") as code:
-                for chunk in request.iter_content(None):
+                for chunk in request.iter_content(DOWNLOAD_CHUNK_SIZE):
                     code.write(chunk)
 
         return link['success']
