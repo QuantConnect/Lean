@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Moq;
 using NodaTime;
 using NUnit.Framework;
@@ -762,6 +761,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var transactionHandler = new TestBrokerageTransactionHandler();
             var broker = new Mock<IBrokerage>();
 
+            broker.Setup(m => m.CanPerformCashSynchronization).Returns(true);
             broker.Setup(m => m.GetCashBalance()).Returns(new List<CashAmount> { new CashAmount(10, Currencies.USD) });
             transactionHandler.Initialize(_algorithm, broker.Object, new BacktestingResultHandler());
             _algorithm.SetLiveMode(true);
@@ -790,6 +790,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var transactionHandler = new TestBrokerageTransactionHandler();
             var broker = new Mock<IBrokerage>();
 
+            broker.Setup(m => m.CanPerformCashSynchronization).Returns(true);
             broker.Setup(m => m.GetCashBalance()).Returns(new List<CashAmount> { new CashAmount(10, Currencies.USD) });
             transactionHandler.Initialize(_algorithm, broker.Object, new BacktestingResultHandler());
             _algorithm.SetLiveMode(true);
@@ -822,6 +823,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var transactionHandler = new TestBrokerageTransactionHandler();
             var broker = new Mock<IBrokerage>();
 
+            broker.Setup(m => m.CanPerformCashSynchronization).Returns(true);
             broker.Setup(m => m.GetCashBalance()).Returns(new List<CashAmount> { new CashAmount(10, Currencies.USD) });
 
             // This is 2 am New York
@@ -848,6 +850,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         {
             // simulate connect failure
             var ib = new Mock<IBrokerage>();
+            ib.Setup(m => m.CanPerformCashSynchronization).Returns(true);
             ib.Setup(m => m.GetCashBalance()).Callback(() => { throw new Exception("Connection error in CashBalance"); });
             ib.Setup(m => m.IsConnected).Returns(false);
 
