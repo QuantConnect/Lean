@@ -53,6 +53,84 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// Destination of formatted data
         /// </summary>
         public string Destination;
+        
+        /// <summary>
+        /// Whitelist of dates to not throw errors on if the file is missing.
+        /// Most of the dates are either Veterans Day or Columbus Day, but
+        /// sometimes there exists random days where the SEC doesn't publish reports
+        /// </summary>
+        public HashSet<DateTime> Holidays = new HashSet<DateTime>
+        {
+            new DateTime(1998, 10, 1),
+            new DateTime(1998, 10, 12),
+            new DateTime(1998, 11, 11),
+            new DateTime(1999, 10, 11),
+            new DateTime(1999, 9, 29),
+            new DateTime(1999, 9, 30),
+            new DateTime(1999, 11, 11),
+            new DateTime(1999, 12, 31),
+            new DateTime(2000, 10, 9),
+            new DateTime(2000, 11, 10),
+            new DateTime(2001, 10, 8),
+            new DateTime(2001, 11, 12),
+            new DateTime(2002, 1, 28),
+            new DateTime(2002, 5, 1),
+            new DateTime(2002, 10, 14),
+            new DateTime(2002, 11, 11),
+            new DateTime(2003, 10, 13),
+            new DateTime(2003, 11, 11),
+            new DateTime(2003, 12, 26),
+            new DateTime(2004, 10, 11),
+            new DateTime(2004, 11, 11),
+            new DateTime(2004, 12, 31),
+            new DateTime(2005, 10, 10),
+            new DateTime(2005, 11, 11),
+            new DateTime(2006, 10, 9),
+            new DateTime(2006, 11, 10),
+            new DateTime(2007, 10, 8),
+            new DateTime(2007, 11, 12),
+            new DateTime(2008, 10, 13),
+            new DateTime(2008, 11, 11),
+            new DateTime(2008, 12, 26),
+            new DateTime(2009, 10, 12),
+            new DateTime(2009, 11, 11),
+            new DateTime(2010, 10, 11),
+            new DateTime(2010, 11, 11),
+            new DateTime(2010, 12, 31),
+            new DateTime(2011, 10, 10),
+            new DateTime(2011, 11, 11),
+            new DateTime(2012, 10, 8),
+            new DateTime(2012, 11, 12),
+            new DateTime(2012, 12, 24),
+            new DateTime(2013, 10, 14),
+            new DateTime(2013, 11, 11),
+            new DateTime(2014, 10, 13),
+            new DateTime(2014, 11, 11),
+            new DateTime(2014, 12, 26),
+            new DateTime(2015, 10, 12),
+            new DateTime(2015, 11, 11),
+            new DateTime(2016, 10, 10),
+            new DateTime(2016, 11, 11),
+            new DateTime(2017, 10, 9),
+            new DateTime(2017, 11, 10),
+            new DateTime(2018, 10, 8),
+            new DateTime(2018, 11, 7),
+            new DateTime(2018, 12, 24),
+            new DateTime(2019, 10, 14),
+            new DateTime(2019, 11, 11),
+            new DateTime(2020, 10, 12),
+            new DateTime(2020, 11, 11),
+            new DateTime(2021, 10, 11),
+            new DateTime(2021, 11, 11),
+            new DateTime(2022, 10, 10),
+            new DateTime(2022, 11, 11),
+            new DateTime(2023, 10, 9),
+            new DateTime(2023, 11, 10),
+            new DateTime(2024, 10, 14),
+            new DateTime(2024, 11, 11),
+            new DateTime(2025, 10, 13),
+            new DateTime(2025, 11, 11)
+        };
 
         /// <summary>
         /// Assets keyed by CIK used to resolve underlying ticker 
@@ -136,6 +214,11 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             var remoteRawData = new FileInfo(Path.Combine(RawSource, $"{formattedDate}.nc.tar.gz"));
             if (!remoteRawData.Exists)
             {
+                if (Holidays.Contains(processingDate))
+                {
+                    Log.Trace("SECDataConverter.Process(): File is missing but it was expected. Nothing to do.");
+                    return;
+                }
                 throw new Exception($"SECDataConverter.Process(): Raw data {remoteRawData} not found. No process can be done.");
             }
             
