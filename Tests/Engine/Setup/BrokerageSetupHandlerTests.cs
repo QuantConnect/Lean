@@ -485,7 +485,10 @@ namespace QuantConnect.Tests.Engine.Setup
             throw new NotImplementedException();
         }
 
-        public bool AccountInstantlyUpdated { get; }
+        public bool AccountInstantlyUpdated { get; } = false;
+
+        public bool CanPerformCashSynchronization { get; } = false;
+
         public IEnumerable<BaseData> GetHistory(HistoryRequest request)
         {
             throw new NotImplementedException();

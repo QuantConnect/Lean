@@ -212,10 +212,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Specifies whether the brokerage will instantly update account balances
         /// </summary>
-        public virtual bool AccountInstantlyUpdated
-        {
-            get { return false; }
-        }
+        public virtual bool AccountInstantlyUpdated => false;
+
+        /// <summary>
+        /// Returns whether the brokerage can perform synchronization of account balances at the current time
+        /// </summary>
+        public virtual bool CanPerformCashSynchronization => true;
 
         /// <summary>
         /// Gets the history for the requested security

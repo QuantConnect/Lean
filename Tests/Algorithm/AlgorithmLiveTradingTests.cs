@@ -87,7 +87,8 @@ namespace QuantConnect.Tests.Algorithm
             public bool CancelOrder(Order order) { return true; }
             public void Connect() {}
             public void Disconnect() {}
-            public bool AccountInstantlyUpdated { get; } = true;
+            public bool AccountInstantlyUpdated { get; } = false;
+            public bool CanPerformCashSynchronization { get; } = false;
             public IEnumerable<BaseData> GetHistory(HistoryRequest request) { return Enumerable.Empty<BaseData>(); }
         }
     }

@@ -540,6 +540,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
+        /// Returns whether the brokerage can perform synchronization of account balances at the current time
+        /// </summary>
+        public override bool CanPerformCashSynchronization => !IsWithinScheduledServerResetTimes();
+
+        /// <summary>
         /// Gets the execution details matching the filter
         /// </summary>
         /// <returns>A list of executions matching the filter</returns>

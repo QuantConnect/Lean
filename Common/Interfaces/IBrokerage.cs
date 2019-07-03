@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
@@ -112,6 +111,11 @@ namespace QuantConnect.Interfaces
         /// Specifies whether the brokerage will instantly update account balances
         /// </summary>
         bool AccountInstantlyUpdated { get; }
+
+        /// <summary>
+        /// Returns whether the brokerage can perform synchronization of account balances at the current time
+        /// </summary>
+        bool CanPerformCashSynchronization { get; }
 
         /// <summary>
         /// Gets the history for the requested security

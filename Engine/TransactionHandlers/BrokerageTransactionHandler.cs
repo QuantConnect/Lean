@@ -629,6 +629,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     return false;
                 }
 
+                // check if the brokerage is able to perform cash sync at this time
+                try
+                {
+                    if (!_brokerage.CanPerformCashSynchronization)
+                    {
+                        Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Reentrant call, cash sync not performed");
+                        _syncedLiveBrokerageCashToday = true;
+                        _lastSyncTimeTicks = CurrentTimeUtc.Ticks;
+                        return true;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception, "Error in CanPerformCashSynchronization:");
+                }
+
                 Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Sync cash balance");
 
                 var balances = new List<CashAmount>();
@@ -685,6 +701,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         _algorithm.Portfolio.CashBook[cash.Symbol].SetAmount(0);
                     }
                 }
+
                 _syncedLiveBrokerageCashToday = true;
                 _lastSyncTimeTicks = CurrentTimeUtc.Ticks;
             }
