@@ -45,7 +45,9 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             _destinationDirectory = new DirectoryInfo(destinationDirectory);
 
             _fileHandles = new Dictionary<string, TickerData>();
-            _knownTickers = Directory.GetFiles(knownTickerFolder, "*.zip").Select(Path.GetFileNameWithoutExtension).ToHashSet();
+            _knownTickers = Directory.GetDirectories(knownTickerFolder)
+                .Select(Path.GetFileName)
+                .ToHashSet();
 
             _destinationDirectory.Create();
         }
@@ -65,6 +67,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 throw new ObjectDisposedException("PsychSignalDataConverter has already been disposed");
             }
 
+            Log.Trace($"PsychSignalDataConverter.Convert(): Begin converting {sourceFilePath.FullName}");
             var file = File.ReadLines(sourceFilePath.FullName);
 
             foreach (var line in file)
@@ -149,7 +152,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                     }
                 )
                 .OrderBy(x => DateTime.ParseExact(x.Name.Substring(0, 11), "yyyyMMdd_HH", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal));
-
+            
             foreach (var rawFile in files)
             {
                 Convert(rawFile);
@@ -169,13 +172,12 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 throw new ObjectDisposedException("PsychSignalDataConverter has already been disposed");
             }
 
-            var finalPath = Path.Combine(Globals.DataFolder, "alternative", "psychsignal");
-            foreach (var tickerFolder in Directory.GetDirectories(finalPath))
+            foreach (var tickerFolder in _destinationDirectory.GetDirectories())
             {
-                foreach (var dataFile in Directory.GetFiles(tickerFolder, "*.csv", SearchOption.TopDirectoryOnly))
+                foreach (var dataFile in tickerFolder.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
                 {
-                    Compression.Zip(dataFile, deleteOriginal: true);
-                    Log.Trace($"PsychSignalDataConverter.CompressData(): Successfully compressed: {dataFile}");
+                    Compression.Zip(dataFile.FullName, deleteOriginal: true);
+                    Log.Trace($"PsychSignalDataConverter.CompressData(): Successfully compressed: {tickerFolder}/{dataFile}");
                 }
             }
         }
@@ -192,6 +194,35 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             private StreamWriter _writer;
             private string _tempPath;
             private DateTime _date;
+            
+            /// <summary>
+            /// Windows filesystem forbids the following names as directory or file names
+            /// </summary>
+            private List<string> _forbiddenTickers = new List<string>
+            {
+                "con",
+                "prn",
+                "aux",
+                "nul",
+                "com1",
+                "com2",
+                "com3",
+                "com4",
+                "com5",
+                "com6",
+                "com7",
+                "com8",
+                "com9",
+                "lpt1",
+                "lpt2",
+                "lpt3",
+                "lpt4",
+                "lpt5",
+                "lpt6",
+                "lpt7",
+                "lpt8",
+                "lpt9"
+            };
 
             /// <summary>
             /// Creates writer instances and saves file path.
@@ -208,6 +239,11 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 _tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
                 _writer = new StreamWriter(_tempPath);
                 _destinationDirectory = destinationDirectory;
+
+                if (OS.IsWindows && _forbiddenTickers.Contains(_ticker))
+                {
+                    _ticker += "_";
+                }
             }
             
             /// <summary>
@@ -242,7 +278,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 var writePath = Path.Combine(tickerDirectory, $"{_date:yyyyMMdd}.csv");
 
                 Directory.CreateDirectory(tickerDirectory);
-
+                
                 // We only want the latest version of the data
                 if (File.Exists(writePath))
                 {
@@ -251,7 +287,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 }
 
                 File.Move(_tempPath, writePath);
-                Log.Trace($"PsychSignalDataConverter.TickerData.MoveTempFile(): Finished writing file: {Path.Combine(_destinationDirectory.FullName, _ticker, $"{_date:yyyyMMdd}.csv")}");
+                Log.Trace($"PsychSignalDataConverter.TickerData.MoveTempFile(): Finished writing file: {writePath}");
             }
 
             /// <summary>
