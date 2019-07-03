@@ -215,12 +215,10 @@ namespace QuantConnect.ToolBox
                         break;
                     case "seccv":
                     case "secconverter":
-                        var secFolder = Path.Combine(Globals.DataFolder, "alternative", "sec");
-                        var equityFolder = Path.Combine(Globals.DataFolder, "equity", Market.USA);
                         var start = DateTime.ParseExact(GetParameterOrExit(optionsObject, "start"), "yyyyMMdd", CultureInfo.InvariantCulture);
                         SECDataDownloaderProgram.SECDataConverter(
                             GetParameterOrExit(optionsObject, "source-dir"),
-                            GetParameterOrDefault(optionsObject, "destination-dir", secFolder),
+                            GetParameterOrDefault(optionsObject, "destination-dir", Globals.DataFolder),
                             start);
                         break;
                     default:
