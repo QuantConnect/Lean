@@ -175,7 +175,15 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         //
                         // Sometimes, ASSIGNED-SIC contains no value and causes errors. Check to make sure that when
                         // we encounter that tag we check if it has a value.
-                        if (currentTagName == "CONFIRMING-COPY" || (currentTagName == "ASSIGNED-SIC" && !HasValue(line)))
+                        //
+                        // "Appearance of the <FLAWED> tag  in
+                        //  an EX-27  document header signals unreliable tagging within  the
+                        //  following  document text stream; however, in  the absence  of a
+                        //  <FLAWED>  tag, tagging is still not guaranteed to  be complete
+                        //  because of  allowance in the financial data specifications  for
+                        //  omitted tags when the submission also includes a financial  data
+                        //  schedule  of article type CT."
+                        if (currentTagName == "CONFIRMING-COPY" || (currentTagName == "ASSIGNED-SIC" && !HasValue(line)) || currentTagName == "FLAWED")
                         {
                             continue;
                         }
