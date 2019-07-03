@@ -290,10 +290,10 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     foreach (var ticker in tickers)
                     {
                         var tickerMapFile = mapFileResolver.ResolveMapFile(ticker, processingDate);
-                        if (tickerMapFile == null) continue;
+                        if (!tickerMapFile.Any()) continue;
 
                         var tickerReports = Reports.GetOrAdd(
-                            ticker,
+                            tickerMapFile.GetMappedSymbol(processingDate),
                             _ => new ConcurrentDictionary<DateTime, List<ISECReport>>()
                         );
                         var reports = tickerReports.GetOrAdd(
