@@ -340,7 +340,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         public void WriteReport(List<ISECReport> reports, string ticker)
         {
             var report = reports.First();
-            var reportPath = Path.Combine(Destination, ticker.ToLower(), $"{report.Report.FilingDate:yyyyMMdd}");
+            var reportPath = Path.Combine(Destination, "alternative", "sec", ticker.ToLower(), $"{report.Report.FilingDate:yyyyMMdd}");
             var formTypeNormalized = report.Report.FormType.Replace("-", "");
             var reportFilePath = $"{reportPath}_{formTypeNormalized}";
             var reportFile = Path.Combine(reportFilePath, $"{formTypeNormalized}.json");
