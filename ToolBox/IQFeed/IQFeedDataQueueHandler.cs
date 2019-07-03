@@ -311,210 +311,451 @@ namespace QuantConnect.ToolBox.IQFeed
         }
 
         /// <summary>
-        /// Admin class type
+        /// Method returns a collection of Symbols that are available at the data source.
         /// </summary>
-        public class AdminPort : IQAdminSocketClient
+        /// <param name="lookupName">String representing the name to lookup</param>
+        /// <param name="securityType">Expected security type of the returned symbols (if any)</param>
+        /// <param name="securityCurrency">Expected security currency(if any)</param>
+        /// <param name="securityExchange">Expected security exchange name(if any)</param>
+        /// <returns></returns>
+        public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, string securityCurrency = null, string securityExchange = null)
         {
-            public AdminPort()
-                : base(80)
+            return _symbolUniverse.LookupSymbols(lookupName, securityType, securityCurrency, securityExchange);
+        }
+    }
+
+    /// <summary>
+    /// Admin class type
+    /// </summary>
+    public class AdminPort : IQAdminSocketClient
+    {
+        public AdminPort()
+            : base(80)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Level 1 Data Request:
+    /// </summary>
+    public class Level1Port : IQLevel1Client
+    {
+        private int count;
+        private DateTime start;
+        private DateTime _feedTime;
+        private Stopwatch _stopwatch = new Stopwatch();
+        private readonly Timer _timer;
+        private readonly BlockingCollection<BaseData> _dataQueue;
+        private readonly ConcurrentDictionary<string, double> _prices;
+        private readonly ConcurrentDictionary<string, int> _openInterests;
+        private readonly IQFeedDataQueueUniverseProvider _symbolUniverse;
+
+        public DateTime FeedTime
+        {
+            get
             {
+                if (_feedTime == new DateTime()) return DateTime.Now;
+                return _feedTime.AddMilliseconds(_stopwatch.ElapsedMilliseconds);
+            }
+            set
+            {
+                _feedTime = value;
+                _stopwatch = Stopwatch.StartNew();
+            }
+        }
+
+        public Level1Port(BlockingCollection<BaseData> dataQueue, IQFeedDataQueueUniverseProvider symbolUniverse)
+            : base(80)
+        {
+            start = DateTime.Now;
+            _prices = new ConcurrentDictionary<string, double>();
+            _openInterests = new ConcurrentDictionary<string, int>();
+
+            _dataQueue = dataQueue;
+            _symbolUniverse = symbolUniverse;
+            Level1SummaryUpdateEvent += OnLevel1SummaryUpdateEvent;
+            Level1TimerEvent += OnLevel1TimerEvent;
+            Level1ServerDisconnectedEvent += OnLevel1ServerDisconnected;
+            Level1ServerReconnectFailed += OnLevel1ServerReconnectFailed;
+            Level1UnknownEvent += OnLevel1UnknownEvent;
+            Level1FundamentalEvent += OnLevel1FundamentalEvent;
+
+            _timer = new Timer(1000);
+            _timer.Enabled = false;
+            _timer.AutoReset = true;
+            _timer.Elapsed += (sender, args) =>
+            {
+                var ticksPerSecond = count / (DateTime.Now - start).TotalSeconds;
+                if (ticksPerSecond > 1000 || _dataQueue.Count > 31)
+                {
+                    Log.Trace(string.Format("IQFeed.OnSecond(): Ticks/sec: {0} Engine.Ticks.Count: {1} CPU%: {2}",
+                        ticksPerSecond.ToString("0000.00"),
+                        _dataQueue.Count,
+                        OS.CpuUsage.ToString("0.0") + "%"
+                        ));
+                }
+
+                count = 0;
+                start = DateTime.Now;
+            };
+
+            _timer.Enabled = true;
+        }
+
+        private Symbol GetLeanSymbol(string ticker)
+        {
+            return _symbolUniverse.GetLeanSymbol(ticker, SecurityType.Base, null);
+        }
+
+        private void OnLevel1FundamentalEvent(object sender, Level1FundamentalEventArgs e)
+        {
+            // handle split data, they're only valid today, they'll show up around 4:45am EST
+            if (e.SplitDate1.Date == DateTime.Today && DateTime.Now.TimeOfDay.TotalHours <= 8) // they will always be sent premarket
+            {
+                // get the last price, if it doesn't exist then we'll just issue the split claiming the price was zero
+                // this should (ideally) never happen, but sending this without the price is much better then not sending
+                // it at all
+                double referencePrice;
+                _prices.TryGetValue(e.Symbol, out referencePrice);
+
+                var symbol = GetLeanSymbol(e.Symbol);
+                var split = new Split(symbol, FeedTime, (decimal)referencePrice, (decimal)e.SplitFactor1, SplitType.SplitOccurred);
+                _dataQueue.Add(split);
             }
         }
 
         /// <summary>
-        /// Level 1 Data Request:
+        /// Handle a new price update packet:
         /// </summary>
-        public class Level1Port : IQLevel1Client
+        private void OnLevel1SummaryUpdateEvent(object sender, Level1SummaryUpdateEventArgs e)
         {
-            private int count;
-            private DateTime start;
-            private DateTime _feedTime;
-            private Stopwatch _stopwatch = new Stopwatch();
-            private readonly Timer _timer;
-            private readonly BlockingCollection<BaseData> _dataQueue;
-            private readonly ConcurrentDictionary<string, double> _prices;
-            private readonly ConcurrentDictionary<string, int> _openInterests;
-            private readonly IQFeedDataQueueUniverseProvider _symbolUniverse;
+            // if ticker is not found, unsubscribe
+            if (e.NotFound) Unsubscribe(e.Symbol);
 
-            public DateTime FeedTime
+            // only update if we have a value
+            if (e.Last == 0) return;
+
+            // only accept trade and B/A updates
+            if (e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.ExtendedTrade
+             && e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.Trade
+             && e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.Bid
+             && e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.Ask) return;
+
+            count++;
+            var time = FeedTime;
+            var last = (decimal)(e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.ExtendedTrade ? e.ExtendedTradingLast : e.Last);
+
+            var symbol = GetLeanSymbol(e.Symbol);
+
+            TickType tradeType;
+
+            switch (symbol.ID.SecurityType)
             {
-                get
-                {
-                    if (_feedTime == new DateTime()) return DateTime.Now;
-                    return _feedTime.AddMilliseconds(_stopwatch.ElapsedMilliseconds);
-                }
-                set
-                {
-                    _feedTime = value;
-                    _stopwatch = Stopwatch.StartNew();
-                }
+                // the feed time is in NYC/EDT, convert it into EST
+                case SecurityType.Forex:
+
+                    time = FeedTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
+                    // TypeOfUpdate always equal to UpdateType.Trade for FXCM, but the message contains B/A and last data
+                    tradeType = TickType.Quote;
+
+                    break;
+
+                // for all other asset classes we leave it as is (NYC/EDT)
+                default:
+
+                    time = FeedTime;
+                    tradeType = e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.Bid ||
+                                e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.Ask ?
+                                TickType.Quote :
+                                TickType.Trade;
+                    break;
             }
 
-            public Level1Port(BlockingCollection<BaseData> dataQueue, IQFeedDataQueueUniverseProvider symbolUniverse)
-                : base(80)
+            var tick = new Tick(time, symbol, last, (decimal)e.Bid, (decimal)e.Ask)
             {
-                start = DateTime.Now;
-                _prices = new ConcurrentDictionary<string, double>();
-                _openInterests = new ConcurrentDictionary<string, int>();
+                AskSize = e.AskSize,
+                BidSize = e.BidSize,
+                Quantity = e.IncrementalVolume,
+                TickType = tradeType,
+                DataType = MarketDataType.Tick
+            };
 
-                _dataQueue = dataQueue;
-                _symbolUniverse = symbolUniverse;
-                Level1SummaryUpdateEvent += OnLevel1SummaryUpdateEvent;
-                Level1TimerEvent += OnLevel1TimerEvent;
-                Level1ServerDisconnectedEvent += OnLevel1ServerDisconnected;
-                Level1ServerReconnectFailed += OnLevel1ServerReconnectFailed;
-                Level1UnknownEvent += OnLevel1UnknownEvent;
-                Level1FundamentalEvent += OnLevel1FundamentalEvent;
+            _dataQueue.Add(tick);
+            _prices[e.Symbol] = e.Last;
 
-                _timer = new Timer(1000);
-                _timer.Enabled = false;
-                _timer.AutoReset = true;
-                _timer.Elapsed += (sender, args) =>
+            if (symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.Future)
+            {
+                if (!_openInterests.ContainsKey(e.Symbol) || _openInterests[e.Symbol] != e.OpenInterest)
                 {
-                    var ticksPerSecond = count / (DateTime.Now - start).TotalSeconds;
-                    if (ticksPerSecond > 1000 || _dataQueue.Count > 31)
+                    var oi = new OpenInterest(time, symbol, e.OpenInterest);
+                    _dataQueue.Add(oi);
+
+                    _openInterests[e.Symbol] = e.OpenInterest;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Set the interal clock time.
+        /// </summary>
+        private void OnLevel1TimerEvent(object sender, Level1TimerEventArgs e)
+        {
+            //If there was a bad tick and the time didn't set right, skip setting it here and just use our millisecond timer to set the time from last time it was set.
+            if (e.DateTimeStamp != DateTime.MinValue)
+            {
+                FeedTime = e.DateTimeStamp;
+            }
+        }
+
+        /// <summary>
+        /// Server has disconnected, reconnect.
+        /// </summary>
+        private void OnLevel1ServerDisconnected(object sender, Level1ServerDisconnectedArgs e)
+        {
+            Log.Error("IQFeed.OnLevel1ServerDisconnected(): LEVEL 1 PORT DISCONNECTED! " + e.TextLine);
+        }
+
+        /// <summary>
+        /// Server has disconnected, reconnect.
+        /// </summary>
+        private void OnLevel1ServerReconnectFailed(object sender, Level1ServerReconnectFailedArgs e)
+        {
+            Log.Error("IQFeed.OnLevel1ServerReconnectFailed(): LEVEL 1 PORT DISCONNECT! " + e.TextLine);
+        }
+
+        /// <summary>
+        /// Got a message we don't know about, log it for posterity.
+        /// </summary>
+        private void OnLevel1UnknownEvent(object sender, Level1TextLineEventArgs e)
+        {
+            Log.Error("IQFeed.OnUnknownEvent(): " + e.TextLine);
+        }
+    }
+
+    // this type is expected to be used for exactly one job at a time
+    public class HistoryPort : IQLookupHistorySymbolClient
+    {
+        private bool _inProgress;
+        private ConcurrentDictionary<string, HistoryRequest> _requestDataByRequestId;
+        private ConcurrentDictionary<string, List<BaseData>> _currentRequest;
+        private readonly string DataDirectory = Config.Get("data-directory", "../../../Data");
+        private readonly double MaxHistoryRequestMinutes = Config.GetDouble("max-history-minutes", 5);
+        private readonly IQFeedDataQueueUniverseProvider _symbolUniverse;
+
+        /// <summary>
+        /// ...
+        /// </summary>
+        public HistoryPort(IQFeedDataQueueUniverseProvider symbolUniverse)
+            : base(80)
+        {
+            _symbolUniverse = symbolUniverse;
+            _requestDataByRequestId = new ConcurrentDictionary<string, HistoryRequest>();
+            _currentRequest = new ConcurrentDictionary<string, List<BaseData>>();
+        }
+
+        /// <summary>
+        /// ...
+        /// </summary>
+        public HistoryPort(IQFeedDataQueueUniverseProvider symbolUniverse, int maxDataPoints, int dataPointsPerSend)
+            : this(symbolUniverse)
+        {
+            MaxDataPoints = maxDataPoints;
+            DataPointsPerSend = dataPointsPerSend;
+        }
+
+        /// <summary>
+        /// Returns true if this data provide can handle the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol to be handled</param>
+        /// <returns>True if this data provider can get data for the symbol, false otherwise</returns>
+        private bool CanHandle(Symbol symbol)
+        {
+            var market = symbol.ID.Market;
+            var securityType = symbol.ID.SecurityType;
+            return
+                (securityType == SecurityType.Equity && market == Market.USA) ||
+                (securityType == SecurityType.Forex && market == Market.FXCM) ||
+                (securityType == SecurityType.Option && market == Market.USA) ||
+                (securityType == SecurityType.Future);
+        }
+
+        /// <summary>
+        /// Populate request data
+        /// </summary>
+        public IEnumerable<Slice> ProcessHistoryRequests(HistoryRequest request)
+        {
+            // skipping universe and canonical symbols
+            if (!CanHandle(request.Symbol) ||
+                (request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.IsCanonical()) ||
+                (request.Symbol.ID.SecurityType == SecurityType.Future && request.Symbol.IsCanonical()))
+            {
+                yield break;
+            }
+
+            // Set this process status
+            _inProgress = true;
+
+            var ticker = _symbolUniverse.GetBrokerageSymbol(request.Symbol);
+            var start = request.StartTimeUtc.ConvertFromUtc(TimeZones.NewYork);
+            DateTime? end = request.EndTimeUtc.ConvertFromUtc(TimeZones.NewYork);
+            // if we're within a minute of now, don't set the end time
+            if (request.EndTimeUtc >= DateTime.UtcNow.AddMinutes(-1))
+            {
+                end = null;
+            }
+
+            Log.Trace(string.Format("HistoryPort.ProcessHistoryJob(): Submitting request: {0}-{1}: {2} {3}->{4}", request.Symbol.SecurityType, ticker, request.Resolution, start, end ?? DateTime.UtcNow.AddMinutes(-1)));
+
+            int id;
+            var reqid = string.Empty;
+
+            switch (request.Resolution)
+            {
+                case Resolution.Tick:
+                    id = RequestTickData(ticker, start, end, true);
+                    reqid = CreateRequestID(LookupType.REQ_HST_TCK, id);
+                    break;
+                case Resolution.Daily:
+                    id = RequestDailyData(ticker, start, end, true);
+                    reqid = CreateRequestID(LookupType.REQ_HST_DWM, id);
+                    break;
+                default:
+                    var interval = new Interval(GetPeriodType(request.Resolution), 1);
+                    id = RequestIntervalData(ticker, interval, start, end, true);
+                    reqid = CreateRequestID(LookupType.REQ_HST_INT, id);
+                    break;
+            }
+
+            _requestDataByRequestId[reqid] = request;
+
+            while (_inProgress)
+            {
+                continue;
+            }
+
+            // After all data arrive, we pass it to the algorithm through memory and write to a file
+            foreach (var key in _currentRequest.Keys)
+            {
+                List<BaseData> tradeBars;
+                if (_currentRequest.TryRemove(key, out tradeBars))
+                {
+                    foreach (var tradeBar in tradeBars)
                     {
-                        Log.Trace(string.Format("IQFeed.OnSecond(): Ticks/sec: {0} Engine.Ticks.Count: {1} CPU%: {2}",
-                            ticksPerSecond.ToString("0000.00"),
-                            _dataQueue.Count,
-                            OS.CpuUsage.ToString("0.0") + "%"
-                            ));
+                        // Returns IEnumerable<Slice> object
+                        yield return new Slice(tradeBar.EndTime, new[] { tradeBar });
                     }
-
-                    count = 0;
-                    start = DateTime.Now;
-                };
-
-                _timer.Enabled = true;
-            }
-
-            private Symbol GetLeanSymbol(string ticker)
-            {
-                return _symbolUniverse.GetLeanSymbol(ticker, SecurityType.Base, null);
-            }
-
-            private void OnLevel1FundamentalEvent(object sender, Level1FundamentalEventArgs e)
-            {
-                // handle split data, they're only valid today, they'll show up around 4:45am EST
-                if (e.SplitDate1.Date == DateTime.Today && DateTime.Now.TimeOfDay.TotalHours <= 8) // they will always be sent premarket
-                {
-                    // get the last price, if it doesn't exist then we'll just issue the split claiming the price was zero
-                    // this should (ideally) never happen, but sending this without the price is much better then not sending
-                    // it at all
-                    double referencePrice;
-                    _prices.TryGetValue(e.Symbol, out referencePrice);
-
-                    var symbol = GetLeanSymbol(e.Symbol);
-                    var split = new Split(symbol, FeedTime, (decimal)referencePrice, (decimal)e.SplitFactor1, SplitType.SplitOccurred);
-                    _dataQueue.Add(split);
                 }
             }
+        }
 
-            /// <summary>
-            /// Handle a new price update packet:
-            /// </summary>
-            private void OnLevel1SummaryUpdateEvent(object sender, Level1SummaryUpdateEventArgs e)
+        /// <summary>
+        /// Created new request ID for a given lookup type (tick, intraday bar, daily bar)
+        /// </summary>
+        /// <param name="lookupType">Lookup type: REQ_HST_TCK (tick), REQ_HST_DWM (daily) or REQ_HST_INT (intraday resolutions)</param>
+        /// <param name="id">Sequential identifier</param>
+        /// <returns></returns>
+        private static string CreateRequestID(LookupType lookupType, int id)
+        {
+            return lookupType + id.ToString("0000000");
+        }
+
+
+        /// <summary>
+        /// Method called when a new Lookup event is fired
+        /// </summary>
+        /// <param name="e">Received data</param>
+        protected override void OnLookupEvent(LookupEventArgs e)
+        {
+            try
             {
-                // if ticker is not found, unsubscribe
-                if (e.NotFound) Unsubscribe(e.Symbol);
-
-                // only update if we have a value
-                if (e.Last == 0) return;
-
-                // only accept trade and B/A updates
-                if (e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.ExtendedTrade
-                 && e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.Trade
-                 && e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.Bid
-                 && e.TypeOfUpdate != Level1SummaryUpdateEventArgs.UpdateType.Ask) return;
-
-                count++;
-                var time = FeedTime;
-                var last = (decimal)(e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.ExtendedTrade ? e.ExtendedTradingLast : e.Last);
-
-                var symbol = GetLeanSymbol(e.Symbol);
-
-                TickType tradeType;
-
-                switch (symbol.ID.SecurityType)
+                switch (e.Sequence)
                 {
-                    // the feed time is in NYC/EDT, convert it into EST
-                    case SecurityType.Forex:
-
-                        time = FeedTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                        // TypeOfUpdate always equal to UpdateType.Trade for FXCM, but the message contains B/A and last data
-                        tradeType = TickType.Quote;
-
+                    case LookupSequence.MessageStart:
+                        _currentRequest.AddOrUpdate(e.Id, new List<BaseData>());
                         break;
-
-                    // for all other asset classes we leave it as is (NYC/EDT)
+                    case LookupSequence.MessageDetail:
+                        List<BaseData> current;
+                        if (_currentRequest.TryGetValue(e.Id, out current))
+                        {
+                            HandleMessageDetail(e, current);
+                        }
+                        break;
+                    case LookupSequence.MessageEnd:
+                        _inProgress = false;
+                        break;
                     default:
-
-                        time = FeedTime;
-                        tradeType = e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.Bid ||
-                                    e.TypeOfUpdate == Level1SummaryUpdateEventArgs.UpdateType.Ask ?
-                                    TickType.Quote :
-                                    TickType.Trade;
-                        break;
-                }
-
-                var tick = new Tick(time, symbol, last, (decimal)e.Bid, (decimal)e.Ask)
-                {
-                    AskSize = e.AskSize,
-                    BidSize = e.BidSize,
-                    Quantity = e.IncrementalVolume,
-                    TickType = tradeType,
-                    DataType = MarketDataType.Tick
-                };
-
-                _dataQueue.Add(tick);
-                _prices[e.Symbol] = e.Last;
-
-                if (symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.Future)
-                {
-                    if (!_openInterests.ContainsKey(e.Symbol) || _openInterests[e.Symbol] != e.OpenInterest)
-                    {
-                        var oi = new OpenInterest(time, symbol, e.OpenInterest);
-                        _dataQueue.Add(oi);
-
-                        _openInterests[e.Symbol] = e.OpenInterest;
-                    }
+                        throw new ArgumentOutOfRangeException();
                 }
             }
-
-            /// <summary>
-            /// Set the interal clock time.
-            /// </summary>
-            private void OnLevel1TimerEvent(object sender, Level1TimerEventArgs e)
+            catch (Exception err)
             {
-                //If there was a bad tick and the time didn't set right, skip setting it here and just use our millisecond timer to set the time from last time it was set.
-                if (e.DateTimeStamp != DateTime.MinValue)
+                Log.Error(err);
+            }
+        }
+
+        /// <summary>
+        /// Put received data into current list of BaseData object
+        /// </summary>
+        /// <param name="e">Received data</param>
+        /// <param name="current">Current list of BaseData object</param>
+        private void HandleMessageDetail(LookupEventArgs e, List<BaseData> current)
+        {
+            var requestData = _requestDataByRequestId[e.Id];
+            var data = GetData(e, requestData);
+            if (data != null && data.Time != DateTime.MinValue)
+            {
+                current.Add(data);
+            }
+        }
+
+        /// <summary>
+        /// Transform received data into BaseData object
+        /// </summary>
+        /// <param name="e">Received data</param>
+        /// <param name="requestData">Request information</param>
+        /// <returns>BaseData object</returns>
+        private BaseData GetData(LookupEventArgs e, HistoryRequest requestData)
+        {
+            var isEquity = requestData.Symbol.SecurityType == SecurityType.Equity;
+            try
+            {
+                switch (e.Type)
                 {
-                    FeedTime = e.DateTimeStamp;
+                    case LookupType.REQ_HST_TCK:
+                        var t = (LookupTickEventArgs)e;
+                        var time = isEquity ? t.DateTimeStamp : t.DateTimeStamp.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
+                        return new Tick(time, requestData.Symbol, (decimal)t.Last, (decimal)t.Bid, (decimal)t.Ask) { Quantity = t.LastSize };
+                    case LookupType.REQ_HST_INT:
+                        var i = (LookupIntervalEventArgs)e;
+                        if (i.DateTimeStamp == DateTime.MinValue) return null;
+                        var istartTime = i.DateTimeStamp - requestData.Resolution.ToTimeSpan();
+                        if (!isEquity) istartTime = istartTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
+                        return new TradeBar(istartTime, requestData.Symbol, (decimal)i.Open, (decimal)i.High, (decimal)i.Low, (decimal)i.Close, i.PeriodVolume);
+                    case LookupType.REQ_HST_DWM:
+                        var d = (LookupDayWeekMonthEventArgs)e;
+                        if (d.DateTimeStamp == DateTime.MinValue) return null;
+                        var dstartTime = d.DateTimeStamp.Date;
+                        if (!isEquity) dstartTime = dstartTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
+                        return new TradeBar(dstartTime, requestData.Symbol, (decimal)d.Open, (decimal)d.High, (decimal)d.Low, (decimal)d.Close, d.PeriodVolume, requestData.Resolution.ToTimeSpan());
+
+                    // we don't need to handle these other types
+                    case LookupType.REQ_SYM_SYM:
+                    case LookupType.REQ_SYM_SIC:
+                    case LookupType.REQ_SYM_NAC:
+                    case LookupType.REQ_TAB_MKT:
+                    case LookupType.REQ_TAB_SEC:
+                    case LookupType.REQ_TAB_MKC:
+                    case LookupType.REQ_TAB_SIC:
+                    case LookupType.REQ_TAB_NAC:
+                    default:
+                        return null;
                 }
             }
-
-            /// <summary>
-            /// Server has disconnected, reconnect.
-            /// </summary>
-            private void OnLevel1ServerDisconnected(object sender, Level1ServerDisconnectedArgs e)
+            catch (Exception err)
             {
-                Log.Error("IQFeed.OnLevel1ServerDisconnected(): LEVEL 1 PORT DISCONNECTED! " + e.TextLine);
-            }
-
-            /// <summary>
-            /// Server has disconnected, reconnect.
-            /// </summary>
-            private void OnLevel1ServerReconnectFailed(object sender, Level1ServerReconnectFailedArgs e)
-            {
-                Log.Error("IQFeed.OnLevel1ServerReconnectFailed(): LEVEL 1 PORT DISCONNECT! " + e.TextLine);
-            }
-
-            /// <summary>
-            /// Got a message we don't know about, log it for posterity.
-            /// </summary>
-            private void OnLevel1UnknownEvent(object sender, Level1TextLineEventArgs e)
-            {
-                Log.Error("IQFeed.OnUnknownEvent(): " + e.TextLine);
+                Log.Error("Encountered error while processing request: " + e.Id);
+                Log.Error(err);
+                return null;
             }
         }
 
@@ -532,237 +773,6 @@ namespace QuantConnect.ToolBox.IQFeed
                 case Resolution.Daily:
                 default:
                     throw new ArgumentOutOfRangeException("resolution", resolution, null);
-            }
-        }
-
-        /// <summary>
-        /// Method returns a collection of Symbols that are available at the data source.
-        /// </summary>
-        /// <param name="lookupName">String representing the name to lookup</param>
-        /// <param name="securityType">Expected security type of the returned symbols (if any)</param>
-        /// <param name="securityCurrency">Expected security currency(if any)</param>
-        /// <param name="securityExchange">Expected security exchange name(if any)</param>
-        /// <returns></returns>
-        public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, string securityCurrency = null, string securityExchange = null)
-        {
-            return _symbolUniverse.LookupSymbols(lookupName, securityType, securityCurrency, securityExchange);
-        }
-
-        // this type is expected to be used for exactly one job at a time
-        public class HistoryPort : IQLookupHistorySymbolClient
-        {
-            private bool _inProgress;
-            private ConcurrentDictionary<string, HistoryRequest> _requestDataByRequestId;
-            private ConcurrentDictionary<string, List<BaseData>> _currentRequest;
-            private readonly string DataDirectory = Config.Get("data-directory", "../../../Data");
-            private readonly double MaxHistoryRequestMinutes = Config.GetDouble("max-history-minutes", 5);
-            private readonly IQFeedDataQueueUniverseProvider _symbolUniverse;
-
-            /// <summary>
-            /// ...
-            /// </summary>
-            public HistoryPort(IQFeedDataQueueUniverseProvider symbolUniverse)
-                : base(80)
-            {
-                _symbolUniverse = symbolUniverse;
-                _requestDataByRequestId = new ConcurrentDictionary<string, HistoryRequest>();
-                _currentRequest = new ConcurrentDictionary<string, List<BaseData>>();
-            }
-
-            /// <summary>
-            /// Returns true if this data provide can handle the specified symbol
-            /// </summary>
-            /// <param name="symbol">The symbol to be handled</param>
-            /// <returns>True if this data provider can get data for the symbol, false otherwise</returns>
-            private bool CanHandle(Symbol symbol)
-            {
-                var market = symbol.ID.Market;
-                var securityType = symbol.ID.SecurityType;
-                return
-                    (securityType == SecurityType.Equity && market == Market.USA) ||
-                    (securityType == SecurityType.Forex && market == Market.FXCM) ||
-                    (securityType == SecurityType.Option && market == Market.USA) ||
-                    (securityType == SecurityType.Future);
-            }
-
-            /// <summary>
-            /// Populate request data
-            /// </summary>
-            public IEnumerable<Slice> ProcessHistoryRequests(HistoryRequest request)
-            {
-                // skipping universe and canonical symbols
-                if (!CanHandle(request.Symbol) ||
-                    (request.Symbol.ID.SecurityType == SecurityType.Option && request.Symbol.IsCanonical()) ||
-                    (request.Symbol.ID.SecurityType == SecurityType.Future && request.Symbol.IsCanonical()))
-                {
-                    yield break;
-                }
-
-                // Set this process status
-                _inProgress = true;
-
-                var ticker = _symbolUniverse.GetBrokerageSymbol(request.Symbol);
-                var start = request.StartTimeUtc.ConvertFromUtc(TimeZones.NewYork);
-                DateTime? end = request.EndTimeUtc.ConvertFromUtc(TimeZones.NewYork);
-                // if we're within a minute of now, don't set the end time
-                if (request.EndTimeUtc >= DateTime.UtcNow.AddMinutes(-1))
-                {
-                    end = null;
-                }
-
-                Log.Trace(string.Format("HistoryPort.ProcessHistoryJob(): Submitting request: {0}-{1}: {2} {3}->{4}", request.Symbol.SecurityType, ticker, request.Resolution, start, end ?? DateTime.UtcNow.AddMinutes(-1)));
-
-                int id;
-                var reqid = string.Empty;
-
-                switch (request.Resolution)
-                {
-                    case Resolution.Tick:
-                        id = RequestTickData(ticker, start, end, true);
-                        reqid = CreateRequestID(LookupType.REQ_HST_TCK, id);
-                        break;
-                    case Resolution.Daily:
-                        id = RequestDailyData(ticker, start, end, true);
-                        reqid = CreateRequestID(LookupType.REQ_HST_DWM, id);
-                        break;
-                    default:
-                        var interval = new Interval(GetPeriodType(request.Resolution), 1);
-                        id = RequestIntervalData(ticker, interval, start, end, true);
-                        reqid = CreateRequestID(LookupType.REQ_HST_INT, id);
-                        break;
-                }
-
-                _requestDataByRequestId[reqid] = request;
-
-                while (_inProgress)
-                {
-                    continue;
-                }
-
-                // After all data arrive, we pass it to the algorithm through memory and write to a file
-                foreach (var key in _currentRequest.Keys)
-                {
-                    List<BaseData> tradeBars;
-                    if (_currentRequest.TryRemove(key, out tradeBars))
-                    {
-                        foreach (var tradeBar in tradeBars)
-                        {
-                            // Returns IEnumerable<Slice> object
-                            yield return new Slice(tradeBar.EndTime, new[] { tradeBar });
-                        }
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Created new request ID for a given lookup type (tick, intraday bar, daily bar)
-            /// </summary>
-            /// <param name="lookupType">Lookup type: REQ_HST_TCK (tick), REQ_HST_DWM (daily) or REQ_HST_INT (intraday resolutions)</param>
-            /// <param name="id">Sequential identifier</param>
-            /// <returns></returns>
-            private static string CreateRequestID(LookupType lookupType, int id)
-            {
-                return lookupType + id.ToString("0000000");
-            }
-
-
-            /// <summary>
-            /// Method called when a new Lookup event is fired
-            /// </summary>
-            /// <param name="e">Received data</param>
-            protected override void OnLookupEvent(LookupEventArgs e)
-            {
-                try
-                {
-                    switch (e.Sequence)
-                    {
-                        case LookupSequence.MessageStart:
-                            _currentRequest.AddOrUpdate(e.Id, new List<BaseData>());
-                            break;
-                        case LookupSequence.MessageDetail:
-                            List<BaseData> current;
-                            if (_currentRequest.TryGetValue(e.Id, out current))
-                            {
-                                HandleMessageDetail(e, current);
-                            }
-                            break;
-                        case LookupSequence.MessageEnd:
-                            _inProgress = false;
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
-                }
-            }
-
-            /// <summary>
-            /// Put received data into current list of BaseData object
-            /// </summary>
-            /// <param name="e">Received data</param>
-            /// <param name="current">Current list of BaseData object</param>
-            private void HandleMessageDetail(LookupEventArgs e, List<BaseData> current)
-            {
-                var requestData = _requestDataByRequestId[e.Id];
-                var data = GetData(e, requestData);
-                if (data != null && data.Time != DateTime.MinValue)
-                {
-                    current.Add(data);
-                }
-            }
-
-            /// <summary>
-            /// Transform received data into BaseData object
-            /// </summary>
-            /// <param name="e">Received data</param>
-            /// <param name="requestData">Request information</param>
-            /// <returns>BaseData object</returns>
-            private BaseData GetData(LookupEventArgs e, HistoryRequest requestData)
-            {
-                var isEquity = requestData.Symbol.SecurityType == SecurityType.Equity;
-                try
-                {
-                    switch (e.Type)
-                    {
-                        case LookupType.REQ_HST_TCK:
-                            var t = (LookupTickEventArgs)e;
-                            var time = isEquity ? t.DateTimeStamp : t.DateTimeStamp.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                            return new Tick(time, requestData.Symbol, (decimal)t.Last, (decimal)t.Bid, (decimal)t.Ask);
-                        case LookupType.REQ_HST_INT:
-                            var i = (LookupIntervalEventArgs)e;
-                            if (i.DateTimeStamp == DateTime.MinValue) return null;
-                            var istartTime = i.DateTimeStamp - requestData.Resolution.ToTimeSpan();
-                            if (!isEquity) istartTime = istartTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                            return new TradeBar(istartTime, requestData.Symbol, (decimal)i.Open, (decimal)i.High, (decimal)i.Low, (decimal)i.Close, i.PeriodVolume);
-                        case LookupType.REQ_HST_DWM:
-                            var d = (LookupDayWeekMonthEventArgs)e;
-                            if (d.DateTimeStamp == DateTime.MinValue) return null;
-                            var dstartTime = d.DateTimeStamp.Date;
-                            if (!isEquity) dstartTime = dstartTime.ConvertTo(TimeZones.NewYork, TimeZones.EasternStandard);
-                            return new TradeBar(dstartTime, requestData.Symbol, (decimal)d.Open, (decimal)d.High, (decimal)d.Low, (decimal)d.Close, d.PeriodVolume, requestData.Resolution.ToTimeSpan());
-
-                        // we don't need to handle these other types
-                        case LookupType.REQ_SYM_SYM:
-                        case LookupType.REQ_SYM_SIC:
-                        case LookupType.REQ_SYM_NAC:
-                        case LookupType.REQ_TAB_MKT:
-                        case LookupType.REQ_TAB_SEC:
-                        case LookupType.REQ_TAB_MKC:
-                        case LookupType.REQ_TAB_SIC:
-                        case LookupType.REQ_TAB_NAC:
-                        default:
-                            return null;
-                    }
-                }
-                catch (Exception err)
-                {
-                    Log.Error("Encountered error while processing request: " + e.Id);
-                    Log.Error(err);
-                    return null;
-                }
             }
         }
     }
