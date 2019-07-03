@@ -55,9 +55,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             var attempt = 1;
-            var contracts = Enumerable.Empty<Symbol>();
+            IEnumerable<Symbol> contracts;
 
-            do
+            while (true)
             {
                 try
                 {
@@ -66,13 +66,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     contracts = FindOptionContracts(symbol.Value);
                     break;
                 }
-                catch (Exception exception)
+                catch (WebException exception)
                 {
                     Log.Error(exception);
+
+                    if (++attempt > MaxDownloadAttempts)
+                    {
+                        throw;
+                    }
+
                     Thread.Sleep(1000);
-                    attempt++;
                 }
-            } while (attempt <= MaxDownloadAttempts);
+            }
 
             return contracts;
         }
