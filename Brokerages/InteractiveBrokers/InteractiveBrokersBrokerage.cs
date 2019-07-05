@@ -53,6 +53,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private bool _loginFailed;
         private bool _existingSessionDetected;
         private bool _securityDialogDetected;
+        private bool _performingRelogin;
 
         // next valid order id for this client
         private int _nextValidId;
@@ -2837,7 +2838,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // an existing session was detected and IBAutomater clicked the "Exit Application" button
-            else if (e.Data.Contains("Existing session detected"))
+            else if (e.Data.Contains("Existing session detected") && !_performingRelogin)
             {
                 _existingSessionDetected = true;
                 _ibAutomaterInitializeEvent.Set();
@@ -2861,10 +2862,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // the IB session was disconnected by the user logging in from another location
             else if (e.Data.Contains("Re-login is required"))
             {
-                const string message = "A new competing session was started from another location and the current session has been terminated.";
+                _performingRelogin = true;
+            }
 
-                _algorithm.Error("Brokerage Error: " + message);
-                _algorithm.RunTimeError = new Exception(message);
+            // the IB session was disconnected by the user logging in from another location
+            else if (e.Data.Contains("Starting application"))
+            {
+                _performingRelogin = false;
             }
         }
 
