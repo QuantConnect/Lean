@@ -54,12 +54,16 @@
     <Content Include="Alphas\VIXDualThrustAlpha.py" />
     <Content Include="BasicCSharpIntegrationTemplateAlgorithm.py" />
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
+    <Content Include="KerasNeuralNetworkAlgorithm.py" />
     <Content Include="TradingEconomicsCalendarIndicatorAlgorithm.py" />
     <Content Include="OnEndOfDayRegressionAlgorithm.py" />
     <Content Include="SECReportDataAlgorithm.py" />
     <Content Include="USEnergyInformationAdministrationAlgorithm.py" />
+    <None Include="NLTKSentimentTradingAlgorithm.py" />
+    <None Include="PytorchNeuralNetworkAlgorithm.py" />
     <None Include="RawPricesUniverseRegressionAlgorithm.py" />
     <None Include="CapmAlphaRankingFrameworkAlgorithm.py" />
+    <None Include="ScikitLearnLinearRegressionAlgorithm.py" />
     <None Include="SmaCrossUniverseSelectionAlgorithm.py" />
     <Content Include="Benchmarks\StatefulCoarseUniverseSelectionBenchmark.py" />
     <Content Include="Benchmarks\StatelessCoarseUniverseSelectionBenchmark.py" />
@@ -72,6 +76,7 @@
     <None Include="CompositeRiskManagementModelFrameworkAlgorithm.py" />
     <None Include="BlackLittermanPortfolioOptimizationFrameworkAlgorithm.py" />
     <None Include="packages.config" />
+    <None Include="TensorFlowNeuralNetworkAlgorithm.py" />
     <None Include="TiingoDailyDataAlgorithm.py" />
     <None Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.py" />
   </ItemGroup>
