@@ -371,10 +371,23 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     foreach (var ticker in tickers)
                     {
                         var tickerMapFile = mapFileResolver.ResolveMapFile(ticker, processingDate);
-                        if (!tickerMapFile.Any()) continue;
+                        if (!tickerMapFile.Any())
+                        {
+                            Log.Trace($"SECDataConverter.Process(): {processingDate} - Failed to find map file for ticker: {ticker}");
+                            continue;
+                        }
+                        
+                        // Map the current ticker to the ticker it was in the past using the map file system
+                        var mappedTicker = tickerMapFile.GetMappedSymbol(processingDate);
+                        
+                        if (string.IsNullOrEmpty(mappedTicker))
+                        {
+                            Log.Trace($"SECDataConverter.Process(): {processingDate} - Failed to find mapped symbol for ticker: {ticker}");
+                            continue;
+                        }
 
                         var tickerReports = Reports.GetOrAdd(
-                            ticker,
+                            mappedTicker,
                             _ => new ConcurrentDictionary<DateTime, List<ISECReport>>()
                         );
                         var reports = tickerReports.GetOrAdd(
