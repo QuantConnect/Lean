@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -68,9 +69,8 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             }
 
             Log.Trace($"PsychSignalDataConverter.Convert(): Begin converting {sourceFilePath.FullName}");
-            var file = File.ReadLines(sourceFilePath.FullName);
 
-            foreach (var line in file)
+            foreach (var line in File.ReadLines(sourceFilePath.FullName))
             {
                 var csv = line.Split(',');
                 var ticker = csv[1].ToLower();
@@ -92,6 +92,8 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 
                 handle.Append(timestamp, csv);
             }
+
+            Log.Trace($"PsychSignalDataConverter.Convert(): Finished converting {sourceFilePath.FullName}");
         }
 
         /// <summary>
@@ -172,14 +174,19 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 throw new ObjectDisposedException("PsychSignalDataConverter has already been disposed");
             }
 
+            Log.Trace("PsychSignalDataConverter.CompressData(): Begin compressing PsychSignal data");
+            var timer = Stopwatch.StartNew();
+
             foreach (var tickerFolder in _destinationDirectory.GetDirectories())
             {
                 foreach (var dataFile in tickerFolder.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
                 {
                     Compression.Zip(dataFile.FullName, deleteOriginal: true);
-                    Log.Trace($"PsychSignalDataConverter.CompressData(): Successfully compressed: {tickerFolder}/{dataFile}");
                 }
             }
+
+            timer.Stop();
+            Log.Trace($"PsychSignalDataConverter.CompressData(): Finished compressing PsychSignal data in {timer.Elapsed.TotalSeconds} seconds");
         }
         
         /// <summary>
@@ -198,7 +205,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             /// <summary>
             /// Windows filesystem forbids the following names as directory or file names
             /// </summary>
-            private List<string> _forbiddenTickers = new List<string>
+            private readonly List<string> _forbiddenTickers = new List<string>
             {
                 "con",
                 "prn",
@@ -287,7 +294,6 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 }
 
                 File.Move(_tempPath, writePath);
-                Log.Trace($"PsychSignalDataConverter.TickerData.MoveTempFile(): Finished writing file: {writePath}");
             }
 
             /// <summary>
@@ -319,19 +325,32 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
         private bool _disposedValue = false;
         
         /// <summary>
-        /// Disposes the object
+        /// Disposes the object. Any additional calls to any method will yield an <see cref="ObjectDisposedException" />
         /// </summary>
         /// <param name="disposing">Flag to indicate whether we are disposing the object</param>
-        public virtual void Dispose(bool disposing)
+        public void Dispose(bool disposing)
         {
             if (!_disposedValue)
             {
                 if (disposing)
                 {
+                    var count = _fileHandles.Count;
+                    var percentage = 0.05m;
+                    var fivePercent = Math.Ceiling(count * percentage);
+                    var step = 1;
+                    var i = 1;
+
                     // Flush each handle to ensure all data gets written
                     foreach (var handle in _fileHandles.Values)
                     {
+                        if (i % fivePercent == 0m || count == i)
+                        {
+                            Log.Trace($"PsychSignalDataConverter.Dispose(): Flushing {percentage * step * 100}% complete");
+                            step++;
+                        }
+
                         handle.Flush();
+                        i++;
                     }
                     CompressData();
                 }
@@ -344,7 +363,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
         }
         
         /// <summary>
-        /// Default Dispose pattern
+        /// Default dispose
         /// </summary>
         public void Dispose()
         {
