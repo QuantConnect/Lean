@@ -22,7 +22,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
     public static class SECDataDownloaderProgram
     {
         /// <summary>
-        /// Downloads and converts the data
+        /// Downloads the raw SEC data
         /// </summary>
         /// <param name="rawDestination">Destination where raw data will be written to</param>
         /// <param name="start">Start date</param>
@@ -35,18 +35,16 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         }
         
         /// <summary>
-        /// Converts the downloaded SEC data
+        /// Converts the downloaded raw SEC data archives
         /// </summary>
         /// <param name="rawSource">Source of the raw data</param>
         /// <param name="destination">Destination to write processed data to</param>
-        /// <param name="start">Start date</param>
-        /// <param name="end">End date</param>
-        /// <param name="knownEquityFolder">Path to daily or hourly equity data</param>
-        public static void SECDataConverter(string rawSource, string destination, DateTime start)
+        /// <param name="date">Date to process data for</param>
+        public static void SECDataConverter(string rawSource, string destination, DateTime date)
         {
             var converter = new SECDataConverter(rawSource, destination);
             Log.Trace("SecDataDownloaderProgram.SecDataDownloader(): Begin parsing raw files from disk...");
-            converter.Process(start);
+            converter.Process(date);
         }
     }
 }

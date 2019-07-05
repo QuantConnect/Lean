@@ -150,7 +150,6 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// </summary>
         /// <param name="rawSource">Source of raw data</param>
         /// <param name="destination">Destination of formatted data</param>
-        /// <param name="tickerFolder">Known ticker folder (should be low resolution tick folder)</param>
         public SECDataConverter(string rawSource, string destination)
         {
             RawSource = rawSource;
@@ -160,8 +159,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// <summary>
         /// Converts the data from raw format (*.nz.tar.gz) to json files consumable by LEAN
         /// </summary>
-        /// <param name="startDate">Starting date to start process files</param>
-        /// <param name="endDate">Ending date to stop processing files</param>
+        /// <param name="processingDate">Date to process SEC filings for</param>
         public void Process(DateTime processingDate)
         {
             // Process data into dictionary of CIK -> List{T} of tickers
@@ -367,7 +365,8 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     }
 
                     // Default to company CIK if no known ticker is found.
-                    // If we don't find a known equity in our list, the equity is probably not worth our time
+                    // If the equity is not does not resolve to a map file or
+                    // it is not found in the map files, we skip writing it.
                     foreach (var ticker in tickers)
                     {
                         var tickerMapFile = mapFileResolver.ResolveMapFile(ticker, processingDate);
@@ -380,6 +379,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         // Map the current ticker to the ticker it was in the past using the map file system
                         var mappedTicker = tickerMapFile.GetMappedSymbol(processingDate);
                         
+                        // If no suitable date is found for the symbol in the map file, we skip writing the data
                         if (string.IsNullOrEmpty(mappedTicker))
                         {
                             Log.Trace($"SECDataConverter.Process(): {processingDate} - Failed to find mapped symbol for ticker: {ticker}");
@@ -430,7 +430,6 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// </summary>
         /// <param name="reports">List of SEC Report objects</param>
         /// <param name="ticker">Symbol ticker</param>
-        /// <param name="destination">Folder to write the reports to</param>
         public void WriteReport(List<ISECReport> reports, string ticker)
         {
             var report = reports.First();
@@ -461,7 +460,6 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// </summary>
         /// <param name="report">SEC report <see cref="BaseData"/> instance</param>
         /// <param name="companyCik">Company CIK to use to lookup filings for</param>
-        /// <remarks>This method caches the results on a per company basis (by CIK), so subsequent lookups for the publication date of the same equity by CIK will be fast</remarks>
         public void GetPublicationDate(ISECReport report, string companyCik)
         {
             Dictionary<string, DateTime> companyPublicationDates;

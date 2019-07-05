@@ -215,7 +215,7 @@ namespace QuantConnect.ToolBox
                         break;
                     case "seccv":
                     case "secconverter":
-                        var start = DateTime.ParseExact(GetParameterOrExit(optionsObject, "start"), "yyyyMMdd", CultureInfo.InvariantCulture);
+                        var start = DateTime.ParseExact(GetParameterOrExit(optionsObject, "date"), "yyyyMMdd", CultureInfo.InvariantCulture);
                         SECDataDownloaderProgram.SECDataConverter(
                             GetParameterOrExit(optionsObject, "source-dir"),
                             GetParameterOrDefault(optionsObject, "destination-dir", Globals.DataFolder),
