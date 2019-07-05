@@ -24,8 +24,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using ICSharpCode.SharpZipLib.GZip;
-using ICSharpCode.SharpZipLib.Tar;
 using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
@@ -183,9 +181,9 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 }
                 
                 // SEC data list contains a null value in the ticker.txt file
-                if (!string.IsNullOrEmpty(ticker))
+                if (!string.IsNullOrWhiteSpace(ticker))
                 {
-                    symbol.Add(tickerCik[0]);
+                    symbol.Add(ticker);
                 }
             }
 
@@ -200,11 +198,11 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 List<string> symbol;
                 if (!CikTicker.TryGetValue(companyCik, out symbol))
                 {
-                    symbol = new List<string>() { companyTicker };
+                    symbol = new List<string>();
                     CikTicker[companyCik] = symbol;
                 }
                 // Add null check just in case data comes malformed
-                else if (!symbol.Contains(companyTicker) && !string.IsNullOrEmpty(companyTicker))
+                if (!symbol.Contains(companyTicker) && !string.IsNullOrWhiteSpace(companyTicker))
                 {
                     symbol.Add(companyTicker);
                 }
@@ -216,7 +214,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             {
                 if (Holidays.Contains(processingDate))
                 {
-                    Log.Trace("SECDataConverter.Process(): File is missing but it was expected. Nothing to do.");
+                    Log.Trace("SECDataConverter.Process(): File is missing, but we expected it to be missing. Nothing to do.");
                     return;
                 }
                 throw new Exception($"SECDataConverter.Process(): Raw data {remoteRawData} not found. No process can be done.");
@@ -376,7 +374,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         if (!tickerMapFile.Any()) continue;
 
                         var tickerReports = Reports.GetOrAdd(
-                            tickerMapFile.GetMappedSymbol(processingDate),
+                            ticker,
                             _ => new ConcurrentDictionary<DateTime, List<ISECReport>>()
                         );
                         var reports = tickerReports.GetOrAdd(
