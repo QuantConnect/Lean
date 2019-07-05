@@ -23,11 +23,7 @@ RUN apt-get update && apt-get install -y git bzip2 unzip wget python3-pip python
     apt-get install -y r-base pandoc libcurl4-openssl-dev
 
 # Java for running IB inside container:
-# https://github.com/dockerfile/java/blob/master/oracle-java8/Dockerfile
-RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
-    add-apt-repository -y ppa:webupd8team/java && \
-    apt-get update && apt-get install -y oracle-java8-installer && \
-    rm -rf /var/lib/apt/lists/* && rm -rf /var/cache/oracle-jdk8-installer
+RUN apt-get install -y openjdk-8-jdk openjdk-8-jre
 
 # Install IB Gateway: Installs to ~/Jts
 RUN wget http://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v974.4g.sh && \
