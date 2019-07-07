@@ -139,7 +139,7 @@ namespace QuantConnect.Indicators
 
                     if (Count == 0)
                     {
-                        throw new ArgumentException("Rolling window is empty");
+                        throw new ArgumentOutOfRangeException("i", "Rolling window is empty");
                     }
                     else if (i > Size - 1 || i < 0)
                     {
