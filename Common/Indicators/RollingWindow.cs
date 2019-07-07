@@ -137,9 +137,17 @@ namespace QuantConnect.Indicators
                 {
                     _listLock.EnterReadLock();
 
-                    if (i < 0 || i > Count - 1)
+                    if (Count == 0)
                     {
-                        throw new ArgumentOutOfRangeException("i", i, string.Format("Must be between 0 and {0}", Count - 1));
+                        throw new ArgumentOutOfRangeException("i", "Rolling window is empty");
+                    }
+                    else if (i > Size - 1 || i < 0)
+                    {
+                        throw new ArgumentOutOfRangeException("i", i, string.Format("Index must be between 0 and {0} (rolling window is of size {1})", Size - 1, Size));
+                    }
+                    else if (i > Count - 1)
+                    {
+                        throw new ArgumentOutOfRangeException("i", i, string.Format("Index must be between 0 and {0} (entry {1} does not exist yet)", Count - 1, i));
                     }
                     return _list[(Count + _tail - i - 1) % Count];
                 }
