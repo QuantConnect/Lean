@@ -341,7 +341,8 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Helper overload that will search the mapfiles to resolve the first date.
+        /// Helper overload that will search the mapfiles to resolve the first date. This implementation
+        /// uses the configured <see cref="IMapFileProvider"/> via the <see cref="Composer.Instance"/>
         /// </summary>
         /// <param name="symbol">The symbol as it is known today</param>
         /// <param name="market">The market</param>
@@ -362,22 +363,17 @@ namespace QuantConnect
         /// <param name="mapSymbol">Specifies if symbol should be mapped using map file provider</param>
         /// <param name="mapFileProvider">Specifies the IMapFileProvider to use for resolving symbols, specify null to load from Composer</param>
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified symbol today</returns>
-        public static SecurityIdentifier GenerateWithFirstDate(string symbol, string market, SecurityType securityType, bool mapSymbol = true, IMapFileProvider mapFileProvider = null)
+        private static SecurityIdentifier GenerateWithFirstDate(string symbol, string market, SecurityType securityType, bool mapSymbol = true, IMapFileProvider mapFileProvider = null)
         {
-            var firstDate = DefaultDate;
-            Func<DateTime, string, string, SecurityIdentifier> GenerateSid;
-
-            switch (securityType)
+            // Check if we're trying to load map files for forex, crypto, cfd, futures, etc.
+            // This ensures that we don't get a confusing error message if we attempted to load
+            // map files for a security type that doesn't use them.
+            if (securityType != SecurityType.Base && securityType != SecurityType.Equity)
             {
-                case SecurityType.Base:
-                    GenerateSid = GenerateBase;
-                    break;
-                case SecurityType.Equity:
-                    GenerateSid = GenerateEquity;
-                    break;
-                default:
-                    throw new ArgumentException("This method only supports SecurityType of Base and Equity");
+                throw new ArgumentException("This method only supports SecurityType of Base and Equity");
             }
+
+            var firstDate = DefaultDate;
 
             if (mapSymbol)
             {
@@ -406,7 +402,16 @@ namespace QuantConnect
                 }
             }
 
-            return GenerateSid(firstDate, symbol, market);
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                    return GenerateEquity(firstDate, symbol, market);
+                case SecurityType.Base:
+                    return GenerateBase(firstDate, symbol, market);
+                default:
+                    // Should never happen because we previously filtered non-base or non-equity SecurityType
+                    throw new Exception("SecurityType is not Base or Equity even though we've previously filtered them");
+            }
         }
 
         public static MapFile GetMapFile(IMapFileProvider mapFileProvider, string market, string symbol)
