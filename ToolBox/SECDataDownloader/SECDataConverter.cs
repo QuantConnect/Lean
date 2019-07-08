@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,7 +51,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// Destination of formatted data
         /// </summary>
         public string Destination;
-        
+
         /// <summary>
         /// Whitelist of dates to not throw errors on if the file is missing.
         /// Most of the dates are either Veterans Day or Columbus Day, but
@@ -131,7 +131,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         };
 
         /// <summary>
-        /// Assets keyed by CIK used to resolve underlying ticker 
+        /// Assets keyed by CIK used to resolve underlying ticker
         /// </summary>
         public readonly Dictionary<string, List<string>> CikTicker = new Dictionary<string, List<string>>();
 
@@ -144,7 +144,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// Keyed by ticker (CIK if ticker not found); contains SEC report(s) that we pass to <see cref="WriteReport"/>
         /// </summary>
         public ConcurrentDictionary<string, ConcurrentDictionary<DateTime, List<ISECReport>>> Reports = new ConcurrentDictionary<string, ConcurrentDictionary<DateTime, List<ISECReport>>>();
-        
+
         /// <summary>
         /// Public constructor creates CIK -> Ticker list from various sources
         /// </summary>
@@ -177,7 +177,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     symbol = new List<string>();
                     CikTicker[cikFormatted] = symbol;
                 }
-                
+
                 // SEC data list contains a null value in the ticker.txt file
                 if (!string.IsNullOrWhiteSpace(ticker))
                 {
@@ -210,14 +210,14 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             var remoteRawData = new FileInfo(Path.Combine(RawSource, $"{formattedDate}.nc.tar.gz"));
             if (!remoteRawData.Exists)
             {
-                if (Holidays.Contains(processingDate))
+                if (Holidays.Contains(processingDate) || USHoliday.Dates.Contains(processingDate))
                 {
                     Log.Trace("SECDataConverter.Process(): File is missing, but we expected it to be missing. Nothing to do.");
                     return;
                 }
-                throw new Exception($"SECDataConverter.Process(): Raw data {remoteRawData} not found. No process can be done.");
+                throw new Exception($"SECDataConverter.Process(): Raw data {remoteRawData} not found. No processing can be done.");
             }
-            
+
             // Copy the raw data to a temp path on disk
             Log.Trace($"SECDataConverter.Process(): Copying raw data locally...");
             var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -375,10 +375,10 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             Log.Trace($"SECDataConverter.Process(): {processingDate} - Failed to find map file for ticker: {ticker}");
                             continue;
                         }
-                        
+
                         // Map the current ticker to the ticker it was in the past using the map file system
                         var mappedTicker = tickerMapFile.GetMappedSymbol(processingDate);
-                        
+
                         // If no suitable date is found for the symbol in the map file, we skip writing the data
                         if (string.IsNullOrEmpty(mappedTicker))
                         {
@@ -415,7 +415,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     WriteReport(reports, ticker);
                 }
             );
-            
+
             // Delete the raw data we copied to the temp folder
             File.Delete(tempPath);
         }
@@ -456,7 +456,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         }
 
         /// <summary>
-        /// Takes instance of <see cref="ISECReport"/> and gets publication date information for the given equity, then mutates the instance. 
+        /// Takes instance of <see cref="ISECReport"/> and gets publication date information for the given equity, then mutates the instance.
         /// </summary>
         /// <param name="report">SEC report <see cref="BaseData"/> instance</param>
         /// <param name="companyCik">Company CIK to use to lookup filings for</param>
