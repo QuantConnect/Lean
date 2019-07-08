@@ -19,6 +19,7 @@ using System.Net;
 using System.Threading;
 using NodaTime;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.PsychSignalDataConverter
 {
@@ -26,7 +27,12 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
     {
         private readonly string _apiKey;
         private readonly string _dataSource;
-        
+
+        /// <summary>
+        /// Psychsignal imposes strict API rate limits set to about one request per ten seconds
+        /// </summary>
+        private readonly RateGate _apiRateGate = new RateGate(occurrences: 1, timeUnit: TimeSpan.FromSeconds(10));
+
         /// <summary>
         /// Base URL for the psychsignal API
         /// </summary>
@@ -36,12 +42,12 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
         /// Destination we will write raw data to
         /// </summary>
         private readonly string _rawDataDestination;
-        
+
         /// <summary>
-        /// Maximum amount of retries per data hour 
+        /// Maximum amount of retries per data hour
         /// </summary>
         public int MaxRetries = 5;
-        
+
         /// <summary>
         /// Downlods data from psychsignal
         /// </summary>
@@ -55,7 +61,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             _dataSource = dataSource;
             _apiKey = apiKey;
         }
-        
+
         /// <summary>
         /// Download the data from the given starting date to the ending date.
         /// Note that if the ending date is in the same hour as the current time,
@@ -68,7 +74,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
         {
             var now = DateTime.UtcNow;
             var nowHour = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
-            
+
             Directory.CreateDirectory(_rawDataDestination);
 
             if (startDateUtc < now.AddDays(-15))
@@ -76,30 +82,31 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 throw new ArgumentException("The starting date can only be at most 15 days from now");
             }
 
-            // Makes sure we only get final, non-changing data by checking if the end date is greater than 
+            // Makes sure we only get final, non-changing data by checking if the end date is greater than
             // or equal to the current time and setting it to an hour before the current time if the condition is met
             if (nowHour <= new DateTime(endDateUtc.Year, endDateUtc.Month, endDateUtc.Day, endDateUtc.Hour, 0, 0))
             {
                 endDateUtc = nowHour.AddHours(-1);
             }
-            
-            // PsychSignal paginates data by hour
+
+            // PsychSignal paginates data by hour. Note that it is possible to retrieve non-complete data if the requested hour
+            // is the same as the current hour or greater than the current hour.
             for (; startDateUtc < endDateUtc; startDateUtc = startDateUtc.AddHours(1))
             {
                 var rawDataPath = Path.Combine(_rawDataDestination, $"{startDateUtc:yyyyMMdd_HH}_{_dataSource}.csv");
                 var rawDataPathTemp = Path.Combine(Path.GetTempPath(), $"{startDateUtc:yyyyMMdd_HH}_{_dataSource}.csv.tmp");
-                
+
                 // Don't download files we already have
                 if (File.Exists(rawDataPath))
                 {
                     continue;
                 }
-                
+
                 // Retry in case a download failed
                 for (var retries = 0; retries < MaxRetries; retries++)
                 {
-                    // Psychsignal imposes very strict rate limits
-                    Thread.Sleep(10000);
+                    // Set a max timeout of ten seconds
+                    _apiRateGate.WaitToProceed(10000);
 
                     try
                     {

@@ -27,8 +27,8 @@ namespace QuantConnect.Tests.ToolBox
         [Test, Ignore("This test requires raw PsychSignal data")]
         public void FileHourMatchesDataTimeRealRawData()
         {
-            var rawPath = Path.Combine(Globals.DataFolder, "alternative", "psychsignal", "raw-psychsignal");
-            
+            var rawPath = Path.Combine("raw", "alternative", "psychsignal");
+
             foreach (var file in Directory.GetFiles(rawPath, "*.csv", SearchOption.TopDirectoryOnly).ToList())
             {
                 var fileSplit = file.Split('_');

@@ -52,12 +52,12 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
 
             _destinationDirectory.Create();
         }
-        
+
         /// <summary>
         /// Converts a specific file to Lean alternative data format. Note that you must flush
         /// after you're done converting a file to ensure that all data gets written to disk.
         /// You can do that by calling <see cref="Dispose"/> once you've finished processing
-        /// 
+        ///
         /// Note: Assumes that it will be given files in ascending order by date
         /// </summary>
         /// <param name="sourceFilePath">File to process and convert</param>
@@ -89,7 +89,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                     handle = new TickerData(ticker, timestamp.Date, _destinationDirectory);
                     _fileHandles[ticker] = handle;
                 }
-                
+
                 handle.Append(timestamp, csv);
             }
 
@@ -154,7 +154,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                     }
                 )
                 .OrderBy(x => DateTime.ParseExact(x.Name.Substring(0, 11), "yyyyMMdd_HH", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal));
-            
+
             foreach (var rawFile in files)
             {
                 Convert(rawFile);
@@ -164,7 +164,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
         }
 
         /// <summary>
-        /// Utility method to compresses the data contained with the psychsignal alternative data folder 
+        /// Utility method to compresses the data contained with the psychsignal alternative data folder
         /// to a structure similar to equity minute files (e.g. /[symbol]/20010101.zip#20010101.csv)
         /// </summary>
         private void CompressData()
@@ -188,7 +188,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             timer.Stop();
             Log.Trace($"PsychSignalDataConverter.CompressData(): Finished compressing PsychSignal data in {timer.Elapsed.TotalSeconds} seconds");
         }
-        
+
         /// <summary>
         /// Handle to a file so that we don't have to open and close it every time we want
         /// to write to a file. This helps us speed up time spent processing massively.
@@ -201,7 +201,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             private StreamWriter _writer;
             private string _tempPath;
             private DateTime _date;
-            
+
             /// <summary>
             /// Windows filesystem forbids the following names as directory or file names
             /// </summary>
@@ -252,7 +252,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                     _ticker += "_";
                 }
             }
-            
+
             /// <summary>
             /// Adds a new line to the writer
             /// </summary>
@@ -270,11 +270,12 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                     _tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
                     _writer = new StreamWriter(_tempPath);
                 }
-                
-                // Ignore the first three entries of the CSV line
+
+                // Ignore the first three columns of the CSV line because we already
+                // know the "source[0]", know the "symbol[1]", and have already parsed the "timestamp[2]"
                 _writer.WriteLine(ToCsv(timestamp, csv.Skip(3)));
             }
-            
+
             /// <summary>
             /// Moves the temporary file containing data to the final path, deleting
             /// any existing file to avoid conflicts when moving
@@ -285,7 +286,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 var writePath = Path.Combine(tickerDirectory, $"{_date:yyyyMMdd}.csv");
 
                 Directory.CreateDirectory(tickerDirectory);
-                
+
                 // We only want the latest version of the data
                 if (File.Exists(writePath))
                 {
@@ -305,9 +306,10 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             private string ToCsv(DateTime timestamp, IEnumerable<string> csvData)
             {
                 // SOURCE[0],SYMBOL[1],TIMESTAMP_UTC[2],BULLISH_INTENSITY[3],BEARISH_INTENSITY[4],BULL_MINUS_BEAR[5],BULL_SCORED_MESSAGES[6],BEAR_SCORED_MESSAGES[7],BULL_BEAR_MSG_RATIO[8],TOTAL_SCANNED_MESSAGES[9]
+                // We should have skipped the first three entries, so our real starting index is "BULLISH_INTENSITY[3]"
                 return $"{timestamp.TimeOfDay.TotalMilliseconds},{string.Join(",", csvData)}";
             }
-            
+
             /// <summary>
             /// Flushes and closes the underlying <see cref="StreamWriter"/>
             /// and moves the temp file to its final path
@@ -323,7 +325,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
 
         #region IDisposable Support
         private bool _disposedValue = false;
-        
+
         /// <summary>
         /// Disposes the object. Any additional calls to any method will yield an <see cref="ObjectDisposedException" />
         /// </summary>
@@ -361,7 +363,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 _disposedValue = true;
             }
         }
-        
+
         /// <summary>
         /// Default dispose
         /// </summary>
