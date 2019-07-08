@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,18 +23,18 @@ namespace QuantConnect.Notifications
     /// </summary>
     public class NotificationManager
     {
+        private const int RateLimit = 30;
+
         private int _count;
         private DateTime _resetTime;
-        private const int _rateLimit = 30;
+
         private readonly bool _liveMode;
+        private readonly object _sync = new object();
 
         /// <summary>
         /// Public access to the messages
         /// </summary>
-        public ConcurrentQueue<Notification> Messages
-        {
-            get; set;
-        }
+        public ConcurrentQueue<Notification> Messages { get; set; }
 
         /// <summary>
         /// Initialize the messaging system
@@ -43,28 +43,10 @@ namespace QuantConnect.Notifications
         {
             _count = 0;
             _liveMode = liveMode;
-            _resetTime = DateTime.Now;
             Messages = new ConcurrentQueue<Notification>();
-        }
 
-        /// <summary>
-        /// Maintain a rate limit of the notification messages per hour send of roughly 20 messages per hour.
-        /// </summary>
-        /// <returns>True on under rate limit and acceptable to send message</returns>
-        private bool Allow()
-        {
-            if (DateTime.Now > _resetTime)
-            {
-                _count = 0;
-                _resetTime = DateTime.Now.RoundUp(TimeSpan.FromHours(1));
-            }
-
-            if (_count < _rateLimit)
-            {
-                _count++;
-                return true;
-            }
-            return false;
+            // start counting reset time based on first invocation of NotificationManager
+            _resetTime = default(DateTime);
         }
 
         /// <summary>
@@ -76,16 +58,15 @@ namespace QuantConnect.Notifications
         /// <param name="address">Email address to send to</param>
         public bool Email(string address, string subject, string message, string data = "")
         {
-            if (!_liveMode) return false;
-            var allow = Allow();
-
-            if (allow)
+            if (!Allow())
             {
-                var email = new NotificationEmail(address, subject, message, data);
-                Messages.Enqueue(email);
+                return false;
             }
 
-            return allow;
+            var email = new NotificationEmail(address, subject, message, data);
+            Messages.Enqueue(email);
+
+            return true;
         }
 
         /// <summary>
@@ -95,14 +76,15 @@ namespace QuantConnect.Notifications
         /// <param name="message">Message to send</param>
         public bool Sms(string phoneNumber, string message)
         {
-            if (!_liveMode) return false;
-            var allow = Allow();
-            if (allow)
+            if (!Allow())
             {
-                var sms = new NotificationSms(phoneNumber, message);
-                Messages.Enqueue(sms);
+                return false;
             }
-            return allow;
+
+            var sms = new NotificationSms(phoneNumber, message);
+            Messages.Enqueue(sms);
+
+            return true;
         }
 
         /// <summary>
@@ -112,14 +94,47 @@ namespace QuantConnect.Notifications
         /// <param name="data">Data to send in body JSON encoded (optional)</param>
         public bool Web(string address, object data = null)
         {
-            if (!_liveMode) return false;
-            var allow = Allow();
-            if (allow)
+            if (!Allow())
             {
-                var web = new NotificationWeb(address, data);
-                Messages.Enqueue(web);
+                return false;
             }
-            return allow;
+
+            var web = new NotificationWeb(address, data);
+            Messages.Enqueue(web);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Maintain a rate limit of the notification messages per hour send of roughly 20 messages per hour.
+        /// </summary>
+        /// <returns>True when running in live mode and under the rate limit</returns>
+        private bool Allow()
+        {
+            if (!_liveMode)
+            {
+                return false;
+            }
+
+            lock (_sync)
+            {
+                var now = DateTime.UtcNow;
+                if (now > _resetTime)
+                {
+                    _count = 0;
+
+                    // rate limiting set at 30/hour
+                    _resetTime = now.Add(TimeSpan.FromHours(1));
+                }
+
+                if (_count < RateLimit)
+                {
+                    _count++;
+                    return true;
+                }
+
+                return false;
+            }
         }
     }
 }
