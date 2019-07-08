@@ -22,6 +22,7 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Data.Custom.SEC import *
 
 from datetime import datetime
+import json
 
 ### <summary>
 ### Demonstration algorithm showing how to use and access SEC data
@@ -42,8 +43,7 @@ class CustomDataUsingMapFileRegressionAlgorithm(QCAlgorithm):
         self.SetEndDate(2003, 12, 31)
         self.SetCash(100000)
 
-        self.proper_symbol_before_rename = False
-        self.proper_symbol_after_rename = False
+        self.tickers = {}
 
         self.ticker = "TWX"
         self.symbol = self.AddData(SECReport8K, self.ticker).Symbol
@@ -53,30 +53,37 @@ class CustomDataUsingMapFileRegressionAlgorithm(QCAlgorithm):
         if slice.SymbolChangedEvents.ContainsKey(self.symbol):
             self.changed_symbol = True
             self.Log("{0} - Ticker changed from: {1} to {2}".format(str(self.Time), slice.SymbolChangedEvents[self.symbol].OldSymbol, slice.SymbolChangedEvents[self.symbol].NewSymbol))
-        
+
         if not slice.ContainsKey(self.symbol):
             return
-            
+
         data = slice[self.symbol]
 
         if not isinstance(data, SECReport8K):
             return
 
         report = data.Report
+        ticker = data.Symbol.Value
+        date = self.Time.date()
 
-        if not self.proper_symbol_before_rename:
-            self.proper_symbol_before_rename = data.Symbol.Value == "AOL" and self.Time < datetime(2003, 10, 16)
-        if not self.proper_symbol_after_rename:
-            self.proper_symbol_after_rename = data.Symbol.Value == "TWX" and self.Time >= datetime(2003, 10, 16)
+        if date == datetime(2001, 1, 26).date() or date == datetime(2003, 10, 22).date():
+            self.tickers[str(date)] = ticker
 
         self.Log(f"{str(self.Time)} - Received 8-K report for {data.Symbol.Value}")
 
     def OnEndOfAlgorithm(self):
         if not self.changed_symbol:
             raise Exception("The ticker did not rename throughout the course of its life even though it should have")
-        if not self.proper_symbol_before_rename:
-            raise Exception("The SEC report data never renamed to its old ticker")
-        if not self.proper_symbol_after_rename:
-            raise Exception("The SEC report data never renamed to its present-day ticker")
+
+        expected_tickers = {}
+        expected_tickers[str(datetime(2001, 1, 26).date())] = "AOL"
+        expected_tickers[str(datetime(2003, 10, 22).date())] = "TWX"
+
+        # Check for dict equality: https://stackoverflow.com/a/4527978
+        if not all([k in self.tickers and expected_tickers[k] == self.tickers[k] for k in expected_tickers]):
+            self.Log(f"Found: {json.dumps(self.tickers)}")
+            self.Log(f"Expected: {json.dumps(expected_tickers)}")
+            raise Exception("SEC data event tickers do not match test case")
+
 
 

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -308,7 +309,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void GenerateEquityWithTickerUsingMapFile()
         {
             var expectedFirstDate = new DateTime(1998, 1, 2);
-            var sid = SecurityIdentifier.GenerateWithFirstDate("TWX", Market.USA, SecurityType.Equity, true);
+            var sid = SecurityIdentifier.GenerateEquity("TWX", Market.USA, mapSymbol: true, mapFileProvider: new LocalDiskMapFileProvider());
 
             Assert.AreEqual(sid.Date, expectedFirstDate);
             Assert.AreEqual(sid.Symbol, "AOL");
@@ -318,18 +319,12 @@ namespace QuantConnect.Tests.Common.Securities
         public void GenerateBaseDataWithTickerUsingMapFile()
         {
             var expectedFirstDate = new DateTime(1998, 1, 2);
-            var sid = SecurityIdentifier.GenerateWithFirstDate("TWX", Market.USA, SecurityType.Base);
+            var sid = SecurityIdentifier.GenerateBase("TWX", Market.USA, mapSymbol: true);
 
             Assert.AreEqual(sid.Date, expectedFirstDate);
             Assert.AreEqual(sid.Symbol, "AOL");
         }
         
-        [Test]
-        public void AttemptToGenerateFromMapFileWithNotSupportedSecurityType()
-        {
-            Assert.Throws<ArgumentException>(() => { SecurityIdentifier.GenerateWithFirstDate("CL", Market.USA, SecurityType.Future); });
-        }
-
         class Container
         {
             public SecurityIdentifier sid;

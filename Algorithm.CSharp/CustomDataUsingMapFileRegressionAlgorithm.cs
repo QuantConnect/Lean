@@ -13,13 +13,13 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.SEC;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -38,8 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _symbol;
         private bool _changedSymbol;
-        private bool _properSymbolBeforeRename;
-        private bool _properSymbolAfterRename;
+        private Dictionary<DateTime, string> _tickers = new Dictionary<DateTime, string>();
 
         /// <summary>
         /// Ticker we use for testing
@@ -75,19 +74,18 @@ namespace QuantConnect.Algorithm.CSharp
 
             foreach (var report in slice.Get<SECReport8K>())
             {
-                if (!_properSymbolBeforeRename)
+                var ticker = report.Key.Value;
+                var date = Time.Date;
+
+                if (date == new DateTime(2001, 1, 26) || date == new DateTime(2003, 10, 22))
                 {
-                    _properSymbolBeforeRename = report.Key.Value == "AOL" && Time < new DateTime(2003, 10, 16);
-                }
-                if (!_properSymbolAfterRename)
-                {
-                    _properSymbolAfterRename = report.Key.Value == "TWX" && Time >= new DateTime(2003, 10, 16);
+                    _tickers[date] = ticker;
                 }
 
-                Log($"{Time} - Received 8-K report for {report.Key.Value}");
+                Log($"{Time} - Received 8-K report for {ticker}");
             }
         }
-        
+
         /// <summary>
         /// Final step of the algorithm
         /// </summary>
@@ -97,13 +95,19 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("The ticker did not rename throughout the course of its life even though it should have");
             }
-            if (!_properSymbolBeforeRename)
+
+            var expectedTickers = new Dictionary<DateTime, string>
             {
-                throw new Exception("The SEC report data never renamed to its old ticker");
-            }
-            if (!_properSymbolAfterRename)
+                { new DateTime(2001, 1, 26), "AOL" },
+                { new DateTime(2003, 10, 22), "TWX" },
+            };
+
+            // Check for dictionary equality: https://stackoverflow.com/a/3804852
+            if (_tickers.Count != expectedTickers.Count && _tickers.Except(expectedTickers).Any())
             {
-                throw new Exception("The SEC report data never renamed back to its present-day ticker");
+                Log($"Found: {JsonConvert.SerializeObject(_tickers, Formatting.None)}");
+                Log($"Expected: {JsonConvert.SerializeObject(expectedTickers, Formatting.None)}");
+                throw new Exception("SEC data event tickers do not match test case");
             }
         }
 
