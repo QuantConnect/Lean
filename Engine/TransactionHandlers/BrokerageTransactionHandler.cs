@@ -634,7 +634,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     if (!_brokerage.CanPerformCashSynchronization)
                     {
-                        Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Reentrant call, cash sync not performed");
+                        Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Brokerage cannot perform cash sync at this time");
                         _syncedLiveBrokerageCashToday = true;
                         _lastSyncTimeTicks = CurrentTimeUtc.Ticks;
                         return true;
