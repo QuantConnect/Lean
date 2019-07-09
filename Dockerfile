@@ -9,29 +9,27 @@ MAINTAINER QuantConnect <contact@quantconnect.com>
 
 #################################
 # Option 1: Download from Master
- RUN \
-    wget https://github.com/QuantConnect/Lean/archive/master.zip && \
-    unzip master.zip -d /root && \
-    cd /root && \
-    mv Lean-master Lean
-
- RUN \
-    cd /root/Lean && \
-    sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj && \
-    wget https://nuget.org/nuget.exe && \
-    nuget restore QuantConnect.Lean.sln -NonInteractive && \
-    msbuild /property:Configuration=Release QuantConnect.Lean.sln
-
+# RUN \
+#	wget https://github.com/QuantConnect/Lean/archive/master.zip && \
+#	unzip master.zip -d /root/Lean && \
+#	cd /root/Lean
+# RUN \
+#	sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj && \
+#	wget https://nuget.org/nuget.exe && \
+#	mono nuget.exe restore QuantConnect.Lean.sln -NonInteractive && \
+#	msbuild /property:Configuration=Release && \
+#	cd /root/Lean/Launcher/bin/Release/
 #################################
+
 
 ################################
 # Option 2: Run Local Binaries:
-#COPY ./Launcher/bin/Release /root/Lean/Launcher/bin/Release
+COPY ./Launcher/bin/Release /root/Lean/Launcher/bin/Release
 #################################
 
 # Finally.
-WORKDIR /root/Lean
-CMD [ "mono", "./Launcher/bin/Release/QuantConnect.Lean.Launcher.exe"] # Run app
+WORKDIR /root/Lean/Launcher/bin/Release
+CMD [ "mono", "QuantConnect.Lean.Launcher.exe"] # Run app
 
 # Usage: 
 # docker build -t quantconnect/lean:foundation -f DockerfileLeanFoundation .
