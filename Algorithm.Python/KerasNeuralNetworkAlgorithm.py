@@ -38,10 +38,10 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
         self.lookback = 30 # day of lookback for historical data
         
         self.Schedule.On(self.DateRules.Every(DayOfWeek.Monday), self.TimeRules.AfterMarketOpen("SPY", 28), self.NetTrain) # train Neural Network
-        self.Schedule.On(self.DateRules.Every(DayOfWeek.Monday), self.TimeRules.AfterMarketOpen("SPY", 30), self.Trade) # trading
+        self.Schedule.On(self.DateRules.Every(DayOfWeek.Monday), self.TimeRules.AfterMarketOpen("SPY", 30), self.Trade) 
         
     def NetTrain(self):
-        # get daily historical data
+        # Daily historical data is used to train the machine learning model 
         history = self.History(self.symbols, self.lookback + 1, Resolution.Daily)
         
         # dicts that store prices for training
@@ -55,14 +55,14 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
         for symbol in self.symbols:
             if not history.empty:
                 # x: pridictors; y: response
-                self.prices_x[symbol.Value] = list(history.loc[symbol.Value]['open'])[:-1]
-                self.prices_y[symbol.Value] = list(history.loc[symbol.Value]['open'])[1:]
+                self.prices_x[symbol] = list(history.loc[symbol.Value]['open'])[:-1]
+                self.prices_y[symbol] = list(history.loc[symbol.Value]['open'])[1:]
                 
         for symbol in self.symbols:
-            if symbol.Value in self.prices_x:
+            if symbol in self.prices_x:
                 # convert the original data to np array for fitting the keras NN model
-                x_data = np.array(self.prices_x[symbol.Value])
-                y_data = np.array(self.prices_y[symbol.Value])
+                x_data = np.array(self.prices_x[symbol])
+                y_data = np.array(self.prices_y[symbol])
                 
                 # build a neural network from the 1st layer to the last layer
                 model = Sequential()
@@ -85,15 +85,17 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
             y_pred_final = model.predict(y_data)[0][-1]
             
             # Follow the trend
-            self.buy_prices[symbol.Value] = y_pred_final + np.std(y_data)
-            self.sell_prices[symbol.Value] = y_pred_final - np.std(y_data)
+            self.buy_prices[symbol] = y_pred_final + np.std(y_data)
+            self.sell_prices[symbol] = y_pred_final - np.std(y_data)
         
     def Trade(self):
+        ''' 
+        Enter or exit positions based on relationship of the open price of the current bar and the prices defined by the machine learning model.
+        Liquidate if the open price is below the sell price and buy if the open price is above the buy price 
+        ''' 
         for holding in self.Portfolio.Values:
-            # liquidate
-            if self.CurrentSlice[holding.Symbol.Value].Open < self.sell_prices[holding.Symbol.Value] and holding.Invested:
-                self.Liquidate(i.Symbol)
+            if self.CurrentSlice[holding.Symbol].Open < self.sell_prices[holding.Symbol] and holding.Invested:
+                self.Liquidate(holding.Symbol)
             
-            # buy
-            if self.CurrentSlice[holding.Symbol.Value].Open > self.buy_prices[holding.Symbol.Value] and not holding.Invested:
+            if self.CurrentSlice[holding.Symbol].Open > self.buy_prices[holding.Symbol] and not holding.Invested:
                 self.SetHoldings(holding.Symbol, 1 / len(self.symbols))

@@ -41,6 +41,7 @@ class ScikitLearnLinearRegressionAlgorithm(QCAlgorithm):
         
     
     def Regression(self):
+        # Daily historical data is used to train the machine learning model
         history = self.History(self.symbols, self.lookback, Resolution.Daily)
 
         # price dictionary:    key: symbol; value: historical price
@@ -51,15 +52,15 @@ class ScikitLearnLinearRegressionAlgorithm(QCAlgorithm):
         for symbol in self.symbols:
             if not history.empty:
                 # get historical open price
-                self.prices[symbol.Value] = list(history.loc[symbol.Value]['open'])
+                self.prices[symbol] = list(history.loc[symbol.Value]['open'])
 
         # A is the design matrix
         A = range(self.lookback + 1)
         
         for symbol in self.symbols:
-            if symbol.Value in self.prices:
+            if symbol in self.prices:
                 # response
-                Y = self.prices[symbol.Value]
+                Y = self.prices[symbol]
                 # features
                 X = np.column_stack([np.ones(len(A)), A])
                 
@@ -88,14 +89,12 @@ class ScikitLearnLinearRegressionAlgorithm(QCAlgorithm):
         thod_buy = 0.001 # threshold of slope to buy
         thod_liquidate = -0.001 # threshold of slope to liquidate
         
-        # liquidate
         for holding in self.Portfolio.Values:
             slope = self.slopes[holding.Symbol] 
             # liquidate when slope smaller than thod_liquidate
             if holding.Invested and slope < thod_liquidate:
                 self.Liquidate(holding.Symbol)
         
-        # buy
         for symbol in self.symbols:
             # buy when slope larger than thod_buy
             if self.slopes[symbol] > thod_buy:

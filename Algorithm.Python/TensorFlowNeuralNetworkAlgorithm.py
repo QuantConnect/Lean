@@ -52,7 +52,7 @@ class TensorFlowNeuralNetworkAlgorithm(QCAlgorithm):
         return outputs
     
     def NetTrain(self):
-        # get historical data
+        # Daily historical data is used to train the machine learning model
         history = self.History(self.symbols, self.lookback + 1, Resolution.Daily)
         
         # model: use prices_x to fit prices_y; key: symbol; value: according price
@@ -63,16 +63,16 @@ class TensorFlowNeuralNetworkAlgorithm(QCAlgorithm):
         
         for symbol in self.symbols:
             if not history.empty:
-                # get historical data if not empty
+                # Daily historical data is used to train the machine learning model 
                 # use open prices to predict the next days'
-                self.prices_x[symbol.Value] = list(history.loc[symbol.Value]['open'][:-1])
-                self.prices_y[symbol.Value] = list(history.loc[symbol.Value]['open'][1:])
+                self.prices_x[symbol] = list(history.loc[symbol.Value]['open'][:-1])
+                self.prices_y[symbol] = list(history.loc[symbol.Value]['open'][1:])
         
         for symbol in self.symbols:
-            if symbol.Value in self.prices_x:
+            if symbol in self.prices_x:
                 # create numpy array
-                x_data = np.array(self.prices_x[symbol.Value]).astype(np.float32).reshape((-1,1))
-                y_data = np.array(self.prices_y[symbol.Value]).astype(np.float32).reshape((-1,1))
+                x_data = np.array(self.prices_x[symbol]).astype(np.float32).reshape((-1,1))
+                y_data = np.array(self.prices_y[symbol]).astype(np.float32).reshape((-1,1))
                 
                 # define placeholder for inputs to network
                 xs = tf.placeholder(tf.float32, [None, 1])
@@ -101,19 +101,19 @@ class TensorFlowNeuralNetworkAlgorithm(QCAlgorithm):
             
             # predict today's price
             y_pred_final = sess.run(prediction, feed_dict = {xs: y_data})[0][-1]
-            # self.Debug(f'pred price: {y_pred_final}')
             
             # get sell prices and buy prices as trading signals
-            self.sell_prices[symbol.Value] = y_pred_final - np.std(y_data)
-            self.buy_prices[symbol.Value] = y_pred_final + np.std(y_data)
+            self.sell_prices[symbol] = y_pred_final - np.std(y_data)
+            self.buy_prices[symbol] = y_pred_final + np.std(y_data)
         
     def Trade(self):
-        # Trending strategy
+        ''' 
+        Enter or exit positions based on relationship of the open price of the current bar and the prices defined by the machine learning model.
+        Liquidate if the open price is below the sell price and buy if the open price is above the buy price 
+        ''' 
         for holding in self.Portfolio.Values:
-            # liquidate if open price smaller than sell_price
-            if self.CurrentSlice[holding.Symbol.Value].Open < self.sell_prices[holding.Symbol.Value] and holding.Invested:
+            if self.CurrentSlice[holding.Symbol].Open < self.sell_prices[holding.Symbol] and holding.Invested:
                 self.Liquidate(holding.Symbol)
             
-            # buy if open price larger than buy_price
-            if self.CurrentSlice[holding.Symbol.Value].Open > self.buy_prices[holding.Symbol.Value] and not holding.Invested:
+            if self.CurrentSlice[holding.Symbol].Open > self.buy_prices[holding.Symbol] and not holding.Invested:
                 self.SetHoldings(holding.Symbol, 1 / len(self.symbols))
