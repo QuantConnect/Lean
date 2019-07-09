@@ -46,6 +46,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
 
             // default values for scores
             Assert.AreEqual(false, result.Score.IsFinalScore);
+            Assert.AreEqual(0, result.ReferenceValueFinal);
             Assert.AreEqual(0, result.Score.Magnitude);
             Assert.AreEqual(0, result.Score.Direction);
         }
@@ -71,6 +72,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
             Assert.AreEqual(true, result.Score.IsFinalScore);
             Assert.AreEqual(jObject["score-magnitude"].Value<double>(), result.Score.Magnitude);
             Assert.AreEqual(jObject["score-direction"].Value<double>(), result.Score.Direction);
+            Assert.AreEqual(jObject["reference-final"].Value<decimal>(), result.ReferenceValueFinal);
         }
 
         [Test]
@@ -117,7 +119,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
                 ScoreIsFinal = jObject["score-final"].Value<bool>(),
                 ScoreMagnitude = jObject["score-magnitude"].Value<double>(),
                 ScoreDirection = jObject["score-direction"].Value<double>(),
-                EstimatedValue = jObject["estimated-value"].Value<decimal>()
+                EstimatedValue = jObject["estimated-value"].Value<decimal>(),
+                ReferenceValueFinal = jObject["reference-final"].Value<decimal>()
             });
             var result = JsonConvert.SerializeObject(insight, Formatting.Indented);
             Assert.AreEqual(jsonWithScore, result);
@@ -149,6 +152,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
   ""ticker"": ""BTCUSD"",
   ""type"": ""price"",
   ""reference"": 9143.53,
+  ""reference-final"": 9243.53,
   ""direction"": ""up"",
   ""period"": 5.0,
   ""magnitude"": 0.025,

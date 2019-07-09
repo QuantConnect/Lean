@@ -82,6 +82,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         public decimal ReferenceValue { get; set; }
 
         /// <summary>
+        /// See <see cref="Insight.ReferenceValueFinal"/>
+        /// </summary>
+        [JsonProperty("reference-final", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal ReferenceValueFinal { get; set; }
+
+        /// <summary>
         /// See <see cref="Insight.Direction"/>
         /// </summary>
         [JsonProperty("direction")]
@@ -162,6 +168,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
             Ticker = insight.Symbol.Value;
             Type = insight.Type;
             ReferenceValue = insight.ReferenceValue;
+            ReferenceValueFinal = insight.ReferenceValueFinal;
             Direction = insight.Direction;
             Period = insight.Period.TotalSeconds;
             Magnitude = insight.Magnitude;

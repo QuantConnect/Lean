@@ -240,6 +240,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
                 {
                     context.Score.Finalize(currentTimeUtc);
 
+                    // set the last value used for scoring
+                    context.Insight.ReferenceValueFinal = context.CurrentValues.Get(context.Insight.Type);
+
                     _extensions.ForEach(e => e.OnInsightAnalysisCompleted(context));
 
                     var id = context.Insight.Id;
