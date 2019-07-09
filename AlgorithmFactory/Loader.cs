@@ -241,12 +241,6 @@ namespace QuantConnect.AlgorithmFactory
                     var assemblyBytes = File.ReadAllBytes(assemblyPath);
                     assembly = Assembly.Load(assemblyBytes, debugInformationBytes);
                 }
-                if (assembly == null)
-                {
-                    errorMessage = "Assembly is null.";
-                    Log.Error("Loader.TryCreateILAlgorithm(): Assembly is null");
-                    return false;
-                }
 
                 //Get the list of extention classes in the library:
                 var types = GetExtendedTypeNames(assembly);
@@ -315,7 +309,12 @@ namespace QuantConnect.AlgorithmFactory
                 }
                 catch (ReflectionTypeLoadException e)
                 {
-                    assemblyTypes = e.Types;
+                    assemblyTypes = e.Types.Where(t => t != null).ToArray();
+
+                    foreach (Exception inner in e.LoaderExceptions)
+                    {
+                        Log.Error($"Loader.GetExtendedTypeNames(): {inner.Message}");
+                    }
                 }
 
                 if (assemblyTypes != null && assemblyTypes.Length > 0)
