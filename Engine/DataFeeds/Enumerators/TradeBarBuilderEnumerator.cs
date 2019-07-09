@@ -79,6 +79,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 var utcNow = _timeProvider.GetUtcNow();
                 var currentLocalTime = utcNow.ConvertFromUtc(_timeZone);
                 var barStartTime = currentLocalTime.RoundDown(_barSize);
+
+                if (barStartTime == currentLocalTime)
+                {
+                    // adjust start time if tick aligned to bar period
+                    barStartTime = currentLocalTime.Subtract(_barSize);
+                }
+
                 working = new TradeBar(barStartTime, data.Symbol, marketPrice, marketPrice, marketPrice, marketPrice, qty, _barSize);
                 _queue.Enqueue(working);
 

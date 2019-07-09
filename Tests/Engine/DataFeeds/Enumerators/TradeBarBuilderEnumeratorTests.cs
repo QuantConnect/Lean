@@ -53,14 +53,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 enumerator.ProcessData(tick);
             }
 
-            // even though no data is here, it will still return true
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.IsNull(enumerator.Current);
-
-            // advance a second
-            currentTime = currentTime.AddSeconds(1);
-            timeProvider.SetCurrentTime(currentTime);
-
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
 
@@ -74,6 +66,41 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(ticks.Min(x => x.LastPrice), bar.Low);
             Assert.AreEqual(ticks.Last().LastPrice, bar.Close);
             Assert.AreEqual(ticks.Sum(x => x.Quantity), bar.Volume);
+        }
+
+        [Test]
+        public void AggregatesHourlyTicksIntoHourlyBars()
+        {
+            var timeProvider = new ManualTimeProvider(TimeZones.NewYork);
+            var enumerator = new TradeBarBuilderEnumerator(Time.OneHour, TimeZones.NewYork, timeProvider, false);
+
+            // noon new york time
+            var currentTime = new DateTime(2015, 10, 08, 12, 0, 0);
+            timeProvider.SetCurrentTime(currentTime);
+
+            var price = 0m;
+
+            for (var i = 0; i < 5; i++)
+            {
+                // advance one hour
+                currentTime = currentTime.AddHours(1);
+                timeProvider.SetCurrentTime(currentTime);
+
+                // add a tick
+                price++;
+                enumerator.ProcessData(new Tick(currentTime, Symbols.SPY, price, price, price));
+
+                Assert.IsTrue(enumerator.MoveNext());
+                Assert.IsNotNull(enumerator.Current);
+
+                var bar = (TradeBar)enumerator.Current;
+                Assert.AreEqual(currentTime.AddHours(-1), bar.Time);
+                Assert.AreEqual(currentTime, bar.EndTime);
+                Assert.AreEqual(price, bar.Open);
+                Assert.AreEqual(price, bar.High);
+                Assert.AreEqual(price, bar.Low);
+                Assert.AreEqual(price, bar.Close);
+            }
         }
     }
 }
