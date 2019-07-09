@@ -14,13 +14,14 @@
 */
 
 using System;
+using System.Globalization;
 
 namespace QuantConnect.ToolBox.PsychSignalDataConverter
 {
     public static class PsychSignalDataConverterProgram
     {
         /// <summary>
-        /// Entry point for ToolBox application PsychSignalDataDownloader 
+        /// Entry point for ToolBox application PsychSignalDataDownloader
         /// </summary>
         /// <param name="startDateUtc">Starting date. Cannot be greater than 15 days from today</param>
         /// <param name="endDateUtc">Ending date</param>
@@ -38,11 +39,10 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
         /// </summary>
         /// <param name="sourceDirectory"></param>
         /// <param name="destinationDirectory"></param>
-        /// <param name="knownTickerFolder"></param>
-        public static void PsychSignalDataConverter(string sourceDirectory, string destinationDirectory, string knownTickerFolder)
+        public static void PsychSignalDataConverter(string date, string sourceDirectory, string destinationDirectory)
         {
-            var converter = new PsychSignalDataConverter(sourceDirectory, destinationDirectory, knownTickerFolder);
-            converter.ConvertDirectory();
+            var converter = new PsychSignalDataConverter(sourceDirectory, destinationDirectory);
+            converter.ConvertDate(DateTime.ParseExact(date, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal));
         }
     }
 }

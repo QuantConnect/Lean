@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
@@ -30,7 +31,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
     public class PsychSignalDataConverter : IDisposable
     {
         private Dictionary<string, TickerData> _fileHandles;
-        private HashSet<string> _knownTickers;
+        private MapFileResolver _mapFileResolver;
         private readonly DirectoryInfo _rawSourceDirectory;
         private readonly DirectoryInfo _destinationDirectory;
 
@@ -39,16 +40,13 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
         /// </summary>
         /// <param name="sourceDirectory">Directory to source our raw data from</param>
         /// <param name="destinationDirectory">Directory to write formatted data to</param>
-        /// <param name="knownTickerFolder">Directory where we source the ticker list</param>
-        public PsychSignalDataConverter(string sourceDirectory, string destinationDirectory, string knownTickerFolder)
+        public PsychSignalDataConverter(string sourceDirectory, string destinationDirectory)
         {
             _rawSourceDirectory = new DirectoryInfo(sourceDirectory);
             _destinationDirectory = new DirectoryInfo(destinationDirectory);
 
             _fileHandles = new Dictionary<string, TickerData>();
-            _knownTickers = Directory.GetDirectories(knownTickerFolder)
-                .Select(Path.GetFileName)
-                .ToHashSet();
+            _mapFileResolver = MapFileResolver.Create(Globals.DataFolder, Market.USA);
 
             _destinationDirectory.Create();
         }
@@ -70,16 +68,40 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
 
             Log.Trace($"PsychSignalDataConverter.Convert(): Begin converting {sourceFilePath.FullName}");
 
-            foreach (var line in File.ReadLines(sourceFilePath.FullName))
+            var file = File.ReadLines(sourceFilePath.FullName);
+            var totalLinesCount = file.Count();
+            var previousTicker = string.Empty;
+            var currentLineCount = 0;
+            var percentIncrement = 0.10;
+            var currentTarget = percentIncrement;
+
+            foreach (var line in file)
             {
+                currentLineCount++;
+
                 var csv = line.Split(',');
                 var ticker = csv[1].ToLower();
                 DateTime timestamp;
 
-                if (csv[0] == "SOURCE" ||
-                    !_knownTickers.Contains(ticker) ||
-                    !DateTime.TryParseExact(csv[2], @"yyyy-MM-dd\THH:mm:ss\Z", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out timestamp))
+                if (csv[0] == "SOURCE")
                 {
+                    Log.Trace($"PsychSignalDataConverter.Convert(): Skipping line {currentLineCount} - Line contains header information");
+                    continue;
+                }
+                if (!DateTime.TryParseExact(csv[2], @"yyyy-MM-dd\THH:mm:ss\Z", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out timestamp))
+                {
+                    Log.Trace($"PsychSignalDataConverter.Convert(): Skipping line {currentLineCount} - Failed to parse date properly");
+                    continue;
+                }
+                if (!_mapFileResolver.ResolveMapFile(ticker, timestamp).Any())
+                {
+                    // Because all tickers are all clustered together, we can detect
+                    // duplicate messages and prevent ourselves from spamming the status log
+                    if (ticker != previousTicker)
+                    {
+                        Log.Trace($"PsychSignalDataDownloader.Convert(): Skipping line {currentLineCount} - Could not resolve map file for ticker {ticker}");
+                    }
+                    previousTicker = ticker;
                     continue;
                 }
 
@@ -91,6 +113,15 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 }
 
                 handle.Append(timestamp, csv);
+
+                var progress = (double) currentLineCount / totalLinesCount;
+                if (progress >= currentTarget)
+                {
+                    Log.Trace($"PsychSignalDataConverter.Convert(): Conversion {progress * 100}% complete");
+                    currentTarget += percentIncrement;
+                }
+
+                previousTicker = ticker;
             }
 
             Log.Trace($"PsychSignalDataConverter.Convert(): Finished converting {sourceFilePath.FullName}");
@@ -131,6 +162,16 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             }
 
             Dispose();
+        }
+
+        /// <summary>
+        /// Converts a single day's data. We start processing data
+        /// from the 0th hour of the day and finish at the 23rd hour of the day
+        /// </summary>
+        /// <param name="date">Date to convert files for</param>
+        public void ConvertDate(DateTime date)
+        {
+            ConvertFrom(date.Date, date.Date.AddDays(1));
         }
 
         /// <summary>
@@ -358,8 +399,6 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 }
 
                 _fileHandles = null;
-                _knownTickers = null;
-
                 _disposedValue = true;
             }
         }

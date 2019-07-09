@@ -148,7 +148,7 @@ namespace QuantConnect.ToolBox
                     case "psdl":
                     case "psychsignaldownloader":
                         PsychSignalDataConverterProgram.PsychSignalDataDownloader(
-                            fromDate, 
+                            fromDate,
                             toDate,
                             GetParameterOrDefault(optionsObject, "destination-dir", Path.Combine(Globals.DataFolder, "alternative", "psychsignal", "raw-psychsignal")),
                             GetParameterOrExit(optionsObject, "api-key"),
@@ -237,9 +237,9 @@ namespace QuantConnect.ToolBox
                     case "psdc":
                     case "psychsignaldataconverter":
                         PsychSignalDataConverterProgram.PsychSignalDataConverter(
-                            GetParameterOrDefault(optionsObject, "source-dir", Path.Combine(Globals.DataFolder, "alternative", "psychsignal", "raw-psychsignal")),
-                            GetParameterOrDefault(optionsObject, "destination-dir", Path.Combine(Globals.DataFolder, "alternative", "psychsignal")),
-                            GetParameterOrDefault(optionsObject, "source-meta-dir", Path.Combine(Globals.DataFolder, "equity", "usa", "daily")));
+                            GetParameterOrExit(optionsObject, "date"),
+                            GetParameterOrExit(optionsObject, "source-dir"),
+                            GetParameterOrExit(optionsObject, "destination-dir"));
                         break;
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");

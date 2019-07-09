@@ -86,19 +86,26 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             // or equal to the current time and setting it to an hour before the current time if the condition is met
             if (nowHour <= new DateTime(endDateUtc.Year, endDateUtc.Month, endDateUtc.Day, endDateUtc.Hour, 0, 0))
             {
+                Log.Trace($"PsychSignalDataDownloader.Download(): Adjusting end time from {endDateUtc:yyyy-MM-dd HH:mm:ss} to {nowHour.AddHours(-1):yyyy-MM-dd HH:mm:ss}");
                 endDateUtc = nowHour.AddHours(-1);
             }
 
+            // Get the total amount of hours in order to keep track of progress
+            var totalHours = endDateUtc.Subtract(startDateUtc).TotalHours;
+            var percentage = 1 / totalHours;
+            Log.Trace("PsychSignalDataDownloader.Download(): Begin downloading raw data");
+
             // PsychSignal paginates data by hour. Note that it is possible to retrieve non-complete data if the requested hour
             // is the same as the current hour or greater than the current hour.
-            for (; startDateUtc < endDateUtc; startDateUtc = startDateUtc.AddHours(1))
+            for (var i = 1; startDateUtc < endDateUtc; startDateUtc = startDateUtc.AddHours(1), i++)
             {
                 var rawDataPath = Path.Combine(_rawDataDestination, $"{startDateUtc:yyyyMMdd_HH}_{_dataSource}.csv");
-                var rawDataPathTemp = Path.Combine(Path.GetTempPath(), $"{startDateUtc:yyyyMMdd_HH}_{_dataSource}.csv.tmp");
+                var rawDataPathTemp = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv.tmp");
 
                 // Don't download files we already have
                 if (File.Exists(rawDataPath))
                 {
+                    Log.Trace($"PsychSignalDataDownloader.Download(): File already exists: {rawDataPath}");
                     continue;
                 }
 
@@ -152,6 +159,11 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                         }
                     }
                 }
+
+                var complete = i / totalHours;
+                var eta = TimeSpan.FromSeconds((totalHours - i) * 10);
+
+                Log.Trace($"PsychSignalDataDownloader.Download(): Downloading {complete * 100}% complete. ETA is {eta.TotalMinutes} minutes");
             }
         }
     }
