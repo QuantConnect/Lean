@@ -28,36 +28,39 @@ class PytorchNeuralNetworkAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2013, 10, 7)  # Set Start Date
-        self.SetEndDate(2013, 10, 8)
+        self.SetEndDate(2013, 10, 8) # Set End Date
         
         self.SetCash(100000)  # Set Strategy Cash
         
+        # add symbol
         spy = self.AddEquity("SPY", Resolution.Minute)
-        self.symbols = [spy.Symbol]
+        self.symbols = [spy.Symbol] # using a list can extend to condition for multiple symbols
         
-        self.lookback = 30
+        self.lookback = 30 # days of historical data (look back)
         
-        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", 28), Action(self.NetTrain))
-        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", 30), Action(self.Trade))
-
-    def OnData(self, data):
-        self.data = data
+        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", 28), self.NetTrain) # train the NN
+        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", 30), self.Trade) # trade
     
     def NetTrain(self):
+        # get historical data
         history = self.History(self.symbols, self.lookback + 1, Resolution.Daily)
         
+        # dicts that store prices for training
         self.prices_x = {} 
         self.prices_y = {}
         
+        # dicts that store prices for sell and buy
         self.sell_prices = {}
         self.buy_prices = {}
         
         for symbol in self.symbols:
             if not history.empty:
+                # x: preditors; y: response
                 self.prices_x[symbol.Value] = list(history.loc[symbol.Value]['open'])[:-1]
                 self.prices_y[symbol.Value] = list(history.loc[symbol.Value]['open'])[1:]
                 
         for symbol in self.symbols:
+            # if this symbol has historical data
             if symbol.Value in self.prices_x:
                 
                 net = Net(n_feature=1, n_hidden=10, n_output=1)     # define the network
@@ -65,11 +68,12 @@ class PytorchNeuralNetworkAlgorithm(QCAlgorithm):
                 loss_func = torch.nn.MSELoss()  # this is for regression mean squared loss
                 
                 for t in range(200):
-                    # Get data
+                    # Get data and do preprocessing
                     x = torch.from_numpy(np.array(self.prices_x[symbol.Value])).float()
                     y = torch.from_numpy(np.array(self.prices_y[symbol.Value])).float()
                     
-                    x = x.unsqueeze(1)
+                    # unsqueeze data (see pytorch doc for details)
+                    x = x.unsqueeze(1) 
                     y = y.unsqueeze(1)
                 
                     prediction = net(x)     # input x and predict based on x
@@ -88,16 +92,16 @@ class PytorchNeuralNetworkAlgorithm(QCAlgorithm):
         
         for i in self.Portfolio.Values:
             # liquidate
-            if self.data[i.Symbol.Value].Open < self.sell_prices[i.Symbol.Value] and i.Invested:
+            if self.CurrentSlice[i.Symbol.Value].Open < self.sell_prices[i.Symbol.Value] and i.Invested:
                 self.Liquidate(i.Symbol)
             
             # buy
-            if self.data[i.Symbol.Value].Open > self.buy_prices[i.Symbol.Value] and not i.Invested:
+            if self.CurrentSlice[i.Symbol.Value].Open > self.buy_prices[i.Symbol.Value] and not i.Invested:
                 self.SetHoldings(i.Symbol, 1 / len(self.symbols))
 
             
         
-
+# class for Pytorch NN model
 class Net(torch.nn.Module):
     def __init__(self, n_feature, n_hidden, n_output):
         super(Net, self).__init__()

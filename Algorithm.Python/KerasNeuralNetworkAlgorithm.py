@@ -33,40 +33,40 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
         
         self.SetCash(100000)  # Set Strategy Cash
         spy = self.AddEquity("SPY", Resolution.Minute)
-        self.symbols = [spy.Symbol]
+        self.symbols = [spy.Symbol] # This way can be easily extended to multiply symbols
         
-        self.lookback = 30
+        self.lookback = 30 # day of lookback for historical data
         
-        self.Schedule.On(self.DateRules.Every(DayOfWeek.Monday), self.TimeRules.AfterMarketOpen("SPY", 28), Action(self.NetTrain))
-        self.Schedule.On(self.DateRules.Every(DayOfWeek.Monday), self.TimeRules.AfterMarketOpen("SPY", 30), Action(self.Trade))
-
-
-    def OnData(self, data):
-        self.data = data
+        self.Schedule.On(self.DateRules.Every(DayOfWeek.Monday), self.TimeRules.AfterMarketOpen("SPY", 28), self.NetTrain) # train Neural Network
+        self.Schedule.On(self.DateRules.Every(DayOfWeek.Monday), self.TimeRules.AfterMarketOpen("SPY", 30), self.Trade) # trading
         
     def NetTrain(self):
+        # get daily historical data
         history = self.History(self.symbols, self.lookback + 1, Resolution.Daily)
         
+        # dicts that store prices for training
         self.prices_x = {} 
         self.prices_y = {}
         
+        # dicts that store prices for sell and buy
         self.sell_prices = {}
         self.buy_prices = {}
         
         for symbol in self.symbols:
             if not history.empty:
+                # x: pridictors; y: response
                 self.prices_x[symbol.Value] = list(history.loc[symbol.Value]['open'])[:-1]
                 self.prices_y[symbol.Value] = list(history.loc[symbol.Value]['open'])[1:]
                 
         for symbol in self.symbols:
             if symbol.Value in self.prices_x:
+                # convert the original data to np array for fitting the keras NN model
                 x_data = np.array(self.prices_x[symbol.Value])
                 y_data = np.array(self.prices_y[symbol.Value])
                 
                 # build a neural network from the 1st layer to the last layer
                 model = Sequential()
 
-                # model.add(Dense(units=1, input_dim=1))
                 model.add(Dense(10, input_dim = 1))
                 model.add(Activation('relu'))
                 model.add(Dense(1))
@@ -76,10 +76,12 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
                 # choose loss function and optimizing method
                 model.compile(loss='mse', optimizer=sgd)
 
+                # pick an iteration number large enough for convergence 
                 for step in range(701):
                     # training the model
                     cost = model.train_on_batch(x_data, y_data)
-
+            
+            # get the final predicted price 
             y_pred_final = model.predict(y_data)[0][-1]
             
             # Follow the trend
@@ -89,9 +91,9 @@ class KerasNeuralNetworkAlgorithm(QCAlgorithm):
     def Trade(self):
         for i in self.Portfolio.Values:
             # liquidate
-            if self.data[i.Symbol.Value].Open < self.sell_prices[i.Symbol.Value] and i.Invested:
+            if self.CurrentSlice[i.Symbol.Value].Open < self.sell_prices[i.Symbol.Value] and i.Invested:
                 self.Liquidate(i.Symbol)
             
             # buy
-            if self.data[i.Symbol.Value].Open > self.buy_prices[i.Symbol.Value] and not i.Invested:
+            if self.CurrentSlice[i.Symbol.Value].Open > self.buy_prices[i.Symbol.Value] and not i.Invested:
                 self.SetHoldings(i.Symbol, 1 / len(self.symbols))

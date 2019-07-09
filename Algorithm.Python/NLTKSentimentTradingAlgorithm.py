@@ -32,18 +32,15 @@ class NLTKSentimentTradingAlgorithm(QCAlgorithm):
         self.SetCash(100000)  # Set Strategy Cash
         
         spy = self.AddEquity("SPY", Resolution.Minute)
-        self.text = self.get_text()
-        self.symbols = [spy.Symbol]
+        self.text = self.get_text() # Get custom text data for creating trading signals
+        self.symbols = [spy.Symbol] # This can be extended to multiple symbols
         
         # for what extra models needed to download, please use code nltk.download()
         nltk.download('punkt')
-        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", 30), Action(self.Trade))
-
-    def OnData(self, data):
-        pass
+        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", 30), self.Trade)
     
     def Trade(self):
-        current_time = str(self.Time.year) + '-' + str(self.Time.month) + '-' + str(self.Time.day)
+        current_time = f'{self.Time.year}-{self.Time.month}-{self.Time.day}'
         current_text = self.text.loc[current_time][0]
         words = nltk.word_tokenize(current_text)
         
@@ -52,22 +49,23 @@ class NLTKSentimentTradingAlgorithm(QCAlgorithm):
         negative_word = 'Down'
         
         for i in self.Portfolio.Values:
-            # liquidate
+            # liquidate if it contains negative words
             if negative_word in words and i.Invested:
                 self.Liquidate(i.Symbol)
             
-            # buy
+            # buy if it contains positive words
             if positive_word in words and not i.Invested:
                 self.SetHoldings(i.Symbol, 1 / len(self.symbols))
         
     def get_text(self):
         # import custom data
         # Note: dl must be 1, or it will not download automatically
-        url = 'https://www.dropbox.com/s/8nhbizxq3lgpced/EconomicNews.csv?dl=1'
+        url = 'https://www.dropbox.com/s/7xgvkypg6uxp6xl/EconomicNews.csv?dl=1'
         data = self.Download(url).split('\n')
 
         headline = [x.split(',')[1] for x in data][1:]
         date = [x.split(',')[0] for x in data][1:]
         
+        # create a pd dataframe with 1st col being date and 2nd col being headline (content of the text)
         df = pd.DataFrame(headline, index = date, columns = ['headline'])
         return df

@@ -29,66 +29,74 @@ class ScikitLearnLinearRegressionAlgorithm(QCAlgorithm):
         self.SetStartDate(2013, 10, 7)  # Set Start Date
         self.SetEndDate(2013, 10, 8) # Set End Date
         
-        self.lookback = 30
+        self.lookback = 30 # number of previous days for training
         
         self.SetCash(100000)  # Set Strategy Cash
         spy = self.AddEquity("SPY", Resolution.Minute)
         
-        self.symbols = [ spy.Symbol ]
+        self.symbols = [ spy.Symbol ] # In the future, we can include more symbols to the list in this way
         
-        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", 28), Action(self.Regression))
-        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", 30), Action(self.Trade))
+        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", 28), self.Regression)
+        self.Schedule.On(self.DateRules.EveryDay("SPY"), self.TimeRules.AfterMarketOpen("SPY", 30), self.Trade)
         
-
-
-    def OnData(self, data):
-        pass
     
     def Regression(self):
         history = self.History(self.symbols, self.lookback, Resolution.Daily)
 
+        # price dictionary:    key: symbol; value: historical price
         self.prices = {}
+        # slope dictionary:    key: symbol; value: slope
         self.slopes = {}
         
         for symbol in self.symbols:
             if not history.empty:
+                # get historical open price
                 self.prices[symbol.Value] = list(history.loc[symbol.Value]['open'])
 
+        # A is the design matrix
         A = range(self.lookback + 1)
         
         for symbol in self.symbols:
             if symbol.Value in self.prices:
+                # response
                 Y = self.prices[symbol.Value]
+                # features
                 X = np.column_stack([np.ones(len(A)), A])
                 
+                # data preparation
                 length = min(len(X), len(Y))
                 X = X[-length:]
                 Y = Y[-length:]
                 A = A[-length:]
                 
+                # fit the linear regression
                 reg = LinearRegression().fit(X, Y)
                 
                 # run linear regression y = ax + b
                 b = reg.intercept_
                 a = reg.coef_[1]
                 
+                # store slopes for symbols
                 self.slopes[symbol] = a/b
                 
     
     def Trade(self):
+        # if there is no open price
         if not self.prices:
             return 
         
-        thod_buy = 0.001
-        thod_liquidate = -0.001
+        thod_buy = 0.001 # threshold of slope to buy
+        thod_liquidate = -0.001 # threshold of slope to liquidate
         
         # liquidate
-        for i in self.Portfolio.Values:
-            slope = self.slopes[i.Symbol] 
-            if i.Invested and slope < thod_liquidate:
-                self.Liquidate(i.Symbol)
+        for holding in self.Portfolio.Values:
+            slope = self.slopes[holding.Symbol] 
+            # liquidate when slope smaller than thod_liquidate
+            if holding.Invested and slope < thod_liquidate:
+                self.Liquidate(holding.Symbol)
         
         # buy
         for symbol in self.symbols:
+            # buy when slope larger than thod_buy
             if self.slopes[symbol] > thod_buy:
                 self.SetHoldings(symbol, 1 / len(self.symbols))
