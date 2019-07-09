@@ -77,9 +77,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public InsightType Type { get; private set; }
 
         /// <summary>
-        /// Gets the reference value this insight is predicting against. The value is dependent on the specified <see cref="InsightType"/>
+        /// Gets the initial reference value this insight is predicting against. The value is dependent on the specified <see cref="InsightType"/>
         /// </summary>
         public decimal ReferenceValue { get; set; }
+
+        /// <summary>
+        /// Gets the final reference value, used for scoring, this insight is predicting against. The value is dependent on the specified <see cref="InsightType"/>
+        /// </summary>
+        public decimal ReferenceValueFinal { get; set; }
 
         /// <summary>
         /// Gets the predicted direction, down, flat or up
@@ -291,6 +296,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 Id = Id,
                 EstimatedValue = EstimatedValue,
                 ReferenceValue = ReferenceValue,
+                ReferenceValueFinal = ReferenceValueFinal,
                 SourceModel = SourceModel,
                 GroupId = GroupId
             };
@@ -428,6 +434,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 CloseTimeUtc = Time.UnixTimeStampToDateTime(serializedInsight.CloseTime),
                 EstimatedValue = serializedInsight.EstimatedValue,
                 ReferenceValue = serializedInsight.ReferenceValue,
+                ReferenceValueFinal = serializedInsight.ReferenceValueFinal,
                 GroupId = string.IsNullOrEmpty(serializedInsight.GroupId) ? (Guid?) null : Guid.Parse(serializedInsight.GroupId)
             };
 
