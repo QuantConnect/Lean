@@ -90,14 +90,14 @@ class PytorchNeuralNetworkAlgorithm(QCAlgorithm):
         
     def Trade(self):
         
-        for i in self.Portfolio.Values:
+        for holding in self.Portfolio.Values:
             # liquidate
-            if self.CurrentSlice[i.Symbol.Value].Open < self.sell_prices[i.Symbol.Value] and i.Invested:
-                self.Liquidate(i.Symbol)
+            if self.CurrentSlice[holding.Symbol.Value].Open < self.sell_prices[holding.Symbol.Value] and holding.Invested:
+                self.Liquidate(holding.Symbol)
             
             # buy
-            if self.CurrentSlice[i.Symbol.Value].Open > self.buy_prices[i.Symbol.Value] and not i.Invested:
-                self.SetHoldings(i.Symbol, 1 / len(self.symbols))
+            if self.CurrentSlice[holding.Symbol.Value].Open > self.buy_prices[holding.Symbol.Value] and not holding.Invested:
+                self.SetHoldings(holding.Symbol, 1 / len(self.symbols))
 
             
         

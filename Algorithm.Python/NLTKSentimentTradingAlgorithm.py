@@ -48,14 +48,14 @@ class NLTKSentimentTradingAlgorithm(QCAlgorithm):
         positive_word = 'Up'
         negative_word = 'Down'
         
-        for i in self.Portfolio.Values:
+        for holding in self.Portfolio.Values:
             # liquidate if it contains negative words
-            if negative_word in words and i.Invested:
-                self.Liquidate(i.Symbol)
+            if negative_word in words and holding.Invested:
+                self.Liquidate(holding.Symbol)
             
             # buy if it contains positive words
-            if positive_word in words and not i.Invested:
-                self.SetHoldings(i.Symbol, 1 / len(self.symbols))
+            if positive_word in words and not holding.Invested:
+                self.SetHoldings(holding.Symbol, 1 / len(self.symbols))
         
     def get_text(self):
         # import custom data
