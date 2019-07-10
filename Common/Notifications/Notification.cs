@@ -1,17 +1,20 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
+using System;
+using QuantConnect.Util;
 
 namespace QuantConnect.Notifications
 {
@@ -113,16 +116,22 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Default constructor for sending an email notification
         /// </summary>
-        /// <param name="address">Address to send to</param>
-        /// <param name="subject">Subject of the email</param>
-        /// <param name="message">Message body of the email</param>
-        /// <param name="data">Data to attach to the email</param>
-        public NotificationEmail(string address, string subject, string message, string data)
+        /// <param name="address">Address to send to. Will throw <see cref="ArgumentException"/> if invalid
+        /// <see cref="Validate.EmailAddress"/></param>
+        /// <param name="subject">Subject of the email. Will set to <see cref="string.Empty"/> if null</param>
+        /// <param name="message">Message body of the email. Will set to <see cref="string.Empty"/> if null</param>
+        /// <param name="data">Data to attach to the email. Will set to <see cref="string.Empty"/> if null</param>
+        public NotificationEmail(string address, string subject = "", string message = "", string data = "")
         {
-            Message = message;
-            Data = data;
-            Subject = subject;
+            if (!Validate.EmailAddress(address))
+            {
+                throw new ArgumentException($"Invalid email address: {address}");
+            }
+
             Address = address;
+            Data = data ?? string.Empty;
+            Message = message ?? string.Empty;
+            Subject = subject ?? string.Empty;
         }
     }
 }
