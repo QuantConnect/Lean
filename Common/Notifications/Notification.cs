@@ -93,8 +93,6 @@ namespace QuantConnect.Notifications
     /// </summary>
     public class NotificationEmail : Notification
     {
-        private const string DefaultMessageAndSubject = "QuantConnect LEAN Email Notification";
-
         /// <summary>
         /// Send to address:
         /// </summary>
@@ -118,11 +116,12 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Default constructor for sending an email notification
         /// </summary>
-        /// <param name="address">Address to send to</param>
-        /// <param name="subject">Subject of the email</param>
-        /// <param name="message">Message body of the email</param>
-        /// <param name="data">Data to attach to the email</param>
-        public NotificationEmail(string address, string subject, string message, string data)
+        /// <param name="address">Address to send to. Will throw <see cref="ArgumentException"/> if invalid
+        /// <see cref="Validate.EmailAddress"/></param>
+        /// <param name="subject">Subject of the email. Will set to <see cref="string.Empty"/> if null</param>
+        /// <param name="message">Message body of the email. Will set to <see cref="string.Empty"/> if null</param>
+        /// <param name="data">Data to attach to the email. Will set to <see cref="string.Empty"/> if null</param>
+        public NotificationEmail(string address, string subject = "", string message = "", string data = "")
         {
             if (!Validate.EmailAddress(address))
             {
@@ -131,8 +130,8 @@ namespace QuantConnect.Notifications
 
             Address = address;
             Data = data ?? string.Empty;
-            Message = message ?? DefaultMessageAndSubject;
-            Subject = subject ?? DefaultMessageAndSubject;
+            Message = message ?? string.Empty;
+            Subject = subject ?? string.Empty;
         }
     }
 }

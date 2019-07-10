@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
 using NUnit.Framework;
 using QuantConnect.Notifications;
 
@@ -16,19 +31,19 @@ namespace QuantConnect.Tests.Common.Notifications
         }
 
         [Test]
-        public void Constructor_SetsNullSubject_ToDefaultQuantConnectLeanEmailNotification()
+        public void Constructor_SetsNullSubject_ToEmptyString()
         {
-            // default subject chosen to provide context for the email
+            // empty string used if subject is null
             var email = new NotificationEmail("e@d.com", null, "message", "data");
-            Assert.AreEqual("QuantConnect LEAN Email Notification", email.Subject);
+            Assert.AreEqual(string.Empty, email.Subject);
         }
 
         [Test]
-        public void Constructor_SetsNullMessage_ToDefaultQuantConnectLeanEmailNotification()
+        public void Constructor_SetsNullMessage_ToEmptyString()
         {
-            // default message chosen to provide context for the email
+            // empty string used if message is null
             var email = new NotificationEmail("e@d.com", "subject", null, "data");
-            Assert.AreEqual("QuantConnect LEAN Email Notification", email.Message);
+            Assert.AreEqual(string.Empty, email.Message);
         }
 
         [Test]
