@@ -31,49 +31,14 @@ namespace QuantConnect.Tests.Common.Orders.Fees
     [TestFixture]
     public class AlphaStreamsFeeModelTests
     {
-        private Security _libor;
-
-        [TestFixtureSetUp]
-        public void SetUp()
-        {
-            _libor = new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new SubscriptionDataConfig(
-                    typeof(TradeBar),
-                    Symbols.SPY,
-                    Resolution.Daily,
-                    TimeZones.NewYork,
-                    TimeZones.NewYork,
-                    true,
-                    true,
-                    false
-                ),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
-            );
-        }
-
-        /// <summary>
-        /// The LIBOR is taken into account for Equity trading
-        /// Long positions on margin pays LIBOR
-        /// Short positions on margin receives LIBOR
-        /// </summary>
-        [TestCase(-100, -0.012)]
-        [TestCase(-100, 0.012)]
-        [TestCase(-100, 0.024)]
-        [TestCase(-100, 0.048)]
-        [TestCase(100, -0.012)]
-        [TestCase(100, 0.012)]
-        [TestCase(100, 0.024)]
-        [TestCase(100, 0.048)]
-        public void CalculateOrderFeeForLongOrShortEquityWithGivenLiborRates(int quantity, decimal rate)
+        [TestCase(-100)]
+        [TestCase(100)]
+        public void CalculateOrderFeeForLongOrShortEquity(int quantity)
         {
             var security = SecurityTests.GetSecurity();
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
-            var feeModel = new AlphaStreamsFeeModel(_libor);
-            _libor.SetMarketPrice(new Tick { Time = DateTime.UtcNow, Value = rate });
+            var feeModel = new AlphaStreamsFeeModel();
 
             var parameters = new OrderFeeParameters(
                 security,
@@ -83,12 +48,12 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var fee = feeModel.GetOrderFee(parameters);
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            var expected = (0.004m + rate * Math.Sign(quantity)) * Math.Abs(security.Price * quantity);
+            var expected = 0.004m * Math.Abs(security.Price * quantity);
             Assert.AreEqual(expected, fee.Value.Amount);
         }
 
-        [TestCase(-100)]
-        [TestCase(100)]
+        [TestCase(-1)]
+        [TestCase(1)]
         public void CalculateOrderFeeForLongOrShortFutures(int quantity)
         {
             var tz = TimeZones.NewYork;

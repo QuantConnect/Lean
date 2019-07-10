@@ -24,8 +24,6 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     public class AlphaStreamsFeeModel : FeeModel
     {
-        private readonly Security _libor;
-
         private readonly IDictionary<SecurityType, decimal> _feeRates = new Dictionary<SecurityType, decimal>
         {
             {SecurityType.Equity, 0.004m},
@@ -34,15 +32,6 @@ namespace QuantConnect.Orders.Fees
             {SecurityType.Future, 0.4m + 0.1m},
             {SecurityType.Option, 0.4m + 0.1m}
         };
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AlphaStreamsFeeModel"/>
-        /// </summary>
-        /// <param name="libor">Average interest rate at which major global banks borrow from one another</param>
-        public AlphaStreamsFeeModel(Security libor = null)
-        {
-            _libor = libor;
-        }
 
         /// <summary>
         /// Gets the order fee associated with the specified order. This returns the cost
@@ -72,26 +61,6 @@ namespace QuantConnect.Orders.Fees
             var value = security.Type == SecurityType.Equity || security.Type == SecurityType.Forex
                 ? Math.Abs(order.GetValue(security))
                 : order.AbsoluteQuantity;
-
-            // The LIBOR is taken into account for Equity trading
-            // Long positions on margin pays LIBOR
-            // Short positions on margin receives LIBOR
-            if (security.Type == SecurityType.Equity)
-            {
-                if (_libor == null)
-                {
-                    throw new ArgumentNullException($"AlphaStreamsFeeModel.GetOrderFee(): LIBOR security cannot be null for fee calculation of equity orders");
-                }
-
-                if (order.Direction == OrderDirection.Buy)
-                {
-                    feeRate += _libor.Price;
-                }
-                else
-                {
-                    feeRate -= _libor.Price;
-                }
-            }
 
             return new OrderFee(new CashAmount(feeRate * value, Currencies.USD));
         }
