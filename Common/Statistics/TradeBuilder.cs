@@ -202,8 +202,9 @@ namespace QuantConnect.Statistics
                 while (position.PendingTrades.Count > 0 && Math.Abs(totalExecutedQuantity) < fill.AbsoluteFillQuantity)
                 {
                     var trade = position.PendingTrades[index];
+                    var absoluteUnexecutedQuantity = fill.AbsoluteFillQuantity - Math.Abs(totalExecutedQuantity);
 
-                    if (fill.AbsoluteFillQuantity >= trade.Quantity)
+                    if (absoluteUnexecutedQuantity >= trade.Quantity)
                     {
                         totalExecutedQuantity -= trade.Quantity * (trade.Direction == TradeDirection.Long ? +1 : -1);
                         position.PendingTrades.RemoveAt(index);
@@ -223,7 +224,7 @@ namespace QuantConnect.Statistics
                     else
                     {
                         totalExecutedQuantity += fill.FillQuantity;
-                        trade.Quantity -= fill.AbsoluteFillQuantity;
+                        trade.Quantity -= absoluteUnexecutedQuantity;
 
                         AddNewTrade(new Trade
                         {
@@ -231,13 +232,13 @@ namespace QuantConnect.Statistics
                             EntryTime = trade.EntryTime,
                             EntryPrice = trade.EntryPrice,
                             Direction = trade.Direction,
-                            Quantity = fill.AbsoluteFillQuantity,
+                            Quantity = absoluteUnexecutedQuantity,
                             ExitTime = fill.UtcTime,
                             ExitPrice = fill.FillPrice,
-                            ProfitLoss = Math.Round((fill.FillPrice - trade.EntryPrice) * fill.AbsoluteFillQuantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2),
+                            ProfitLoss = Math.Round((fill.FillPrice - trade.EntryPrice) * absoluteUnexecutedQuantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2),
                             TotalFees = trade.TotalFees + (orderFeeAssigned ? 0 : orderFee),
-                            MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * fill.AbsoluteFillQuantity * conversionRate * multiplier, 2),
-                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * fill.AbsoluteFillQuantity * conversionRate * multiplier, 2)
+                            MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
+                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2)
                         });
 
                         trade.TotalFees = 0;
