@@ -129,6 +129,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
         private const string jsonNoScore =
 @"{
   ""id"": ""e02be50f56a8496b9ba995d19a904ada"",
+  ""group-id"": null,
   ""source-model"": ""mySourceModel-1"",
   ""generated-time"": 1520711961.00055,
   ""close-time"": 1520711961.00055,
@@ -136,9 +137,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
   ""ticker"": ""BTCUSD"",
   ""type"": ""price"",
   ""reference"": 9143.53,
+  ""reference-final"": 0.0,
   ""direction"": ""up"",
   ""period"": 5.0,
-  ""magnitude"": 0.025
+  ""magnitude"": 0.025,
+  ""confidence"": null,
+  ""weight"": null,
+  ""score-final"": false,
+  ""score-magnitude"": 0.0,
+  ""score-direction"": 0.0,
+  ""estimated-value"": 0.0
 }";
 
         private const string jsonWithScore =
@@ -156,6 +164,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
   ""direction"": ""up"",
   ""period"": 5.0,
   ""magnitude"": 0.025,
+  ""confidence"": null,
+  ""weight"": null,
   ""score-final"": true,
   ""score-magnitude"": 1.0,
   ""score-direction"": 1.0,
