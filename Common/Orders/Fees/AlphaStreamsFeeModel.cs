@@ -55,7 +55,9 @@ namespace QuantConnect.Orders.Fees
 
             if (!_feeRates.TryGetValue(security.Type, out feeRate))
             {
-                throw new ArgumentException($"Unsupported security type: {security.Type}");
+                throw new ArgumentException(
+                    $"Unsupported security type: {security.Type}. For direct-to-exchange assets such as Crypto, use the fee model specified by the exchange."
+                );
             }
 
             var value = security.Type == SecurityType.Equity || security.Type == SecurityType.Forex
