@@ -13,37 +13,37 @@
  * limitations under the License.
 */
 
+using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
-using QLNet;
-using QuantConnect.Data.Fundamental;
-using QuantConnect.Orders.Fills;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Fees
 {
+    /// <summary>
+    /// Provides an implementation of <see cref="FeeModel"/> that models order fees that alpha stream clients pay/receive
+    /// </summary>
     public class AlphaStreamsFeeModel : FeeModel
     {
+        private readonly Security _libor;
 
-        private readonly decimal _forexCommissionRate = 0.000002m;
-        private decimal _liborRate;
-
-        private readonly Dictionary<string, EquityFee> _equityFee =
-            new Dictionary<string, EquityFee>();
-
-        private readonly Dictionary<string, CashAmount> _futureFee =
-            //                                                               Commission plus clearing fee
-            new Dictionary<string, CashAmount> { { Market.USA, new CashAmount(0.4m + 0.1m, "USD") } };
-
-        private readonly Dictionary<string, CashAmount> _optionFee =
-            //                                                               Commission plus clearing fee
-            new Dictionary<string, CashAmount> { { Market.USA, new CashAmount(0.4m + 0.1m, "USD") } };
-
-        public AlphaStreamsFeeModel(decimal liborRate = 0.024m)
+        private readonly IDictionary<SecurityType, decimal> _feeRates = new Dictionary<SecurityType, decimal>
         {
-            _liborRate = Math.Abs(liborRate);
-            _equityFee.Add(Market.USA, new EquityFee("USD", 0.004m + _liborRate, 0));
+            {SecurityType.Equity, 0.004m},
+            {SecurityType.Forex, 0.000002m},
+            // Commission plus clearing fee
+            {SecurityType.Future, 0.4m + 0.1m},
+            {SecurityType.Option, 0.4m + 0.1m}
+        };
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AlphaStreamsFeeModel"/>
+        /// </summary>
+        /// <param name="libor">Average interest rate at which major global banks borrow from one another</param>
+        public AlphaStreamsFeeModel(Security libor = null)
+        {
+            _libor = libor;
         }
+
         /// <summary>
         /// Gets the order fee associated with the specified order. This returns the cost
         /// of the transaction in the account currency
@@ -56,108 +56,44 @@ namespace QuantConnect.Orders.Fees
             var order = parameters.Order;
             var security = parameters.Security;
 
-            // Option exercise for equity options is free of charge
+            // Option exercise is free of charge
             if (order.Type == OrderType.OptionExercise)
             {
-                var optionOrder = (OptionExerciseOrder)order;
+                return OrderFee.Zero;
+            }
 
-                if (optionOrder.Symbol.ID.SecurityType == SecurityType.Option &&
-                    optionOrder.Symbol.ID.Underlying.SecurityType == SecurityType.Equity)
+            decimal feeRate;
+
+            if (!_feeRates.TryGetValue(security.Type, out feeRate))
+            {
+                throw new ArgumentException($"Unsupported security type: {security.Type}");
+            }
+
+            var value = security.Type == SecurityType.Equity || security.Type == SecurityType.Forex
+                ? Math.Abs(order.GetValue(security))
+                : order.AbsoluteQuantity;
+
+            // The LIBOR is taken into account for Equity trading
+            // Long positions on margin pays LIBOR
+            // Short positions on margin receives LIBOR
+            if (security.Type == SecurityType.Equity)
+            {
+                if (_libor == null)
                 {
-                    return OrderFee.Zero;
+                    throw new ArgumentNullException($"AlphaStreamsFeeModel.GetOrderFee(): LIBOR security cannot be null for fee calculation of equity orders");
+                }
+
+                if (order.Direction == OrderDirection.Buy)
+                {
+                    feeRate += _libor.Price;
+                }
+                else
+                {
+                    feeRate -= _libor.Price;
                 }
             }
 
-            decimal feeResult;
-            string feeCurrency;
-            var market = security.Symbol.ID.Market;
-            switch (security.Type)
-            {
-                case SecurityType.Forex:
-                    // get the total order value in the account currency
-                    var totalOrderValue = order.GetValue(security);
-                    var fee = Math.Abs(_forexCommissionRate * totalOrderValue);
-                    feeResult = Math.Max(0, fee);
-                    // Forex fees are all in USD
-                    feeCurrency = Currencies.USD;
-                    break;
-
-                case SecurityType.Option:
-                    CashAmount optionsFeeRatePerContract;
-                    if (!_optionFee.TryGetValue(market, out optionsFeeRatePerContract))
-                    {
-                        throw new Exception($"AlphaStreamsFeeModel(): unexpected future Market {market}");
-                    }
-                    feeResult = order.AbsoluteQuantity * optionsFeeRatePerContract.Amount;
-                    feeCurrency = optionsFeeRatePerContract.Currency;
-                    break;
-
-                case SecurityType.Future:
-                    if (market == Market.Globex || market == Market.NYMEX
-                        || market == Market.CBOT || market == Market.ICE
-                        || market == Market.CBOE || market == Market.NSE)
-                    {
-                        // just in case...
-                        market = Market.USA;
-                    }
-
-                    CashAmount futuresFeeRatePerContract;
-                    if (!_futureFee.TryGetValue(market, out futuresFeeRatePerContract))
-                    {
-                        throw new Exception($"AlphaStreamsFeeModel(): unexpected future Market {market}");
-                    }
-                    feeResult = order.AbsoluteQuantity * futuresFeeRatePerContract.Amount;
-                    feeCurrency = futuresFeeRatePerContract.Currency;
-                    break;
-
-                case SecurityType.Equity:
-                    EquityFee equityFee;
-                    if (!_equityFee.TryGetValue(market, out equityFee))
-                    {
-                        throw new Exception($"AlphaStreamsFeeModel(): unexpected equity Market {market}");
-                    }
-                    
-                    //Per trade notional value fees
-                    var tradeFee = equityFee.FeePerTrade * order.GetValue(security);
-
-                    if (tradeFee < equityFee.MinimumFee)
-                    {
-                        tradeFee = equityFee.MinimumFee;
-                    }
-                    
-                    feeCurrency = equityFee.Currency;
-                    //Always return a positive fee.
-                    feeResult = Math.Abs(tradeFee);
-                    break;
-
-                default:
-                    // unsupported security type
-                    throw new ArgumentException($"Unsupported security type: {security.Type}");
-            }
-
-            return new OrderFee(new CashAmount(
-                feeResult,
-                feeCurrency));
-        }
-
-        /// <summary>
-        /// Helper class to handle IB Equity fees
-        /// </summary>
-        private class EquityFee
-        {
-            public string Currency { get; }
-            public decimal FeePerTrade { get; }
-            public decimal MinimumFee { get; }
-            public decimal LiborRate { get; }
-
-            public EquityFee(string currency,
-                decimal feePerTrade,
-                decimal minimumFee)
-            {
-                Currency = currency;
-                FeePerTrade = feePerTrade;
-                MinimumFee = minimumFee;
-            }
+            return new OrderFee(new CashAmount(feeRate * value, Currencies.USD));
         }
     }
 }

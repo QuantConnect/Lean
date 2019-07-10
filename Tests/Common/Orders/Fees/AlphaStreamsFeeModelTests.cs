@@ -29,30 +29,67 @@ using QuantConnect.Tests.Common.Securities;
 namespace QuantConnect.Tests.Common.Orders.Fees
 {
     [TestFixture]
-    class AlphaStreamsFeeModelTests
+    public class AlphaStreamsFeeModelTests
     {
-        private decimal _liborRate = 0.024m;
-        private readonly IFeeModel _feeModel = new AlphaStreamsFeeModel(0.024m);
+        private Security _libor;
 
-        [Test]
-        public void USAEquityFeeInUSD()
+        [TestFixtureSetUp]
+        public void SetUp()
+        {
+            _libor = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.SPY,
+                    Resolution.Daily,
+                    TimeZones.NewYork,
+                    TimeZones.NewYork,
+                    true,
+                    true,
+                    false
+                ),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance
+            );
+        }
+
+        /// <summary>
+        /// The LIBOR is taken into account for Equity trading
+        /// Long positions on margin pays LIBOR
+        /// Short positions on margin receives LIBOR
+        /// </summary>
+        [TestCase(-100, -0.012)]
+        [TestCase(-100, 0.012)]
+        [TestCase(-100, 0.024)]
+        [TestCase(-100, 0.048)]
+        [TestCase(100, -0.012)]
+        [TestCase(100, 0.012)]
+        [TestCase(100, 0.024)]
+        [TestCase(100, 0.048)]
+        public void CalculateOrderFeeForLongOrShortEquityWithGivenLiborRates(int quantity, decimal rate)
         {
             var security = SecurityTests.GetSecurity();
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
-            var fee = _feeModel.GetOrderFee(
-                new OrderFeeParameters(
-                    security,
-                    new MarketOrder(security.Symbol, 1000, DateTime.UtcNow)
-                )
+            var feeModel = new AlphaStreamsFeeModel(_libor);
+            _libor.SetMarketPrice(new Tick { Time = DateTime.UtcNow, Value = rate });
+
+            var parameters = new OrderFeeParameters(
+                security,
+                new MarketOrder(security.Symbol, quantity, DateTime.UtcNow)
             );
 
+            var fee = feeModel.GetOrderFee(parameters);
+
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            Assert.AreEqual((0.004m + _liborRate) * security.Price * 1000, fee.Value.Amount);
+            var expected = (0.004m + rate * Math.Sign(quantity)) * Math.Abs(security.Price * quantity);
+            Assert.AreEqual(expected, fee.Value.Amount);
         }
 
-        [Test]
-        public void USAFutureFee()
+        [TestCase(-100)]
+        [TestCase(100)]
+        public void CalculateOrderFeeForLongOrShortFutures(int quantity)
         {
             var tz = TimeZones.NewYork;
             var security = new Future(Symbols.Fut_SPY_Feb19_2016,
@@ -63,19 +100,22 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
-            var fee = _feeModel.GetOrderFee(
-                new OrderFeeParameters(
-                    security,
-                    new MarketOrder(security.Symbol, 1000, DateTime.UtcNow)
-                )
+            var feeModel = new AlphaStreamsFeeModel();
+
+            var parameters = new OrderFeeParameters(
+                security,
+                new MarketOrder(security.Symbol, quantity, DateTime.UtcNow)
             );
 
+            var fee = feeModel.GetOrderFee(parameters);
+
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            Assert.AreEqual(1000 * 0.50m, fee.Value.Amount);
+            Assert.AreEqual(Math.Abs(quantity) * 0.50m, fee.Value.Amount);
         }
 
-        [Test]
-        public void USAOptionFee()
+        [TestCase(-1)]
+        [TestCase(1)]
+        public void CalculateOrderFeeForLongOrShortOptions(int quantity)
         {
             var tz = TimeZones.NewYork;
             var security = new Option(Symbols.SPY_C_192_Feb19_2016,
@@ -86,19 +126,22 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
-            var fee = _feeModel.GetOrderFee(
-                new OrderFeeParameters(
-                    security,
-                    new MarketOrder(security.Symbol, 1000, DateTime.UtcNow)
-                )
+            var feeModel = new AlphaStreamsFeeModel();
+
+            var parameters = new OrderFeeParameters(
+                security,
+                new MarketOrder(security.Symbol, quantity, DateTime.UtcNow)
             );
 
+            var fee = feeModel.GetOrderFee(parameters);
+
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            Assert.AreEqual(0.50m * 1000, fee.Value.Amount);
+            Assert.AreEqual(Math.Abs(quantity) * 0.50m, fee.Value.Amount);
         }
 
-        [Test]
-        public void USAOptionMinimumFee()
+        [TestCase(-1)]
+        [TestCase(1)]
+        public void GetMinimumOrderFeeForLongOrShortOptions(int quantity)
         {
             var tz = TimeZones.NewYork;
             var security = new Option(Symbols.SPY_C_192_Feb19_2016,
@@ -109,19 +152,22 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
-            var fee = _feeModel.GetOrderFee(
-                new OrderFeeParameters(
-                    security,
-                    new MarketOrder(security.Symbol, 1, DateTime.UtcNow)
-                )
+            var feeModel = new AlphaStreamsFeeModel();
+
+            var parameters = new OrderFeeParameters(
+                security,
+                new MarketOrder(security.Symbol, quantity, DateTime.UtcNow)
             );
 
+            var fee = feeModel.GetOrderFee(parameters);
+
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            Assert.AreEqual(0.50m, fee.Value.Amount);
+            Assert.AreEqual(Math.Abs(quantity) * 0.50m, fee.Value.Amount);
         }
 
-        [Test]
-        public void ForexFeeUSD()
+        [TestCase(-1000)]
+        [TestCase(1000)]
+        public void CalculateOrderFeeForLongOrShortForex(int quantity)
         {
             var tz = TimeZones.NewYork;
             var security = new Forex(
@@ -133,42 +179,46 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
-            var fee = _feeModel.GetOrderFee(
-                new OrderFeeParameters(
-                    security,
-                    new MarketOrder(security.Symbol, 1000, DateTime.UtcNow)
-                )
+            var feeModel = new AlphaStreamsFeeModel();
+
+            var parameters = new OrderFeeParameters(
+                security,
+                new MarketOrder(security.Symbol, quantity, DateTime.UtcNow)
             );
 
+            var fee = feeModel.GetOrderFee(parameters);
+
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            Assert.AreEqual(0.000002m * security.Price * 1000, fee.Value.Amount);
+            Assert.AreEqual(0.000002m * security.Price * Math.Abs(quantity), fee.Value.Amount);
         }
 
-        [Test]
-        public void ForexFee_NonUSD()
+        [TestCase(-1000000)]
+        [TestCase(1000000)]
+        public void CalculateOrderFeeForLongOrShortForexNonUsd(int quantity)
         {
+            var conversionRate = 1.2m;
             var tz = TimeZones.NewYork;
             var security = new Forex(
                 SecurityExchangeHours.AlwaysOpen(tz),
-                new Cash("GBP", 0, 1.2m),
+                new Cash("GBP", 0, conversionRate),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("EURGBP", "GBP", 1, 0.01m, 0.00000001m),
                 ErrorCurrencyConverter.Instance
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
-            var fee = _feeModel.GetOrderFee(
+            var feeModel = new AlphaStreamsFeeModel();
+
+            var fee = feeModel.GetOrderFee(
                 new OrderFeeParameters(
                     security,
-                    new MarketOrder(security.Symbol, 1000000, DateTime.UtcNow)
+                    new MarketOrder(security.Symbol, quantity, DateTime.UtcNow)
                 )
             );
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            Assert.AreEqual(0.000002m * security.Price * 1000000 * 1.2m, fee.Value.Amount);
+            Assert.AreEqual(0.000002m * security.Price * Math.Abs(quantity) * conversionRate, fee.Value.Amount);
         }
-
-        // Add USD Forex Test
 
         [Test]
         public void GetOrderFeeThrowsForUnsupportedSecurityType()
@@ -186,7 +236,9 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                     );
                     security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 12000, 12000));
 
-                    _feeModel.GetOrderFee(
+                    var feeModel = new AlphaStreamsFeeModel();
+
+                    feeModel.GetOrderFee(
                         new OrderFeeParameters(
                             security,
                             new MarketOrder(security.Symbol, 1, DateTime.UtcNow)
