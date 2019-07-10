@@ -1,5 +1,5 @@
 #
-#   LEAN Foundation Docker Container 20190708
+#   LEAN Foundation Docker Container 20190710
 #   Cross platform deployment for multiple brokerages
 #   Intended to be used in conjunction with Dockerfile. This is just the foundation common OS+Dependencies required.
 #
@@ -48,30 +48,56 @@ RUN wget https://cdn.quantconnect.com/miniconda/${CONDA} && \
     ln -s /opt/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
 
 # Install supported third party python packages
-RUN conda update -y conda pip
-RUN conda install -y python=3.6.8
-RUN conda install -y msgpack-python=0.5.6
-RUN conda install -y numpy=1.16.1
-RUN conda install -y pandas=0.23.4
-RUN conda install -y wrapt=1.10.11
-RUN conda install -y dill=0.2.9
-RUN conda install -y jsonschema lxml
-RUN conda install -y blaze cython cvxopt keras nltk tensorflow
-RUN conda install -y -c pytorch pytorch torchvision
-RUN conda install -y -c pytorch -c fastai nvidia-ml-py3 fastai
-RUN conda install -y -c conda-forge rauth fbprophet
-RUN conda install pomegranate
+RUN conda update -y conda pip 
+RUN conda install -y python=3.6.8   \
+    blaze=0.11.3                    \
+    cvxopt=1.2.0                    \
+    cython=0.29.11                  \
+    dill=0.2.9                      \
+    jsonschema=3.0.1                \
+    keras=2.2.4                     \
+    lxml=4.3.4                      \
+    msgpack-python=0.5.6            \
+    nltk=3.4.3                      \
+    numpy=1.16.1                    \
+    pandas=0.23.4                   \
+    pomegranate=0.10.0              \
+    wrapt=1.10.11                   \
+    nltk=3.4.3                      \
+    tensorflow=1.13.1
+RUN conda install -y -c conda-forge \
+    fbprophet=0.5                   \
+    rauth=0.7.3                     \
+    setuptools-git>=1.2
+RUN conda install -y -c pytorch     \
+    pytorch=1.1.0                   \
+    torchvision=0.3.0
+RUN conda install -y -c fastai      \
+    nvidia-ml-py3=7.352.0           \
+    fastai=1.0.54
+RUN conda clean -y --all
+
 RUN pip install --upgrade pip
-RUN pip install arch copulalib cvxpy deap gym pykalman pyro-ppl
-RUN pip install sklearn statistics tensorforce xgboost theano
-RUN pip install QuantLib-Python
-RUN pip install copulas
-RUN pip install --upgrade --user hmmlearn
-RUN pip install tsfresh
-RUN pip install lightgbm
-RUN pip install beautifulsoup4
-RUN pip install pyramid-arima
-RUN pip install stable-baselines
+RUN pip install gym==0.13.1         \
+    arch==4.8.1                     \
+    beautifulsoup4==4.7.1           \
+    copulalib==1.1.0                \
+    copulas==0.2.1                  \
+    cvxpy==1.0.24                   \
+    deap==1.3.0                     \
+    lightgbm==2.2.3                 \
+    pykalman==0.9.5                 \
+    pyramid-arima==0.9.0            \
+    pyro-ppl==0.3.3                 \
+    QuantLib-Python==1.15           \
+    sklearn==0.0                    \
+    stable-baselines==2.6.0         \
+    statistics==1.0.3.5             \
+    tensorforce==0.4.3              \
+    theano==1.0.4                   \
+    tsfresh==0.12.0                 \
+    xgboost==0.90
+RUN pip install --upgrade --user hmmlearn==0.2.2
 RUN python -c "import nltk; nltk.download('punkt')"
 RUN conda clean -y --all
 
