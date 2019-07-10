@@ -289,6 +289,8 @@
     <Compile Include="Common\Data\MockSubscriptionDataConfigProvider.cs" />
     <Compile Include="Common\Data\UniverseSelection\UniverseTests.cs" />
     <Compile Include="Common\IsolatorTests.cs" />
+    <Compile Include="Common\Notifications\NotificationEmailTests.cs" />
+    <Compile Include="Common\Notifications\NotificationManagerTests.cs" />
     <Compile Include="Common\Orders\Fees\BackwardsCompatibilityFeeModelTests.cs" />
     <Compile Include="Common\Orders\Fees\BitfinexFeeModelTests.cs" />
     <Compile Include="Common\Orders\Fees\GDAXFeeModelTests.cs" />
@@ -310,6 +312,7 @@
     <Compile Include="Common\Util\ListComparerTests.cs" />
     <Compile Include="Common\Util\SeriesJsonConverterTests.cs" />
     <Compile Include="Common\Util\StreamReaderEnumerableTests.cs" />
+    <Compile Include="Common\Util\ValidateTests.cs" />
     <Compile Include="Engine\Alphas\InsightAnalysisContextTests.cs" />
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BacktestingTransactionHandlerTests.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerStub.cs" />

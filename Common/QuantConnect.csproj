@@ -723,6 +723,7 @@
     <Compile Include="Util\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Util\Ref.cs" />
     <Compile Include="Util\SingleValueListConverter.cs" />
+    <Compile Include="Util\Validate.cs" />
     <Compile Include="Util\VersionHelper.cs" />
     <Compile Include="Util\WorkerThread.cs" />
     <Compile Include="Util\XElementExtensions.cs" />
