@@ -83,21 +83,24 @@ namespace QuantConnect.VisualStudioPlugin
                     // Verify the backtest are from the selected project
                     if (selectedItem?.Id == projectId)
                     {
-                        _dataGridCollection.Clear();
-                        // Setting a limit of _maximumBacktestToShow backtests in the table...
-                        for (var i = 0; i < backtestsList.Count && i < _maximumBacktestToShow; i++)
+                        lock (_dataGridCollection)
                         {
-                            _dataGridCollection.Add(new DataGridItem
+                            _dataGridCollection.Clear();
+                            // Setting a limit of _maximumBacktestToShow backtests in the table...
+                            for (var i = 0; i < backtestsList.Count && i < _maximumBacktestToShow; i++)
                             {
-                                Name = backtestsList[i].Name,
-                                Progress = backtestsList[i].Progress,
-                                ProjectId = projectId,
-                                Date = backtestsList[i].Created,
-                                BacktestId = backtestsList[i].BacktestId,
-                                Status = string.IsNullOrEmpty(backtestsList[i].Error) ?
-                                    DataGridItem.BacktestSucceeded : DataGridItem.BacktestFailed,
-                                Note = backtestsList[i].Note
-                            });
+                                _dataGridCollection.Add(new DataGridItem
+                                {
+                                    Name = backtestsList[i].Name,
+                                    Progress = backtestsList[i].Progress,
+                                    ProjectId = projectId,
+                                    Date = backtestsList[i].Created,
+                                    BacktestId = backtestsList[i].BacktestId,
+                                    Status = string.IsNullOrEmpty(backtestsList[i].Error) ?
+                                        DataGridItem.BacktestSucceeded : DataGridItem.BacktestFailed,
+                                    Note = backtestsList[i].Note
+                                });
+                            }
                         }
                         VsUtils.DisplayInStatusBar(ServiceProvider.GlobalProvider, "Successfully loaded backtests");
                     }
@@ -128,8 +131,11 @@ namespace QuantConnect.VisualStudioPlugin
                     });
                     // Clear available projects
                     projectNameBox.Items.Clear();
-                    // Clear rows in the backtest data grid
-                    _dataGridCollection.Clear();
+                    lock (_dataGridCollection)
+                    {
+                        // Clear rows in the backtest data grid
+                        _dataGridCollection.Clear();
+                    }
                     if (projectNames.Count > 0)
                     {
                         projectNames.ForEach(p => projectNameBox.Items.Add(new ComboboxProjectItem(p.Item1, p.Item2, p.Item3)));
@@ -204,12 +210,15 @@ namespace QuantConnect.VisualStudioPlugin
                     // Verify the backtest is from the selected project
                     if (selectedItem?.Id == projectId)
                     {
-                        foreach (DataGridItem item in _dataGridCollection)
+                        lock (_dataGridCollection)
                         {
-                            if (item.BacktestId == backtestId)
+                            foreach (DataGridItem item in _dataGridCollection)
                             {
-                                _dataGridCollection.Remove(item);
-                                break;
+                                if (item.BacktestId == backtestId)
+                                {
+                                    _dataGridCollection.Remove(item);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -233,15 +242,18 @@ namespace QuantConnect.VisualStudioPlugin
             // Verify the backtest is from the selected project
             if (selectedItem?.Id == projectId)
             {
-                _dataGridCollection.Insert(0, new DataGridItem
+                lock (_dataGridCollection)
                 {
-                    Name = backtestStatus.Name,
-                    Progress = 0,
-                    ProjectId = projectId,
-                    BacktestId = backtestStatus.BacktestId,
-                    Date = backtestStatus.Created,
-                    Status = DataGridItem.BacktestInProgress
-                });
+                    _dataGridCollection.Insert(0, new DataGridItem
+                    {
+                        Name = backtestStatus.Name,
+                        Progress = 0,
+                        ProjectId = projectId,
+                        BacktestId = backtestStatus.BacktestId,
+                        Date = backtestStatus.Created,
+                        Status = DataGridItem.BacktestInProgress
+                    });
+                }
             }
         }
 
@@ -256,12 +268,15 @@ namespace QuantConnect.VisualStudioPlugin
             // Verify the backtest is from the selected project
             if (selectedItem?.Id == projectId)
             {
-                foreach (DataGridItem item in _dataGridCollection)
+                lock (_dataGridCollection)
                 {
-                    if (item.BacktestId == backtestStatus.BacktestId)
+                    foreach (DataGridItem item in _dataGridCollection)
                     {
-                        item.Progress = backtestStatus.Progress;
-                        break;
+                        if (item.BacktestId == backtestStatus.BacktestId)
+                        {
+                            item.Progress = backtestStatus.Progress;
+                            break;
+                        }
                     }
                 }
             }
@@ -278,15 +293,18 @@ namespace QuantConnect.VisualStudioPlugin
             // Verify the backtest is from the selected project
             if (selectedItem?.Id == projectId)
             {
-                foreach (DataGridItem item in _dataGridCollection)
+                lock (_dataGridCollection)
                 {
-                    if (item.BacktestId == backtestStatus.BacktestId)
+                    foreach (DataGridItem item in _dataGridCollection)
                     {
-                        var success = string.IsNullOrEmpty(backtestStatus.Error) &&
-                                      string.IsNullOrEmpty(backtestStatus.StackTrace);
-                        item.Status = success ? DataGridItem.BacktestSucceeded : DataGridItem.BacktestFailed;
-                        item.Progress = backtestStatus.Progress;
-                        break;
+                        if (item.BacktestId == backtestStatus.BacktestId)
+                        {
+                            var success = string.IsNullOrEmpty(backtestStatus.Error) &&
+                                          string.IsNullOrEmpty(backtestStatus.StackTrace);
+                            item.Status = success ? DataGridItem.BacktestSucceeded : DataGridItem.BacktestFailed;
+                            item.Progress = backtestStatus.Progress;
+                            break;
+                        }
                     }
                 }
             }
