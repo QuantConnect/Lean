@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Configuration;
+using QuantConnect.Logging;
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -48,31 +49,36 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 
         public async Task<string> HttpRequester(string url)
         {
-            try
+            for (var retries = 1; retries <= 5; retries++)
             {
-                using (var client = new HttpClient())
+                try
                 {
-                    client.BaseAddress = new Uri("https://api.tradingeconomics.com");
-                    client.DefaultRequestHeaders.Clear();
+                    using (var client = new HttpClient())
+                    {
+                        client.BaseAddress = new Uri("https://api.tradingeconomics.com");
+                        client.DefaultRequestHeaders.Clear();
 
-                    //ADD Accept Header to tell the server what data type you want
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
+                        //ADD Accept Header to tell the server what data type you want
+                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
 
-                    //ADD Authorization
-                    var auth = new AuthenticationHeaderValue("Client", _clientKey);
-                    client.DefaultRequestHeaders.Authorization = auth;
+                        //ADD Authorization
+                        var auth = new AuthenticationHeaderValue("Client", _clientKey);
+                        client.DefaultRequestHeaders.Authorization = auth;
 
-                    var response = await client.GetAsync(Uri.EscapeUriString(url));
+                        var response = await client.GetAsync(Uri.EscapeUriString(url));
 
-                    response.EnsureSuccessStatusCode();
+                        response.EnsureSuccessStatusCode();
 
-                    return await response.Content.ReadAsStringAsync();
+                        return await response.Content.ReadAsStringAsync();
+                    }
+                }
+                catch (HttpRequestException e)
+                {
+                    Log.Trace($"TradingEconomicsDataDownloader.HttpRequester(): HTTP Request failed with message: {e.Message} - (attempt {retries} / 5). Retrying...");
                 }
             }
-            catch (Exception e)
-            {
-                throw new Exception($"Error at HttpRequester with msg: {e.Message}", e);
-            }
+
+            throw new Exception("HTTP request retries exceeded maximum (5/5)");
         }
     }
 }
