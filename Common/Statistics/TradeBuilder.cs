@@ -223,7 +223,7 @@ namespace QuantConnect.Statistics
                     }
                     else
                     {
-                        totalExecutedQuantity += fill.FillQuantity;
+                        totalExecutedQuantity += absoluteUnexecutedQuantity * (trade.Direction == TradeDirection.Long ? -1 : +1);
                         trade.Quantity -= absoluteUnexecutedQuantity;
 
                         AddNewTrade(new Trade
@@ -412,7 +412,8 @@ namespace QuantConnect.Statistics
 
                 while (position.PendingFills.Count > 0 && Math.Abs(totalExecutedQuantity) < fill.AbsoluteFillQuantity)
                 {
-                    if (fill.AbsoluteFillQuantity >= Math.Abs(position.PendingFills[index].FillQuantity))
+                    var absoluteUnexecutedQuantity = fill.AbsoluteFillQuantity - Math.Abs(totalExecutedQuantity);
+                    if (absoluteUnexecutedQuantity >= Math.Abs(position.PendingFills[index].FillQuantity))
                     {
                         if (_matchingMethod == FillMatchingMethod.LIFO)
                             entryTime = position.PendingFills[index].UtcTime;
@@ -425,9 +426,10 @@ namespace QuantConnect.Statistics
                     }
                     else
                     {
-                        totalExecutedQuantity += fill.FillQuantity;
-                        entryPrice += (position.PendingFills[index].FillPrice - entryPrice) * fill.FillQuantity / totalExecutedQuantity;
-                        position.PendingFills[index].FillQuantity += fill.FillQuantity;
+                        var executedQuantity = absoluteUnexecutedQuantity * Math.Sign(fill.FillQuantity);
+                        totalExecutedQuantity += executedQuantity;
+                        entryPrice += (position.PendingFills[index].FillPrice - entryPrice) * executedQuantity / totalExecutedQuantity;
+                        position.PendingFills[index].FillQuantity += executedQuantity;
                     }
                 }
 
