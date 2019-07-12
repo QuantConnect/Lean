@@ -59,7 +59,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
         /// Note: Assumes that it will be given files in ascending order by date
         /// </summary>
         /// <param name="sourceFilePath">File to process and convert</param>
-        public void Convert(FileInfo sourceFilePath)
+        public void Convert(Stream stream)
         {
             if (_disposedValue)
             {
@@ -69,9 +69,6 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             var previousTicker = string.Empty;
             var currentLineCount = 0;
 
-            Log.Trace($"PsychSignalDataConverter.Convert(): Begin converting {sourceFilePath.Name}");
-
-            using (var stream = sourceFilePath.OpenRead())
             using (var reader = new StreamReader(stream))
             {
                 string line;
@@ -115,8 +112,6 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                     handle.Append(timestamp, csv);
                     previousTicker = ticker;
                 }
-
-                Log.Trace($"PsychSignalDataConverter.Convert(): Finished converting {sourceFilePath.FullName}");
             }
         }
 
@@ -157,7 +152,14 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             {
                 i++;
                 Log.Trace($"PsychSignalDataConverter.ConvertFrom(): Reading file {rawFile.Name} (file {i}/{fileCount})");
-                Convert(rawFile);
+                Log.Trace($"PsychSignalDataConverter.ConvertFrom(): Begin converting {rawFile.Name}");
+
+                using (var stream = rawFile.OpenRead())
+                {
+                    Convert(stream);
+                }
+
+                Log.Trace($"PsychSignalDataConverter.Convert(): Finished converting {rawFile.Name}");
             }
 
             Dispose();
@@ -171,6 +173,25 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
         public void ConvertDate(DateTime date)
         {
             ConvertFrom(date.Date, date.Date.AddDays(1));
+        }
+
+        /// <summary>
+        /// Converts gzipped backfill data. Reads all *.gz files in the raw directory and attempts to convert them
+        /// </summary>
+        public void ConvertHistoricalData()
+        {
+            foreach (var archive in _rawSourceDirectory.GetFiles("*.gz", SearchOption.TopDirectoryOnly))
+            {
+                Log.Trace($"PsychSignalDataConverter.ConvertBackfill(): Begin converting historical data for file: {archive.FullName}");
+                using (var archiveStream = StreamProvider.ForExtension(".gz").Open(archive.FullName).First())
+                {
+                    Convert(archiveStream);
+                }
+
+                Log.Trace($"PsychSignalDataConverter.ConvertBackfill(): Finished converting historical data for file: {archive.FullName}");
+            }
+
+            Dispose();
         }
 
         /// <summary>
@@ -193,11 +214,24 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                         return DateTime.TryParseExact(x.Name.Substring(0, 11), "yyyyMMdd_HH", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out fileDate);
                     }
                 )
-                .OrderBy(x => DateTime.ParseExact(x.Name.Substring(0, 11), "yyyyMMdd_HH", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal));
+                .OrderBy(x => DateTime.ParseExact(x.Name.Substring(0, 11), "yyyyMMdd_HH", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
+                .ToList();
+
+            var i = 0;
+            var fileCount = files.Count();
 
             foreach (var rawFile in files)
             {
-                Convert(rawFile);
+                i++;
+                Log.Trace($"PsychSignalDataConverter.ConvertFrom(): Reading file {rawFile.Name} (file {i}/{fileCount})");
+                Log.Trace($"PsychSignalDataConverter.ConvertDirectory(): Begin converting {rawFile.Name}");
+
+                using (var stream = rawFile.OpenRead())
+                {
+                    Convert(stream);
+                }
+
+                Log.Trace("PsychSignalDataConverter.ConvertDirectory(): Finished converting {rawFile.Name}");
             }
 
             Dispose();
