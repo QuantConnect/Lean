@@ -66,9 +66,14 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 throw new ObjectDisposedException("PsychSignalDataConverter has already been disposed");
             }
 
-            Log.Trace($"PsychSignalDataConverter.Convert(): Begin converting {sourceFilePath.FullName}");
+            var tempRawFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
-            var file = File.ReadLines(sourceFilePath.FullName);
+            Log.Trace($"PsychSignalDataConverter.Convert(): Copying file: {sourceFilePath.Name} - to: {tempRawFile}");
+            File.Copy(sourceFilePath.FullName, tempRawFile);
+
+            Log.Trace($"PsychSignalDataConverter.Convert(): Begin converting {sourceFilePath.Name}");
+
+            var file = File.ReadLines(tempRawFile);
             var totalLinesCount = file.Count();
             var previousTicker = string.Empty;
             var currentLineCount = 0;
@@ -125,6 +130,9 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             }
 
             Log.Trace($"PsychSignalDataConverter.Convert(): Finished converting {sourceFilePath.FullName}");
+
+            File.Delete(tempRawFile);
+            Log.Trace("PsychSignalDataConverter.Convert(): Deleted temp raw data file");
         }
 
         /// <summary>
