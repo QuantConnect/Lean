@@ -2162,6 +2162,14 @@ namespace QuantConnect.Algorithm
         /// <param name="synchronous">Queue the work synchronously (true). Otherwise we'll block until it is completed</param>
         public void Train(Action action, TimeSpan? timeout = null, Action callback = null, bool synchronous = true)
         {
+            if (!synchronous && !LiveMode)
+            {
+                throw new ArgumentException(
+                    "In backtesting mode, please use QCAlgorithm.Train() synchronously",
+                    nameof(synchronous)
+                );
+            }
+
             IsTraining = true;
 
             if (synchronous)

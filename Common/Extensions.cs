@@ -1456,25 +1456,28 @@ namespace QuantConnect
         /// <exception cref="TimeoutException">The exception that is thrown when the time allotted for the asynchronously work has expired.</exception>
         public static async Task TimeoutAfterAndContinue(this Action action, TimeSpan? delay, Action continuationAction = null)
         {
-            using (var timeoutCancellationTokenSource = new CancellationTokenSource())
+            using (var timeoutCancellationTokenSource = new CancellationTokenSource(delay ?? TimeSpan.MaxValue))
             {
-                var task = Task.Run(action, timeoutCancellationTokenSource.Token);
-                var delayTask = Task.Delay(delay ?? TimeSpan.FromMilliseconds(-1), timeoutCancellationTokenSource.Token);
-
-                if (delayTask == await Task.WhenAny(task, delayTask))
+                var token = timeoutCancellationTokenSource.Token;
+                try
                 {
-                    timeoutCancellationTokenSource.Cancel();
-                    if (delay.HasValue)
-                    {
-                        throw new TimeoutException(
-                            $"The operation has timed out after {delay.Value.TotalMinutes:F2} minutes"
-                        );
-                    }
+                    await Task.Run(
+                        () =>
+                        {
+                            action();
+                            token.ThrowIfCancellationRequested();
+                        },
+                        token
+                    ).ConfigureAwait(false);
                 }
-
-                timeoutCancellationTokenSource.Cancel();
-
-                await task;
+                // Process cancellation from ThrowIfCancellationRequested
+                catch (OperationCanceledException e)
+                {
+                    throw new TimeoutException(
+                        $"The operation has timed out after {delay.Value.TotalMinutes:F2} minutes",
+                        e
+                    );
+                }
             }
 
             continuationAction?.Invoke();

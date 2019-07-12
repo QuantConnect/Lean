@@ -773,44 +773,63 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
-        public void TimeoutAfterAndContinueTests()
+        public void TimeoutAfterAndContinue_DoesNotTimeOut()
         {
             Action action = () => Thread.Sleep(1000);
-            Action divideByZeroAction = () => { var x = 0; var y = 1 / x; };
 
             action.TimeoutAfterAndContinue(TimeSpan.FromMilliseconds(2000))
                 .ContinueWith(x => Assert.IsTrue(x.IsCompleted))
                 .Wait();
+        }
+
+        [Test]
+        public void TimeoutAfterAndContinue_TimesOut()
+        {
+            Action action = () => Thread.Sleep(2000);
 
             // Timeout exception: wait 900 ms for a 2s work
-            var task1 = action.TimeoutAfterAndContinue(TimeSpan.FromMilliseconds(900));
-            task1.ContinueWith(x =>
+            var task = action.TimeoutAfterAndContinue(TimeSpan.FromMilliseconds(500));
+            task.ContinueWith(
+                x =>
                 {
                     Assert.IsTrue(x.IsFaulted);
                     Assert.AreEqual(x.Exception?.InnerException?.GetType(), typeof(TimeoutException));
                 }
             );
-            Assert.Throws<AggregateException>(() => task1.Wait());
+            Assert.Throws<AggregateException>(() => task.Wait());
+        }
+
+        [Test]
+        public void TimeoutAfterAndContinue_ActionThrowsExceptionBeforeTimeout()
+        {
+            Action divideByZeroAction = () => { var x = 0; var y = 1 / x; };
 
             // Action throws exception
-            var task2 = divideByZeroAction.TimeoutAfterAndContinue(TimeSpan.FromMilliseconds(900));
-            task2.ContinueWith(x =>
+            var task = divideByZeroAction.TimeoutAfterAndContinue(TimeSpan.FromMilliseconds(900));
+            task.ContinueWith(x =>
                 {
                     Assert.IsTrue(x.IsFaulted);
                     Assert.AreEqual(x.Exception?.InnerException?.GetType(), typeof(DivideByZeroException));
                 }
             );
-            Assert.Throws<AggregateException>(() => task2.Wait());
+            Assert.Throws<AggregateException>(() => task.Wait());
+        }
+
+        [Test]
+        public void TimeoutAfterAndContinue_CallbackThrowsExceptionBeforeTimeout()
+        {
+            Action action = () => Thread.Sleep(1000);
+            Action divideByZeroAction = () => { var x = 0; var y = 1 / x; };
 
             // Callback throws exception
-            var task3 = action.TimeoutAfterAndContinue(TimeSpan.FromMilliseconds(2000), divideByZeroAction);
-            task3.ContinueWith(x =>
+            var task = action.TimeoutAfterAndContinue(TimeSpan.FromMilliseconds(2000), divideByZeroAction);
+            task.ContinueWith(x =>
                 {
                     Assert.IsTrue(x.IsFaulted);
                     Assert.AreEqual(x.Exception?.InnerException?.GetType(), typeof(DivideByZeroException));
                 }
             );
-            Assert.Throws<AggregateException>(() => task3.Wait());
+            Assert.Throws<AggregateException>(() => task.Wait());
         }
 
         private PyObject ConvertToPyObject(object value)
