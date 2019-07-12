@@ -20,11 +20,12 @@ using System.Linq;
 namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// Represents an order book interface for a security.
+    /// Represents an orderbook updater interface for a security.
+    /// Provides the ability to update orderbook price level and to be alerted about updates
     /// </summary>
     /// <typeparam name="K">Price level identifier</typeparam>
     /// <typeparam name="V">Size at the price level</typeparam>
-    public interface IOrderBook<K, V>
+    public interface IOrderBookUpdater<K, V>
     {
         /// <summary>
         /// Event fired each time <see cref="BestBidPrice"/> or <see cref="BestAskPrice"/> are changed

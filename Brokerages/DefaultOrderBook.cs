@@ -24,12 +24,20 @@ namespace QuantConnect.Brokerages
     /// It contains prices and order sizes for each bid and ask level.
     /// The best bid and ask prices are also kept up to date.
     /// </summary>
-    public class DefaultOrderBook : IOrderBook<decimal, decimal>
+    public class DefaultOrderBook : IOrderBookUpdater<decimal, decimal>
     {
         private readonly object _locker = new object();
         private readonly Symbol _symbol;
-        protected readonly SortedDictionary<decimal, decimal> _bids = new SortedDictionary<decimal, decimal>();
-        protected readonly SortedDictionary<decimal, decimal> _asks = new SortedDictionary<decimal, decimal>();
+
+        /// <summary>
+        /// Represents bid prices and sizes
+        /// </summary>
+        protected readonly SortedDictionary<decimal, decimal> Bids = new SortedDictionary<decimal, decimal>();
+
+        /// <summary>
+        /// Represents ask prices and sizes
+        /// </summary>
+        protected readonly SortedDictionary<decimal, decimal> Asks = new SortedDictionary<decimal, decimal>();
 
         /// <summary>
         /// Event fired each time <see cref="BestBidPrice"/> or <see cref="BestAskPrice"/> are changed
@@ -72,8 +80,8 @@ namespace QuantConnect.Brokerages
         {
             lock (_locker)
             {
-                _bids.Clear();
-                _asks.Clear();
+                Bids.Clear();
+                Asks.Clear();
             }
 
             BestBidPrice = 0;
@@ -91,7 +99,7 @@ namespace QuantConnect.Brokerages
         {
             lock (_locker)
             {
-                _bids[price] = size;
+                Bids[price] = size;
             }
 
             if (BestBidPrice == 0 || price >= BestBidPrice)
@@ -112,7 +120,7 @@ namespace QuantConnect.Brokerages
         {
             lock (_locker)
             {
-                _asks[price] = size;
+                Asks[price] = size;
             }
 
             if (BestAskPrice == 0 || price <= BestAskPrice)
@@ -132,15 +140,15 @@ namespace QuantConnect.Brokerages
         {
             lock (_locker)
             {
-                _bids.Remove(price);
+                Bids.Remove(price);
             }
 
             if (price == BestBidPrice)
             {
                 lock (_locker)
                 {
-                    BestBidPrice = _bids.Keys.LastOrDefault();
-                    BestBidSize = BestBidPrice > 0 ? _bids[BestBidPrice] : 0;
+                    BestBidPrice = Bids.Keys.LastOrDefault();
+                    BestBidSize = BestBidPrice > 0 ? Bids[BestBidPrice] : 0;
                 }
 
                 BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, BestBidPrice, BestBidSize, BestAskPrice, BestAskSize));
@@ -155,15 +163,15 @@ namespace QuantConnect.Brokerages
         {
             lock (_locker)
             {
-                _asks.Remove(price);
+                Asks.Remove(price);
             }
 
             if (price == BestAskPrice)
             {
                 lock (_locker)
                 {
-                    BestAskPrice = _asks.Keys.FirstOrDefault();
-                    BestAskSize = BestAskPrice > 0 ? _asks[BestAskPrice] : 0;
+                    BestAskPrice = Asks.Keys.FirstOrDefault();
+                    BestAskSize = BestAskPrice > 0 ? Asks[BestAskPrice] : 0;
                 }
 
                 BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, BestBidPrice, BestBidSize, BestAskPrice, BestAskSize));
@@ -176,11 +184,11 @@ namespace QuantConnect.Brokerages
         /// <param name="priceLevel"></param>
         public void RemovePriceLevel(decimal priceLevel)
         {
-            if (_asks.ContainsKey(priceLevel))
+            if (Asks.ContainsKey(priceLevel))
             {
                 RemoveAskRow(priceLevel);
             }
-            else if (_bids.ContainsKey(priceLevel))
+            else if (Bids.ContainsKey(priceLevel))
             {
                 RemoveBidRow(priceLevel);
             }

@@ -276,7 +276,7 @@
     <Compile Include="Bitfinex\BitfinexWebSocketWrapper.cs" />
     <Compile Include="Bitfinex\Messages.cs" />
     <Compile Include="Bitfinex\BitfinexSymbolMapper.cs" />
-    <Compile Include="IOrderBook.cs" />
+    <Compile Include="IOrderBookUpdater.cs" />
     <Compile Include="DefaultOrderBook.cs" />
     <Compile Include="Brokerage.cs" />
     <Compile Include="BrokerageException.cs" />
