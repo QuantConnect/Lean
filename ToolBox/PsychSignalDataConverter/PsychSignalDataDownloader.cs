@@ -99,7 +99,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             // is the same as the current hour or greater than the current hour.
             for (var i = 1; startDateUtc < endDateUtc; startDateUtc = startDateUtc.AddHours(1), i++)
             {
-                var rawDataPath = Path.Combine(_rawDataDestination, $"{startDateUtc:yyyyMMdd_HH}_{_dataSource}.csv");
+                var rawDataPath = Path.Combine(_rawDataDestination, $"{startDateUtc:yyyyMMdd_HH}.csv");
                 var rawDataPathTemp = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv.tmp");
 
                 // Don't download files we already have
@@ -163,7 +163,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 var complete = i / totalHours;
                 var eta = TimeSpan.FromSeconds((totalHours - i) * 10);
 
-                Log.Trace($"PsychSignalDataDownloader.Download(): Downloading {complete * 100}% complete. ETA is {eta.TotalMinutes} minutes");
+                Log.Trace($"PsychSignalDataDownloader.Download(): Downloading {complete:P2} complete. ETA is {eta.TotalMinutes:N2} minutes");
             }
         }
     }
