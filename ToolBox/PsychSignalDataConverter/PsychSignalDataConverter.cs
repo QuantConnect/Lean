@@ -66,73 +66,58 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                 throw new ObjectDisposedException("PsychSignalDataConverter has already been disposed");
             }
 
-            var tempRawFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-
-            Log.Trace($"PsychSignalDataConverter.Convert(): Copying file: {sourceFilePath.Name} - to: {tempRawFile}");
-            File.Copy(sourceFilePath.FullName, tempRawFile);
+            var previousTicker = string.Empty;
+            var currentLineCount = 0;
 
             Log.Trace($"PsychSignalDataConverter.Convert(): Begin converting {sourceFilePath.Name}");
 
-            var file = File.ReadLines(tempRawFile);
-            var totalLinesCount = file.Count();
-            var previousTicker = string.Empty;
-            var currentLineCount = 0;
-            var percentIncrement = 0.10;
-            var currentTarget = percentIncrement;
-
-            foreach (var line in file)
+            using (var stream = sourceFilePath.OpenRead())
+            using (var reader = new StreamReader(stream))
             {
-                currentLineCount++;
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    currentLineCount++;
 
-                var csv = line.Split(',');
-                var ticker = csv[1].ToLower();
-                DateTime timestamp;
+                    var csv = line.Split(',');
+                    var ticker = csv[1].ToLower();
+                    DateTime timestamp;
 
-                if (csv[0] == "SOURCE")
-                {
-                    Log.Trace($"PsychSignalDataConverter.Convert(): Skipping line {currentLineCount} - Line contains header information");
-                    continue;
-                }
-                if (!DateTime.TryParseExact(csv[2], @"yyyy-MM-dd\THH:mm:ss\Z", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out timestamp))
-                {
-                    Log.Trace($"PsychSignalDataConverter.Convert(): Skipping line {currentLineCount} - Failed to parse date properly");
-                    continue;
-                }
-                if (!_mapFileResolver.ResolveMapFile(ticker, timestamp).Any())
-                {
-                    // Because all tickers are all clustered together, we can detect
-                    // duplicate messages and prevent ourselves from spamming the status log
-                    if (ticker != previousTicker)
+                    if (csv[0] == "SOURCE")
                     {
-                        Log.Trace($"PsychSignalDataDownloader.Convert(): Skipping line {currentLineCount} - Could not resolve map file for ticker {ticker}");
+                        Log.Trace($"PsychSignalDataConverter.Convert(): Skipping line {currentLineCount} - Line contains header information");
+                        continue;
                     }
+                    if (!DateTime.TryParseExact(csv[2], @"yyyy-MM-dd\THH:mm:ss\Z", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out timestamp))
+                    {
+                        Log.Trace($"PsychSignalDataConverter.Convert(): Skipping line {currentLineCount} - Failed to parse date properly");
+                        continue;
+                    }
+                    if (!_mapFileResolver.ResolveMapFile(ticker, timestamp).Any())
+                    {
+                        // Because all tickers are all clustered together, we can detect
+                        // duplicate messages and prevent ourselves from spamming the status log
+                        if (ticker != previousTicker)
+                        {
+                            Log.Trace($"PsychSignalDataDownloader.Convert(): Skipping line {currentLineCount} - Could not resolve map file for ticker {ticker}");
+                        }
+                        previousTicker = ticker;
+                        continue;
+                    }
+
+                    TickerData handle;
+                    if (!_fileHandles.TryGetValue(ticker, out handle))
+                    {
+                        handle = new TickerData(ticker, timestamp.Date, _destinationDirectory);
+                        _fileHandles[ticker] = handle;
+                    }
+
+                    handle.Append(timestamp, csv);
                     previousTicker = ticker;
-                    continue;
                 }
 
-                TickerData handle;
-                if (!_fileHandles.TryGetValue(ticker, out handle))
-                {
-                    handle = new TickerData(ticker, timestamp.Date, _destinationDirectory);
-                    _fileHandles[ticker] = handle;
-                }
-
-                handle.Append(timestamp, csv);
-
-                var progress = (double) currentLineCount / totalLinesCount;
-                if (progress >= currentTarget)
-                {
-                    Log.Trace($"PsychSignalDataConverter.Convert(): Conversion {progress * 100}% complete");
-                    currentTarget += percentIncrement;
-                }
-
-                previousTicker = ticker;
+                Log.Trace($"PsychSignalDataConverter.Convert(): Finished converting {sourceFilePath.FullName}");
             }
-
-            Log.Trace($"PsychSignalDataConverter.Convert(): Finished converting {sourceFilePath.FullName}");
-
-            File.Delete(tempRawFile);
-            Log.Trace("PsychSignalDataConverter.Convert(): Deleted temp raw data file");
         }
 
         /// <summary>
@@ -162,10 +147,16 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                         return fileDate >= startDateUtc && fileDate < endDateUtc;
                     }
                 )
-                .OrderBy(x => DateTime.ParseExact(x.Name.Substring(0, 11), "yyyyMMdd_HH", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal));
+                .OrderBy(x => DateTime.ParseExact(x.Name.Substring(0, 11), "yyyyMMdd_HH", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
+                .ToList();
+
+            var fileCount = files.Count();
+            var i = 0;
 
             foreach (var rawFile in files)
             {
+                i++;
+                Log.Trace($"PsychSignalDataConverter.ConvertFrom(): Reading file {rawFile.Name} (file {i}/{fileCount})");
                 Convert(rawFile);
             }
 
