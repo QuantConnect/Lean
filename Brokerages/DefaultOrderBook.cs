@@ -184,13 +184,16 @@ namespace QuantConnect.Brokerages
         /// <param name="priceLevel"></param>
         public void RemovePriceLevel(decimal priceLevel)
         {
-            if (Asks.ContainsKey(priceLevel))
+            lock (_locker)
             {
-                RemoveAskRow(priceLevel);
-            }
-            else if (Bids.ContainsKey(priceLevel))
-            {
-                RemoveBidRow(priceLevel);
+                if (Asks.ContainsKey(priceLevel))
+                {
+                    RemoveAskRow(priceLevel);
+                }
+                else if (Bids.ContainsKey(priceLevel))
+                {
+                    RemoveBidRow(priceLevel);
+                }
             }
         }
     }
