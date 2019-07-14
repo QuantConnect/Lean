@@ -32,8 +32,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly DateTimeZone _exchangeTimeZone;
         private readonly IEnumerator<BaseData> _auxDataEnumerator;
         private readonly IEnumerator<BaseData> _tradeBarAggregator;
-        private bool _auxDataEnumeratorAdvanced;
-        private bool _tradeBarEnumeratorAdvanced;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LiveEquityDataSynchronizingEnumerator"/> class
@@ -48,13 +46,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _exchangeTimeZone = exchangeTimeZone;
             _auxDataEnumerator = auxDataEnumerator;
             _tradeBarAggregator = tradeBarAggregator;
-
-            // prime enumerators
-            _auxDataEnumerator.MoveNext();
-            tradeBarAggregator.MoveNext();
-
-            _auxDataEnumeratorAdvanced = true;
-            _tradeBarEnumeratorAdvanced = true;
         }
 
         /// <summary>
@@ -72,8 +63,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 return true;
 
             // advance enumerators with no current data
-            _auxDataEnumeratorAdvanced = _auxDataEnumerator.Current == null && _auxDataEnumerator.MoveNext();
-            _tradeBarEnumeratorAdvanced = _tradeBarAggregator.Current == null && _tradeBarAggregator.MoveNext();
+            if (_auxDataEnumerator.Current == null) _auxDataEnumerator.MoveNext();
+            if (_tradeBarAggregator.Current == null) _tradeBarAggregator.MoveNext();
 
             // check if any enumerator is ready to emit
             if (DataPointEmitted(frontierUtc))
@@ -120,7 +111,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private bool DataPointEmitted(DateTime frontierUtc)
         {
             // check if any enumerator is ready to emit
-            if (_auxDataEnumeratorAdvanced && _auxDataEnumerator.Current != null && _tradeBarEnumeratorAdvanced && _tradeBarAggregator.Current != null)
+            if (_auxDataEnumerator.Current != null && _tradeBarAggregator.Current != null)
             {
                 var auxDataEndTime = _auxDataEnumerator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
                 var tradeBarEndTime = _tradeBarAggregator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
@@ -143,7 +134,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     }
                 }
             }
-            else if (_auxDataEnumeratorAdvanced && _auxDataEnumerator.Current != null)
+            else if (_auxDataEnumerator.Current != null)
             {
                 var auxDataEndTime = _auxDataEnumerator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
                 if (auxDataEndTime <= frontierUtc)
@@ -153,7 +144,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     return true;
                 }
             }
-            else if (_tradeBarEnumeratorAdvanced && _tradeBarAggregator.Current != null)
+            else if (_tradeBarAggregator.Current != null)
             {
                 var tradeBarEndTime = _tradeBarAggregator.Current.EndTime.ConvertToUtc(_exchangeTimeZone);
                 if (tradeBarEndTime <= frontierUtc)
