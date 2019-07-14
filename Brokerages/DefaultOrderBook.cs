@@ -147,8 +147,9 @@ namespace QuantConnect.Brokerages
             {
                 lock (_locker)
                 {
-                    BestBidPrice = Bids.Keys.LastOrDefault();
-                    BestBidSize = BestBidPrice > 0 ? Bids[BestBidPrice] : 0;
+                    var priceLevel = Bids.LastOrDefault();
+                    BestBidPrice = priceLevel.Key;
+                    BestBidSize = priceLevel.Value;
                 }
 
                 BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, BestBidPrice, BestBidSize, BestAskPrice, BestAskSize));
@@ -170,8 +171,9 @@ namespace QuantConnect.Brokerages
             {
                 lock (_locker)
                 {
-                    BestAskPrice = Asks.Keys.FirstOrDefault();
-                    BestAskSize = BestAskPrice > 0 ? Asks[BestAskPrice] : 0;
+                    var priceLevel = Asks.FirstOrDefault();
+                    BestAskPrice = priceLevel.Key;
+                    BestAskSize = priceLevel.Value;
                 }
 
                 BestBidAskUpdated?.Invoke(this, new BestBidAskUpdatedEventArgs(_symbol, BestBidPrice, BestBidSize, BestAskPrice, BestAskSize));
