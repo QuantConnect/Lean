@@ -309,7 +309,13 @@ namespace QuantConnect.AlgorithmFactory
                 }
                 catch (ReflectionTypeLoadException e)
                 {
+                    // We may want to exclude possible null values
+                    // See https://stackoverflow.com/questions/7889228/how-to-prevent-reflectiontypeloadexception-when-calling-assembly-gettypes
                     assemblyTypes = e.Types.Where(t => t != null).ToArray();
+
+                    var countTypesNotLoaded = e.Types.Count(t => t == null);
+                    Log.Error($"Loader.GetExtendedTypeNames(): Unable to load {countTypesNotLoaded} of the requested types, " +
+                              "see below for more details on what causes an issue:");
 
                     foreach (Exception inner in e.LoaderExceptions)
                     {
