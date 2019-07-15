@@ -102,13 +102,32 @@ namespace QuantConnect.Tests.Jupyter
 
                 // Get the last 5 candles
                 var periodHistory = securityTestHistory.test_period_overload(5);
+
+                // Note there is no data for BTCUSD at 2014
+
+                //symbol                 EURUSD         SPY
+                //time
+                //2014-05-03 00:00:00       NaN  173.580655
+                //2014-05-05 01:00:00  1.387565         NaN
+                //2014-05-06 00:00:00       NaN  173.903690
+                //2014-05-06 01:00:00  1.388335         NaN
+                //2014-05-07 00:00:00       NaN  172.426958
+                //2014-05-07 01:00:00  1.392495         NaN
+                //2014-05-08 00:00:00       NaN  173.423752
+                //2014-05-08 01:00:00  1.391480         NaN
+                //2014-05-09 00:00:00       NaN  173.229931
+                Console.WriteLine(periodHistory);
+
                 var count = (periodHistory.shape[0] as PyObject).AsManagedObject(typeof(int));
-                Assert.AreEqual(6, count);
+                Assert.AreEqual(9, count);
 
                 // Get the one day of data
                 var timedeltaHistory = securityTestHistory.test_period_overload(TimeSpan.FromDays(8));
                 var firstIndex = (DateTime) (timedeltaHistory.index.values[0] as PyObject).AsManagedObject(typeof(DateTime));
-                Assert.AreEqual(startDate.AddDays(-8), firstIndex);
+
+                // adding an hour because EURUSD exchange time zone, has 1 hour difference with than data time zone
+                // due to day light savings change (data is in exchange time zone)
+                Assert.AreEqual(startDate.AddDays(-8).AddHours(1), firstIndex);
             }
         }
 

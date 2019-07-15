@@ -23184,7 +23184,7 @@
     },
     "Forex-fxcm-[*]": {
       "dataTimeZone": "UTC-05",
-      "exchangeTimeZone": "UTC-05",
+      "exchangeTimeZone": "America/New_York",
       "sunday": [
         {
           "start": "17:00:00",
