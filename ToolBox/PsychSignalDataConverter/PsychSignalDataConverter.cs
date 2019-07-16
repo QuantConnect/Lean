@@ -19,7 +19,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
@@ -46,7 +48,8 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
             _destinationDirectory = new DirectoryInfo(destinationDirectory);
 
             _fileHandles = new Dictionary<string, TickerData>();
-            _mapFileResolver = MapFileResolver.Create(Globals.DataFolder, Market.USA);
+            _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
+                .Get(Market.USA);
 
             _destinationDirectory.Create();
         }
