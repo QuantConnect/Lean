@@ -133,9 +133,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         public override bool IsConnected => _client != null && _client.Connected && !_disconnected1100Fired;
 
         /// <summary>
-        /// Returns true if the connected user is a financial advisor
+        /// Returns true if the connected user is a financial advisor or non-disclosed broker
         /// </summary>
-        public bool IsFinancialAdvisor => _account.Contains("F");
+        public bool IsFinancialAdvisor => IsMasterAccount(_account);
+
+        /// <summary>
+        /// Returns true if the account is a financial advisor or non-disclosed broker master account
+        /// </summary>
+        /// <param name="account">The account code</param>
+        /// <returns>True if the account is a master account</returns>
+        public static bool IsMasterAccount(string account)
+        {
+            return account.Contains("F") || account.Contains("I");
+        }
 
         /// <summary>
         /// Creates a new InteractiveBrokersBrokerage using values from configuration:
