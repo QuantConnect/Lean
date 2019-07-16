@@ -169,6 +169,7 @@
     <Compile Include="StopLossOnOrderEventRegressionAlgorithm.cs" />
     <Compile Include="TotalPortfolioValueRegressionAlgorithm.cs" />
     <Compile Include="TradingEconomicsCalendarIndicatorAlgorithm.cs" />
+    <Compile Include="PsychSignalSentimentRegressionAlgorithm.cs" />
     <Compile Include="TrailingStopRiskFrameworkAlgorithm.cs" />
     <Compile Include="BasicTemplateFuturesFrameworkAlgorithm.cs" />
     <Compile Include="BasicTemplateOptionsFrameworkAlgorithm.cs" />
