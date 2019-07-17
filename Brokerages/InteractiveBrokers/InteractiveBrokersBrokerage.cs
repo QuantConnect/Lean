@@ -282,11 +282,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): IB Automater initialized.");
 
             CheckIbAutomaterErrors();
-            LoadIbServerInformation();
 
-            Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): " +
-                      $"Host: {host}, Port: {port}, Account: {account}, AgentDescription: {agentDescription}, " +
-                      $"ServerName: {_ibServerName}, ServerRegion: {_ibServerRegion}");
+            Log.Trace($"InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Host: {host}, Port: {port}, Account: {account}, AgentDescription: {agentDescription}");
 
             _client = new IB.InteractiveBrokersClient(_signal);
 
@@ -735,6 +732,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                     // enable detailed logging
                     _client.ClientSocket.setServerLogLevel(5);
+
+                    // load server name and region
+                    LoadIbServerInformation();
+
+                    Log.Trace($"InteractiveBrokersBrokerage.Connect(): ServerName: {_ibServerName}, ServerRegion: {_ibServerRegion}");
 
                     break;
                 }
@@ -1211,7 +1213,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): IB Automater initialized.");
             CheckIbAutomaterErrors();
-            LoadIbServerInformation();
 
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Reconnecting...");
             Connect();
