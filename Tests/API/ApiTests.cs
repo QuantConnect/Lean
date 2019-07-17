@@ -16,12 +16,12 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Web;
 using NUnit.Framework;
 using QuantConnect.Api;
 using QuantConnect.API;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
-using RestSharp.Extensions.MonoHttp;
 
 namespace QuantConnect.Tests.API
 {
