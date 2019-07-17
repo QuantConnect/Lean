@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,12 +49,33 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     [BrokerageFactory(typeof(InteractiveBrokersBrokerageFactory))]
     public sealed class InteractiveBrokersBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
+        private enum Region { America, Europe, Asia }
+
+        // Source: https://ibkr.info/article/2816
+        private readonly Dictionary<string, Region> _ibServerMap = new Dictionary<string, Region>
+        {
+            { "ndc1.ibllc.com", Region.America },
+            { "ndc1_hb1.ibllc.com", Region.America },
+            { "cdc1.ibllc.com", Region.America },
+            { "cdc1_hb1.ibllc.com", Region.America },
+
+            { "zdc1.ibllc.com", Region.Europe },
+            { "zdc1_hb1.ibllc.com", Region.Europe },
+
+            { "hdc1.ibllc.com", Region.Asia },
+            { "hdc1_hb1.ibllc.com", Region.Asia },
+            { "mcgw1.ibllc.com.cn", Region.Asia },
+            { "mcgw1_hb1.ibllc.com.cn", Region.Asia }
+        };
+
         private readonly IBAutomater.IBAutomater _ibAutomater;
         private readonly AutoResetEvent _ibAutomaterInitializeEvent = new AutoResetEvent(false);
         private bool _loginFailed;
         private bool _existingSessionDetected;
         private bool _securityDialogDetected;
         private bool _performingRelogin;
+        private string _ibServerName;
+        private Region _ibServerRegion = Region.America;
 
         // next valid order id for this client
         private int _nextValidId;
@@ -67,6 +89,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly int _port;
         private readonly string _account;
         private readonly string _host;
+        private readonly string _ibDirectory;
         private readonly int _clientId;
         private readonly IAlgorithm _algorithm;
         private readonly IOrderProvider _orderProvider;
@@ -209,7 +232,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <param name="account">The Interactive Brokers account name</param>
         /// <param name="host">host name or IP address of the machine where TWS is running. Leave blank to connect to the local host.</param>
         /// <param name="port">must match the port specified in TWS on the Configure&gt;API&gt;Socket Port field.</param>
-        /// <param name="twsDirectory">The IB TWS root directory</param>
+        /// <param name="ibDirectory">The IB Gateway root directory</param>
         /// <param name="ibVersion">The IB Gateway version</param>
         /// <param name="userName">The login user name</param>
         /// <param name="password">The login password</param>
@@ -222,7 +245,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             string account,
             string host,
             int port,
-            string twsDirectory,
+            string ibDirectory,
             string ibVersion,
             string userName,
             string password,
@@ -236,13 +259,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _account = account;
             _host = host;
             _port = port;
+            _ibDirectory = ibDirectory;
             _clientId = IncrementClientId();
             _agentDescription = agentDescription;
 
             Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Starting IB Automater...");
 
             // start IB Gateway
-            _ibAutomater = new IBAutomater.IBAutomater(twsDirectory, ibVersion, userName, password, tradingMode, port);
+            _ibAutomater = new IBAutomater.IBAutomater(ibDirectory, ibVersion, userName, password, tradingMode, port);
             _ibAutomater.OutputDataReceived += OnIbAutomaterOutputDataReceived;
             _ibAutomater.ErrorDataReceived += OnIbAutomaterErrorDataReceived;
             _ibAutomater.Exited += OnIbAutomaterExited;
@@ -257,8 +281,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): IB Automater initialized.");
 
             CheckIbAutomaterErrors();
+            LoadIbServerInformation();
 
-            Log.Trace($"InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Host: {host}, Port: {port}, Account: {account}, AgentDescription: {agentDescription}");
+            Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): " +
+                      $"Host: {host}, Port: {port}, Account: {account}, AgentDescription: {agentDescription}, " +
+                      $"ServerName: {_ibServerName}, ServerRegion: {_ibServerRegion}");
 
             _client = new IB.InteractiveBrokersClient(_signal);
 
@@ -1183,6 +1210,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): IB Automater initialized.");
             CheckIbAutomaterErrors();
+            LoadIbServerInformation();
 
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Reconnecting...");
             Connect();
@@ -2918,6 +2946,45 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     "InteractiveBrokersBrokerage.CheckIbAutomaterErrors(): " +
                     "A security dialog was detected for Second Factor/Code Card Authentication. " +
                     "Please opt out of the Secure Login System: Manage Account > Security > Secure Login System > SLS Opt Out");
+            }
+        }
+
+        private void LoadIbServerInformation()
+        {
+            // After a successful login, IBGateway saves the connected/redirected host name to the Peer key in the jts.ini file.
+            var iniFileName = Path.Combine(_ibDirectory, "jts.ini");
+
+            // Note: Attempting to connect to a different server via jts.ini will not change anything.
+            // IB will route you back to the server they have set for you on their server side.
+            // You need to request a server change and only then will your system connect to the changed server address.
+
+            if (File.Exists(iniFileName))
+            {
+                const string key = "Peer=";
+                foreach (var line in File.ReadLines(iniFileName))
+                {
+                    if (line.StartsWith(key))
+                    {
+                        var value = line.Substring(key.Length);
+                        _ibServerName = value.Substring(0, value.IndexOf(':'));
+
+                        if (!_ibServerMap.TryGetValue(_ibServerName, out _ibServerRegion))
+                        {
+                            _ibServerRegion = Region.America;
+                            Log.Error($"InteractiveBrokersBrokerage.LoadIbServerInformation(): Unknown server name: {_ibServerName}, region set to {_ibServerRegion}");
+                        }
+
+                        // known server name and region
+                        return;
+                    }
+                }
+
+                _ibServerRegion = Region.America;
+                Log.Error($"InteractiveBrokersBrokerage.LoadIbServerInformation(): Unable to find the server name in the IB ini file: {iniFileName}, region set to {_ibServerRegion}");
+            }
+            else
+            {
+                Log.Error($"InteractiveBrokersBrokerage.LoadIbServerInformation(): IB ini file not found: {iniFileName}");
             }
         }
 
