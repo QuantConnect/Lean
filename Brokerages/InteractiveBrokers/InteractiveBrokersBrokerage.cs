@@ -54,6 +54,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // Source: https://ibkr.info/article/2816
         private readonly Dictionary<string, Region> _ibServerMap = new Dictionary<string, Region>
         {
+            { "gdc1.ibllc.com", Region.America },
             { "ndc1.ibllc.com", Region.America },
             { "ndc1_hb1.ibllc.com", Region.America },
             { "cdc1.ibllc.com", Region.America },
