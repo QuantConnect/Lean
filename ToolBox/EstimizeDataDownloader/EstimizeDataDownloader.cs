@@ -16,11 +16,14 @@
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.EstimizeDataDownloader
@@ -28,6 +31,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
     public abstract class EstimizeDataDownloader : IDataDownloader
     {
         private readonly string _clientKey;
+        private readonly int _maxRetries = 5;
 
         /// <summary>
         /// Control the rate of download per unit of time.
@@ -76,37 +80,74 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
         public async Task<string> HttpRequester(string url)
         {
-            try
+            for (var retries = 1; retries <= _maxRetries; retries++)
             {
-                using (var client = new HttpClient())
+                try
                 {
-                    client.BaseAddress = new Uri("https://api.estimize.com/");
-                    client.DefaultRequestHeaders.Clear();
+                    using (var client = new HttpClient())
+                    {
+                        client.BaseAddress = new Uri("https://api.estimize.com/");
+                        client.DefaultRequestHeaders.Clear();
 
-                    // You must supply your API key in the HTTP header X-Estimize-Key,
-                    // otherwise you will receive a 403 Forbidden response 
-                    client.DefaultRequestHeaders.Add("X-Estimize-Key", _clientKey);
+                        // You must supply your API key in the HTTP header X-Estimize-Key,
+                        // otherwise you will receive a 403 Forbidden response
+                        client.DefaultRequestHeaders.Add("X-Estimize-Key", _clientKey);
 
-                    // Responses are in JSON: you need to specify the HTTP header Accept: application/json
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                        // Responses are in JSON: you need to specify the HTTP header Accept: application/json
+                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                    var response = await client.GetAsync(Uri.EscapeUriString(url));
+                        var response = await client.GetAsync(Uri.EscapeUriString(url));
 
-                    response.EnsureSuccessStatusCode();
+                        response.EnsureSuccessStatusCode();
 
-                    return await response.Content.ReadAsStringAsync();
+                        return await response.Content.ReadAsStringAsync();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, $"Error at HttpRequester. (retry {retries}/{_maxRetries}");
+                    Thread.Sleep(1000);
                 }
             }
-            catch (Exception e)
+
+            throw new Exception($"Request failed with no more retries remaining (retry {_maxRetries}/{_maxRetries})");
+        }
+
+        /// <summary>
+        /// Saves contents to disk, deleting existing zip files
+        /// </summary>
+        /// <param name="destinationFolder">Final destination of the data</param>
+        /// <param name="ticker">Stock ticker</param>
+        /// <param name="contents">Contents to write</param>
+        protected void SaveContentToZipFile(string destinationFolder, string ticker, string contents)
+        {
+            ticker = ticker.ToLower();
+            var zipEntryName = $"{ticker}.json";
+
+            var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
+            Log.Trace($"EstimizeDataDownloader.SavecontentToZipFile(): Writing to file: {tempPath}");
+            File.WriteAllText(tempPath, contents);
+
+            var tempZipPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip");
+            var zipPath = Path.Combine(destinationFolder, $"{ticker}.zip");
+
+            Log.Trace($"EstimizeDataDownloader.SaveContentToZipFile(): Compressing to: {tempZipPath}");
+            Compression.Zip(tempPath, tempZipPath, zipEntryName, true);
+
+            if (File.Exists(zipPath))
             {
-                throw new Exception($"Error at HttpRequester with msg: {e.Message}", e);
+                Log.Trace($"EstimizeDataDownloader.SaveContentToZipFile(): Deleting existing file: {zipPath}");
+                File.Delete(zipPath);
             }
+
+            Log.Trace($"EstimizeDataDownloader.SaveContentToZipFile(): Moving temp zip file to: {zipPath}");
+            File.Move(tempZipPath, zipPath);
         }
 
         public class Company
         {
             /// <summary>
-            /// The name of the company 
+            /// The name of the company
             /// </summary>
             [JsonProperty(PropertyName = "name")]
             public string Name { get; set; }

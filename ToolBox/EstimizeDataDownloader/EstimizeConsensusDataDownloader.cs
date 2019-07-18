@@ -64,18 +64,34 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                     return false;
                 }
 
+                // We overwrite any data that we've written to disk that has not yet become
+                // a completed event (e.g. earningsRelease = 2019-01-01, utcNow = 2018-12-27
+                // we would overwrite the data so long as utcNow < earningsRelease
+                var utcNow = DateTime.UtcNow;
+
                 foreach (var zipFile in _zipFiles)
                 {
-                    var tasks = new List<Task<List<EstimizeConsensus>>>();
+                    var tasks = new List<Task<KeyValuePair<DateTime, List<EstimizeConsensus>>>>();
+                    var ticker = Path.GetFileNameWithoutExtension(zipFile) ?? string.Empty;
 
                     foreach (var kvp in Compression.Unzip(zipFile))
                     {
                         var content = kvp.Value.SingleOrDefault();
-
-                        var estimates = JsonConvert.DeserializeObject<List<EstimizeEstimate>>(content);
+                        var estimates = JsonConvert.DeserializeObject<List<EstimizeRelease>>(content);
 
                         foreach (var estimate in estimates)
                         {
+                            var releaseDate = estimate.ReleaseDate.Date;
+                            var filePath = Path.Combine(_destinationFolder, ticker, $"{releaseDate:yyyyMMdd}.zip");
+
+                            // Skip exsiting files so long as its earnings release date is in the past
+                            if (File.Exists(filePath) && releaseDate < utcNow)
+                            {
+                                Log.Trace($"EstimizeConsensusDataDownloader.Run(): Earnings release: {releaseDate:yyyy-MM-dd} - Skipping duplicate file: {filePath}");
+                                continue;
+                            }
+
+                            Log.Trace($"EstimizeConsensusDataDownloader.Run(): Earnings release: {releaseDate:yyyy-MM-dd} - Parsing Estimate {estimate.Id} for: {ticker}");
                             // Makes sure we don't overrun Estimize rate limits accidentally
                             IndexGate.WaitToProceed();
 
@@ -93,7 +109,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                                             list.AddRange(Unpack(estimate, Source.Estimize, Type.Eps, jObject));
                                             list.AddRange(Unpack(estimate, Source.Estimize, Type.Revenue, jObject));
 
-                                            return list;
+                                            return new KeyValuePair<DateTime, List<EstimizeConsensus>>(releaseDate, list);
                                         }
                                     )
                             );
@@ -101,14 +117,31 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                     }
 
                     Task.WaitAll(tasks.ToArray());
-
-                    var ticker = Path.GetFileNameWithoutExtension(zipFile) ?? string.Empty;
                     Directory.CreateDirectory(Path.Combine(_destinationFolder, ticker));
 
-                    var consensuses = tasks.SelectMany(x => x.Result);
+                    var results = tasks.Select(x => x.Result);
+                    var consensuses = results.Select(x => x.Value).SelectMany(x => x);
+                    var consensusWithRelease = consensuses.GroupBy(x => x.UpdatedAt.Date)
+                        .Zip(results.Select(x => x.Key), (grouping, releaseDate) =>
+                        {
+                            return new KeyValuePair<DateTime, IGrouping<DateTime, EstimizeConsensus>>(releaseDate, grouping);
+                        }
+                    );
 
-                    foreach (var kvp in consensuses.GroupBy(x => x.UpdatedAt.Date))
+                    foreach (var consensusPair in consensusWithRelease)
                     {
+                        var kvp = consensusPair.Value;
+                        var releaseDate = consensusPair.Key;
+                        var consensusPath = Path.Combine(_destinationFolder, ticker, $"{kvp.Key:yyyyMMdd}.zip");
+
+                        // We can only retrieve consensus data up until today.
+                        // If the earnings release date is in the future, overwrite the data since there
+                        // might be new updates
+                        if (File.Exists(consensusPath) && releaseDate < utcNow)
+                        {
+                            Log.Trace($"EstimizeConsensusDataDownloader.Run(): Earnings release: {releaseDate:yyyy-MM-dd} - Skipping duplicate file after request: {consensusPath}");
+                            continue;
+                        }
                         var contents = JsonConvert.SerializeObject(kvp.OrderBy(x => x.UpdatedAt));
                         SaveContentToZipFile(ticker, $"{kvp.Key:yyyyMMdd}", contents);
                     }
@@ -126,7 +159,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
             return true;
         }
 
-        private IEnumerable<EstimizeConsensus> Unpack(EstimizeEstimate estimizeEstimate, Source source, Type type, JObject jObject)
+        private IEnumerable<EstimizeConsensus> Unpack(EstimizeRelease estimizeEstimate, Source source, Type type, JObject jObject)
         {
             var jToken = jObject[source.ToLower()][type.ToLower()];
             var revisionsJToken = jToken["revisions"];
@@ -149,15 +182,29 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
             return consensuses.Where(x => x.UpdatedAt > DateTime.MinValue);
         }
 
-        private void SaveContentToZipFile(string ticker, string filename, string contents)
+        protected new void SaveContentToZipFile(string ticker, string filename, string contents)
         {
             var zipEntryName = $"{filename}.json";
-            var path = Path.Combine(_destinationFolder, ticker, zipEntryName);
-            File.WriteAllText(path, contents);
+            var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
+
+            Log.Trace($"EstimizeConsensusDataDownloader.SaveContentToZipFile(): Writing to file: {tempPath}");
+            File.WriteAllText(tempPath, contents);
 
             // Write out this data string to a zip file
+            var tempZipPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
             var zipPath = Path.Combine(_destinationFolder, ticker, $"{filename}.zip");
-            Compression.Zip(path, zipPath, zipEntryName, true);
+
+            Log.Trace($"EstimizeConsensusDataDownloader.SaveContentToZipFile(): Compressing to: {tempZipPath}");
+            Compression.Zip(tempPath, tempZipPath, zipEntryName, true);
+
+            if (File.Exists(zipPath))
+            {
+                Log.Trace($"EstimizeConsensusDataDownloader.SaveContentToZipFile(): Deleting existing zip file: {zipPath}");
+                File.Delete(zipPath);
+            }
+
+            Log.Trace($"EstimizeConsensusDataDownloader.SaveContentToZipFile(): Moving temp zip file to: {zipPath}");
+            File.Move(tempZipPath, zipPath);
         }
     }
 }

@@ -47,7 +47,12 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
             try
             {
                 var companies = GetCompanies().Result;
-                Log.Trace($"EstimizeReleaseDataDownloader.Run(): Start processing {companies.Count} companies");
+                var count = companies.Count;
+                var currentPercent = 0.05;
+                var percent = 0.05;
+                var i = 0;
+
+                Log.Trace($"EstimizeReleaseDataDownloader.Run(): Start processing {count} companies");
 
                 var tasks = new List<Task>();
 
@@ -63,18 +68,29 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                         ticker = ticker.Substring(0, length).Trim();
                     }
 
+                    Log.Trace($"EstimizeReleaseDataDownloader.Run(): Processing {ticker}");
+
                     tasks.Add(
                         HttpRequester($"/companies/{ticker}/releases")
                             .ContinueWith(
                                 y =>
                                 {
+                                    i++;
+
                                     if (y.IsFaulted)
                                     {
-                                        Log.Trace($"EstimizeReleaseDataDownloader.Run(): Failed to get data for {company}");
+                                        Log.Error($"EstimizeReleaseDataDownloader.Run(): Failed to get data for {company}");
                                         return;
                                     }
 
-                                    SaveContentToZipFile(ticker, y.Result);
+                                    SaveContentToZipFile(_destinationFolder, ticker, y.Result);
+
+                                    var percentDone = i / count;
+                                    if (percentDone >= currentPercent)
+                                    {
+                                        Log.Trace($"EstimizeEstimateDataDownloader.Run(): {percentDone:P2} complete");
+                                        currentPercent += percent;
+                                    }
                                 }
                             )
                     );
@@ -90,19 +106,6 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
             Log.Trace($"EstimizeReleaseDataDownloader.Run(): Finished in {stopwatch.Elapsed}");
             return true;
-        }
-
-        private void SaveContentToZipFile(string ticker, string contents)
-        {
-            ticker = ticker.ToLower();
-            var zipEntryName = $"{ticker}.json";
-
-            var path = Path.Combine(_destinationFolder, zipEntryName);
-            File.WriteAllText(path, contents);
-
-            // Write out this data string to a zip file
-            var zipPath = Path.Combine(_destinationFolder, $"{ticker}.zip");
-            Compression.Zip(path, zipPath, zipEntryName, true);
         }
     }
 }
