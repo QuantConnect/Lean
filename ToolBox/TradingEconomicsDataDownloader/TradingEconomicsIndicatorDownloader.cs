@@ -15,7 +15,6 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.TradingEconomics;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -44,7 +43,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         {
             _fromDate = fromDate;
             _toDate = toDate;
-            _destinationFolder = destinationFolder;
+            _destinationFolder = Path.Combine(destinationFolder, "indicator");
             _requestGate = new RateGate(1, TimeSpan.FromSeconds(1));
 
             Directory.CreateDirectory(destinationFolder);
@@ -70,17 +69,22 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 
             var json = HttpRequester("/indicators").Result;
             var indicators = JArray.Parse(json).Select(x => x["Category"].Value<string>().ToLower());
-            var availableFiles = Directory.GetFiles(Path.Combine(_destinationFolder, "indicator"), "*.zip", SearchOption.AllDirectories)
-                .Where(
+            var availableFiles = Directory.GetFiles(_destinationFolder, "*.zip", SearchOption.AllDirectories)
+                .Select(
                     x =>
                     {
-                        DateTime _;
-                        return DateTime.TryParseExact(Path.GetFileName(x).Substring(0, 8), "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out _);
+                        try
+                        {
+                            return DateTime.ParseExact(Path.GetFileName(x).Substring(0, 8), "yyyyMMdd", CultureInfo.InvariantCulture);
+                        }
+                        catch
+                        {
+                            return DateTime.MinValue;
+                        }
                     }
                 )
-                .Select(x => DateTime.ParseExact(Path.GetFileName(x).Substring(0, 8), "yyyyMMdd", CultureInfo.InvariantCulture))
+                .Where(x => x != DateTime.MinValue)
                 .ToHashSet();
-
 
             foreach (var indicator in indicators)
             {
@@ -124,19 +128,19 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                 // Return status code. We default to `true` so that we can identify if an error occured during the loop
                 var status = true;
 
-                Parallel.ForEach(data.GroupBy(GetTicker),
+                Parallel.ForEach(data.GroupBy(x => GetTicker(x.HistoricalDataSymbol, x.Category, x.Country)),
                     (kvp, state) =>
                     {
                         // Create the destination directory, otherwise we risk having it fail when we move
                         // the temp file to its final destination
-                        Directory.CreateDirectory(Path.Combine(_destinationFolder, "indicator", kvp.Key));
+                        Directory.CreateDirectory(Path.Combine(_destinationFolder, kvp.Key));
 
                         foreach (var indicatorByDate in kvp.GroupBy(x => x.LastUpdate))
                         {
                             var date = indicatorByDate.Key.ToString("yyyyMMdd");
                             var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
                             var tempZipPath = tempPath.Replace(".json", ".zip");
-                            var finalZipPath = Path.Combine(_destinationFolder, "indicator", kvp.Key, $"{date}.zip");
+                            var finalZipPath = Path.Combine(_destinationFolder, kvp.Key, $"{date}.zip");
                             var dataFolderZipPath = Path.Combine(Globals.DataFolder, "alternative", "trading-economics", "indicator", kvp.Key, $"{date}.zip");
 
                             if (File.Exists(finalZipPath))
@@ -195,24 +199,6 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         {
             var url = $"/historical/country/all/indicator/{_indicator}/{startUtc:yyyy-MM-dd}/{endUtc:yyyy-MM-dd}";
             return HttpRequester(url);
-        }
-
-        /// <summary>
-        /// Gets the ticker. If the ticker is empty, we return the category and country of the calendar
-        /// </summary>
-        /// <param name="tradingEconomicsIndicator">Indicator data</param>
-        /// <returns>Ticker or category + country data</returns>
-        private string GetTicker(TradingEconomicsIndicator tradingEconomicsIndicator)
-        {
-            var ticker = tradingEconomicsIndicator.HistoricalDataSymbol;
-            var defaultTicker = (tradingEconomicsIndicator.Category + tradingEconomicsIndicator.Country).ToLower().Replace(" ", "-");
-
-            if (string.IsNullOrWhiteSpace(ticker))
-            {
-                return defaultTicker;
-            }
-
-            return ticker.ToLower().Replace(" ", "-");
         }
     }
 }

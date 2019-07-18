@@ -18,6 +18,7 @@ using QuantConnect.Logging;
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
@@ -75,10 +76,29 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                 catch (HttpRequestException e)
                 {
                     Log.Trace($"TradingEconomicsDataDownloader.HttpRequester(): HTTP Request failed with message: {e.Message} - (attempt {retries} / 5). Retrying...");
+
+                    // Sleep for half a second in order to respect rate limits. This event is rare enough
+                    // that sleeping for half a second won't have much impact on performance
+                    Thread.Sleep(500);
                 }
             }
 
             throw new Exception("HTTP request retries exceeded maximum (5/5)");
+        }
+
+        /// <summary>
+        /// Gets the ticker. If the ticker is empty, we return the category and country of the calendar
+        /// </summary>
+        /// <param name="tradingEconomicsIndicator">Indicator data</param>
+        /// <returns>Ticker or category + country data</returns>
+        public string GetTicker(string ticker, string category, string country)
+        {
+            if (string.IsNullOrWhiteSpace(ticker))
+            {
+                return (category + country).ToLower().Replace(" ", "-");
+            }
+
+            return ticker.ToLower().Replace(" ", "-");
         }
     }
 }
