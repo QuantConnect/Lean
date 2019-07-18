@@ -14,8 +14,11 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
+AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Algorithm.Framework")
 
+from QuantConnect.Algorithm import *
+from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, PortfolioTargetCollection
 from QuantConnect.Algorithm.Framework.Risk import RiskManagementModel
 from itertools import groupby
@@ -27,7 +30,10 @@ class MaximumSectorExposureRiskManagementModel(RiskManagementModel):
         '''Initializes a new instance of the MaximumSectorExposureRiskManagementModel class
         Args:
             maximumDrawdownPercent: The maximum exposure for any sector, defaults to 20% sector exposure.'''
-        self.maximumSectorExposure = abs(maximumSectorExposure)
+        if maximumSectorExposure <= 0:
+            raise ValueError('MaximumSectorExposureRiskManagementModel: the maximum sector exposure cannot be a non-positive value.')
+
+        self.maximumSectorExposure = maximumSectorExposure
         self.targetsCollection = PortfolioTargetCollection()
 
     def ManageRisk(self, algorithm, targets):
@@ -41,7 +47,7 @@ class MaximumSectorExposureRiskManagementModel(RiskManagementModel):
         risk_targets = list()
 
         # Group the securities by their sector
-        filtered = list(filter(lambda x: x.Value.Fundamentals.HasFundamentalData, algorithm.UniverseManager.ActiveSecurities))
+        filtered = list(filter(lambda x: x.Value.Fundamentals is not None and x.Value.Fundamentals.HasFundamentalData, algorithm.UniverseManager.ActiveSecurities))
         filtered.sort(key = lambda x: x.Value.Fundamentals.CompanyReference.IndustryTemplateCode)
         groupBySector = groupby(filtered, lambda x: x.Value.Fundamentals.CompanyReference.IndustryTemplateCode)
 
@@ -77,3 +83,16 @@ class MaximumSectorExposureRiskManagementModel(RiskManagementModel):
                         risk_targets.append(PortfolioTarget(symbol, float(quantity) / ratio))
 
         return risk_targets
+
+    def OnSecuritiesChanged(self, algorithm, changes):
+        '''Event fired each time the we add/remove securities from the data feed
+        Args:
+            algorithm: The algorithm instance that experienced the change in securities
+            changes: The security additions and removals from the algorithm'''
+        anyFundamentalData = any([
+            kvp.Value.Fundamentals is not None and 
+            kvp.Value.Fundamentals.HasFundamentalData for kvp in algorithm.ActiveSecurities
+            ]);
+
+        if not anyFundamentalData:
+            raise Exception("MaximumSectorExposureRiskManagementModel.OnSecuritiesChanged: Please select a portfolio selection model that selects securities with fundamental data.")

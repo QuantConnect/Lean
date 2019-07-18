@@ -21,7 +21,6 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
-import decimal as d
 
 ### <summary>
 ### In this example we look at the canonical 15/30 day moving average cross. This algorithm
@@ -44,10 +43,10 @@ class MovingAverageCrossAlgorithm(QCAlgorithm):
         self.AddEquity("SPY")
 
         # create a 15 day exponential moving average
-        self.fast = self.EMA("SPY", 15, Resolution.Daily);
+        self.fast = self.EMA("SPY", 15, Resolution.Daily)
 
         # create a 30 day exponential moving average
-        self.slow = self.EMA("SPY", 30, Resolution.Daily);
+        self.slow = self.EMA("SPY", 30, Resolution.Daily)
 
         self.previous = None
 
@@ -68,14 +67,14 @@ class MovingAverageCrossAlgorithm(QCAlgorithm):
             return
 
         # define a small tolerance on our checks to avoid bouncing
-        tolerance = 0.00015;
+        tolerance = 0.00015
 
         holdings = self.Portfolio["SPY"].Quantity
 
         # we only want to go long if we're currently short or flat
         if holdings <= 0:
             # if the fast is greater than the slow, we'll go long
-            if self.fast.Current.Value > self.slow.Current.Value * d.Decimal(1 + tolerance):
+            if self.fast.Current.Value > self.slow.Current.Value *(1 + tolerance):
                 self.Log("BUY  >> {0}".format(self.Securities["SPY"].Price))
                 self.SetHoldings("SPY", 1.0)
 

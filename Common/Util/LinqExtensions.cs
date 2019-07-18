@@ -315,5 +315,51 @@ namespace QuantConnect.Util
                 }
             }
         }
+
+        /// <summary>
+        /// Determines if there are any differences between the left and right collections.
+        /// This method uses sets to improve performance and also uses lazy evaluation so if a
+        /// difference is found, true is immediately returned and evaluation is halted.
+        /// </summary>
+        /// <typeparam name="T">The item type</typeparam>
+        /// <param name="left">The left set</param>
+        /// <param name="right">The right set</param>
+        /// <returns>True if there are any differences between the two sets, false otherwise</returns>
+        public static bool AreDifferent<T>(this ISet<T> left, ISet<T> right)
+        {
+            return left.Except(right).Any() || right.Except(left).Any();
+        }
+
+        /// <summary>
+        /// Converts an <see cref="IEnumerator{T}"/> to an <see cref="IEnumerable{T}"/>
+        /// </summary>
+        /// <typeparam name="T">Collection element type</typeparam>
+        /// <param name="enumerator">The enumerator to convert to an enumerable</param>
+        /// <returns>An enumerable wrapping the specified enumerator</returns>
+        public static IEnumerable<T> AsEnumerable<T>(this IEnumerator<T> enumerator)
+        {
+            using (enumerator)
+            {
+                while (enumerator.MoveNext())
+                {
+                    yield return enumerator.Current;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the value associated with the specified key or provided default value if key is not found.
+        /// </summary>
+        /// <typeparam name="K">The key type</typeparam>
+        /// <typeparam name="V">The value type</typeparam>
+        /// <param name="dictionary">The dictionary instance</param>
+        /// <param name="key">Lookup key</param>
+        /// <param name="defaultValue">Default value</param>
+        /// <returns>Value associated with the specified key or  default value</returns>
+        public static V GetValueOrDefault<K, V>(this IDictionary<K, V> dictionary, K key, V defaultValue)
+        {
+            V obj;
+            return dictionary.TryGetValue(key, out obj) ? obj : defaultValue;
+        }
     }
 }

@@ -40,9 +40,10 @@ namespace QuantConnect.Tests.Common.Securities
             {
             }
 
-            public new decimal GetInitialMarginRequiredForOrder(Security security, Order order)
+            public new decimal GetInitialMarginRequiredForOrder(
+                InitialMarginRequiredForOrderParameters parameters)
             {
-                return base.GetInitialMarginRequiredForOrder(security, order);
+                return base.GetInitialMarginRequiredForOrder(parameters);
             }
 
             public new decimal GetMaintenanceMargin(Security security)
@@ -107,7 +108,8 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
         }
 
         [Test]
@@ -123,7 +125,8 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
         }
 
         [Test]
@@ -139,21 +142,24 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
 
             // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
             security = CreateSecurity(NoonHoliday);
             order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
 
             // Market is Closed on Sunday, Feb, 14th 2016 at Noon
             security = CreateSecurity(NoonWeekend);
             order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
         }
 
         [Test]
@@ -169,21 +175,24 @@ namespace QuantConnect.Tests.Common.Securities
             var order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
 
             // Market is Closed on Monday, Feb, 15th 2016 at Noon (US President Day)
             security = CreateSecurity(NoonHoliday);
             order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
 
             // Market is Closed on Sunday, Feb, 14th 2016 at Noon
             security = CreateSecurity(NoonWeekend);
             order = new MarketOrder(security.Symbol, 100, security.LocalTime);
 
             Assert.AreEqual((double)leverage, (double)model.GetLeverage(security), 1e-3);
-            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(security, order), 1e-3);
+            Assert.AreEqual((double)expected, (double)model.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(new IdentityCurrencyConverter(Currencies.USD), security, order)), 1e-3);
         }
 
         [Test]
@@ -212,7 +221,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securityPrice = 100m;
             var quantity = 300;
 
-            var orderProcessor = new MarginCallModelTests.OrderProcessor();
+            var orderProcessor = new FakeOrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
             var model = new PatternDayTradingMarginModel();
 
@@ -243,7 +252,7 @@ namespace QuantConnect.Tests.Common.Securities
             var securityPrice = 100m;
             var quantity = -300;
 
-            var orderProcessor = new MarginCallModelTests.OrderProcessor();
+            var orderProcessor = new FakeOrderProcessor();
             var portfolio = GetPortfolio(orderProcessor, quantity);
             var model = new PatternDayTradingMarginModel();
 
@@ -280,7 +289,13 @@ namespace QuantConnect.Tests.Common.Securities
 
         private static Security CreateSecurity(DateTime newLocalTime)
         {
-            var security = new Security(CreateUsEquitySecurityExchangeHours(), CreateTradeBarConfig(), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(
+                CreateUsEquitySecurityExchangeHours(),
+                CreateTradeBarConfig(),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance
+            );
             TimeKeeper.SetUtcDateTime(newLocalTime.ConvertToUtc(security.Exchange.TimeZone));
             security.Exchange.SetLocalDateTimeFrontier(newLocalTime);
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));

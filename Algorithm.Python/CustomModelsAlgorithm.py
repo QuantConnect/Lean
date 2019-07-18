@@ -19,10 +19,11 @@ AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Orders import OrderStatus
-from QuantConnect.Orders.Fills import ImmediateFillModel
+from QuantConnect.Orders import *
+from QuantConnect.Orders.Fees import *
+from QuantConnect.Securities import *
+from QuantConnect.Orders.Fills import *
 import numpy as np
-import decimal as d
 import random
 
 ### <summary>
@@ -49,7 +50,7 @@ class CustomModelsAlgorithm(QCAlgorithm):
         self.security.SetFillModel(CustomFillModel(self))
         self.security.SetSlippageModel(CustomSlippageModel(self))
 
-        
+
     def OnData(self, data):
         open_orders = self.Transactions.GetOpenOrders(self.spy)
         if len(open_orders) != 0: return
@@ -58,7 +59,7 @@ class CustomModelsAlgorithm(QCAlgorithm):
             quantity = self.CalculateOrderQuantity(self.spy, .5)
             self.Log("MarketOrder: " + str(quantity))
             self.MarketOrder(self.spy, quantity, True)   # async needed for partial fill market orders
-        
+
         elif self.Time.day > 20 and self.security.Holdings.Quantity >= 0:
             quantity = self.CalculateOrderQuantity(self.spy, -.5)
             self.Log("MarketOrder: " + str(quantity))
@@ -68,17 +69,19 @@ class CustomModelsAlgorithm(QCAlgorithm):
 class CustomFillModel(ImmediateFillModel):
     def __init__(self, algorithm):
         self.algorithm = algorithm
-        self.base = ImmediateFillModel()
         self.absoluteRemainingByOrderId = {}
-        random.seed(100)
-    
+        self.random = Random(387510346)
+
     def MarketFill(self, asset, order):
-        #if not _absoluteRemainingByOrderId.TryGetValue(order.Id, absoluteRemaining):
         absoluteRemaining = order.AbsoluteQuantity
-        self.absoluteRemainingByOrderId[order.Id] = order.AbsoluteQuantity
-        fill = self.base.MarketFill(asset, order)
-        absoluteFillQuantity = int(min(absoluteRemaining, random.randint(0, 2*int(order.AbsoluteQuantity))))
+
+        if order.Id in self.absoluteRemainingByOrderId.keys():
+            absoluteRemaining = self.absoluteRemainingByOrderId[order.Id]
+
+        fill = super().MarketFill(asset, order)
+        absoluteFillQuantity = int(min(absoluteRemaining, self.random.Next(0, 2*int(order.AbsoluteQuantity))))
         fill.FillQuantity = np.sign(order.Quantity) * absoluteFillQuantity
+        
         if absoluteRemaining == absoluteFillQuantity:
             fill.Status = OrderStatus.Filled
             if self.absoluteRemainingByOrderId.get(order.Id):
@@ -90,22 +93,24 @@ class CustomFillModel(ImmediateFillModel):
         self.algorithm.Log("CustomFillModel: " + str(fill))
         return fill
 
-class CustomFeeModel:
+class CustomFeeModel(FeeModel):
     def __init__(self, algorithm):
         self.algorithm = algorithm
 
-    def GetOrderFee(self, security, order):
+    def GetOrderFee(self, parameters):
         # custom fee math
-        fee = max(1, security.Price * order.AbsoluteQuantity * d.Decimal(0.00001))
+        fee = max(1, parameters.Security.Price
+                  * parameters.Order.AbsoluteQuantity
+                  * 0.00001)
         self.algorithm.Log("CustomFeeModel: " + str(fee))
-        return fee
+        return OrderFee(CashAmount(fee, "USD"))
 
 class CustomSlippageModel:
     def __init__(self, algorithm):
         self.algorithm = algorithm
-        
+
     def GetSlippageApproximation(self, asset, order):
         # custom slippage math
-        slippage = asset.Price * d.Decimal(0.0001 * np.log10(2*float(order.AbsoluteQuantity)))
+        slippage = asset.Price * 0.0001 * np.log10(2*float(order.AbsoluteQuantity))
         self.algorithm.Log("CustomSlippageModel: " + str(slippage))
         return slippage

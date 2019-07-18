@@ -1323,14 +1323,138 @@ namespace QuantConnect.Data.Fundamental
 		}
 
 		/// <summary>
-		/// Sets values for non existing periods from a previous instance
+		/// Applies updated values from <paramref name="update"/> to this instance
 		/// </summary>
-		/// <remarks>Used to fill-forward values from previous dates</remarks>
-		/// <param name="previous">The previous instance</param>
-		public void UpdateValues(ValuationRatios previous)
+		/// <remarks>Used to apply data updates to the current instance. This WILL overwrite existing values. Default update values are ignored.</remarks>
+		/// <param name="update">The next data update for this instance</param>
+		public void UpdateValues(ValuationRatios update)
 		{
-			if (previous == null) return;
+			if (update == null) return;
 
+			if (update.PayoutRatio != default(decimal)) PayoutRatio = update.PayoutRatio;
+			if (update.SustainableGrowthRate != default(decimal)) SustainableGrowthRate = update.SustainableGrowthRate;
+			if (update.CashReturn != default(decimal)) CashReturn = update.CashReturn;
+			if (update.SalesPerShare != default(decimal)) SalesPerShare = update.SalesPerShare;
+			if (update.BookValuePerShare != default(decimal)) BookValuePerShare = update.BookValuePerShare;
+			if (update.CFOPerShare != default(decimal)) CFOPerShare = update.CFOPerShare;
+			if (update.FCFPerShare != default(decimal)) FCFPerShare = update.FCFPerShare;
+			if (update.EarningYield != default(decimal)) EarningYield = update.EarningYield;
+			if (update.PERatio != default(decimal)) PERatio = update.PERatio;
+			if (update.SalesYield != default(decimal)) SalesYield = update.SalesYield;
+			if (update.PSRatio != default(decimal)) PSRatio = update.PSRatio;
+			if (update.BookValueYield != default(decimal)) BookValueYield = update.BookValueYield;
+			if (update.PBRatio != default(decimal)) PBRatio = update.PBRatio;
+			if (update.CFYield != default(decimal)) CFYield = update.CFYield;
+			if (update.PCFRatio != default(decimal)) PCFRatio = update.PCFRatio;
+			if (update.FCFYield != default(decimal)) FCFYield = update.FCFYield;
+			if (update.FCFRatio != default(decimal)) FCFRatio = update.FCFRatio;
+			if (update.TrailingDividendYield != default(decimal)) TrailingDividendYield = update.TrailingDividendYield;
+			if (update.ForwardDividendYield != default(decimal)) ForwardDividendYield = update.ForwardDividendYield;
+			if (update.ForwardEarningYield != default(decimal)) ForwardEarningYield = update.ForwardEarningYield;
+			if (update.ForwardPERatio != default(decimal)) ForwardPERatio = update.ForwardPERatio;
+			if (update.PEGRatio != default(decimal)) PEGRatio = update.PEGRatio;
+			if (update.PEGPayback != default(decimal)) PEGPayback = update.PEGPayback;
+			if (update.TangibleBookValuePerShare != default(decimal)) TangibleBookValuePerShare = update.TangibleBookValuePerShare;
+			if (update.TangibleBVPerShare3YrAvg != default(decimal)) TangibleBVPerShare3YrAvg = update.TangibleBVPerShare3YrAvg;
+			if (update.TangibleBVPerShare5YrAvg != default(decimal)) TangibleBVPerShare5YrAvg = update.TangibleBVPerShare5YrAvg;
+			if (update.ForwardDividend != default(decimal)) ForwardDividend = update.ForwardDividend;
+			if (update.WorkingCapitalPerShare != default(decimal)) WorkingCapitalPerShare = update.WorkingCapitalPerShare;
+			if (update.WorkingCapitalPerShare3YrAvg != default(decimal)) WorkingCapitalPerShare3YrAvg = update.WorkingCapitalPerShare3YrAvg;
+			if (update.WorkingCapitalPerShare5YrAvg != default(decimal)) WorkingCapitalPerShare5YrAvg = update.WorkingCapitalPerShare5YrAvg;
+			if (update.EVToEBITDA != default(decimal)) EVToEBITDA = update.EVToEBITDA;
+			if (update.BuyBackYield != default(decimal)) BuyBackYield = update.BuyBackYield;
+			if (update.TotalYield != default(decimal)) TotalYield = update.TotalYield;
+			if (update.RatioPE5YearAverage != default(decimal)) RatioPE5YearAverage = update.RatioPE5YearAverage;
+			if (update.PriceChange1M != default(decimal)) PriceChange1M = update.PriceChange1M;
+			if (update.NormalizedPERatio != default(decimal)) NormalizedPERatio = update.NormalizedPERatio;
+			if (update.PricetoEBITDA != default(decimal)) PricetoEBITDA = update.PricetoEBITDA;
+			if (update.DivYield5Year != default(decimal)) DivYield5Year = update.DivYield5Year;
+			if (update.ForwardROE != default(decimal)) ForwardROE = update.ForwardROE;
+			if (update.ForwardROA != default(decimal)) ForwardROA = update.ForwardROA;
+			if (update.TwoYearsForwardEarningYield != default(decimal)) TwoYearsForwardEarningYield = update.TwoYearsForwardEarningYield;
+			if (update.TwoYearsForwardPERatio != default(decimal)) TwoYearsForwardPERatio = update.TwoYearsForwardPERatio;
+			if (!string.IsNullOrWhiteSpace(update.ForwardCalculationStyle)) ForwardCalculationStyle = update.ForwardCalculationStyle;
+			if (update.ActualForwardDividend != default(decimal)) ActualForwardDividend = update.ActualForwardDividend;
+			if (!string.IsNullOrWhiteSpace(update.TrailingCalculationStyle)) TrailingCalculationStyle = update.TrailingCalculationStyle;
+			if (update.ActualTrailingDividend != default(decimal)) ActualTrailingDividend = update.ActualTrailingDividend;
+			if (update.TotalAssetPerShare != default(decimal)) TotalAssetPerShare = update.TotalAssetPerShare;
+			if (update.ExpectedDividendGrowthRate != default(decimal)) ExpectedDividendGrowthRate = update.ExpectedDividendGrowthRate;
+			if (update.EVtoRevenue != default(decimal)) EVtoRevenue = update.EVtoRevenue;
+			if (update.EVtoPreTaxIncome != default(decimal)) EVtoPreTaxIncome = update.EVtoPreTaxIncome;
+			if (update.EVtoTotalAssets != default(decimal)) EVtoTotalAssets = update.EVtoTotalAssets;
+			if (update.EVtoFCF != default(decimal)) EVtoFCF = update.EVtoFCF;
+			if (update.EVtoEBIT != default(decimal)) EVtoEBIT = update.EVtoEBIT;
+			if (update.FFOPerShare != default(decimal)) FFOPerShare = update.FFOPerShare;
+			if (update.PricetoCashRatio != default(decimal)) PricetoCashRatio = update.PricetoCashRatio;
+			if (update.EVToForwardEBITDA != default(decimal)) EVToForwardEBITDA = update.EVToForwardEBITDA;
+			if (update.EVToForwardRevenue != default(decimal)) EVToForwardRevenue = update.EVToForwardRevenue;
+			if (update.EVToForwardEBIT != default(decimal)) EVToForwardEBIT = update.EVToForwardEBIT;
+			if (update.EVToEBITDA1YearGrowth != default(decimal)) EVToEBITDA1YearGrowth = update.EVToEBITDA1YearGrowth;
+			if (update.EVToFCF1YearGrowth != default(decimal)) EVToFCF1YearGrowth = update.EVToFCF1YearGrowth;
+			if (update.EVToRevenue1YearGrowth != default(decimal)) EVToRevenue1YearGrowth = update.EVToRevenue1YearGrowth;
+			if (update.EVToTotalAssets1YearGrowth != default(decimal)) EVToTotalAssets1YearGrowth = update.EVToTotalAssets1YearGrowth;
+			if (update.PFCFRatio1YearGrowth != default(decimal)) PFCFRatio1YearGrowth = update.PFCFRatio1YearGrowth;
+			if (update.PBRatio1YearGrowth != default(decimal)) PBRatio1YearGrowth = update.PBRatio1YearGrowth;
+			if (update.PERatio1YearGrowth != default(decimal)) PERatio1YearGrowth = update.PERatio1YearGrowth;
+			if (update.PSRatio1YearGrowth != default(decimal)) PSRatio1YearGrowth = update.PSRatio1YearGrowth;
+			if (update.EVToEBIT3YrAvg != default(decimal)) EVToEBIT3YrAvg = update.EVToEBIT3YrAvg;
+			if (update.EVToEBITDA3YrAvg != default(decimal)) EVToEBITDA3YrAvg = update.EVToEBITDA3YrAvg;
+			if (update.EVToFCF3YrAvg != default(decimal)) EVToFCF3YrAvg = update.EVToFCF3YrAvg;
+			if (update.EVToRevenue3YrAvg != default(decimal)) EVToRevenue3YrAvg = update.EVToRevenue3YrAvg;
+			if (update.EVToTotalAssets3YrAvg != default(decimal)) EVToTotalAssets3YrAvg = update.EVToTotalAssets3YrAvg;
+			if (update.EVToEBIT3YrAvgChange != default(decimal)) EVToEBIT3YrAvgChange = update.EVToEBIT3YrAvgChange;
+			if (update.EVToEBITDA3YrAvgChange != default(decimal)) EVToEBITDA3YrAvgChange = update.EVToEBITDA3YrAvgChange;
+			if (update.EVToFCF3YrAvgChange != default(decimal)) EVToFCF3YrAvgChange = update.EVToFCF3YrAvgChange;
+			if (update.EVToRevenue3YrAvgChange != default(decimal)) EVToRevenue3YrAvgChange = update.EVToRevenue3YrAvgChange;
+			if (update.EVToTotalAssets3YrAvgChange != default(decimal)) EVToTotalAssets3YrAvgChange = update.EVToTotalAssets3YrAvgChange;
+			if (update.PFCFRatio3YrAvg != default(decimal)) PFCFRatio3YrAvg = update.PFCFRatio3YrAvg;
+			if (update.PBRatio3YrAvg != default(decimal)) PBRatio3YrAvg = update.PBRatio3YrAvg;
+			if (update.PSRatio3YrAvg != default(decimal)) PSRatio3YrAvg = update.PSRatio3YrAvg;
+			if (update.PCashRatio3YrAvg != default(decimal)) PCashRatio3YrAvg = update.PCashRatio3YrAvg;
+			if (update.PERatio3YrAvg != default(decimal)) PERatio3YrAvg = update.PERatio3YrAvg;
+			if (update.PFCFRatio3YrAvgChange != default(decimal)) PFCFRatio3YrAvgChange = update.PFCFRatio3YrAvgChange;
+			if (update.PBRatio3YrAvgChange != default(decimal)) PBRatio3YrAvgChange = update.PBRatio3YrAvgChange;
+			if (update.PSRatio3YrAvgChange != default(decimal)) PSRatio3YrAvgChange = update.PSRatio3YrAvgChange;
+			if (update.PERatio3YrAvgChange != default(decimal)) PERatio3YrAvgChange = update.PERatio3YrAvgChange;
+			if (update.PERatio1YearHigh != default(decimal)) PERatio1YearHigh = update.PERatio1YearHigh;
+			if (update.PERatio1YearLow != default(decimal)) PERatio1YearLow = update.PERatio1YearLow;
+			if (update.PERatio1YearAverage != default(decimal)) PERatio1YearAverage = update.PERatio1YearAverage;
+			if (update.PERatio5YearHigh != default(decimal)) PERatio5YearHigh = update.PERatio5YearHigh;
+			if (update.PERatio5YearLow != default(decimal)) PERatio5YearLow = update.PERatio5YearLow;
+			if (update.PERatio5YearAverage != default(decimal)) PERatio5YearAverage = update.PERatio5YearAverage;
+			if (update.PERatio10YearHigh != default(decimal)) PERatio10YearHigh = update.PERatio10YearHigh;
+			if (update.PERatio10YearLow != default(decimal)) PERatio10YearLow = update.PERatio10YearLow;
+			if (update.PERatio10YearAverage != default(decimal)) PERatio10YearAverage = update.PERatio10YearAverage;
+			if (update.CAPERatio != default(decimal)) CAPERatio = update.CAPERatio;
+			if (update.EVToEBITDA3YearGrowth != default(decimal)) EVToEBITDA3YearGrowth = update.EVToEBITDA3YearGrowth;
+			if (update.EVToFCF3YearGrowth != default(decimal)) EVToFCF3YearGrowth = update.EVToFCF3YearGrowth;
+			if (update.EVToRevenue3YearGrowth != default(decimal)) EVToRevenue3YearGrowth = update.EVToRevenue3YearGrowth;
+			if (update.EVToTotalAssets3YearGrowth != default(decimal)) EVToTotalAssets3YearGrowth = update.EVToTotalAssets3YearGrowth;
+			if (update.PFCFRatio3YearGrowth != default(decimal)) PFCFRatio3YearGrowth = update.PFCFRatio3YearGrowth;
+			if (update.PBRatio3YearGrowth != default(decimal)) PBRatio3YearGrowth = update.PBRatio3YearGrowth;
+			if (update.PERatio3YearGrowth != default(decimal)) PERatio3YearGrowth = update.PERatio3YearGrowth;
+			if (update.PSRatio3YearGrowth != default(decimal)) PSRatio3YearGrowth = update.PSRatio3YearGrowth;
+			if (update.EVToEBITDA5YearGrowth != default(decimal)) EVToEBITDA5YearGrowth = update.EVToEBITDA5YearGrowth;
+			if (update.EVToFCF5YearGrowth != default(decimal)) EVToFCF5YearGrowth = update.EVToFCF5YearGrowth;
+			if (update.EVToRevenue5YearGrowth != default(decimal)) EVToRevenue5YearGrowth = update.EVToRevenue5YearGrowth;
+			if (update.EVToTotalAssets5YearGrowth != default(decimal)) EVToTotalAssets5YearGrowth = update.EVToTotalAssets5YearGrowth;
+			if (update.PFCFRatio5YearGrowth != default(decimal)) PFCFRatio5YearGrowth = update.PFCFRatio5YearGrowth;
+			if (update.PBRatio5YearGrowth != default(decimal)) PBRatio5YearGrowth = update.PBRatio5YearGrowth;
+			if (update.PERatio5YearGrowth != default(decimal)) PERatio5YearGrowth = update.PERatio5YearGrowth;
+			if (update.PSRatio5YearGrowth != default(decimal)) PSRatio5YearGrowth = update.PSRatio5YearGrowth;
+			if (update.EVToEBITDA10YearGrowth != default(decimal)) EVToEBITDA10YearGrowth = update.EVToEBITDA10YearGrowth;
+			if (update.EVToFCF10YearGrowth != default(decimal)) EVToFCF10YearGrowth = update.EVToFCF10YearGrowth;
+			if (update.EVToRevenue10YearGrowth != default(decimal)) EVToRevenue10YearGrowth = update.EVToRevenue10YearGrowth;
+			if (update.EVToTotalAssets10YearGrowth != default(decimal)) EVToTotalAssets10YearGrowth = update.EVToTotalAssets10YearGrowth;
+			if (update.PFCFRatio10YearGrowth != default(decimal)) PFCFRatio10YearGrowth = update.PFCFRatio10YearGrowth;
+			if (update.PBRatio10YearGrowth != default(decimal)) PBRatio10YearGrowth = update.PBRatio10YearGrowth;
+			if (update.PERatio10YearGrowth != default(decimal)) PERatio10YearGrowth = update.PERatio10YearGrowth;
+			if (update.PSRatio10YearGrowth != default(decimal)) PSRatio10YearGrowth = update.PSRatio10YearGrowth;
+			if (update.TwoYrsEVToForwardEBIT != default(decimal)) TwoYrsEVToForwardEBIT = update.TwoYrsEVToForwardEBIT;
+			if (update.TwoYrsEVToForwardEBITDA != default(decimal)) TwoYrsEVToForwardEBITDA = update.TwoYrsEVToForwardEBITDA;
+			if (update.FirstYearEstimatedEPSGrowth != default(decimal)) FirstYearEstimatedEPSGrowth = update.FirstYearEstimatedEPSGrowth;
+			if (update.SecondYearEstimatedEPSGrowth != default(decimal)) SecondYearEstimatedEPSGrowth = update.SecondYearEstimatedEPSGrowth;
+			if (update.NormalizedPEGatio != default(decimal)) NormalizedPEGatio = update.NormalizedPEGatio;
 		}
 	}
 }

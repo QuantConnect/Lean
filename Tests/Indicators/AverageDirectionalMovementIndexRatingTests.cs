@@ -28,15 +28,9 @@ namespace QuantConnect.Tests.Indicators
             return new AverageDirectionalMovementIndexRating(14);
         }
 
-        protected override string TestFileName
-        {
-            get { return "spy_adxr.txt"; }
-        }
+        protected override string TestFileName => "spy_with_adx.txt";
 
-        protected override string TestColumnName
-        {
-            get { return "ADXR_14"; }
-        }
+        protected override string TestColumnName => "ADXR 14";
 
         protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion
         {

@@ -117,7 +117,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            if (AddedSecurities.Count == 0 && RemovedSecurities.Count == 0)
+            if (Count == 0)
             {
                 return "SecurityChanges: None";
             }

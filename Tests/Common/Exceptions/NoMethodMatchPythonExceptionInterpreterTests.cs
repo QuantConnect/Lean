@@ -19,11 +19,10 @@ using Python.Runtime;
 using QuantConnect.Exceptions;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace QuantConnect.Tests.Common.Exceptions
 {
-    [TestFixture, Ignore]
+    [TestFixture]
     public class NoMethodMatchPythonExceptionInterpreterTests
     {
         private PythonException _pythonException;
@@ -31,9 +30,6 @@ namespace QuantConnect.Tests.Common.Exceptions
         [TestFixtureSetUp]
         public void Setup()
         {
-            var pythonPath = new DirectoryInfo("RegressionAlgorithms");
-            Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath.FullName);
-
             using (Py.GIL())
             {
                 var module = Py.Import("Test_PythonExceptionInterpreter");
@@ -41,7 +37,7 @@ namespace QuantConnect.Tests.Common.Exceptions
 
                 try
                 {
-                    // self.Log(1)
+                    // self.SetCash('SPY')
                     algorithm.no_method_match();
                 }
                 catch (PythonException pythonException)
@@ -84,7 +80,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             var assembly = typeof(PythonExceptionInterpreter).Assembly;
             var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] { assembly });
             exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
-            Assert.True(exception.Message.Contains("self.Log(1)"));
+            Assert.True(exception.Message.Contains("self.SetCash(\\'SPY\\')"));
         }
 
         private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);

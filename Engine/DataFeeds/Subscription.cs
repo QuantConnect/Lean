@@ -17,33 +17,40 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Represents the data required for a data feed to process a single subsciption
+    /// Represents the data required for a data feed to process a single subscription
     /// </summary>
     public class Subscription : IEnumerator<SubscriptionData>
     {
+        private bool _removedFromUniverse;
         private readonly IEnumerator<SubscriptionData> _enumerator;
+        private List<SubscriptionRequest> _subscriptionRequests;
+
+        /// <summary>
+        /// Event fired when a new data point is available
+        /// </summary>
+        public event EventHandler NewDataAvailable;
 
         /// <summary>
         /// Gets the universe for this subscription
         /// </summary>
-        public Universe Universe
-        {
-            get;
-            private set;
-        }
+        public IEnumerable<Universe> Universes => _subscriptionRequests
+            .Where(x => x.Universe != null)
+            .Select(x => x.Universe);
 
         /// <summary>
         /// Gets the security this subscription points to
         /// </summary>
-        public readonly Security Security;
+        public readonly ISecurityPrice Security;
 
         /// <summary>
         /// Gets the configuration for this subscritions
@@ -53,10 +60,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the exchange time zone associated with this subscription
         /// </summary>
-        public DateTimeZone TimeZone
-        {
-            get { return Security.Exchange.TimeZone; }
-        }
+        public DateTimeZone TimeZone { get; }
 
         /// <summary>
         /// Gets the offset provider for time zone conversions to and from the data's local time
@@ -76,49 +80,113 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets true if this subscription is used in universe selection
         /// </summary>
-        public bool IsUniverseSelectionSubscription { get; private set; }
+        public bool IsUniverseSelectionSubscription { get; }
 
         /// <summary>
         /// Gets the start time of this subscription in UTC
         /// </summary>
-        public DateTime UtcStartTime { get; private set; }
+        public DateTime UtcStartTime { get; }
 
         /// <summary>
         /// Gets the end time of this subscription in UTC
         /// </summary>
-        public DateTime UtcEndTime { get; private set; }
+        public DateTime UtcEndTime { get; }
+
+        /// <summary>
+        /// Gets whether or not this subscription has been removed from its parent universe
+        /// </summary>
+        public IReadOnlyRef<bool> RemovedFromUniverse { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Subscription"/> class with a universe
         /// </summary>
-        /// <param name="universe">Specified for universe subscriptions</param>
-        /// <param name="security">The security this subscription is for</param>
-        /// <param name="configuration">The subscription configuration that was used to generate the enumerator</param>
+        /// <param name="subscriptionRequest">Specified for universe subscriptions</param>
         /// <param name="enumerator">The subscription's data source</param>
         /// <param name="timeZoneOffsetProvider">The offset provider used to convert data local times to utc</param>
-        /// <param name="utcStartTime">The start time of the subscription</param>
-        /// <param name="utcEndTime">The end time of the subscription</param>
-        /// <param name="isUniverseSelectionSubscription">True if this is a subscription for universe selection,
-        /// that is, the configuration is used to produce the used to perform universe selection, false for a
-        /// normal data subscription, i.e, SPY</param>
-        public Subscription(Universe universe,
-            Security security,
-            SubscriptionDataConfig configuration,
+        public Subscription(
+            SubscriptionRequest subscriptionRequest,
             IEnumerator<SubscriptionData> enumerator,
-            TimeZoneOffsetProvider timeZoneOffsetProvider,
-            DateTime utcStartTime,
-            DateTime utcEndTime,
-            bool isUniverseSelectionSubscription)
+            TimeZoneOffsetProvider timeZoneOffsetProvider)
         {
-            Universe = universe;
-            Security = security;
+            _subscriptionRequests = new List<SubscriptionRequest> { subscriptionRequest };
             _enumerator = enumerator;
-            IsUniverseSelectionSubscription = isUniverseSelectionSubscription;
-            Configuration = configuration;
+            Security = subscriptionRequest.Security;
+            IsUniverseSelectionSubscription = subscriptionRequest.IsUniverseSubscription;
+            Configuration = subscriptionRequest.Configuration;
             OffsetProvider = timeZoneOffsetProvider;
+            TimeZone = subscriptionRequest.Security.Exchange.TimeZone;
+            UtcStartTime = subscriptionRequest.StartTimeUtc;
+            UtcEndTime = subscriptionRequest.EndTimeUtc;
 
-            UtcStartTime = utcStartTime;
-            UtcEndTime = utcEndTime;
+            RemovedFromUniverse = Ref.CreateReadOnly(() => _removedFromUniverse);
+        }
+
+        /// <summary>
+        /// Adds a <see cref="SubscriptionRequest"/> for this subscription
+        /// </summary>
+        /// <param name="subscriptionRequest">The <see cref="SubscriptionRequest"/> to add</param>
+        public bool AddSubscriptionRequest(SubscriptionRequest subscriptionRequest)
+        {
+            if (IsUniverseSelectionSubscription
+                || subscriptionRequest.IsUniverseSubscription)
+            {
+                throw new Exception("Subscription.AddSubscriptionRequest(): Universe selection" +
+                    " subscriptions should not have more than 1 SubscriptionRequest");
+            }
+
+            // this shouldn't happen but just in case..
+            if (subscriptionRequest.Configuration != Configuration)
+            {
+                throw new Exception("Subscription.AddSubscriptionRequest(): Requesting to add" +
+                    "a different SubscriptionDataConfig");
+            }
+
+            // Only allow one subscription request per universe
+            if (!Universes.Contains(subscriptionRequest.Universe))
+            {
+                _subscriptionRequests.Add(subscriptionRequest);
+                // TODO this might update the 'UtcStartTime' and 'UtcEndTime' of this subscription
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Removes one or all <see cref="SubscriptionRequest"/> from this subscription
+        /// </summary>
+        /// <param name="universe">Universe requesting to remove <see cref="SubscriptionRequest"/>.
+        /// Default value, null, will remove all universes</param>
+        /// <returns>True, if the subscription is empty and ready to be removed</returns>
+        public bool RemoveSubscriptionRequest(Universe universe = null)
+        {
+            // TODO this might update the 'UtcStartTime' and 'UtcEndTime' of this subscription
+            IEnumerable<Universe> removedUniverses;
+            if (universe == null)
+            {
+                var subscriptionRequests = _subscriptionRequests;
+                _subscriptionRequests = new List<SubscriptionRequest>();
+                removedUniverses = subscriptionRequests.Where(x => x.Universe != null)
+                    .Select(x => x.Universe);
+            }
+            else
+            {
+                _subscriptionRequests.RemoveAll(x => x.Universe == universe);
+                removedUniverses = new[] {universe};
+            }
+
+            var emptySubscription = !_subscriptionRequests.Any();
+            if (emptySubscription)
+            {
+                // if the security is no longer a member of the universe, then mark the subscription properly
+                // universe may be null for internal currency conversion feeds
+                // TODO : Put currency feeds in their own internal universe
+                if (!removedUniverses.Any(x => x.Securities.ContainsKey(Configuration.Symbol)))
+                {
+                    MarkAsRemovedFromUniverse();
+                }
+            }
+
+            return emptySubscription;
         }
 
         /// <summary>
@@ -165,10 +233,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// The current element in the collection.
         /// </returns>
         /// <filterpriority>2</filterpriority>
-        object IEnumerator.Current
-        {
-            get { return Current; }
-        }
+        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -181,6 +246,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Mark this subscription as having been removed from the universe.
+        /// Data for this time step will be discarded.
+        /// </summary>
+        public void MarkAsRemovedFromUniverse()
+        {
+            _removedFromUniverse = true;
+        }
+
+        /// <summary>
         /// Serves as a hash function for a particular type.
         /// </summary>
         /// <returns>
@@ -189,7 +263,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <filterpriority>2</filterpriority>
         public override int GetHashCode()
         {
-            return Configuration.Symbol.GetHashCode();
+            return Configuration.GetHashCode();
+        }
+
+        /// <summary>Determines whether the specified object is equal to the current object.</summary>
+        /// <param name="obj">The object to compare with the current object. </param>
+        /// <returns>
+        /// <see langword="true" /> if the specified object  is equal to the current object; otherwise, <see langword="false" />.</returns>
+        public override bool Equals(object obj)
+        {
+            var subscription = obj as Subscription;
+            if (subscription == null)
+            {
+                return false;
+            }
+
+            return subscription.Configuration.Equals(Configuration);
         }
 
         /// <summary>Returns a string that represents the current object.</summary>
@@ -198,6 +287,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public override string ToString()
         {
             return Configuration.ToString();
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="NewDataAvailable"/> event
+        /// </summary>
+        public void OnNewDataAvailable()
+        {
+            NewDataAvailable?.Invoke(this, EventArgs.Empty);
         }
     }
 }

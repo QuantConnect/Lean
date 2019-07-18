@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -22,7 +24,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Algorithm used for regression tests purposes
     /// </summary>
     /// <meta name="tag" content="regression test" />
-    public class RegressionAlgorithm : QCAlgorithm
+    public class RegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -68,5 +70,41 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "5433"},
+            {"Average Win", "0.00%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "-3.894%"},
+            {"Drawdown", "0.100%"},
+            {"Expectancy", "-0.993"},
+            {"Net Profit", "-0.054%"},
+            {"Sharpe Ratio", "-30.322"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "2.23"},
+            {"Alpha", "-0.019"},
+            {"Beta", "-0.344"},
+            {"Annual Standard Deviation", "0.001"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "-38.881"},
+            {"Tracking Error", "0.001"},
+            {"Treynor Ratio", "0.066"},
+            {"Total Fees", "$5433.00"}
+        };
     }
 }

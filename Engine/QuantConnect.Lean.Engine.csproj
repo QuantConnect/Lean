@@ -37,7 +37,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>$(SelectedOptimization)</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -104,9 +104,12 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <Target Name="Print" BeforeTargets="Build">
+    <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
+  </Target>
   <ItemGroup>
-    <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotNetZip.1.10.1\lib\net20\DotNetZip.dll</HintPath>
+    <Reference Include="DotNetZip, Version=1.13.3.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
+      <HintPath>..\packages\DotNetZip.1.13.3\lib\net40\DotNetZip.dll</HintPath>
     </Reference>
     <Reference Include="Fasterflect">
       <HintPath>..\packages\fasterflect.2.1.3\lib\net40\Fasterflect.dll</HintPath>
@@ -135,6 +138,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -149,18 +153,41 @@
     <Compile Include="DataFeeds\BacktestingOptionChainProvider.cs" />
     <Compile Include="DataFeeds\CachingFutureChainProvider.cs" />
     <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
+    <Compile Include="DataFeeds\CurrencySubscriptionDataConfigManager.cs" />
+    <Compile Include="DataFeeds\DataManager.cs" />
+    <Compile Include="DataFeeds\Enumerators\DelistingEventProvider.cs" />
+    <Compile Include="DataFeeds\Enumerators\DividendEventProvider.cs" />
+    <Compile Include="DataFeeds\Enumerators\Factories\CorporateEventEnumeratorFactory.cs" />
+    <Compile Include="DataFeeds\Enumerators\ITradableDateEventProvider.cs" />
+    <Compile Include="DataFeeds\Enumerators\ITradableDatesNotifier.cs" />
+    <Compile Include="DataFeeds\Enumerators\LiveEquityDataSynchronizingEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\MappingEventProvider.cs" />
+    <Compile Include="DataFeeds\Enumerators\LiveAuxiliaryDataEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\PriceScaleFactorEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\SplitEventProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\QuoteBarFillForwardEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\AuxiliaryDataEnumerator.cs" />
+    <Compile Include="DataFeeds\IDataFeedSubscriptionManager.cs" />
+    <Compile Include="DataFeeds\IDataFeedTimeProvider.cs" />
+    <Compile Include="DataFeeds\IDataManager.cs" />
     <Compile Include="DataFeeds\ISubscriptionSynchronizer.cs" />
+    <Compile Include="DataFeeds\ISynchronizer.cs" />
     <Compile Include="DataFeeds\LiveFutureChainProvider.cs" />
     <Compile Include="DataFeeds\LiveOptionChainProvider.cs" />
+    <Compile Include="DataFeeds\NullDataFeed.cs" />
+    <Compile Include="DataFeeds\PendingRemovalsManager.cs" />
+    <Compile Include="DataFeeds\RealTimeScheduleEventService.cs" />
+    <Compile Include="DataFeeds\PredicateTimeProvider.cs" />
+    <Compile Include="DataFeeds\SubscriptionDataReaderEvents.cs" />
+    <Compile Include="DataFeeds\SubscriptionFrontierTimeProvider.cs" />
     <Compile Include="DataFeeds\SingleEntryDataCacheProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\EnqueueableEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\BaseDataCollectionSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\BaseDataSubscriptionEnumeratorFactory.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\DataQueueFuturesChainUniverseDataCollectionEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\Factories\DataQueueOptionChainUniverseDataCollectionEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\DataQueueFuturesChainUniverseDataCollectionEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\DataQueueOptionChainUniverseDataCollectionEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\FineFundamentalSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\FuturesChainUniverseSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\Factories\OptionChainUniverseSubscriptionEnumeratorFactory.cs" />
@@ -189,6 +216,8 @@
     <Compile Include="DataFeeds\DataFeedPacket.cs" />
     <Compile Include="DataFeeds\SubscriptionCollection.cs" />
     <Compile Include="DataFeeds\SubscriptionData.cs" />
+    <Compile Include="DataFeeds\LiveSynchronizer.cs" />
+    <Compile Include="DataFeeds\Synchronizer.cs" />
     <Compile Include="DataFeeds\TextSubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\CreateStreamReaderErrorEventArgs.cs" />
     <Compile Include="DataFeeds\BaseDataExchange.cs" />
@@ -202,6 +231,7 @@
     <Compile Include="DataFeeds\ReaderErrorEventArgs.cs" />
     <Compile Include="DataFeeds\SubscriptionDataReader.cs" />
     <Compile Include="DataFeeds\TimeSlice.cs" />
+    <Compile Include="DataFeeds\TimeSliceFactory.cs" />
     <Compile Include="DataFeeds\Transport\LocalFileSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\RemoteFileSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\Transport\RestSubscriptionStreamReader.cs" />
@@ -210,6 +240,7 @@
     <Compile Include="DataFeeds\ZipDataCacheProvider.cs" />
     <Compile Include="DataFeeds\ZipEntryNameSubscriptionDataSourceReader.cs" />
     <Compile Include="HistoricalData\SineHistoryProvider.cs" />
+    <Compile Include="RealTime\BaseRealTimeHandler.cs" />
     <Compile Include="Results\BaseResultsHandler.cs" />
     <Compile Include="Results\RegressionResultHandler.cs" />
     <Compile Include="Server\LocalLeanManager.cs" />
@@ -226,6 +257,7 @@
     <Compile Include="Results\DesktopResultHandler.cs" />
     <Compile Include="Results\IResultHandler.cs" />
     <Compile Include="Setup\AlgorithmSetupException.cs" />
+    <Compile Include="Setup\BaseSetupHandler.cs" />
     <Compile Include="Setup\BrokerageSetupHandler.cs" />
     <Compile Include="Setup\ConsoleSetupHandler.cs" />
     <Compile Include="Setup\BacktestingSetupHandler.cs" />
@@ -238,8 +270,10 @@
     <Compile Include="DataFeeds\FileSystemDataFeed.cs" />
     <Compile Include="Alphas\DefaultAlphaHandler.cs" />
     <Compile Include="Alphas\IAlphaHandler.cs" />
+    <Compile Include="Setup\SetupHandlerParameters.cs" />
     <Compile Include="TransactionHandlers\BacktestingTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\BrokerageTransactionHandler.cs" />
+    <Compile Include="TransactionHandlers\CancelPendingOrders.cs" />
     <Compile Include="TransactionHandlers\ITransactionHandler.cs" />
     <Compile Include="DataFeeds\IDataFeed.cs" />
     <Compile Include="Results\LiveTradingResultHandler.cs" />

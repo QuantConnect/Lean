@@ -15,18 +15,18 @@
 
 namespace QuantConnect.Indicators
 {
-
     /// <summary>
-    ///     Represents the moving average indicator defined by Welles Wilder in his book: 
-    ///     New Concepts in Technical Trading Systems.
+    /// Represents the moving average indicator defined by Welles Wilder in his book:
+    /// New Concepts in Technical Trading Systems.
     /// </summary>
-    public class WilderMovingAverage : Indicator
+    public class WilderMovingAverage : Indicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly decimal _k;
         private readonly int _period;
         private readonly IndicatorBase<IndicatorDataPoint> _sma;
 
-        /// <summary>Initializes a new instance of the WilderMovingAverage class with the specified name and period
+        /// <summary>
+        /// Initializes a new instance of the WilderMovingAverage class with the specified name and period
         /// </summary>
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the Wilder Moving Average</param>
@@ -39,7 +39,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Initializes a new instance of the WilderMovingAverage class with the default name and period
+        /// Initializes a new instance of the WilderMovingAverage class with the default name and period
         /// </summary>
         /// <param name="period">The period of the Wilder Moving Average</param>
         public WilderMovingAverage(int period)
@@ -48,12 +48,17 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Gets a flag indicating when this indicator is ready and fully initialized
+        /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => Samples >= _period;
 
         /// <summary>
-        ///     Resets this indicator to its initial state
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => _period;
+
+        /// <summary>
+        /// Resets this indicator to its initial state
         /// </summary>
         public override void Reset()
         {
@@ -62,7 +67,7 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        ///     Computes the next value of this indicator from the given state
+        /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
@@ -73,7 +78,7 @@ namespace QuantConnect.Indicators
                 _sma.Update(input);
                 return _sma;
             }
-            return input*_k + Current*(1 - _k);
+            return input * _k + Current * (1 - _k);
         }
     }
 }

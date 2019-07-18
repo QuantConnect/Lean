@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -27,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Universe Selection regression algorithm simulates an edge case. In one week, Google listed two new symbols, delisted one of them and changed tickers.
     /// </summary>
     /// <meta name="tag" content="regression test" />
-    public class UniverseSelectionRegressionAlgorithm : QCAlgorithm
+    public class UniverseSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private HashSet<Symbol> _delistedSymbols = new HashSet<Symbol>();
         private SecurityChanges _changes;
@@ -75,6 +76,18 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // can access the current set of active securitie through UniverseManager.ActiveSecurities
             Log(Time + ": Active Securities: " + string.Join(", ", UniverseManager.ActiveSecurities.Keys));
+
+            // verify we don't receive data for inactive securities
+            var inactiveSymbols = data.Keys
+                .Where(sym => !UniverseManager.ActiveSecurities.ContainsKey(sym))
+                // on daily data we'll get the last data point and the delisting at the same time
+                .Where(sym => !data.Delistings.ContainsKey(sym) || data.Delistings[sym].Type != DelistingType.Delisted)
+                .ToList();
+            if (inactiveSymbols.Any())
+            {
+                var symbols = string.Join(", ", inactiveSymbols);
+                throw new Exception($"Received data for non-active security: {symbols}.");
+            }
 
             if (Transactions.OrdersCount == 0)
             {
@@ -143,5 +156,41 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception(string.Format("{0}({1}) expected {2}, but received {3}.", symbol, symbol.ID, expected, actual));
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "5"},
+            {"Average Win", "0.68%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "-73.924%"},
+            {"Drawdown", "6.600%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "-6.069%"},
+            {"Sharpe Ratio", "-4.008"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-0.704"},
+            {"Beta", "-28.684"},
+            {"Annual Standard Deviation", "0.316"},
+            {"Annual Variance", "0.1"},
+            {"Information Ratio", "-4.069"},
+            {"Tracking Error", "0.316"},
+            {"Treynor Ratio", "0.044"},
+            {"Total Fees", "$5.00"}
+        };
     }
 }

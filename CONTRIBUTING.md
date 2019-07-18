@@ -20,6 +20,14 @@ As a point of consistency, we use soft tabs of four spaces to ensure files rende
 
 All pull requests must be accompanied by units tests. If it is a new feature, the tests should highlight expected use cases as well as edge cases, if applicable. If it is a bugfix, there should be tests that expose the bug in question.
 
+## Guidelines for Framework Modules Contributions
+
+Contributions of [Algorithm Framework](https://www.quantconnect.com/docs/algorithm-framework/overview) Modules needs to follow certain extra patterns, since QuantConnect users can use them in their algorithms.
+
+Generally modules should do one focused, specific role well. For example, combining risk control logic with [notifications](https://www.quantconnect.com/docs/live-trading/notifications) or placing orders outside execution models violates the general programming rule 'separation of concerns'. Keep each module doing one specific task and if you want to consider additional functionality add event handlers that users can bind to from their Algorithm instance.
+
+By default production code should be silent unless there is a fatal exception. Because of this, [logging or debugging](https://www.quantconnect.com/docs/algorithm-reference/logging-and-debug) is not allowed inside LEAN framework modules. Additional [charting](https://www.quantconnect.com/docs/algorithm-reference/charting) inside the module consumes the resources and should not be included in a module as well.
+
 ## Initial Setup
 
 * Setup a [GitHub](https://github.com/) account
@@ -79,11 +87,11 @@ Topic branches should exist in your **local** and **origin** repositories only. 
 
 ## Working on topic branches
 
-First create a new branch for the work you'd like to perform:
+First create a new branch for the work you'd like to perform. When naming your branch, please use the following convention: `bug-<issue#>-<description>` or `feature-<issue#>-<description>`:
 
 ```bash
-$ git checkout -b issue-123/short-issue-description
-Switched to a new branch 'issue-123/short-issue-description'
+$ git checkout -b bug-123-short-issue-description
+Switched to a new branch 'bug-123-short-issue-description'
 ```
 
 Now perform some work and commit changes. Always review your changes before committing
@@ -107,10 +115,10 @@ After performing some work you'll want to merge in changes from the **upstream/m
 
 ```bash
 $ git fetch upstream
-$ git rebase upstream/master issue-123/short-issue-description
+$ git rebase upstream/master bug-123-short-issue-description
 ```
 
-The `git fetch upstream` command will download the **upstream** repository to your computer but not merge it. The `rebase upstream/master issue-123/short-issue-description` command will [rebase](https://www.atlassian.com/git/tutorials/rewriting-history/git-commit--amend) your changes on top of **upstream/master**. This will make the review process easier for **collaborators**.
+The `git fetch upstream` command will download the **upstream** repository to your computer but not merge it. The `rebase upstream/master bug-123-short-issue-description` command will [rebase](https://www.atlassian.com/git/tutorials/rewriting-history/git-commit--amend) your changes on top of **upstream/master**. This will make the review process easier for **collaborators**.
 
 > CAUTION Please note that once you have pushed your branch remotely you MUST NOT rebase!
 
@@ -123,15 +131,15 @@ $ git pull upstream/master
 When topic branches are finished and ready for review, they should be pushed back to **origin**.
 
 ```bash
-$ git push origin issue-123/short-issue-description
+$ git push origin bug-123-short-issue-description
 To git@github.com:username/Lean.git
-    * [new branch]       issue-123/short-issue-description -> issue-123/short-issue-description
+    * [new branch]       bug-123-short-issue-description -> bug-123-short-issue-description
 ```
 
 Now you're ready to send a [pull request](https://help.github.com/articles/using-pull-requests/) from this branch to **upstream/master** and update the GitHub issue tracker to let a collaborator know that your branch is ready to be reviewed and merged.  If extra changes are required as part of the review process, make those changes on the topic branch and re-push. First re-checkout the topic branch you made your original changes on:
 
 ```bash
-$ git checkout issue-123/short-issue-description
+$ git checkout bug-123-short-issue-description
 ```
 
 Now make responses to the review comments, commit, and re-push your changes:

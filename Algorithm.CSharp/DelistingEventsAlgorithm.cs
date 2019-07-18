@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,9 +15,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -28,8 +30,12 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="data event handlers" />
     /// <meta name="tag" content="delisting event" />
-    public class DelistingEventsAlgorithm : QCAlgorithm
+    public class DelistingEventsAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private bool _receivedDelistedWarningEvent;
+        private bool _receivedDelistedEvent;
+        private int _dataCount;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -49,6 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            _dataCount += data.Bars.Count;
             if (Transactions.OrdersCount == 0)
             {
                 SetHoldings("AAA", 1);
@@ -83,6 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var delisting = kvp.Value;
                 if (delisting.Type == DelistingType.Warning)
                 {
+                    _receivedDelistedWarningEvent = true;
                     Debug($"OnData(Delistings): {Time}: {symbol} will be delisted at end of day today.");
 
                     // liquidate on delisting warning
@@ -90,6 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 if (delisting.Type == DelistingType.Delisted)
                 {
+                    _receivedDelistedEvent = true;
                     Debug($"OnData(Delistings): {Time}: {symbol} has been delisted.");
 
                     // fails because the security has already been delisted and is no longer tradable
@@ -102,5 +111,57 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Debug($"OnOrderEvent(OrderEvent): {Time}: {orderEvent}");
         }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_receivedDelistedEvent)
+            {
+                throw new Exception("Did not receive expected delisted event");
+            }
+            if (!_receivedDelistedWarningEvent)
+            {
+                throw new Exception("Did not receive expected delisted warning event");
+            }
+            if (_dataCount != 13)
+            {
+                throw new Exception($"Unexpected data count {_dataCount}. Expected 13");
+            }
+        }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "2"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-5.58%"},
+            {"Compounding Annual Return", "-87.694%"},
+            {"Drawdown", "5.600%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-5.578%"},
+            {"Sharpe Ratio", "-10.227"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-1.953"},
+            {"Beta", "23.587"},
+            {"Annual Standard Deviation", "0.156"},
+            {"Annual Variance", "0.024"},
+            {"Information Ratio", "-10.33"},
+            {"Tracking Error", "0.156"},
+            {"Treynor Ratio", "-0.067"},
+            {"Total Fees", "$36.70"}
+        };
     }
 }

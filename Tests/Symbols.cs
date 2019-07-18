@@ -43,6 +43,7 @@ namespace QuantConnect.Tests
         public static readonly Symbol ETHBTC = CreateCryptoSymbol("ETHBTC");
 
         public static readonly Symbol DE10YBEUR = CreateCfdSymbol("DE10YBEUR", Market.FXCM);
+        public static readonly Symbol DE30EUR = CreateCfdSymbol("DE30EUR", Market.FXCM);
         public static readonly Symbol XAGUSD = CreateCfdSymbol("XAGUSD", Market.FXCM);
         public static readonly Symbol XAUUSD = CreateCfdSymbol("XAUUSD", Market.FXCM);
 
@@ -51,6 +52,9 @@ namespace QuantConnect.Tests
 
         public static readonly Symbol Fut_SPY_Feb19_2016 = CreateFutureSymbol("SPY", new DateTime(2016, 02, 19));
         public static readonly Symbol Fut_SPY_Mar19_2016 = CreateFutureSymbol("SPY", new DateTime(2016, 03, 19));
+
+        public static readonly Symbol Future_ESZ18_Dec2018 = CreateFutureSymbol("ES", new DateTime(2018, 12, 21));
+        public static readonly Symbol Future_CLF19_Jan2019 = CreateFutureSymbol("CL", new DateTime(2018, 12, 19));
 
         /// <summary>
         /// Can be supplied in TestCase attribute

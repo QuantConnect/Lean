@@ -56,40 +56,11 @@ namespace QuantConnect.Orders
         OptionExercise
     }
 
-
-    /// <summary>
-    /// Time In Force - defines the length of time over which an order will continue working before it is canceled
-    /// </summary>
-    public enum TimeInForce
-    {
-        /// <summary>
-        /// Order active until it is filled or canceled (same as GTC).
-        /// </summary>
-        GoodTilCanceled,
-
-        /// <summary>
-        /// Order active until it is filled or canceled (same as GoodTilCanceled).
-        /// </summary>
-        GTC = GoodTilCanceled,
-
-        /// <summary>
-        /// Order valid only for the current day (DAY).
-        /// The order will be cancelled if not executed before the market close.
-        /// </summary>
-        Day,
-
-        /// <summary>
-        /// Order valid until a custom set date time value.
-        /// </summary>
-        Custom
-    }
-
-
     /// <summary>
     /// Direction of the order
     /// </summary>
-    public enum OrderDirection {
-
+    public enum OrderDirection
+    {
         /// <summary>
         /// Buy Order
         /// </summary>
@@ -110,12 +81,11 @@ namespace QuantConnect.Orders
         Hold
     }
 
-
     /// <summary>
     /// Fill status of the order class.
     /// </summary>
-    public enum OrderStatus {
-
+    public enum OrderStatus
+    {
         /// <summary>
         /// New order pre-submission to the order processor.
         /// </summary>
@@ -156,5 +126,4 @@ namespace QuantConnect.Orders
         /// </summary>
         CancelPending = 8
     }
-
-} // End QC Namespace:
+}

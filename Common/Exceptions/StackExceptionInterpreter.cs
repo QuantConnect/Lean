@@ -116,6 +116,8 @@ namespace QuantConnect.Exceptions
                 where type.IsPublic && !type.IsAbstract
                 // type implements IExceptionInterpreter
                 where typeof(IExceptionInterpreter).IsAssignableFrom(type)
+                // type is not mocked with MOQ library
+                where type.FullName != null && !type.FullName.StartsWith("Castle.Proxies.ObjectProxy")
                 // type has default parameterless ctor
                 where type.GetConstructor(new Type[0]) != null
                 // provide guarantee of deterministic ordering

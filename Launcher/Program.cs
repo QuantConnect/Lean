@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,6 +33,17 @@ namespace QuantConnect.Lean.Launcher
     {
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
 
+        static Program()
+        {
+            AppDomain.CurrentDomain.AssemblyLoad += (sender, e) =>
+            {
+                if (e.LoadedAssembly.FullName.ToLower().Contains("python"))
+                {
+                    Log.Trace($"Python for .NET Assembly: {e.LoadedAssembly.GetName()}");
+                }
+            };
+        }
+
         static void Main(string[] args)
         {
             //Initialize:
@@ -42,7 +53,7 @@ namespace QuantConnect.Lean.Launcher
             #endif
 
             if (OS.IsWindows)
-            { 
+            {
                 Console.OutputEncoding = System.Text.Encoding.Unicode;
             }
 
@@ -56,12 +67,11 @@ namespace QuantConnect.Lean.Launcher
             var liveMode = Config.GetBool("live-mode");
             Log.DebuggingEnabled = Config.GetBool("debug-mode");
             Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
-   
+
             //Name thread for the profiler:
             Thread.CurrentThread.Name = "Algorithm Analysis Thread";
             Log.Trace("Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v" + Globals.Version + " Mode: " + mode + " (" + (Environment.Is64BitProcess ? "64" : "32") + "bit)");
             Log.Trace("Engine.Main(): Started " + DateTime.Now.ToShortTimeString());
-            Log.Trace("Engine.Main(): Memory " + OS.ApplicationMemoryUsed + "Mb-App  " + +OS.TotalPhysicalMemoryUsed + "Mb-Used  " + OS.TotalPhysicalMemory + "Mb-Total");
 
             //Import external libraries specific to physical server location (cloud/local)
             LeanEngineSystemHandlers leanEngineSystemHandlers;
@@ -86,7 +96,7 @@ namespace QuantConnect.Lean.Launcher
             {
                 throw new Exception("Engine.Main(): Job was null.");
             }
-            
+
             LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
             try
             {
@@ -100,6 +110,12 @@ namespace QuantConnect.Lean.Launcher
 
             if (environment.EndsWith("-desktop"))
             {
+                if (!File.Exists(Config.Get("desktop-exe")))
+                {
+                    var message = $"desktop-exe path ({Config.Get("desktop-exe")}) does not exist. You may need to update this path with the build configuration (currently ${mode})";
+                    Log.Error(message);
+                    throw new FileNotFoundException(message);
+                }
                 var info = new ProcessStartInfo
                 {
                     UseShellExecute = false,

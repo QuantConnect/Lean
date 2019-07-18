@@ -35,24 +35,30 @@ namespace QuantConnect.Tests.Common.Securities
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             var model = new ImmediateSettlementModel();
             var config = CreateTradeBarConfig();
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance
+            );
 
             portfolio.SetCash(1000);
             Assert.AreEqual(1000, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
             var timeUtc = Noon.ConvertToUtc(TimeZones.NewYork);
-            model.ApplyFunds(portfolio, security, timeUtc, "USD", 1000);
+            model.ApplyFunds(portfolio, security, timeUtc, Currencies.USD, 1000);
 
             Assert.AreEqual(2000, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
-            model.ApplyFunds(portfolio, security, timeUtc, "USD", -500);
+            model.ApplyFunds(portfolio, security, timeUtc, Currencies.USD, -500);
 
             Assert.AreEqual(1500, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);
 
-            model.ApplyFunds(portfolio, security, timeUtc, "USD", 1000);
+            model.ApplyFunds(portfolio, security, timeUtc, Currencies.USD, 1000);
 
             Assert.AreEqual(2500, portfolio.Cash);
             Assert.AreEqual(0, portfolio.UnsettledCash);

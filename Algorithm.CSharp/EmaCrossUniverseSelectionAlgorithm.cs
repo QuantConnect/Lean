@@ -85,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
                         // grab th SelectionData instance for this symbol
                         let avg = _averages.GetOrAdd(cf.Symbol, sym => new SelectionData())
                         // Update returns true when the indicators are ready, so don't accept until they are
-                        where avg.Update(cf.EndTime, cf.Price)
+                        where avg.Update(cf.EndTime, cf.AdjustedPrice)
                         // only pick symbols who have their 50 day ema over their 100 day ema
                         where avg.Fast > avg.Slow*(1 + Tolerance)
                         // prefer symbols with a larger delta by percentage between the two averages

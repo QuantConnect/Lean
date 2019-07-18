@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,10 +15,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -27,14 +29,14 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     /// <meta name="tag" content="regression test" />
     /// <meta name="tag" content="options" />
-    public class OptionSplitRegressionAlgorithm : QCAlgorithm
+    public class OptionSplitRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _optionSymbol;
 
         public override void Initialize()
         {
             // this test opens position in the first day of trading, lives through stock split (7 for 1), and closes adjusted position on the second day
-            SetStartDate(2014, 06, 05);
+            SetStartDate(2014, 06, 06);
             SetEndDate(2014, 06, 09);
             SetCash(1000000);
 
@@ -108,5 +110,41 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Log(orderEvent.ToString());
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "2"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-0.02%"},
+            {"Compounding Annual Return", "-1.578%"},
+            {"Drawdown", "0.000%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-0.017%"},
+            {"Sharpe Ratio", "-7.937"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-0.014"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0.001"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "7.935"},
+            {"Tracking Error", "6.786"},
+            {"Treynor Ratio", "161.568"},
+            {"Total Fees", "$2.00"}
+        };
     }
 }

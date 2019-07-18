@@ -1,14 +1,25 @@
-﻿using NUnit.Framework;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -24,21 +35,66 @@ namespace QuantConnect.Tests.Common.Securities
             var securities = new SecurityManager(TimeKeeper);
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
-            securities.Add(Symbols.SPY, new Security(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY), new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency)));
+            securities.Add(
+                Symbols.SPY,
+                new Security(
+                    SecurityExchangeHours,
+                    CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
+                    new Cash(Currencies.USD, 0, 1m),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance
+                )
+            );
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
 
             var option1 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 192m, new DateTime(2016, 02, 16));
-            securities.Add(option1, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Option, option1), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(
+                option1,
+                new Option(
+                    SecurityExchangeHours,
+                    CreateTradeBarDataConfig(SecurityType.Option, option1),
+                    new Cash(Currencies.USD, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                    ErrorCurrencyConverter.Instance
+                )
+            );
 
             var option2 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 193m, new DateTime(2016, 03, 19));
-            securities.Add(option2, new Option(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Option, option2), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(
+                option2,
+                new Option(
+                    SecurityExchangeHours,
+                    CreateTradeBarDataConfig(SecurityType.Option, option2),
+                    new Cash(Currencies.USD, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                    ErrorCurrencyConverter.Instance
+                )
+            );
 
             var future1= Symbol.CreateFuture("ES", Market.USA, new DateTime(2016, 02, 16));
-            securities.Add(future1, new Future(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Future, future1), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
+            securities.Add(
+                future1,
+                new Future(
+                    SecurityExchangeHours,
+                    CreateTradeBarDataConfig(SecurityType.Future, future1),
+                    new Cash(Currencies.USD, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                    ErrorCurrencyConverter.Instance
+                )
+            );
 
             var future2 = Symbol.CreateFuture("ES", Market.USA, new DateTime(2016, 02, 19));
-            securities.Add(future2, new Future(SecurityExchangeHours, CreateTradeBarDataConfig(SecurityType.Future, future2), new Cash(CashBook.AccountCurrency, 0, 1m), new OptionSymbolProperties(SymbolProperties.GetDefault(CashBook.AccountCurrency))));
-            
+            securities.Add(
+                future2,
+                new Future(
+                    SecurityExchangeHours,
+                    CreateTradeBarDataConfig(SecurityType.Future, future2),
+                    new Cash(Currencies.USD, 0, 1m),
+                    new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                    ErrorCurrencyConverter.Instance
+                )
+            );
+
             var cal = new TradingCalendar(securities, marketHoursDatabase);
 
             var optionDays = cal.GetDaysByType(TradingDayType.OptionExpiration, new DateTime(2016, 02, 16), new DateTime(2016, 03, 19)).Count();

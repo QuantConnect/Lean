@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@ namespace QuantConnect.Indicators
     /// The Generalized DEMA (GD) is calculated with the following formula:
     /// GD = (volumeFactor+1) * EMA(t,period) - volumeFactor * EMA2
     /// </summary>
-    public class DoubleExponentialMovingAverage : IndicatorBase<IndicatorDataPoint>
+    public class DoubleExponentialMovingAverage : IndicatorBase<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
         private readonly int _period;
         private readonly decimal _volumeFactor;
@@ -51,17 +51,19 @@ namespace QuantConnect.Indicators
         /// <param name="period">The period of the DEMA</param>
         /// <param name="volumeFactor">The volume factor of the DEMA (value must be in the [0,1] range, set to 1 for standard DEMA)</param>
         public DoubleExponentialMovingAverage(int period, decimal volumeFactor = 1m)
-            : this("DEMA" + period, period, volumeFactor)
+            : this($"DEMA({period})", period, volumeFactor)
         {
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return Samples > 2 * (_period - 1); }
-        }
+        public override bool IsReady => Samples > 2 * (_period - 1);
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => 1 + 2 * (_period - 1);
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

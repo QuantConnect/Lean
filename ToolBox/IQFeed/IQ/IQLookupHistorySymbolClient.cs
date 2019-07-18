@@ -538,5 +538,18 @@ namespace QuantConnect.ToolBox.IQFeed
         private int _lastRequestNumber;
         #endregion
 
+        #region public
+        public int MaxDataPoints
+        {
+            get { return _histMaxDataPoints; }
+            set { _histMaxDataPoints = value; }
+        }
+
+        public int DataPointsPerSend
+        {
+            get { return _histDataPointsPerSend; }
+            set { _histDataPointsPerSend = value; }
+        }
+        #endregion
     }
 }

@@ -55,15 +55,18 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         private static GDAXBrokerage GetBrokerage()
         {
-            var wssUrl = Config.Get("gdax-url", "wss://ws-feed.gdax.com");
+            var wssUrl = Config.Get("gdax-url", "wss://ws-feed.pro.coinbase.com");
             var webSocketClient = new WebSocketWrapper();
-            var restClient = new RestClient("https://api.gdax.com");
+            var restClient = new RestClient("https://api.pro.coinbase.com");
             var apiKey = Config.Get("gdax-api-key");
             var apiSecret = Config.Get("gdax-api-secret");
             var passPhrase = Config.Get("gdax-passphrase");
             var algorithm = new QCAlgorithm();
+            var userId = Config.GetInt("job-user-id");
+            var userToken = Config.Get("api-access-token");
+            var priceProvider = new ApiPriceProvider(userId, userToken);
 
-            var brokerage = new GDAXBrokerage(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm);
+            var brokerage = new GDAXBrokerage(wssUrl, webSocketClient, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider);
             brokerage.Connect();
 
             return brokerage;

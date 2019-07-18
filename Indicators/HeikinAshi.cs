@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,40 +26,37 @@ namespace QuantConnect.Indicators
     /// HA_High[0] = MAX(High[0], HA_Open[0], HA_Close[0])
     /// HA_Low[0] = MIN(Low[0], HA_Open[0], HA_Close[0])
     /// </summary>
-    public class HeikinAshi : BarIndicator
+    public class HeikinAshi : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// Gets the Heikin-Ashi Open
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> Open { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> Open { get; }
 
         /// <summary>
         /// Gets the Heikin-Ashi High
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> High { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> High { get; }
 
         /// <summary>
         /// Gets the Heikin-Ashi Low
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> Low { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> Low { get; }
 
         /// <summary>
         /// Gets the Heikin-Ashi Close
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> Close { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> Close { get; }
 
         /// <summary>
         /// Gets the Heikin-Ashi Volume
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> Volume { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> Volume { get; }
 
         /// <summary>
         /// Gets the Heikin-Ashi current TradeBar
         /// </summary>
-        public TradeBar CurrentBar
-        {
-            get { return new TradeBar(Open.Current.Time, Symbol.Empty, Open, High, Low, Close, Convert.ToInt64(Volume.Current.Value)); }
-        }
+        public TradeBar CurrentBar => new TradeBar(Open.Current.Time, Symbol.Empty, Open, High, Low, Close, Volume);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HeikinAshi"/> class using the specified name.
@@ -86,10 +83,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return Samples > 1; }
-        }
+        public override bool IsReady => Samples > 1;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => 2;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -100,17 +99,17 @@ namespace QuantConnect.Indicators
         {
             if (!IsReady)
             {
-                Open.Update(new IndicatorDataPoint(input.Time, (input.Open + input.Close) / 2));
-                Close.Update(new IndicatorDataPoint(input.Time, (input.Open + input.High + input.Low + input.Close) / 4));
-                High.Update(new IndicatorDataPoint(input.Time, input.High));
-                Low.Update(new IndicatorDataPoint(input.Time, input.Low));
+                Open.Update(input.Time, (input.Open + input.Close) / 2);
+                Close.Update(input.Time, (input.Open + input.High + input.Low + input.Close) / 4);
+                High.Update(input.Time, input.High);
+                Low.Update(input.Time, input.Low);
             }
             else
             {
-                Open.Update(new IndicatorDataPoint(input.Time, (Open + Close) / 2));
-                Close.Update(new IndicatorDataPoint(input.Time, (input.Open + input.High + input.Low + input.Close) / 4));
-                High.Update(new IndicatorDataPoint(input.Time, Math.Max(input.High, Math.Max(Open, Close))));
-                Low.Update(new IndicatorDataPoint(input.Time, Math.Min(input.Low, Math.Min(Open, Close))));
+                Open.Update(input.Time, (Open + Close) / 2);
+                Close.Update(input.Time, (input.Open + input.High + input.Low + input.Close) / 4);
+                High.Update(input.Time, Math.Max(input.High, Math.Max(Open, Close)));
+                Low.Update(input.Time, Math.Min(input.Low, Math.Min(Open, Close)));
             }
             
             return Close;

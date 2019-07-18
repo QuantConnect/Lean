@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Serialization

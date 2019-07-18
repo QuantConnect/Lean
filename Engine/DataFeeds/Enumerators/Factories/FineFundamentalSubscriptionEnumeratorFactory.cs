@@ -68,7 +68,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 {
                     var fineFundamentalSource = GetSource(fineFundamental, fineFundamentalConfiguration, date);
                     var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode);
-                    var fineFundamentalForDate = (FineFundamental) fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault();
+                    var fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault();
 
                     yield return new FineFundamental
                     {
@@ -81,7 +81,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                         EarningReports = fineFundamentalForDate != null ? fineFundamentalForDate.EarningReports : new EarningReports(),
                         OperationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.OperationRatios : new OperationRatios(),
                         EarningRatios = fineFundamentalForDate != null ? fineFundamentalForDate.EarningRatios : new EarningRatios(),
-                        ValuationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.ValuationRatios : new ValuationRatios()
+                        ValuationRatios = fineFundamentalForDate != null ? fineFundamentalForDate.ValuationRatios : new ValuationRatios(),
+                        AssetClassification = fineFundamentalForDate != null ? fineFundamentalForDate.AssetClassification : new AssetClassification(),
+                        CompanyProfile = fineFundamentalForDate != null ? fineFundamentalForDate.CompanyProfile : new CompanyProfile()
                     };
                 }
             }

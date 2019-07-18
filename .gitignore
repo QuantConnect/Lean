@@ -259,3 +259,6 @@ QuantConnectProjects.xml
 Launcher/Plugins/*
 /ApiPython/dist
 /ApiPython/quantconnect.egg-info
+/ApiPython/quantconnect.egg-info/*
+
+QuantConnect.Lean.sln.DotSettings*

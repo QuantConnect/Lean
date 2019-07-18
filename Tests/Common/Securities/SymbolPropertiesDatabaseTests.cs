@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void LoadsDefaultLotSize()
         {
-            var defaultSymbolProperties = SymbolProperties.GetDefault("USD");
+            var defaultSymbolProperties = SymbolProperties.GetDefault(Currencies.USD);
 
             Assert.AreEqual(defaultSymbolProperties.LotSize, 1);
         }

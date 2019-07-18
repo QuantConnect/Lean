@@ -16,7 +16,6 @@
 using Newtonsoft.Json;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
-using QuantConnect.Packets;
 using RestSharp;
 using System;
 using System.Collections.Concurrent;
@@ -311,7 +310,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Represents a subscription channel
         /// </summary>
-        protected class Channel
+        public class Channel
         {
             /// <summary>
             /// The name of the channel

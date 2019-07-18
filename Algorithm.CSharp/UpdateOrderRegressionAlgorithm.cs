@@ -1,4 +1,4 @@
-﻿
+
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -28,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Provides a regression baseline focused on updating orders
     /// </summary>
     /// <meta name="tag" content="regression test" />
-    public class UpdateOrderRegressionAlgorithm : QCAlgorithm
+    public class UpdateOrderRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private int LastMonth = -1;
         private Security Security;
@@ -167,7 +168,7 @@ namespace QuantConnect.Algorithm.CSharp
             else
             {
                 Log(orderEvent.ToString());
-                Log("TICKET:: " + _tickets.Last());
+                Log("TICKET:: " + ticket);
             }
         }
 
@@ -176,5 +177,41 @@ namespace QuantConnect.Algorithm.CSharp
             if (LiveMode) Debug(msg);
             else base.Log(msg);
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "21"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-1.60%"},
+            {"Compounding Annual Return", "-7.774%"},
+            {"Drawdown", "15.700%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-14.944%"},
+            {"Sharpe Ratio", "-1.359"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-0.074"},
+            {"Beta", "-0.27"},
+            {"Annual Standard Deviation", "0.058"},
+            {"Annual Variance", "0.003"},
+            {"Information Ratio", "-1.701"},
+            {"Tracking Error", "0.058"},
+            {"Treynor Ratio", "0.293"},
+            {"Total Fees", "$21.00"}
+        };
     }
 }

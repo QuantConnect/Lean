@@ -1,10 +1,25 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+using System;
 using System.IO;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -38,7 +53,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             if (File.Exists(key))
             {
-                return new FileStream(key, FileMode.Open, FileAccess.Read);
+                return new FileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
 
             // If the file cannot be found on disc, attempt to retrieve it from the API
@@ -49,8 +64,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (LeanData.TryParsePath(key, out symbol, out date, out resolution))
             {
                 Log.Trace("ApiDataProvider.Fetch(): Attempting to get data from QuantConnect.com's data library for symbol({0}), resolution({1}) and date({2}).",
-                    symbol.Value, 
-                    resolution, 
+                    symbol.Value,
+                    resolution,
                     date.Date.ToShortDateString());
 
                 var downloadSuccessful = _api.DownloadData(symbol, resolution, date);
@@ -58,11 +73,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (downloadSuccessful)
                 {
                     Log.Trace("ApiDataProvider.Fetch(): Successfully retrieved data for symbol({0}), resolution({1}) and date({2}).",
-                        symbol.Value, 
-                        resolution, 
+                        symbol.Value,
+                        resolution,
                         date.Date.ToShortDateString());
 
-                    return new FileStream(key, FileMode.Open, FileAccess.Read);
+                    return new FileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
                 }
             }
 

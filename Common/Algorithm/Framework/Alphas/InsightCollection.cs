@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
         /// <summary>Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
         /// <returns>The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.</returns>
-        public int Count => _insights.Sum(kvp => kvp.Value.Count);
+        public int Count => _insights.Aggregate(0, (i, kvp) => i + kvp.Value.Count);
 
         /// <summary>Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</summary>
         /// <returns>true if the <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only; otherwise, false.</returns>
@@ -102,8 +103,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <exception cref="T:System.ArgumentException">The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1" /> is greater than the available space from <paramref name="arrayIndex" /> to the end of the destination <paramref name="array" />.</exception>
         public void CopyTo(Insight[] array, int arrayIndex)
         {
-            var copy = this.ToList();
-            copy.CopyTo(array, arrayIndex);
+            // Avoid calling `ToList` on insights to avoid potential infinite loop (issue #3168)
+            Array.Copy(_insights.SelectMany(kvp => kvp.Value).ToArray(), 0, array, arrayIndex, Count);
         }
 
         /// <summary>Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
@@ -166,6 +167,92 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        /// <summary>
+        /// Removes the symbol and its insights
+        /// </summary>
+        /// <param name="symbols">List of symbols that will be removed</param>
+        public void Clear(Symbol[] symbols)
+        {
+            foreach (var symbol in symbols)
+            {
+                List<Insight> insights;
+                _insights.TryRemove(symbol, out insights);
+            }
+        }
+
+        /// <summary>
+        /// Gets the next expiry time
+        /// </summary>
+        public DateTime? GetNextExpiryTime()
+        {
+            if (Count == 0)
+            {
+                return null;
+            }
+            return _insights.Min(x => x.Value.Min(i => i.CloseTimeUtc));
+        }
+
+        /// <summary>
+        /// Gets the last generated active insight
+        /// </summary>
+        /// <returns>Collection of insights that are active</returns>
+        public ICollection<Insight> GetActiveInsights(DateTime utcTime)
+        {
+            var activeInsights = new List<Insight>();
+            foreach (var kvp in _insights)
+            {
+                foreach (var insight in kvp.Value)
+                {
+                    if (insight.IsActive(utcTime))
+                    {
+                        activeInsights.Add(insight);
+                    }
+                }
+            }
+            return activeInsights;
+        }
+
+        /// <summary>
+        /// Returns true if there are active insights for a given symbol and time
+        /// </summary>
+        /// <param name="symbol">The symbol key</param>
+        /// <param name="utcTime">Time that determines whether the insight has expired</param>
+        /// <returns></returns>
+        public bool HasActiveInsights(Symbol symbol, DateTime utcTime)
+        {
+            List<Insight> insights;
+            if (TryGetValue(symbol, out insights))
+            {
+                return insights.Any(i => i.IsActive(utcTime));
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Remove all expired insights from the collection and retuns them
+        /// </summary>
+        /// <param name="utcTime">Time that determines whether the insight has expired</param>
+        /// <returns>Expired insights that were removed</returns>
+        public ICollection<Insight> RemoveExpiredInsights(DateTime utcTime)
+        {
+            var removedInsights = new List<Insight>();
+            foreach (var kvp in _insights)
+            {
+                foreach (var insight in kvp.Value)
+                {
+                    if (insight.IsExpired(utcTime))
+                    {
+                        removedInsights.Add(insight);
+                    }
+                }
+            }
+            foreach (var insight in removedInsights)
+            {
+                Remove(insight);
+            }
+            return removedInsights;
         }
     }
 }

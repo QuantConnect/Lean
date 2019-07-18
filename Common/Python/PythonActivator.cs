@@ -47,7 +47,8 @@ namespace QuantConnect.Python
             using (Py.GIL())
             {
                 var pythonType = value.Invoke().GetPythonType();
-                isPythonQuandl = pythonType.As<Type>() == typeof(PythonQuandl) ;
+                isPythonQuandl = pythonType.As<Type>() == typeof(PythonQuandl);
+                pythonType.Dispose();
             }
 
             if (isPythonQuandl)
@@ -57,7 +58,10 @@ namespace QuantConnect.Python
                     using (Py.GIL())
                     {
                         var instance = value.Invoke();
-                        var valueColumnName = instance.GetAttr("ValueColumnName").ToString();
+                        var pyValueColumnName = instance.GetAttr("ValueColumnName");
+                        var valueColumnName = pyValueColumnName.ToString();
+                        instance.Dispose();
+                        pyValueColumnName.Dispose();
                         return new PythonQuandl(valueColumnName);
                     }
                 };

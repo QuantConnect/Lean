@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Orders;
-
 namespace QuantConnect.Securities
 {
     /// <summary>
@@ -42,35 +40,29 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Check if there is sufficient buying power to execute this order.
         /// </summary>
-        /// <param name="portfolio">The algorithm's portfolio</param>
-        /// <param name="security">The security to be traded</param>
-        /// <param name="order">The order to be checked</param>
+        /// <param name="parameters">An object containing the portfolio, the security and the order</param>
         /// <returns>Returns buying power information for an order</returns>
-        HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(SecurityPortfolioManager portfolio, Security security, Order order);
+        HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(HasSufficientBuyingPowerForOrderParameters parameters);
 
         /// <summary>
         /// Get the maximum market order quantity to obtain a position with a given value in account currency
         /// </summary>
-        /// <param name="portfolio">The algorithm's portfolio</param>
-        /// <param name="security">The security to be traded</param>
-        /// <param name="targetPortfolioValue">The value in account currency that we want our holding to have</param>
+        /// <param name="parameters">An object containing the portfolio, the security and the target percentage holdings</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(SecurityPortfolioManager portfolio, Security security, decimal targetPortfolioValue);
+        GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(GetMaximumOrderQuantityForTargetValueParameters parameters);
 
         /// <summary>
         /// Gets the amount of buying power reserved to maintain the specified position
         /// </summary>
-        /// <param name="security">The security for the position</param>
+        /// <param name="parameters">A parameters object containing the security</param>
         /// <returns>The reserved buying power in account currency</returns>
-        decimal GetReservedBuyingPowerForPosition(Security security);
+        ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionParameters parameters);
 
         /// <summary>
         /// Gets the buying power available for a trade
         /// </summary>
-        /// <param name="portfolio">The algorithm's portfolio</param>
-        /// <param name="security">The security to be traded</param>
-        /// <param name="direction">The direction of the trade</param>
+        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
         /// <returns>The buying power available for the trade</returns>
-        decimal GetBuyingPower(SecurityPortfolioManager portfolio, Security security, OrderDirection direction);
+        BuyingPower GetBuyingPower(BuyingPowerParameters parameters);
     }
 }

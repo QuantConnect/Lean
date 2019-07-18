@@ -21,9 +21,9 @@ from QuantConnect import *
 from QuantConnect.Orders import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from Alphas.RsiAlphaModel import RsiAlphaModel
+from Portfolio.EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
 from Execution.StandardDeviationExecutionModel import StandardDeviationExecutionModel
 from datetime import timedelta
 
@@ -35,7 +35,7 @@ from datetime import timedelta
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
 ### <meta name="tag" content="trading and orders" />
-class StandardDeviationExecutionModelRegressionAlgorithm(QCAlgorithmFramework):
+class StandardDeviationExecutionModelRegressionAlgorithm(QCAlgorithm):
     '''Regression algorithm for the StandardDeviationExecutionModel.
     This algorithm shows how the execution model works to split up orders and submit them
     only when the price is 2 standard deviations from the 60min mean (default model settings).'''
@@ -62,4 +62,4 @@ class StandardDeviationExecutionModelRegressionAlgorithm(QCAlgorithmFramework):
         self.SetExecution(StandardDeviationExecutionModel())
 
     def OnOrderEvent(self, orderEvent):
-        self.Log("{}: {}".format(self.Time, orderEvent))
+        self.Log(f"{self.Time}: {orderEvent}")

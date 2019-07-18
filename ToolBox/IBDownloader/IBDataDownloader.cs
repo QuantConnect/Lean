@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,8 +22,6 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.IBDownloader
 {
@@ -33,15 +31,13 @@ namespace QuantConnect.ToolBox.IBDownloader
     public class IBDataDownloader : IDataDownloader, IDisposable
     {
         private readonly InteractiveBrokersBrokerage _brokerage;
-        private readonly InteractiveBrokersSymbolMapper _symbolMapper = new InteractiveBrokersSymbolMapper();
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IBDataDownloader"/> class
         /// </summary>
         public IBDataDownloader()
         {
-            _brokerage = new InteractiveBrokersBrokerage(null, null,null);
+            _brokerage = new InteractiveBrokersBrokerage(null, null, null);
             _brokerage.Connect();
         }
 
@@ -77,11 +73,10 @@ namespace QuantConnect.ToolBox.IBDownloader
                 TickType.Quote);
 
             var data = _brokerage.GetHistory(historyRequest);
-            
-            return data;
-            
-        }
 
+            return data;
+
+        }
 
         /// <summary>
         /// Groups a list of bars into a dictionary keyed by date
@@ -142,7 +137,7 @@ namespace QuantConnect.ToolBox.IBDownloader
         #region Console Helper
 
         /// <summary>
-        /// Draw a progress bar 
+        /// Draw a progress bar
         /// </summary>
         /// <param name="complete"></param>
         /// <param name="maxVal"></param>
@@ -162,7 +157,11 @@ namespace QuantConnect.ToolBox.IBDownloader
 
         public void Dispose()
         {
-            _brokerage.Disconnect();
+            if (_brokerage != null)
+            {
+                _brokerage.Disconnect();
+                _brokerage.Dispose();
+            }
         }
 
         #endregion

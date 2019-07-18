@@ -36,104 +36,50 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class DesktopResultHandler : BaseResultsHandler, IResultHandler
     {
-        private bool _isActive;
         private bool _exitTriggered;
-        private IAlgorithm _algorithm;
-        private readonly object _chartLock;
+        private readonly object _chartLock = new object();
         private AlgorithmNodePacket _job;
 
         //Sampling Periods:
         private DateTime _nextSample;
-        private readonly TimeSpan _resamplePeriod;
-        private readonly TimeSpan _notificationPeriod;
 
         /// <summary>
         /// A dictionary containing summary statistics
         /// </summary>
-        public Dictionary<string, string> FinalStatistics { get; private set; }
+        public Dictionary<string, string> FinalStatistics { get; private set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// Messaging to store notification messages for processing.
         /// </summary>
-        public ConcurrentQueue<Packet> Messages
-        {
-            get;
-            set;
-        }
+        public ConcurrentQueue<Packet> Messages { get; set; } = new ConcurrentQueue<Packet>();
 
         /// <summary>
         /// Local object access to the algorithm for the underlying Debug and Error messaging.
         /// </summary>
-        public IAlgorithm Algorithm
-        {
-            get
-            {
-                return _algorithm;
-            }
-            set
-            {
-                _algorithm = value;
-            }
-        }
+        public IAlgorithm Algorithm { get; set; }
 
         /// <summary>
         /// Charts collection for storing the master copy of user charting data.
         /// </summary>
-        public ConcurrentDictionary<string, Chart> Charts
-        {
-            get;
-            set;
-        }
+        public ConcurrentDictionary<string, Chart> Charts { get; set; } = new ConcurrentDictionary<string, Chart>();
 
         /// <summary>
         /// Boolean flag indicating the result hander thread is busy.
         /// False means it has completely finished and ready to dispose.
         /// </summary>
-        public bool IsActive {
-            get
-            {
-                return _isActive;
-            }
-        }
+        public bool IsActive { get; private set; } = true;
 
         /// <summary>
         /// Sampling period for timespans between resamples of the charting equity.
         /// </summary>
         /// <remarks>Specifically critical for backtesting since with such long timeframes the sampled data can get extreme.</remarks>
-        public TimeSpan ResamplePeriod
-        {
-            get
-            {
-                return _resamplePeriod;
-            }
-        }
+        public TimeSpan ResamplePeriod { get; } = TimeSpan.FromSeconds(2);
 
         /// <summary>
         /// How frequently the backtests push messages to the browser.
         /// </summary>
         /// <remarks>Update frequency of notification packets</remarks>
-        public TimeSpan NotificationPeriod
-        {
-            get
-            {
-                return _notificationPeriod;
-            }
-        }
-
-        /// <summary>
-        /// Desktop default constructor
-        /// </summary>
-        public DesktopResultHandler()
-        {
-            FinalStatistics = new Dictionary<string, string>();
-            Messages = new ConcurrentQueue<Packet>();
-            Charts = new ConcurrentDictionary<string, Chart>();
-
-            _chartLock = new Object();
-            _isActive = true;
-            _resamplePeriod = TimeSpan.FromSeconds(2);
-            _notificationPeriod = TimeSpan.FromSeconds(2);
-        }
+        public TimeSpan NotificationPeriod { get; } = TimeSpan.FromSeconds(2);
 
         /// <summary>
         /// Initialize the result handler with this result packet.
@@ -141,15 +87,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="job">Algorithm job packet for this result handler</param>
         /// <param name="messagingHandler"></param>
         /// <param name="api"></param>
-        /// <param name="dataFeed"></param>
         /// <param name="setupHandler"></param>
         /// <param name="transactionHandler"></param>
-        public void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, IDataFeed dataFeed, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
+        public void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ISetupHandler setupHandler, ITransactionHandler transactionHandler)
         {
             //Redirect the log messages here:
             _job = job;
             var desktopLogging = new FunctionalLogHandler(DebugMessage, DebugMessage, ErrorMessage);
-            Log.LogHandler = new CompositeLogHandler(new[] { desktopLogging, Log.LogHandler });
+            Log.LogHandler = new CompositeLogHandler(desktopLogging, Log.LogHandler);
         }
 
         /// <summary>
@@ -162,7 +107,7 @@ namespace QuantConnect.Lean.Engine.Results
                 Thread.Sleep(100);
             }
             DebugMessage("DesktopResultHandler: Ending Thread...");
-            _isActive = false;
+            IsActive = false;
         }
 
         /// <summary>
@@ -208,7 +153,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Error message we'd like shown in console.</param>
         public void ErrorMessage(string message)
         {
-            Messages.Enqueue(new HandledErrorPacket("", message, ""));
+            Messages.Enqueue(new HandledErrorPacket("", message));
         }
 
         /// <summary>
@@ -234,12 +179,18 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>Sample can be used to create new charts or sample equity - daily performance.</remarks>
         public void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
         {
+            // Sampling during warming up period skews statistics
+            if (Algorithm.IsWarmingUp)
+            {
+                return;
+            }
+
             lock (_chartLock)
             {
                 //Add a copy locally:
                 if (!Charts.ContainsKey(chartName))
                 {
-                    Charts.AddOrUpdate<string, Chart>(chartName, new Chart(chartName));
+                    Charts.AddOrUpdate(chartName, new Chart(chartName));
                 }
 
                 //Add the sample to our chart:
@@ -260,7 +211,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="value">Current equity value</param>
         public void SampleEquity(DateTime time, decimal value)
         {
-            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value, "$");
+            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value);
         }
 
         /// <summary>
@@ -303,7 +254,6 @@ namespace QuantConnect.Lean.Engine.Results
         {
             DebugMessage("DesktopResultHandler.SendStatusUpdate(): Algorithm Status: " + status + " : " + message);
         }
-
 
         /// <summary>
         /// Sample the asset prices to generate plots.
@@ -349,7 +299,6 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-
         /// <summary>
         /// Algorithm final analysis results dumped to the console.
         /// </summary>
@@ -381,7 +330,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>While setting the algorithm the backtest result handler.</remarks>
         public void SetAlgorithm(IAlgorithm algorithm)
         {
-            _algorithm = algorithm;
+            Algorithm = algorithm;
         }
 
         /// <summary>
@@ -402,7 +351,6 @@ namespace QuantConnect.Lean.Engine.Results
             DebugMessage("DesktopResultHandler.OrderEvent(): id:" + newEvent.OrderId + " >> Status:" + newEvent.Status + " >> Fill Price: " + newEvent.FillPrice.ToString("C") + " >> Fill Quantity: " + newEvent.FillQuantity);
         }
 
-
         /// <summary>
         /// Set the current runtime statistics of the algorithm
         /// </summary>
@@ -412,7 +360,6 @@ namespace QuantConnect.Lean.Engine.Results
         {
             DebugMessage("DesktopResultHandler.RuntimeStatistic(): " + key + " : " + value);
         }
-
 
         /// <summary>
         /// Clear the outstanding message queue to exit the thread.
@@ -448,7 +395,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
         public void ProcessSynchronousEvents(bool forceProcess = false)
         {
-            var time = _algorithm.Time;
+            var time = Algorithm.Time;
 
             if (time > _nextSample || forceProcess)
             {
@@ -456,13 +403,13 @@ namespace QuantConnect.Lean.Engine.Results
                 _nextSample = time.Add(ResamplePeriod);
 
                 //Sample the portfolio value over time for chart.
-                SampleEquity(time, Math.Round(_algorithm.Portfolio.TotalPortfolioValue, 4));
+                SampleEquity(time, Math.Round(Algorithm.Portfolio.TotalPortfolioValue, 4));
 
                 //Also add the user samples / plots to the result handler tracking:
-                SampleRange(_algorithm.GetChartUpdates());
+                SampleRange(Algorithm.GetChartUpdates());
 
                 //Sample the asset pricing:
-                foreach (var kvp in _algorithm.Securities)
+                foreach (var kvp in Algorithm.Securities)
                 {
                     var security = kvp.Value;
 
@@ -472,10 +419,10 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Send out the debug messages:
             var debugStopWatch = Stopwatch.StartNew();
-            while (_algorithm.DebugMessages.Count > 0 && debugStopWatch.ElapsedMilliseconds < 250)
+            while (Algorithm.DebugMessages.Count > 0 && debugStopWatch.ElapsedMilliseconds < 250)
             {
                 string message;
-                if (_algorithm.DebugMessages.TryDequeue(out message))
+                if (Algorithm.DebugMessages.TryDequeue(out message))
                 {
                     DebugMessage(message);
                 }
@@ -483,10 +430,10 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Send out the error messages:
             var errorStopWatch = Stopwatch.StartNew();
-            while (_algorithm.ErrorMessages.Count > 0 && errorStopWatch.ElapsedMilliseconds < 250)
+            while (Algorithm.ErrorMessages.Count > 0 && errorStopWatch.ElapsedMilliseconds < 250)
             {
                 string message;
-                if (_algorithm.ErrorMessages.TryDequeue(out message))
+                if (Algorithm.ErrorMessages.TryDequeue(out message))
                 {
                     ErrorMessage(message);
                 }
@@ -494,22 +441,20 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Send out the log messages:
             var logStopWatch = Stopwatch.StartNew();
-            while (_algorithm.LogMessages.Count > 0 && logStopWatch.ElapsedMilliseconds < 250)
+            while (Algorithm.LogMessages.Count > 0 && logStopWatch.ElapsedMilliseconds < 250)
             {
                 string message;
-                if (_algorithm.LogMessages.TryDequeue(out message))
+                if (Algorithm.LogMessages.TryDequeue(out message))
                 {
                     LogMessage(message);
                 }
             }
 
             //Set the running statistics:
-            foreach (var pair in _algorithm.RuntimeStatistics)
+            foreach (var pair in Algorithm.RuntimeStatistics)
             {
                 RuntimeStatistic(pair.Key, pair.Value);
             }
         }
-
-    } // End Result Handler Thread:
-
-} // End Namespace
+    }
+}

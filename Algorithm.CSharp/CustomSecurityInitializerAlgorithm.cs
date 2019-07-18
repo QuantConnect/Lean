@@ -14,8 +14,10 @@
 */
 
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -34,7 +36,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // set our initializer to our custom type
             SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
-            SetSecurityInitializer(new CustomSecurityInitializer(BrokerageModel, SecuritySeeder.Null, DataNormalizationMode.Raw));
+            var funcSecuritySeeder = new FuncSecuritySeeder(CustomSeedFunction);
+            SetSecurityInitializer(new CustomSecurityInitializer(BrokerageModel, funcSecuritySeeder, DataNormalizationMode.Raw));
 
             SetStartDate(2013, 10, 01);
             SetEndDate(2013, 11, 01);
@@ -48,6 +51,19 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 SetHoldings("SPY", 1);
             }
+        }
+
+        private BaseData CustomSeedFunction(Security security)
+        {
+            var resolution = Resolution.Hour;
+            var history = History(new[] { security.Symbol }, 1, resolution);
+
+            if (history.Any() && history.First().Values.Any())
+            {
+                return history.First().Values.First();
+            }
+
+            return null;
         }
 
         /// <summary>

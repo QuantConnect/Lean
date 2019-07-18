@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -45,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             slow = EMA("EURUSD", 3600);
 
             // 3601 because rolling window waits for one to fall off the back to be considered ready
-            var history = History("EURUSD", 3601);
+            var history = History<QuoteBar>("EURUSD", 3601);
             foreach (var bar in history)
             {
                 fast.Update(bar.EndTime, bar.Close);

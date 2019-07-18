@@ -22,7 +22,6 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
 from datetime import datetime, timedelta
-import decimal
 
 ### <summary>
 ### Using weather in NYC to rebalance portfolio. Assumption is people are happier when its warm.
@@ -72,8 +71,8 @@ class Weather(PythonData):
 
     def GetSource(self, config, date, isLive):
         source = "https://dl.dropboxusercontent.com/u/44311500/KNYC.csv"
-        source = "https://www.wunderground.com/history/airport/{0}/{1}/1/1/CustomHistory.html?dayend=31&monthend=12&yearend={1}&format=1".format(config.Symbol, date.year);
-        return SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile);
+        source = "https://www.wunderground.com/history/airport/{0}/{1}/1/1/CustomHistory.html?dayend=31&monthend=12&yearend={1}&format=1".format(config.Symbol, date.year)
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile)
 
 
     def Reader(self, config, line, date, isLive):
@@ -86,7 +85,7 @@ class Weather(PythonData):
         weather.Time = datetime.strptime(data[0], '%Y-%m-%d') + timedelta(hours=20) # Make sure we only get this data AFTER trading day - don't want forward bias.
         # If the second column is an invalid value (empty string), return None. The algorithm will discard it.
         if not data[2]: return None
-        weather.Value = decimal.Decimal(data[2])
+        weather.Value = data[2]
         weather["Max.C"] = float(data[1])   # Using a dot in the propety name, it will capitalize the first letter of each word:
         weather["Min.C"] = float(data[3])   # Max.C -> MaxC and Min.C -> MinC
 

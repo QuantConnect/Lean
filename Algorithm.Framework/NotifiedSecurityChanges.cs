@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.Framework
         /// </summary>
         /// <param name="securities">The securities collection to be updated with the changes</param>
         /// <param name="changes">The changes to be applied to the securities collection</param>
-        /// <param name="valueFactory">Delegate used to create instances of <see cref="TValue"/> from a <see cref="Security"/> objec</param>
+        /// <param name="valueFactory">Delegate used to create instances of <typeparamref name="TValue"/> from a <see cref="Security"/> object</param>
         public static void UpdateCollection<TValue>(ICollection<TValue> securities, SecurityChanges changes, Func<Security, TValue> valueFactory)
         {
             Update(changes, added => securities.Add(valueFactory(added)), removed => securities.Remove(valueFactory(removed)));

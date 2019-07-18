@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Orders.OptionExercise
@@ -25,7 +26,7 @@ namespace QuantConnect.Orders.OptionExercise
     public class DefaultExerciseModel : IOptionExerciseModel
     {
         /// <summary>
-        /// Default option exercise model for the basic equity/index option security class. 
+        /// Default option exercise model for the basic equity/index option security class.
         /// </summary>
         /// <param name="option">Option we're trading this order</param>
         /// <param name="order">Order to update</param>
@@ -40,11 +41,9 @@ namespace QuantConnect.Orders.OptionExercise
             var fillQuantity = option.GetExerciseQuantity(order.Quantity);
             var exerciseQuantity =
                     option.Symbol.ID.OptionRight == OptionRight.Call ? fillQuantity : -fillQuantity;
-            var exerciseDirection = assignment? 
+            var exerciseDirection = assignment?
                     (option.Symbol.ID.OptionRight == OptionRight.Call ? OrderDirection.Sell : OrderDirection.Buy):
                     (option.Symbol.ID.OptionRight == OptionRight.Call ? OrderDirection.Buy : OrderDirection.Sell);
-
-            var orderFee = option.FeeModel.GetOrderFee(option, order);
 
             var addUnderlyingEvent = new OrderEvent(order.Id,
                             underlying.Symbol,
@@ -53,7 +52,7 @@ namespace QuantConnect.Orders.OptionExercise
                             exerciseDirection,
                             exercisePrice,
                             exerciseQuantity,
-                            0.0m,
+                            OrderFee.Zero,
                             "Option Exercise/Assignment");
 
             var optionRemoveEvent = new OrderEvent(order.Id,
@@ -63,7 +62,7 @@ namespace QuantConnect.Orders.OptionExercise
                             assignment ? OrderDirection.Buy : OrderDirection.Sell,
                             0.0m,
                             -optionQuantity,
-                            orderFee,
+                            OrderFee.Zero,
                             "Adjusting(or removing) the exercised/assigned option");
 
             if (optionRemoveEvent.FillQuantity > 0)
@@ -79,6 +78,6 @@ namespace QuantConnect.Orders.OptionExercise
 
             return new[] { optionRemoveEvent };
         }
-        
+
     }
 }

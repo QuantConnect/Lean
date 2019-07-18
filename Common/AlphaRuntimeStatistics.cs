@@ -1,7 +1,24 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Securities;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect
 {
@@ -12,6 +29,29 @@ namespace QuantConnect
     {
         private DateTime _startDate;
         private double _daysCompleted;
+        // this is only used when deserializing to this type since it represents a computed property dependent on internal state
+        private decimal _overrideEstimatedMonthlyAlphaValue;
+        private readonly IAccountCurrencyProvider _accountCurrencyProvider;
+        private decimal _fitnessScore;
+        private decimal _portfolioTurnover;
+        private decimal _returnOverMaxDrawdown;
+        private decimal _sortinoRatio;
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        public AlphaRuntimeStatistics(IAccountCurrencyProvider accountCurrencyProvider)
+        {
+            _accountCurrencyProvider = accountCurrencyProvider;
+        }
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <remarks>Required for proper deserialization</remarks>
+        public AlphaRuntimeStatistics()
+        {
+        }
 
         /// <summary>
         /// Gets the mean scores for the entire population of insights
@@ -44,15 +84,88 @@ namespace QuantConnect
         public decimal TotalAccumulatedEstimatedAlphaValue { get; set; }
 
         /// <summary>
+        /// Score of the strategy's performance, and suitability for the Alpha Stream Market
+        /// </summary>
+        /// <remarks>See https://www.quantconnect.com/research/3bc40ecee68d36a9424fbd1b338eb227.
+        /// For performance we only truncate when the value is gotten</remarks>
+        public decimal FitnessScore
+        {
+            get
+            {
+                return _fitnessScore.TruncateTo3DecimalPlaces();
+            }
+            set
+            {
+                _fitnessScore = value;
+            }
+        }
+
+        /// <summary>
+        /// Measurement of the strategies trading activity with respect to the portfolio value.
+        /// Calculated as the sales volume with respect to the average total portfolio value.
+        /// </summary>
+        /// <remarks>For performance we only truncate when the value is gotten</remarks>
+        public decimal PortfolioTurnover
+        {
+            get
+            {
+                return _portfolioTurnover.TruncateTo3DecimalPlaces();
+            }
+            set
+            {
+                _portfolioTurnover = value;
+            }
+        }
+
+        /// <summary>
+        /// Provides a risk adjusted way to factor in the returns and drawdown of the strategy.
+        /// It is calculated by dividing the Portfolio Annualized Return by the Maximum Drawdown seen during the backtest.
+        /// </summary>
+        /// <remarks>For performance we only truncate when the value is gotten</remarks>
+        public decimal ReturnOverMaxDrawdown
+        {
+            get
+            {
+                return _returnOverMaxDrawdown.TruncateTo3DecimalPlaces();
+            }
+            set
+            {
+                _returnOverMaxDrawdown = value;
+            }
+        }
+
+        /// <summary>
+        /// Gives a relative picture of the strategy volatility.
+        /// It is calculated by taking a portfolio's annualized rate of return and subtracting the risk free rate of return.
+        /// </summary>
+        /// <remarks>For performance we only truncate when the value is gotten</remarks>
+        public decimal SortinoRatio
+        {
+            get
+            {
+                return _sortinoRatio.TruncateTo3DecimalPlaces();
+            }
+            set
+            {
+                _sortinoRatio = value;
+            }
+        }
+
+        /// <summary>
         /// Suggested Value of the Alpha On A Monthly Basis For Licensing
         /// </summary>
+        [JsonProperty]
         public decimal EstimatedMonthlyAlphaValue
         {
             get
             {
-                if (_daysCompleted == 0) return 0;
+                if (_daysCompleted == 0)
+                {
+                    return _overrideEstimatedMonthlyAlphaValue;
+                }
                 return (TotalAccumulatedEstimatedAlphaValue / (decimal) _daysCompleted) * 30;
             }
+            private set { _overrideEstimatedMonthlyAlphaValue = value; }
         }
 
         /// <summary>
@@ -80,9 +193,14 @@ namespace QuantConnect
         /// </summary>
         public Dictionary<string, string> ToDictionary()
         {
-            var accountCurrencySymbol = Currencies.GetCurrencySymbol(CashBook.AccountCurrency);
+            var accountCurrencySymbol = Currencies.GetCurrencySymbol(_accountCurrencyProvider?.AccountCurrency ?? Currencies.USD);
+
             return new Dictionary<string, string>
             {
+                {"Fitness Score", $"{FitnessScore}"},
+                {"Sortino Ratio", $"{SortinoRatio}"},
+                {"Return Over Maximum Drawdown", $"{ReturnOverMaxDrawdown}"},
+                {"Portfolio Turnover", $"{PortfolioTurnover}"},
                 {"Total Insights Generated", $"{TotalInsightsGenerated}"},
                 {"Total Insights Closed", $"{TotalInsightsClosed}"},
                 {"Total Insights Analysis Completed", $"{TotalInsightsAnalysisCompleted}"},

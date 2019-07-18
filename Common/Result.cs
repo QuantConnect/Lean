@@ -13,14 +13,9 @@ namespace QuantConnect
     public class Result
     {
         /// <summary>
-        /// Determines if the compiled assembly contains a framework algorithm implementation
-        /// </summary>
-        public bool IsFrameworkAlgorithm;
-
-        /// <summary>
         /// Contains population averages scores over the life of the algorithm
         /// </summary>
-        public AlphaRuntimeStatistics AlphaRuntimeStatistics = new AlphaRuntimeStatistics();
+        public AlphaRuntimeStatistics AlphaRuntimeStatistics;
 
         /// <summary>
         /// Charts updates for the live algorithm since the last result packet

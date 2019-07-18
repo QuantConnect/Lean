@@ -28,6 +28,7 @@ namespace QuantConnect.Lean.Engine.Alphas
     {
         private readonly double _smoothingFactor;
         private readonly int _rollingAverageIsReadyCount;
+        private readonly bool _requireRollingAverageWarmup;
         private readonly decimal _tradablePercentOfVolume;
 
         /// <summary>
@@ -39,21 +40,28 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Gets whether or not the rolling average statistics is ready
         /// </summary>
-        public bool RollingAverageIsReady => Statistics.TotalInsightsAnalysisCompleted >= _rollingAverageIsReadyCount;
+        public bool RollingAverageIsReady => !_requireRollingAverageWarmup || Statistics.TotalInsightsAnalysisCompleted >= _rollingAverageIsReadyCount;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StatisticsInsightManagerExtension"/> class
         /// </summary>
+        /// <param name="accountCurrencyProvider">The account currency provider</param>
         /// <param name="tradablePercentOfVolume">Percent of volume of first bar used to estimate the maximum number of tradable shares. Defaults to 1%</param>
-        /// <param name="period">The period used for exponential smoothing of scores - this is a number of insights. Defaults to 100 insight predictions</param>
-        public StatisticsInsightManagerExtension(decimal tradablePercentOfVolume = 0.01m, int period = 100)
+        /// <param name="period">The period used for exponential smoothing of scores - this is a number of insights. Defaults to 100 insight predictions.</param>
+        /// <param name="requireRollingAverageWarmup">Specify true to force the population average scoring to warmup before plotting.</param>
+        public StatisticsInsightManagerExtension(
+            IAccountCurrencyProvider accountCurrencyProvider,
+            decimal tradablePercentOfVolume = 0.01m,
+            int period = 100,
+            bool requireRollingAverageWarmup = false)
         {
-            Statistics = new AlphaRuntimeStatistics();
+            Statistics = new AlphaRuntimeStatistics(accountCurrencyProvider);
             _tradablePercentOfVolume = tradablePercentOfVolume;
             _smoothingFactor = 2.0 / (period + 1.0);
 
             // use normal ema warmup period
             _rollingAverageIsReadyCount = period;
+            _requireRollingAverageWarmup = requireRollingAverageWarmup;
         }
 
         /// <summary>
@@ -114,6 +122,10 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             foreach (var scoreType in InsightManager.ScoreTypes)
             {
+                if (!context.ShouldAnalyze(scoreType))
+                {
+                    continue;
+                }
                 var score = context.Score.GetScore(scoreType);
                 var currentTime = context.CurrentValues.TimeUtc;
 
@@ -122,8 +134,8 @@ namespace QuantConnect.Lean.Engine.Alphas
                 var newMean = mean + (score - mean) / Statistics.TotalInsightsAnalysisCompleted;
                 Statistics.MeanPopulationScore.SetScore(scoreType, newMean, currentTime);
 
-                var newEma = score;
-                if (Statistics.TotalInsightsAnalysisCompleted > 1)
+                var newEma = newMean;
+                if (Statistics.TotalInsightsAnalysisCompleted > 4)
                 {
                     // compute the traditional ema
                     var ema = Statistics.RollingAveragedPopulationScore.GetScore(scoreType);

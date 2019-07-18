@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="data">The new data available</param>
         /// <returns>The new insights generated</returns>
-        public override IEnumerable<Insight> Update(QCAlgorithmFramework algorithm, Slice data)
+        public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
             var insights = new List<Insight>();
             foreach (var symbolData in _symbolDataBySymbol.Values)
@@ -94,7 +94,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithmFramework algorithm, SecurityChanges changes)
+        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
             foreach (var added in changes.AddedSecurities)
             {
@@ -102,8 +102,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 if (!_symbolDataBySymbol.TryGetValue(added.Symbol, out symbolData))
                 {
                     // create fast/slow EMAs
-                    var fast = algorithm.EMA(added.Symbol, _fastPeriod);
-                    var slow = algorithm.EMA(added.Symbol, _slowPeriod);
+                    var fast = algorithm.EMA(added.Symbol, _fastPeriod, _resolution);
+                    var slow = algorithm.EMA(added.Symbol, _slowPeriod, _resolution);
                     _symbolDataBySymbol[added.Symbol] = new SymbolData
                     {
                         Security = added,

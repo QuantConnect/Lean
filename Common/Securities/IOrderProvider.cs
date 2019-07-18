@@ -51,6 +51,13 @@ namespace QuantConnect.Securities
         IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null);
 
         /// <summary>
+        /// Gets and enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The filter predicate used to find the required order tickets. If null is specified then all tickets are returned</param>
+        /// <returns>An enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        IEnumerable<OrderTicket> GetOpenOrderTickets(Func<OrderTicket, bool> filter = null);
+
+        /// <summary>
         /// Gets the order ticket for the specified order id. Returns null if not found
         /// </summary>
         /// <param name="orderId">The order's id</param>
@@ -62,8 +69,16 @@ namespace QuantConnect.Securities
         /// of all orders.
         /// </summary>
         /// <param name="filter">Delegate used to filter the orders</param>
-        /// <returns>All open orders this order provider currently holds</returns>
+        /// <returns>All orders this order provider currently holds by the specified filter</returns>
         IEnumerable<Order> GetOrders(Func<Order, bool> filter = null);
+
+        /// <summary>
+        /// Gets open orders matching the specified filter. Specifying null will return an enumerable
+        /// of all open orders.
+        /// </summary>
+        /// <param name="filter">Delegate used to filter the orders</param>
+        /// <returns>All filtered open orders this order provider currently holds</returns>
+        List<Order> GetOpenOrders(Func<Order, bool> filter = null);
     }
 
     /// <summary>

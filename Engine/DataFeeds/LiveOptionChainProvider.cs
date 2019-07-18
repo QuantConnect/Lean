@@ -17,7 +17,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -27,6 +29,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class LiveOptionChainProvider : IOptionChainProvider
     {
+        private const int MaxDownloadAttempts = 5;
+
         /// <summary>
         /// Static constructor for the <see cref="LiveOptionChainProvider"/> class
         /// </summary>
@@ -50,7 +54,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new NotSupportedException($"LiveOptionChainProvider.GetOptionContractList(): SecurityType.Equity is expected but was {symbol.SecurityType}");
             }
 
-            return FindOptionContracts(symbol.Value);
+            var attempt = 1;
+            IEnumerable<Symbol> contracts;
+
+            while (true)
+            {
+                try
+                {
+                    Log.Trace($"LiveOptionChainProvider.GetOptionContractList(): Fetching option chain for {symbol.Value} [Attempt {attempt}]");
+
+                    contracts = FindOptionContracts(symbol.Value);
+                    break;
+                }
+                catch (WebException exception)
+                {
+                    Log.Error(exception);
+
+                    if (++attempt > MaxDownloadAttempts)
+                    {
+                        throw;
+                    }
+
+                    Thread.Sleep(1000);
+                }
+            }
+
+            return contracts;
         }
 
         /// <summary>

@@ -14,11 +14,13 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -38,8 +40,12 @@ namespace QuantConnect
     {
         #region Empty, DefaultDate Fields
 
+        private static readonly ConcurrentDictionary<string, SecurityIdentifier> SecurityIdentifierCache
+            = new ConcurrentDictionary<string, SecurityIdentifier>();
         private static readonly string MapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
         private static readonly char[] InvalidCharacters = {'|', ' '};
+        private static IMapFileProvider _mapFileProvider;
+        private static readonly object _mapFileProviderLock = new object();
 
         /// <summary>
         /// Gets an instance of <see cref="SecurityIdentifier"/> that is empty, that is, one with no symbol specified
@@ -95,6 +101,8 @@ namespace QuantConnect
         private readonly string _symbol;
         private readonly ulong _properties;
         private readonly SidBox _underlying;
+        private readonly int _hashCode;
+        private decimal _strikePrice;
 
         #endregion
 
@@ -181,10 +189,7 @@ namespace QuantConnect
         /// <summary>
         /// Gets the security type component of this security identifier.
         /// </summary>
-        public SecurityType SecurityType
-        {
-            get { return (SecurityType)ExtractFromProperties(SecurityTypeOffset, SecurityTypeWidth); }
-        }
+        public SecurityType SecurityType { get; }
 
         /// <summary>
         /// Gets the option strike price. This only applies to SecurityType.Option
@@ -198,10 +203,16 @@ namespace QuantConnect
                 {
                     throw new InvalidOperationException("OptionType is only defined for SecurityType.Option");
                 }
-                var scale = ExtractFromProperties(StrikeScaleOffset, StrikeScaleWidth);
-                var unscaled = ExtractFromProperties(StrikeOffset, StrikeWidth);
-                var pow = Math.Pow(10, (int)scale - StrikeDefaultScale);
-                return unscaled * (decimal)pow;
+
+                // performance: lets calculate strike price once
+                if (_strikePrice == -1)
+                {
+                    var scale = ExtractFromProperties(StrikeScaleOffset, StrikeScaleWidth);
+                    var unscaled = ExtractFromProperties(StrikeOffset, StrikeWidth);
+                    var pow = Math.Pow(10, (int)scale - StrikeDefaultScale);
+                    _strikePrice = unscaled * (decimal)pow;
+                }
+                return _strikePrice;
             }
         }
 
@@ -262,6 +273,9 @@ namespace QuantConnect
             _symbol = symbol;
             _properties = properties;
             _underlying = null;
+            _strikePrice = -1;
+            SecurityType = (SecurityType)ExtractFromProperties(SecurityTypeOffset, SecurityTypeWidth, properties);
+            _hashCode = unchecked (symbol.GetHashCode() * 397) ^ properties.GetHashCode();
         }
 
         /// <summary>
@@ -280,7 +294,8 @@ namespace QuantConnect
             }
             _symbol = symbol;
             _properties = properties;
-            if (underlying != Empty)
+            // performance: directly call Equals(SecurityIdentifier other), shortcuts Equals(object other)
+            if (!underlying.Equals(Empty))
             {
                 _underlying = new SidBox(underlying);
             }
@@ -331,19 +346,36 @@ namespace QuantConnect
         /// <param name="symbol">The symbol as it is known today</param>
         /// <param name="market">The market</param>
         /// <param name="mapSymbol">Specifies if symbol should be mapped using map file provider</param>
+        /// <param name="mapFileProvider">Specifies the IMapFileProvider to use for resolving symbols, specify null to load from Composer</param>
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified symbol today</returns>
-        public static SecurityIdentifier GenerateEquity(string symbol, string market, bool mapSymbol = true)
+        public static SecurityIdentifier GenerateEquity(string symbol, string market, bool mapSymbol = true, IMapFileProvider mapFileProvider = null)
         {
             if (mapSymbol)
             {
-                var provider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(MapFileProviderTypeName);
-                var resolver = provider.Get(market);
-                var mapFile = resolver.ResolveMapFile(symbol, DateTime.Today);
+                MapFile mapFile;
+                if (mapFileProvider == null)
+                {
+                    lock (_mapFileProviderLock)
+                    {
+                        if (_mapFileProvider == null)
+                        {
+                            _mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(MapFileProviderTypeName);
+                        }
+
+                        mapFile = GetMapFile(_mapFileProvider, market, symbol);
+                    }
+                }
+                else
+                {
+                    mapFile = GetMapFile(mapFileProvider, market, symbol);
+                }
+
                 var firstDate = mapFile.FirstDate;
                 if (mapFile.Any())
                 {
-                    symbol = mapFile.OrderBy(x => x.Date).First().MappedSymbol;
+                    symbol = mapFile.FirstTicker;
                 }
+
                 return GenerateEquity(firstDate, symbol, market);
             }
             else
@@ -351,6 +383,13 @@ namespace QuantConnect
                 return GenerateEquity(DefaultDate, symbol, market);
             }
 
+        }
+
+        public static MapFile GetMapFile(IMapFileProvider mapFileProvider, string market, string symbol)
+        {
+            var resolver = mapFileProvider.Get(market);
+            var mapFile = resolver.ResolveMapFile(symbol, DateTime.Today);
+            return mapFile;
         }
 
         /// <summary>
@@ -433,7 +472,7 @@ namespace QuantConnect
 
             // normalize input strings
             market = market.ToLower();
-            symbol = symbol.ToUpper();
+            symbol = symbol.LazyToUpper();
 
             var marketIdentifier = QuantConnect.Market.Encode(market);
             if (!marketIdentifier.HasValue)
@@ -602,12 +641,20 @@ namespace QuantConnect
         private static bool TryParseProperties(string value, out Exception exception, out SecurityIdentifier identifier)
         {
             exception = null;
-            identifier = Empty;
 
             if (string.IsNullOrWhiteSpace(value))
             {
+                identifier = Empty;
                 return true;
             }
+
+            // for performance, we first verify if we already have parsed this SecurityIdentifier
+            if (SecurityIdentifierCache.TryGetValue(value, out identifier))
+            {
+                return true;
+            }
+            // after calling TryGetValue because if it failed it will set identifier to default
+            identifier = Empty;
 
             try
             {
@@ -637,6 +684,7 @@ namespace QuantConnect
                 return false;
             }
 
+            SecurityIdentifierCache.TryAdd(value, identifier);
             return true;
         }
 
@@ -645,7 +693,16 @@ namespace QuantConnect
         /// </summary>
         private ulong ExtractFromProperties(ulong offset, ulong width)
         {
-            return (_properties/offset)%width;
+            return ExtractFromProperties(offset, width, _properties);
+        }
+
+        /// <summary>
+        /// Extracts the embedded value from _otherData
+        /// </summary>
+        /// <remarks>Static so it can be used in <see cref="_lazySecurityType"/> initialization</remarks>
+        private static ulong ExtractFromProperties(ulong offset, ulong width, ulong properties)
+        {
+            return (properties / offset) % width;
         }
 
         #endregion
@@ -687,10 +744,7 @@ namespace QuantConnect
         /// A hash code for the current <see cref="T:System.Object"/>.
         /// </returns>
         /// <filterpriority>2</filterpriority>
-        public override int GetHashCode()
-        {
-            unchecked { return (_symbol.GetHashCode()*397) ^ _properties.GetHashCode(); }
-        }
+        public override int GetHashCode() => _hashCode;
 
         /// <summary>
         /// Override equals operator

@@ -29,7 +29,7 @@ class EmaCrossUniverseSelectionModel(FundamentalUniverseSelectionModel):
                  fastPeriod = 100,
                  slowPeriod = 300,
                  universeCount = 500,
-                 universeSettings = None, 
+                 universeSettings = None,
                  securityInitializer = None):
         '''Initializes a new instance of the EmaCrossUniverseSelectionModel class
         Args:
@@ -64,7 +64,7 @@ class EmaCrossUniverseSelectionModel(FundamentalUniverseSelectionModel):
 
             # Update returns true when the indicators are ready, so don't accept until they are
             # and only pick symbols who have their fastPeriod-day ema over their slowPeriod-day ema
-            if avg.Update(cf.EndTime, cf.Price) and avg.Fast > avg.Slow * (1 + self.tolerance):
+            if avg.Update(cf.EndTime, cf.AdjustedPrice) and avg.Fast > avg.Slow * (1 + self.tolerance):
                 filtered.append(avg)
 
         # prefer symbols with a larger delta by percentage between the two averages

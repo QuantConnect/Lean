@@ -22,7 +22,6 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Securities.Option import OptionPriceModels
 from QuantConnect.Data.UniverseSelection import *
 from datetime import timedelta
-import decimal as d
 
 ### <summary>
 ### Example demonstrating how to access to options history for a given underlying equity security.

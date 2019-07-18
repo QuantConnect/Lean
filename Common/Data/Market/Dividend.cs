@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,25 @@ namespace QuantConnect.Data.Market
     public class Dividend : BaseData
     {
         /// <summary>
+        /// Gets the dividend payment
+        /// </summary>
+        public decimal Distribution
+        {
+            get { return Value; }
+            set { Value = value; }
+        }
+
+        /// <summary>
+        /// Gets the price at which the dividend occurred.
+        /// This is typically the previous day's closing price
+        /// </summary>
+        public decimal ReferencePrice
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Initializes a new instance of the Dividend class
         /// </summary>
         public Dividend()
@@ -36,14 +55,15 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="date">The date</param>
-        /// <param name="close">The close</param>
-        /// <param name="priceFactorRatio">The ratio of the price factors, pf_i/pf_i+1</param>
-        public Dividend(Symbol symbol, DateTime date, decimal close, decimal priceFactorRatio)
+        /// <param name="distribution">The dividend amount</param>
+        /// <param name="referencePrice">The previous day's closing price</param>
+        public Dividend(Symbol symbol, DateTime date, decimal distribution, decimal referencePrice)
             : this()
         {
             Symbol = symbol;
             Time = date;
-            Distribution = close - (close * priceFactorRatio);
+            Distribution = distribution;
+            ReferencePrice = referencePrice;
         }
 
         /// <summary>
@@ -51,27 +71,29 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="symbol">The symbol</param>
         /// <param name="date">The date</param>
-        /// <param name="distribution">The dividend amount</param>
-        public Dividend(Symbol symbol, DateTime date, decimal distribution)
-            : this()
+        /// <param name="referencePrice">The previous day's closing price</param>
+        /// <param name="priceFactorRatio">The ratio of the price factors, pf_i/pf_i+1</param>
+        public static Dividend Create(Symbol symbol, DateTime date, decimal referencePrice, decimal priceFactorRatio)
         {
-            Symbol = symbol;
-            Time = date;
-            Distribution = distribution;
+            var distribution = ComputeDistribution(referencePrice, priceFactorRatio);
+            return new Dividend(symbol, date, distribution, referencePrice);
         }
 
         /// <summary>
-        /// Gets the dividend payment
+        /// Computes the price factor ratio given the previous day's closing price and the p
         /// </summary>
-        public decimal Distribution
+        /// <param name="close">Previous day's closing price</param>
+        /// <param name="priceFactorRatio">Price factor ratio pf_i/pf_i+1</param>
+        /// <param name="decimalPlaces">The number of decimal places to round the result to, defaulting to 2</param>
+        /// <returns>The distribution rounded to the specified number of decimal places, defaulting to 2</returns>
+        public static decimal ComputeDistribution(decimal close, decimal priceFactorRatio, int decimalPlaces = 2)
         {
-            get { return Value; } 
-            set { Value = Math.Round(value, 2); }
+            return Math.Round(close - close * priceFactorRatio, decimalPlaces);
         }
 
         /// <summary>
-        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object 
-        /// each time it is called. 
+        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
+        /// each time it is called.
         /// </summary>
         /// <param name="config">Subscription data config setup object</param>
         /// <param name="line">Line of the source document</param>
@@ -85,7 +107,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Return the URL string source of the file. This will be converted to a stream 
+        /// Return the URL string source of the file. This will be converted to a stream
         /// </summary>
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source file</param>
@@ -106,7 +128,25 @@ namespace QuantConnect.Data.Market
         /// <returns>A clone of the current object</returns>
         public override BaseData Clone()
         {
-            return new Dividend(Symbol, Time, Distribution);
+            return new Dividend
+            {
+                Time = Time,
+                Value = Value,
+                Symbol = Symbol,
+                EndTime = EndTime,
+                DataType = DataType,
+                Distribution = Distribution,
+                ReferencePrice = ReferencePrice
+            };
+        }
+
+        /// <summary>
+        /// Formats a string with the symbol and value.
+        /// </summary>
+        /// <returns>string - a string formatted as SPY: 167.753</returns>
+        public override string ToString()
+        {
+            return $"Dividend: {Symbol}: {Distribution} | {ReferencePrice}";
         }
     }
 }

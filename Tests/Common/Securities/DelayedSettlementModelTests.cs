@@ -36,7 +36,13 @@ namespace QuantConnect.Tests.Common.Securities
             // settlement at T+3, 8:00 AM
             var model = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance
+            );
 
             portfolio.SetCash(3000);
             Assert.AreEqual(3000, portfolio.Cash);
@@ -44,7 +50,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Sell on Monday
             var timeUtc = Noon.ConvertToUtc(TimeZones.NewYork);
-            model.ApplyFunds(portfolio, security, timeUtc, "USD", 1000);
+            model.ApplyFunds(portfolio, security, timeUtc, Currencies.USD, 1000);
             portfolio.ScanForCashSettlement(timeUtc);
             Assert.AreEqual(3000, portfolio.Cash);
             Assert.AreEqual(1000, portfolio.UnsettledCash);
@@ -83,7 +89,13 @@ namespace QuantConnect.Tests.Common.Securities
             // settlement at T+3, 8:00 AM
             var model = new DelayedSettlementModel(3, TimeSpan.FromHours(8));
             var config = CreateTradeBarConfig(Symbols.SPY);
-            var security = new Security(SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance
+            );
 
             portfolio.SetCash(3000);
             Assert.AreEqual(3000, portfolio.Cash);
@@ -91,7 +103,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Sell on Thursday
             var timeUtc = Noon.AddDays(3).ConvertToUtc(TimeZones.NewYork);
-            model.ApplyFunds(portfolio, security, timeUtc, "USD", 1000);
+            model.ApplyFunds(portfolio, security, timeUtc, Currencies.USD, 1000);
             portfolio.ScanForCashSettlement(timeUtc);
             Assert.AreEqual(3000, portfolio.Cash);
             Assert.AreEqual(1000, portfolio.UnsettledCash);

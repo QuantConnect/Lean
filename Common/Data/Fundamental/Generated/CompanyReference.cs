@@ -285,14 +285,39 @@ namespace QuantConnect.Data.Fundamental
 		}
 
 		/// <summary>
-		/// Sets values for non existing periods from a previous instance
+		/// Applies updated values from <paramref name="update"/> to this instance
 		/// </summary>
-		/// <remarks>Used to fill-forward values from previous dates</remarks>
-		/// <param name="previous">The previous instance</param>
-		public void UpdateValues(CompanyReference previous)
+		/// <remarks>Used to apply data updates to the current instance. This WILL overwrite existing values. Default update values are ignored.</remarks>
+		/// <param name="update">The next data update for this instance</param>
+		public void UpdateValues(CompanyReference update)
 		{
-			if (previous == null) return;
+			if (update == null) return;
 
+			if (!string.IsNullOrWhiteSpace(update.CompanyId)) CompanyId = update.CompanyId;
+			if (!string.IsNullOrWhiteSpace(update.ShortName)) ShortName = update.ShortName;
+			if (!string.IsNullOrWhiteSpace(update.StandardName)) StandardName = update.StandardName;
+			if (!string.IsNullOrWhiteSpace(update.LegalName)) LegalName = update.LegalName;
+			if (!string.IsNullOrWhiteSpace(update.CountryId)) CountryId = update.CountryId;
+			if (!string.IsNullOrWhiteSpace(update.CIK)) CIK = update.CIK;
+			if (!string.IsNullOrWhiteSpace(update.CompanyStatus)) CompanyStatus = update.CompanyStatus;
+			if (update.FiscalYearEnd != default(int)) FiscalYearEnd = update.FiscalYearEnd;
+			if (!string.IsNullOrWhiteSpace(update.IndustryTemplateCode)) IndustryTemplateCode = update.IndustryTemplateCode;
+			if (!string.IsNullOrWhiteSpace(update.PrimaryShareClassID)) PrimaryShareClassID = update.PrimaryShareClassID;
+			if (!string.IsNullOrWhiteSpace(update.PrimarySymbol)) PrimarySymbol = update.PrimarySymbol;
+			if (!string.IsNullOrWhiteSpace(update.PrimaryExchangeID)) PrimaryExchangeID = update.PrimaryExchangeID;
+			if (!string.IsNullOrWhiteSpace(update.BusinessCountryID)) BusinessCountryID = update.BusinessCountryID;
+			if (!string.IsNullOrWhiteSpace(update.LegalNameLanguageCode)) LegalNameLanguageCode = update.LegalNameLanguageCode;
+			if (!string.IsNullOrWhiteSpace(update.Auditor)) Auditor = update.Auditor;
+			if (!string.IsNullOrWhiteSpace(update.AuditorLanguageCode)) AuditorLanguageCode = update.AuditorLanguageCode;
+			if (!string.IsNullOrWhiteSpace(update.Advisor)) Advisor = update.Advisor;
+			if (!string.IsNullOrWhiteSpace(update.AdvisorLanguageCode)) AdvisorLanguageCode = update.AdvisorLanguageCode;
+			if (update.IsLimitedPartnership != default(bool)) IsLimitedPartnership = update.IsLimitedPartnership;
+			if (update.IsREIT != default(bool)) IsREIT = update.IsREIT;
+			if (!string.IsNullOrWhiteSpace(update.PrimaryMIC)) PrimaryMIC = update.PrimaryMIC;
+			if (update.ReportStyle != default(int)) ReportStyle = update.ReportStyle;
+			if (!string.IsNullOrWhiteSpace(update.YearofEstablishment)) YearofEstablishment = update.YearofEstablishment;
+			if (update.IsLimitedLiabilityCompany != default(bool)) IsLimitedLiabilityCompany = update.IsLimitedLiabilityCompany;
+			if (update.ExpectedFiscalYearEnd != default(DateTime)) ExpectedFiscalYearEnd = update.ExpectedFiscalYearEnd;
 		}
 	}
 }

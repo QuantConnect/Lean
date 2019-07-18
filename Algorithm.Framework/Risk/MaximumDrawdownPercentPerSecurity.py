@@ -14,8 +14,12 @@
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Common")
+AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Algorithm.Framework")
 
+from QuantConnect import *
+from QuantConnect.Algorithm import *
+from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget
 from QuantConnect.Algorithm.Framework.Risk import RiskManagementModel
 
@@ -31,7 +35,9 @@ class MaximumDrawdownPercentPerSecurity(RiskManagementModel):
     def ManageRisk(self, algorithm, targets):
         '''Manages the algorithm's risk at each time step
         Args:
-            algorithm: The algorithm instance'''
+            algorithm: The algorithm instance
+            targets: The current portfolio targets to be assessed for risk'''
+        targets = []
         for kvp in algorithm.Securities:
             security = kvp.Value
 
@@ -40,8 +46,7 @@ class MaximumDrawdownPercentPerSecurity(RiskManagementModel):
 
             pnl = security.Holdings.UnrealizedProfitPercent
             if pnl < self.maximumDrawdownPercent:
-                # remove PortfolioTarget with symbol to be liquidated and add new PortfolioTarget
-                targets = list(filter(lambda x: x.Symbol != security.Symbol, targets))
+                # liquidate
                 targets.append(PortfolioTarget(security.Symbol, 0))
 
         return targets

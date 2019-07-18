@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,14 +19,14 @@ namespace QuantConnect.Indicators
     /// This indicator computes the n-period percentage rate of change in a value using the following:
     /// 100 * (value_0 - value_n) / value_n
     /// </summary>
-    public class RateOfChangePercent : WindowIndicator<IndicatorDataPoint>
+    public class RateOfChangePercent : RateOfChange
     {
         /// <summary>
         /// Creates a new RateOfChangePercent indicator with the specified period
         /// </summary>
         /// <param name="period">The period over which to perform to computation</param>
         public RateOfChangePercent(int period)
-            : base("ROCP" + period, period)
+            : this($"ROCP({period})", period)
         {
         }
 
@@ -48,15 +48,7 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            // if we're not ready just grab the first input point in the window
-            decimal denominator = window.Samples <= window.Size ? window[window.Count - 1] : window.MostRecentlyRemoved;
-
-            if (denominator == 0)
-            {
-                return 0;
-            }
-
-            return 100 * (input - denominator) / denominator;
+            return 100 * base.ComputeNextValue(window, input);
         }
     }
 }

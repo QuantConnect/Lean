@@ -27,6 +27,8 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
@@ -797,11 +799,11 @@ namespace QuantConnect.Brokerages.Tradier
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
-            return new List<Cash>
+            return new List<CashAmount>
             {
-                new Cash("USD", GetBalanceDetails(_accountID).TotalCash, 1.0m)
+                new CashAmount(GetBalanceDetails(_accountID).TotalCash, Currencies.USD)
             };
         }
 
@@ -966,7 +968,8 @@ namespace QuantConnect.Brokerages.Tradier
             }
 
             // success
-            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0) {Status = OrderStatus.Submitted});
+            OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero)
+                { Status = OrderStatus.Submitted});
 
             // if we have contingents, update them as well
             if (contingent != null)
@@ -1020,8 +1023,8 @@ namespace QuantConnect.Brokerages.Tradier
                 {
                     TradierCachedOpenOrder tradierOrder;
                     _cachedOpenOrdersByTradierOrderID.TryRemove(id, out tradierOrder);
-                    const int orderFee = 0;
-                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee, "Tradier Fill Event") { Status = OrderStatus.Canceled });
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Tradier Fill Event")
+                        { Status = OrderStatus.Canceled });
                 }
             }
 
@@ -1094,9 +1097,8 @@ namespace QuantConnect.Brokerages.Tradier
             if (response != null && response.Errors.Errors.IsNullOrEmpty())
             {
                 // send the submitted event
-                const int orderFee = 0;
-                order.QCOrder.PriceCurrency = "USD";
-                OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
+                order.QCOrder.PriceCurrency = Currencies.USD;
+                OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Submitted });
 
                 // mark this in our open orders before we submit so it's gauranteed to be there when we poll for updates
                 UpdateCachedOpenOrder(response.Order.Id, new TradierOrderDetailed
@@ -1125,8 +1127,8 @@ namespace QuantConnect.Brokerages.Tradier
             else
             {
                 // invalidate the order, bad request
-                const int orderFee = 0;
-                OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, orderFee) { Status = OrderStatus.Invalid });
+                OnOrderEvent(new OrderEvent(order.QCOrder, DateTime.UtcNow, OrderFee.Zero)
+                    { Status = OrderStatus.Invalid });
 
                 string message = _previousResponseRaw;
                 if (response != null && response.Errors != null && !response.Errors.Errors.IsNullOrEmpty())
@@ -1327,8 +1329,8 @@ namespace QuantConnect.Brokerages.Tradier
              || ConvertStatus(updatedOrder.Status) != ConvertStatus(cachedOrder.Order.Status))
             {
                 var qcOrder = _orderProvider.GetOrderByBrokerageId(updatedOrder.Id);
-                qcOrder.PriceCurrency = "USD";
-                const int orderFee = 0;
+                qcOrder.PriceCurrency = Currencies.USD;
+                var orderFee = OrderFee.Zero;
                 var fill = new OrderEvent(qcOrder, DateTime.UtcNow, orderFee, "Tradier Fill Event")
                 {
                     Status = ConvertStatus(updatedOrder.Status),
@@ -1350,7 +1352,8 @@ namespace QuantConnect.Brokerages.Tradier
                 {
                     cachedOrder.EmittedOrderFee = true;
                     var security = _securityProvider.GetSecurity(qcOrder.Symbol);
-                    fill.OrderFee = security.FeeModel.GetOrderFee(security, qcOrder);
+                    fill.OrderFee = security.FeeModel.GetOrderFee(
+                        new OrderFeeParameters(security, qcOrder));
                 }
 
                 // if we filled the order and have another contingent order waiting, submit it
@@ -1556,8 +1559,10 @@ namespace QuantConnect.Brokerages.Tradier
             {
                 case TradierOrderDuration.GTC:
                     return TimeInForce.GoodTilCanceled;
+
                 case TradierOrderDuration.Day:
-                    return (TimeInForce) 1; //.Day;
+                    return TimeInForce.Day;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -1669,7 +1674,6 @@ namespace QuantConnect.Brokerages.Tradier
                 Symbol = Symbol.Create(position.Symbol, SecurityType.Equity, Market.USA),
                 Type = SecurityType.Equity,
                 AveragePrice = position.CostBasis/position.Quantity,
-                ConversionRate = 1.0m,
                 CurrencySymbol = "$",
                 MarketPrice = 0m, //--> GetAccountHoldings does a call to GetQuotes to fill this data in
                 Quantity = position.Quantity
@@ -1752,15 +1756,19 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Converts the qc order duration into a tradier order duration
         /// </summary>
-        protected static TradierOrderDuration GetOrderDuration(TimeInForce duration)
+        protected static TradierOrderDuration GetOrderDuration(TimeInForce timeInForce)
         {
-            switch (duration)
+            if (timeInForce is GoodTilCanceledTimeInForce)
             {
-                case TimeInForce.GoodTilCanceled:
-                    return TradierOrderDuration.GTC;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                return TradierOrderDuration.GTC;
             }
+
+            if (timeInForce is DayTimeInForce)
+            {
+                return TradierOrderDuration.Day;
+            }
+
+            throw new ArgumentOutOfRangeException();
         }
 
         /// <summary>

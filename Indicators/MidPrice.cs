@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,9 +22,9 @@ namespace QuantConnect.Indicators
     /// The MidPrice is calculated using the following formula:
     /// MIDPRICE = (Highest High + Lowest Low) / 2
     /// </summary>
-    public class MidPrice : BarIndicator
+    public class MidPrice : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
-        private readonly decimal _period;
+        private readonly int _period;
         private readonly Maximum _maximum;
         private readonly Minimum _minimum;
 
@@ -46,17 +46,19 @@ namespace QuantConnect.Indicators
         /// </summary> 
         /// <param name="period">The period of the MIDPRICE</param>
         public MidPrice(int period)
-            : this("MIDPRICE" + period, period)
+            : this($"MIDPRICE({period})", period)
         {
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return Samples >= _period; }
-        }
+        public override bool IsReady => Samples >= _period;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => _period;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

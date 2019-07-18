@@ -22,14 +22,12 @@ using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.RealTime;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Data;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -39,9 +37,13 @@ namespace QuantConnect.Lean.Engine.Setup
     public class BacktestingSetupHandler : ISetupHandler
     {
         private TimeSpan _maxRuntime = TimeSpan.FromSeconds(300);
-        private decimal _startingCaptial = 0;
         private int _maxOrders = 0;
         private DateTime _startingDate = new DateTime(1998, 01, 01);
+
+        /// <summary>
+        /// The worker thread instance the setup handler should use
+        /// </summary>
+        public WorkerThread WorkerThread { get; set; }
 
         /// <summary>
         /// Internal errors list from running the setup proceedures.
@@ -69,13 +71,7 @@ namespace QuantConnect.Lean.Engine.Setup
         /// </summary>
         /// <remarks>Set from the user code.</remarks>
         /// <seealso cref="QCAlgorithm.SetCash(decimal)"/>
-        public decimal StartingPortfolioValue
-        {
-            get
-            {
-                return _startingCaptial;
-            }
-        }
+        public decimal StartingPortfolioValue { get; private set; } = 0;
 
         /// <summary>
         /// Start date for analysis loops to search for data.
@@ -121,9 +117,9 @@ namespace QuantConnect.Lean.Engine.Setup
             IAlgorithm algorithm;
 
             // limit load times to 60 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(algorithmNodePacket.Language, TimeSpan.FromSeconds(60), names => names.SingleOrAlgorithmTypeName(Config.Get("algorithm-type-name")));
+            var loader = new Loader(algorithmNodePacket.Language, TimeSpan.FromSeconds(60), names => names.SingleOrAlgorithmTypeName(Config.Get("algorithm-type-name")), WorkerThread);
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
-            if (!complete) throw new Exception(error + " Try re-building algorithm.");
+            if (!complete) throw new AlgorithmSetupException($"During the algorithm initialization, the following exception has occurred: {error}");
 
             return algorithm;
         }
@@ -145,19 +141,15 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <summary>
         /// Setup the algorithm cash, dates and data subscriptions as desired.
         /// </summary>
-        /// <param name="algorithm">Algorithm instance</param>
-        /// <param name="brokerage">Brokerage instance</param>
-        /// <param name="baseJob">Algorithm job</param>
-        /// <param name="resultHandler">The configured result handler</param>
-        /// <param name="transactionHandler">The configurated transaction handler</param>
-        /// <param name="realTimeHandler">The configured real time handler</param>
+        /// <param name="parameters">The parameters object to use</param>
         /// <returns>Boolean true on successfully initializing the algorithm</returns>
-        public bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler)
+        public bool Setup(SetupHandlerParameters parameters)
         {
-            var job = baseJob as BacktestNodePacket;
+            var algorithm = parameters.Algorithm;
+            var job = parameters.AlgorithmNodePacket as BacktestNodePacket;
             if (job == null)
             {
-                throw new ArgumentException("Expected BacktestNodePacket but received " + baseJob.GetType().Name);
+                throw new ArgumentException("Expected BacktestNodePacket but received " + parameters.AlgorithmNodePacket.GetType().Name);
             }
 
             Log.Trace(string.Format("BacktestingSetupHandler.Setup(): Setting up job: Plan: {0}, UID: {1}, PID: {2}, Version: {3}, Source: {4}", job.UserPlan, job.UserId, job.ProjectId, job.Version, job.RequestSource));
@@ -183,7 +175,7 @@ namespace QuantConnect.Lean.Engine.Setup
             {
                 try
                 {
-                    resultHandler.SendStatusUpdate(AlgorithmStatus.Initializing, "Initializing algorithm...");
+                    parameters.ResultHandler.SendStatusUpdate(AlgorithmStatus.Initializing, "Initializing algorithm...");
 
                     //Set our parameters
                     algorithm.SetParameters(job.Parameters);
@@ -192,7 +184,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     algorithm.SetLiveMode(false);
 
                     //Set the source impl for the event scheduling
-                    algorithm.Schedule.SetEventSchedule(realTimeHandler);
+                    algorithm.Schedule.SetEventSchedule(parameters.RealTimeHandler);
 
                     // set the option chain provider
                     algorithm.SetOptionChainProvider(new CachingOptionChainProvider(new BacktestingOptionChainProvider()));
@@ -211,7 +203,9 @@ namespace QuantConnect.Lean.Engine.Setup
                     Log.Error(err);
                     Errors.Add(new AlgorithmSetupException("During the algorithm initialization, the following exception has occurred: ", err));
                 }
-            }, controls.RamAllocation);
+            }, controls.RamAllocation,
+                sleepIntervalMillis:50,  // entire system is waiting on this, so be as fast as possible
+                workerThread: WorkerThread);
 
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
@@ -221,7 +215,7 @@ namespace QuantConnect.Lean.Engine.Setup
             job.PeriodFinish = algorithm.EndDate;
 
             //Calculate the max runtime for the strategy
-            _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager, algorithm.UniverseManager, baseJob.Controls);
+            _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager, algorithm.UniverseManager, parameters.AlgorithmNodePacket.Controls);
 
             // Python takes forever; lets give it 10x longer to finish.
             if (job.Language == Language.Python)
@@ -229,8 +223,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 _maxRuntime = _maxRuntime.Add(TimeSpan.FromSeconds(_maxRuntime.TotalSeconds * 9));
             }
 
-            //Get starting capital:
-            _startingCaptial = algorithm.Portfolio.Cash;
+            BaseSetupHandler.SetupCurrencyConversions(algorithm, parameters.UniverseSelection);
+            StartingPortfolioValue = algorithm.Portfolio.Cash;
 
             //Max Orders: 10k per backtest:
             if (job.UserPlan == UserPlan.Free)
@@ -251,7 +245,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
             //Put into log for debugging:
             Log.Trace("SetUp Backtesting: User: " + job.UserId + " ProjectId: " + job.ProjectId + " AlgoId: " + job.AlgorithmId);
-            Log.Trace("Dates: Start: " + job.PeriodStart.ToShortDateString() + " End: " + job.PeriodFinish.ToShortDateString() + " Cash: " + _startingCaptial.ToString("C"));
+            Log.Trace("Dates: Start: " + job.PeriodStart.ToShortDateString() + " End: " + job.PeriodFinish.ToShortDateString() + " Cash: " + StartingPortfolioValue.ToString("C"));
 
             if (Errors.Count > 0)
             {

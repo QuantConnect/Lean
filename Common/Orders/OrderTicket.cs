@@ -43,6 +43,7 @@ namespace QuantConnect.Orders
         private readonly SubmitOrderRequest _submitRequest;
         private readonly ManualResetEvent _orderStatusClosedEvent;
         private readonly List<UpdateOrderRequest> _updateRequests;
+        private readonly ManualResetEvent _orderSetEvent;
 
         // we pull this in to provide some behavior/simplicity to the ticket API
         private readonly SecurityTransactionManager _transactionManager;
@@ -194,6 +195,16 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Returns true if the order has been set for this ticket
+        /// </summary>
+        public bool HasOrder => _order != null;
+
+        /// <summary>
+        /// Gets a wait handle that can be used to wait until the order has been set
+        /// </summary>
+        public WaitHandle OrderSet => _orderSetEvent;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OrderTicket"/> class
         /// </summary>
         /// <param name="transactionManager">The transaction manager used for submitting updates and cancels for this ticket</param>
@@ -207,6 +218,7 @@ namespace QuantConnect.Orders
             _orderEvents = new List<OrderEvent>();
             _updateRequests = new List<UpdateOrderRequest>();
             _orderStatusClosedEvent = new ManualResetEvent(false);
+            _orderSetEvent = new ManualResetEvent(false);
         }
 
         /// <summary>
@@ -332,7 +344,8 @@ namespace QuantConnect.Orders
                     // keep running totals of quantity filled and the average fill price so we
                     // don't need to compute these on demand
                     _quantityFilled += orderEvent.FillQuantity;
-                    var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill()).Sum(x => x.AbsoluteFillQuantity*x.FillPrice);
+                    var quantityWeightedFillPrice = _orderEvents.Where(x => x.Status.IsFill())
+                        .Aggregate(0m, (d, x) => d + x.AbsoluteFillQuantity*x.FillPrice);
                     _averageFillPrice = quantityWeightedFillPrice/Math.Abs(_quantityFilled);
                 }
             }
@@ -356,6 +369,8 @@ namespace QuantConnect.Orders
             }
 
             _order = order;
+
+            _orderSetEvent.Set();
         }
 
         /// <summary>
@@ -407,8 +422,9 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderTicket InvalidCancelOrderId(SecurityTransactionManager transactionManager, CancelOrderRequest request)
         {
-            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, Symbol.Empty, 0, 0, 0, DateTime.MaxValue, string.Empty);
+            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, Symbol.Empty, 0, 0, 0, DateTime.MaxValue, request.Tag);
             submit.SetResponse(OrderResponse.UnableToFindOrder(request));
+            submit.SetOrderId(request.OrderId);
             var ticket = new OrderTicket(transactionManager, submit);
             request.SetResponse(OrderResponse.UnableToFindOrder(request));
             ticket.TrySetCancelRequest(request);
@@ -417,12 +433,13 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
-        /// Creates a new <see cref="OrderTicket"/> tht represents trying to update an order for which no ticket exists
+        /// Creates a new <see cref="OrderTicket"/> that represents trying to update an order for which no ticket exists
         /// </summary>
         public static OrderTicket InvalidUpdateOrderId(SecurityTransactionManager transactionManager, UpdateOrderRequest request)
         {
-            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, Symbol.Empty, 0, 0, 0, DateTime.MaxValue, string.Empty);
+            var submit = new SubmitOrderRequest(OrderType.Market, SecurityType.Base, Symbol.Empty, 0, 0, 0, DateTime.MaxValue, request.Tag);
             submit.SetResponse(OrderResponse.UnableToFindOrder(request));
+            submit.SetOrderId(request.OrderId);
             var ticket = new OrderTicket(transactionManager, submit);
             request.SetResponse(OrderResponse.UnableToFindOrder(request));
             ticket.AddUpdateRequest(request);

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,16 +18,23 @@ using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 
-namespace QuantConnect.Tests.Indicators {
+namespace QuantConnect.Tests.Indicators
+{
     [TestFixture]
-    public class CommodityChannelIndexTests
+    public class CommodityChannelIndexTests : CommonIndicatorTests<IBaseDataBar>
     {
-        [Test]
-        public void ComparesAgainstExternalData()
+        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            var cci = new CommodityChannelIndex(14);
-            TestHelper.TestIndicator(cci, "spy_with_cci.txt", "Commodity Channel Index (CCI) 14", 1e-2);
+            return new CommodityChannelIndex(14);
         }
+
+        protected override string TestFileName => "spy_with_cci.txt";
+
+        protected override string TestColumnName => "Commodity Channel Index (CCI) 14";
+
+        protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion =>
+            (indicator, expected) =>
+                Assert.AreEqual(expected, (double) indicator.Current.Value, 1e-2);
 
         [Test]
         public void ResetsProperly()

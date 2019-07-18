@@ -12,21 +12,26 @@
 # limitations under the License.
 
 from clr import AddReference
+AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Indicators")
+AddReference("QuantConnect.Logging")
 AddReference("QuantConnect.Common")
 
 from QuantConnect import *
 from QuantConnect.Indicators import *
+from QuantConnect.Logging import Log
+from QuantConnect.Algorithm import *
+from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from datetime import timedelta
 from enum import Enum
 
 class RsiAlphaModel(AlphaModel):
-    '''Uses Wilder's RSI to create insights. 
+    '''Uses Wilder's RSI to create insights.
     Using default settings, a cross over below 30 or above 70 will trigger a new insight.'''
 
-    def __init__(self, 
+    def __init__(self,
                  period = 14,
                  resolution = Resolution.Daily):
         '''Initializes a new instance of the RsiAlphaModel class
@@ -82,24 +87,25 @@ class RsiAlphaModel(AlphaModel):
 
         # initialize data for added securities
 
-        symbols = [ x.Symbol for x in changes.AddedSecurities ]
-        if len(symbols) == 0: return
+        addedSymbols = [ x.Symbol for x in changes.AddedSecurities if x.Symbol not in self.symbolDataBySymbol]
+        if len(addedSymbols) == 0: return
 
-        history = algorithm.History(symbols, self.period, self.resolution)
-        if history.empty: return
+        history = algorithm.History(addedSymbols, self.period, self.resolution)
 
-        tickers = history.index.levels[0]
-        
-        for ticker in tickers:
-            symbol = SymbolCache.GetSymbol(ticker)
+        for symbol in addedSymbols:
+            rsi = algorithm.RSI(symbol, self.period, MovingAverageType.Wilders, self.resolution)
 
-            if symbol not in self.symbolDataBySymbol:
-                rsi = algorithm.RSI(symbol, self.period, MovingAverageType.Wilders, self.resolution)
-                symbolData = SymbolData(symbol, rsi)
-                self.symbolDataBySymbol[symbol] = symbolData
+            if not history.empty:
+                ticker = SymbolCache.GetTicker(symbol)
+
+                if ticker not in history.index.levels[0]:
+                    Log.Trace(f'RsiAlphaModel.OnSecuritiesChanged: {ticker} not found in history data frame.')
+                    continue
 
                 for tuple in history.loc[ticker].itertuples():
-                    symbolData.RSI.Update(tuple.Index, tuple.close)
+                    rsi.Update(tuple.Index, tuple.close)
+
+            self.symbolDataBySymbol[symbol] = SymbolData(symbol, rsi)
 
 
     def GetState(self, rsi, previous):

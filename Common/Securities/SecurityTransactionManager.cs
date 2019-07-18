@@ -28,6 +28,7 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityTransactionManager : IOrderProvider
     {
+        private readonly Dictionary<DateTime, decimal> _transactionRecord;
         private readonly IAlgorithm _algorithm;
         private int _orderId;
         private readonly SecurityManager _securities;
@@ -36,7 +37,6 @@ namespace QuantConnect.Securities
         private TimeSpan _marketOrderFillTimeout = TimeSpan.FromSeconds(5);
 
         private IOrderProcessor _orderProcessor;
-        private Dictionary<DateTime, decimal> _transactionRecord;
 
         /// <summary>
         /// Gets the time the security information was last updated
@@ -63,15 +63,16 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Trade record of profits and losses for each trade statistics calculations
         /// </summary>
+        /// <remarks>Will return a shallow copy, modifying the returned container
+        /// will have no effect <see cref="AddTransactionRecord"/></remarks>
         public Dictionary<DateTime, decimal> TransactionRecord
         {
             get
             {
-                return _transactionRecord;
-            }
-            set
-            {
-                _transactionRecord = value;
+                lock (_transactionRecord)
+                {
+                    return new Dictionary<DateTime, decimal>(_transactionRecord);
+                }
             }
         }
 
@@ -177,6 +178,26 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Cancels all open orders for all symbols
+        /// </summary>
+        /// <returns>List containing the cancelled order tickets</returns>
+        public List<OrderTicket> CancelOpenOrders()
+        {
+            if (_algorithm != null && _algorithm.IsWarmingUp)
+            {
+                throw new Exception("This operation is not allowed in Initialize or during warm up: CancelOpenOrders. Please move this code to the OnWarmupFinished() method.");
+            }
+
+            var cancelledOrders = new List<OrderTicket>();
+            foreach (var ticket in GetOpenOrderTickets())
+            {
+                ticket.Cancel($"Canceled by CancelOpenOrders() at {_algorithm.UtcTime:o}");
+                cancelledOrders.Add(ticket);
+            }
+            return cancelledOrders;
+        }
+
+        /// <summary>
         /// Cancels all open orders for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol whose orders are to be cancelled</param>
@@ -190,7 +211,7 @@ namespace QuantConnect.Securities
             }
 
             var cancelledOrders = new List<OrderTicket>();
-            foreach (var ticket in GetOrderTickets(x => x.Symbol == symbol && x.Status.IsOpen()))
+            foreach (var ticket in GetOpenOrderTickets(x => x.Symbol == symbol))
             {
                 ticket.Cancel(tag);
                 cancelledOrders.Add(ticket);
@@ -209,13 +230,33 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets and enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// Gets an enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
         /// </summary>
         /// <param name="filter">The filter predicate used to find the required order tickets</param>
         /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
         public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
         {
             return _orderProcessor.GetOrderTickets(filter ?? (x => true));
+        }
+
+        /// <summary>
+        /// Get an enumerable of open <see cref="OrderTicket"/> for the specified symbol
+        /// </summary>
+        /// <param name="symbol">The symbol for which to return the order tickets</param>
+        /// <returns>An enumerable of open <see cref="OrderTicket"/>.</returns>
+        public IEnumerable<OrderTicket> GetOpenOrderTickets(Symbol symbol)
+        {
+            return GetOpenOrderTickets(x => x.Symbol == symbol);
+        }
+
+        /// <summary>
+        /// Gets an enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The filter predicate used to find the required order tickets</param>
+        /// <returns>An enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        public IEnumerable<OrderTicket> GetOpenOrderTickets(Func<OrderTicket, bool> filter = null)
+        {
+            return _orderProcessor.GetOpenOrderTickets(filter ?? (x => true));
         }
 
         /// <summary>
@@ -254,32 +295,25 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Get a list of all open orders.
-        /// </summary>
-        /// <returns>List of open orders.</returns>
-        public List<Order> GetOpenOrders()
-        {
-            return _orderProcessor.GetOrders(x => x.Status.IsOpen()).ToList();
-        }
-
-        /// <summary>
         /// Get a list of all open orders for a symbol.
         /// </summary>
         /// <param name="symbol">The symbol for which to return the orders</param>
         /// <returns>List of open orders.</returns>
         public List<Order> GetOpenOrders(Symbol symbol)
         {
-            return _orderProcessor.GetOrders(x => x.Symbol == symbol && x.Status.IsOpen()).ToList();
+            return GetOpenOrders(x => x.Symbol == symbol).ToList();
         }
 
         /// <summary>
-        /// Get a list of open orders satisfying the filter.
+        /// Gets open orders matching the specified filter. Specifying null will return an enumerable
+        /// of all open orders.
         /// </summary>
-        /// <returns>List of open orders.</returns>
-        public List<Order> GetOpenOrders(Func<Order, bool> filter)
+        /// <param name="filter">Delegate used to filter the orders</param>
+        /// <returns>All filtered open orders this order provider currently holds</returns>
+        public List<Order> GetOpenOrders(Func<Order, bool> filter = null)
         {
             filter = filter ?? (x => true);
-            return _orderProcessor.GetOrders(x => x.Status.IsOpen() && filter(x)).ToList();
+            return _orderProcessor.GetOpenOrders(x => filter(x));
         }
 
         /// <summary>
@@ -311,10 +345,11 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets all orders matching the specified filter
+        /// Gets all orders matching the specified filter. Specifying null will return an enumerable
+        /// of all orders.
         /// </summary>
         /// <param name="filter">Delegate used to filter the orders</param>
-        /// <returns>All open orders this order provider currently holds</returns>
+        /// <returns>All orders this order provider currently holds by the specified filter</returns>
         public IEnumerable<Order> GetOrders(Func<Order, bool> filter)
         {
             return _orderProcessor.GetOrders(filter);
@@ -336,6 +371,29 @@ namespace QuantConnect.Securities
         public void SetOrderProcessor(IOrderProcessor orderProvider)
         {
             _orderProcessor = orderProvider;
+        }
+
+
+        /// <summary>
+        /// Record the transaction value and time in a list to later be processed for statistics creation.
+        /// </summary>
+        /// <remarks>
+        /// Bit of a hack -- but using datetime as dictionary key is dangerous as you can process multiple orders within a second.
+        /// For the accounting / statistics generating purposes its not really critical to know the precise time, so just add a millisecond while there's an identical key.
+        /// </remarks>
+        /// <param name="time">Time of order processed </param>
+        /// <param name="transactionProfitLoss">Profit Loss.</param>
+        public void AddTransactionRecord(DateTime time, decimal transactionProfitLoss)
+        {
+            lock (_transactionRecord)
+            {
+                var clone = time;
+                while (_transactionRecord.ContainsKey(clone))
+                {
+                    clone = clone.AddMilliseconds(1);
+                }
+                _transactionRecord.Add(clone, transactionProfitLoss);
+            }
         }
 
         /// <summary>

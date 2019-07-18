@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -9,6 +10,8 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public class BaseResultsHandler
     {
+        protected IDataFeedSubscriptionManager DataManager;
+
         /// <summary>
         /// Gets or sets the current alpha runtime statistics
         /// </summary>
@@ -44,6 +47,14 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics)
         {
             AlphaRuntimeStatistics = statistics;
+        }
+
+        /// <summary>
+        /// Sets the current Data Manager instance
+        /// </summary>
+        public virtual void SetDataManager(IDataFeedSubscriptionManager dataManager)
+        {
+            DataManager = dataManager;
         }
     }
 }

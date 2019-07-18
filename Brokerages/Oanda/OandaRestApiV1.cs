@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,6 +32,7 @@ using QuantConnect.Brokerages.Oanda.RestV1.Session;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using Order = QuantConnect.Orders.Order;
 
@@ -71,7 +72,7 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Gets all open orders on the account. 
+        /// Gets all open orders on the account.
         /// NOTE: The order objects returned do not have QC order IDs.
         /// </summary>
         /// <returns>The open orders returned from Oanda</returns>
@@ -93,15 +94,14 @@ namespace QuantConnect.Brokerages.Oanda
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
             var getAccountRequestString = EndpointResolver.ResolveEndpoint(Environment, Server.Account) + "accounts/" + AccountId;
             var accountResponse = MakeRequest<Account>(getAccountRequestString);
 
-            return new List<Cash>
+            return new List<CashAmount>
             {
-                new Cash(accountResponse.accountCurrency, accountResponse.balance.ToDecimal(),
-                    GetUsdConversion(accountResponse.accountCurrency))
+                new CashAmount(accountResponse.balance.ToDecimal(), accountResponse.accountCurrency)
             };
         }
 
@@ -135,70 +135,77 @@ namespace QuantConnect.Brokerages.Oanda
                 { "units", Convert.ToInt32(order.AbsoluteQuantity).ToString() }
             };
 
+            var orderFee = OrderFee.Zero;
+            var marketOrderFillQuantity = 0;
+            var marketOrderRemainingQuantity = 0;
+            decimal marketOrderFillPrice;
+            var marketOrderStatus = OrderStatus.Filled;
+            order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
             PopulateOrderRequestParameters(order, requestParams);
 
-            var postOrderResponse = PostOrderAsync(requestParams);
-            if (postOrderResponse == null)
-                return false;
-
-            // if market order, find fill quantity and price
-            var marketOrderFillPrice = 0m;
-            if (order.Type == OrderType.Market)
+            lock (Locker)
             {
+                var postOrderResponse = PostOrderAsync(requestParams);
+                if (postOrderResponse == null)
+                    return false;
+                // Market orders are special, due to the callback not being triggered always, if the order was filled,
+                // find fill quantity and price and inform the user
+                if (postOrderResponse.tradeOpened != null && postOrderResponse.tradeOpened.id > 0)
+                {
+                    if (order.Type == OrderType.Market)
+                    {
+                        marketOrderFillQuantity = postOrderResponse.tradeOpened.units;
+                    }
+                    else
+                    {
+                        order.BrokerId.Add(postOrderResponse.tradeOpened.id.ToString());
+                    }
+                }
+
+                if (postOrderResponse.tradeReduced != null && postOrderResponse.tradeReduced.id > 0)
+                {
+                    if (order.Type == OrderType.Market)
+                    {
+                        marketOrderFillQuantity = postOrderResponse.tradeReduced.units;
+                    }
+                    else
+                    {
+                        order.BrokerId.Add(postOrderResponse.tradeReduced.id.ToString());
+                    }
+                }
+
+                if (postOrderResponse.orderOpened != null && postOrderResponse.orderOpened.id > 0)
+                {
+                    if (order.Type != OrderType.Market)
+                    {
+                        order.BrokerId.Add(postOrderResponse.orderOpened.id.ToString());
+                    }
+                }
+
+                if (postOrderResponse.tradesClosed != null && postOrderResponse.tradesClosed.Count > 0)
+                {
+                    marketOrderFillQuantity += postOrderResponse.tradesClosed
+                        .Where(trade => order.Type == OrderType.Market)
+                        .Sum(trade => trade.units);
+                }
+
                 marketOrderFillPrice = Convert.ToDecimal(postOrderResponse.price);
-            }
-
-            var marketOrderFillQuantity = 0;
-            if (postOrderResponse.tradeOpened != null && postOrderResponse.tradeOpened.id > 0)
-            {
-                if (order.Type == OrderType.Market)
+                marketOrderRemainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - Math.Abs(marketOrderFillQuantity));
+                if (marketOrderRemainingQuantity > 0)
                 {
-                    marketOrderFillQuantity = postOrderResponse.tradeOpened.units;
-                }
-                else
-                {
-                    order.BrokerId.Add(postOrderResponse.tradeOpened.id.ToString());
+                    marketOrderStatus = OrderStatus.PartiallyFilled;
+                    // The order was not fully filled lets save it so the callback can inform the user
+                    PendingFilledMarketOrders[order.Id] = marketOrderStatus;
                 }
             }
-
-            if (postOrderResponse.tradeReduced != null && postOrderResponse.tradeReduced.id > 0)
-            {
-                if (order.Type == OrderType.Market)
-                {
-                    marketOrderFillQuantity = postOrderResponse.tradeReduced.units;
-                }
-                else
-                {
-                    order.BrokerId.Add(postOrderResponse.tradeReduced.id.ToString());
-                }
-            }
-
-            if (postOrderResponse.orderOpened != null && postOrderResponse.orderOpened.id > 0)
-            {
-                if (order.Type != OrderType.Market)
-                {
-                    order.BrokerId.Add(postOrderResponse.orderOpened.id.ToString());
-                }
-            }
-
-            if (postOrderResponse.tradesClosed != null && postOrderResponse.tradesClosed.Count > 0)
-            {
-                marketOrderFillQuantity += postOrderResponse.tradesClosed
-                    .Where(trade => order.Type == OrderType.Market)
-                    .Sum(trade => trade.units);
-            }
-
-            // send Submitted order event
-            const int orderFee = 0;
-            order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
             OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee) { Status = OrderStatus.Submitted });
 
-            if (order.Type == OrderType.Market)
+            // If 'marketOrderRemainingQuantity < order.AbsoluteQuantity' is false it means the order was not even PartiallyFilled, wait for callback
+            if (order.Type == OrderType.Market && marketOrderRemainingQuantity < order.AbsoluteQuantity)
             {
-                // if market order, also send Filled order event
                 OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, orderFee)
                 {
-                    Status = OrderStatus.Filled,
+                    Status = marketOrderStatus,
                     FillPrice = marketOrderFillPrice,
                     FillQuantity = marketOrderFillQuantity * Math.Sign(order.Quantity)
                 });
@@ -255,7 +262,10 @@ namespace QuantConnect.Brokerages.Oanda
             foreach (var orderId in order.BrokerId)
             {
                 CancelOrder(long.Parse(orderId));
-                OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, 0, "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
+                OnOrderEvent(new OrderEvent(order,
+                    DateTime.UtcNow,
+                    OrderFee.Zero,
+                    "Oanda Cancel Order Event") { Status = OrderStatus.Canceled });
             }
 
             return true;
@@ -628,23 +638,40 @@ namespace QuantConnect.Brokerages.Oanda
             {
                 if (data.transaction.type == "ORDER_FILLED")
                 {
-                    var qcOrder = OrderProvider.GetOrderByBrokerageId(data.transaction.orderId);
-                    qcOrder.PriceCurrency = SecurityProvider.GetSecurity(qcOrder.Symbol).SymbolProperties.QuoteCurrency;
-
-                    const int orderFee = 0;
-                    var fill = new OrderEvent(qcOrder, DateTime.UtcNow, orderFee, "Oanda Fill Event")
+                    Order order;
+                    lock (Locker)
                     {
-                        Status = OrderStatus.Filled,
-                        FillPrice = (decimal)data.transaction.price,
-                        FillQuantity = data.transaction.units
-                    };
-
-                    // flip the quantity on sell actions
-                    if (qcOrder.Direction == OrderDirection.Sell)
-                    {
-                        fill.FillQuantity *= -1;
+                        order = OrderProvider.GetOrderByBrokerageId(data.transaction.orderId);
                     }
-                    OnOrderEvent(fill);
+                    if (order != null)
+                    {
+                        OrderStatus status;
+                        // Market orders are special: if the order was not in 'PartiallyFilledMarketOrders', means
+                        // we already sent the fill event with OrderStatus.Filled, else it means we already informed the user
+                        // of a partiall fill, or didn't inform the user, so we need to do it now
+                        if (order.Type != OrderType.Market || PendingFilledMarketOrders.TryRemove(order.Id, out status))
+                        {
+                            order.PriceCurrency = SecurityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
+
+                            var fill = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "Oanda Fill Event")
+                            {
+                                Status = OrderStatus.Filled,
+                                FillPrice = (decimal)data.transaction.price,
+                                FillQuantity = data.transaction.units
+                            };
+
+                            // flip the quantity on sell actions
+                            if (order.Direction == OrderDirection.Sell)
+                            {
+                                fill.FillQuantity *= -1;
+                            }
+                            OnOrderEvent(fill);
+                        }
+                    }
+                    else
+                    {
+                        Log.Error($"OandaBrokerage.OnEventReceived(): order id not found: {data.transaction.orderId}");
+                    }
                 }
             }
         }
@@ -770,8 +797,8 @@ namespace QuantConnect.Brokerages.Oanda
                 qcOrder.Id = orderByBrokerageId.Id;
             }
 
-            qcOrder.Properties.TimeInForce = TimeInForce.Custom;
-            qcOrder.DurationValue = XmlConvert.ToDateTime(order.expiry, XmlDateTimeSerializationMode.Utc);
+            var expiry = XmlConvert.ToDateTime(order.expiry, XmlDateTimeSerializationMode.Utc);
+            qcOrder.Properties.TimeInForce = TimeInForce.GoodTilDate(expiry);
             qcOrder.Time = XmlConvert.ToDateTime(order.time, XmlDateTimeSerializationMode.Utc);
 
             return qcOrder;
@@ -813,7 +840,6 @@ namespace QuantConnect.Brokerages.Oanda
                 Symbol = SymbolMapper.GetLeanSymbol(position.instrument, securityType, Market.Oanda),
                 Type = securityType,
                 AveragePrice = (decimal)position.avgPrice,
-                ConversionRate = 1.0m,
                 CurrencySymbol = "$",
                 Quantity = position.side == "sell" ? -position.units : position.units
             };
@@ -842,13 +868,13 @@ namespace QuantConnect.Brokerages.Oanda
                 {
                     case OrderDirection.Buy:
                         //Limit Order Does not like Lower Bound Values == Limit Price value
-                        //Don't set bounds when placing limit orders. 
+                        //Don't set bounds when placing limit orders.
                         //Orders can be submitted with lower and upper bounds. If the market price on execution falls outside these bounds, it is considered a "Bounds Violation" and the order is cancelled.
                         break;
 
                     case OrderDirection.Sell:
                         //Limit Order Does not like Lower Bound Values == Limit Price value
-                        //Don't set bounds when placing limit orders. 
+                        //Don't set bounds when placing limit orders.
                         //Orders can be submitted with lower and upper bounds. If the market price on execution falls outside these bounds, it is considered a "Bounds Violation" and the order is cancelled.
                         break;
                 }
@@ -917,7 +943,7 @@ namespace QuantConnect.Brokerages.Oanda
             else
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateFailed", "Failed to update Oanda order id: " + orderId + "."));
-                OnOrderEvent(new OrderEvent(ConvertOrder(order), DateTime.UtcNow, 0)
+                OnOrderEvent(new OrderEvent(ConvertOrder(order), DateTime.UtcNow, OrderFee.Zero)
                 {
                     Status = OrderStatus.Invalid,
                     Message = string.Format("Order currently does not exist with order id: {0}.", orderId)

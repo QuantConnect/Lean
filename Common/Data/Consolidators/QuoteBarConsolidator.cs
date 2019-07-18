@@ -52,6 +52,15 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Creates a consolidator to produce a new 'QuoteBar' representing the last count pieces of data or the period, whichever comes first
+        /// </summary>
+        /// <param name="func">Func that defines the start time of a consolidated data</param>
+        public QuoteBarConsolidator(Func<DateTime, CalendarInfo> func)
+            : base(func)
+        {
+        }
+
+        /// <summary>
         /// Aggregates the new 'data' into the 'workingBar'. The 'workingBar' will be
         /// null following the event firing
         /// </summary>

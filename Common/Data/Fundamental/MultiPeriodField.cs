@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.Fundamental
 {
@@ -32,20 +33,46 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Gets the default period for the field
         /// </summary>
-        protected virtual string DefaultPeriod
-        {
-            get { return Store.Keys.FirstOrDefault() ?? string.Empty; }
-        }
+        protected virtual string DefaultPeriod => Store.Keys.FirstOrDefault() ?? string.Empty;
 
         /// <summary>
         /// Gets the value of the field for the requested period
         /// </summary>
         /// <param name="period">The requested period</param>
         /// <returns>The value for the period</returns>
-        protected decimal GetPeriodValue(string period)
+        public decimal GetPeriodValue(string period)
         {
             decimal value;
             return Store.TryGetValue(period, out value) ? value : 0m;
+        }
+
+        /// <summary>
+        /// Returns true if the field contains a value for the requested period
+        /// </summary>
+        /// <param name="period">The requested period</param>
+        public bool HasPeriodValue(string period) => Store.ContainsKey(period);
+
+        /// <summary>
+        /// Returns true if the field contains a value for the default period
+        /// </summary>
+        public bool HasValue => DefaultPeriod.Length > 0 && Store.ContainsKey(DefaultPeriod);
+
+        /// <summary>
+        /// Gets the list of available period names for the field
+        /// </summary>
+        /// <returns>The list of periods</returns>
+        public IEnumerable<string> GetPeriodNames()
+        {
+            return Store.Keys;
+        }
+
+        /// <summary>
+        /// Gets a dictionary of period names and values for the field
+        /// </summary>
+        /// <returns>The dictionary of period names and values</returns>
+        public IReadOnlyDictionary<string, decimal> GetPeriodValues()
+        {
+            return Store.ToReadOnlyDictionary();
         }
 
         /// <summary>
@@ -91,16 +118,16 @@ namespace QuantConnect.Data.Fundamental
         }
 
         /// <summary>
-        /// Sets period values for non existing periods from a previous instance
+        /// Applies updated values from <paramref name="update"/> to this instance
         /// </summary>
-        /// <remarks>Used to fill-forward values from previous dates</remarks>
-		/// <param name="previous">The previous instance</param>
-        public void UpdateValues(MultiPeriodField previous)
+        /// <remarks>Used to apply data updates to the current instance. This WILL overwrite existing values.</remarks>
+        /// <param name="update">The next data update for this instance</param>
+        public void UpdateValues(MultiPeriodField update)
         {
-            if (previous == null)
+            if (update == null)
                 return;
 
-            foreach (var kvp in previous.Store.Where(kvp => !Store.ContainsKey(kvp.Key)))
+            foreach (var kvp in update.Store)
             {
                 SetPeriodValue(kvp.Key, kvp.Value);
             }

@@ -18,6 +18,8 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -45,6 +47,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
         /// <summary>
         /// Gets all portfolio targets in this collection
+        /// Careful, will return targets for securities that might have no data yet.
         /// </summary>
         public ICollection<IPortfolioTarget> Values => _targets.Values;
 
@@ -98,11 +101,42 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         }
 
         /// <summary>
+        /// Adds the specified targets to the collection. If a target for the same symbol
+        /// already exists it will be overwritten.
+        /// </summary>
+        /// <param name="targets">The portfolio targets to add</param>
+        public void AddRange(IPortfolioTarget[] targets)
+        {
+            foreach (var item in targets)
+            {
+                _targets[item.Symbol] = item;
+            }
+        }
+
+        /// <summary>
         /// Removes all portfolio targets from this collection
         /// </summary>
         public void Clear()
         {
             _targets.Clear();
+        }
+
+        /// <summary>
+        /// Removes fulfilled portfolio targets from this collection.
+        /// Will only take into account actual holdings and ignore open orders.
+        /// </summary>
+        public void ClearFulfilled(IAlgorithm algorithm)
+        {
+            foreach (var target in _targets)
+            {
+                var security = algorithm.Securities[target.Key];
+                var holdings = security.Holdings.Quantity;
+                // check to see if we're done with this target
+                if (Math.Abs(target.Value.Quantity - holdings) < security.SymbolProperties.LotSize)
+                {
+                    Remove(target.Key);
+                }
+            }
         }
 
         /// <summary>
@@ -251,6 +285,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Gets an enumerator to iterator over all portfolio targets in this collection.
         /// This is the default enumerator for this collection.
+        /// Careful, will return targets for securities that might have no data yet.
         /// </summary>
         /// <returns>Portfolio targets enumerator</returns>
         IEnumerator IEnumerable.GetEnumerator()
@@ -272,6 +307,40 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         private T WithDictionary<T>(Func<IDictionary<Symbol, IPortfolioTarget>, T> func)
         {
             return func(_targets);
+        }
+
+        /// <summary>
+        /// Returned an ordered enumerable where position reducing orders are executed first
+        /// and the remaining orders are executed in decreasing order value.
+        /// Will NOT return targets for securities that have no data yet.
+        /// Will NOT return targets for which current holdings + open orders quantity, sum up to the target quantity
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        public IEnumerable<IPortfolioTarget> OrderByMarginImpact(IAlgorithm algorithm)
+        {
+            return _targets
+                .Select(x => x.Value)
+                .Where(x => {
+                    var security = algorithm.Securities[x.Symbol];
+                    return security.HasData
+                            && Math.Abs(OrderSizing.GetUnorderedQuantity(algorithm, x)) >= security.SymbolProperties.LotSize;
+                })
+                .Select(x => new {
+                    PortfolioTarget = x,
+                    TargetQuantity = x.Quantity,
+                    ExistingQuantity = algorithm.Portfolio[x.Symbol].Quantity
+                                       + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
+                                           .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
+                    Price = algorithm.Securities[x.Symbol].Price
+                })
+                .Select(x => new {
+                    PortfolioTarget = x.PortfolioTarget,
+                    OrderValue = Math.Abs((x.TargetQuantity - x.ExistingQuantity) * x.Price),
+                    IsReducingPosition = x.ExistingQuantity != 0 && Math.Abs(x.TargetQuantity) < Math.Abs(x.ExistingQuantity)
+                })
+                .OrderByDescending(x => x.IsReducingPosition)
+                .ThenByDescending(x => x.OrderValue)
+                .Select(x => x.PortfolioTarget);
         }
     }
 }

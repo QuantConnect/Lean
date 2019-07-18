@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,17 +17,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect
 {
     /// <summary>
     /// Provides a means of centralizing time for various time zones.
     /// </summary>
-    public class TimeKeeper
+    public class TimeKeeper : ITimeKeeper
     {
         private DateTime _utcDateTime;
 
-        private readonly Dictionary<DateTimeZone, LocalTimeKeeper> _localTimeKeepers;
+        private readonly Dictionary<string, LocalTimeKeeper> _localTimeKeepers;
 
         /// <summary>
         /// Gets the current time in UTC
@@ -59,7 +60,7 @@ namespace QuantConnect
         public TimeKeeper(DateTime utcDateTime, IEnumerable<DateTimeZone> timeZones)
         {
             _utcDateTime = utcDateTime;
-            _localTimeKeepers = timeZones.Distinct().Select(x => new LocalTimeKeeper(utcDateTime, x)).ToDictionary(x => x.TimeZone);
+            _localTimeKeepers = timeZones.Distinct().Select(x => new LocalTimeKeeper(utcDateTime, x)).ToDictionary(x => x.TimeZone.Id);
         }
 
         /// <summary>
@@ -94,10 +95,10 @@ namespace QuantConnect
         public LocalTimeKeeper GetLocalTimeKeeper(DateTimeZone timeZone)
         {
             LocalTimeKeeper localTimeKeeper;
-            if (!_localTimeKeepers.TryGetValue(timeZone, out localTimeKeeper))
+            if (!_localTimeKeepers.TryGetValue(timeZone.Id, out localTimeKeeper))
             {
                 localTimeKeeper = new LocalTimeKeeper(UtcTime, timeZone);
-                _localTimeKeepers[timeZone] = localTimeKeeper;
+                _localTimeKeepers[timeZone.Id] = localTimeKeeper;
             }
             return localTimeKeeper;
         }
@@ -108,9 +109,9 @@ namespace QuantConnect
         /// <param name="timeZone"></param>
         public void AddTimeZone(DateTimeZone timeZone)
         {
-            if (!_localTimeKeepers.ContainsKey(timeZone))
+            if (!_localTimeKeepers.ContainsKey(timeZone.Id))
             {
-                _localTimeKeepers[timeZone] = new LocalTimeKeeper(_utcDateTime, timeZone);
+                _localTimeKeepers[timeZone.Id] = new LocalTimeKeeper(_utcDateTime, timeZone);
             }
         }
     }

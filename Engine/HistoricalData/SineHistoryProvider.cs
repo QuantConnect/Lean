@@ -17,9 +17,7 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
@@ -31,16 +29,15 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     /// <summary>
     /// Implements a History provider that always return a IEnumerable of Slice with prices following a sine function
     /// </summary>
-    public class SineHistoryProvider : IHistoryProvider
+    public class SineHistoryProvider : HistoryProviderBase
     {
-        private CashBook _cashBook = new CashBook();
-        private SecurityChanges _securityChanges = SecurityChanges.None;
-        private SecurityManager _securities;
+        private readonly SecurityChanges _securityChanges = SecurityChanges.None;
+        private readonly SecurityManager _securities;
 
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
-        public int DataPointCount => 0;
+        public override int DataPointCount => 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SineHistoryProvider"/> class
@@ -54,13 +51,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Initializes this history provider to work for the specified job
         /// </summary>
-        /// <param name="job">The job</param>
-        /// <param name="dataProvider">Provider used to get data when it is not present on disk</param>
-        /// <param name="dataCacheProvider">Provider used to cache history data files</param>
-        /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
-        /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
-        /// <param name="statusUpdate">Function used to send status updates</param>
-        public void Initialize(AlgorithmNodePacket job, IDataProvider dataProvider, IDataCacheProvider dataCacheProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, Action<int> statusUpdate)
+        /// <param name="parameters">The initialization parameters</param>
+        public override void Initialize(HistoryProviderInitializeParameters parameters)
         {
         }
 
@@ -70,40 +62,46 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <param name="requests">The historical data requests</param>
         /// <param name="sliceTimeZone">The time zone used when time stamping the slice instances</param>
         /// <returns>An enumerable of the slices of data covering the span specified in each request</returns>
-        public IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
         {
-            var securitiesByDateTime = GetSecuritiesByDateTime(requests);
-            var count = securitiesByDateTime.Count;
+            var configsByDateTime = GetSubscriptionDataConfigByDateTime(requests);
+            var count = configsByDateTime.Count;
             var i = 0;
-
-            foreach (var kvp in securitiesByDateTime)
+            var timeSliceFactory = new TimeSliceFactory(sliceTimeZone);
+            foreach (var kvp in configsByDateTime)
             {
                 var utcDateTime = kvp.Key;
-                var securities = kvp.Value;
+                var configs = kvp.Value;
                 var last = Convert.ToDecimal(100 + 10 * Math.Sin(Math.PI * (360 - count + i) / 180.0));
                 var high = last * 1.005m;
                 var low = last / 1.005m;
 
                 var packets = new List<DataFeedPacket>();
 
-                foreach (var security in securities)
+                foreach (var config in configs)
                 {
-                    var configuration = security.Subscriptions.FirstOrDefault(x => x.Resolution == security.Resolution);
-                    var period = security.Resolution.ToTimeSpan();
-                    var time = (utcDateTime - period).ConvertFromUtc(configuration.DataTimeZone);
-                    var data = new TradeBar(time, security.Symbol, last, high, last, last, 1000, period);
+                    Security security;
+                    if (!_securities.TryGetValue(config.Symbol, out security))
+                    {
+                        continue;
+                    }
+
+                    var period = config.Resolution.ToTimeSpan();
+                    var time = (utcDateTime - period).ConvertFromUtc(config.DataTimeZone);
+                    var data = new TradeBar(time, config.Symbol, last, high, last, last, 1000, period);
                     security.SetMarketPrice(data);
-                    packets.Add(new DataFeedPacket(security, configuration, new List<BaseData> { data }));
+                    packets.Add(new DataFeedPacket(security, config, new List<BaseData> { data }));
                 }
 
                 i++;
-                yield return TimeSlice.Create(utcDateTime, sliceTimeZone, _cashBook, packets, _securityChanges, new Dictionary<Universe, BaseDataCollection>()).Slice;
+                yield return timeSliceFactory.Create(utcDateTime, packets, _securityChanges, new Dictionary<Universe, BaseDataCollection>()).Slice;
             }
         }
 
-        private Dictionary<DateTime, List<Security>> GetSecuritiesByDateTime(IEnumerable<HistoryRequest> requests)
+        private Dictionary<DateTime, List<SubscriptionDataConfig>> GetSubscriptionDataConfigByDateTime(
+            IEnumerable<HistoryRequest> requests)
         {
-            var dictionary = new Dictionary<DateTime, List<Security>>();
+            var dictionary = new Dictionary<DateTime, List<SubscriptionDataConfig>>();
 
             var barSize = requests.Select(x => x.Resolution.ToTimeSpan()).Min();
             var startUtc = requests.Min(x => x.StartTimeUtc);
@@ -111,36 +109,38 @@ namespace QuantConnect.Lean.Engine.HistoricalData
 
             for (var utcDateTime = startUtc; utcDateTime < endUtc; utcDateTime += barSize)
             {
-                var securities = new List<Security>();
+                var subscriptionDataConfig = new List<SubscriptionDataConfig>();
 
                 foreach (var request in requests)
                 {
-                    Security security;
-                    if (!_securities.TryGetValue(request.Symbol, out security))
-                    {
-                        continue;
-                    }
-
-                    var exchange = security.Exchange.Hours;
-                    var extendedMarket = security.IsExtendedMarketHours;
+                    var exchange = request.ExchangeHours;
+                    var extendedMarket = request.IncludeExtendedMarketHours;
                     var localDateTime = utcDateTime.ConvertFromUtc(exchange.TimeZone);
                     if (!exchange.IsOpen(localDateTime, extendedMarket))
                     {
                         continue;
                     }
 
-                    var configuration = security.Subscriptions.FirstOrDefault(x => x.Resolution == request.Resolution);
-                    if (configuration == null)
-                    {
-                        continue;
-                    }
+                    var config = new SubscriptionDataConfig(request.DataType,
+                        request.Symbol,
+                        request.Resolution,
+                        request.DataTimeZone,
+                        request.ExchangeHours.TimeZone,
+                        request.FillForwardResolution.HasValue,
+                        request.IncludeExtendedMarketHours,
+                        false,
+                        request.IsCustomData,
+                        request.TickType,
+                        true,
+                        request.DataNormalizationMode
+                    );
 
-                    securities.Add(security);
+                    subscriptionDataConfig.Add(config);
                 }
 
-                if (securities.Count > 0)
+                if (subscriptionDataConfig.Count > 0)
                 {
-                    dictionary.Add(utcDateTime.Add(barSize), securities);
+                    dictionary.Add(utcDateTime.Add(barSize), subscriptionDataConfig);
                 }
             }
 

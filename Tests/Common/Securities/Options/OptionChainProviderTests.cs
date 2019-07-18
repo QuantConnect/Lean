@@ -58,9 +58,24 @@ namespace QuantConnect.Tests.Common.Securities.Options
         public void LiveOptionChainProviderReturnsData()
         {
             var provider = new LiveOptionChainProvider();
-            var result = provider.GetOptionContractList(Symbols.AAPL, DateTime.Today);
 
-            Assert.IsTrue(result.Any());
+            foreach (var symbol in new[] { Symbols.SPY, Symbols.AAPL, Symbols.MSFT })
+            {
+                var result = provider.GetOptionContractList(symbol, DateTime.Today);
+
+                Assert.IsTrue(result.Any());
+            }
+        }
+
+        [Test]
+        public void LiveOptionChainProviderReturnsNoDataForInvalidSymbol()
+        {
+            var symbol = Symbol.Create("ABCDEF123", SecurityType.Equity, Market.USA);
+
+            var provider = new LiveOptionChainProvider();
+            var result = provider.GetOptionContractList(symbol, DateTime.Today);
+
+            Assert.IsFalse(result.Any());
         }
     }
 

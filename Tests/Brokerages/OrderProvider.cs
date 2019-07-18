@@ -66,6 +66,11 @@ namespace QuantConnect.Tests.Brokerages
             throw new NotImplementedException("This method has not been implemented");
         }
 
+        public IEnumerable<OrderTicket> GetOpenOrderTickets(Func<OrderTicket, bool> filter = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public OrderTicket GetOrderTicket(int orderId)
         {
             throw new NotImplementedException("This method has not been implemented");
@@ -74,6 +79,11 @@ namespace QuantConnect.Tests.Brokerages
         public IEnumerable<Order> GetOrders(Func<Order, bool> filter)
         {
             return _orders.Where(filter);
+        }
+
+        public List<Order> GetOpenOrders(Func<Order, bool> filter = null)
+        {
+            return _orders.Where(x => x.Status.IsOpen() && (filter == null || filter(x))).ToList();
         }
     }
 }

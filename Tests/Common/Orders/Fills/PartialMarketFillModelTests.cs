@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,6 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Brokerages.Backtesting;
@@ -23,6 +22,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine;
@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
     [TestFixture, Ignore]
     public class PartialMarketFillModelTests
     {
-        [Test, Category("TravisExclude")]
+        [Test]
         public void CreatesSpecificNumberOfFills()
         {
             Security security;
@@ -94,12 +94,17 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
             var transactionHandler = new BacktestingTransactionHandler();
             transactionHandler.Initialize(algorithm, new BacktestingBrokerage(algorithm), new TestResultHandler(Console.WriteLine));
-            Task.Run(() => transactionHandler.Run());
 
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
-            security = new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork), config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            security = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance
+            );
 
             model = new PartialMarketFillModel(algorithm.Transactions, 2);
 
@@ -161,7 +166,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 if (ticket == null)
                 {
                     // if we can't find the ticket issue empty fills
-                    return new OrderEvent(order, currentUtcTime, 0);
+                    return new OrderEvent(order, currentUtcTime, OrderFee.Zero);
                 }
 
                 // make sure some time has passed
@@ -170,7 +175,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 if (lastOrderEvent != null && currentUtcTime - lastOrderEvent.UtcTime < increment)
                 {
                     // wait a minute between fills
-                    return new OrderEvent(order, currentUtcTime, 0);
+                    return new OrderEvent(order, currentUtcTime, OrderFee.Zero);
                 }
 
                 var remaining = (int)(ticket.Quantity - ticket.QuantityFilled);

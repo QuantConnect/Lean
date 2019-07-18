@@ -56,7 +56,7 @@ class MACDTrendAlgorithm(QCAlgorithm):
         if self.__previous.date() == self.Time.date(): return
 
         # define a small tolerance on our checks to avoid bouncing
-        tolerance = 0.0025;
+        tolerance = 0.0025
 
         holdings = self.Portfolio["SPY"].Quantity
 

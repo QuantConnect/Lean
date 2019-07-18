@@ -347,8 +347,8 @@ namespace QuantConnect.Data
                 hashCode = (hashCode*397) ^ ExtendedMarketHours.GetHashCode();
                 hashCode = (hashCode*397) ^ IsInternalFeed.GetHashCode();
                 hashCode = (hashCode*397) ^ IsCustomData.GetHashCode();
-                hashCode = (hashCode*397) ^ DataTimeZone.GetHashCode();
-                hashCode = (hashCode*397) ^ ExchangeTimeZone.GetHashCode();
+                hashCode = (hashCode*397) ^ DataTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
+                hashCode = (hashCode*397) ^ ExchangeTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
                 hashCode = (hashCode*397) ^ IsFilteredSubscription.GetHashCode();
                 return hashCode;
             }

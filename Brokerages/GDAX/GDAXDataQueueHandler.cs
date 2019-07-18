@@ -24,13 +24,15 @@ namespace QuantConnect.Brokerages.GDAX
     /// <summary>
     /// An implementation of <see cref="IDataQueueHandler"/> for GDAX
     /// </summary>
+    [BrokerageFactory(typeof(GDAXBrokerageFactory))]
     public class GDAXDataQueueHandler : GDAXBrokerage, IDataQueueHandler
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="GDAXDataQueueHandler"/> class
         /// </summary>
-        public GDAXDataQueueHandler(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm)
-            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm)
+        public GDAXDataQueueHandler(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, string passPhrase, IAlgorithm algorithm,
+            IPriceProvider priceProvider)
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, passPhrase, algorithm, priceProvider)
         {
         }
 

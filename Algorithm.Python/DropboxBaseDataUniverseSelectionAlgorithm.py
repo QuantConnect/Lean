@@ -25,7 +25,6 @@ from datetime import date, timedelta, datetime
 from System.Collections.Generic import List
 from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data.UniverseSelection import *
-import decimal as d
 import numpy as np
 import math
 import json
@@ -42,7 +41,7 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
 
-        self.UniverseSettings.Resolution = Resolution.Daily;
+        self.UniverseSettings.Resolution = Resolution.Daily
 
         self.SetStartDate(2013,1,1)
         self.SetEndDate(2013,12,31)
@@ -59,12 +58,12 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
     def OnData(self, slice):
 
         if slice.Bars.Count == 0: return
-        if self._changes == None: return
+        if self._changes is None: return
         
         # start fresh
         self.Liquidate()
 
-        percentage = 1 / d.Decimal(slice.Bars.Count)
+        percentage = 1 / slice.Bars.Count
         for tradeBar in slice.Bars.Values:
             self.SetHoldings(tradeBar.Symbol, percentage)
         

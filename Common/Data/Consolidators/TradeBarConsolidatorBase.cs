@@ -55,7 +55,16 @@ namespace QuantConnect.Data.Consolidators
             : base(maxCount, period)
         {
         }
-        
+
+        /// <summary>
+        /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first
+        /// </summary>
+        /// <param name="func">Func that defines the start time of a consolidated data</param>
+        protected TradeBarConsolidatorBase(Func<DateTime, CalendarInfo> func)
+            : base(func)
+        {
+        }
+
         /// <summary>
         /// Gets a copy of the current 'workingBar'.
         /// </summary>

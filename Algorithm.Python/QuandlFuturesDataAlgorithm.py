@@ -38,7 +38,7 @@ class QuandlFuturesDataAlgorithm(QCAlgorithm):
         ''' Initialize the data and resolution you require for your strategy '''
         self.SetStartDate(2000, 1, 1)
         self.SetEndDate(datetime.now().date() - timedelta(1))
-        self.SetCash(25000);
+        self.SetCash(25000)
 
         # Symbol corresponding to the quandl code
         self.crude = "SCF/CME_CL1_ON"
@@ -49,7 +49,7 @@ class QuandlFuturesDataAlgorithm(QCAlgorithm):
         '''Data Event Handler: New data arrives here. "TradeBars" type is a dictionary of strings so you can access it by symbol.'''
         if self.Portfolio.HoldStock: return
 
-        self.SetHoldings(self.crude, 1);
+        self.SetHoldings(self.crude, 1)
         self.Debug(str(self.Time) + str(" Purchased Crude Oil: ") + self.crude)
 
 

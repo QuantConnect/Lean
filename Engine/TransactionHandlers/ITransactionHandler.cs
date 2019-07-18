@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,10 +28,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// The pass this information back to the algorithm portfolio and ensure the cash and portfolio are synchronized.
     /// </summary>
     [InheritedExport(typeof(ITransactionHandler))]
-    public interface ITransactionHandler : IOrderProcessor
+    public interface ITransactionHandler : IOrderProcessor, IOrderEventProvider
     {
         /// <summary>
-        /// Boolean flag indicating the thread is busy. 
+        /// Boolean flag indicating the thread is busy.
         /// False indicates it is completely finished processing and ready to be terminated.
         /// </summary>
         bool IsActive
@@ -61,11 +61,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler);
 
         /// <summary>
-        /// Primary thread entry point to launch the transaction thread.
-        /// </summary>
-        void Run();
-
-        /// <summary>
         /// Signal a end of thread request to stop montioring the transactions.
         /// </summary>
         void Exit();
@@ -74,5 +69,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Process any synchronous events from the primary algorithm thread.
         /// </summary>
         void ProcessSynchronousEvents();
+
+        /// <summary>
+        /// Register an already open Order
+        /// </summary>
+        void AddOpenOrder(Order order, OrderTicket orderTicket);
     }
 }

@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Brokerages.Backtesting;
@@ -28,6 +29,7 @@ namespace QuantConnect.Brokerages.Paper
     /// </summary>
     public class PaperBrokerage : BacktestingBrokerage
     {
+        private DateTime _lastScanTime;
         private readonly LiveNodePacket _job;
 
         /// <summary>
@@ -45,18 +47,47 @@ namespace QuantConnect.Brokerages.Paper
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
             string value;
             if (_job.BrokerageData.TryGetValue("project-paper-equity", out value))
             {
                 // remove the key, we really only want to return the cached value on the first request
                 _job.BrokerageData.Remove("project-paper-equity");
-                return new List<Cash>{new Cash("USD", decimal.Parse(value), 1)};
+                return new List<CashAmount> {new CashAmount(decimal.Parse(value), Algorithm.AccountCurrency)};
             }
 
             // if we've already begun running, just return the current state
-            return Algorithm.Portfolio.CashBook.Select(x => x.Value).ToList();
+            return Algorithm.Portfolio.CashBook.Select(x => new CashAmount(x.Value.Amount, x.Value.Symbol)).ToList();
+        }
+
+        /// <summary>
+        /// Scans all the outstanding orders and applies the algorithm model fills to generate the order events.
+        /// This override adds dividend detection and application
+        /// </summary>
+        public override void Scan()
+        {
+            // Scan is called twice per time loop, this check enforces that we only check
+            // on the first call for each time loop
+            if (Algorithm.UtcTime != _lastScanTime && Algorithm.CurrentSlice != null)
+            {
+                _lastScanTime = Algorithm.UtcTime;
+
+                // apply each dividend directly to the quote cash holdings of the security
+                // this assumes dividends are paid out in a security's quote cash (reasonable assumption)
+                foreach (var dividend in Algorithm.CurrentSlice.Dividends.Values)
+                {
+                    Security security;
+                    if (Algorithm.Securities.TryGetValue(dividend.Symbol, out security))
+                    {
+                        // compute the total distribution and apply as security's quote currency
+                        var distribution = security.Holdings.Quantity * dividend.Distribution;
+                        security.QuoteCurrency.AddAmount(distribution);
+                    }
+                }
+            }
+
+            base.Scan();
         }
     }
 }

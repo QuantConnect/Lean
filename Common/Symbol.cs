@@ -123,7 +123,7 @@ namespace QuantConnect
 
             if (expiry == SecurityIdentifier.DefaultDate)
             {
-                alias = alias ?? "?" + underlyingSymbol.Value.ToUpper();
+                alias = alias ?? "?" + underlyingSymbol.Value.LazyToUpper();
             }
             else
             {
@@ -151,7 +151,7 @@ namespace QuantConnect
 
             if (expiry == SecurityIdentifier.DefaultDate)
             {
-                alias = alias ?? "/" + ticker.ToUpper();
+                alias = alias ?? "/" + ticker.LazyToUpper();
             }
             else
             {
@@ -247,7 +247,8 @@ namespace QuantConnect
                 throw new ArgumentNullException("value");
             }
             ID = sid;
-            Value = value.ToUpper();
+
+            Value = value.LazyToUpper();
         }
 
         /// <summary>
@@ -289,7 +290,7 @@ namespace QuantConnect
                 throw new ArgumentNullException("value");
             }
             ID = sid;
-            Value = value.ToUpper();
+            Value = value.LazyToUpper();
             Underlying = underlying;
         }
 
@@ -474,7 +475,7 @@ namespace QuantConnect
         [Obsolete("Symbol.ToLower is a pass-through for Symbol.Value.ToLower")]
         public string ToLower() { return Value.ToLower(); }
         [Obsolete("Symbol.ToUpper is a pass-through for Symbol.Value.ToUpper")]
-        public string ToUpper() { return Value.ToUpper(); }
+        public string ToUpper() { return Value.LazyToUpper(); }
 #pragma warning restore 1591
 
         #endregion

@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -78,6 +78,14 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the most common tradable time during the market week.
+        /// For a normal US equity trading day this is 6.5 hours.
+        /// This does NOT account for extended market hours and only
+        /// considers <see cref="MarketHoursState.Market"/>
+        /// </summary>
+        public TimeSpan RegularMarketDuration { get; }
+
+        /// <summary>
         /// Gets a <see cref="SecurityExchangeHours"/> instance that is always open
         /// </summary>
         public static SecurityExchangeHours AlwaysOpen(DateTimeZone timeZone)
@@ -114,6 +122,12 @@ namespace QuantConnect.Securities
             SetMarketHoursForDay(DayOfWeek.Thursday, out _thursday);
             SetMarketHoursForDay(DayOfWeek.Friday, out _friday);
             SetMarketHoursForDay(DayOfWeek.Saturday, out _saturday);
+
+            // pick the most common market hours duration, if there's a tie, pick the larger duration
+            RegularMarketDuration = _openHoursByDay.Values.GroupBy(lmh => lmh.MarketDuration)
+                .OrderByDescending(grp => grp.Count())
+                .ThenByDescending(grp => grp.Key)
+                .First().Key;
         }
 
         /// <summary>
@@ -320,6 +334,38 @@ namespace QuantConnect.Securities
         {
             TimeSpan earlyCloseTime;
             return _earlyCloses.TryGetValue(localDateTime.Date, out earlyCloseTime) && localDateTime.TimeOfDay >= earlyCloseTime;
+        }
+
+        /// <summary>
+        /// Gets the previous trading day
+        /// </summary>
+        /// <param name="localDate">The date to start searching at in this exchange's time zones</param>
+        /// <returns>The previous trading day</returns>
+        public DateTime GetPreviousTradingDay(DateTime localDate)
+        {
+            localDate = localDate.AddDays(-1);
+            while (!IsDateOpen(localDate))
+            {
+                localDate = localDate.AddDays(-1);
+            }
+
+            return localDate;
+        }
+
+        /// <summary>
+        /// Gets the next trading day
+        /// </summary>
+        /// <param name="date">The date to start searching at</param>
+        /// <returns>The next trading day</returns>
+        public DateTime GetNextTradingDay(DateTime date)
+        {
+            date = date.AddDays(1);
+            while (!IsDateOpen(date))
+            {
+                date = date.AddDays(1);
+            }
+
+            return date;
         }
     }
 }

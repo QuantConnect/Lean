@@ -25,6 +25,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -42,24 +43,29 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
             var feed = new FileSystemDataFeed();
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var dataManager = new DataManager(feed,
+                new UniverseSelection(
+                    algorithm,
+                    new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm)),
+                algorithm,
+                algorithm.TimeKeeper,
+                marketHoursDatabase,
+                false);
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+            var synchronizer = new Synchronizer();
+            synchronizer.Initialize(algorithm, dataManager);
 
-            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider);
+            feed.Initialize(algorithm, job, resultHandler, mapFileProvider, factorFileProvider, dataProvider, dataManager, synchronizer);
             algorithm.Initialize();
             algorithm.PostInitialize();
 
-            var feedThreadStarted = new ManualResetEvent(false);
-            var dataFeedThread = new Thread(() =>
-            {
-                feedThreadStarted.Set();
-                feed.Run();
-            }) {IsBackground = true};
-            dataFeedThread.Start();
-            feedThreadStarted.WaitOne();
-
+            var cancellationTokenSource = new CancellationTokenSource();
             var count = 0;
             var stopwatch = Stopwatch.StartNew();
             var lastMonth = algorithm.StartDate.Month;
-            foreach (var timeSlice in feed)
+            foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
             {
                 if (timeSlice.Time.Month != lastMonth)
                 {
@@ -71,8 +77,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 count++;
             }
             Console.WriteLine("Count: " + count);
-
             stopwatch.Stop();
+            feed.Exit();
             Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}   KPS: {count/1000d/stopwatch.Elapsed.TotalSeconds}");
         }
 
@@ -87,7 +93,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var resultHandler = new BacktestingResultHandler();
             var mapFileProvider = new LocalDiskMapFileProvider();
             var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
-            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, mapFileProvider, factorFileProvider, dataProvider, false, true);
+            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, mapFileProvider, factorFileProvider, dataProvider, true);
 
             var universe = algorithm.UniverseManager.Single().Value;
             var security = algorithm.Securities.Single().Value;

@@ -192,7 +192,7 @@ namespace QuantConnect.Views.WinForms
         /// </summary>
         private void timer_Tick(object sender, EventArgs e)
         {
-            StatisticsToolStripStatusLabel.Text = string.Concat("Performance: CPU: ", OS.CpuUsage.NextValue().ToString("0.0"), "%",
+            StatisticsToolStripStatusLabel.Text = string.Concat("Performance: CPU: ", OS.CpuUsage.ToString("0.0"), "%",
                                                                 " Ram: ", OS.TotalPhysicalMemoryUsed, " Mb");
 
             if (_logging == null) return;

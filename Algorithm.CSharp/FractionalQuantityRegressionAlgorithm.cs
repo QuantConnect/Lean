@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,15 +16,17 @@
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using System;
+using System.Collections.Generic;
 using QuantConnect.Brokerages;
 using QuantConnect.Securities;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm for fractional forex pair
     /// </summary>
-    public class FractionalQuantityRegressionAlgorithm : QCAlgorithm
+    public class FractionalQuantityRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -43,15 +45,15 @@ namespace QuantConnect.Algorithm.CSharp
 
             // The default buying power model for the Crypto security type is now CashBuyingPowerModel.
             // Since this test algorithm uses leverage we need to set a buying power model with margin.
-            security.BuyingPowerModel = new SecurityMarginModel(3.3m);
+            security.SetBuyingPowerModel(new SecurityMarginModel(3.3m));
 
-            var con = new QuoteBarConsolidator(1);
+            var con = new TradeBarConsolidator(1);
             SubscriptionManager.AddConsolidator("BTCUSD", con);
             con.DataConsolidated += DataConsolidated;
             SetBenchmark(security.Symbol);
         }
 
-        private void DataConsolidated(object sender, QuoteBar e)
+        private void DataConsolidated(object sender, TradeBar e)
         {
             var quantity = Math.Truncate((Portfolio.Cash + Portfolio.TotalFees) / Math.Abs(e.Value + 1));
             if (!Portfolio.Invested)
@@ -80,5 +82,41 @@ namespace QuantConnect.Algorithm.CSharp
                 Quit();
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "6"},
+            {"Average Win", "6.02%"},
+            {"Average Loss", "-2.40%"},
+            {"Compounding Annual Return", "915.597%"},
+            {"Drawdown", "5.500%"},
+            {"Expectancy", "1.339"},
+            {"Net Profit", "11.401%"},
+            {"Sharpe Ratio", "3.299"},
+            {"Loss Rate", "33%"},
+            {"Win Rate", "67%"},
+            {"Profit-Loss Ratio", "2.51"},
+            {"Alpha", "-0.409"},
+            {"Beta", "1.047"},
+            {"Annual Standard Deviation", "0.493"},
+            {"Annual Variance", "0.243"},
+            {"Information Ratio", "-2.648"},
+            {"Tracking Error", "0.12"},
+            {"Treynor Ratio", "1.555"},
+            {"Total Fees", "$2650.41"}
+        };
     }
 }

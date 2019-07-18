@@ -14,7 +14,6 @@
 */
 
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
@@ -30,6 +29,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <param name="symbol">The symbol to get price/volatility for</param>
         /// <returns>The insight target values for the specified symbol</returns>
         SecurityValues GetValues(Symbol symbol);
+
+        /// <summary>
+        /// Gets the current values for all the algorithm securities (price/volatility)
+        /// </summary>
+        /// <returns>The insight target values for all the algorithm securities</returns>
+        ReadOnlySecurityValuesCollection GetAllValues();
     }
 
     /// <summary>
@@ -44,10 +49,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <param name="securityValuesProvider">Security values provider fetches security values for each symbol</param>
         /// <param name="symbols">The symbols to get values for</param>
         /// <returns>A collection of</returns>
-        public static ReadOnlySecurityValuesCollection GetValues(this ISecurityValuesProvider securityValuesProvider, IEnumerable<Symbol> symbols)
+        public static ReadOnlySecurityValuesCollection GetValues(this ISecurityValuesProvider securityValuesProvider, ICollection<Symbol> symbols)
         {
-            var values = new Dictionary<Symbol, SecurityValues>();
-            foreach (var symbol in symbols.Distinct())
+            var values = new Dictionary<Symbol, SecurityValues>(symbols.Count);
+            foreach (var symbol in symbols)
             {
                 values[symbol] = securityValuesProvider.GetValues(symbol);
             }

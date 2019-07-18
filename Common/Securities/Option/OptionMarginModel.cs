@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Securities.Option
 {
@@ -31,6 +32,15 @@ namespace QuantConnect.Securities.Option
         private const decimal OptionMarginRequirement = 1;
         private const decimal NakedPositionMarginRequirement = 0.1m;
         private const decimal NakedPositionMarginRequirementOtm = 0.2m;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OptionMarginModel"/>
+        /// </summary>
+        /// <param name="requiredFreeBuyingPowerPercent">The percentage used to determine the required unused buying power for the account.</param>
+        public OptionMarginModel(decimal requiredFreeBuyingPowerPercent = 0)
+        {
+            RequiredFreeBuyingPowerPercent = requiredFreeBuyingPowerPercent;
+        }
 
         /// <summary>
         /// Gets the current leverage of the security
@@ -57,18 +67,24 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Gets the total margin required to execute the specified order in units of the account currency including fees
         /// </summary>
-        /// <param name="security">The security to compute initial margin for</param>
-        /// <param name="order">The order to be executed</param>
+        /// <param name="parameters">An object containing the portfolio, the security and the order</param>
         /// <returns>The total margin in terms of the currency quoted in the order</returns>
-        protected override decimal GetInitialMarginRequiredForOrder(Security security, Order order)
+        protected override decimal GetInitialMarginRequiredForOrder(
+            InitialMarginRequiredForOrderParameters parameters)
         {
             //Get the order value from the non-abstract order classes (MarketOrder, LimitOrder, StopMarketOrder)
             //Market order is approximated from the current security price and set in the MarketOrder Method in QCAlgorithm.
-            var orderFees = security.FeeModel.GetOrderFee(security, order);
-            var value = order.GetValue(security);
-            var orderValue = value * GetInitialMarginRequirement(security, value);
 
-            return orderValue + Math.Sign(orderValue) * orderFees;
+            var fees = parameters.Security.FeeModel.GetOrderFee(
+                new OrderFeeParameters(parameters.Security,
+                    parameters.Order)).Value;
+            var feesInAccountCurrency = parameters.CurrencyConverter.
+                ConvertToAccountCurrency(fees).Amount;
+
+            var value = parameters.Order.GetValue(parameters.Security);
+            var orderValue = value * GetInitialMarginRequirement(parameters.Security, value);
+
+            return orderValue + Math.Sign(orderValue) * feesInAccountCurrency;
         }
 
         /// <summary>
@@ -90,50 +106,43 @@ namespace QuantConnect.Securities.Option
         /// <returns>The margin available for the trade</returns>
         protected override decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
         {
-            var holdings = security.Holdings;
+            var result = portfolio.MarginRemaining;
 
-            if (direction == OrderDirection.Hold)
+            if (direction != OrderDirection.Hold)
             {
-                return portfolio.MarginRemaining;
-            }
-
-            //If the order is in the same direction as holdings, our remaining cash is our cash
-            //In the opposite direction, our remaining cash is 2 x current value of assets + our cash
-            if (holdings.IsLong)
-            {
-                switch (direction)
+                var holdings = security.Holdings;
+                //If the order is in the same direction as holdings, our remaining cash is our cash
+                //In the opposite direction, our remaining cash is 2 x current value of assets + our cash
+                if (holdings.IsLong)
                 {
-                    case OrderDirection.Buy:
-                        return portfolio.MarginRemaining;
-
-                    case OrderDirection.Sell:
-                        return
-                            // portion of margin to close the existing position
-                            GetMaintenanceMargin(security) +
-                            // portion of margin to open the new position
-                            security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security, security.Holdings.HoldingsValue) +
-                            portfolio.MarginRemaining;
+                    switch (direction)
+                    {
+                        case OrderDirection.Sell:
+                            result +=
+                                // portion of margin to close the existing position
+                                GetMaintenanceMargin(security) +
+                                // portion of margin to open the new position
+                                security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security, security.Holdings.HoldingsValue);
+                            break;
+                    }
                 }
-            }
-            else if (holdings.IsShort)
-            {
-                switch (direction)
+                else if (holdings.IsShort)
                 {
-                    case OrderDirection.Buy:
-                        return
-                            // portion of margin to close the existing position
-                            GetMaintenanceMargin(security) +
-                            // portion of margin to open the new position
-                            security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security, security.Holdings.HoldingsValue) +
-                            portfolio.MarginRemaining;
-
-                    case OrderDirection.Sell:
-                        return portfolio.MarginRemaining;
+                    switch (direction)
+                    {
+                        case OrderDirection.Buy:
+                            result +=
+                                // portion of margin to close the existing position
+                                GetMaintenanceMargin(security) +
+                                // portion of margin to open the new position
+                                security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security, security.Holdings.HoldingsValue);
+                            break;
+                    }
                 }
             }
 
-            //No holdings, return cash
-            return portfolio.MarginRemaining;
+            result -= portfolio.TotalPortfolioValue * RequiredFreeBuyingPowerPercent;
+            return result < 0 ? 0 : result;
         }
 
         /// <summary>

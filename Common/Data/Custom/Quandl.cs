@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,11 +16,12 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Net;
 
 namespace QuantConnect.Data.Custom
 {
     /// <summary>
-    /// Quandl Data Type - Import generic data from quandl, without needing to define Reader methods. 
+    /// Quandl Data Type - Import generic data from quandl, without needing to define Reader methods.
     /// This reads the headers of the data imported, and dynamically creates properties for the imported data.
     /// </summary>
     public class Quandl : DynamicData
@@ -29,6 +30,16 @@ namespace QuantConnect.Data.Custom
         private readonly List<string> _propertyNames = new List<string>();
         private readonly string _valueColumn;
         private static string _authCode = "";
+
+        /// <summary>
+        /// Static constructor for the <see cref="Quandl"/> class
+        /// </summary>
+        static Quandl()
+        {
+            // The Quandl API now requires TLS 1.2 for API requests (since 9/18/2018).
+            // NET 4.5.2 and below does not enable this more secure protocol by default, so we add it in here
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+        }
 
         /// <summary>
         /// Flag indicating whether or not the Quanl auth code has been set yet

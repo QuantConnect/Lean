@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -35,9 +36,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private volatile bool _end;
         private volatile bool _disposed;
 
+        private readonly bool _isBlocking;
         private readonly int _timeout;
         private readonly object _lock = new object();
         private readonly BlockingCollection<T> _blockingCollection;
+
+        private int _count;
+        private int _lowerThreshold;
+        private Action _produce;
+        private Task _producer;
 
         /// <summary>
         /// Gets the current number of items held in the internal queue
@@ -77,6 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         public EnqueueableEnumerator(bool blocking = false)
         {
             _blockingCollection = new BlockingCollection<T>();
+            _isBlocking = blocking;
             _timeout = blocking ? Timeout.Infinite : 0;
         }
 
@@ -118,13 +126,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
+            TriggerProducer();
+
             T current;
             if (!_blockingCollection.TryTake(out current, _timeout))
             {
                 _current = default(T);
+
+                // if the enumerator has blocking behavior and there is no more data, it has ended
+                if (_isBlocking)
+                {
+                    lock (_lock)
+                    {
+                        _end = true;
+                    }
+                }
+
                 return !_end;
             }
-
             _current = current;
 
             // even if we don't have data to return, we haven't technically
@@ -177,6 +196,42 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 Stop();
                 if (_blockingCollection != null) _blockingCollection.Dispose();
                 _disposed = true;
+            }
+        }
+
+        /// <summary>
+        /// Sets the production <see cref="Action"/> and the lower threshold production trigger.
+        /// Will also start the first producer <see cref="Task"/>
+        /// </summary>
+        /// <param name="produce">The <see cref="Action"/> used to produce more items</param>
+        /// <param name="lowerThreshold">The threshold used to determine
+        /// if a new producer <see cref="Task"/> has to start</param>
+        public void SetProducer(Action produce, int lowerThreshold)
+        {
+            _producer = Task.Run(produce);
+            _produce = produce;
+            _lowerThreshold = lowerThreshold;
+        }
+
+        /// <summary>
+        /// If the <see cref="_produce"/> action was set <see cref="SetProducer"/>,
+        /// this method will generate a new task to execute the <see cref="_produce"/> action
+        /// when items are less than <see cref="_lowerThreshold"/>, the enumerator is not finished
+        /// <see cref="HasFinished"/> and previous <see cref="_producer"/> already finished running.
+        /// </summary>
+        private void TriggerProducer()
+        {
+            if (_produce != null
+                && !HasFinished
+                && _producer.IsCompleted
+                && _lowerThreshold > _count--)
+            {
+                // we use local count for the outside if, for performance, and adjust here
+                _count = Count;
+                if (_lowerThreshold > _count)
+                {
+                    _producer = Task.Run(_produce);
+                }
             }
         }
     }

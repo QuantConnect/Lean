@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -47,7 +46,15 @@ namespace QuantConnect.Data.UniverseSelection
         /// Defines the minimum amount of time a security must be in
         /// the universe before being removed.
         /// </summary>
+        /// <remarks>When selection takes place, the actual members time in the universe
+        /// will be rounded based on this TimeSpan, so that relative small differences do not
+        /// cause an unexpected behavior <see cref="Universe.CanRemoveMember"/></remarks>
         public TimeSpan MinimumTimeInUniverse;
+
+        /// <summary>
+        /// Defines how universe data is normalized before being send into the algorithm
+        /// </summary>
+        public DataNormalizationMode DataNormalizationMode;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSettings"/> class
@@ -57,13 +64,15 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="fillForward">True to fill data forward, false otherwise</param>
         /// <param name="extendedMarketHours">True to allow exended market hours data, false otherwise</param>
         /// <param name="minimumTimeInUniverse">Defines the minimum amount of time a security must remain in the universe before being removed</param>
-        public UniverseSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarketHours, TimeSpan minimumTimeInUniverse)
+        /// <param name="dataNormalizationMode">Defines how universe data is normalized before being send into the algorithm</param>
+        public UniverseSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarketHours, TimeSpan minimumTimeInUniverse, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted)
         {
             Resolution = resolution;
             Leverage = leverage;
             FillForward = fillForward;
             ExtendedMarketHours = extendedMarketHours;
             MinimumTimeInUniverse = minimumTimeInUniverse;
+            DataNormalizationMode = dataNormalizationMode;
         }
     }
 }

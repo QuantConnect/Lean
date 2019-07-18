@@ -27,7 +27,6 @@ from QuantConnect.Securities import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Data.Consolidators import *
 
-import decimal as d
 from datetime import timedelta
 from math import floor
 
@@ -52,9 +51,9 @@ class FractionalQuantityRegressionAlgorithm(QCAlgorithm):
 
         ### The default buying power model for the Crypto security type is now CashBuyingPowerModel.
         ### Since this test algorithm uses leverage we need to set a buying power model with margin.
-        security.BuyingPowerModel = SecurityMarginModel(3.3);
+        security.SetBuyingPowerModel(SecurityMarginModel(3.3))
 
-        con = QuoteBarConsolidator(timedelta(1))
+        con = TradeBarConsolidator(timedelta(1))
         self.SubscriptionManager.AddConsolidator("BTCUSD", con)
         con.DataConsolidated += self.DataConsolidated
         self.SetBenchmark(security.Symbol)

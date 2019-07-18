@@ -23,7 +23,6 @@ from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
 
 from datetime import date, timedelta, datetime
-import decimal
 import numpy as np
 import json
 
@@ -68,7 +67,7 @@ class Bitcoin(PythonData):
 
         #return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip";
         # OR simply return a fixed small data file. Large files will slow down your backtest
-        return SubscriptionDataSource("http://www.quandl.com/api/v1/datasets/BCHARTS/BITSTAMPUSD.csv?sort_order=asc", SubscriptionTransportMedium.RemoteFile);
+        return SubscriptionDataSource("https://www.quandl.com/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc", SubscriptionTransportMedium.RemoteFile);
 
 
     def Reader(self, config, line, date, isLiveMode):
@@ -82,7 +81,7 @@ class Bitcoin(PythonData):
                 liveBTC = json.loads(line)
 
                 # If value is zero, return None
-                value = decimal.Decimal(liveBTC["last"])
+                value = liveBTC["last"]
                 if value == 0: return None
 
                 coin.Time = datetime.now()
@@ -109,7 +108,7 @@ class Bitcoin(PythonData):
             data = line.split(',')
 
             # If value is zero, return None
-            value = decimal.Decimal(data[4])
+            value = data[4]
             if value == 0: return None
 
             coin.Time = datetime.strptime(data[0], "%Y-%m-%d")

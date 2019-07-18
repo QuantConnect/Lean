@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Securities.Future;
 
@@ -22,13 +24,13 @@ namespace QuantConnect.Tests.Common.Securities.Futures
     [TestFixture]
     public class FuturesExpiryUtilityFunctionsTests
     {
-        [TestCase("08/05/2017",4,"12/05/2017")]
-        [TestCase("10/05/2017", 5,"17/05/2017")]
-        [TestCase("24/12/2017",3,"28/12/2017")]
+        [TestCase("08/05/2017", 4, "12/05/2017")]
+        [TestCase("10/05/2017", 5, "17/05/2017")]
+        [TestCase("24/12/2017", 3, "28/12/2017")]
         public void AddBusinessDays_WithPositiveInput_ShouldReturnNthSuccedingBusinessDay(string time, int n, string actual)
         {
             //Arrange
-            var inputTime = DateTime.ParseExact(time,"dd/MM/yyyy", null);
+            var inputTime = DateTime.ParseExact(time, "dd/MM/yyyy", null);
             var actualDate = DateTime.ParseExact(actual, "dd/MM/yyyy", null);
 
             //Act
@@ -64,7 +66,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var actualDate = DateTime.ParseExact(actual, "dd/MM/yyyy", null);
 
             //Act
-            var calculatedDate = FuturesExpiryUtilityFunctions.NthLastBusinessDay(inputDate,numberOfDays);
+            var calculatedDate = FuturesExpiryUtilityFunctions.NthLastBusinessDay(inputDate, numberOfDays);
 
             //Assert
             Assert.AreEqual(calculatedDate, actualDate);
@@ -77,10 +79,39 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         {
             //Arrange
             var inputDate = DateTime.ParseExact(time, "dd/MM/yyyy", null);
-            
+
             //Act
             FuturesExpiryUtilityFunctions.NthLastBusinessDay(inputDate, numberOfDays);
-            
+
+        }
+
+        [TestCase("01/01/2016", 1, "01/04/2016")]
+        [TestCase("02/01/2019", 1, "02/01/2019")]
+        [TestCase("01/01/2019", 1, "01/02/2019")]
+        [TestCase("06/01/2019", 1, "06/03/2019")]
+        [TestCase("07/01/2019", 5, "07/08/2019")]
+        public void NthBusinessDay_ShouldReturnAccurateBusinessDay(string testDate, int nthBusinessDay, string actualDate)
+        {
+            var inputDate = DateTime.ParseExact(testDate, "MM/dd/yyyy", null);
+            var expectedResult = DateTime.ParseExact(actualDate, "MM/dd/yyyy", null);
+
+            var actual = FuturesExpiryUtilityFunctions.NthBusinessDay(inputDate, nthBusinessDay);
+
+            Assert.AreEqual(expectedResult, actual);
+        }
+
+        [TestCase("01/01/2016", 1, "01/05/2016", "01/04/2016")]
+        [TestCase("02/01/2019", 12, "02/20/2019", "02/19/2019")]
+        [TestCase("01/01/2019", 1, "01/07/2019", "01/02/2019", "01/03/2019", "01/04/2019")]
+        public void NthBusinessDay_ShouldReturnAccurateBusinessDay_WithHolidays(string testDate, int nthBusinessDay, string actualDate, params string[] holidayDates)
+        {
+            var inputDate = DateTime.ParseExact(testDate, "MM/dd/yyyy", null);
+            var expectedResult = DateTime.ParseExact(actualDate, "MM/dd/yyyy", null);
+            var holidays = holidayDates.Select(x => DateTime.ParseExact(x, "MM/dd/yyyy", null));
+
+            var actual = FuturesExpiryUtilityFunctions.NthBusinessDay(inputDate, nthBusinessDay, holidays);
+
+            Assert.AreEqual(expectedResult, actual);
         }
 
         [TestCase("01/2015","16/01/2015")]
@@ -185,6 +216,20 @@ namespace QuantConnect.Tests.Common.Securities.Futures
 
             //Assert
             Assert.AreEqual(calculatedOutput, false);
+        }
+        
+        [TestCase("01/05/2019", "01/30/2019", "17:10:00")]
+        [TestCase("01/31/2019", "01/30/2019", "12:00:00")]
+        [TestCase("03/01/2012", "04/02/2012", "17:10:00")]
+        public void DairyReportDates_ShouldNormalizeDateTimeAndReturnCorrectReportDate(string contractMonth, string reportDate, string lastTradeTime)
+        {
+            var actual = FuturesExpiryUtilityFunctions.DairyLastTradeDate(
+                DateTime.ParseExact(contractMonth, "MM/dd/yyyy", null),
+                TimeSpan.Parse(lastTradeTime));
+
+            var expected = DateTime.ParseExact(reportDate, "MM/dd/yyyy", null).AddDays(-1).Add(TimeSpan.Parse(lastTradeTime));
+
+            Assert.AreEqual(expected, actual);
         }
     }
 }

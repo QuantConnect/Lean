@@ -54,7 +54,10 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         [SetUp]
         public void Setup()
         {
-            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object);
+            var priceProvider = new Mock<IPriceProvider>();
+            priceProvider.Setup(x => x.GetLastPrice(It.IsAny<Symbol>())).Returns(1.234m);
+
+            _unit = new GDAXBrokerage("wss://localhost", _wss.Object, _rest.Object, "abc", "MTIz", "pass", _algo.Object, priceProvider.Object);
             _orderData = File.ReadAllText("TestData//gdax_order.txt");
             _matchData = File.ReadAllText("TestData//gdax_match.txt");
             _openOrderData = File.ReadAllText("TestData//gdax_openOrders.txt");
@@ -79,14 +82,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             });
 
             _algo.Setup(a => a.BrokerageModel.AccountType).Returns(_accountType);
-            var rateMock = new Mock<IRestClient>();
-            _unit.RateClient = rateMock.Object;
-            rateMock.Setup(r => r.Execute(It.IsAny<IRestRequest>())).Returns(new RestResponse
-            {
-                Content = @"{""base"":""USD"",""date"":""2001-01-01"",""rates"":{""GBP"":1.234 }}",
-                StatusCode = HttpStatusCode.OK
-            });
-
+            _algo.Setup(a => a.AccountCurrency).Returns(Currencies.USD);
         }
 
         private void SetupResponse(string body, HttpStatusCode httpStatus = HttpStatusCode.OK)
@@ -148,7 +144,8 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             _unit.OrderStatusChanged += (s, e) =>
             {
                 Assert.AreEqual("BTCUSD", e.Symbol.Value);
-                actualFee += e.OrderFee;
+                actualFee += e.OrderFee.Value.Amount;
+                Assert.AreEqual(Currencies.USD, e.OrderFee.Value.Currency);
                 actualQuantity += e.AbsoluteFillQuantity;
 
                 Assert.IsTrue(actualQuantity != orderQuantity);
@@ -156,8 +153,8 @@ namespace QuantConnect.Tests.Brokerages.GDAX
                 Assert.AreEqual(expectedQuantity, e.FillQuantity);
                 // fill quantity = 5.23512
                 // fill price = 400.23
-                // partial order fee = (400.23 * 5.23512 * 0.0025) = 5.238130194
-                Assert.AreEqual(5.238130194m, actualFee);
+                // partial order fee = (400.23 * 5.23512 * 0.003) = 6.2857562328
+                Assert.AreEqual(6.2857562328m, actualFee);
                 raised.Set();
             };
 
@@ -268,13 +265,11 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
             Assert.AreEqual(2, actual.Count());
 
-            var usd = actual.Single(a => a.Symbol == "USD");
-            var btc = actual.Single(a => a.Symbol == "BTC");
+            var usd = actual.Single(a => a.Currency == Currencies.USD);
+            var btc = actual.Single(a => a.Currency == "BTC");
 
             Assert.AreEqual(80.2301373066930000m, usd.Amount);
-            Assert.AreEqual(1, usd.ConversionRate);
             Assert.AreEqual(1.1, btc.Amount);
-            Assert.AreEqual(333.985m, btc.ConversionRate);
         }
 
         [Test, Ignore("Holdings are now set to 0 swaps at the start of each launch. Not meaningful.")]
@@ -377,11 +372,11 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         [Test]
         public void PollTickTest()
         {
-            _unit.PollTick(Symbol.Create("GBPUSD", SecurityType.Crypto, Market.GDAX));
+            _unit.PollTick(Symbol.Create("GBPUSD", SecurityType.Forex, Market.FXCM));
             Thread.Sleep(1000);
 
-            // conversion rates are inverted: value = 1 / 1.234
-            Assert.AreEqual(0.8103727714748784440842787682m, _unit.Ticks.First().Price);
+            // conversion rate is the price returned by the QC pricing API
+            Assert.AreEqual(1.234m, _unit.Ticks.First().Price);
         }
 
         [Test]

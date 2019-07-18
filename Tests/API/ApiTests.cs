@@ -171,7 +171,7 @@ namespace QuantConnect.Tests.API
             // Delete the second file
             var deleteFile = _api.DeleteProjectFile(project.Projects.First().ProjectId, secondRealFile.Name);
             Assert.IsTrue(deleteFile.Success);
-            
+
             // Read files
             var readFilesAgain = _api.ReadProjectFiles(project.Projects.First().ProjectId);
             Assert.IsTrue(readFilesAgain.Success);
@@ -196,7 +196,7 @@ namespace QuantConnect.Tests.API
             BrokerageEnvironment environment = BrokerageEnvironment.Paper;
             string account = "";
 
-            // Oanda Custom Variables 
+            // Oanda Custom Variables
             string accessToken = "";
             var dateIssuedString = "20160920";
 
@@ -238,7 +238,7 @@ namespace QuantConnect.Tests.API
                         accessToken = Config.Get("oanda-access-token");
                         account     = Config.Get("oanda-account-id");
 
-                        settings = new OandaLiveAlgorithmSettings(accessToken, environment, account); 
+                        settings = new OandaLiveAlgorithmSettings(accessToken, environment, account);
                         Assert.IsTrue(settings.Id == BrokerageName.OandaBrokerage.ToString());
                         break;
                     case BrokerageName.TradierBrokerage:
@@ -384,7 +384,7 @@ namespace QuantConnect.Tests.API
                 Name = "main.cs",
                 Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs")
             };
-             
+
 
             // Create a new project
             var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
@@ -597,6 +597,47 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
+        /// Test read price API for given symbol
+        /// </summary>
+        [Test]
+        public void ReadPriceWorksCorrectlyFor1Symbol()
+        {
+            var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var pricesList = _api.ReadPrices(new [] { spy });
+
+            Assert.IsTrue(pricesList.Success);
+            Assert.AreEqual(pricesList.Prices.Count, 1);
+
+            var price = pricesList.Prices.First();
+            Assert.AreEqual(price.Symbol, spy);
+            Assert.AreNotEqual(price.Price, 0);
+            var updated = price.Updated;
+            var reference = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3));
+            Assert.IsTrue(updated > reference);
+        }
+
+        /// <summary>
+        /// Test read price API for multiple symbols
+        /// </summary>
+        [Test]
+        public void ReadPriceWorksCorrectlyForMultipleSymbols()
+        {
+            var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var pricesList = _api.ReadPrices(new[] { spy, aapl });
+
+            Assert.IsTrue(pricesList.Success);
+            Assert.AreEqual(pricesList.Prices.Count, 2);
+
+            Assert.IsTrue(pricesList.Prices.All(x => x.Price != 0));
+            Assert.AreEqual(pricesList.Prices.Count(x => x.Symbol == aapl), 1);
+            Assert.AreEqual(pricesList.Prices.Count(x => x.Symbol == spy), 1);
+
+            var reference = DateTime.UtcNow.Subtract(TimeSpan.FromDays(3));
+            Assert.IsTrue(pricesList.Prices.All(x => x.Updated > reference));
+        }
+
+        /// <summary>
         /// Test downloading non existent data
         /// </summary>
         [Test]
@@ -649,6 +690,31 @@ namespace QuantConnect.Tests.API
             var projectName = DateTime.UtcNow.ToString("u") + " Test " + _testAccount + " Lang " + language;
 
             Perform_CreateCompileBactest_Tests(projectName, language, algorithmName, code);
+        }
+
+        [Test]
+        public void GetsSplits()
+        {
+            var date = new DateTime(2014, 06, 09);
+            var AAPL = new Symbol(SecurityIdentifier.Parse("AAPL R735QTJ8XC9X"), "AAPL");
+            var splits = _api.GetSplits(date, date);
+            var aapl = splits.Single(s => s.Symbol == AAPL);
+            Assert.AreEqual((1 / 7m).RoundToSignificantDigits(6), aapl.SplitFactor);
+            Assert.AreEqual(date, aapl.Time);
+            Assert.AreEqual(SplitType.SplitOccurred, aapl.Type);
+            Assert.AreEqual(645.57m, aapl.ReferencePrice);
+        }
+
+        [Test]
+        public void GetDividends()
+        {
+            var date = new DateTime(2018, 05, 11);
+            var AAPL = new Symbol(SecurityIdentifier.Parse("AAPL R735QTJ8XC9X"), "AAPL");
+            var dividends = _api.GetDividends(date, date);
+            var aapl = dividends.Single(s => s.Symbol == AAPL);
+            Assert.AreEqual(0.73m, aapl.Distribution);
+            Assert.AreEqual(date, aapl.Time);
+            Assert.AreEqual(190.03m, aapl.ReferencePrice);
         }
 
         private void Perform_CreateCompileBactest_Tests(string projectName, Language language, string algorithmName, string code)

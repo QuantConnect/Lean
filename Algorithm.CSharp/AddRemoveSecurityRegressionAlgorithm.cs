@@ -14,8 +14,10 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -26,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="assets" />
     /// <meta name="tag" content="regression test" />
-    public class AddRemoveSecurityRegressionAlgorithm : QCAlgorithm
+    public class AddRemoveSecurityRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private DateTime lastAction;
 
@@ -93,5 +95,41 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug(Time + ": Filled: " + Transactions.GetOrderById(orderEvent.OrderId));
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "5"},
+            {"Average Win", "0.49%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "305.340%"},
+            {"Drawdown", "1.400%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "1.805%"},
+            {"Sharpe Ratio", "6.475"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0.003"},
+            {"Beta", "82.247"},
+            {"Annual Standard Deviation", "0.141"},
+            {"Annual Variance", "0.02"},
+            {"Information Ratio", "6.401"},
+            {"Tracking Error", "0.141"},
+            {"Treynor Ratio", "0.011"},
+            {"Total Fees", "$26.40"}
+        };
     }
 }

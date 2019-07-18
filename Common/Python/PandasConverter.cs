@@ -87,7 +87,7 @@ namespace QuantConnect.Python
                     return _pandas.DataFrame();
                 }
                 var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(maxLevels));
-                return _pandas.concat(dataFrames.ToArray());
+                return _pandas.concat(dataFrames.ToArray(), Py.kw("sort", true));
             }
         }
 

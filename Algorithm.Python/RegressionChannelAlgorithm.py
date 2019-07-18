@@ -23,7 +23,6 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
 
 import numpy as np
-import decimal as d
 from datetime import timedelta, datetime
 
 ### <summary>

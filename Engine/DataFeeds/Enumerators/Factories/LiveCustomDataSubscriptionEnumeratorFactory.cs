@@ -105,9 +105,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 return enumerator;
             });
 
-            // prevent calls to the enumerator stack if current is in the future
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
-            return new FrontierAwareEnumerator(refresher, _timeProvider, timeZoneOffsetProvider);
+            return refresher;
         }
 
         private IEnumerator<BaseData> EnumerateDataSourceReader(SubscriptionDataConfig config, IDataProvider dataProvider, Ref<DateTime> localFrontier, SubscriptionDataSource source, DateTime localDate)
@@ -121,12 +119,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     // always skip past all times emitted on the previous invocation of this enumerator
                     // this allows data at the same time from the same refresh of the source while excluding
                     // data from different refreshes of the source
-                    if (datum.EndTime > localFrontier.Value)
+                    if (datum != null && datum.EndTime > localFrontier.Value)
                     {
                         yield return datum;
                     }
+                    else if (!SourceRequiresFastForward(source))
+                    {
+                        // if the 'source' is Rest and there is no new value,
+                        // we return null, else we will be caught in a tight loop
+                        // because Rest source never ends!
+                        yield return null;
+                    }
 
-                    newLocalFrontier = Time.Max(datum.EndTime, newLocalFrontier);
+                    if (datum != null)
+                    {
+                        newLocalFrontier = Time.Max(datum.EndTime, newLocalFrontier);
+                    }
                 }
 
                 localFrontier.Value = newLocalFrontier;

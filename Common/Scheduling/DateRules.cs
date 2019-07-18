@@ -67,6 +67,13 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Specifies an event should fire on each of the specified days of week
         /// </summary>
+        /// <param name="day">The day the event shouls fire</param>
+        /// <returns>A date rule that fires on every specified day of week</returns>
+        public IDateRule Every(DayOfWeek day) => Every(new[] { day });
+
+        /// <summary>
+        /// Specifies an event should fire on each of the specified days of week
+        /// </summary>
         /// <param name="days">The days the event shouls fire</param>
         /// <returns>A date rule that fires on every specified day of week</returns>
         public IDateRule Every(params DayOfWeek[] days)

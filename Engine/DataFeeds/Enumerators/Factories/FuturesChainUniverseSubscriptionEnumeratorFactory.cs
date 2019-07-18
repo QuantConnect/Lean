@@ -18,10 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -69,21 +67,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         {
             if (_isLiveMode)
             {
-                var localTime = request.StartTimeUtc.ConvertFromUtc(request.Configuration.ExchangeTimeZone);
-
-                // loading the list of futures contracts and converting them into zip entries
-                var symbols = _symbolUniverse.LookupSymbols(request.Security.Symbol.ID.Symbol, request.Security.Type);
-                var zipEntries = symbols.Select(x => new ZipEntryName { Time = localTime, Symbol = x } as BaseData).ToList();
-
-                var underlyingEnumerator = new TradeBarBuilderEnumerator(request.Configuration.Increment, request.Security.Exchange.TimeZone, _timeProvider);
-                underlyingEnumerator.ProcessData(new Tick { Value = 0 });
-
-                // configuring the enumerator
                 var subscriptionConfiguration = GetSubscriptionConfigurations(request).First();
                 var subscriptionRequest = new SubscriptionRequest(request, configuration: subscriptionConfiguration);
-                var configuredEnumerator = _enumeratorConfigurator(subscriptionRequest, underlyingEnumerator);
 
-                return new DataQueueFuturesChainUniverseDataCollectionEnumerator(request.Security.Symbol, configuredEnumerator, zipEntries);
+                return new DataQueueFuturesChainUniverseDataCollectionEnumerator(subscriptionRequest, _symbolUniverse, _timeProvider);
             }
             else
             {

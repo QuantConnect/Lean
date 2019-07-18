@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -68,7 +68,7 @@ namespace QuantConnect
             }
         }
 
-        // 
+        //
         public void OnData(VIX vix)
         {
             _vix = vix.Close;
@@ -91,7 +91,7 @@ namespace QuantConnect
 
         public override string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
         {
-            return "https://www.quandl.com/api/v1/datasets/YAHOO/INDEX_VIX.csv?trim_start=2000-01-01&trim_end=2014-10-31&sort_order=asc&exclude_headers=true";
+            return "https://www.quandl.com/api/v3/datasets/YAHOO/INDEX_VIX.csv?trim_start=2000-01-01&trim_end=2014-10-31&order=asc&exclude_headers=true";
         }
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
         {
@@ -102,13 +102,13 @@ namespace QuantConnect
             //10/27/2014    17.24    17.87    16    16.04    0         16.04
             string[] data = line.Split(',');
             fear.Time = DateTime.ParseExact(data[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            fear.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture); 
+            fear.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
             fear.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
-            fear.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture); 
+            fear.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
             fear.Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
             fear.Symbol = "VIX"; fear.Value = fear.Close;
             //}
-            //catch 
+            //catch
             //{ }
             return fear;
         }

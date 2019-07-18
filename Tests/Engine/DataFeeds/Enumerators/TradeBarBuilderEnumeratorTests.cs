@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         public void AggregatesTicksIntoSecondBars()
         {
             var timeProvider = new ManualTimeProvider(TimeZones.NewYork);
-            var enumerator = new TradeBarBuilderEnumerator(Time.OneSecond, TimeZones.NewYork, timeProvider);
+            var enumerator = new TradeBarBuilderEnumerator(Time.OneSecond, TimeZones.NewYork, timeProvider, false);
 
             // noon new york time
             var currentTime = new DateTime(2015, 10, 08, 12, 0, 0);
@@ -63,8 +63,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNotNull(enumerator.Current);
-            
-            // in the spirit of not duplicating the above code 5 times (OHLCV, we'll assert these ere as well)
+
+            // in the spirit of not duplicating the above code 5 times (OHLCV, we'll assert these here as well)
             var bar = (TradeBar)enumerator.Current;
             Assert.AreEqual(currentTime.AddSeconds(-1), bar.Time);
             Assert.AreEqual(currentTime, bar.EndTime);

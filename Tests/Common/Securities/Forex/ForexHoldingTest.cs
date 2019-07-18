@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,9 @@ namespace QuantConnect.Tests.Common.Securities.Forex
 
             var symbol = Symbol.Create(ticker, SecurityType.Forex, Market.FXCM);
             var pairQuoteCurrency = symbol.Value.Substring(startIndex: 3);
-            var cash = new Cash(pairQuoteCurrency, amount: 100000, conversionRate: conversionRate);
+            var cash = new Cash(pairQuoteCurrency,
+                amount: 100000,
+                conversionRate: conversionRate);
             var subscription = new SubscriptionDataConfig(typeof(QuoteBar), symbol, Resolution.Daily,
                                                           TimeZones.NewYork, TimeZones.NewYork, fillForward: true,
                                                           extendedHours: true, isInternalFeed: true);
@@ -46,14 +48,15 @@ namespace QuantConnect.Tests.Common.Securities.Forex
             var pair = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                                                                cash, subscription,
                                                                new SymbolProperties("", pairQuoteCurrency, 1,
-                                                                                    minimumPriceVariation, lotSize));
+                                                                                    minimumPriceVariation, lotSize), ErrorCurrencyConverter.Instance);
             pair.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             pair.SetFeeModel(new ConstantFeeModel(decimal.Zero));
-            var forexHolding = new ForexHolding(pair);
+            var forexHolding = new ForexHolding(pair, new IdentityCurrencyConverter(Currencies.USD));
             // Act
             forexHolding.SetHoldings(entryPrice, entryQuantity);
             var priceVariation = pips * 10 * minimumPriceVariation;
             forexHolding.UpdateMarketPrice(entryPrice + priceVariation);
+            pair.SetMarketPrice(new Tick(DateTime.Now, pair.Symbol, forexHolding.Price, forexHolding.Price));
             var actualPips = forexHolding.TotalCloseProfitPips();
             // Assert
             Assert.AreEqual(pips, actualPips);

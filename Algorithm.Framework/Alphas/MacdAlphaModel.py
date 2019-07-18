@@ -13,11 +13,14 @@
 
 from clr import AddReference
 AddReference("QuantConnect.Common")
+AddReference("QuantConnect.Algorithm")
 AddReference("QuantConnect.Algorithm.Framework")
 AddReference("QuantConnect.Indicators")
 
 from QuantConnect import *
 from QuantConnect.Indicators import *
+from QuantConnect.Algorithm import *
+from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 
 
@@ -45,7 +48,7 @@ class MacdAlphaModel(AlphaModel):
         self.resolution = resolution
         self.insightPeriod = Time.Multiply(Extensions.ToTimeSpan(resolution), fastPeriod)
         self.bounceThresholdPercent = 0.01
-        self.symbolData = {};
+        self.symbolData = {}
 
         resolutionString = Extensions.GetEnumString(resolution, Resolution)
         movingAverageTypeString = Extensions.GetEnumString(movingAverageType, MovingAverageType)
@@ -75,7 +78,7 @@ class MacdAlphaModel(AlphaModel):
 
             # ignore signal for same direction as previous signal
             if direction == sd.PreviousDirection:
-                continue;
+                continue
 
             insight = Insight.Price(sd.Security.Symbol, self.insightPeriod, direction)
             sd.PreviousDirection = insight.Direction
@@ -97,7 +100,7 @@ class MacdAlphaModel(AlphaModel):
             data = self.symbolData.pop(removed.Symbol, None)
             if data is not None:
                 # clean up our consolidator
-                algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator);
+                algorithm.SubscriptionManager.RemoveConsolidator(removed.Symbol, data.Consolidator)
 
 class SymbolData:
     def __init__(self, algorithm, security, fastPeriod, slowPeriod, signalPeriod, movingAverageType, resolution):

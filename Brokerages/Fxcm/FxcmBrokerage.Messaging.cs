@@ -29,6 +29,7 @@ using NodaTime;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Brokerages.Fxcm
 {
@@ -58,7 +59,7 @@ namespace QuantConnect.Brokerages.Fxcm
         private readonly Dictionary<string, AutoResetEvent> _mapRequestsToAutoResetEvents = new Dictionary<string, AutoResetEvent>();
         private readonly HashSet<string> _pendingHistoryRequests = new HashSet<string>();
 
-        private string _fxcmAccountCurrency = "USD";
+        private string _fxcmAccountCurrency = Currencies.USD;
 
         private void LoadInstruments()
         {
@@ -168,29 +169,6 @@ namespace QuantConnect.Brokerages.Fxcm
                 throw new TimeoutException(string.Format("FxcmBrokerage.GetQuotes(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
 
             return _rates.Where(x => fxcmSymbols.Contains(x.Key)).Select(x => x.Value).ToList();
-        }
-
-        /// <summary>
-        /// Gets the current conversion rate into USD
-        /// </summary>
-        /// <remarks>Synchronous, blocking</remarks>
-        private decimal GetUsdConversion(string currency)
-        {
-            if (currency == "USD")
-                return 1m;
-
-            // determine the correct symbol to choose
-            var normalSymbol = currency + "/USD";
-            var invertedSymbol = "USD/" + currency;
-            var isInverted = _fxcmInstruments.ContainsKey(invertedSymbol);
-            var fxcmSymbol = isInverted ? invertedSymbol : normalSymbol;
-
-            // get current quotes for the instrument
-            var quotes = GetQuotes(new List<string> { fxcmSymbol });
-
-            var rate = (decimal)(quotes[0].getBidClose() + quotes[0].getAskClose()) / 2;
-
-            return isInverted ? 1 / rate : rate;
         }
 
         #region IGenericMessageListener implementation
@@ -403,9 +381,12 @@ namespace QuantConnect.Brokerages.Fxcm
                     // existing order
                     if (!OrderIsBeingProcessed(orderStatus.getCode()))
                     {
-                        order.PriceCurrency = message.getCurrency();
+                        var security = _securityProvider.GetSecurity(order.Symbol);
+                        order.PriceCurrency = security.SymbolProperties.QuoteCurrency;
 
-                        var orderEvent = new OrderEvent(order, DateTime.UtcNow, 0)
+                        var orderEvent = new OrderEvent(order,
+                            DateTime.UtcNow,
+                            OrderFee.Zero)
                         {
                             Status = ConvertOrderStatus(orderStatus),
                             FillPrice = Convert.ToDecimal(message.getPrice()),
@@ -415,8 +396,8 @@ namespace QuantConnect.Brokerages.Fxcm
                         // we're catching the first fill so we apply the fees only once
                         if ((int)message.getCumQty() == (int)message.getLastQty() && message.getLastQty() > 0)
                         {
-                            var security = _securityProvider.GetSecurity(order.Symbol);
-                            orderEvent.OrderFee = security.FeeModel.GetOrderFee(security, order);
+                            orderEvent.OrderFee = security.FeeModel.GetOrderFee(
+                                new OrderFeeParameters(security, order));
                         }
 
                         _orderEventQueue.Enqueue(orderEvent);
@@ -426,10 +407,12 @@ namespace QuantConnect.Brokerages.Fxcm
                 {
                     _mapFxcmOrderIdsToOrders[orderId] = order;
                     order.BrokerId.Add(orderId);
-                    order.PriceCurrency = message.getCurrency();
+                    order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
                     // new order
-                    var orderEvent = new OrderEvent(order, DateTime.UtcNow, 0)
+                    var orderEvent = new OrderEvent(order,
+                        DateTime.UtcNow,
+                        OrderFee.Zero)
                     {
                         Status = ConvertOrderStatus(orderStatus)
                     };

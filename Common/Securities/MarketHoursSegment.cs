@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Securities
@@ -69,6 +70,55 @@ namespace QuantConnect.Securities
         public static MarketHoursSegment ClosedAllDay()
         {
             return new MarketHoursSegment(MarketHoursState.Closed, TimeSpan.Zero, Time.OneDay);
+        }
+
+        /// <summary>
+        /// Creates the market hours segments for the specified market open/close times
+        /// </summary>
+        /// <param name="extendedMarketOpen">The extended market open time. If no pre market, set to market open</param>
+        /// <param name="marketOpen">The regular market open time</param>
+        /// <param name="marketClose">The regular market close time</param>
+        /// <param name="extendedMarketClose">The extended market close time. If no post market, set to market close</param>
+        /// <returns>An array of <see cref="MarketHoursSegment"/> representing the specified market open/close times</returns>
+        public static MarketHoursSegment[] GetMarketHoursSegments(
+            TimeSpan extendedMarketOpen,
+            TimeSpan marketOpen,
+            TimeSpan marketClose,
+            TimeSpan extendedMarketClose
+            )
+        {
+            // perform some sanity checks
+            if (marketOpen < extendedMarketOpen)
+            {
+                throw new ArgumentException("Extended market open time must be less than or equal to market open time.");
+            }
+            if (marketClose < marketOpen)
+            {
+                throw new ArgumentException("Market close time must be after market open time.");
+            }
+            if (extendedMarketClose < marketClose)
+            {
+                throw new ArgumentException("Extended market close time must be greater than or equal to market close time.");
+            }
+
+            var segments = new List<MarketHoursSegment>();
+
+            if (extendedMarketOpen != marketOpen)
+            {
+                segments.Add(new MarketHoursSegment(MarketHoursState.PreMarket, extendedMarketOpen, marketOpen));
+            }
+
+            if (marketOpen != TimeSpan.Zero || marketClose != TimeSpan.Zero)
+            {
+                segments.Add(new MarketHoursSegment(MarketHoursState.Market, marketOpen, marketClose));
+            }
+
+            if (marketClose != extendedMarketClose)
+            {
+                segments.Add(new MarketHoursSegment(MarketHoursState.PostMarket, marketClose, extendedMarketClose));
+            }
+
+            return segments.ToArray();
         }
 
         /// <summary>

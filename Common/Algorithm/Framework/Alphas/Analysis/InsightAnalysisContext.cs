@@ -23,6 +23,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
     /// </summary>
     public class InsightAnalysisContext
     {
+        private readonly Lazy<int> _lazyHashCode;
         private DateTime _previousEvaluationTimeUtc;
         private readonly Dictionary<string, object> _contextStorage;
         private readonly TimeSpan _analysisPeriod;
@@ -50,7 +51,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <summary>
         /// Gets ending time of the analysis period
         /// </summary>
-        public DateTime AnalysisEndTimeUtc { get; }
+        public DateTime AnalysisEndTimeUtc { get; private set; }
 
         /// <summary>
         /// Gets the initial values. These are values of price/volatility at the time the insight was generated
@@ -95,10 +96,22 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 
             _previousEvaluationTimeUtc = CurrentValues.TimeUtc;
 
-            var barSize = Time.Max(analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), Time.OneMinute);
-            var barCount = (int)(insight.Period.Ticks / barSize.Ticks);
-            AnalysisEndTimeUtc = Time.GetEndTimeForTradeBars(initialValues.ExchangeHours, insight.CloseTimeUtc, analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), barCount, false);
+            // this will always be equal when the InsightManager is initialized with extraAnalysisPeriodRatio == 0
+            // this is the way LEAN run in the cloud and locally, but support for non-zero ratios are left in for posterity
+            // by short-circuiting this here, we guarantee that analysis end time and close time are identical
+            if (analysisPeriod == insight.Period)
+            {
+                AnalysisEndTimeUtc = insight.CloseTimeUtc;
+            }
+            else
+            {
+                var barSize = Time.Max(analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), Time.OneMinute);
+                var barCount = (int)(insight.Period.Ticks / barSize.Ticks);
+                AnalysisEndTimeUtc = Time.GetEndTimeForTradeBars(initialValues.ExchangeHours, insight.CloseTimeUtc, analysisPeriod.ToHigherResolutionEquivalent(false).ToTimeSpan(), barCount, false);
+            }
+
             _analysisPeriod = AnalysisEndTimeUtc - initialValues.TimeUtc;
+            _lazyHashCode = new Lazy<int>(() => Id.GetHashCode());
         }
 
         /// <summary>
@@ -111,6 +124,12 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
             if (values.TimeUtc >= Insight.CloseTimeUtc)
             {
                 InsightPeriodClosed = true;
+                if (Insight.Period == Time.EndOfTimeTimeSpan)
+                {
+                    // Special case, see OrderBasedInsightGenerator
+                    AnalysisEndTimeUtc = Insight.CloseTimeUtc;
+                    Insight.Period = Insight.CloseTimeUtc - Insight.GeneratedTimeUtc;
+                }
             }
 
             CurrentValues = values;
@@ -151,7 +170,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <returns>True to proceed with analyzing this insight for the specified score type, false to skip analysis of the score type</returns>
         public bool ShouldAnalyze(InsightScoreType scoreType)
         {
-            if (scoreType == InsightScoreType.Magnitude)
+            if (Insight.Direction == InsightDirection.Flat)
+            {
+                return false;
+            }
+            else if (scoreType == InsightScoreType.Magnitude)
             {
                 return Insight.Magnitude.HasValue;
             }
@@ -172,7 +195,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// <filterpriority>2</filterpriority>
         public override int GetHashCode()
         {
-            return Id.GetHashCode();
+            return _lazyHashCode.Value;
         }
 
         /// <summary>Determines whether the specified object is equal to the current object.</summary>

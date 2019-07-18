@@ -123,28 +123,42 @@ namespace QuantConnect.Parameters
             foreach (var type in assembly.GetTypes())
             {
                 Log.Debug("ParameterAttribute.GetParametersFromAssembly(): Checking type " + type.Name);
-                foreach (var field in type.GetFields(BindingFlags))
+                foreach (var kvp in GetParametersFromType(type))
                 {
-                    var attribute = field.GetCustomAttribute<ParameterAttribute>();
-                    if (attribute != null)
-                    {
-                        var parameterName = attribute.Name ?? field.Name;
-                        parameters[parameterName] = field.FieldType.GetBetterTypeName();
-                    }
-                }
-                foreach (var property in type.GetProperties(BindingFlags))
-                {
-                    // ignore non-writeable properties
-                    if (!property.CanWrite) continue;
-                    var attribute = property.GetCustomAttribute<ParameterAttribute>();
-                    if (attribute != null)
-                    {
-                        var parameterName = attribute.Name ?? property.Name;
-                        parameters[parameterName] = property.PropertyType.Name;
-                    }
+                    parameters[kvp.Key] = kvp.Value;
                 }
             }
             return parameters;
+        }
+
+        /// <summary>
+        /// Resolves all parameter attributes from the specified type
+        /// </summary>
+        /// <param name="type">The type to inspect</param>
+        /// <returns>Parameters dictionary keyed by parameter name with a value of the member type</returns>
+        public static IEnumerable<KeyValuePair<string, string>> GetParametersFromType(Type type)
+        {
+            foreach (var field in type.GetFields(BindingFlags))
+            {
+                var attribute = field.GetCustomAttribute<ParameterAttribute>();
+                if (attribute != null)
+                {
+                    var parameterName = attribute.Name ?? field.Name;
+                    yield return new KeyValuePair<string, string>(parameterName, field.FieldType.GetBetterTypeName());
+                }
+            }
+
+            foreach (var property in type.GetProperties(BindingFlags))
+            {
+                // ignore non-writeable properties
+                if (!property.CanWrite) continue;
+                var attribute = property.GetCustomAttribute<ParameterAttribute>();
+                if (attribute != null)
+                {
+                    var parameterName = attribute.Name ?? property.Name;
+                    yield return new KeyValuePair<string, string>(parameterName, property.PropertyType.GetBetterTypeName());
+                }
+            }
         }
     }
 }

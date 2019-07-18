@@ -34,8 +34,6 @@ namespace QuantConnect.Python
         {
             // Python Data class: Converts custom data (PythonData) into a python object'''
             _converter = PythonEngine.ModuleFromString("converter",
-                "import decimal\n" +
-
                 "class Data(object):\n" +
                 "    def __init__(self, data):\n" +
                 "        self.data = data\n" +
@@ -44,7 +42,7 @@ namespace QuantConnect.Python
                 "            setattr(self, member, getattr(data, member))\n" +
                 "        for kvp in data.GetStorageDictionary():\n" +
                 "           name = kvp.Key.replace('-',' ').replace('.',' ').title().replace(' ', '')\n" +
-                "           value = decimal.Decimal(kvp.Value) if isinstance(kvp.Value, float) else kvp.Value\n" +
+                "           value = kvp.Value if isinstance(kvp.Value, float) else kvp.Value\n" +
                 "           setattr(self, name, value)\n" +
 
                 "    def __str__(self):\n" +

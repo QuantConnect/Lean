@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Securities;
+using DayOfWeek = System.DayOfWeek;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -236,6 +237,25 @@ namespace QuantConnect.Tests.Common.Securities
             stopwatch.Stop();
 
             Console.WriteLine("forex1: " + stopwatch.Elapsed);
+        }
+
+        [Test]
+        public void RegularMarketDurationIsFromMostCommonLocalMarketHours()
+        {
+            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, Enumerable.Empty<DateTime>(),
+                new Dictionary<DayOfWeek, LocalMarketHours>
+                {
+                    // fake market hours schedule with random durations, the most common of which is 5 hours and 2 hours, it will pick the larger
+                    {DayOfWeek.Sunday, new LocalMarketHours(DayOfWeek.Sunday, TimeSpan.FromHours(4), TimeSpan.FromHours(6))},           //2hr
+                    {DayOfWeek.Monday, new LocalMarketHours(DayOfWeek.Monday, TimeSpan.FromHours(13), TimeSpan.FromHours(15))},         //2hr
+                    {DayOfWeek.Tuesday, new LocalMarketHours(DayOfWeek.Tuesday, TimeSpan.FromHours(5), TimeSpan.FromHours(10))},        //5hr
+                    {DayOfWeek.Wednesday, new LocalMarketHours(DayOfWeek.Wednesday, TimeSpan.FromHours(5), TimeSpan.FromHours(10))},    //5hr
+                    {DayOfWeek.Thursday, new LocalMarketHours(DayOfWeek.Thursday, TimeSpan.FromHours(1), TimeSpan.FromHours(23))},      //22hr
+                    {DayOfWeek.Friday, new LocalMarketHours(DayOfWeek.Friday, TimeSpan.FromHours(0), TimeSpan.FromHours(23))},          //23hr
+                    {DayOfWeek.Saturday, new LocalMarketHours(DayOfWeek.Saturday, TimeSpan.FromHours(3), TimeSpan.FromHours(23))},      //20hr
+                }, new Dictionary<DateTime, TimeSpan>());
+
+            Assert.AreEqual(TimeSpan.FromHours(5), exchangeHours.RegularMarketDuration);
         }
 
         public static SecurityExchangeHours CreateForexSecurityExchangeHours()

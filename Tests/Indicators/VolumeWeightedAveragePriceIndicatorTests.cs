@@ -1,8 +1,8 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  * 
@@ -23,10 +23,19 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class VolumeWeightedAveragePriceIndicatorTests
+    public class VolumeWeightedAveragePriceIndicatorTests : CommonIndicatorTests<TradeBar>
     {
+        protected override IndicatorBase<TradeBar> CreateIndicator()
+        {
+            return new VolumeWeightedAveragePriceIndicator(50);
+        }
+
+        protected override string TestFileName => "spy_with_vwap.txt";
+
+        protected override string TestColumnName => "Moving VWAP 50";
+
         [Test]
-        public void VWAPComputesCorrectly()
+        public void VwapComputesCorrectly()
         {
             const int period = 4;
             const int volume = 100;
@@ -34,7 +43,7 @@ namespace QuantConnect.Tests.Indicators
             var data = new[] {1m, 10m, 100m, 1000m, 10000m, 1234m, 56789m};
 
             var seen = new List<decimal>();
-            for (int i = 0; i < data.Length; i++)
+            for (var i = 0; i < data.Length; i++)
             {
                 var datum = data[i];
                 seen.Add(datum);
@@ -59,28 +68,19 @@ namespace QuantConnect.Tests.Indicators
         [Test]
         public void ResetsProperly()
         {
-            var ind = new VolumeWeightedAveragePriceIndicator(50);
+            var ind = CreateIndicator();
 
-            foreach (var data in TestHelper.GetTradeBarStream("spy_with_vwap.txt"))
+            foreach (var data in TestHelper.GetTradeBarStream(TestFileName))
             {
                 ind.Update(data);
             }
             Assert.IsTrue(ind.IsReady);
-            
+
             ind.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(ind);
             ind.Update(new TradeBar(DateTime.UtcNow, Symbols.SPY, 2m, 2m, 2m, 2m, 1));
             Assert.AreEqual(ind.Current.Value, 2m);
-        }
-
-        [Test]
-        public void CompareAgainstExternalData()
-        {
-            var ind = new VolumeWeightedAveragePriceIndicator(50);
-            TestHelper.TestIndicator(ind, "spy_with_vwap.txt", "Moving VWAP 50",
-                (x, expected) => Assert.AreEqual(expected, (double)((VolumeWeightedAveragePriceIndicator)x).Current.Value, 1e-3));
-            
         }
     }
 }

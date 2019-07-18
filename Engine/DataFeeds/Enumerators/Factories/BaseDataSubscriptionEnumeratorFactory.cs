@@ -75,10 +75,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             {
                 foreach (var date in _tradableDaysProvider(request))
                 {
-                    var currentSymbol = request.Configuration.MappedSymbol;
                     request.Configuration.MappedSymbol = GetMappedSymbol(request, date);
                     var source = sourceFactory.GetSource(request.Configuration, date, _isLiveMode);
-                    request.Configuration.MappedSymbol = currentSymbol;
                     var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, request.Configuration, date, _isLiveMode);
                     var entriesForDate = factory.Read(source);
                     foreach (var entry in entriesForDate)
@@ -99,12 +97,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                         _mapFileResolver.ResolveMapFile(config.Symbol.Underlying.ID.Symbol, config.Symbol.Underlying.ID.Date) :
                         _mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
 
-                return mapFile.GetMappedSymbol(date);
+                return mapFile.GetMappedSymbol(date, config.MappedSymbol);
             }
-            else
-            {
-                return config.MappedSymbol;
-            }
+            return config.MappedSymbol;
         }
     }
 }

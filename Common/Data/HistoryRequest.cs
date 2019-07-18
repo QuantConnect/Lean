@@ -16,9 +16,7 @@
 
 using System;
 using NodaTime;
-using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -27,6 +25,8 @@ namespace QuantConnect.Data
     /// </summary>
     public class HistoryRequest
     {
+        private Resolution? _fillForwardResolution;
+
         /// <summary>
         /// Gets the start time of the request.
         /// </summary>
@@ -53,9 +53,20 @@ namespace QuantConnect.Data
         public Resolution Resolution { get; set; }
 
         /// <summary>
-        /// Gets the requested fill forward resolution, set to null for no fill forward behavior
+        /// Gets the requested fill forward resolution, set to null for no fill forward behavior.
+        /// Will always return null when Resolution is set to Tick.
         /// </summary>
-        public Resolution? FillForwardResolution { get; set; }
+        public Resolution? FillForwardResolution
+        {
+            get
+            {
+                return Resolution == Resolution.Tick ? null : _fillForwardResolution;
+            }
+            set
+            {
+                _fillForwardResolution = value;
+            }
+        }
 
         /// <summary>
         /// Gets whether or not to include extended market hours data, set to false for only normal market hours

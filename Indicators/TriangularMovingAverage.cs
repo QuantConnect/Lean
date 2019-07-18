@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ namespace QuantConnect.Indicators
     /// (1) When the period is even, TRIMA(x,period)=SMA(SMA(x,period/2),(period/2)+1)
     /// (2) When the period is odd,  TRIMA(x,period)=SMA(SMA(x,(period+1)/2),(period+1)/2)
     /// </summary>
-    public class TriangularMovingAverage : IndicatorBase<IndicatorDataPoint>
+    public class TriangularMovingAverage : Indicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly int _period;
         private readonly SimpleMovingAverage _sma1;
@@ -49,17 +49,19 @@ namespace QuantConnect.Indicators
         /// </summary> 
         /// <param name="period">The period of the indicator</param>
         public TriangularMovingAverage(int period)
-            : this("TRIMA" + period, period)
+            : this($"TRIMA({period})", period)
         {
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return Samples >= _period; }
-        }
+        public override bool IsReady => Samples >= _period;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => _period;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state

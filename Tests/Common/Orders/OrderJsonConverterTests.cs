@@ -19,6 +19,7 @@ using System.IO;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Orders;
+using QuantConnect.Orders.TimeInForces;
 
 namespace QuantConnect.Tests.Common.Orders
 {
@@ -201,7 +202,7 @@ namespace QuantConnect.Tests.Common.Orders
             var order = JsonConvert.DeserializeObject<Order>(json);
             Assert.IsInstanceOf<MarketOrder>(order);
             Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
-            Assert.AreEqual(1, (int)order.TimeInForce);
+            Assert.IsTrue(order.TimeInForce is DayTimeInForce);
         }
 
         [Test]
@@ -234,7 +235,44 @@ namespace QuantConnect.Tests.Common.Orders
             var order = JsonConvert.DeserializeObject<Order>(json);
             Assert.IsInstanceOf<MarketOrder>(order);
             Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
-            Assert.AreEqual(1, (int)order.TimeInForce);
+            Assert.IsTrue(order.TimeInForce is DayTimeInForce);
+        }
+
+        [Test]
+        public void DeserializesOldDurationValueProperty()
+        {
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                Converters = { new OrderJsonConverter() }
+            };
+
+            // The DurationValue property has been moved to GoodTilDateTimeInforce.Expiry,
+            // we still want to deserialize old JSON files containing Duration.
+            const string json = @"{'Type':0,
+'Value':99986.827413672,
+'Id':1,
+'ContingentId':0,
+'BrokerId':[1],
+'Symbol':{'Value':'SPY',
+'Permtick':'SPY'},
+'Price':100.086914328,
+'Time':'2010-03-04T14:31:00Z',
+'Quantity':999,
+'Status':3,
+'Duration':2,
+'DurationValue':'2010-04-04T14:31:00Z',
+'Tag':'',
+'SecurityType':1,
+'Direction':0,
+'AbsoluteQuantity':999}";
+
+            var order = JsonConvert.DeserializeObject<Order>(json);
+            Assert.IsInstanceOf<MarketOrder>(order);
+            Assert.AreEqual(Market.USA, order.Symbol.ID.Market);
+            Assert.IsTrue(order.TimeInForce is GoodTilDateTimeInForce);
+
+            var timeInForce = (GoodTilDateTimeInForce)order.TimeInForce;
+            Assert.AreEqual(new DateTime(2010, 4, 4, 14, 31, 0), timeInForce.Expiry);
         }
 
         [Test]
@@ -242,6 +280,37 @@ namespace QuantConnect.Tests.Common.Orders
         {
             var expected = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today);
             TestOrderType(expected);
+        }
+
+        [Test]
+        public void DeserializesOrderGoodTilCanceledTimeInForce()
+        {
+            var orderProperties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
+            var expected = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today, "", orderProperties);
+            TestOrderType(expected);
+        }
+
+        [Test]
+        public void DeserializesOrderDayTimeInForce()
+        {
+            var orderProperties = new OrderProperties { TimeInForce = TimeInForce.Day };
+            var expected = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today, "", orderProperties);
+            TestOrderType(expected);
+        }
+
+        [Test]
+        public void DeserializesOrderGoodTilDateTimeInForce()
+        {
+            var expiry = new DateTime(2018, 5, 26);
+            var orderProperties = new OrderProperties { TimeInForce = TimeInForce.GoodTilDate(expiry) };
+            var expected = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.Today, "", orderProperties);
+            TestOrderType(expected);
+
+            var json = JsonConvert.SerializeObject(expected);
+            var actual = DeserializeOrder<MarketOrder>(json);
+
+            var gtd = (GoodTilDateTimeInForce)actual.Properties.TimeInForce;
+            Assert.AreEqual(expiry, gtd.Expiry);
         }
 
         private static T TestOrderType<T>(T expected)
@@ -256,8 +325,7 @@ namespace QuantConnect.Tests.Common.Orders
             CollectionAssert.AreEqual(expected.BrokerId, actual.BrokerId);
             Assert.AreEqual(expected.ContingentId, actual.ContingentId);
             Assert.AreEqual(expected.Direction, actual.Direction);
-            Assert.AreEqual(expected.TimeInForce, actual.TimeInForce);
-            Assert.AreEqual(expected.DurationValue, actual.DurationValue);
+            Assert.AreEqual(expected.TimeInForce.GetType(), actual.TimeInForce.GetType());
             Assert.AreEqual(expected.Id, actual.Id);
             Assert.AreEqual(expected.Price, actual.Price);
             Assert.AreEqual(expected.SecurityType, actual.SecurityType);

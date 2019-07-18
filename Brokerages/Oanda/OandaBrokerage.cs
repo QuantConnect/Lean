@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Forex;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 using Order = QuantConnect.Orders.Order;
 
@@ -32,6 +33,7 @@ namespace QuantConnect.Brokerages.Oanda
     /// <summary>
     /// Oanda Brokerage implementation
     /// </summary>
+    [BrokerageFactory(typeof(OandaBrokerageFactory))]
     public class OandaBrokerage : Brokerage, IDataQueueHandler
     {
         private readonly OandaSymbolMapper _symbolMapper = new OandaSymbolMapper();
@@ -98,7 +100,7 @@ namespace QuantConnect.Brokerages.Oanda
         }
 
         /// <summary>
-        /// Gets all open orders on the account. 
+        /// Gets all open orders on the account.
         /// NOTE: The order objects returned do not have QC order IDs.
         /// </summary>
         /// <returns>The open orders returned from Oanda</returns>
@@ -141,9 +143,31 @@ namespace QuantConnect.Brokerages.Oanda
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
-            return _api.GetCashBalance();
+            var balances = _api.GetCashBalance().ToDictionary(x => x.Currency);
+
+            // include cash balances from currency swaps for open Forex positions
+            foreach (var holding in GetAccountHoldings().Where(x => x.Symbol.SecurityType == SecurityType.Forex))
+            {
+                string baseCurrency;
+                string quoteCurrency;
+                Forex.DecomposeCurrencyPair(holding.Symbol.Value, out baseCurrency, out quoteCurrency);
+
+                var baseQuantity = holding.Quantity;
+                CashAmount baseCurrencyAmount;
+                balances[baseCurrency] = balances.TryGetValue(baseCurrency, out baseCurrencyAmount)
+                    ? new CashAmount(baseQuantity + baseCurrencyAmount.Amount, baseCurrency)
+                    : new CashAmount(baseQuantity, baseCurrency);
+
+                var quoteQuantity = -holding.Quantity * holding.AveragePrice;
+                CashAmount quoteCurrencyAmount;
+                balances[quoteCurrency] = balances.TryGetValue(quoteCurrency, out quoteCurrencyAmount)
+                    ? new CashAmount(quoteQuantity + quoteCurrencyAmount.Amount, quoteCurrency)
+                    : new CashAmount(quoteQuantity, quoteCurrency);
+            }
+
+            return balances.Values.ToList();
         }
 
         /// <summary>

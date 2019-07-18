@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,10 +22,10 @@ namespace QuantConnect.Indicators
     /// The Kaufman Adaptive Moving Average is calculated as explained here:
     /// http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:kaufman_s_adaptive_moving_average
     /// </summary>
-    public class KaufmanAdaptiveMovingAverage : WindowIndicator<IndicatorDataPoint>
+    public class KaufmanAdaptiveMovingAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
-        private const decimal ConstMax = 2m / (30m + 1m);
-        private const decimal ConstDiff = 2m / (2m + 1m) - ConstMax;
+        private const decimal _constMax = 2m / (30m + 1m);
+        private const decimal _constDiff = 2m / (2m + 1m) - _constMax;
 
         private decimal _sumRoc1;
         private decimal _periodRoc;
@@ -47,17 +47,19 @@ namespace QuantConnect.Indicators
         /// </summary> 
         /// <param name="period">The period of the KAMA</param>
         public KaufmanAdaptiveMovingAverage(int period)
-            : this("KAMA" + period, period)
+            : this($"KAMA({period})", period)
         {
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return Samples >= Period; }
-        }
+        public override bool IsReady => Samples >= Period;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => Period;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -109,7 +111,7 @@ namespace QuantConnect.Indicators
             var efficiencyRatio = (_sumRoc1 <= _periodRoc) || _sumRoc1 == 0 ? 1m : Math.Abs(_periodRoc / _sumRoc1);
 
             // Calculate the smoothing constant
-            var smoothingConstant = efficiencyRatio * ConstDiff + ConstMax;
+            var smoothingConstant = efficiencyRatio * _constDiff + _constMax;
             smoothingConstant *= smoothingConstant;
 
             // Calculate the KAMA like an EMA, using the

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,11 +14,13 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Brokerages;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -28,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
     /// <meta name="tag" content="trading and orders" />
-    public class BasicTemplateCryptoAlgorithm : QCAlgorithm
+    public class BasicTemplateCryptoAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private ExponentialMovingAverage _fast;
         private ExponentialMovingAverage _slow;
@@ -48,16 +50,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Set Strategy Cash (EUR)
             // EUR/USD conversion rate will be updated dynamically
-            SetCash("EUR", 10000, 1.23m);
+            SetCash("EUR", 10000);
 
             // Add some coins as initial holdings
             // When connected to a real brokerage, the amount specified in SetCash
             // will be replaced with the amount in your actual account.
-            SetCash("BTC", 1m, 7300m);
-            SetCash("ETH", 5m, 400m);
-
-            // Note: the conversion rates above are required in backtesting (for now) because of this issue:
-            // https://github.com/QuantConnect/Lean/issues/1859
+            SetCash("BTC", 1m);
+            SetCash("ETH", 5m);
 
             SetBrokerageModel(BrokerageName.GDAX, AccountType.Cash);
 
@@ -83,6 +82,18 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            if (Portfolio.CashBook["EUR"].ConversionRate == 0
+                || Portfolio.CashBook["BTC"].ConversionRate == 0
+                || Portfolio.CashBook["ETH"].ConversionRate == 0
+                || Portfolio.CashBook["LTC"].ConversionRate == 0)
+            {
+                Log($"EUR conversion rate: {Portfolio.CashBook["EUR"].ConversionRate}");
+                Log($"BTC conversion rate: {Portfolio.CashBook["BTC"].ConversionRate}");
+                Log($"LTC conversion rate: {Portfolio.CashBook["LTC"].ConversionRate}");
+                Log($"ETH conversion rate: {Portfolio.CashBook["ETH"].ConversionRate}");
+
+                throw new Exception("Conversion rate is 0");
+            }
             if (Time.Hour == 1 && Time.Minute == 0)
             {
                 // Sell all ETH holdings with a limit order at 1% above the current price
@@ -176,5 +187,41 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"{Time} - TotalPortfolioValue: {Portfolio.TotalPortfolioValue}");
             Log($"{Time} - CashBook: {Portfolio.CashBook}");
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "10"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-0.13%"},
+            {"Compounding Annual Return", "-99.979%"},
+            {"Drawdown", "3.500%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "-2.288%"},
+            {"Sharpe Ratio", "-11.335"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-5.739"},
+            {"Beta", "413.859"},
+            {"Annual Standard Deviation", "0.254"},
+            {"Annual Variance", "0.065"},
+            {"Information Ratio", "-11.39"},
+            {"Tracking Error", "0.254"},
+            {"Treynor Ratio", "-0.007"},
+            {"Total Fees", "$85.34"}
+        };
     }
 }

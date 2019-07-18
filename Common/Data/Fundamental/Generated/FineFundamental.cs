@@ -64,6 +64,16 @@ namespace QuantConnect.Data.Fundamental
 		public ValuationRatios ValuationRatios { get; set; }
 
 		/// <summary>
+		/// The instance of the CompanyProfile class
+		/// </summary>
+		public CompanyProfile CompanyProfile { get; set; }
+
+		/// <summary>
+		/// The instance of the AssetClassification class
+		/// </summary>
+		public AssetClassification AssetClassification { get; set; }
+
+		/// <summary>
 		/// Creates an instance of the FineFundamental class
 		/// </summary>
 		public FineFundamental()
@@ -77,24 +87,28 @@ namespace QuantConnect.Data.Fundamental
 			OperationRatios = new OperationRatios();
 			EarningRatios = new EarningRatios();
 			ValuationRatios = new ValuationRatios();
+			CompanyProfile = new CompanyProfile();
+			AssetClassification = new AssetClassification();
 		}
 
 		/// <summary>
-		/// Sets values for non existing periods from a previous instance
+		/// Applies updated values from <paramref name="update"/> to this instance
 		/// </summary>
-		/// <remarks>Used to fill-forward values from previous dates</remarks>
-		/// <param name="previous">The previous instance</param>
-		public void UpdateValues(FineFundamental previous)
+		/// <remarks>Used to apply data updates to the current instance. This WILL overwrite existing values. Default update values are ignored.</remarks>
+		/// <param name="update">The next data update for this instance</param>
+		public void UpdateValues(FineFundamental update)
 		{
-			if (previous == null) return;
+			if (update == null) return;
 
-			if (CompanyReference != null) CompanyReference.UpdateValues(previous.CompanyReference);
-			if (SecurityReference != null) SecurityReference.UpdateValues(previous.SecurityReference);
-			if (FinancialStatements != null) FinancialStatements.UpdateValues(previous.FinancialStatements);
-			if (EarningReports != null) EarningReports.UpdateValues(previous.EarningReports);
-			if (OperationRatios != null) OperationRatios.UpdateValues(previous.OperationRatios);
-			if (EarningRatios != null) EarningRatios.UpdateValues(previous.EarningRatios);
-			if (ValuationRatios != null) ValuationRatios.UpdateValues(previous.ValuationRatios);
+			CompanyReference?.UpdateValues(update.CompanyReference);
+			SecurityReference?.UpdateValues(update.SecurityReference);
+			FinancialStatements?.UpdateValues(update.FinancialStatements);
+			EarningReports?.UpdateValues(update.EarningReports);
+			OperationRatios?.UpdateValues(update.OperationRatios);
+			EarningRatios?.UpdateValues(update.EarningRatios);
+			ValuationRatios?.UpdateValues(update.ValuationRatios);
+			CompanyProfile?.UpdateValues(update.CompanyProfile);
+			AssetClassification?.UpdateValues(update.AssetClassification);
 		}
 	}
 }

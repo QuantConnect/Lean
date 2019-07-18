@@ -22,7 +22,7 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Exceptions
 {
-    [TestFixture, Ignore]
+    [TestFixture]
     public class InvalidTokenPythonExceptionInterpreterTests
     {
         private PythonException _pythonException;

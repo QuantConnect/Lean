@@ -36,7 +36,7 @@ namespace QuantConnect.Exceptions
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
         public bool CanInterpret(Exception exception)
         {
-            return 
+            return
                 exception?.GetType() == typeof(PythonException) &&
                 exception.Message.Contains("SyntaxError") &&
                 exception.Message.Contains("invalid token");
@@ -46,7 +46,7 @@ namespace QuantConnect.Exceptions
         /// Interprets the specified exception into a new exception
         /// </summary>
         /// <param name="exception">The exception to be interpreted</param>
-        /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.
+        /// <param name="innerInterpreter">An interpreter that should be applied to the inner exception.</param>
         /// <returns>The interpreted exception</returns>
         public Exception Interpret(Exception exception, IExceptionInterpreter innerInterpreter)
         {

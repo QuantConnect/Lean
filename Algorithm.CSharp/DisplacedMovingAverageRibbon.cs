@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -28,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     ///     A buy signal is when the values of the indicators are increasing (from slowest to fastest).
     ///     A sell signal is when the values of the indicators are decreasing (from slowest to fastest).
     /// </summary>
-    public class DisplacedMovingAverageRibbon : QCAlgorithm
+    public class DisplacedMovingAverageRibbon : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
         private IndicatorBase<IndicatorDataPoint>[] _ribbon;
@@ -149,5 +150,41 @@ namespace QuantConnect.Algorithm.CSharp
             }
             return true;
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "7"},
+            {"Average Win", "19.15%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "16.720%"},
+            {"Drawdown", "12.500%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "152.966%"},
+            {"Sharpe Ratio", "1.275"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0.079"},
+            {"Beta", "4.194"},
+            {"Annual Standard Deviation", "0.128"},
+            {"Annual Variance", "0.016"},
+            {"Information Ratio", "1.119"},
+            {"Tracking Error", "0.128"},
+            {"Treynor Ratio", "0.039"},
+            {"Total Fees", "$46.73"}
+        };
     }
 }

@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
     /// <summary>
     /// The Fractal Adaptive Moving Average (FRAMA) by John Ehlers
     /// </summary>
-    public class FractalAdaptiveMovingAverage : BarIndicator
+    public class FractalAdaptiveMovingAverage : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly int _n = 16;
         private readonly double _w = -4.6;
@@ -40,7 +40,7 @@ namespace QuantConnect.Indicators
         {
             if (n % 2 > 0)
             {
-                throw new ArgumentException($"{name}: N must be even, N = {n}");
+                throw new ArgumentException($"{name}: N must be even, N = {n}", nameof(n));
             }
             _n = n;
             _w = Math.Log(2d / (1 + longPeriod));
@@ -66,7 +66,6 @@ namespace QuantConnect.Indicators
         public FractalAdaptiveMovingAverage(int n)
             : this(n, 198)
         {
-
         }
 
         /// <summary>
@@ -121,6 +120,11 @@ namespace QuantConnect.Indicators
         /// Returns whether the indicator will return valid results
         /// </summary>
         public override bool IsReady => _high.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod => _high.Size;
 
         /// <summary>
         /// Resets the average to its initial state

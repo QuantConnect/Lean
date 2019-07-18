@@ -56,7 +56,7 @@ class UniverseSelectionDefinitionsAlgorithm(QCAlgorithm):
         self.changes = None
 
     def OnData(self, data):
-        if self.changes == None: return
+        if self.changes is None: return
 
         # liquidate securities that fell out of our universe
         for security in self.changes.RemovedSecurities:
@@ -68,7 +68,7 @@ class UniverseSelectionDefinitionsAlgorithm(QCAlgorithm):
             if not security.Invested:
                 self.MarketOrder(security.Symbol, 10)
 
-        self.changes = None;
+        self.changes = None
 
 
     # this event fires whenever we have changes to our universe

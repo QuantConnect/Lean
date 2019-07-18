@@ -13,15 +13,33 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders.Fills;
 
 namespace QuantConnect
 {
     /// <summary>
     /// This class includes user settings for the algorithm which can be changed in the <see cref="IAlgorithm.Initialize"/> method
     /// </summary>
-    public class AlgorithmSettings
+    public class AlgorithmSettings : IAlgorithmSettings
     {
+        /// <summary>
+        /// The absolute maximum valid total portfolio value target percentage
+        /// </summary>
+        /// <remarks>This setting is currently being used to filter out undesired target percent values,
+        /// caused by the <see cref="IPortfolioConstructionModel"/> implementation being used.
+        /// For example rounding errors, math operations</remarks>
+        public decimal MaxAbsolutePortfolioTargetPercentage { get; set; }
+
+        /// <summary>
+        /// The absolute minimum valid total portfolio value target percentage
+        /// </summary>
+        /// <remarks>This setting is currently being used to filter out undesired target percent values,
+        /// caused by the <see cref="IPortfolioConstructionModel"/> implementation being used.
+        /// For example rounding errors, math operations</remarks>
+        public decimal MinAbsolutePortfolioTargetPercentage { get; set; }
+
         /// <summary>
         /// Gets/sets the maximum number of concurrent market data subscriptions available
         /// </summary>
@@ -32,12 +50,39 @@ namespace QuantConnect
         public int DataSubscriptionLimit { get; set; }
 
         /// <summary>
+        /// Gets/sets the SetHoldings buffers value.
+        /// The buffer is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
+        /// </summary>
+        public decimal FreePortfolioValuePercentage { get; set; }
+
+        /// <summary>
+        /// Gets/sets if Liquidate() is enabled
+        /// </summary>
+        public bool LiquidateEnabled { get; set; }
+
+        /// <summary>
+        /// Gets/sets the minimum time span elapsed to consider a market fill price as stale (defaults to one hour)
+        /// </summary>
+        /// <remarks>
+        /// In the default fill models, a warning message will be added to market order fills
+        /// if this time span (or more) has elapsed since the price was last updated.
+        /// </remarks>
+        /// <seealso cref="FillModel"/>
+        /// <seealso cref="ImmediateFillModel"/>
+        public TimeSpan StalePriceTimeSpan { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmSettings"/> class
         /// </summary>
         public AlgorithmSettings()
         {
             // default is unlimited
             DataSubscriptionLimit = int.MaxValue;
+            LiquidateEnabled = true;
+            FreePortfolioValuePercentage = 0.0025m;
+            StalePriceTimeSpan = Time.OneHour;
+            MaxAbsolutePortfolioTargetPercentage = 1000000000;
+            MinAbsolutePortfolioTargetPercentage = 0.0000000001m;
         }
     }
 }

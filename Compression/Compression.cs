@@ -252,7 +252,8 @@ namespace QuantConnect
                     entryStream.Write(bytes, 0, bytes.Length);
                 }
             }
-            return memoryStream.GetBuffer();
+
+            return memoryStream.ToArray();
         }
 
         /// <summary>
@@ -718,15 +719,17 @@ namespace QuantConnect
                     //Ignore Directories
                     if (!zipEntry.IsFile) continue;
 
-                    //Remove the folder from the entry
-                    var entryFileName = Path.GetFileName(zipEntry.Name);
-                    if (entryFileName == null) continue;
-
                     var buffer = new byte[4096];     // 4K is optimum
                     var zipStream = zf.GetInputStream(zipEntry);
 
                     // Manipulate the output filename here as desired.
-                    var fullZipToPath = Path.Combine(outFolder, entryFileName);
+                    var fullZipToPath = Path.Combine(outFolder, zipEntry.Name);
+
+                    var targetFile = new FileInfo(fullZipToPath);
+                    if (targetFile.Directory != null && !targetFile.Directory.Exists)
+                    {
+                        targetFile.Directory.Create();
+                    }
 
                     //Save the file name for later:
                     files.Add(fullZipToPath);

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Brokerages;
@@ -50,7 +51,22 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    return _model.AccountType;
+                    return (_model.AccountType as PyObject).GetAndDispose<AccountType>();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the brokerages model percentage factor used to determine the required unused buying power for the account.
+        /// From 1 to 0. Example: 0 means no unused buying power is required. 0.5 means 50% of the buying power should be left unused.
+        /// </summary>
+        public decimal RequiredFreeBuyingPowerPercent
+        {
+            get
+            {
+                using (Py.GIL())
+                {
+                    return (_model.RequiredFreeBuyingPowerPercent as PyObject).GetAndDispose<decimal>();
                 }
             }
         }
@@ -64,7 +80,8 @@ namespace QuantConnect.Python
             {
                 using (Py.GIL())
                 {
-                    return _model.DefaultMarkets;
+                    return (_model.DefaultMarkets as PyObject)
+                        .GetAndDispose<IReadOnlyDictionary<SecurityType, string>>();
                 }
             }
         }
@@ -96,7 +113,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.CanExecuteOrder(security, order);
+                return (_model.CanExecuteOrder(security, order) as PyObject).GetAndDispose<bool>();
             }
         }
 
@@ -115,7 +132,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.CanSubmitOrder(security, order, out message);
+                return (_model.CanSubmitOrder(security, order, out message) as PyObject).GetAndDispose<bool>();
             }
         }
 
@@ -131,7 +148,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.CanUpdateOrder(security, order, out message);
+                return (_model.CanUpdateOrder(security, order, out message) as PyObject).GetAndDispose<bool>();
             }
         }
 
@@ -144,7 +161,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetFeeModel(security);
+                return (_model.GetFeeModel(security) as PyObject).GetAndDispose<IFeeModel>();
             }
         }
 
@@ -157,7 +174,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetFillModel(security);
+                return (_model.GetFillModel(security) as PyObject).GetAndDispose<IFillModel>();
             }
         }
 
@@ -170,7 +187,20 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetLeverage(security);
+                return (_model.GetLeverage(security) as PyObject).GetAndDispose<decimal>();
+            }
+        }
+
+        /// <summary>
+        /// Gets a new settlement model for the security
+        /// </summary>
+        /// <param name="security">The security to get a settlement model for</param>
+        /// <returns>The settlement model for this brokerage</returns>
+        public ISettlementModel GetSettlementModel(Security security)
+        {
+            using (Py.GIL())
+            {
+                return (_model.GetSettlementModel(security) as PyObject).GetAndDispose<ISettlementModel>();
             }
         }
 
@@ -180,11 +210,13 @@ namespace QuantConnect.Python
         /// <param name="security">The security to get a settlement model for</param>
         /// <param name="accountType">The account type</param>
         /// <returns>The settlement model for this brokerage</returns>
+        [Obsolete("Flagged deprecated and will remove December 1st 2018")]
         public ISettlementModel GetSettlementModel(Security security, AccountType accountType)
         {
             using (Py.GIL())
             {
-                return _model.GetSettlementModel(security, accountType);
+                return (_model.GetSettlementModel(security, accountType)
+                    as PyObject).GetAndDispose<ISettlementModel>();
             }
         }
 
@@ -197,7 +229,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return _model.GetSlippageModel(security);
+                return (_model.GetSlippageModel(security) as PyObject).GetAndDispose<ISlippageModel>();
             }
         }
 
@@ -206,13 +238,28 @@ namespace QuantConnect.Python
         /// For cash accounts, leverage = 1 is used.
         /// </summary>
         /// <param name="security">The security to get a buying power model for</param>
+        /// <returns>The buying power model for this brokerage/security</returns>
+        public IBuyingPowerModel GetBuyingPowerModel(Security security)
+        {
+            using (Py.GIL())
+            {
+                return (_model.GetBuyingPowerModel(security) as PyObject).GetAndDispose<IBuyingPowerModel>();
+            }
+        }
+
+        /// <summary>
+        /// Gets a new buying power model for the security
+        /// </summary>
+        /// <param name="security">The security to get a buying power model for</param>
         /// <param name="accountType">The account type</param>
         /// <returns>The buying power model for this brokerage/security</returns>
+        [Obsolete("Flagged deprecated and will remove December 1st 2018")]
         public IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
         {
             using (Py.GIL())
             {
-                return _model.GetBuyingPowerModel(security, accountType);
+                return (_model.GetBuyingPowerModel(security, accountType)
+                    as PyObject).GetAndDispose<IBuyingPowerModel>();
             }
         }
     }

@@ -31,9 +31,18 @@ namespace QuantConnect.Brokerages
     public interface IBrokerageModel
     {
         /// <summary>
-        /// Gets or sets the account type used by this model
+        /// Gets the account type used by this model
         /// </summary>
         AccountType AccountType
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the brokerages model percentage factor used to determine the required unused buying power for the account.
+        /// From 1 to 0. Example: 0 means no unused buying power is required. 0.5 means 50% of the buying power should be left unused.
+        /// </summary>
+        decimal RequiredFreeBuyingPowerPercent
         {
             get;
         }
@@ -117,9 +126,24 @@ namespace QuantConnect.Brokerages
         /// Gets a new settlement model for the security
         /// </summary>
         /// <param name="security">The security to get a settlement model for</param>
+        /// <returns>The settlement model for this brokerage</returns>
+        ISettlementModel GetSettlementModel(Security security);
+
+        /// <summary>
+        /// Gets a new settlement model for the security
+        /// </summary>
+        /// <param name="security">The security to get a settlement model for</param>
         /// <param name="accountType">The account type</param>
         /// <returns>The settlement model for this brokerage</returns>
+        [Obsolete("Flagged deprecated and will remove December 1st 2018")]
         ISettlementModel GetSettlementModel(Security security, AccountType accountType);
+
+        /// <summary>
+        /// Gets a new buying power model for the security
+        /// </summary>
+        /// <param name="security">The security to get a buying power model for</param>
+        /// <returns>The buying power model for this brokerage/security</returns>
+        IBuyingPowerModel GetBuyingPowerModel(Security security);
 
         /// <summary>
         /// Gets a new buying power model for the security
@@ -127,6 +151,7 @@ namespace QuantConnect.Brokerages
         /// <param name="security">The security to get a buying power model for</param>
         /// <param name="accountType">The account type</param>
         /// <returns>The buying power model for this brokerage/security</returns>
+        [Obsolete("Flagged deprecated and will remove December 1st 2018")]
         IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType);
     }
 
@@ -161,10 +186,13 @@ namespace QuantConnect.Brokerages
                     return new FxcmBrokerageModel(accountType);
 
                 case BrokerageName.Bitfinex:
-                    return new DefaultBrokerageModel(accountType);
+                    return new BitfinexBrokerageModel(accountType);
 
                 case BrokerageName.GDAX:
                     return new GDAXBrokerageModel(accountType);
+
+                case BrokerageName.Alpaca:
+                    return new AlpacaBrokerageModel(accountType);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);

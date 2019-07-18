@@ -17,6 +17,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using com.fxcm.external.api.transport;
 using com.fxcm.external.api.transport.listeners;
@@ -37,6 +38,7 @@ namespace QuantConnect.Brokerages.Fxcm
     /// <summary>
     /// FXCM brokerage - implementation of IBrokerage interface
     /// </summary>
+    [BrokerageFactory(typeof(FxcmBrokerageFactory))]
     public partial class FxcmBrokerage : Brokerage, IDataQueueHandler, IGenericMessageListener, IStatusMessageListener
     {
         private readonly IOrderProvider _orderProvider;
@@ -77,6 +79,15 @@ namespace QuantConnect.Brokerages.Fxcm
         /// Set to true in parallel downloaders to avoid loading accounts, orders, positions etc. at connect time
         /// </summary>
         public bool EnableOnlyHistoryRequests { get; set; }
+
+        /// <summary>
+        /// Static constructor for the <see cref="FxcmBrokerage"/> class
+        /// </summary>
+        static FxcmBrokerage()
+        {
+            // FXCM requires TLS 1.2 since 6/16/2019
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+        }
 
         /// <summary>
         /// Creates a new instance of the <see cref="FxcmBrokerage"/> class
@@ -368,7 +379,6 @@ namespace QuantConnect.Brokerages.Fxcm
                     Symbol = group.Key,
                     Type = group.First().Type,
                     AveragePrice = group.Sum(x => x.AveragePrice * x.Quantity) / group.Sum(x => x.Quantity),
-                    ConversionRate = group.First().ConversionRate,
                     CurrencySymbol = group.First().CurrencySymbol,
                     Quantity = group.Sum(x => x.Quantity)
                 })
@@ -399,58 +409,67 @@ namespace QuantConnect.Brokerages.Fxcm
         /// Gets the current cash balance for each currency held in the brokerage account
         /// </summary>
         /// <returns>The current cash balance for each currency available for trading</returns>
-        public override List<Cash> GetCashBalance()
+        public override List<CashAmount> GetCashBalance()
         {
             Log.Trace("FxcmBrokerage.GetCashBalance()");
-            var cashBook = new List<Cash>();
+            var cashBook = new List<CashAmount>();
 
-            //Adds the account currency USD to the cashbook.
-            cashBook.Add(new Cash(_fxcmAccountCurrency,
-                        Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()),
-                        GetUsdConversion(_fxcmAccountCurrency)));
+            //Adds the account currency to the cashbook.
+            cashBook.Add(new CashAmount(Convert.ToDecimal(_accounts[_accountId].getCashOutstanding()),
+                _fxcmAccountCurrency));
 
+            // include cash balances from currency swaps for open Forex positions
             foreach (var trade in _openPositions.Values)
             {
-                //settlement price for the trade
-                var settlementPrice = Convert.ToDecimal(trade.getSettlPrice());
-                //direction of trade
-                var direction = trade.getPositionQty().getLongQty() > 0 ? 1 : -1;
-                //quantity of the asset
-                var quantity = Convert.ToDecimal(trade.getPositionQty().getQty());
-                //quantity of base currency
-                var baseQuantity = direction * quantity;
-                //quantity of quote currency
-                var quoteQuantity = -direction * quantity * settlementPrice;
-                //base currency
-                var baseCurrency = trade.getCurrency();
-                //quote currency
-                var quoteCurrency = FxcmSymbolMapper.ConvertFxcmSymbolToLeanSymbol(trade.getInstrument().getSymbol());
-                quoteCurrency = quoteCurrency.Substring(quoteCurrency.Length - 3);
+                var brokerageSymbol = trade.getInstrument().getSymbol();
+                var ticker = FxcmSymbolMapper.ConvertFxcmSymbolToLeanSymbol(brokerageSymbol);
+                var securityType = _symbolMapper.GetBrokerageSecurityType(brokerageSymbol);
 
-                var baseCurrencyObject = (from cash in cashBook where cash.Symbol == baseCurrency select cash).FirstOrDefault();
-                //update the value of the base currency
-                if (baseCurrencyObject != null)
+                if (securityType == SecurityType.Forex)
                 {
-                    baseCurrencyObject.AddAmount(baseQuantity);
-                }
-                else
-                {
-                    //add the base currency if not present
-                    cashBook.Add(new Cash(baseCurrency, baseQuantity, GetUsdConversion(baseCurrency)));
-                }
+                    //settlement price for the trade
+                    var settlementPrice = Convert.ToDecimal(trade.getSettlPrice());
+                    //direction of trade
+                    var direction = trade.getPositionQty().getLongQty() > 0 ? 1 : -1;
+                    //quantity of the asset
+                    var quantity = Convert.ToDecimal(trade.getPositionQty().getQty());
+                    //quantity of base currency
+                    var baseQuantity = direction * quantity;
+                    //quantity of quote currency
+                    var quoteQuantity = -direction * quantity * settlementPrice;
+                    //base currency
+                    var baseCurrency = trade.getCurrency();
+                    //quote currency
+                    var quoteCurrency = ticker.Substring(ticker.Length - 3);
 
-                var quoteCurrencyObject = (from cash in cashBook where cash.Symbol == quoteCurrency select cash).FirstOrDefault();
-                //update the value of the quote currency
-                if (quoteCurrencyObject != null)
-                {
-                    quoteCurrencyObject.AddAmount(quoteQuantity);
-                }
-                else
-                {
-                    //add the quote currency if not present
-                    cashBook.Add(new Cash(quoteCurrency, quoteQuantity, GetUsdConversion(quoteCurrency)));
+                    var baseCurrencyAmount = cashBook.FirstOrDefault(x => x.Currency == baseCurrency);
+                    //update the value of the base currency
+                    if (baseCurrencyAmount != default(CashAmount))
+                    {
+                        cashBook.Remove(baseCurrencyAmount);
+                        cashBook.Add(new CashAmount(baseQuantity + baseCurrencyAmount.Amount, baseCurrency));
+                    }
+                    else
+                    {
+                        //add the base currency if not present
+                        cashBook.Add(new CashAmount(baseQuantity, baseCurrency));
+                    }
+
+                    var quoteCurrencyAmount = cashBook.Find(x => x.Currency == quoteCurrency);
+                    //update the value of the quote currency
+                    if (quoteCurrencyAmount != default(CashAmount))
+                    {
+                        cashBook.Remove(quoteCurrencyAmount);
+                        cashBook.Add(new CashAmount(quoteQuantity + quoteCurrencyAmount.Amount, quoteCurrency));
+                    }
+                    else
+                    {
+                        //add the quote currency if not present
+                        cashBook.Add(new CashAmount(quoteQuantity, quoteCurrency));
+                    }
                 }
             }
+
             return cashBook;
         }
 

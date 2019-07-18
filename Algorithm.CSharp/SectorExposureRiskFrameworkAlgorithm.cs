@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
@@ -21,6 +20,7 @@ using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
+using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,9 +29,9 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This example algorithm defines its own custom coarse/fine fundamental selection model
-    /// with equally weighted portfolio and a maximum sector exposure 
+    /// with equally weighted portfolio and a maximum sector exposure
     /// </summary>
-    public class SectorExposureRiskFrameworkAlgorithm : QCAlgorithmFramework
+    public class SectorExposureRiskFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -66,5 +66,54 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         private IEnumerable<Symbol> SelectFine(IEnumerable<FineFundamental> fine) => fine.Select(f => f.Symbol);
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "19"},
+            {"Average Win", "0.12%"},
+            {"Average Loss", "-0.03%"},
+            {"Compounding Annual Return", "-47.750%"},
+            {"Drawdown", "3.000%"},
+            {"Expectancy", "1.860"},
+            {"Net Profit", "-2.632%"},
+            {"Sharpe Ratio", "-6.155"},
+            {"Loss Rate", "43%"},
+            {"Win Rate", "57%"},
+            {"Profit-Loss Ratio", "4.01"},
+            {"Alpha", "-0.209"},
+            {"Beta", "-20.117"},
+            {"Annual Standard Deviation", "0.09"},
+            {"Annual Variance", "0.008"},
+            {"Information Ratio", "-6.337"},
+            {"Tracking Error", "0.09"},
+            {"Treynor Ratio", "0.028"},
+            {"Total Fees", "$26.42"},
+            {"Total Insights Generated", "33"},
+            {"Total Insights Closed", "30"},
+            {"Total Insights Analysis Completed", "30"},
+            {"Long Insight Count", "33"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$-10605760"},
+            {"Total Accumulated Estimated Alpha Value", "$-5361800"},
+            {"Mean Population Estimated Insight Value", "$-178726.7"},
+            {"Mean Population Direction", "36.6667%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "56.482%"},
+            {"Rolling Averaged Population Magnitude", "0%"}
+        };
     }
 }

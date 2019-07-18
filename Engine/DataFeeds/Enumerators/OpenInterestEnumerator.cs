@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -32,6 +33,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly DateTimeZone _timeZone;
         private readonly ITimeProvider _timeProvider;
         private readonly ConcurrentQueue<OpenInterest> _queue;
+        private readonly bool _liveMode;
+        private readonly RealTimeScheduleEventService _realTimeScheduleEventService;
+        private readonly EventHandler _newDataAvailableHandler;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OpenInterestEnumerator"/> class
@@ -40,13 +44,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="timeZone">The time zone the raw data is time stamped in</param>
         /// <param name="timeProvider">The time provider instance used to determine when bars are completed and
         /// can be emitted</param>
-        public OpenInterestEnumerator(TimeSpan barSize, DateTimeZone timeZone, ITimeProvider timeProvider)
+        /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
+        /// <param name="newDataAvailableHandler">The event handler for a new available data point</param>
+        public OpenInterestEnumerator(TimeSpan barSize, DateTimeZone timeZone, ITimeProvider timeProvider, bool liveMode, EventHandler newDataAvailableHandler = null)
         {
             _barSize = barSize;
             _timeZone = timeZone;
             _timeProvider = timeProvider;
             _queue = new ConcurrentQueue<OpenInterest>();
+            _liveMode = liveMode;
+            _newDataAvailableHandler = newDataAvailableHandler ?? ((s, e) => { });
+
+            if (liveMode)
+            {
+                _realTimeScheduleEventService = new RealTimeScheduleEventService(timeProvider);
+                _realTimeScheduleEventService.NewEvent += _newDataAvailableHandler;
+            }
         }
+
         /// <summary>
         /// Pushes the tick into this enumerator. This tick will be aggregated into a OI bar
         /// and emitted after the alotted time has passed
@@ -59,11 +74,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             if (!_queue.TryPeek(out working))
             {
                 // the consumer took the working bar, or time ticked over into next bar
-                var currentLocalTime = _timeProvider.GetUtcNow().ConvertFromUtc(_timeZone);
+                var utcNow = _timeProvider.GetUtcNow();
+                var currentLocalTime = utcNow.ConvertFromUtc(_timeZone);
                 var barStartTime = currentLocalTime.RoundDown(_barSize);
                 working = new OpenInterest(barStartTime, data.Symbol, data.Value);
                 working.EndTime = barStartTime + _barSize;
                 _queue.Enqueue(working);
+
+                if (_liveMode)
+                {
+                    _realTimeScheduleEventService.ScheduleEvent(_barSize.Subtract(currentLocalTime - barStartTime), utcNow);
+                }
             }
             else
             {
@@ -125,10 +146,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// The current element in the collection.
         /// </returns>
         /// <filterpriority>2</filterpriority>
-        object IEnumerator.Current
-        {
-            get { return Current; }
-        }
+        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -136,6 +154,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            if (_liveMode)
+            {
+                _realTimeScheduleEventService.NewEvent -= _newDataAvailableHandler;
+                _realTimeScheduleEventService.DisposeSafely();
+            }
         }
     }
 }

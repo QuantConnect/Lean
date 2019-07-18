@@ -28,8 +28,13 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute)
         {
-            return new Security(SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), CreateConfig(securityType, resolution), new Cash(CashBook.AccountCurrency, 1000, price),
-                new SymbolProperties("BTCUSD", CashBook.AccountCurrency, 1, 1, 0.01m));
+            return new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                CreateConfig(securityType, resolution),
+                new Cash(Currencies.USD, 1000, price),
+                new SymbolProperties("BTCUSD", Currencies.USD, 1, 1, 0.01m),
+                ErrorCurrencyConverter.Instance
+            );
         }
 
         private static SubscriptionDataConfig CreateConfig(SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute)
@@ -41,6 +46,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
         public static void AddOrder(GDAXBrokerage unit, int id, string brokerId, decimal quantity)
         {
             var order = new Orders.MarketOrder { BrokerId = new List<string> { brokerId }, Symbol = Btcusd, Quantity = quantity, Id = id };
+            order.PriceCurrency = Currencies.USD;
             unit.CachedOrderIDs.TryAdd(1, order);
             unit.FillSplit.TryAdd(id, new GDAXFill(order));
         }

@@ -22,7 +22,6 @@ from QuantConnect.Algorithm import QCAlgorithm
 from QuantConnect.Data import SubscriptionDataSource
 from QuantConnect.Python import PythonData
 from datetime import date, timedelta, datetime
-import decimal as d
 
 ### <summary>
 ### This algorithm shows how to grab symbols from an external api each day
@@ -38,7 +37,7 @@ class CustomDataUniverseAlgorithm(QCAlgorithm):
     def Initialize(self):
 
         # Data ADDED via universe selection is added with Daily resolution.
-        self.UniverseSettings.Resolution = Resolution.Daily;
+        self.UniverseSettings.Resolution = Resolution.Daily
 
         self.SetStartDate(2015,1,5)
         self.SetEndDate(2015,7,1)

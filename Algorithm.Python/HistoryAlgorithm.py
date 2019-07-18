@@ -109,13 +109,13 @@ class HistoryAlgorithm(QCAlgorithm):
         # we can also access the return value from the multiple symbol functions to request a single
         # symbol and then loop over it
         singleSymbolQuandl = allQuandlData.loc["CHRIS/CME_SP1"]
-        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1\"]", singleSymbolQuandl, 250);
+        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1\"]", singleSymbolQuandl, 250)
         for  quandl in singleSymbolQuandl:
             # do something with 'CHRIS/CME_SP1' quandl data
             pass
 
         quandlSpyLows = allQuandlData.loc["CHRIS/CME_SP1"]["low"]
-        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1\"][\"low\"]", quandlSpyLows, 250);
+        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1\"][\"low\"]", quandlSpyLows, 250)
         for  low in quandlSpyLows:
             # do something with 'CHRIS/CME_SP1' quandl data
             pass

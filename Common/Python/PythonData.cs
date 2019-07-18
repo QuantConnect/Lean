@@ -26,7 +26,7 @@ namespace QuantConnect.Python
     public class PythonData : DynamicData
     {
         private readonly dynamic _pythonData;
-        
+
         /// <summary>
         /// Constructor for initialising the PythonData class
         /// </summary>
@@ -43,7 +43,7 @@ namespace QuantConnect.Python
         {
             _pythonData = pythonData;
         }
-      
+
         /// <summary>
         /// Source Locator for algorithm written in Python.
         /// </summary>
@@ -54,8 +54,9 @@ namespace QuantConnect.Python
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             using (Py.GIL())
-            {             
-                return _pythonData.GetSource(config, date, isLiveMode);               
+            {
+                var source = _pythonData.GetSource(config, date, isLiveMode);
+                return (source as PyObject).GetAndDispose<SubscriptionDataSource>();
             }
         }
 
@@ -68,13 +69,14 @@ namespace QuantConnect.Python
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns></returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
-        {   
+        {
             using (Py.GIL())
             {
-                return _pythonData.Reader(config, line, date, isLiveMode);
+                var data = _pythonData.Reader(config, line, date, isLiveMode);
+                return (data as PyObject).GetAndDispose<BaseData>();
             }
         }
-        
+
         /// <summary>
         /// Indexes into this PythonData, where index is key to the dynamic property
         /// </summary>
@@ -82,7 +84,7 @@ namespace QuantConnect.Python
         /// <returns>Dynamic property of a given index</returns>
         public object this[string index]
         {
-            get 
+            get
             {
                 return GetProperty(index);
             }
@@ -91,6 +93,6 @@ namespace QuantConnect.Python
             {
                 SetProperty(index, value is double ? Convert.ToDecimal(value) : value);
             }
-        }   
+        }
     }
 }

@@ -222,9 +222,8 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Constructor for the result class using dictionary objects.
         /// </summary>
-        public BacktestResult(bool isFrameworkAlgorithm, IDictionary<string, Chart> charts, IDictionary<int, Order> orders, IDictionary<DateTime, decimal> profitLoss, IDictionary<string, string> statistics, IDictionary<string, string> runtimeStatistics, Dictionary<string, AlgorithmPerformance> rollingWindow, AlgorithmPerformance totalPerformance = null)
+        public BacktestResult(IDictionary<string, Chart> charts, IDictionary<int, Order> orders, IDictionary<DateTime, decimal> profitLoss, IDictionary<string, string> statistics, IDictionary<string, string> runtimeStatistics, Dictionary<string, AlgorithmPerformance> rollingWindow, AlgorithmPerformance totalPerformance = null)
         {
-            IsFrameworkAlgorithm = isFrameworkAlgorithm;
             Charts = charts;
             Orders = orders;
             ProfitLoss = profitLoss;

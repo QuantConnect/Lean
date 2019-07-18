@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
@@ -55,6 +56,12 @@ namespace QuantConnect.Brokerages
             get;
             private set;
         }
+
+        /// <summary>
+        /// Gets the brokerages model percentage factor used to determine the required unused buying power for the account.
+        /// From 1 to 0. Example: 0 means no unused buying power is required. 0.5 means 50% of the buying power should be left unused.
+        /// </summary>
+        public virtual decimal RequiredFreeBuyingPowerPercent => 0m;
 
         /// <summary>
         /// Gets a map of the default markets to be used for each security type
@@ -239,11 +246,10 @@ namespace QuantConnect.Brokerages
         /// Gets a new settlement model for the security
         /// </summary>
         /// <param name="security">The security to get a settlement model for</param>
-        /// <param name="accountType">The account type</param>
         /// <returns>The settlement model for this brokerage</returns>
-        public virtual ISettlementModel GetSettlementModel(Security security, AccountType accountType)
+        public virtual ISettlementModel GetSettlementModel(Security security)
         {
-            if (accountType == AccountType.Cash)
+            if (AccountType == AccountType.Cash)
             {
                 switch (security.Type)
                 {
@@ -259,32 +265,60 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Gets a new settlement model for the security
+        /// </summary>
+        /// <param name="security">The security to get a settlement model for</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The settlement model for this brokerage</returns>
+        [Obsolete("Flagged deprecated and will remove December 1st 2018")]
+        public ISettlementModel GetSettlementModel(Security security, AccountType accountType)
+        {
+            return GetSettlementModel(security);
+        }
+
+        /// <summary>
         /// Gets a new buying power model for the security, returning the default model with the security's configured leverage.
         /// For cash accounts, leverage = 1 is used.
         /// </summary>
         /// <param name="security">The security to get a buying power model for</param>
-        /// <param name="accountType">The account type</param>
         /// <returns>The buying power model for this brokerage/security</returns>
-        public virtual IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
+        public virtual IBuyingPowerModel GetBuyingPowerModel(Security security)
         {
+            var leverage = GetLeverage(security);
+            IBuyingPowerModel model;
+
             switch (security.Type)
             {
                 case SecurityType.Crypto:
-                    return new CashBuyingPowerModel();
-
+                    model = new CashBuyingPowerModel();
+                    break;
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
-                    return new SecurityMarginModel(50m);
-
+                    model = new SecurityMarginModel(leverage, RequiredFreeBuyingPowerPercent);
+                    break;
                 case SecurityType.Option:
-                    return new OptionMarginModel();
-
+                    model = new OptionMarginModel(RequiredFreeBuyingPowerPercent);
+                    break;
                 case SecurityType.Future:
-                    return new FutureMarginModel();
-
+                    model = new FutureMarginModel(RequiredFreeBuyingPowerPercent);
+                    break;
                 default:
-                    return new SecurityMarginModel(2m);
+                    model = new SecurityMarginModel(leverage, RequiredFreeBuyingPowerPercent);
+                    break;
             }
+            return model;
+        }
+
+        /// <summary>
+        /// Gets a new buying power model for the security
+        /// </summary>
+        /// <param name="security">The security to get a buying power model for</param>
+        /// <param name="accountType">The account type</param>
+        /// <returns>The buying power model for this brokerage/security</returns>
+        [Obsolete("Flagged deprecated and will remove December 1st 2018")]
+        public IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
+        {
+            return GetBuyingPowerModel(security);
         }
     }
 }

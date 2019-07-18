@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,9 +16,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="universes" />
     /// <meta name="tag" content="coarse universes" />
     /// <meta name="tag" content="regression test" />
-    public class CoarseFineFundamentalRegressionAlgorithm : QCAlgorithm
+    public class CoarseFineFundamentalRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const int NumberOfSymbolsFine = 2;
 
@@ -114,6 +116,21 @@ namespace QuantConnect.Algorithm.CSharp
             _changes = SecurityChanges.None;
         }
 
+        public override void OnData(Slice data)
+        {
+            // verify we don't receive data for inactive securities
+            var inactiveSymbols = data.Keys
+                .Where(sym => !UniverseManager.ActiveSecurities.ContainsKey(sym))
+                // on daily data we'll get the last data point and the delisting at the same time
+                .Where(sym => !data.Delistings.ContainsKey(sym) || data.Delistings[sym].Type != DelistingType.Delisted)
+                .ToList();
+            if (inactiveSymbols.Any())
+            {
+                var symbols = string.Join(", ", inactiveSymbols);
+                throw new Exception($"Received data for non-active security: {symbols}.");
+            }
+        }
+
         // this event fires whenever we have changes to our universe
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
@@ -128,5 +145,41 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug("Securities removed: " + string.Join(",", changes.RemovedSecurities.Select(x => x.Symbol.Value)));
             }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "2"},
+            {"Average Win", "1.39%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "40.038%"},
+            {"Drawdown", "1.400%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "1.394%"},
+            {"Sharpe Ratio", "3.081"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "-0.033"},
+            {"Beta", "19.023"},
+            {"Annual Standard Deviation", "0.096"},
+            {"Annual Variance", "0.009"},
+            {"Information Ratio", "2.904"},
+            {"Tracking Error", "0.096"},
+            {"Treynor Ratio", "0.016"},
+            {"Total Fees", "$2.00"}
+        };
     }
 }

@@ -174,5 +174,15 @@ namespace QuantConnect.Tests.Common.Scheduling
             Assert.IsFalse(Equals(se, null));
             Assert.AreNotEqual(se, null);
         }
+
+        [Test]
+        public void ToStringTest()
+        {
+            var name = "PepeGrillo";
+            var se = new ScheduledEvent(name, DateTime.UtcNow);
+
+            Assert.IsNotNull(se);
+            Assert.AreEqual(name, se.ToString());
+        }
     }
 }

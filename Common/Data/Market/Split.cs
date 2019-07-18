@@ -15,6 +15,7 @@
 */
 
 using System;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Data.Market
 {
@@ -26,6 +27,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         ///Gets the type of split event, warning or split.
         /// </summary>
+        [JsonProperty]
         public SplitType Type
         {
             get; private set;
@@ -34,6 +36,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Gets the split factor
         /// </summary>
+        [JsonProperty]
         public decimal SplitFactor
         {
             get; private set;
@@ -41,6 +44,7 @@ namespace QuantConnect.Data.Market
 
         /// <summary>
         /// Gets the price at which the split occurred
+        /// This is typically the previous day's closing price
         /// </summary>
         public decimal ReferencePrice
         {
@@ -68,11 +72,11 @@ namespace QuantConnect.Data.Market
         public Split(Symbol symbol, DateTime date, decimal price, decimal splitFactor, SplitType type)
              : this()
         {
-            Symbol = symbol;
+            Type = type;
             Time = date;
+            Symbol = symbol;
             ReferencePrice = price;
             SplitFactor = splitFactor;
-            Type = type;
         }
 
         /// <summary>
@@ -104,13 +108,13 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Returns a <see cref="System.String"/> that represents the current <see cref="QuantConnect.Data.Market.Split"/>.
+        /// Formats a string with the symbol and value.
         /// </summary>
-        /// <returns>A <see cref="System.String"/> that represents the current <see cref="QuantConnect.Data.Market.Split"/>.</returns>
+        /// <returns>string - a string formatted as SPY: 167.753</returns>
         public override string ToString()
         {
             var type = Type == SplitType.Warning ? "Split Warning" : "Split";
-            return $"{type}: {Symbol}: {SplitFactor}";
+            return $"{type}: {Symbol}: {SplitFactor} | {ReferencePrice}";
         }
 
         /// <summary>

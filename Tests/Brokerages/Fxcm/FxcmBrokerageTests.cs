@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,11 +15,13 @@
 
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Fxcm;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Fxcm
@@ -102,6 +104,14 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
         }
 
         /// <summary>
+        /// Returns wether or not the brokers order methods implementation are async
+        /// </summary>
+        protected override bool IsAsync()
+        {
+            return false;
+        }
+
+        /// <summary>
         /// Gets the current market price of the specified security
         /// </summary>
         protected override decimal GetAskPrice(Symbol symbol)
@@ -152,6 +162,45 @@ namespace QuantConnect.Tests.Brokerages.Fxcm
             }
 
             Assert.IsTrue(brokerage.IsConnected);
+        }
+
+        [TestCase("EURGBP", SecurityType.Forex, Market.FXCM, 50000)]
+        [TestCase("EURGBP", SecurityType.Forex, Market.FXCM, -50000)]
+        [TestCase("DE30EUR", SecurityType.Cfd, Market.FXCM, 10)]
+        [TestCase("DE30EUR", SecurityType.Cfd, Market.FXCM, -10)]
+        public void GetCashBalanceIncludesCurrencySwapsForOpenPositions(string ticker, SecurityType securityType, string market, decimal quantity)
+        {
+            // This test requires a practice account with USD account currency
+
+            var brokerage = Brokerage;
+            Assert.IsTrue(brokerage.IsConnected);
+
+            var symbol = Symbol.Create(ticker, securityType, market);
+            var order = new MarketOrder(symbol, quantity, DateTime.UtcNow);
+            PlaceOrderWaitForStatus(order);
+
+            var holdings = brokerage.GetAccountHoldings();
+            var balances = brokerage.GetCashBalance();
+
+            Assert.IsTrue(holdings.Count == 1);
+
+            // account currency
+            Assert.IsTrue(balances.Any(x => x.Currency == "USD"));
+
+            if (securityType == SecurityType.Forex)
+            {
+                // base currency
+                var baseCurrencyCash = balances.Single(x => x.Currency == ticker.Substring(0, 3));
+                Assert.AreEqual(quantity, baseCurrencyCash.Amount);
+
+                // quote currency
+                var quoteCurrencyCash = balances.Single(x => x.Currency == ticker.Substring(3));
+                Assert.AreEqual(-Math.Sign(quantity), Math.Sign(quoteCurrencyCash.Amount));
+            }
+            else if (securityType == SecurityType.Cfd)
+            {
+                Assert.AreEqual(1, balances.Count);
+            }
         }
 
     }

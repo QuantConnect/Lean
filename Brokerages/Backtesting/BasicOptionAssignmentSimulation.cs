@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,12 +14,11 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
@@ -28,8 +27,8 @@ namespace QuantConnect.Brokerages.Backtesting
 {
     /// <summary>
     /// This market conditions simulator emulates exercising of short option positions in the portfolio.
-    /// Simulator implements basic no-arb argument: when time value of the option contract is close to zero 
-    /// it assigns short legs getting profit close to expiration dates in deep ITM positions. User algorithm then receives 
+    /// Simulator implements basic no-arb argument: when time value of the option contract is close to zero
+    /// it assigns short legs getting profit close to expiration dates in deep ITM positions. User algorithm then receives
     /// assignment event from LEAN. Simulator randomly scans for arbitrage opportunities every two hours or so.
     /// </summary>
     public class BasicOptionAssignmentSimulation : IBacktestingMarketSimulation
@@ -52,7 +51,7 @@ namespace QuantConnect.Brokerages.Backtesting
         private static Random _rand = new Random((int)12345);
 
         /// <summary>
-        /// We generate a list of time points when we would like to run our simulation. we then return true if the time is in the list. 
+        /// We generate a list of time points when we would like to run our simulation. we then return true if the time is in the list.
         /// </summary>
         /// <returns></returns>
         public bool IsReadyToSimulate(IAlgorithm algorithm)
@@ -83,10 +82,10 @@ namespace QuantConnect.Brokerages.Backtesting
                     }
                 }
                 var randomizedScans = scans
-                                    .DistinctBy(x => new DateTime(x.Year, x.Month, x.Day, x.Hour, 0, 0)) // DistinctBy hour 
+                                    .DistinctBy(x => new DateTime(x.Year, x.Month, x.Day, x.Hour, 0, 0)) // DistinctBy hour
                                     .OrderBy(x => x)
                                     .Select(x => x.AddMinutes(_rand.NextDouble() * _assignmentScanPeriod.TotalMinutes));
-                
+
                 _assignmentScans = new Queue<DateTime>(randomizedScans);
 
                 _lastUpdate = algorithm.UtcTime;
@@ -98,7 +97,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 // we fast forward through unused items
                 if (algorithm.UtcTime >= _assignmentScans.Peek())
                 {
-                    while (_assignmentScans.Count > 0 && 
+                    while (_assignmentScans.Count > 0 &&
                             algorithm.UtcTime >= _assignmentScans.Peek())
                     {
                         _assignmentScans.Dequeue();
@@ -115,7 +114,7 @@ namespace QuantConnect.Brokerages.Backtesting
 
         /// <summary>
         /// We simulate activity of market makers on expiration. Trying to get profit close to expiration dates in deep ITM positions.
-        /// This version of the simulator exercises short positions in full. 
+        /// This version of the simulator exercises short positions in full.
         /// </summary>
         public void SimulateMarketConditions(IBrokerage brokerage, IAlgorithm algorithm)
         {
@@ -144,25 +143,31 @@ namespace QuantConnect.Brokerages.Backtesting
                 // we take only deep ITM strikes
                 .Where(x => deepITM(x.Key))
                 // we estimate P/L
-                .Where(x => EstimateArbitragePnL((Option)x.Value, (OptionHolding)x.Value.Holdings, algorithm.Securities[x.Value.Symbol.Underlying]) > 0.0m)
+                .Where(x => EstimateArbitragePnL((Option)x.Value,
+                        (OptionHolding)x.Value.Holdings,
+                        algorithm.Securities[x.Value.Symbol.Underlying],
+                        algorithm.Portfolio.CashBook) > 0.0m)
                 .ToList()
                 // we exercise options with positive expected P/L (over basic sale of option)
                 .ForEach(x => backtestingBrokerage.ActivateOptionAssignment((Option)x.Value, (int)((OptionHolding)x.Value.Holdings).AbsoluteQuantity));
 
         }
 
-        private decimal EstimateArbitragePnL(Option option, OptionHolding holding, Security underlying)
+        private decimal EstimateArbitragePnL(Option option,
+            OptionHolding holding,
+            Security underlying,
+            ICurrencyConverter currencyConverter)
         {
-            // no-arb argument: 
-            // if our long deep ITM position has a large B/A spread and almost no time value, it may be interesting for us 
-            // to exercise the option and close the resulting position in underlying instrument, if we want to exit now. 
+            // no-arb argument:
+            // if our long deep ITM position has a large B/A spread and almost no time value, it may be interesting for us
+            // to exercise the option and close the resulting position in underlying instrument, if we want to exit now.
 
-            // User's short option position is our long one. 
+            // User's short option position is our long one.
             // In order to sell ITM position we take option bid price as an input
             var optionPrice = option.BidPrice;
 
-            // we are interested in underlying bid price if we exercise calls and want to sell the underlying immediately. 
-            // we are interested in underlying ask price if we exercise puts 
+            // we are interested in underlying bid price if we exercise calls and want to sell the underlying immediately.
+            // we are interested in underlying ask price if we exercise puts
             var underlyingPrice = option.Symbol.ID.OptionRight == OptionRight.Call ?
                                    underlying.BidPrice :
                                     underlying.AskPrice;
@@ -173,22 +178,28 @@ namespace QuantConnect.Brokerages.Backtesting
 
             // Scenario 1 (base): we just close option position
             var marketOrder1 = new MarketOrder(option.Symbol, -holding.Quantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
-            var orderFee1 = option.FeeModel.GetOrderFee(option, marketOrder1);
+            var orderFee1 = currencyConverter.ConvertToAccountCurrency(option.FeeModel.GetOrderFee(
+                new OrderFeeParameters(option, marketOrder1)).Value);
 
-            var basePnL = (optionPrice - holding.AveragePrice) * -holding.Quantity * option.QuoteCurrency.ConversionRate * option.SymbolProperties.ContractMultiplier - orderFee1;
+            var basePnL = (optionPrice - holding.AveragePrice) * -holding.Quantity
+                * option.QuoteCurrency.ConversionRate
+                * option.SymbolProperties.ContractMultiplier
+                - orderFee1.Amount;
 
             // Scenario 2 (alternative): we exercise option and then close underlying position
             var optionExerciseOrder2 = new OptionExerciseOrder(option.Symbol, (int)holding.AbsoluteQuantity, option.LocalTime.ConvertToUtc(option.Exchange.TimeZone));
-            var optionOrderFee2 = option.FeeModel.GetOrderFee(option, optionExerciseOrder2);
+            var optionOrderFee2 = currencyConverter.ConvertToAccountCurrency(option.FeeModel.GetOrderFee(
+                new OrderFeeParameters(option, optionExerciseOrder2)).Value);
 
             var undelyingMarketOrder2 = new MarketOrder(underlying.Symbol, -underlyingQuantity, underlying.LocalTime.ConvertToUtc(underlying.Exchange.TimeZone));
-            var undelyingOrderFee2 = underlying.FeeModel.GetOrderFee(underlying, undelyingMarketOrder2);
+            var undelyingOrderFee2 = currencyConverter.ConvertToAccountCurrency(underlying.FeeModel.GetOrderFee(
+                new OrderFeeParameters(underlying, undelyingMarketOrder2)).Value);
 
             // calculating P/L of the two transactions (exercise option and then close underlying position)
             var altPnL = (underlyingPrice - option.StrikePrice) * underlyingQuantity * underlying.QuoteCurrency.ConversionRate * option.ContractUnitOfTrade
-                        - undelyingOrderFee2 
+                        - undelyingOrderFee2.Amount
                         - holding.AveragePrice * holding.AbsoluteQuantity * option.SymbolProperties.ContractMultiplier * option.QuoteCurrency.ConversionRate
-                        - optionOrderFee2;
+                        - optionOrderFee2.Amount;
 
             return altPnL - basePnL;
         }

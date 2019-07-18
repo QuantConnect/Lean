@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,9 +16,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
+using System.Text;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,7 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="universes" />
     /// <meta name="tag" content="custom universes" />
-    public class DropboxUniverseSelectionAlgorithm : QCAlgorithm
+    public class DropboxUniverseSelectionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         // the changes from the previous universe selection
         private SecurityChanges _changes = SecurityChanges.None;
@@ -55,46 +56,47 @@ namespace QuantConnect.Algorithm.CSharp
             // define a new custom universe that will trigger each day at midnight
             AddUniverse("my-dropbox-universe", Resolution.Daily, dateTime =>
             {
-                const string liveUrl = @"https://www.dropbox.com/s/2az14r5xbx4w5j6/daily-stock-picker-live.csv?dl=1";
-                const string backtestUrl = @"https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1";
-                var url = LiveMode ? liveUrl : backtestUrl;
-                using (var client = new WebClient())
+                // handle live mode file format
+                if (LiveMode)
                 {
-                    // handle live mode file format
-                    if (LiveMode)
-                    {
-                        // fetch the file from dropbox
-                        var file = client.DownloadString(url);
-                        // if we have a file for today, break apart by commas and return symbols
-                        if (file.Length > 0) return file.ToCsv();
-                        // no symbol today, leave universe unchanged
-                        return Universe.Unchanged;
-                    }
-
-                    // backtest - first cache the entire file
-                    if (_backtestSymbolsPerDay.Count == 0)
-                    {
-                        // fetch the file from dropbox only if we haven't cached the result already
-                        var file = client.DownloadString(url);
-
-                        // split the file into lines and add to our cache
-                        foreach (var line in file.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
-                        {
-                            var csv = line.ToCsv();
-                            var date = DateTime.ParseExact(csv[0], "yyyyMMdd", null);
-                            var symbols = csv.Skip(1).ToList();
-                            _backtestSymbolsPerDay[date] = symbols;
-                        }
-                    }
-
-                    // if we have symbols for this date return them, else specify Universe.Unchanged
-                    List<string> result;
-                    if (_backtestSymbolsPerDay.TryGetValue(dateTime.Date, out result))
-                    {
-                        return result;
-                    }
+                    // fetch the file from dropbox
+                    var file = Download(@"https://www.dropbox.com/s/2az14r5xbx4w5j6/daily-stock-picker-live.csv?dl=1");
+                    // if we have a file for today, break apart by commas and return symbols
+                    if (file.Length > 0) return file.ToCsv();
+                    // no symbol today, leave universe unchanged
                     return Universe.Unchanged;
                 }
+
+                // backtest - first cache the entire file
+                if (_backtestSymbolsPerDay.Count == 0)
+                {
+                    // No need for headers for authorization with dropbox, these two lines are for example purposes
+                    var byteKey = Encoding.ASCII.GetBytes($"UserName:Password");
+                    // The headers must be passed to the Download method as list of key/value pair.
+                    var headers = new List<KeyValuePair<string, string>>
+                    {
+                        new KeyValuePair<string, string>("Authorization", $"Basic ({Convert.ToBase64String(byteKey)})")
+                    };
+
+                    var file = Download(@"https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1", headers);
+
+                    // split the file into lines and add to our cache
+                    foreach (var line in file.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var csv = line.ToCsv();
+                        var date = DateTime.ParseExact(csv[0], "yyyyMMdd", null);
+                        var symbols = csv.Skip(1).ToList();
+                        _backtestSymbolsPerDay[date] = symbols;
+                    }
+                }
+
+                // if we have symbols for this date return them, else specify Universe.Unchanged
+                List<string> result;
+                if (_backtestSymbolsPerDay.TryGetValue(dateTime.Date, out result))
+                {
+                    return result;
+                }
+                return Universe.Unchanged;
             });
         }
 
@@ -139,5 +141,41 @@ namespace QuantConnect.Algorithm.CSharp
             // each time our securities change we'll be notified here
             _changes = changes;
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "66"},
+            {"Average Win", "1.06%"},
+            {"Average Loss", "-0.50%"},
+            {"Compounding Annual Return", "18.511%"},
+            {"Drawdown", "7.100%"},
+            {"Expectancy", "0.810"},
+            {"Net Profit", "18.511%"},
+            {"Sharpe Ratio", "1.439"},
+            {"Loss Rate", "42%"},
+            {"Win Rate", "58%"},
+            {"Profit-Loss Ratio", "2.12"},
+            {"Alpha", "0.308"},
+            {"Beta", "-10.065"},
+            {"Annual Standard Deviation", "0.1"},
+            {"Annual Variance", "0.01"},
+            {"Information Ratio", "1.275"},
+            {"Tracking Error", "0.1"},
+            {"Treynor Ratio", "-0.014"},
+            {"Total Fees", "$193.75"}
+        };
     }
 }

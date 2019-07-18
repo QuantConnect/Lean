@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,34 +14,37 @@
 */
 
 using QuantConnect.Data.Market;
+using System;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
     /// The Aroon Oscillator is the difference between AroonUp and AroonDown. The value of this
-    /// indicator fluctuats between -100 and +100. An upward trend bias is present when the oscillator
+    /// indicator fluctuates between -100 and +100. An upward trend bias is present when the oscillator
     /// is positive, and a negative trend bias is present when the oscillator is negative. AroonUp/Down
     /// values over 75 identify strong trends in their respective direction.
     /// </summary>
-    public class AroonOscillator : BarIndicator
+    public class AroonOscillator : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         /// <summary>
         /// Gets the AroonUp indicator
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> AroonUp { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> AroonUp { get; }
 
         /// <summary>
         /// Gets the AroonDown indicator
         /// </summary>
-        public IndicatorBase<IndicatorDataPoint> AroonDown { get; private set; }
+        public IndicatorBase<IndicatorDataPoint> AroonDown { get; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady
-        {
-            get { return AroonUp.IsReady && AroonDown.IsReady; }
-        }
+        public override bool IsReady => AroonUp.IsReady && AroonDown.IsReady;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Creates a new AroonOscillator from the specified up/down periods.
@@ -49,7 +52,7 @@ namespace QuantConnect.Indicators
         /// <param name="upPeriod">The lookback period to determine the highest high for the AroonDown</param>
         /// <param name="downPeriod">The lookback period to determine the lowest low for the AroonUp</param>
         public AroonOscillator(int upPeriod, int downPeriod)
-            : this(string.Format("AROON({0},{1})", upPeriod, downPeriod), upPeriod, downPeriod)
+            : this($"AROON({upPeriod},{downPeriod})", upPeriod, downPeriod)
         {
         }
 
@@ -75,6 +78,8 @@ namespace QuantConnect.Indicators
                 aroonDown => min.IsReady,
                 () => min.Reset()
                 );
+
+            WarmUpPeriod = 1 + Math.Max(upPeriod, downPeriod);
         }
 
         /// <summary>

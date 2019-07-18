@@ -55,22 +55,19 @@ class DividendAlgorithm(QCAlgorithm):
             self.SetHoldings("MSFT", .5)
             # place some orders that won't fill, when the split comes in they'll get modified to reflect the split
             quantity = self.CalculateOrderQuantity("MSFT", .25)
-            self.Debug("Purchased Stock: {0}".format(bar.Price))
+            self.Debug(f"Purchased Stock: {bar.Price}")
             self.StopMarketOrder("MSFT", -quantity, bar.Low/2)
             self.LimitOrder("MSFT", -quantity, bar.High*2)
 
-        for kvp in data.Dividends:   # update this to Dividends dictionary
-            symbol = kvp.Key
-            value = kvp.Value.Distribution
-            self.Log("{0} >> DIVIDEND >> {1} - {2} - {3} - {4}".format(self.Time, symbol, value, self.Portfolio.Cash, self.Portfolio["MSFT"].Price))
+        if data.Dividends.ContainsKey("MSFT"):
+            dividend = data.Dividends["MSFT"]
+            self.Log(f"{self.Time} >> DIVIDEND >> {dividend.Symbol} - {dividend.Distribution} - {self.Portfolio.Cash} - {self.Portfolio['MSFT'].Price}")
 
-        for kvp in data.Splits:      # update this to Splits dictionary
-            symbol = kvp.Key
-            value = kvp.Value.SplitFactor
-            self.Log("{0} >> SPLIT >> {1} - {2} - {3} - {4}".format(self.Time, symbol, value, self.Portfolio.Cash, self.Portfolio["MSFT"].Quantity))
-
+        if data.Splits.ContainsKey("MSFT"):
+            split = data.Splits["MSFT"]
+            self.Log(f"{self.Time} >> SPLIT >> {split.Symbol} - {split.SplitFactor} - {self.Portfolio.Cash} - {self.Portfolio['MSFT'].Price}")
 
     def OnOrderEvent(self, orderEvent):
         # orders get adjusted based on split events to maintain order value
         order = self.Transactions.GetOrderById(orderEvent.OrderId)
-        self.Log("{0} >> ORDER >> {1}".format(self.Time, order))
+        self.Log(f"{self.Time} >> ORDER >> {order}")

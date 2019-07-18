@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -113,7 +113,8 @@ namespace QuantConnect.Data.Market
         /// <param name="underlying">The most recent underlying trade data</param>
         /// <param name="trades">All trade data for the entire option chain</param>
         /// <param name="quotes">All quote data for the entire option chain</param>
-        /// <param name="contracts">All contrains for this option chain</param>
+        /// <param name="contracts">All contracts for this option chain</param>
+        /// <param name="filteredContracts">The filtered list of contracts for this option chain</param>
         public OptionChain(Symbol canonicalOptionSymbol, DateTime time, BaseData underlying, IEnumerable<BaseData> trades, IEnumerable<BaseData> quotes, IEnumerable<OptionContract> contracts, IEnumerable<Symbol> filteredContracts)
         {
             Time = time;

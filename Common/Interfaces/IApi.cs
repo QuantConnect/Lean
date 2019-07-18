@@ -15,9 +15,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Net;
 using QuantConnect.Api;
 using QuantConnect.API;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Interfaces
 {
@@ -202,6 +205,7 @@ namespace QuantConnect.Interfaces
         /// <param name="compileId">Id of the compilation on QuantConnect</param>
         /// <param name="serverType">Type of server instance that will run the algorithm</param>
         /// <param name="baseLiveAlgorithmSettings">Brokerage specific <see cref="BaseLiveAlgorithmSettings">BaseLiveAlgorithmSettings</see>.</param>
+        /// <param name="versionId">The version identifier</param>
         /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
         LiveAlgorithm CreateLiveAlgorithm(int projectId, string compileId, string serverType, BaseLiveAlgorithmSettings baseLiveAlgorithmSettings, string versionId = "-1");
 
@@ -262,6 +266,13 @@ namespace QuantConnect.Interfaces
         void SetAlgorithmStatus(string algorithmId, AlgorithmStatus status, string message = "");
 
         /// <summary>
+        /// Will get the prices for requested symbols
+        /// </summary>
+        /// <param name="symbols">Symbols for which the price is requested</param>
+        /// <returns><see cref="Prices"/></returns>
+        PricesList ReadPrices(IEnumerable<Symbol> symbols);
+
+        /// <summary>
         /// Send the statistics to storage for performance tracking.
         /// </summary>
         /// <param name="algorithmId">Identifier for algorithm</param>
@@ -283,5 +294,31 @@ namespace QuantConnect.Interfaces
         /// <param name="subject">The email subject</param>
         /// <param name="body">The email message body</param>
         void SendUserEmail(string algorithmId, string subject, string body);
+
+        /// <summary>
+        /// Gets all split events between the specified times. From and to are inclusive.
+        /// </summary>
+        /// <param name="from">The first date to get splits for</param>
+        /// <param name="to">The last date to get splits for</param>
+        /// <returns>A list of all splits in the specified range</returns>
+        List<Data.Market.Split> GetSplits(DateTime from, DateTime to);
+
+        /// <summary>
+        /// Gets all dividend events between the specified times. From and to are inclusive.
+        /// </summary>
+        /// <param name="from">The first date to get dividend for</param>
+        /// <param name="to">The last date to get dividend for</param>
+        /// <returns>A list of all dividend in the specified range</returns>
+        List<Data.Market.Dividend> GetDividends(DateTime from, DateTime to);
+
+        /// <summary>
+        /// Local implementation for downloading data to algorithms
+        /// </summary>
+        /// <param name="address">URL to download</param>
+        /// <param name="headers">KVP headers</param>
+        /// <param name="userName">Username for basic authentication</param>
+        /// <param name="password">Password for basic authentication</param>
+        /// <returns></returns>
+        string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password);
     }
 }
