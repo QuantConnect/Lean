@@ -42,6 +42,9 @@
     <Reference Include="Accord.Fuzzy, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
       <HintPath>..\packages\Accord.Fuzzy.3.6.0\lib\net45\Accord.Fuzzy.dll</HintPath>
     </Reference>
+    <Reference Include="Accord.MachineLearning, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Accord.MachineLearning.3.6.0\lib\net45\Accord.MachineLearning.dll</HintPath>
+    </Reference>
     <Reference Include="Accord.Math, Version=3.6.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
       <HintPath>..\packages\Accord.Math.3.6.0\lib\net45\Accord.Math.dll</HintPath>
     </Reference>
@@ -139,6 +142,7 @@
     <Compile Include="Alphas\VixDualThrustAlpha.cs" />
     <Compile Include="BasicPythonIntegrationTemplateAlgorithm.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
+    <Compile Include="BasicTemplateAlgorithm.cs" />
     <Compile Include="Benchmarks\StatefulCoarseUniverseSelectionBenchmark.cs" />
     <Compile Include="Benchmarks\StatelessCoarseUniverseSelectionBenchmark.cs" />
     <Compile Include="CapmAlphaRankingFrameworkAlgorithm.cs" />
@@ -223,7 +227,7 @@
     <Compile Include="OptionSplitRegressionAlgorithm.cs" />
     <Compile Include="PortfolioOptimizationNumericsAlgorithm.cs" />
     <Compile Include="BasicTemplateForexAlgorithm.cs" />
-    <Compile Include="BasicTemplateAlgorithm.cs" />
+    <Compile Include="AccordVectorMachinesAlgorithm.cs" />
     <Compile Include="BasicTemplateOptionsAlgorithm.cs" />
     <Compile Include="CoarseFundamentalTop3Algorithm.cs" />
     <Compile Include="CustomBenchmarkAlgorithm.cs" />
