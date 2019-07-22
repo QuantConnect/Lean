@@ -43,7 +43,7 @@ class SectorExposureRiskFrameworkAlgorithm(QCAlgorithm):
         # Set requested data resolution
         self.UniverseSettings.Resolution = Resolution.Daily
 
-        self.SetStartDate(2014, 3, 24)
+        self.SetStartDate(2014, 3, 25)
         self.SetEndDate(2014, 4, 7)
         self.SetCash(100000)
 

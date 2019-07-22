@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Provides the ability to synchronize subscriptions into time slices
     /// </summary>
-    public class SubscriptionSynchronizer : ISubscriptionSynchronizer, ITimeProvider
+    public class SubscriptionSynchronizer : ISubscriptionSynchronizer, IFrontierTimeProvider
     {
         private readonly UniverseSelection _universeSelection;
         private TimeSliceFactory _timeSliceFactory;
@@ -35,6 +35,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Event fired when a <see cref="Subscription"/> is finished
         /// </summary>
         public event EventHandler<Subscription> SubscriptionFinished;
+
+        /// <summary>
+        /// Event triggered when the frontier time is updated
+        /// </summary>
+        public event EventHandler<DateTime> FrontierTimeUpdated;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SubscriptionSynchronizer"/> class
@@ -90,6 +95,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _frontierTimeProvider.SetCurrentTimeUtc(_timeProvider.GetUtcNow());
             var frontierUtc = _frontierTimeProvider.GetUtcNow();
+            FrontierTimeUpdated?.Invoke(this, frontierUtc);
 
             SecurityChanges newChanges;
             do

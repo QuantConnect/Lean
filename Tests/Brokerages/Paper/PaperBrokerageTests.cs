@@ -149,6 +149,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             {
                 _algorithm = algorithm;
                 _dividend = dividend;
+                FrontierTimeProvider = new NullFrontierTimeProvider();
                 _symbol = dividend.Symbol;
                 _timeSliceFactory = new TimeSliceFactory(TimeZones.NewYork);
             }
@@ -165,6 +166,18 @@ namespace QuantConnect.Tests.Brokerages.Paper
                     new Dictionary<Universe, BaseDataCollection>()
                 );
             }
+
+            public IFrontierTimeProvider FrontierTimeProvider { get; }
+        }
+
+        class NullFrontierTimeProvider : IFrontierTimeProvider
+        {
+            public DateTime GetUtcNow()
+            {
+                throw new NotImplementedException();
+            }
+
+            public event EventHandler<DateTime> FrontierTimeUpdated;
         }
     }
 }

@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -34,11 +33,8 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Server;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
-using QuantConnect.Orders;
 using QuantConnect.Packets;
-using QuantConnect.Scheduling;
 using QuantConnect.Securities;
-using QuantConnect.Statistics;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Engine
@@ -90,7 +86,7 @@ namespace QuantConnect.Tests.Engine
             Log.Trace("COUNT: " + nullSynchronizer.Count + "  KPS: " + thousands/seconds);
         }
 
-        public class NullAlphaHandler : IAlphaHandler
+        internal class NullAlphaHandler : IAlphaHandler
         {
             public bool IsActive { get; }
             public AlphaRuntimeStatistics RuntimeStatistics { get; }
@@ -115,7 +111,7 @@ namespace QuantConnect.Tests.Engine
             }
         }
 
-        public class NullLeanManager : ILeanManager
+        internal class NullLeanManager : ILeanManager
         {
             public void Dispose()
             {
@@ -143,244 +139,6 @@ namespace QuantConnect.Tests.Engine
             public void OnAlgorithmEnd()
             {
             }
-        }
-
-        class NullResultHandler : IResultHandler
-        {
-            public ConcurrentQueue<Packet> Messages { get; set; }
-            public ConcurrentDictionary<string, Chart> Charts { get; set; }
-            public TimeSpan ResamplePeriod { get; }
-            public TimeSpan NotificationPeriod { get; }
-            public bool IsActive { get; }
-
-            public void Initialize(AlgorithmNodePacket job,
-                IMessagingHandler messagingHandler,
-                IApi api,
-                ISetupHandler setupHandler,
-                ITransactionHandler transactionHandler)
-            {
-            }
-
-            public void Run()
-            {
-            }
-
-            public void DebugMessage(string message)
-            {
-            }
-
-            public void SystemDebugMessage(string message)
-            {
-            }
-
-            public void SecurityType(List<SecurityType> types)
-            {
-            }
-
-            public void LogMessage(string message)
-            {
-            }
-
-            public void ErrorMessage(string error, string stacktrace = "")
-            {
-            }
-
-            public void RuntimeError(string message, string stacktrace = "")
-            {
-            }
-
-            public void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
-            {
-            }
-
-            public void SampleEquity(DateTime time, decimal value)
-            {
-            }
-
-            public void SamplePerformance(DateTime time, decimal value)
-            {
-            }
-
-            public void SampleBenchmark(DateTime time, decimal value)
-            {
-            }
-
-            public void SampleAssetPrices(Symbol symbol, DateTime time, decimal value)
-            {
-            }
-
-            public void SampleRange(List<Chart> samples)
-            {
-            }
-
-            public void SetAlgorithm(IAlgorithm algorithm)
-            {
-            }
-
-            public void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics)
-            {
-            }
-
-            public void StoreResult(Packet packet, bool async = false)
-            {
-            }
-
-            public void SendFinalResult(AlgorithmNodePacket job,
-                Dictionary<int, Order> orders,
-                Dictionary<DateTime, decimal> profitLoss,
-                Dictionary<string, Holding> holdings,
-                CashBook cashbook,
-                StatisticsResults statisticsResults,
-                Dictionary<string, string> banner)
-            {
-            }
-
-            public void SendStatusUpdate(AlgorithmStatus status, string message = "")
-            {
-            }
-
-            public void SetChartSubscription(string symbol)
-            {
-            }
-
-            public void RuntimeStatistic(string key, string value)
-            {
-            }
-
-            public void OrderEvent(OrderEvent newEvent)
-            {
-            }
-
-            public void Exit()
-            {
-            }
-
-            public void PurgeQueue()
-            {
-            }
-
-            public void ProcessSynchronousEvents(bool forceProcess = false)
-            {
-            }
-
-            public string SaveLogs(string id, IEnumerable<string> logs)
-            {
-                return id;
-            }
-
-            public void SaveResults(string name, Result result)
-            {
-            }
-
-            public void SetDataManager(IDataFeedSubscriptionManager dataManager)
-            {
-            }
-        }
-
-        class NullRealTimeHandler : IRealTimeHandler
-        {
-            public void Add(ScheduledEvent scheduledEvent)
-            {
-            }
-
-            public void Remove(ScheduledEvent scheduledEvent)
-            {
-            }
-
-            public bool IsActive { get; }
-            public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api)
-            {
-            }
-
-            public void Run()
-            {
-            }
-
-            public void SetTime(DateTime time)
-            {
-            }
-
-            public void ScanPastEvents(DateTime time)
-            {
-            }
-
-            public void Exit()
-            {
-            }
-
-            public void OnSecuritiesChanged(SecurityChanges changes)
-            {
-            }
-        }
-
-        class NullTransactionHandler : ITransactionHandler
-        {
-            public int OrdersCount { get; }
-            public Order GetOrderById(int orderId)
-            {
-                throw new NotImplementedException();
-            }
-
-            public Order GetOrderByBrokerageId(string brokerageId)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IEnumerable<OrderTicket> GetOpenOrderTickets(Func<OrderTicket, bool> filter = null)
-            {
-                return OrderTickets.Values.Where(x => x.Status.IsOpen() && (filter == null || filter(x)));
-            }
-
-            public OrderTicket GetOrderTicket(int orderId)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IEnumerable<Order> GetOrders(Func<Order, bool> filter = null)
-            {
-                throw new NotImplementedException();
-            }
-
-            public OrderTicket Process(OrderRequest request)
-            {
-                throw new NotImplementedException();
-            }
-
-            public List<Order> GetOpenOrders(Func<Order, bool> filter = null)
-            {
-                return Orders.Values.Where(x => x.Status.IsOpen() && (filter == null || filter(x))).ToList();
-            }
-
-            public bool IsActive { get; }
-            public ConcurrentDictionary<int, Order> Orders { get; }
-            public ConcurrentDictionary<int, OrderTicket> OrderTickets { get; }
-            public void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler)
-            {
-            }
-
-            public void Run()
-            {
-            }
-
-            public void Exit()
-            {
-            }
-
-            public void ProcessSynchronousEvents()
-            {
-            }
-
-            public void AddOpenOrder(Order order, OrderTicket orderTicket)
-            {
-                throw new NotImplementedException();
-            }
-
-            public event EventHandler<OrderEvent> NewOrderEvent;
         }
 
         class NullSynchronizer : ISynchronizer
@@ -411,6 +169,7 @@ namespace QuantConnect.Tests.Engine
                     _consolidatorUpdateData.Add(new UpdateData<SubscriptionDataConfig>(security.Subscriptions.First(), typeof(Tick), new BaseData[] { tick }));
                 }
 
+                FrontierTimeProvider = new NullFrontierTimeProvider();
                 _timeSlices.AddRange(GenerateTimeSlices().Take(int.MaxValue / 1000));
             }
 
@@ -418,6 +177,8 @@ namespace QuantConnect.Tests.Engine
             {
                 return _timeSlices;
             }
+
+            public IFrontierTimeProvider FrontierTimeProvider { get; }
 
             private IEnumerable<TimeSlice> GenerateTimeSlices()
             {
@@ -442,6 +203,15 @@ namespace QuantConnect.Tests.Engine
                 }
                 while (_frontierUtc <= _endTimeUtc);
             }
+        }
+        class NullFrontierTimeProvider : IFrontierTimeProvider
+        {
+            public DateTime GetUtcNow()
+            {
+                throw new NotImplementedException();
+            }
+
+            public event EventHandler<DateTime> FrontierTimeUpdated;
         }
     }
 }

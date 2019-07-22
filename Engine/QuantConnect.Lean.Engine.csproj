@@ -171,6 +171,7 @@
     <Compile Include="DataFeeds\IDataFeedSubscriptionManager.cs" />
     <Compile Include="DataFeeds\IDataFeedTimeProvider.cs" />
     <Compile Include="DataFeeds\IDataManager.cs" />
+    <Compile Include="DataFeeds\IFrontierTimeProvider.cs" />
     <Compile Include="DataFeeds\ISubscriptionSynchronizer.cs" />
     <Compile Include="DataFeeds\ISynchronizer.cs" />
     <Compile Include="DataFeeds\LiveFutureChainProvider.cs" />

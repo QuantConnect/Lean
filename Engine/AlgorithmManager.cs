@@ -53,6 +53,7 @@ namespace QuantConnect.Lean.Engine
         private DateTime _currentTimeStepTime;
         private readonly TimeSpan _timeLoopMaximum = TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-maximum", 20));
         private long _dataPointCount;
+        private IRealTimeHandler _realTime;
 
         /// <summary>
         /// Publicly accessible algorithm status
@@ -149,6 +150,7 @@ namespace QuantConnect.Lean.Engine
         public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, ISynchronizer synchronizer, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ILeanManager leanManager, IAlphaHandler alphas, CancellationToken token)
         {
             //Initialize:
+            _realTime = realtime;
             _dataPointCount = 0;
             _algorithm = algorithm;
             var portfolioValue = algorithm.Portfolio.TotalPortfolioValue;
@@ -205,6 +207,11 @@ namespace QuantConnect.Lean.Engine
                 }
             }
 
+            synchronizer.FrontierTimeProvider.FrontierTimeUpdated += (sender, time) =>
+            {
+                AdvanceAlgorithmTime(time);
+            };
+
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace("AlgorithmManager.Run(): Begin DataStream - Start: " + algorithm.StartDate + " Stop: " + algorithm.EndDate);
             foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
@@ -212,10 +219,8 @@ namespace QuantConnect.Lean.Engine
                 // reset our timer on each loop
                 _currentTimeStepTime = DateTime.MinValue;
 
-                //Check this backtest is still running:
-                if (_algorithm.Status != AlgorithmStatus.Running)
+                if (!IsAlgorithmStillRunning())
                 {
-                    Log.Error(string.Format("AlgorithmManager.Run(): Algorithm state changed to {0} at {1}", _algorithm.Status, timeSlice.Time));
                     break;
                 }
 
@@ -274,17 +279,6 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 //Update algorithm state after capturing performance from previous day
-
-                // If backtesting, we need to check if there are realtime events in the past
-                // which didn't fire because at the scheduled times there was no data (i.e. markets closed)
-                // and fire them with the correct date/time.
-                if (backtestMode)
-                {
-                    realtime.ScanPastEvents(time);
-                }
-
-                //Set the algorithm and real time handler's time
-                algorithm.SetDateTime(time);
 
                 // Update the current slice before firing scheduled events or any other task
                 algorithm.SetCurrentSlice(timeSlice.Slice);
@@ -705,6 +699,10 @@ namespace QuantConnect.Lean.Engine
                 // poke the algorithm at the end of each time step
                 algorithm.OnEndOfTimeStep();
 
+                if (!IsAlgorithmStillRunning())
+                {
+                    break;
+                }
             } // End of ForEach feed.Bridge.GetConsumingEnumerable
 
             // stop timing the loops
@@ -920,6 +918,7 @@ namespace QuantConnect.Lean.Engine
                             var percent = (int)(100 * (timeSlice.Time.Ticks - warmUpStartTicks) / (double)(DateTime.UtcNow.Ticks - warmUpStartTicks));
                             results.SendStatusUpdate(AlgorithmStatus.History, $"Catching up to realtime {percent}%...");
                         }
+                        AdvanceAlgorithmTime(timeSlice.Time);
                         yield return timeSlice;
                         lastHistoryTimeUtc = timeSlice.Time;
                     }
@@ -1270,6 +1269,29 @@ namespace QuantConnect.Lean.Engine
                 _algorithm.Status = AlgorithmStatus.RuntimeError;
                 Log.Error(err);
             }
+        }
+
+        private void AdvanceAlgorithmTime(DateTime time)
+        {
+            // If backtesting, we need to check if there are realtime events in the past
+            // which didn't fire because at the scheduled times there was no data (i.e. markets closed)
+            // and fire them with the correct date/time.
+            if (!_liveMode)
+            {
+                _realTime.ScanPastEvents(time);
+            }
+            //Set the algorithm and real time handler's time
+            _algorithm.SetDateTime(time);
+        }
+
+        private bool IsAlgorithmStillRunning()
+        {
+            if (_algorithm.Status != AlgorithmStatus.Running)
+            {
+                Log.Error($"AlgorithmManager.Run(): Algorithm state changed to {_algorithm.Status} at {_algorithm.Time}");
+                return false;
+            }
+            return true;
         }
 
         /// <summary>

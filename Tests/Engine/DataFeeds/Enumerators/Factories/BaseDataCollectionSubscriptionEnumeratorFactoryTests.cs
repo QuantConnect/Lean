@@ -96,15 +96,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
             var factory = new BaseDataCollectionSubscriptionEnumeratorFactory();
 
-            var dateStart = new DateTime(2014, 3, 25);
-            var dateEnd = new DateTime(2014, 3, 26);
+            var dateStart = new DateTime(2014, 3, 26);
+            var dateEnd = new DateTime(2014, 3, 27);
             var days = (dateEnd - dateStart).Days + 1;
 
             var request = new SubscriptionRequest(true, universe, security, config, dateStart, dateEnd);
 
             using (var enumerator = factory.CreateEnumerator(request, fileProvider))
             {
-                for (var i = 0; i < days; i++)
+                dateStart = dateStart.AddDays(-1);
+                for (var i = 0; i <= days; i++)
                 {
                     Assert.IsTrue(enumerator.MoveNext());
 

@@ -2,7 +2,7 @@
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -14,24 +14,19 @@
  *
 */
 
-using System.Collections.Generic;
-using System.Threading;
+using System;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
-    /// Interface which provides the data to stream to the algorithm
+    /// Frontier time provider that triggers an event
+    /// each time the frontier is updated
     /// </summary>
-    public interface ISynchronizer
+    public interface IFrontierTimeProvider : ITimeProvider
     {
         /// <summary>
-        /// Returns an enumerable which provides the data to stream to the algorithm
+        /// Event triggered when the frontier time is updated
         /// </summary>
-        IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Time provider which returns current UTC frontier time
-        /// </summary>
-        IFrontierTimeProvider FrontierTimeProvider { get; }
+        event EventHandler<DateTime> FrontierTimeUpdated;
     }
 }

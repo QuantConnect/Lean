@@ -29,6 +29,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Time provider which returns current UTC frontier time
         /// </summary>
-        ITimeProvider FrontierTimeProvider { get; }
+        IFrontierTimeProvider FrontierTimeProvider { get; }
     }
 }

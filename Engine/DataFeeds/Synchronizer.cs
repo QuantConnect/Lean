@@ -59,7 +59,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Time provider which returns current UTC frontier time
         /// </summary>
-        public ITimeProvider FrontierTimeProvider => SubscriptionSynchronizer;
+        public IFrontierTimeProvider FrontierTimeProvider => SubscriptionSynchronizer;
 
         /// <summary>
         /// Initializes the instance of the Synchronizer class
