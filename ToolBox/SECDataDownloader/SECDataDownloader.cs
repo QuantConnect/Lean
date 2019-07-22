@@ -28,6 +28,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
     {
         // SEC imposes rate limits of 10 requests per second. Set to 10 req / 1.1 sec just to be safe.
         private readonly RateGate _indexGate = new RateGate(10, TimeSpan.FromSeconds(1.1));
+        private readonly HashSet<string> _downloadedIndexFiles = new HashSet<string>();
 
         /// <summary>
         /// Base URL to query the SEC website for reports
@@ -71,12 +72,6 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 var dailyIndexTmp = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.idx"));
                 var dailyIndexRaw = new FileInfo(Path.Combine(rawDestination, "indexes", $"{currentDate:yyyyMMdd}.idx"));
 
-                if (File.Exists(rawFile) && dailyIndexRaw.Exists)
-                {
-                    Log.Trace($"SECDataDownloader.Download(): Files already exist: {rawFile} - {dailyIndexRaw.FullName} -- Skipping...");
-                    continue;
-                }
-
                 // Sometimes, requests to the SEC can fail for no apparent reason.
                 // We implement retry logic here to mitigate that potential issue
                 for (var retries = 0; retries < MaxRetries; retries++)
@@ -108,7 +103,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 
                         if (response == null)
                         {
-                            Log.Error("SECDataDownloader.Download(): Response is null");
+                            Log.Error("SECDataDownloader.Download(): Archive download response is null");
                             continue;
                         }
 
@@ -135,17 +130,17 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     {
                         using (var client = new WebClient())
                         {
-                            if (dailyIndexRaw.Exists)
-                            {
-                                Log.Trace($"SECDataDownloader.Download(): Skipping download of index file manifest: {dailyIndexRaw.FullName}");
-                                break;
-                            }
-
                             Log.Trace($"SECDataDownloader.Download(): Downloading temp index manifest to: {dailyIndexTmp.FullName}");
                             client.DownloadFile($"{BaseUrl}/daily-index/{currentDate.Year}/{quarter}/master.{currentDate:yyyyMMdd}.idx", dailyIndexTmp.FullName);
 
+                            if (dailyIndexRaw.Exists)
+                            {
+                                Log.Trace($"SECDataDownloader.Download(): Deleting existing index file manifest: {dailyIndexRaw.FullName}");
+                                dailyIndexRaw.Delete();
+                            }
+
                             Log.Trace($"SECDataDownloader.Download(): Moving temp index manifest to: {dailyIndexRaw.FullName}");
-                            File.Move(dailyIndexTmp.FullName, dailyIndexRaw.FullName);
+                            dailyIndexTmp.MoveTo(dailyIndexRaw.FullName);
 
                             Log.Trace($"SECDataDownloader.Download(): Successfully downloaded master.{currentDate:yyyyMMdd}.idx");
 
@@ -158,7 +153,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 
                         if (response == null)
                         {
-                            Log.Error("SECDataDownloader.Download(): Response is null");
+                            Log.Error("SECDataDownloader.Download(): Daily index file response is null");
                         }
 
                         // SEC website uses s3, which returns a 403 if the given file does not exist
@@ -184,6 +179,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 
                 // Tasks of index file downloads
                 var downloadTasks = new List<Task>();
+                var previousCik = string.Empty;
                 var i = 0;
 
                 // Parse CIK from text database and download the file asynchronously if we don't already have it
@@ -211,8 +207,21 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         case "10-Q":
                             break;
                         default:
-                            Log.Error($"SECDataDownloader(): Skipping form type {formType} with CIK: {cik} - on line {i}");
+                            // To prevent duplicate log spam
+                            if (!string.IsNullOrEmpty(previousCik) && cik != previousCik)
+                            {
+                                Log.Error($"SECDataDownloader.Download(): Skipping form type {formType} with CIK: {cik} - line {i}");
+                            }
+
+                            previousCik = cik;
                             continue;
+                    }
+
+                    if (_downloadedIndexFiles.Contains(cik))
+                    {
+                        Log.Trace($"SECDataDownloader.Download(): Skipping index file since we already downloaded it during this session: {cik}.json");
+                        previousCik = cik;
+                        continue;
                     }
 
                     var indexPathTmp = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json"));
@@ -227,6 +236,9 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         downloadTasks.Add(client.DownloadFileTaskAsync($"{BaseUrl}/data/{cik}/index.json", indexPathTmp.FullName)
                             .ContinueWith(_ => OnIndexFileDownloaded(indexPathTmp, indexPath)));
                     }
+
+                    _downloadedIndexFiles.Add(cik);
+                    previousCik = cik;
                 }
 
                 Task.WaitAll(downloadTasks.ToArray());
