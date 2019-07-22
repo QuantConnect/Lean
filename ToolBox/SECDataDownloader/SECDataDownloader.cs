@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using QuantConnect.Logging;
@@ -46,13 +47,14 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         /// <param name="end">Ending date</param>
         public void Download(string rawDestination, DateTime start, DateTime end)
         {
-            Directory.CreateDirectory(rawDestination);
+            Directory.CreateDirectory(Path.Combine(rawDestination, "indexes"));
 
             for (var currentDate = start; currentDate <= end; currentDate = currentDate.AddDays(1))
             {
                 // SEC does not publish documents on US federal holidays or weekends
                 if (!currentDate.IsCommonBusinessDay() || USHoliday.Dates.Contains(currentDate))
                 {
+                    Log.Trace($"SECDataDownloader.Download(): Skipping date {currentDate:yyyy-MM-dd} because it was during the weekend or was a holiday");
                     continue;
                 }
 
@@ -63,10 +65,15 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     "QTR4";
 
                 var rawFile = Path.Combine(rawDestination, $"{currentDate:yyyyMMdd}.nc.tar.gz");
-                var tmpFile = Path.Combine(rawDestination, $"{currentDate:yyyyMMdd}.nc.tar.gz.tmp");
+                var tmpFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.nc.tar.gz.tmp");
 
-                if (File.Exists(rawFile))
+                // We can access the index files for any given date and filter by form type
+                var dailyIndexTmp = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.idx"));
+                var dailyIndexRaw = new FileInfo(Path.Combine(rawDestination, "indexes", $"{currentDate:yyyyMMdd}.idx"));
+
+                if (File.Exists(rawFile) && dailyIndexRaw.Exists)
                 {
+                    Log.Trace($"SECDataDownloader.Download(): Files already exist: {rawFile} - {dailyIndexRaw.FullName} -- Skipping...");
                     continue;
                 }
 
@@ -78,9 +85,20 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     {
                         using (var client = new WebClient())
                         {
+                            if (File.Exists(rawFile))
+                            {
+                                Log.Trace($"SECDataDownloader.Download(): Skipping download of archive: {currentDate:yyyyMMdd}.nc.tar.gz");
+                                break;
+                            }
+
+                            Log.Trace($"SECDataDownloader.Download(): Downloading temp filing archive to: {tmpFile}");
                             client.DownloadFile($"{BaseUrl}/Feed/{currentDate.Year}/{quarter}/{currentDate:yyyyMMdd}.nc.tar.gz", tmpFile);
+
+                            Log.Trace($"SECDataDownloader.Download(): Moving temp archive to: {rawFile}");
                             File.Move(tmpFile, rawFile);
+
                             Log.Trace($"SECDataDownloader.Download(): Successfully downloaded {currentDate:yyyyMMdd}.nc.tar.gz");
+
                             break;
                         }
                     }
@@ -88,18 +106,130 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     {
                         var response = (HttpWebResponse) e.Response;
 
+                        if (response == null)
+                        {
+                            Log.Error("SECDataDownloader.Download(): Response is null");
+                            continue;
+                        }
+
                         // SEC website uses s3, which returns a 403 if the given file does not exist
                         if (response?.StatusCode != null && response.StatusCode == HttpStatusCode.Forbidden)
                         {
                             Log.Error($"SECDataDownloader.Download(): Report files not found on date {currentDate:yyyy-MM-dd}");
                             break;
                         }
+
+                        Log.Error($"SECDataDownloader.Download(): Received status code {(int)response.StatusCode} - Retrying...");
                     }
                     catch (Exception e)
                     {
                         Log.Error(e);
                     }
                 }
+
+                // Sometimes, requests to the SEC can fail for no apparent reason.
+                // We implement retry logic here to mitigate that potential issue
+                for (var retries = 0; retries < MaxRetries; retries++)
+                {
+                    try
+                    {
+                        using (var client = new WebClient())
+                        {
+                            if (dailyIndexRaw.Exists)
+                            {
+                                Log.Trace($"SECDataDownloader.Download(): Skipping download of index file manifest: {dailyIndexRaw.FullName}");
+                                break;
+                            }
+
+                            Log.Trace($"SECDataDownloader.Download(): Downloading temp index manifest to: {dailyIndexTmp.FullName}");
+                            client.DownloadFile($"{BaseUrl}/daily-index/{currentDate.Year}/{quarter}/master.{currentDate:yyyyMMdd}.idx", dailyIndexTmp.FullName);
+
+                            Log.Trace($"SECDataDownloader.Download(): Moving temp index manifest to: {dailyIndexRaw.FullName}");
+                            File.Move(dailyIndexTmp.FullName, dailyIndexRaw.FullName);
+
+                            Log.Trace($"SECDataDownloader.Download(): Successfully downloaded master.{currentDate:yyyyMMdd}.idx");
+
+                            break;
+                        }
+                    }
+                    catch (WebException e)
+                    {
+                        var response = (HttpWebResponse)e.Response;
+
+                        if (response == null)
+                        {
+                            Log.Error("SECDataDownloader.Download(): Response is null");
+                        }
+
+                        // SEC website uses s3, which returns a 403 if the given file does not exist
+                        if (response?.StatusCode != null && response.StatusCode == HttpStatusCode.Forbidden)
+                        {
+                            Log.Error($"SECDataDownloader.Download(): Index files not found on date {currentDate:yyyy-MM-dd}");
+                            break;
+                        }
+
+                        Log.Error($"SECDataDownloader.Download(): Received status code {(int)response.StatusCode} - Retrying...");
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e);
+                    }
+                }
+
+                // Skip miscellaneous header rows because it is unstructured data
+                var dailyIndexes = File.ReadAllLines(dailyIndexRaw.FullName).Skip(7);
+
+                // Increase max simultaneous HTTP connection count
+                ServicePointManager.DefaultConnectionLimit = 1000;
+
+                // Tasks of index file downloads
+                var downloadTasks = new List<Task>();
+                var i = 0;
+
+                // Parse CIK from text database and download the file asynchronously if we don't already have it
+                foreach (var line in dailyIndexes)
+                {
+                    i++;
+
+                    // CIK[0] | Company Name[1] | Form Type[2] | Date Filed[3] | File Name[4]
+                    var csv = line.Split('|');
+
+                    if (csv.Length < 5)
+                    {
+                        Log.Error($"SECDataDownloader.Download(): Length of daily index file line is less than five");
+                        continue;
+                    }
+
+                    // CIK is 10 digits long, which we use to get the index file
+                    var cik = csv[0].PadLeft(10, '0');
+                    var formType = csv[2];
+
+                    switch (formType)
+                    {
+                        case "8-K":
+                        case "10-K":
+                        case "10-Q":
+                            break;
+                        default:
+                            Log.Error($"SECDataDownloader(): Skipping form type {formType} with CIK: {cik} - on line {i}");
+                            continue;
+                    }
+
+                    var indexPathTmp = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json"));
+                    var indexPath = new FileInfo(Path.Combine(rawDestination, "indexes", $"{cik}.json"));
+
+                    // If we re-use the webclient per request, we get a concurrent I/O operations error
+                    using (var client = new WebClient())
+                    {
+                        // Makes sure we don't overrun SEC rate limits accidentally
+                        _indexGate.WaitToProceed();
+
+                        downloadTasks.Add(client.DownloadFileTaskAsync($"{BaseUrl}/data/{cik}/index.json", indexPathTmp.FullName)
+                            .ContinueWith(_ => OnIndexFileDownloaded(indexPathTmp, indexPath)));
+                    }
+                }
+
+                Task.WaitAll(downloadTasks.ToArray());
             }
 
             // Download list of Ticker to CIK mappings from SEC website. Note that this list
@@ -138,52 +268,25 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     File.Delete(cikLookupTempPath);
                 }
             }
-
-            // WebClient does not create the directory for us, so let's make sure it exists
-            Directory.CreateDirectory(Path.Combine(rawDestination, "indexes"));
-
-            // Increase max simultaneous HTTP connection count
-            ServicePointManager.DefaultConnectionLimit = 1000;
-
-            // Tasks of index file downloads
-            var downloadTasks = new List<Task>();
-
-            // Parse CIK from text database and download the file asynchronously if we don't already have it
-            foreach (var line in File.ReadLines(cikLookupPath))
-            {
-                // CIK is 10 digits long, which allows us to get the CIK effortlessly
-                var cik = line.Substring(line.Length - 11).Trim(':');
-                var cikPath = Path.Combine(rawDestination, "indexes", $"{cik}.json");
-
-                // Only download files we don't have
-                if (File.Exists(cikPath))
-                {
-                    continue;
-                }
-                
-                // If we re-use the webclient from above, we get a concurrent I/O operations error
-                using (var client = new WebClient())
-                {
-                    // Makes sure we don't overrun SEC rate limits accidentally
-                    _indexGate.WaitToProceed();
-
-                    downloadTasks.Add(client.DownloadFileTaskAsync($"{BaseUrl}/data/{cik}/index.json", $"{cikPath}.tmp").ContinueWith(_ => OnIndexFileDownloaded(cikPath)));
-                }
-            }
-
-            Task.WaitAll(downloadTasks.ToArray());
         }
 
         /// <summary>
         /// Moves temporary file to permanent path
         /// </summary>
-        /// <param name="cikPath">Path we will move temporary index file to</param>
-        private void OnIndexFileDownloaded(string cikPath)
+        /// <param name="source">Path we will move index file from</param>
+        /// <param name="destination">Path we will move index file to</param>
+        private void OnIndexFileDownloaded(FileInfo source, FileInfo destination)
         {
             try
             {
-                File.Move($"{cikPath}.tmp", cikPath);
-                Log.Trace($"SECDataDownloader.Download(): Successfully downloaded {cikPath}");
+                if (destination.Exists)
+                {
+                    Log.Trace($"SECDataDownloader.OnIndexFileDownloaded(): Deleting index file: {destination.FullName}");
+                    destination.Delete();
+                }
+
+                source.MoveTo(destination.FullName);
+                Log.Trace($"SECDataDownloader.OnIndexFileDownloaded(): Successfully downloaded {destination.FullName}");
             }
             catch (Exception e)
             {
