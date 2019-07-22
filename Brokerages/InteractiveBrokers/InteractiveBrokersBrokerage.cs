@@ -2211,23 +2211,65 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// This function is used to decide whether or not we should kill an algorithm
         /// when we lose contact with IB servers. IB performs server resets nightly
         /// and on Fridays they take everything down, so we'll prevent killing algos
-        /// on Saturdays completely for the time being.
+        /// during the scheduled reset times.
         /// </summary>
-        private static bool IsWithinScheduledServerResetTimes()
+        private bool IsWithinScheduledServerResetTimes()
         {
-            bool result;
-            var time = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
+            // Use schedule based on server region:
+            // https://www.interactivebrokers.com/en/index.php?f=2225
 
-            // don't kill algos on Saturdays if we don't have a connection
-            if (time.DayOfWeek == DayOfWeek.Saturday)
+            bool result;
+            var utcTime = DateTime.UtcNow;
+            var time = utcTime.ConvertFromUtc(TimeZones.NewYork);
+            var timeOfDay = time.TimeOfDay;
+
+            // Note: we add 15 minutes *before* and *after* all time ranges for safety margin
+
+            // During the Friday evening reset period, all services will be unavailable in all regions for the duration of the reset.
+            if (time.DayOfWeek == DayOfWeek.Friday && timeOfDay > new TimeSpan(22, 45, 0) ||
+                time.DayOfWeek == DayOfWeek.Saturday && timeOfDay < new TimeSpan(3, 15, 0))
             {
+                // Friday: 23:00 - 03:00 ET for all regions
                 result = true;
             }
             else
             {
-                var timeOfDay = time.TimeOfDay;
-                // from 11:45 -> 12:45 is the IB reset times, we'll go from 11:00pm->1:30am for safety margin
-                result = timeOfDay > new TimeSpan(23, 0, 0) || timeOfDay < new TimeSpan(1, 30, 0);
+                switch (_ibServerRegion)
+                {
+                    case Region.Europe:
+                        {
+                            // Saturday - Thursday: 05:45 - 06:45 CET
+                            var euTime = utcTime.ConvertFromUtc(TimeZones.Zurich);
+                            var euTimeOfDay = euTime.TimeOfDay;
+                            result = euTimeOfDay > new TimeSpan(5, 30, 0) && euTimeOfDay < new TimeSpan(7, 0, 0);
+                        }
+                        break;
+
+                    case Region.Asia:
+                        {
+                            // Saturday - Thursday: First reset: 16:30 - 17:00 ET
+                            if (timeOfDay > new TimeSpan(16, 15, 0) && timeOfDay < new TimeSpan(17, 15, 0))
+                            {
+                                result = true;
+                            }
+                            else
+                            {
+                                // Saturday - Thursday: Second reset: 20:15 - 21:00 HKT
+                                var hkTime = utcTime.ConvertFromUtc(TimeZones.HongKong);
+                                var hkTimeOfDay = hkTime.TimeOfDay;
+                                result = hkTimeOfDay > new TimeSpan(20, 0, 0) && hkTimeOfDay < new TimeSpan(21, 15, 0);
+                            }
+                        }
+                        break;
+
+                    case Region.America:
+                    default:
+                        {
+                            // Saturday - Thursday: 23:45 - 00:45 ET
+                            result = timeOfDay > new TimeSpan(23, 30, 0) || timeOfDay < new TimeSpan(1, 0, 0);
+                        }
+                        break;
+                }
             }
 
             Log.Trace("InteractiveBrokersBrokerage.IsWithinScheduledServerResetTimes(): " + result);
