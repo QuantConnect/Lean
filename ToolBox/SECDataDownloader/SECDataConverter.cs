@@ -25,9 +25,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Newtonsoft.Json;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.SEC;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using Formatting = Newtonsoft.Json.Formatting;
@@ -42,6 +44,8 @@ namespace QuantConnect.ToolBox.SECDataDownloader
     /// </summary>
     public class SECDataConverter
     {
+        private MapFileResolver _mapFileResolver;
+
         /// <summary>
         /// Raw data source path
         /// </summary>
@@ -154,6 +158,9 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         {
             RawSource = rawSource;
             Destination = destination;
+
+            _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
+                .Get(Market.USA);
         }
 
         /// <summary>
@@ -225,8 +232,6 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             Log.Trace($"SECDataConverter.Process(): Copied raw data from {remoteRawData.FullName} - to: {tempPath}");
 
             Log.Trace($"SECDataConverter.Process(): Start processing...");
-
-            var mapFileResolver = MapFileResolver.Create(Globals.DataFolder, Market.USA);
 
             var ncFilesRead = 0;
             var startingTime = DateTime.Now;
@@ -369,7 +374,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     // it is not found in the map files, we skip writing it.
                     foreach (var ticker in tickers)
                     {
-                        var tickerMapFile = mapFileResolver.ResolveMapFile(ticker, processingDate);
+                        var tickerMapFile = _mapFileResolver.ResolveMapFile(ticker, processingDate);
                         if (!tickerMapFile.Any())
                         {
                             Log.Trace($"SECDataConverter.Process(): {processingDate} - Failed to find map file for ticker: {ticker}");
