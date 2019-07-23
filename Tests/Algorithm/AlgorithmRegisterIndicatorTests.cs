@@ -127,12 +127,15 @@ namespace QuantConnect.Tests.Algorithm
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
                     "class GoodCustomIndicator:\n" +
                     "    def __init__(self):\n" +
+                    "        self.IsReady = True\n" +
+                    "        self.Value = 0\n" +
                     "        pass\n" +
                     "    def Update(self, input):\n" +
                     "        return input\n" +
                     "class BadCustomIndicator:\n" +
                     "    def __init__(self):\n" +
-                    "        pass\n" +
+                    "        self.IsReady = True\n" +
+                    "        self.Value = 0\n" +
                     "    def Updat(self, input):\n" +
                     "        return input");
 
@@ -143,7 +146,7 @@ namespace QuantConnect.Tests.Algorithm
                 Assert.AreEqual(1, actual);
 
                 var badIndicator = module.GetAttr("BadCustomIndicator").Invoke();
-                Assert.Throws<ArgumentException>(() => _algorithm.RegisterIndicator(_spy, badIndicator, Resolution.Minute));
+                Assert.Throws<NotImplementedException>(() => _algorithm.RegisterIndicator(_spy, badIndicator, Resolution.Minute));
             }
         }
 

@@ -35,6 +35,7 @@ namespace QuantConnect.Algorithm
     public partial class QCAlgorithm
     {
         private readonly Dictionary<IntPtr, PythonActivator> _pythonActivators = new Dictionary<IntPtr, PythonActivator>();
+        private readonly Dictionary<IntPtr, PythonIndicator> _pythonIndicators = new Dictionary<IntPtr, PythonIndicator>();
 
         public PandasConverter PandasConverter { get; private set; }
 
@@ -367,27 +368,7 @@ namespace QuantConnect.Algorithm
                 return;
             }
 
-            using (Py.GIL())
-            {
-                if (!indicator.HasAttr("Update"))
-                {
-                    throw new ArgumentException($"QCAlgorithm.RegisterIndicator(): Update method must be defined. Please checkout {indicator}");
-                }
-            }
-
-            // register the consolidator for automatic updates via SubscriptionManager
-            SubscriptionManager.AddConsolidator(symbol, consolidator);
-
-            // attach to the DataConsolidated event so it updates our indicator
-            consolidator.DataConsolidated += (sender, consolidated) =>
-            {
-                using (Py.GIL())
-                {
-                    var data = consolidated.ToPython();
-                    indicator.InvokeMethod("Update", new[] { data });
-                    data.Dispose();
-                }
-            };
+            RegisterIndicator(symbol, WrapPythonIndicator(indicator), consolidator);
         }
 
         /// <summary>
@@ -988,14 +969,18 @@ namespace QuantConnect.Algorithm
         {
             using (Py.GIL())
             {
-                var array = new[] { first, second, third, fourth }
-                    .Select(x =>
-                    {
-                        if (x == null) return null;
-                        var type = (Type)x.GetPythonType().AsManagedObject(typeof(Type));
-                        return (dynamic)x.AsManagedObject(type);
+                var array = new[] {first, second, third, fourth}
+                    .Select(
+                        x =>
+                        {
+                            if (x == null) return null;
 
-                    }).ToArray();
+                            Type type;
+                            return x.GetPythonType().TryConvert(out type)
+                                ? x.AsManagedObject(type)
+                                : WrapPythonIndicator(x);
+                        }
+                    ).ToArray();
 
                 var types = array.Where(x => x != null).Select(x => GetIndicatorBaseType(x.GetType())).Distinct();
 
@@ -1006,6 +991,25 @@ namespace QuantConnect.Algorithm
 
                 return array;
             }
+        }
+
+        /// <summary>
+        /// Wraps a custom python indicator and save its reference to _pythonIndicators dictionary
+        /// </summary>
+        /// <param name="pyObject">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
+        /// <returns><see cref="PythonIndicator"/> that wraps the python implementation</returns>
+        private PythonIndicator WrapPythonIndicator(PyObject pyObject)
+        {
+            PythonIndicator pythonIndicator;
+            if (!_pythonIndicators.TryGetValue(pyObject.Handle, out pythonIndicator))
+            {
+                pythonIndicator = new PythonIndicator(pyObject);
+
+                // Save to prevent future additions
+                _pythonIndicators.Add(pyObject.Handle, pythonIndicator);
+            }
+
+            return pythonIndicator;
         }
 
         /// <summary>
