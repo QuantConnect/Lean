@@ -22,7 +22,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-font = {'family': 'Arial'}
+font = {'family': 'Open Sans Condensed'}
 matplotlib.rc('font',**font)
 la = matplotlib.font_manager.FontManager()
 lu = matplotlib.font_manager.FontProperties(family = "Open Sans Condensed")
