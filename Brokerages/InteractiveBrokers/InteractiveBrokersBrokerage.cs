@@ -2902,8 +2902,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>True if the cash sync should be performed</returns>
         public override bool ShouldPerformCashSync(DateTime currentTimeUtc)
         {
-            return !IsWithinScheduledServerResetTimes() &&
-                   base.ShouldPerformCashSync(currentTimeUtc);
+            return base.ShouldPerformCashSync(currentTimeUtc) &&
+                   !IsWithinScheduledServerResetTimes();
         }
 
         private void CheckRateLimiting()
