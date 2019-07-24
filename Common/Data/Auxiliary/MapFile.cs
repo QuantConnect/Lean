@@ -215,7 +215,7 @@ namespace QuantConnect.Data.Auxiliary
             var mapFiles = new ConcurrentBag<MapFile>();
             Parallel.ForEach(Directory.EnumerateFiles(mapFileDirectory), file =>
             {
-                if (file.EndsWith(".csv"))
+                if (file.EndsWith(".csv") && !file.EndsWith("con.csv") && !file.EndsWith("prn.csv") && !file.EndsWith("prn.1.csv"))
                 {
                     var permtick = Path.GetFileNameWithoutExtension(file);
                     var fileRead = SafeMapFileRowRead(file);
@@ -232,6 +232,7 @@ namespace QuantConnect.Data.Auxiliary
         {
             try
             {
+
                 return MapFileRow.Read(file).ToList();
             }
             catch (Exception err)
