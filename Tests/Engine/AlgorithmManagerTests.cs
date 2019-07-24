@@ -407,8 +407,8 @@ namespace QuantConnect.Tests.Engine
                         EndTime = _frontierUtc.ConvertFromUtc(security.Exchange.TimeZone)
                     };
                     _data.Add(tick);
-                    _securitiesUpdateData.Add(new UpdateData<ISecurityPrice>(security, typeof(Tick), new BaseData[] { tick }));
-                    _consolidatorUpdateData.Add(new UpdateData<SubscriptionDataConfig>(security.Subscriptions.First(), typeof(Tick), new BaseData[] { tick }));
+                    _securitiesUpdateData.Add(new UpdateData<ISecurityPrice>(security, typeof(Tick), new BaseData[] { tick }, false));
+                    _consolidatorUpdateData.Add(new UpdateData<SubscriptionDataConfig>(security.Subscriptions.First(), typeof(Tick), new BaseData[] { tick }, false));
                 }
 
                 _timeSlices.AddRange(GenerateTimeSlices().Take(int.MaxValue / 1000));

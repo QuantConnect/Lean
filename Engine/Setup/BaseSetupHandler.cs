@@ -63,7 +63,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 var configs = algorithm
                     .SubscriptionManager
                     .SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(cash.ConversionRateSecurity.Symbol);
+                    .GetSubscriptionDataConfigs(cash.ConversionRateSecurity.Symbol,
+                        includeInternalConfigs:true);
 
                 var resolution = configs.GetHighestResolution();
                 var startTime = historyRequestFactory.GetStartTimeAlgoTz(

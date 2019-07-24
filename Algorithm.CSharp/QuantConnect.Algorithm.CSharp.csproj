@@ -146,6 +146,7 @@
     <Compile Include="Benchmarks\StatefulCoarseUniverseSelectionBenchmark.cs" />
     <Compile Include="Benchmarks\StatelessCoarseUniverseSelectionBenchmark.cs" />
     <Compile Include="CapmAlphaRankingFrameworkAlgorithm.cs" />
+    <Compile Include="CustomUniverseWithBenchmarkRegressionAlgorithm.cs" />
     <Compile Include="OnEndOfDayRegressionAlgorithm.cs" />
     <Compile Include="UniverseUnchangedRegressionAlgorithm.cs" />
     <Compile Include="USTreasuryYieldCurveDataAlgorithm.cs" />

@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using QuantConnect.Benchmarks;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -41,6 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
         private readonly PendingRemovalsManager _pendingRemovalsManager;
         private readonly CurrencySubscriptionDataConfigManager _currencySubscriptionDataConfigManager;
+        private bool _initializedSecurityBenchmark;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -336,9 +338,46 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="utcStart">The current date time in utc</param>
         /// <returns>Will return true if any subscription was added</returns>
-        public bool AddPendingCurrencyDataFeeds(DateTime utcStart)
+        public bool AddPendingInternalDataFeeds(DateTime utcStart)
         {
             var added = false;
+            if (!_initializedSecurityBenchmark)
+            {
+                _initializedSecurityBenchmark = true;
+
+                var securityBenchmark = _algorithm.Benchmark as SecurityBenchmark;
+                if (securityBenchmark != null)
+                {
+                    // we want to start from the previous tradable bar so the benchmark security
+                    // never has 0 price
+                    var previousTradableBar = Time.GetStartTimeForTradeBars(
+                        securityBenchmark.Security.Exchange.Hours,
+                        utcStart.ConvertFromUtc(securityBenchmark.Security.Exchange.TimeZone),
+                        _algorithm.LiveMode ? Time.OneMinute : Time.OneDay,
+                        1,
+                        false).ConvertToUtc(securityBenchmark.Security.Exchange.TimeZone);
+
+                    var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
+                        securityBenchmark.Security.Symbol,
+                        _algorithm.LiveMode ? Resolution.Minute : Resolution.Daily,
+                        isInternalFeed: true,
+                        fillForward: false).First();
+
+                    if (dataConfig != null)
+                    {
+                        added |= _dataManager.AddSubscription(new SubscriptionRequest(
+                            false,
+                            null,
+                            securityBenchmark.Security,
+                            dataConfig,
+                            previousTradableBar,
+                            _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)));
+
+                        Log.Trace($"UniverseSelection.AddPendingInternalDataFeeds(): Adding internal benchmark data feed {dataConfig}");
+                    }
+                }
+            }
+
             if (_currencySubscriptionDataConfigManager.UpdatePendingSubscriptionDataConfigs())
             {
                 foreach (var subscriptionDataConfig in _currencySubscriptionDataConfigManager

@@ -105,7 +105,7 @@ namespace QuantConnect.Tests.Common.Securities
                     cashBook));
             cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketMap, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
 
-            Assert.AreEqual(1, subscriptions.Subscriptions.Count(x => x.Symbol == Symbols.USDJPY));
+            Assert.AreEqual(1, subscriptions.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.USDJPY, includeInternalConfigs:true).Count);
             Assert.AreEqual(1, securities.Values.Count(x => x.Symbol == Symbols.USDJPY));
         }
 
@@ -177,7 +177,7 @@ namespace QuantConnect.Tests.Common.Securities
             );
 
             cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketMap, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
-            Assert.AreEqual(minimumResolution, subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.USDJPY).Resolution);
+            Assert.AreEqual(minimumResolution, subscriptions.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.USDJPY, includeInternalConfigs: true).Single().Resolution);
         }
 
         [Test]
@@ -205,7 +205,7 @@ namespace QuantConnect.Tests.Common.Securities
             );
 
             cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketMap, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
-            var config = subscriptions.Subscriptions.Single(x => x.Symbol == Symbols.USDJPY);
+            var config = subscriptions.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.USDJPY, includeInternalConfigs: true).Single();
             Assert.IsTrue(config.IsInternalFeed);
         }
 
@@ -407,7 +407,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             book.EnsureCurrencyDataFeeds(securities, subscriptions, MarketMap, SecurityChanges.None, dataManager.SecurityService);
 
-            var symbols = subscriptions.Subscriptions.Select(sdc => sdc.Symbol).ToHashSet();
+            var symbols = dataManager.SubscriptionManagerSubscriptions.Select(sdc => sdc.Symbol).ToHashSet();
 
             Assert.IsTrue(symbols.Contains(Symbols.BTCUSD));
             Assert.IsTrue(symbols.Contains(Symbols.LTCUSD));
