@@ -176,10 +176,6 @@ class LeanReportCreator(object):
                     text-align: center;
                 }
 
-                .col-xs-12 table > tbody > tr > td > img{
-                    width: 95%;
-                }
-
                 table.table > thead > tr > th {
                     border-bottom: none;
                     font-weight: bold;
@@ -197,7 +193,7 @@ class LeanReportCreator(object):
                 }
 
                 table#key-characteristics > tbody > tr {
-                    border-bottom: 1px solid #9c9c9c;
+                    border-bottom: 1px solid #cbd1d4;
                 }
 
                 table#key-characteristics > tbody > tr:first-child {
@@ -225,7 +221,7 @@ class LeanReportCreator(object):
                 }
 
                 table#key-characteristics > tbody > tr > td:first-child {
-                    border-top: #eee;
+                    border-top: #c3cace;
                 }
 
                 table#description-box {
@@ -254,7 +250,7 @@ class LeanReportCreator(object):
                     top: 80px;
                     left: 110px;
                     right: 110px;
-                    border-top: 1px solid #9c9c9c;
+                    border-top: 1px solid #888888;
                     border-bottom: none;
                 }
 
@@ -288,7 +284,7 @@ class LeanReportCreator(object):
                 .container-row {
                     height: auto;
                     overflow: auto;
-                    border-bottom: 1px solid #9c9c9c;
+                    border-bottom: 1px solid #b8b8b8;
                 }
 
                 .container-row:first-of-type {
