@@ -41,19 +41,20 @@ class CustomIndicatorAlgorithm(QCAlgorithm):
         self.sma = self.SMA("SPY", 60, Resolution.Minute)
         self.custom = CustomSimpleMovingAverage('custom', 60)
         self.RegisterIndicator("SPY", self.custom, Resolution.Minute)
+        self.PlotIndicator('cSMA', self.custom)
 
     def OnData(self, data):
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
 
         if self.Time.second == 0:
-            self.Log("   sma -> IsReady: {0}. Time: {1}. Value: {2}".format(self.sma.IsReady, self.sma.Current.Time, self.sma.Current.Value))
+            self.Log(f"   sma -> IsReady: {self.sma.IsReady}. Time: {self.sma.Current.Time}. Value: {self.sma.Current.Value}")
             self.Log(str(self.custom))
 
         # Regression test: test fails with an early quit
         diff = abs(self.custom.Value - self.sma.Current.Value)
-        if diff > 1e-25:
-            self.Quit("Quit: indicators difference is {0}".format(diff))
+        if diff > 1e-10:
+            self.Quit(f"Quit: indicators difference is {diff}")
 
 
 # Python implementation of SimpleMovingAverage.
@@ -67,7 +68,7 @@ class CustomSimpleMovingAverage:
         self.queue = deque(maxlen=period)
 
     def __repr__(self):
-        return "{0} -> IsReady: {1}. Time: {2}. Value: {3}".format(self.Name, self.IsReady, self.Time, self.Value)
+        return f"{self.Name} -> IsReady: {self.IsReady}. Time: {self.Time}. Value: {self.Value}"
 
     # Update method is mandatory
     def Update(self, input):
