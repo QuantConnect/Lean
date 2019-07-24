@@ -2895,6 +2895,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return history;
         }
 
+        /// <summary>
+        /// Returns whether the brokerage should perform the cash synchronization
+        /// </summary>
+        /// <param name="currentTimeUtc">The current time (UTC)</param>
+        /// <returns>True if the cash sync should be performed</returns>
+        public override bool ShouldPerformCashSync(DateTime currentTimeUtc)
+        {
+            return !IsWithinScheduledServerResetTimes() &&
+                   base.ShouldPerformCashSync(currentTimeUtc);
+        }
+
         private void CheckRateLimiting()
         {
             if (!_messagingRateLimiter.WaitToProceed(TimeSpan.Zero))

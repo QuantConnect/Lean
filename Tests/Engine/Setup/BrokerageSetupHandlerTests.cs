@@ -22,7 +22,6 @@ using Moq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
@@ -33,7 +32,6 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
-using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Engine.Setup
 {
@@ -415,16 +413,20 @@ namespace QuantConnect.Tests.Engine.Setup
         }
     }
 
-    internal class TestBrokerage : IBrokerage
+    internal class TestBrokerage : Brokerage
     {
-        public event EventHandler<OrderEvent> OrderStatusChanged;
-        public event EventHandler<OrderEvent> OptionPositionAssigned;
-        public event EventHandler<AccountEvent> AccountChanged;
-        public event EventHandler<BrokerageMessageEvent> Message;
-        public string Name { get; }
-        public bool IsConnected { get; }
+        public override bool IsConnected { get; } = true;
+        public int GetCashBalanceCallCount;
 
-        public List<Order> GetOpenOrders()
+        public TestBrokerage() : base("Test")
+        {
+        }
+
+        public TestBrokerage(string name) : base(name)
+        {
+        }
+
+        public override List<Order> GetOpenOrders()
         {
             const decimal delta = 1m;
             const decimal price = 1.2345m;
@@ -434,10 +436,12 @@ namespace QuantConnect.Tests.Engine.Setup
             var tz = TimeZones.NewYork;
 
             var time = new DateTime(2016, 2, 4, 16, 0, 0).ConvertToUtc(tz);
-            var marketOrderWithPrice = new MarketOrder(Symbols.SPY, quantity, time);
-            marketOrderWithPrice.Price = price;
+            var marketOrderWithPrice = new MarketOrder(Symbols.SPY, quantity, time)
+            {
+                Price = price
+            };
 
-            return new List<Order>()
+            return new List<Order>
             {
                 marketOrderWithPrice,
                 new LimitOrder(Symbols.SPY, -quantity, pricePlusDelta, time),
@@ -446,47 +450,41 @@ namespace QuantConnect.Tests.Engine.Setup
             };
         }
 
+        public override List<CashAmount> GetCashBalance()
+        {
+            GetCashBalanceCallCount++;
+
+            return new List<CashAmount> { new CashAmount(10, Currencies.USD) };
+        }
+
         #region UnusedMethods
-        public void Dispose()
-        {
-        }
-        public List<Holding> GetAccountHoldings()
+
+        public override List<Holding> GetAccountHoldings()
         {
             throw new NotImplementedException();
         }
 
-        public List<CashAmount> GetCashBalance()
+        public override bool PlaceOrder(Order order)
         {
             throw new NotImplementedException();
         }
 
-        public bool PlaceOrder(Order order)
+        public override bool UpdateOrder(Order order)
         {
             throw new NotImplementedException();
         }
 
-        public bool UpdateOrder(Order order)
+        public override bool CancelOrder(Order order)
         {
             throw new NotImplementedException();
         }
 
-        public bool CancelOrder(Order order)
+        public override void Connect()
         {
             throw new NotImplementedException();
         }
 
-        public void Connect()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Disconnect()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool AccountInstantlyUpdated { get; }
-        public IEnumerable<BaseData> GetHistory(HistoryRequest request)
+        public override void Disconnect()
         {
             throw new NotImplementedException();
         }

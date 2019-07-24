@@ -256,6 +256,7 @@
     <Compile Include="Indicators\IIndicatorWarmUpPeriodProvider.cs" />
     <Compile Include="Interfaces\IAccountCurrencyProvider.cs" />
     <Compile Include="Interfaces\IAlgorithmSubscriptionManager.cs" />
+    <Compile Include="Interfaces\IBrokerageCashSynchronizer.cs" />
     <Compile Include="Interfaces\IBusyCollection.cs" />
     <Compile Include="Interfaces\IDownloadProvider.cs" />
     <Compile Include="Interfaces\IHistoryProvider.cs" />
