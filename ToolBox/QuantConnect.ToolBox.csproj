@@ -335,6 +335,10 @@
     <Compile Include="TradingEconomicsDataDownloader\ITradingEconomicsDataDownloader.cs" />
     <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsCalendarDownloader.cs" />
     <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsCalendarDownloaderProgram.cs" />
+    <Compile Include="USTreasuryYieldCurve\USTreasuryYieldCurveConverter.cs" />
+    <Compile Include="USTreasuryYieldCurve\USTreasuryYieldCurveDownloader.cs" />
+    <Compile Include="USTreasuryYieldCurve\USTreasuryYieldCurveProgram.cs" />
+    <Compile Include="USTreasuryYieldCurve\YieldCurveAutogenXml.cs" />
     <Compile Include="YahooDownloader\Historical.cs" />
     <Compile Include="YahooDownloader\YahooDownloaderProgram.cs" />
     <Compile Include="YahooDownloader\Token.cs" />

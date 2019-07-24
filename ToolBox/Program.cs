@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.IO;
 using QuantConnect.Configuration;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
@@ -44,6 +43,7 @@ using QuantConnect.ToolBox.QuantQuoteConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using QuantConnect.ToolBox.SECDataDownloader;
 using QuantConnect.ToolBox.TradingEconomicsDataDownloader;
+using QuantConnect.ToolBox.USTreasuryYieldCurve;
 using QuantConnect.ToolBox.YahooDownloader;
 using QuantConnect.Util;
 
@@ -154,6 +154,14 @@ namespace QuantConnect.ToolBox
                             GetParameterOrExit(optionsObject, "api-key"),
                             GetParameterOrDefault(optionsObject, "data-source", "twitter_enhanced_withretweets,stocktwits"));
                         break;
+                    case "ustycdl":
+                    case "ustreasuryyieldcurvedownloader":
+                        USTreasuryYieldCurveProgram.USTreasuryYieldCurveRateDownloader(
+                            fromDate,
+                            toDate,
+                            GetParameterOrExit(optionsObject, "destination-dir")
+                        );
+                        break;
 
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
@@ -238,6 +246,12 @@ namespace QuantConnect.ToolBox
                     case "psychsignaldataconverter":
                         PsychSignalDataConverterProgram.PsychSignalDataConverter(
                             GetParameterOrExit(optionsObject, "date"),
+                            GetParameterOrExit(optionsObject, "source-dir"),
+                            GetParameterOrExit(optionsObject, "destination-dir"));
+                        break;
+                    case "ustyccv":
+                    case "ustreasuryyieldcurveconverter":
+                        USTreasuryYieldCurveProgram.USTreasuryYieldCurveConverter(
                             GetParameterOrExit(optionsObject, "source-dir"),
                             GetParameterOrExit(optionsObject, "destination-dir"));
                         break;
