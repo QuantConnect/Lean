@@ -254,10 +254,10 @@ class LeanReportCreator(object):
                     border-bottom: none;
                 }
 
-                .header {
+                .page .header {
                     height: 80px;
-                    left: 110;
-                    right: 110;
+                    left: 110px;
+                    right: 110px;
                     padding: 0;
                 }
 
