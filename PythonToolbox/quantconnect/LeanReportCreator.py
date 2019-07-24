@@ -71,15 +71,6 @@ class LeanReportCreator(object):
             "projectDescription": "Basic Template Algorithm",
         }
 
-    def get_footer(self):
-        self.count += 1
-        return f'''
-            <div class="footer">
-                <div class="footer-id">Hash: {self.hash} </div>
-                Democratizing Finance, Empowering Individuals
-                <div class="footer-page">{self.count}</div>
-            </div>'''
-
     def create(self):
 
         assets = self.reader.asset_allocation()
@@ -89,7 +80,7 @@ class LeanReportCreator(object):
         crisis = self.reader.crisis_events()
         for title, image in crisis.items():
             crisis[title] = self.get_image_box(title, image)
-        
+
         chartAssetAllocation = assets.pop("Asset Allocation", str())
         chartAnnualReturns = self.reader.annual_returns()
         chartCumulativeReturns = self.reader.cumulative_return()
@@ -137,88 +128,215 @@ class LeanReportCreator(object):
             <script src="''' + locationPrefix + '''/js/libraries/bootstrap.min.js"></script>
             <script src="''' + locationPrefix + '''/js/libraries/jquery.growl.js"></script>
             <link rel="stylesheet" href="''' + locationPrefix + '''/css/libraries/jquery.growl.css">
-    
+
             <style>
                 #table-summary .fa-times {
                     color: #d9534f;
                 }
-    
-                #key-statistics tr > td:first-child,
-                #author-metadata tr > td:first-child,
-                #project-metadata tr > td:first-child,
-                #key-statistics tr > td:first-child,
-                #key-characteristics tr > td:first-child {
-                    font-family: Norpeth-Bold, Helvetica, Arial, sans-serif;
-                    font-weight: bold;
-                }
-    
+
                 #author-metadata tr > td:first-child,
                 #project-metadata tr > td:first-child,
                 #key-characteristics tr > td:first-child {
                     width: 66%;
                 }
-    
+
                 #key-characteristics tr > td:first-child {
                     width: 50%;
                 }
-    
-                #key-characteristics tr > td:last-child {
-                    text-align: center;
-                    padding: 0;
-                }
-    
-                #author-metadata tr > td:last-child,
+
                 #project-metadata tr > td:last-child {
                     text-align: center;
                 }
-    
+
                 #key-statistics tr > td:last-child {
                     text-align: right;
                 }
-    
+
                 #key-statistics tr > td,
                 #key-characteristics tr > td,
                 table.table tr > td {
                     vertical-align: middle;
                 }
-    
+
                 table.table.align-top tr > td {
                     vertical-align: top;
                 }
-    
-                .table.qc-table.compact {
-                    height: 234px;
+
+                table.table {
+                    height: 230px;
                 }
-    
-                .table.qc-table.compact img {
+
+                table img {
                     width: 100%;
                     height: 100%;
-                    max-height: 196px;
+                    max-height: 225px;
                 }
-    
-                #author-box img {
-                    max-width: 33%;
-                    height: auto;
-                    max-height: 33%;
-                    float: left;
-                    margin-right: 5px;
-                    margin-bottom: 5px;
-                }
-    
-                .header .header-title {
-                    margin-top: 40px;
-                    line-height: 30px;
-                    position: absolute;
-                    left: 0;
-                    right: 0;
+
+                .col-xs-12 table > tbody > tr > td {
                     text-align: center;
                 }
-    
-                #strategy-description,
-                #author-bio {
-                    max-height: 194px;
+
+                table.table > thead > tr > th {
+                    border-bottom: none;
+                    font-weight: bold;
+                    font-size: 18px;
+                    padding-top: 15px;
+                }
+
+                table.table > tbody > tr > td {
+                    border-top: none;
+                    font-size: 18px;
+                }
+
+                table#key-characteristics {
+                    width: calc(100% - 30px);
+                }
+
+                table#key-characteristics > tbody > tr {
+                    border-bottom: 1px solid #cbd1d4;
+                }
+
+                table#key-characteristics > tbody > tr:first-child {
+                    border-top: 1px solid #9c9c9c;
+                }
+
+                table#key-characteristics > tbody > tr > td:last-child {
+                    width: 5%;
+                    text-align: center;
+                    position: relative;
+                    padding: 0;
+                    font-weight: bold;
+                }
+
+                table#key-characteristics > tbody > tr > td  > span.markets {
+                    background: #8f9ca3;
+                    font-size: 11px;
+                    color: #fff;
+                    padding: 8px 14px;
+                    border-radius: 4px;
+                }
+
+                .col-xs-4:nth-child(2) table#key-characteristics > tbody > tr > td:last-child {
+                    text-align: right;
+                }
+
+                table#key-characteristics > tbody > tr > td:first-child {
+                    border-top: #c3cace;
+                }
+
+                table#description-box {
                     word-wrap: break-word;
-                    height: 100%;
+                    height: 100px;
+                }
+
+                table#description-box > thead > tr > th > p{
+                    color: #f5ae29;
+                    font-size: 24px;
+                }
+
+                table#description-box > thead > tr > th > p > span {
+                    margin-right: 10px;
+                    width: 1px;
+                    height: 24px;
+                    background: #f5ae29;
+                }
+
+                .page {
+                    width: 1200px;
+                    height: 1686px;
+                }
+
+                .page .content {
+                    top: 80px;
+                    left: 110px;
+                    right: 110px;
+                    border-top: 1px solid #888888;
+                    border-bottom: none;
+                }
+
+                .header {
+                    height: 80px;
+                    left: 110;
+                    right: 110;
+                    padding: 0;
+                }
+
+                .header .header-left img {
+                    width: 230px;
+                    height: auto;
+                    padding-top: 0;
+                    margin-top: 25px;
+                }
+
+                .header .header-right {
+                    font-family: Helvetica, Arial, sans-serif;
+                    font-weight: bold;
+                    margin-top: 40px;
+                    line-height: 18px;
+                    float: right;
+                    font-size: 18px;
+                    max-width: 70%;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+
+                .container-row {
+                    height: auto;
+                    overflow: auto;
+                    border-bottom: 1px solid #b8b8b8;
+                }
+
+                .container-row:first-of-type {
+                    padding: 10px 0;
+                }
+
+                .container-row:empty {
+                    border: none;
+                }
+
+                span.checkmark, span.exmark {
+                    border-radius: 50%;
+                    position: absolute;
+                    border: none;
+                    top: 10px;
+                    right: 25px;
+                }
+
+                span.checkmark {
+                    background-color: #46bd6a;
+                    height: 20px;
+                    width: 20px;
+                }
+
+                span.checkmark:after {
+                    content: "";
+                    position: absolute;
+                    left: 7px;
+                    top: 3px;
+                    width: 5px;
+                    height: 10px;
+                    border: solid #fff;
+                    border-width: 0 1px 1px 0;
+                    -webkit-transform: rotate(45deg);
+                    -ms-transform: rotate(45deg);
+                    transform: rotate(45deg);
+                }
+
+                span.exmark {
+                    background-color:#bc4143;
+                    color: white;
+                    font-size: 12px;
+                    padding: 3px 5px;
+                    padding-top: 4px;
+                    line-height: 1;
+                }
+
+                p#strategy-description {
+                    overflow: hidden;
+                    max-height: 130px;
+                    margin-bottom: 15px;
+                    word-break: break-word;
                 }
 
             </style>
@@ -229,44 +347,26 @@ class LeanReportCreator(object):
                 <div class="header-left">
                     <img src="https://cdn.quantconnect.com/web/i/logo.png">
                 </div>
-                <div class="header-title">Strategy Report Summary</div>
-                <div class="header-right">''' + self.user['projectName'] + '''</div>
+                <div class="header-right">Strategy Report Summary: ''' + self.user['projectName'] + '''</div>
             </div>
             <div class="content">
                 <h1 class="hidden">Strategy Report</h1>
                 <div class="container-row">
-                    <div class="col-xs-8">
-                        <table id="description-box" class="table qc-table compact no-margin align-top">
+                    <div class="col-xs-12">
+                        <table id="description-box" class="table compact no-margin align-top">
                             <thead>
                             <tr>
                                 <th>
-                                    Strategy Description
+                                    <p>
+                                        <span>|</span>Strategy Description
+                                    </p>
                                 </th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr>
                                 <td>
-                                    <p id="strategy-description" class="text-justify editable" style="max-width: 590px;overflow: hidden;height:193px">''' + self.user['projectDescription'] + '''</p>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="col-xs-4">
-                        <table id="author-box" class="table qc-table compact no-margin align-top">
-                            <thead>
-                            <tr>
-                                <th>
-                                    About the Author <span class="pull-right">''' + self.user['authorName'] + '''</span>
-                                </th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr>
-                                <td style="overflow: hidden;">
-                                    <img src="''' + self.user['authorPicture'] + '''">
-                                    <p id="author-bio" class="text-justify editable" style="max-width: 286px;height:193px">''' + self.user['authorBiography']+ '''</p>
+                                    <p id="strategy-description" class="text-justify editable">''' + self.user['projectDescription'] + '''</p>
                                 </td>
                             </tr>
                             </tbody>
@@ -290,38 +390,25 @@ class LeanReportCreator(object):
                     ''' + chartDrawdown + '''
                 </div>
             </div>
-            ''' + self.get_footer() + '''
         </div>
-    
+
         <div class="page">
             <div class="header">
                 <div class="header-left">
                     <img src="https://cdn.quantconnect.com/web/i/logo.png">
                 </div>
-                <div class="header-title">Backtest Strategy Analysis</div>
-                <div class="header-right">''' + self.user['projectName'] + '''</div>
+                <div class="header-right">Strategy Report Summary: ''' + self.user['projectName'] + '''</div>
             </div>
             <div class="content">
-                <div class="container-row">
-                    ''' + chartDailyReturns + '''
-                </div>
-                <div class="container-row">
-                    ''' + chartRollingBeta + '''
-                </div>
-                <div class="container-row">
-                    ''' + chartRollingSP + '''
-                </div>
-                <div class="container-row">
-                    ''' + chartNetHoldings + '''
-                </div>
-                <div class="container-row">
-                    ''' + chartLeverage + '''
-                </div>
+                <div class="container-row">''' + chartDailyReturns + '''</div>
+                <div class="container-row">''' + chartRollingBeta + '''</div>
+                <div class="container-row">''' + chartRollingSP + '''</div>
+                <div class="container-row">''' + chartNetHoldings + '''</div>
+                <div class="container-row">''' + chartLeverage + '''</div>
             </div>
-            ''' + self.get_footer() + '''
         </div>
-        ''' + self.get_page_from_dict("Backtest Crisis Analysis", crisis) + ''' 
-        ''' + self.get_page_from_dict("Asset Allocation", assets) + ''' 
+        ''' + self.get_page_from_dict("Backtest Crisis Analysis", crisis) + '''
+        ''' + self.get_page_from_dict("Asset Allocation", assets) + '''
         </body>
         </html>'''
 
@@ -340,7 +427,7 @@ class LeanReportCreator(object):
     def get_table(self, title, dict):
         ret = f'''
         <div class="col-xs-4">
-            <table id="key-characteristics" class="table qc-table compact">
+            <table id="key-characteristics" class="table compact">
                 <thead><tr>
                 <th colspan="2">{title}</th>
                 </tr></thead>
@@ -350,9 +437,12 @@ class LeanReportCreator(object):
             if isinstance(value, list):
                 value = ", ".join(value)
             if isinstance(value, bool):
-                value = '&#10004' if value else '&#10006'
-            ret += f'''<tr><td>{title}</td><td>{value}</td></tr>'''
-    
+                value = '''<span class="checkmark"></span>''' if value else '''<span class="exmark">&#x2715;</span>'''
+            if title == 'Markets':
+                ret += f'''<tr><td>{title}</td><td><span class="markets">{value}</span></td></tr>'''
+            else:
+                ret += f'''<tr><td>{title}</td><td>{value}</td></tr>'''
+
         return ret + '''
                 </tbody>
             </table>
@@ -361,7 +451,7 @@ class LeanReportCreator(object):
     def get_image_box(self, title, url, col = 4):
         return "" if not url else '''
         <div class="col-xs-''' + str(col) + '''">
-            <table class="table qc-table compact">
+            <table class="table compact">
                 <thead>
                 <tr>
                     <th>''' + title + '''</th>
@@ -369,7 +459,7 @@ class LeanReportCreator(object):
                 </thead>
                 <tbody>
                 <tr>
-                    <td>
+                    <td style="padding:0;">
                         ''' + (( '''<img src="''' + url + '''">''' ) if url else "") + '''
                     </td>
                 </tr>
@@ -381,7 +471,7 @@ class LeanReportCreator(object):
         ret = '''<div class="content">'''
         titles = list(dict.keys())
         stop = min(15, len(titles))
-        
+
         for i in range(0, stop, 3):
             ret += '''<div class="container-row">'''
             for j in range(0, 3):
@@ -400,9 +490,7 @@ class LeanReportCreator(object):
                     <div class="header-left">
                         <img src="https://cdn.quantconnect.com/web/i/logo.png">
                     </div>
-                    <div class="header-title">''' + title + '''</div>
-                    <div class="header-right">''' + self.user['projectName'] + '''</div>
+                    <div class="header-right">Strategy Report Summary: ''' + self.user['projectName'] + '''</div>
                 </div> ''' + self.get_image_from_dict(dict) + '''
-                ''' + self.get_footer() + '''
             </div>'''
         return ret
