@@ -14,8 +14,10 @@
 */
 
 using Newtonsoft.Json;
+using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.TradingEconomics;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -30,7 +32,9 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
     /// </summary>
     public class TradingEconomicsEarningsDownloader : TradingEconomicsDataDownloader
     {
+        private readonly MapFileResolver _mapFileResolver;
         private readonly string _destinationFolder;
+        private readonly RateGate _requestGate;
         private readonly DateTime _fromDate;
         private readonly DateTime _toDate;
 
@@ -39,6 +43,9 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
             _fromDate = new DateTime(1998, 1, 1);
             _toDate = DateTime.Now;
             _destinationFolder = Path.Combine(destinationFolder, "earnings");
+            _requestGate = new RateGate(1, TimeSpan.FromSeconds(1));
+            _mapFileResolver = MapFileResolver.Create(Globals.DataFolder, Market.USA);
+
             Directory.CreateDirectory(_destinationFolder);
         }
 
@@ -48,6 +55,8 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         /// <returns>True if process all downloads successfully</returns>
         public override bool Run()
         {
+            Log.Trace("TradingEconoimcsEarningsDownloader.Run(): Begin downloading earnings data");
+
             var stopwatch = Stopwatch.StartNew();
             var data = new List<TradingEconomicsEarnings>();
 
@@ -57,6 +66,11 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                 try
                 {
                     var endUtc = startUtc.AddMonths(1).AddDays(-1);
+
+                    Log.Trace($"TradingEconomicsEarningsDownloader.Run(): Collecting earnings data from {startUtc:yyyy-MM-dd} to {endUtc:yyyy-MM-dd}");
+
+                    _requestGate.WaitToProceed(TimeSpan.FromSeconds(1));
+
                     var content = Get(startUtc, endUtc).Result;
                     var collection = JsonConvert.DeserializeObject<List<TradingEconomicsEarnings>>(content);
 
@@ -66,38 +80,67 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, $"TradingEconomicsCalendarDownloader(): Error parsing data for date {startUtc:yyyyMMdd}");
+                    Log.Error(e, $"TradingEconomicsEarningsDownloader.Run(): Error parsing data for date {startUtc:yyyyMMdd}");
                     return false;
                 }
             }
 
-            Log.Trace($"TradingEconomicsEarningsDownloader(): {data.Count} calendar entries read in {stopwatch.Elapsed}");
+            Log.Trace($"TradingEconomicsEarningsDownloader.Run(): {data.Count} earnings entries read in {stopwatch.Elapsed}");
 
-            foreach (var kvp in data.GroupBy(GetFileName))
+            foreach (var kvp in data.GroupBy(GetMappedSymbol))
             {
-                var path = Path.Combine(_destinationFolder, kvp.Key);
-                var zipPath = path.Replace(".json", ".zip");
+                var ticker = kvp.Key;
 
-                try
+                // We return string.Empty if we fail to resolve a map file or a symbol inside a map file
+                if (string.IsNullOrEmpty(ticker))
                 {
-                    var contents = JsonConvert.SerializeObject(kvp.ToList());
-                    File.WriteAllText(path, contents);
-                    // Write out this data string to a zip file
-                    Compression.Zip(path, zipPath, kvp.Key, true);
+                    continue;
                 }
-                catch (Exception e)
+
+                // Create the destination directory, otherwise we risk having it fail when we move
+                // the temp file to its final destination
+                Directory.CreateDirectory(Path.Combine(_destinationFolder, kvp.Key));
+
+                foreach (var earningsDataByDate in kvp.GroupBy(x => x.LastUpdate.Date))
                 {
-                    Log.Error(e, $"TradingEconomicsEarningsDownloader(): Error creating {path}");
-                    return false;
+                    var date = earningsDataByDate.Key.ToString("yyyyMMdd");
+                    var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
+                    var tempZipPath = tempPath.Replace(".json", ".zip");
+                    var finalZipPath = Path.Combine(_destinationFolder, kvp.Key, $"{date}.zip");
+
+                    try
+                    {
+                        var contents = JsonConvert.SerializeObject(earningsDataByDate.ToList());
+                        Log.Trace($"TradingEconomicsEarningsDownloader.Run(): {date} - Writing file before compression: {tempPath}");
+                        File.WriteAllText(tempPath, contents);
+
+                        Log.Trace($"TradingEconomicsEarningsDownloader.Run(): {date} - Compressing to: {tempZipPath}");
+                        // Write out this data string to a zip file
+                        Compression.Zip(tempPath, tempZipPath, $"{date}.json", true);
+
+                        if (File.Exists(finalZipPath))
+                        {
+                            Log.Trace($"TradingEconomicsEarningsDownloader.Run(): {date} - Deleting existing file: {finalZipPath}");
+                            File.Delete(finalZipPath);
+                        }
+
+                        Log.Trace($"TradingEconomicsEarningsDownloader.Run(): {date} - Moving temp file: {tempZipPath} to {finalZipPath}");
+                        File.Move(tempZipPath, finalZipPath);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, $"TradingEconomicsEarningsDownloader.Run(): {date} - Error creating zip file for ticker: {ticker}");
+                        return false;
+                    }
                 }
             }
 
-            Log.Trace($"TradingEconomicsEarningsDownloader(): Finished in {stopwatch.Elapsed}");
+            Log.Trace($"TradingEconomicsEarningsDownloader.Run(): Finished in {stopwatch.Elapsed}");
             return true;
         }
 
         /// <summary>
-        /// Get Trading Economics Calendar data for a given this start and end times(in UTC).
+        /// Get Trading Economics Earnings data for a given this start and end times(in UTC).
         /// </summary>
         /// <param name="startUtc">Start time of the data in UTC</param>
         /// <param name="endUtc">End time of the data in UTC</param>
@@ -108,10 +151,32 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
             return HttpRequester(url);
         }
 
-        private string GetFileName(TradingEconomicsEarnings tradingEconomicsEarnings)
+        /// <summary>
+        /// Gets the ticker using map files. If the ticker is empty, we can't resolve a map file, or we can't
+        /// resolve a ticker within a map file, we return null
+        /// </summary>
+        /// <param name="tradingEconomicsEarnings">TE Earnings data</param>
+        /// <returns>Mapped ticker or null</returns>
+        private string GetMappedSymbol(TradingEconomicsEarnings tradingEconomicsEarnings)
         {
             var ticker = tradingEconomicsEarnings.Symbol;
-            return ticker.Replace(":", "-").ToLower() + ".json";
+            var mapFile = _mapFileResolver.ResolveMapFile(ticker, tradingEconomicsEarnings.LastUpdate);
+
+            if (!mapFile.Any())
+            {
+                Log.Error($"TradingEconomicsEarningsDownloader.GetMappedSymbol(): No mapfile found for ticker {ticker}");
+                return string.Empty;
+            }
+
+            var symbol = mapFile.GetMappedSymbol(tradingEconomicsEarnings.LastUpdate);
+
+            if (string.IsNullOrEmpty(symbol))
+            {
+                Log.Error($"TradingEconomicsEarningsDownloader.GetMappedSymbol(): No mapped symbol found for ticker {ticker}");
+                return string.Empty;
+            }
+
+            return symbol.ToLower();
         }
     }
 }
