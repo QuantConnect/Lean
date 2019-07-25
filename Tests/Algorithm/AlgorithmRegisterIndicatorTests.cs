@@ -125,19 +125,55 @@ namespace QuantConnect.Tests.Algorithm
             using (Py.GIL())
             {
                 var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
+                    "from clr import AddReference\n" +
+                    "AddReference('QuantConnect.Indicators')\n" +
+                    "from QuantConnect.Indicators import PythonIndicator\n" +
+                    "class GoodCustomIndicator(PythonIndicator):\n" +
+                    "    def __init__(self):\n" +
+                    "        self.Value = 0\n" +
+                    "        pass\n" +
+                    "    def Update(self, input):\n" +
+                    "        self.Value = input.Value\n" +
+                    "        return True\n" +
+                    "class BadCustomIndicator(PythonIndicator):\n" +
+                    "    def __init__(self):\n" +
+                    "        self.Valeu = 0\n" +
+                    "    def Update(self, input):\n" +
+                    "        self.Value = input.Value\n" +
+                    "        return True");
+
+                var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
+                Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, goodIndicator, Resolution.Minute));
+
+                var actual = _algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
+                Assert.AreEqual(1, actual);
+
+                var badIndicator = module.GetAttr("BadCustomIndicator").Invoke();
+                Assert.Throws<NotImplementedException>(() => _algorithm.RegisterIndicator(_spy, badIndicator, Resolution.Minute));
+            }
+        }
+
+        [Test]
+        public void RegisterPythonCustomIndicatorNoInheritanceProperly()
+        {
+            using (Py.GIL())
+            {
+                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
                     "class GoodCustomIndicator:\n" +
                     "    def __init__(self):\n" +
                     "        self.IsReady = True\n" +
                     "        self.Value = 0\n" +
                     "        pass\n" +
                     "    def Update(self, input):\n" +
-                    "        return input\n" +
+                    "        self.Value = input.Value\n" +
+                    "        return True\n" +
                     "class BadCustomIndicator:\n" +
                     "    def __init__(self):\n" +
                     "        self.IsReady = True\n" +
                     "        self.Value = 0\n" +
                     "    def Updat(self, input):\n" +
-                    "        return input");
+                    "        self.Value = input.Value\n" +
+                    "        return True");
 
                 var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
                 Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, goodIndicator, Resolution.Minute));

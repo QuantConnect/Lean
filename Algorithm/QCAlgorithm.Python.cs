@@ -1001,9 +1001,16 @@ namespace QuantConnect.Algorithm
         private PythonIndicator WrapPythonIndicator(PyObject pyObject)
         {
             PythonIndicator pythonIndicator;
+
             if (!_pythonIndicators.TryGetValue(pyObject.Handle, out pythonIndicator))
             {
-                pythonIndicator = new PythonIndicator(pyObject);
+                pyObject.TryConvert(out pythonIndicator);
+                pythonIndicator?.SetIndicator(pyObject);
+
+                if (pythonIndicator == null)
+                {
+                    pythonIndicator = new PythonIndicator(pyObject);
+                }
 
                 // Save to prevent future additions
                 _pythonIndicators.Add(pyObject.Handle, pythonIndicator);
