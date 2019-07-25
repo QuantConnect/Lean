@@ -56,7 +56,22 @@ namespace QuantConnect.Brokerages.GDAX
         public AuthenticationToken GetAuthenticationToken(IRestRequest request)
         {
             var body = request.Parameters.SingleOrDefault(b => b.Type == ParameterType.RequestBody);
-            var token = GetAuthenticationToken(body == null ? "" : body.Value.ToString(), request.Method.ToString().ToUpper(), request.Resource);
+
+            string url;
+            if (request.Parameters.Count > 0)
+            {
+                var parameters = request.Parameters.Count > 0
+                    ? string.Join("&", request.Parameters.Select(x => $"{x.Name}={x.Value}"))
+                    : string.Empty;
+                url = $"{request.Resource}?{parameters}";
+            }
+            else
+            {
+                url = request.Resource;
+            }
+
+
+            var token = GetAuthenticationToken(body?.Value.ToString() ?? string.Empty, request.Method.ToString().ToUpper(), url);
 
             request.AddHeader(SignHeader, token.Signature);
             request.AddHeader(KeyHeader, ApiKey);
