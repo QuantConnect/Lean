@@ -17,6 +17,7 @@ using QuantConnect.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities.Volatility;
 
 namespace QuantConnect.Securities
@@ -40,6 +41,22 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to calculate volatility for</param>
         /// <param name="data">The new data used to update the model</param>
         void Update(Security security, BaseData data);
+
+        /// <summary>
+        /// Applies a dividend to the portfolio
+        /// </summary>
+        /// <param name="dividend">The dividend to be applied</param>
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        /// <param name="mode">The <see cref="DataNormalizationMode"/> for this security</param>
+        void ApplyDividend(Dividend dividend, bool liveMode, DataNormalizationMode mode);
+
+        /// <summary>
+        /// Applies a split to the model
+        /// </summary>
+        /// <param name="split">The split to be applied</param>
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        /// <param name="mode">The <see cref="DataNormalizationMode"/> for this security</param>
+        void ApplySplit(Split split, bool liveMode, DataNormalizationMode mode);
 
         /// <summary>
         /// Returns history requirements for the volatility model expressed in the form of history request
@@ -66,6 +83,9 @@ namespace QuantConnect.Securities
             public decimal Volatility { get; private set; }
 
             public void Update(Security security, BaseData data) { }
+            public void ApplyDividend(Dividend split, bool liveMode, DataNormalizationMode mode) { }
+
+            public void ApplySplit(Split split, bool liveMode, DataNormalizationMode mode) { }
 
             public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime utcTime) { return Enumerable.Empty<HistoryRequest>(); }
         }

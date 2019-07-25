@@ -478,7 +478,7 @@ namespace QuantConnect.Lean.Engine
                     Log.Debug($"AlgorithmManager.Run(): {algorithm.Time}: Applying Dividend: {dividend}");
 
                     Security security = null;
-                    if (_liveMode && algorithm.Securities.TryGetValue(dividend.Symbol, out security))
+                    if (_liveMode & algorithm.Securities.TryGetValue(dividend.Symbol, out security))
                     {
                         Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Dividend: {dividend}. " +
                             $"Security Holdings: {security.Holdings.Quantity} Account Currency Holdings: " +
@@ -491,6 +491,9 @@ namespace QuantConnect.Lean.Engine
 
                     // apply the dividend event to the portfolio
                     algorithm.Portfolio.ApplyDividend(dividend, _liveMode, mode);
+
+                    // apply the dividend event to the volatility model
+                    security.VolatilityModel.ApplyDividend(dividend, _liveMode, mode);
 
                     if (_liveMode && security != null)
                     {
@@ -514,7 +517,7 @@ namespace QuantConnect.Lean.Engine
                         Log.Debug($"AlgorithmManager.Run(): {algorithm.Time}: Applying Split for {split.Symbol}");
 
                         Security security = null;
-                        if (_liveMode && algorithm.Securities.TryGetValue(split.Symbol, out security))
+                        if (_liveMode & algorithm.Securities.TryGetValue(split.Symbol, out security))
                         {
                             Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Split for {split}. Security Price: {security.Price} Holdings: {security.Holdings.Quantity}");
                         }
@@ -525,6 +528,9 @@ namespace QuantConnect.Lean.Engine
 
                         // apply the split event to the portfolio
                         algorithm.Portfolio.ApplySplit(split, _liveMode, mode);
+
+                        // apply the split event to the volatility model
+                        security.VolatilityModel.ApplySplit(split, _liveMode, mode);
 
                         if (_liveMode && security != null)
                         {

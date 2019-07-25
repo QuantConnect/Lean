@@ -89,10 +89,18 @@ namespace QuantConnect.Securities
                 {
                     if (_lastPrice > 0.0m)
                     {
+                        // Updates the last price applying the last price factor
+                        if (LastFactor.HasValue)
+                        {
+                            _lastPrice *= LastFactor.Value;
+                            SetLastFactor(null);
+                        }
+
                         _needsUpdate = true;
-                        _window.Add((double)(data.Price / _lastPrice) - 1.0);
+                        _window.Add((double) (data.Price / _lastPrice) - 1.0);
                     }
                 }
+
                 _lastUpdate = data.EndTime;
                 _lastPrice = data.Price;
             }
@@ -141,7 +149,7 @@ namespace QuantConnect.Securities
                                    Resolution.Daily,
                                    extendedMarketHours,
                                    configurations.IsCustomData(),
-                                   configurations.DataNormalizationMode(),
+                                   DataNormalizationMode.Adjusted,
                                    LeanData.GetCommonTickTypeForCommonDataTypes(typeof(TradeBar), security.Type))
             };
         }

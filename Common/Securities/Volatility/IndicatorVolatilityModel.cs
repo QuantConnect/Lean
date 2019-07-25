@@ -18,6 +18,7 @@ using QuantConnect.Data;
 using QuantConnect.Indicators;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Securities
 {
@@ -35,10 +36,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the volatility of the security as a percentage
         /// </summary>
-        public decimal Volatility
-        {
-            get { return _indicator.Current; }
-        }
+        public decimal Volatility => _indicator.Current;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IVolatilityModel"/> using
@@ -78,6 +76,26 @@ namespace QuantConnect.Securities
             {
                 _indicatorUpdate(security, data, _indicator);
             }
+        }
+
+        /// <summary>
+        /// Applies a dividend to the portfolio
+        /// </summary>
+        /// <param name="dividend">The dividend to be applied</param>
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        /// <param name="mode">The <see cref="DataNormalizationMode"/> for this security</param>
+        public void ApplyDividend(Dividend dividend, bool liveMode, DataNormalizationMode mode)
+        {
+        }
+
+        /// <summary>
+        /// Applies a split to the model
+        /// </summary>
+        /// <param name="split">The split to be applied</param>
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        /// <param name="mode">The <see cref="DataNormalizationMode"/> for this security</param>
+        public void ApplySplit(Split split, bool liveMode, DataNormalizationMode mode)
+        {
         }
 
         /// <summary>

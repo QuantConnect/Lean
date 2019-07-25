@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Securities.Volatility
@@ -34,7 +35,12 @@ namespace QuantConnect.Securities.Volatility
         /// <summary>
         /// Gets the volatility of the security as a percentage
         /// </summary>
-        public virtual decimal Volatility { get; }
+        public virtual decimal Volatility { get; } = 0m;
+
+        /// <summary>
+        /// Latest price factor to be applied
+        /// </summary>
+        public decimal? LastFactor { get; private set; }
 
         /// <summary>
         /// Sets the <see cref="ISubscriptionDataConfigProvider"/> instance to use.
@@ -54,6 +60,56 @@ namespace QuantConnect.Securities.Volatility
         /// <param name="data">The new data used to update the model</param>
         public virtual void Update(Security security, BaseData data)
         {
+        }
+
+        /// <summary>
+        /// Applies a dividend to the portfolio
+        /// </summary>
+        /// <param name="dividend">The dividend to be applied</param>
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        /// <param name="mode">The <see cref="DataNormalizationMode"/> for this security</param>
+        public virtual void ApplyDividend(Dividend dividend, bool liveMode, DataNormalizationMode mode)
+        {
+            // only apply splits in live or raw data mode
+            if (!liveMode && !(mode == DataNormalizationMode.Raw || mode == DataNormalizationMode.SplitAdjusted))
+            {
+                return;
+            }
+
+            var factor = 1 - dividend.Distribution / dividend.ReferencePrice;
+            SetLastFactor(factor);
+        }
+
+        /// <summary>
+        /// Applies a split to the model
+        /// </summary>
+        /// <param name="split">The split to be applied</param>
+        /// <param name="liveMode">True if live mode, false for backtest</param>
+        /// <param name="mode">The <see cref="DataNormalizationMode"/> for this security</param>
+        public virtual void ApplySplit(Split split, bool liveMode, DataNormalizationMode mode)
+        {
+            // only apply splits in live or raw data mode
+            if (!liveMode && mode != DataNormalizationMode.Raw)
+            {
+                return;
+            }
+
+            SetLastFactor(split.SplitFactor);
+        }
+
+        /// <summary>
+        /// Sets the value of the latest price factor
+        /// </summary>
+        /// <param name="factor">Latest price factor to be applied</param>
+        public void SetLastFactor(decimal? factor)
+        {
+            if (!LastFactor.HasValue || !factor.HasValue)
+            {
+                LastFactor = factor;
+                return;
+            }
+
+            LastFactor *= factor;
         }
 
         /// <summary>

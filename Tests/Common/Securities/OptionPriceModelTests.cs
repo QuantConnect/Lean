@@ -332,6 +332,14 @@ namespace QuantConnect.Tests.Common
             public void Update(Security security, BaseData data)
             {
             }
+
+            public void ApplyDividend(Dividend dividend, bool liveMode, DataNormalizationMode mode)
+            {
+            }
+
+            public void ApplySplit(Split split, bool liveMode, DataNormalizationMode mode)
+            {
+            }
         }
     }
 }
