@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     {
         private readonly bool _isLiveMode;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
-        private string _lastUsedFileName;
+        private DateTime _lastUsedDate;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FineFundamentalSubscriptionEnumeratorFactory"/> class.
@@ -97,59 +97,94 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         {
             var source = fine.GetSource(config, date, _isLiveMode);
 
-            var fileName = date.ToString("yyyyMMdd");
-
             if (!File.Exists(source.Source))
             {
-                if (_lastUsedFileName == null)
+                if (_lastUsedDate == default(DateTime))
                 {
                     // find first file date
-                    var path = Path.GetDirectoryName(source.Source) ?? string.Empty;
-                    if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
-                        return source;
-
-                    var firstFileName = Path.GetFileNameWithoutExtension(Directory.GetFiles(path, "*.zip").OrderBy(x => x).First());
-                    var firstDate = DateTime.ParseExact(firstFileName, "yyyyMMdd", CultureInfo.InvariantCulture);
-
-                    // requested date before first date, return current invalid source anyway
-                    if (date < firstDate)
-                        return source;
-
-                    // requested date after first date, save date of first existing file
-                    _lastUsedFileName = firstFileName;
-
-                    // loop back in time until we find an existing file
-                    while (string.CompareOrdinal(fileName, _lastUsedFileName) > 0)
+                    List<string> availableFiles;
+                    try
                     {
-                        // get previous date
-                        date = date.AddDays(-1);
-
-                        // get file name for this date
-                        source = fine.GetSource(config, date, _isLiveMode);
-                        fileName = Path.GetFileNameWithoutExtension(source.Source);
-
-                        if (!File.Exists(source.Source))
-                            continue;
-
-                        // we found the file, save its name and return the source
-                        _lastUsedFileName = fileName;
-
-                        break;
+                        availableFiles = Directory.GetFiles(Path.GetDirectoryName(source.Source),
+                            "*.zip").OrderBy(x => x).ToList();
                     }
+                    catch
+                    {
+                        // argument null exception or directory doesn't exist
+                        return source;
+                    }
+
+                    // no files or requested date before first date, return null source
+                    if (availableFiles.Count == 0 || date < DateTime.ParseExact(
+                            Path.GetFileNameWithoutExtension(availableFiles[0]),
+                            "yyyyMMdd",
+                            CultureInfo.InvariantCulture))
+                    {
+                        return source;
+                    }
+
+                    // take advantage of the order and avoid parsing all files to get the date
+                    var value = availableFiles.BinarySearch(source.Source,
+                        new FileDateComparer());
+
+                    if (value < 0)
+                    {
+                        // if negative returns the complement of the index of the next element that is larger than Date
+                        // so subtract 1 to get the previous item which is less than Date
+                        value = ~value - 1;
+                    }
+
+                    var current = DateTime.ParseExact(
+                        Path.GetFileNameWithoutExtension(availableFiles[value]),
+                        "yyyyMMdd",
+                        CultureInfo.InvariantCulture);
+
+                    if (current <= date)
+                    {
+                        // we found the file, save its date and return the source
+                        _lastUsedDate = current;
+                        return fine.GetSource(config, current, _isLiveMode);
+                    }
+
+                    // this shouldn't ever happen so throw
+                    throw new InvalidOperationException("FineFundamentalSubscriptionEnumeratorFactory.GetSource(): " +
+                                                        $"failed to resolve source for {config.Symbol} on {date}");
                 }
                 else
                 {
                     // return source for last existing file date
-                    date = DateTime.ParseExact(_lastUsedFileName, "yyyyMMdd", CultureInfo.InvariantCulture);
-                    source = fine.GetSource(config, date, _isLiveMode);
+                    source = fine.GetSource(config, _lastUsedDate, _isLiveMode);
                 }
             }
             else
             {
-                _lastUsedFileName = fileName;
+                _lastUsedDate = date;
             }
 
             return source;
+        }
+
+        /// <summary>
+        /// Helper class to compare to file names which are named as a date
+        /// </summary>
+        private class FileDateComparer : IComparer<string>
+        {
+            public int Compare(string x, string y)
+            {
+                var dateX = x == null ? DateTime.MaxValue : DateTime.ParseExact(
+                    Path.GetFileNameWithoutExtension(x),
+                    "yyyyMMdd",
+                    CultureInfo.InvariantCulture
+                );
+
+                var dateY = y == null ? DateTime.MaxValue : DateTime.ParseExact(
+                    Path.GetFileNameWithoutExtension(y),
+                    "yyyyMMdd",
+                    CultureInfo.InvariantCulture
+                );
+
+                return dateX.CompareTo(dateY);
+            }
         }
     }
 }
