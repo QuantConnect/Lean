@@ -55,6 +55,12 @@ namespace QuantConnect
         public static readonly TimeSpan MaxTimeSpan = TimeSpan.FromDays(1000*365);
 
         /// <summary>
+        /// One Year TimeSpan Period Constant
+        /// </summary>
+        /// <remarks>365 days</remarks>
+        public static readonly TimeSpan OneYear = TimeSpan.FromDays(365);
+
+        /// <summary>
         /// One Day TimeSpan Period Constant
         /// </summary>
         public static readonly TimeSpan OneDay = TimeSpan.FromDays(1);

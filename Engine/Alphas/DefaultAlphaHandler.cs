@@ -40,17 +40,20 @@ namespace QuantConnect.Lean.Engine.Alphas
     {
         private DateTime _lastStepTime;
         private List<Insight> _insights;
-        private ChartingInsightManagerExtension _charting;
         private ISecurityValuesProvider _securityValuesProvider;
-        private CancellationTokenSource _cancellationTokenSource;
         private FitnessScoreManager _fitnessScore;
         private DateTime _lastFitnessScoreCalculation;
         private readonly object _lock = new object();
 
         /// <summary>
+        /// The cancellation token that will be cancelled when requested to exit
+        /// </summary>
+        protected CancellationTokenSource CancellationTokenSource { get; set; }
+
+        /// <summary>
         /// Gets a flag indicating if this handler's thread is still running and processing messages
         /// </summary>
-        public bool IsActive { get; private set; }
+        public virtual bool IsActive { get; private set; }
 
         /// <summary>
         /// Gets the current alpha runtime statistics
@@ -96,7 +99,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <param name="api">Api instance</param>
         public virtual void Initialize(AlgorithmNodePacket job, IAlgorithm algorithm, IMessagingHandler messagingHandler, IApi api)
         {
-            // initializing these properties just in case, doens't hurt to have them populated
+            // initializing these properties just in case, doesn't hurt to have them populated
             Job = job;
             Algorithm = algorithm;
             MessagingHandler = messagingHandler;
@@ -107,14 +110,11 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             InsightManager = CreateInsightManager();
 
-            // send scored insights to messaging handler
-            InsightManager.AddExtension(CreateAlphaResultPacketSender());
-
             var statistics = new StatisticsInsightManagerExtension(algorithm);
             RuntimeStatistics = statistics.Statistics;
             InsightManager.AddExtension(statistics);
-            _charting = new ChartingInsightManagerExtension(algorithm, statistics);
-            InsightManager.AddExtension(_charting);
+
+            AddInsightManagerCustomExtensions(statistics);
 
             // when insight is generated, take snapshot of securities and place in queue for insight manager to process on alpha thread
             algorithm.InsightsGenerated += (algo, collection) =>
@@ -124,6 +124,16 @@ namespace QuantConnect.Lean.Engine.Alphas
                     _insights.AddRange(collection.Insights);
                 }
             };
+        }
+
+        /// <summary>
+        /// Allows each alpha handler implementation to add there own optional extensions
+        /// </summary>
+        protected virtual void AddInsightManagerCustomExtensions(StatisticsInsightManagerExtension statistics)
+        {
+            // send scored insights to messaging handler
+            InsightManager.AddExtension(new AlphaResultPacketSender(Job, MessagingHandler, TimeSpan.FromSeconds(1), 50));
+            InsightManager.AddExtension(new ChartingInsightManagerExtension(Algorithm, statistics));
         }
 
         /// <summary>
@@ -144,7 +154,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// </summary>
         public virtual void ProcessSynchronousEvents()
         {
-            // check the last snap shot time, we may have already produced a snapshot via OnInsightssGenerated
+            // check the last snap shot time, we may have already produced a snapshot via OnInsightsGenerated
             if (_lastStepTime != Algorithm.UtcTime)
             {
                 _lastStepTime = Algorithm.UtcTime;
@@ -173,7 +183,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         public virtual void Run()
         {
             IsActive = true;
-            _cancellationTokenSource = new CancellationTokenSource();
+            CancellationTokenSource = new CancellationTokenSource();
 
             using (LiveMode ? new Timer(_ => StoreInsights(),
                 null,
@@ -181,7 +191,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                 TimeSpan.FromMinutes(10)) : null)
             {
                 // run main loop until canceled, will clean out work queues separately
-                while (!_cancellationTokenSource.IsCancellationRequested)
+                while (!CancellationTokenSource.IsCancellationRequested)
                 {
                     try
                     {
@@ -213,7 +223,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         {
             Log.Trace("DefaultAlphaHandler.Exit(): Exiting Thread...");
 
-            _cancellationTokenSource.Cancel(false);
+            CancellationTokenSource?.Cancel(false);
         }
 
         /// <summary>
@@ -226,6 +236,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Save insight results to persistent storage
         /// </summary>
+        /// <remarks>Method called by <see cref="Run"/></remarks>
         protected virtual void StoreInsights()
         {
             // avoid reentrancy
@@ -259,15 +270,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         {
             var scoreFunctionProvider = new DefaultInsightScoreFunctionProvider();
             return new InsightManager(scoreFunctionProvider, 0);
-        }
-
-        /// <summary>
-        /// Creates the <see cref="AlphaResultPacketSender"/> to manage sending finalized insights via the messaging handler
-        /// </summary>
-        /// <returns>A new <see cref="CreateAlphaResultPacketSender"/> instance</returns>
-        protected virtual AlphaResultPacketSender CreateAlphaResultPacketSender()
-        {
-            return new AlphaResultPacketSender(Job, MessagingHandler, TimeSpan.FromSeconds(1), 50);
         }
 
         /// <summary>

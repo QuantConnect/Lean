@@ -310,6 +310,7 @@
     <Compile Include="Common\Securities\SecurityServiceTests.cs" />
     <Compile Include="Common\Securities\TestAccountCurrencyProvider.cs" />
     <Compile Include="Common\Statistics\FitnessScoreManagerTests.cs" />
+    <Compile Include="Common\Statistics\KellyCriterionManagerTests.cs" />
     <Compile Include="Common\Util\ListComparerTests.cs" />
     <Compile Include="Common\Util\SeriesJsonConverterTests.cs" />
     <Compile Include="Common\Util\StreamReaderEnumerableTests.cs" />
