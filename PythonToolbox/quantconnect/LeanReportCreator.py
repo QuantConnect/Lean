@@ -226,7 +226,7 @@ class LeanReportCreator(object):
 
                 table#description-box {
                     word-wrap: break-word;
-                    height: 100px;
+                    min-height: 225px;
                 }
 
                 table#description-box > thead > tr > th > p{
@@ -252,6 +252,7 @@ class LeanReportCreator(object):
                     right: 110px;
                     border-top: 1px solid #888888;
                     border-bottom: none;
+                    padding: 0;
                 }
 
                 .page .header {
@@ -287,7 +288,7 @@ class LeanReportCreator(object):
                     border-bottom: 1px solid #b8b8b8;
                 }
 
-                .container-row:first-of-type {
+                .page:first-of-type .container-row:first-of-type {
                     padding: 10px 0;
                 }
 
@@ -335,7 +336,7 @@ class LeanReportCreator(object):
                 p#strategy-description {
                     overflow: hidden;
                     max-height: 130px;
-                    margin-bottom: 15px;
+                    margin-bottom: 0;
                     word-break: break-word;
                 }
 
@@ -407,8 +408,7 @@ class LeanReportCreator(object):
                 <div class="container-row">''' + chartLeverage + '''</div>
             </div>
         </div>
-        ''' + self.get_page_from_dict("Backtest Crisis Analysis", crisis) + '''
-        ''' + self.get_page_from_dict("Asset Allocation", assets) + '''
+        ''' + self.get_pages_from_two_dict(crisis, assets) + '''
         </body>
         </html>'''
 
@@ -467,23 +467,35 @@ class LeanReportCreator(object):
             </table>
         </div>'''
 
-    def get_image_from_dict(self, dict):
+    def get_image_from_dict(self, dict, len_dict1, num_empty_block):
         ret = '''<div class="content">'''
         titles = list(dict.keys())
-        stop = min(15, len(titles))
+        stop = min(15, len(titles) + num_empty_block)
+        index = 0;
 
         for i in range(0, stop, 3):
             ret += '''<div class="container-row">'''
             for j in range(0, 3):
                 if i + j >= stop: continue
-                ret += dict.pop(titles[i + j])
+                if i + j >= len_dict1 and i + j < len_dict1 + num_empty_block:
+                    ret += '''<div class="col-xs-4" style="height: 305px;"></div>'''
+                else:
+                    ret += dict.pop(titles[index])
+                    index += 1
             ret += '''</div>'''
 
         return ret + '''</div>'''
 
-    def get_page_from_dict(self, title, dict):
+    def get_pages_from_two_dict(self, dict1, dict2):
+        num_empty_block = 0
+        if (len(dict1) % 15) % 3  != 0:
+            num_empty_block = 3 - (len(dict1) % 15) % 3
+
+        len_og_dict1 = len(dict1)
+        dict1.update(dict2)
+
         ret = ''''''
-        while(len(dict) > 0):
+        while(len(dict1) > 0):
             ret += '''
             <div class="page">
                 <div class="header">
@@ -491,6 +503,6 @@ class LeanReportCreator(object):
                         <img src="https://cdn.quantconnect.com/web/i/logo.png">
                     </div>
                     <div class="header-right">Strategy Report Summary: ''' + self.user['projectName'] + '''</div>
-                </div> ''' + self.get_image_from_dict(dict) + '''
+                </div> ''' + self.get_image_from_dict(dict1, len_og_dict1, num_empty_block) + '''
             </div>'''
         return ret
