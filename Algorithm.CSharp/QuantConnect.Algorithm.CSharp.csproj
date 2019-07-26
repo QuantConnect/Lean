@@ -143,6 +143,7 @@
     <Compile Include="BasicPythonIntegrationTemplateAlgorithm.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
     <Compile Include="BasicTemplateAlgorithm.cs" />
+    <Compile Include="DuplicateKeyExceptionAlgorithm.cs" />
     <Compile Include="Benchmarks\StatefulCoarseUniverseSelectionBenchmark.cs" />
     <Compile Include="Benchmarks\StatelessCoarseUniverseSelectionBenchmark.cs" />
     <Compile Include="CapmAlphaRankingFrameworkAlgorithm.cs" />
