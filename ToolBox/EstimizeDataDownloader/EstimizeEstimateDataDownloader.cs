@@ -13,11 +13,18 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
+using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Custom.Estimize;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.EstimizeDataDownloader
@@ -25,6 +32,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
     public class EstimizeEstimateDataDownloader : EstimizeDataDownloader
     {
         private readonly string _destinationFolder;
+        private readonly MapFileResolver _mapFileResolver;
 
         /// <summary>
         /// Creates a new instance of <see cref="EstimizeEstimateDataDownloader"/>
@@ -33,6 +41,9 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
         public EstimizeEstimateDataDownloader(string destinationFolder)
         {
             _destinationFolder = Path.Combine(destinationFolder, "estimate");
+            _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
+                .Get(Market.USA);
+
             Directory.CreateDirectory(_destinationFolder);
         }
 
@@ -46,7 +57,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
             try
             {
-                var companies = GetCompanies().Result;
+                var companies = GetCompanies().Result.DistinctBy(x => x.Ticker).ToList();
                 var count = companies.Count;
                 var currentPercent = 0.05;
                 var percent = 0.05;
@@ -86,7 +97,60 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                                         return;
                                     }
 
-                                    SaveContentToZipFile(_destinationFolder, ticker, y.Result);
+                                    var result = y.Result;
+                                    if (string.IsNullOrEmpty(result))
+                                    {
+                                        // We've already logged inside HttpRequester
+                                        return;
+                                    }
+
+                                    var estimates = JsonConvert.DeserializeObject<List<EstimizeEstimate>>(result)
+                                        .GroupBy(estimate =>
+                                        {
+                                            var oldTicker = ticker;
+                                            var newTicker = ticker;
+                                            var createdAt = estimate.CreatedAt;
+
+                                            try
+                                            {
+                                                var mapFile = _mapFileResolver.ResolveMapFile(ticker, createdAt);
+
+                                                // Ensure we're writing to the correct historical ticker
+                                                if (!mapFile.Any())
+                                                {
+                                                    Log.Trace($"EstimizeEstimateDataDownloader.Run(): Failed to find map file for: {newTicker} - on: {createdAt}");
+                                                    return string.Empty;
+                                                }
+
+                                                newTicker = mapFile.GetMappedSymbol(createdAt);
+                                                if (string.IsNullOrWhiteSpace(newTicker))
+                                                {
+                                                    Log.Trace($"EstimizeEstimateDataDownloader.Run(): New ticker is null. Old ticker: {oldTicker} - on: {createdAt}");
+                                                    return string.Empty;
+                                                }
+
+                                                if (oldTicker != newTicker)
+                                                {
+                                                    Log.Trace($"EstimizeEstimateDataDonwloader.Run(): Remapping {oldTicker} to {newTicker}");
+                                                }
+                                            }
+                                            // We get a failure inside the map file constructor rarely. It tries
+                                            // to access the last element of an empty list. Maybe this is a bug?
+                                            catch (InvalidOperationException e)
+                                            {
+                                                Log.Error(e, $"EstimizeEstimateDataDownloader.Run(): Failed to load map file for: {oldTicker} - on {createdAt}");
+                                                return string.Empty;
+                                            }
+
+                                            return newTicker;
+                                        })
+                                        .Where(kvp => !string.IsNullOrEmpty(kvp.Key));
+
+                                    foreach (var kvp in estimates)
+                                    {
+                                        var csvContents = kvp.Select(x => $"{x.CreatedAt.ToUniversalTime():yyyyMMdd HH:mm},{x.Id},{x.AnalystId},{x.UserName},{x.FiscalYear},{x.FiscalQuarter},{x.Eps},{x.Revenue},{x.Flagged.ToString().ToLower()}");
+                                        SaveContentToFile(_destinationFolder, kvp.Key, csvContents);
+                                    }
 
                                     var percentageDone = i / count;
                                     if (percentageDone >= currentPercent)

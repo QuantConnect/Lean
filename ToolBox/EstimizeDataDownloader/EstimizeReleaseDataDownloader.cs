@@ -13,11 +13,18 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
+using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Custom.Estimize;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.EstimizeDataDownloader
@@ -25,6 +32,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
     public class EstimizeReleaseDataDownloader : EstimizeDataDownloader
     {
         private readonly string _destinationFolder;
+        private readonly MapFileResolver _mapFileResolver;
 
         /// <summary>
         /// Creates a new instance of <see cref="EstimizeReleaseDataDownloader"/>
@@ -33,6 +41,9 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
         public EstimizeReleaseDataDownloader(string destinationFolder)
         {
             _destinationFolder = Path.Combine(destinationFolder, "release");
+            _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
+                .Get(Market.USA);
+
             Directory.CreateDirectory(_destinationFolder);
         }
 
@@ -46,7 +57,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
             try
             {
-                var companies = GetCompanies().Result;
+                var companies = GetCompanies().Result.DistinctBy(x => x.Ticker).ToList();
                 var count = companies.Count;
                 var currentPercent = 0.05;
                 var percent = 0.05;
@@ -83,7 +94,65 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                                         return;
                                     }
 
-                                    SaveContentToZipFile(_destinationFolder, ticker, y.Result);
+                                    var result = y.Result;
+                                    if (string.IsNullOrEmpty(result))
+                                    {
+                                        // We've already logged inside HttpRequester
+                                        return;
+                                    }
+
+                                    // Just like TradingEconomics, we only want the events that already occured
+                                    // instead of having "forecasts" that will change in the future taint our
+                                    // data and make backtests non-deterministic. We want to have
+                                    // consistency with our data in live trading historical requests as well
+                                    var releases = JsonConvert.DeserializeObject<List<EstimizeRelease>>(result)
+                                        .Where(x => x.Eps != null)
+                                        .GroupBy(x =>
+                                        {
+                                            var releaseDate = x.ReleaseDate;
+
+                                            try
+                                            {
+                                                var mapFile = _mapFileResolver.ResolveMapFile(ticker, releaseDate);
+                                                var oldTicker = ticker;
+                                                var newTicker = ticker;
+
+                                                // Ensure we're writing to the correct historical ticker
+                                                if (!mapFile.Any())
+                                                {
+                                                    Log.Trace($"EstimizeReleaseDataDownloader.Run(): Failed to find map file for: {newTicker} - on: {releaseDate}");
+                                                    return string.Empty;
+                                                }
+
+                                                newTicker = mapFile.GetMappedSymbol(releaseDate);
+                                                if (string.IsNullOrWhiteSpace(newTicker))
+                                                {
+                                                    Log.Trace($"EstimizeReleaseDataDownloader.Run(): Failed to find mapping for null new ticker. Old ticker: {oldTicker} - on: {releaseDate}");
+                                                    return string.Empty;
+                                                }
+
+                                                if (oldTicker != newTicker)
+                                                {
+                                                    Log.Trace($"EstimizeReleaseDataDownloader.Run(): Remapped from {oldTicker} to {newTicker} for {releaseDate}");
+                                                }
+
+                                                return newTicker;
+                                            }
+                                            // We get a failure inside the map file constructor rarely. It tries
+                                            // to access the last element of an empty list. Maybe this is a bug?
+                                            catch (InvalidOperationException e)
+                                            {
+                                                Log.Error(e, $"EstimizeReleaseDataDownloader.Run(): Failed to load map file for: {ticker} - on: {releaseDate}");
+                                                return string.Empty;
+                                            }
+                                        })
+                                        .Where(x => !string.IsNullOrEmpty(x.Key));
+
+                                    foreach (var kvp in releases)
+                                    {
+                                        var csvContents = kvp.Select(x => $"{x.ReleaseDate.ToUniversalTime():yyyyMMdd HH:mm},{x.Id},{x.FiscalYear},{x.FiscalQuarter},{x.Eps},{x.Revenue},{x.ConsensusEpsEstimate},{x.ConsensusRevenueEstimate},{x.WallStreetEpsEstimate},{x.WallStreetRevenueEstimate},{x.ConsensusWeightedEpsEstimate},{x.ConsensusWeightedRevenueEstimate}");
+                                        SaveContentToFile(_destinationFolder, kvp.Key, csvContents);
+                                    }
 
                                     var percentDone = i / count;
                                     if (percentDone >= currentPercent)

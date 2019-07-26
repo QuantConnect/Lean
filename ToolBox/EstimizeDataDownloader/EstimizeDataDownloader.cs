@@ -20,7 +20,10 @@ using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -98,6 +101,12 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
                         var response = await client.GetAsync(Uri.EscapeUriString(url));
 
+                        if (response.StatusCode == HttpStatusCode.NotFound)
+                        {
+                            Log.Error($"EstimizeDataDownloader.HttpRequester(): File not found at url: {url}");
+                            return string.Empty;
+                        }
+
                         response.EnsureSuccessStatusCode();
 
                         return await response.Content.ReadAsStringAsync();
@@ -105,7 +114,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, $"Error at HttpRequester. (retry {retries}/{_maxRetries}");
+                    Log.Error(e, $"EstimizeDataDownloader.HttpRequester(): Error at HttpRequester. (retry {retries}/{_maxRetries})");
                     Thread.Sleep(1000);
                 }
             }
@@ -119,29 +128,30 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
         /// <param name="destinationFolder">Final destination of the data</param>
         /// <param name="ticker">Stock ticker</param>
         /// <param name="contents">Contents to write</param>
-        protected void SaveContentToZipFile(string destinationFolder, string ticker, string contents)
+        protected void SaveContentToFile(string destinationFolder, string ticker, IEnumerable<string> contents)
         {
             ticker = ticker.ToLower();
-            var zipEntryName = $"{ticker}.json";
+            var finalPath = Path.Combine(destinationFolder, $"{ticker}.csv");
+            var finalFileExists = File.Exists(finalPath);
 
-            var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
-            Log.Trace($"EstimizeDataDownloader.SavecontentToZipFile(): Writing to file: {tempPath}");
-            File.WriteAllText(tempPath, contents);
-
-            var tempZipPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip");
-            var zipPath = Path.Combine(destinationFolder, $"{ticker}.zip");
-
-            Log.Trace($"EstimizeDataDownloader.SaveContentToZipFile(): Compressing to: {tempZipPath}");
-            Compression.Zip(tempPath, tempZipPath, zipEntryName, true);
-
-            if (File.Exists(zipPath))
+            var lines = new HashSet<string>(contents);
+            if (finalFileExists)
             {
-                Log.Trace($"EstimizeDataDownloader.SaveContentToZipFile(): Deleting existing file: {zipPath}");
-                File.Delete(zipPath);
+                Log.Trace($"EstimizeDataDownloader.SaveContentToZipFile(): Adding to existing file: {finalPath}");
+                foreach (var line in File.ReadAllLines(finalPath))
+                {
+                    lines.Add(line);
+                }
+            }
+            else
+            {
+                Log.Trace($"EstimizeDataDownloader.SaveContentToZipFile(): Writing to file: {finalPath}");
             }
 
-            Log.Trace($"EstimizeDataDownloader.SaveContentToZipFile(): Moving temp zip file to: {zipPath}");
-            File.Move(tempZipPath, zipPath);
+            var finalLines = lines.OrderBy(x => DateTime.ParseExact(x.Split(',').First(), "yyyyMMdd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
+                .ToList();
+
+            File.WriteAllLines(finalPath, finalLines);
         }
 
         public class Company

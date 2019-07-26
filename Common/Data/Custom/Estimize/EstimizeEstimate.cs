@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -52,7 +53,7 @@ namespace QuantConnect.Data.Custom.Estimize
         public int FiscalQuarter { get; set; }
 
         /// <summary>
-        /// The time that the estimate was created (UTC) 
+        /// The time that the estimate was created (UTC)
         /// </summary>
         [JsonProperty(PropertyName = "created_at")]
         public DateTime CreatedAt { get; set; }
@@ -74,7 +75,7 @@ namespace QuantConnect.Data.Custom.Estimize
         public override decimal Value => Eps ?? 0m;
 
         /// <summary>
-        /// The estimated revenue for the company in the specified fiscal quarter 
+        /// The estimated revenue for the company in the specified fiscal quarter
         /// </summary>
         [JsonProperty(PropertyName = "revenue")]
         public decimal? Revenue { get; set; }
@@ -99,6 +100,33 @@ namespace QuantConnect.Data.Custom.Estimize
         public bool Flagged { get; set; }
 
         /// <summary>
+        /// Required for successful Json.NET deserialization
+        /// </summary>
+        public EstimizeEstimate()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of EstimizeEstimate from a CSV line
+        /// </summary>
+        /// <param name="csvLine">CSV line</param>
+        public EstimizeEstimate(string csvLine)
+        {
+            // CreatedAt[0], Id[1], AnalystId[2], UserName[3], FiscalYear[4], FiscalQuarter[5], Eps[6], Revenue[7], Flagged[8]"
+            var csv = csvLine.Split(',');
+
+            CreatedAt = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
+            Id = csv[1];
+            AnalystId = csv[2];
+            UserName = csv[3];
+            FiscalYear = Convert.ToInt32(csv[4], CultureInfo.InvariantCulture);
+            FiscalQuarter = Convert.ToInt32(csv[5], CultureInfo.InvariantCulture);
+            Eps = string.IsNullOrWhiteSpace(csv[6]) ? (decimal?)null : Convert.ToDecimal(csv[6], CultureInfo.InvariantCulture);
+            Revenue =  string.IsNullOrWhiteSpace(csv[7]) ? (decimal?)null : Convert.ToDecimal(csv[7], CultureInfo.InvariantCulture);
+            Flagged = Convert.ToBoolean(csv[8]);
+        }
+
+        /// <summary>
         /// Return the Subscription Data Source gained from the URL
         /// </summary>
         /// <param name="config">Configuration object</param>
@@ -120,32 +148,24 @@ namespace QuantConnect.Data.Custom.Estimize
                 "alternative",
                 "estimize",
                 "estimate",
-                $"{symbol.ToLower()}.zip"
+                $"{symbol.ToLower()}.csv"
             );
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Collection);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
         /// <summary>
         /// Reader converts each line of the data source into BaseData objects.
         /// </summary>
         /// <param name="config">Subscription data config setup object</param>
-        /// <param name="content">Content of the source document</param>
+        /// <param name="line">Content of the source document</param>
         /// <param name="date">Date of the requested data</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>
-        /// Collection of Estimize Estimate objects
+        /// Estimize Estimate object
         /// </returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var objectList = JsonConvert.DeserializeObject<List<EstimizeEstimate>>(content);
-
-            foreach (var obj in objectList)
-            {
-                obj.Symbol = config.Symbol;
-                obj.Time = new DateTime(obj.FiscalYear, obj.FiscalQuarter * 3 - 2, 1);
-            }
-
-            return new BaseDataCollection(date, config.Symbol, objectList.OrderBy(x => x.EndTime));
+            return new EstimizeEstimate(line);
         }
 
         /// <summary>
