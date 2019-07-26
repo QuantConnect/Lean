@@ -126,8 +126,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "10.413"},
             {"Total Fees", "$15207.00"},
             {"Fitness Score", "0.033"},
-            {"Kelly Criterion Estimate", "-0.022"},
-            {"Kelly Criterion Probability Value", "1"}
+            {"Kelly Criterion Estimate", "-36.472"},
+            {"Kelly Criterion Probability Value", "0.82"}
         };
     }
 }

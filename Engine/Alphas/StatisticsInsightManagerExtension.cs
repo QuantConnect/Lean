@@ -117,7 +117,13 @@ namespace QuantConnect.Lean.Engine.Alphas
             context.Insight.EstimatedValue = insightValueFactoredByTradableVolume;
             Statistics.TotalAccumulatedEstimatedAlphaValue += insightValueFactoredByTradableVolume;
 
-            _kellyCriterionManager.AddNewValue(insightValue, context.Insight.GeneratedTimeUtc);
+            // testing showed sometimes enter value is 0, example is ScheduledUniverseSelectionModelRegressionAlgorithm
+            if (enterValue != 0)
+            {
+                _kellyCriterionManager.AddNewValue(
+                    (int)context.Insight.Direction * (exitValue / enterValue - 1),
+                    context.Insight.GeneratedTimeUtc);
+            }
         }
 
         /// <summary>

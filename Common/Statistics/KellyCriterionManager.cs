@@ -23,7 +23,8 @@ using QuantConnect.Logging;
 namespace QuantConnect.Statistics
 {
     /// <summary>
-    /// Class in charge of calculating the Kelly Criterion values
+    /// Class in charge of calculating the Kelly Criterion values.
+    /// Will use the sample values of the last year.
     /// </summary>
     /// <remarks>See https://www.quantconnect.com/forum/discussion/6194/insight-scoring-metric/p1 </remarks>
     public class KellyCriterionManager
@@ -107,10 +108,9 @@ namespace QuantConnect.Statistics
                         (1 / variance + 2 * averagePowered / variancePowered)
                         / _insightValues.Count - 1);
 
-                    KellyCriterionProbabilityValue = 1 - _normalDistribution
-                                                         .CumulativeDistribution(
-                                                             kellyCriterionEstimate / kellyCriterionStandardDeviation)
-                                                         .SafeDecimalCast();
+                    KellyCriterionProbabilityValue =
+                        1 - _normalDistribution.CumulativeDistribution(kellyCriterionEstimate / kellyCriterionStandardDeviation)
+                            .SafeDecimalCast();
                 }
             }
             catch (Exception exception)
