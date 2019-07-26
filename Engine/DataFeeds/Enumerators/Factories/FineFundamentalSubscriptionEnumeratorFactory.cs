@@ -114,28 +114,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                         return source;
                     }
 
+                    var fileName = Path.GetFileNameWithoutExtension(source.Source);
+
                     // no files or requested date before first date, return null source
-                    if (availableFiles.Count == 0 || date < DateTime.ParseExact(
-                            Path.GetFileNameWithoutExtension(availableFiles[0]),
-                            "yyyyMMdd",
-                            CultureInfo.InvariantCulture))
+                    if (availableFiles.Count == 0
+                        || string.CompareOrdinal(fileName,
+                            Path.GetFileNameWithoutExtension(availableFiles[0])) < 0)
                     {
                         return source;
                     }
 
-                    // take advantage of the order and avoid parsing all files to get the date
-                    var value = availableFiles.BinarySearch(source.Source,
-                        new FileDateComparer());
+                    // take advantage of the order and avoid parsing and comparing all files to get the date
+                    var index = availableFiles.BinarySearch(fileName, new FileNameComparer());
 
-                    if (value < 0)
+                    if (index < 0)
                     {
                         // if negative returns the complement of the index of the next element that is larger than Date
                         // so subtract 1 to get the previous item which is less than Date
-                        value = ~value - 1;
+                        index = ~index - 1;
                     }
 
                     var current = DateTime.ParseExact(
-                        Path.GetFileNameWithoutExtension(availableFiles[value]),
+                        Path.GetFileNameWithoutExtension(availableFiles[index]),
                         "yyyyMMdd",
                         CultureInfo.InvariantCulture);
 
@@ -165,25 +165,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         }
 
         /// <summary>
-        /// Helper class to compare to file names which are named as a date
+        /// Helper class to compare to file names which are named as a date.
         /// </summary>
-        private class FileDateComparer : IComparer<string>
+        private class FileNameComparer : IComparer<string>
         {
             public int Compare(string x, string y)
             {
-                var dateX = x == null ? DateTime.MaxValue : DateTime.ParseExact(
+                return string.CompareOrdinal(
                     Path.GetFileNameWithoutExtension(x),
-                    "yyyyMMdd",
-                    CultureInfo.InvariantCulture
-                );
-
-                var dateY = y == null ? DateTime.MaxValue : DateTime.ParseExact(
-                    Path.GetFileNameWithoutExtension(y),
-                    "yyyyMMdd",
-                    CultureInfo.InvariantCulture
-                );
-
-                return dateX.CompareTo(dateY);
+                    Path.GetFileNameWithoutExtension(y));
             }
         }
     }
