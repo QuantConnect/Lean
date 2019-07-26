@@ -60,17 +60,48 @@ namespace QuantConnect.Util
                     {
                         case Resolution.Tick:
                             var tick = (Tick) data;
-                            return ToCsv(milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
-
+                            if (tick.TickType == TickType.Trade)
+                            {
+                                return ToCsv(milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                            }
+                            if (tick.TickType == TickType.Quote)
+                            {
+                                return ToCsv(milliseconds, Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                            }
+                            break;
                         case Resolution.Minute:
                         case Resolution.Second:
-                            var bar = (TradeBar) data;
-                            return ToCsv(milliseconds, Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close), bar.Volume);
+                            var tradeBar = data as TradeBar;
+                            if (tradeBar != null)
+                            {
+                                return ToCsv(milliseconds, Scale(tradeBar.Open), Scale(tradeBar.High), Scale(tradeBar.Low), Scale(tradeBar.Close), tradeBar.Volume);
+                            }
+                            var quoteBar = data as QuoteBar;
+                            if (quoteBar != null)
+                            {
+                                var bidClose = quoteBar.Bid != null ? Scale(quoteBar.Bid.Close) : 0;
+                                var askClose = quoteBar.Ask != null ? Scale(quoteBar.Ask.Close) : 0;
+                                return ToCsv(milliseconds,
+                                    bidClose, quoteBar.LastBidSize,
+                                    askClose, quoteBar.LastAskSize);
+                            }
+                            break;
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var bigBar = (TradeBar) data;
-                            return ToCsv(longTime, Scale(bigBar.Open), Scale(bigBar.High), Scale(bigBar.Low), Scale(bigBar.Close), bigBar.Volume);
+                            var bigTradeBar = data as TradeBar;
+                            if (bigTradeBar != null)
+                            {
+                                return ToCsv(longTime, Scale(bigTradeBar.Open), Scale(bigTradeBar.High), Scale(bigTradeBar.Low), Scale(bigTradeBar.Close), bigTradeBar.Volume);
+                            }
+                            var bigQuoteBar = data as QuoteBar;
+                            if (bigQuoteBar != null)
+                            {
+                                return ToCsv(longTime,
+                                    Scale(bigQuoteBar.Bid.Close), bigQuoteBar.LastBidSize,
+                                    Scale(bigQuoteBar.Ask.Close), bigQuoteBar.LastAskSize);
+                            }
+                            break;
                     }
                     break;
 

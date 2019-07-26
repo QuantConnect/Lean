@@ -13,8 +13,8 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data.Market;
+using System;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -24,12 +24,14 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     public class TickConsolidator : TradeBarConsolidatorBase<Tick>
     {
+        private readonly Func<Tick, bool> _condition;
+
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the period
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
         public TickConsolidator(TimeSpan period)
-            : base(period)
+            : this(period, null)
         {
         }
 
@@ -62,13 +64,23 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="TickConsolidator"/> class.
+        /// </summary>
+        /// <param name="period">The period.</param>
+        /// <param name="condition">The condition.</param>
+        public TickConsolidator(TimeSpan period, Func<Tick, bool> condition) : base(period)
+        {
+            _condition = condition ?? (t => true);
+        }
+
+        /// <summary>
         /// Determines whether or not the specified data should be processd
         /// </summary>
         /// <param name="data">The data to check</param>
         /// <returns>True if the consolidator should process this data, false otherwise</returns>
         protected override bool ShouldProcess(Tick data)
         {
-            return data.TickType == TickType.Trade;
+            return data.TickType == TickType.Trade && _condition(data);
         }
 
         /// <summary>
