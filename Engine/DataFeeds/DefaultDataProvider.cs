@@ -32,13 +32,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>A <see cref="Stream"/> of the data requested</returns>
         public Stream Fetch(string key)
         {
-            if (!File.Exists(key))
+            try
             {
-                Log.Error("DefaultDataProvider.Fetch(): The specified file was not found: {0}", key);
-                return null;
+                return new FileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
-
-            return new FileStream(key, FileMode.Open, FileAccess.Read, FileShare.Read);
+            catch (Exception exception)
+            {
+                if (exception is DirectoryNotFoundException
+                    || exception is FileNotFoundException)
+                {
+                    Log.Error("DefaultDataProvider.Fetch(): The specified file was not found: {0}", key);
+                    return null;
+                }
+                throw;
+            }
         }
 
         /// <summary>

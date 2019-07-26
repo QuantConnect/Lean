@@ -80,6 +80,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.AreEqual(parameters.EquityPerShareGrowth1Y, row.EarningRatios.EquityPerShareGrowth.OneYear);
             Assert.AreEqual(parameters.EquityPerShareGrowth1Y, row.EarningRatios.EquityPerShareGrowth);
             Assert.AreEqual(parameters.PeRatio, row.ValuationRatios.PERatio);
+            Assert.AreEqual(parameters.NetIncomeExtraordinary3M, row.FinancialStatements.IncomeStatement.NetIncomeExtraordinary.ThreeMonths);
         }
 
         [Test]
@@ -190,7 +191,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     EquityPerShareGrowth1Y = 0.091652m,
                     PeRatio = 13.012858m
                 },
-                new FineFundamentalTestParameters("AAPL-BeforeLastDate")
+                new FineFundamentalTestParameters("AAPL-AfterFirstDate")
+                {
+                    Symbol = Symbols.AAPL,
+                    StartDate = new DateTime(2014, 3, 2),
+                    EndDate = new DateTime(2014, 3, 2),
+                    RowCount = 1,
+                    CompanyShortName = "Apple",
+                    Ebitda3M = 19937000000m,
+                    Ebitda12M = 57048000000m,
+                    CostOfRevenue3M = 35748000000m,
+                    CostOfRevenue12M = 106606000000m,
+                    EquityPerShareGrowth1Y = 0.091652m,
+                    PeRatio = 13.012858m
+                },
+                new FineFundamentalTestParameters("AAPL-PreviousBeforeLastDate")
                 {
                     Symbol = Symbols.AAPL,
                     StartDate = new DateTime(2014, 4, 15),
@@ -204,11 +219,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     EquityPerShareGrowth1Y = 0.091652m,
                     PeRatio = 13.272502m
                 },
-                new FineFundamentalTestParameters("AAPL-LastDate")
+                new FineFundamentalTestParameters("AAPL-BeforeLastDate")
                 {
                     Symbol = Symbols.AAPL,
-                    StartDate = new DateTime(2014, 4, 25),
-                    EndDate = new DateTime(2014, 4, 25),
+                    StartDate = new DateTime(2014, 4, 26),
+                    EndDate = new DateTime(2014, 4, 26),
                     RowCount = 1,
                     CompanyShortName = "Apple",
                     Ebitda3M = 15790000000m,
@@ -218,7 +233,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     EquityPerShareGrowth1Y = 0.091652m,
                     PeRatio = 13.272502m
                 },
-                new FineFundamentalTestParameters("AAPL-AfterLastDate")
+                new FineFundamentalTestParameters("AAPL-LastDate")
                 {
                     Symbol = Symbols.AAPL,
                     StartDate = new DateTime(2014, 4, 30),
@@ -230,9 +245,33 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     CostOfRevenue3M = 27699000000m,
                     CostOfRevenue12M = 106606000000m,
                     EquityPerShareGrowth1Y = 0.091652m,
-                    PeRatio = 13.272502m
+                    PeRatio = 13.272502m,
+                    // different than AAPL-BeforeLastDate
+                    NetIncomeExtraordinary3M = 3000000
                 },
-
+                new FineFundamentalTestParameters("AAPL-AfterLastDate")
+                {
+                    Symbol = Symbols.AAPL,
+                    StartDate = new DateTime(2014, 5, 10),
+                    EndDate = new DateTime(2014, 5, 10),
+                    RowCount = 1,
+                    CompanyShortName = "Apple",
+                    Ebitda3M = 15790000000m,
+                    Ebitda12M = 57048000000m,
+                    CostOfRevenue3M = 27699000000m,
+                    CostOfRevenue12M = 106606000000m,
+                    EquityPerShareGrowth1Y = 0.091652m,
+                    PeRatio = 13.272502m,
+                    // different than AAPL-BeforeLastDate
+                    NetIncomeExtraordinary3M = 3000000
+                },
+                new FineFundamentalTestParameters("No-Fine")
+                {
+                    Symbol = Symbols.EURUSD,
+                    StartDate = new DateTime(2014, 5, 10),
+                    EndDate = new DateTime(2014, 5, 10),
+                    RowCount = 1
+                }
             }.Select(x => new TestCaseData(x).SetName(x.Name)).ToArray();
         }
 
@@ -250,6 +289,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             public decimal CostOfRevenue12M { get; set; }
             public decimal EquityPerShareGrowth1Y { get; set; }
             public decimal PeRatio { get; set; }
+            public decimal NetIncomeExtraordinary3M { get; set; }
 
             public FineFundamentalTestParameters(string name)
             {
