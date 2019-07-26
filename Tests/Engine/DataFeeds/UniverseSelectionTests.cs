@@ -117,7 +117,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private IEnumerable<Symbol> FineSelectionFunction(IEnumerable<FineFundamental> fine)
         {
-            return new[] { fine.First().Symbol };
+            return new[] { fine.First(fundamental => fundamental.Symbol.Value == "SPY").Symbol };
         }
 
         public class MockDataFeedWithSubscription : IDataFeed
