@@ -280,7 +280,7 @@ class LeanOutputReader(object):
         plt.yticks(range(len(df_this.index.values)),df_this.index.values, fontsize = 8)
         plt.xticks(range(12),["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"])
         for (j,i),label in np.ndenumerate(df_this):
-            plt.text(i,j,round(label,1),ha='center',va='center')
+            plt.text(i,j,round(label,1),ha='center',va='center', fontsize = 7)
         fig.set_size_inches(width, height)
         base64 = self.fig_to_base64(name, fig)
         plt.cla()
@@ -381,18 +381,18 @@ class LeanOutputReader(object):
         df_this = self.df.copy()
         start_date = ["2000-03-10","2001-09-11","2003-01-08","2008-08-01","2010-05-05",
                                 "2007-08-01","2008-03-01","2008-09-01","2009-01-01","2009-03-01",
-                                "2011-08-05","2011-03-16","2012-09-10",
-                                "2014-04-01","2014-10-01","2015-08-15",
+                                "2011-08-05","2012-09-10",
+                                "2014-10-01","2015-08-15",
                                 "2005-01-01","2007-08-01","2009-04-01","2013-01-01"]
         end_date = ["2000-09-10","2001-10-11","2003-02-07","2008-09-30","2010-05-10",
                             "2007-08-31","2008-03-31","2008-09-30","2009-02-28","2009-05-31",
-                            "2011-09-05","2011-04-16","2012-10-10",
-                            "2014-04-30","2014-10-31","2015-09-30",
+                            "2011-09-05","2012-10-10",
+                            "2014-10-31","2015-09-30",
                             "2007-07-31","2009-03-31","2012-12-31",str(date.today())]
         titles = ["Dotcom","9-11","US Housing Bubble 2003","Lehman Brothers","Flash Crash",
                     "Aug07","Mar08","Sept08","2009Q1","2009Q2",
-                    "US Downgrade-European Debt Crisis","Fukushima Melt Down 2011","ECB IR Event 2012",
-                    "Apr14","Oct14","Fall2015",
+                    "US Downgrade-European Debt Crisis","ECB IR Event 2012",
+                    "Oct14","Fall2015",
                     "Low Volatility Bull Market","GFC Crash","Recovery","New Normal"]
 
         crisis = dict()
