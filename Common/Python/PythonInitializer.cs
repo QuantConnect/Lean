@@ -14,6 +14,8 @@
  *
 */
 
+using System;
+using System.Diagnostics;
 using Python.Runtime;
 
 namespace QuantConnect.Python
@@ -25,20 +27,25 @@ namespace QuantConnect.Python
     {
         // Used to allow multiple Python unit and regression tests to be run in the same test run
         private static bool _isBeginAllowThreadsCalled;
+        private static readonly object _initializeLock = new object();
 
         /// <summary>
         /// Initialize the Python.NET library
         /// </summary>
         public static void Initialize()
         {
-            if (!_isBeginAllowThreadsCalled)
+            lock (_initializeLock)
             {
-                PythonEngine.Initialize();
+                if (!_isBeginAllowThreadsCalled)
+                {
+                    var benchmark = Stopwatch.StartNew();
+                    PythonEngine.Initialize();
+                    Logging.Log.Trace("PythonInitializer(): Python Engine Initialized in " + benchmark.Elapsed.TotalSeconds + "s.");
 
-                // required for multi-threading usage
-                PythonEngine.BeginAllowThreads();
-
-                _isBeginAllowThreadsCalled = true;
+                    // required for multi-threading usage
+                    PythonEngine.BeginAllowThreads();
+                    _isBeginAllowThreadsCalled = true;
+                }
             }
         }
     }

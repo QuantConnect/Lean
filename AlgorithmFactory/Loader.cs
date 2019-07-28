@@ -165,7 +165,7 @@ namespace QuantConnect.AlgorithmFactory
                 pythonFile.Directory.FullName,
                 new DirectoryInfo(Environment.CurrentDirectory).FullName,
             };
-            
+
             // Don't include an empty environment variable in pythonPath, otherwise the PYTHONPATH
             // environment variable won't be used in the module import process
             var pythonPathEnvironmentVariable = Environment.GetEnvironmentVariable("PYTHONPATH");
@@ -179,7 +179,6 @@ namespace QuantConnect.AlgorithmFactory
             try
             {
                 PythonInitializer.Initialize();
-
                 algorithmInstance = new AlgorithmPythonWrapper(moduleName);
             }
             catch (Exception e)
