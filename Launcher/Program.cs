@@ -25,6 +25,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Python;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Launcher
@@ -85,6 +86,17 @@ namespace QuantConnect.Lean.Launcher
                 throw;
             }
 
+            LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
+            try
+            {
+                leanEngineAlgorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
+            }
+            catch (CompositionException compositionException)
+            {
+                Log.Error("Engine.Main(): Failed to load library: " + compositionException);
+                throw;
+            }
+
             //Setup packeting, queue and controls system: These don't do much locally.
             leanEngineSystemHandlers.Initialize();
 
@@ -95,17 +107,6 @@ namespace QuantConnect.Lean.Launcher
             if (job == null)
             {
                 throw new Exception("Engine.Main(): Job was null.");
-            }
-
-            LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
-            try
-            {
-                leanEngineAlgorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
-            }
-            catch (CompositionException compositionException)
-            {
-                Log.Error("Engine.Main(): Failed to load library: " + compositionException);
-                throw;
             }
 
             if (environment.EndsWith("-desktop"))
