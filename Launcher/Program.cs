@@ -25,7 +25,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
-using QuantConnect.Python;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Launcher
@@ -89,7 +88,15 @@ namespace QuantConnect.Lean.Launcher
             //Setup packeting, queue and controls system: These don't do much locally.
             leanEngineSystemHandlers.Initialize();
 
-            // Load Components needed to run the algorithm from configuration.
+            //-> Pull job from QuantConnect job queue, or, pull local build:
+            string assemblyPath;
+            var job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
+
+            if (job == null)
+            {
+                throw new Exception("Engine.Main(): Job was null.");
+            }
+
             LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
             try
             {
@@ -99,21 +106,6 @@ namespace QuantConnect.Lean.Launcher
             {
                 Log.Error("Engine.Main(): Failed to load library: " + compositionException);
                 throw;
-            }
-
-            // Load Python on WorkerThread before waiting for job.
-            var isolator = new Isolator();
-            var workerThread = new WorkerThread();
-            leanEngineAlgorithmHandlers.Setup.WorkerThread = workerThread;
-            isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(10), PythonInitializer.Initialize, 100, sleepIntervalMillis: 50, workerThread: workerThread);
-
-            //-> Pull job from QuantConnect job queue, or, pull local build:
-            string assemblyPath;
-            var job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
-
-            if (job == null)
-            {
-                throw new Exception("Engine.Main(): Job was null.");
             }
 
             if (environment.EndsWith("-desktop"))

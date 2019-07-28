@@ -38,11 +38,11 @@ namespace QuantConnect.Python
                 var benchmark = Stopwatch.StartNew();
                 PythonEngine.Initialize();
                 benchmark.Restart();
-                Logging.Log.Trace("PythonInitializer(): Python Engine Initialized in " + benchmark.Elapsed.TotalSeconds + "s.");
+                Logging.Log.Trace("PythonInitializer(): Python Engine Initialized in " + benchmark.Elapsed.TotalSeconds + "s. Thread: " + System.Threading.Thread.CurrentThread.Name);
 
                 // required for multi-threading usage
                 PythonEngine.BeginAllowThreads();
-                Logging.Log.Trace("PythonInitializer():  Allow threading completed in " + benchmark.Elapsed.TotalSeconds + "s.");
+                Logging.Log.Trace("PythonInitializer():  Allow threading completed in " + benchmark.Elapsed.TotalSeconds + "s. Thread: " + System.Threading.Thread.CurrentThread.Name);
                 _isBeginAllowThreadsCalled = true;
             }
         }
