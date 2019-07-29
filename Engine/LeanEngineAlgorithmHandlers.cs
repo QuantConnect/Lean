@@ -80,11 +80,6 @@ namespace QuantConnect.Lean.Engine
         public IAlphaHandler Alphas { get; }
 
         /// <summary>
-        /// Python algorithm worker thread.
-        /// </summary>
-        public WorkerThread WorkerThread { get; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="LeanEngineAlgorithmHandlers"/> class from the specified handlers
         /// </summary>
         /// <param name="results">The result handler for communicating results from the algorithm</param>
@@ -153,10 +148,6 @@ namespace QuantConnect.Lean.Engine
             FactorFileProvider = factorFileProvider;
             DataProvider = dataProvider;
             Alphas = alphas;
-
-            //Worker thread for python instances:
-            WorkerThread = new WorkerThread();
-            Setup.WorkerThread = WorkerThread;
         }
 
         /// <summary>
