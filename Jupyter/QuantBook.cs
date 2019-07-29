@@ -140,7 +140,7 @@ namespace QuantConnect.Jupyter
                 foreach (var ticker in tickers)
                 {
                     var symbol = QuantConnect.Symbol.Create(ticker.ToString(), SecurityType.Equity, Market.USA);
-                    var dir = new DirectoryInfo(Path.Combine(Globals.DataFolder, "equity", symbol.ID.Market, "fundamental", "fine", symbol.Value.ToLower()));
+                    var dir = new DirectoryInfo(Path.Combine(Globals.DataFolder, "equity", symbol.ID.Market, "fundamental", "fine", symbol.Value.ToLowerInvariant()));
                     if (!dir.Exists) continue;
 
                     var config = new SubscriptionDataConfig(typeof(FineFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);

@@ -455,7 +455,7 @@ namespace QuantConnect
                     {
                         if (!File.Exists(file))
                         {
-                            Log.Trace("ZipFiles(): File does not exist: " + file);
+                            Log.Trace($"ZipFiles(): File does not exist: {file}");
                             continue;
                         }
 
@@ -524,7 +524,7 @@ namespace QuantConnect
                 }
                 else
                 {
-                    Log.Error("Data.UnZip(2): File doesn't exist: " + filename);
+                    Log.Error($"Data.UnZip(2): File doesn\'t exist: {filename}");
                 }
             }
             catch (Exception err)
@@ -549,7 +549,7 @@ namespace QuantConnect
         {
             if (!File.Exists(filename))
             {
-                Log.Error("Compression.Unzip(): File does not exist: " + filename);
+                Log.Error($"Compression.Unzip(): File does not exist: {filename}");
                 return Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>();
             }
 
@@ -590,7 +590,7 @@ namespace QuantConnect
         {
             if (!File.Exists(filename))
             {
-                Log.Error("Compression.ReadFirstZipEntry(): File does not exist: " + filename);
+                Log.Error($"Compression.ReadFirstZipEntry(): File does not exist: {filename}");
                 return Enumerable.Empty<string>();
             }
 
