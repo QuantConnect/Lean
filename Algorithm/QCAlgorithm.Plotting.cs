@@ -300,7 +300,7 @@ namespace QuantConnect.Algorithm
         /// <param name="value">Int value of your runtime statistic</param>
         public void SetRuntimeStatistic(string name, int value)
         {
-            SetRuntimeStatistic(name, value.ToString());
+            SetRuntimeStatistic(name, value.ToStringInvariant());
         }
 
         /// <summary>
