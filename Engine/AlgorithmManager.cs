@@ -202,14 +202,14 @@ namespace QuantConnect.Lean.Engine
                 //Check this backtest is still running:
                 if (_algorithm.Status != AlgorithmStatus.Running)
                 {
-                    Log.Error(string.Format("AlgorithmManager.Run(): Algorithm state changed to {0} at {1}", _algorithm.Status, timeSlice.Time));
+                    Log.Error($"AlgorithmManager.Run(): Algorithm state changed to {_algorithm.Status} at {timeSlice.Time.ToStringInvariant()}");
                     break;
                 }
 
                 //Execute with TimeLimit Monitor:
                 if (token.IsCancellationRequested)
                 {
-                    Log.Error("AlgorithmManager.Run(): CancellationRequestion at " + timeSlice.Time);
+                    Log.Error($"AlgorithmManager.Run(): CancellationRequestion at {timeSlice.Time.ToStringInvariant()}");
                     return;
                 }
 
@@ -379,7 +379,7 @@ namespace QuantConnect.Lean.Engine
                 if (algorithm.RunTimeError != null)
                 {
                     _algorithm.Status = AlgorithmStatus.RuntimeError;
-                    Log.Trace(string.Format("AlgorithmManager.Run(): Algorithm encountered a runtime error at {0}. Error: {1}", timeSlice.Time, algorithm.RunTimeError));
+                    Log.Trace($"AlgorithmManager.Run(): Algorithm encountered a runtime error at {timeSlice.Time.ToStringInvariant()}. Error: {algorithm.RunTimeError}");
                     break;
                 }
 
@@ -403,7 +403,9 @@ namespace QuantConnect.Lean.Engine
                             var executedTickets = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
                             foreach (var ticket in executedTickets)
                             {
-                                algorithm.Error(string.Format("{0} - Executed MarginCallOrder: {1} - Quantity: {2} @ {3}", algorithm.Time, ticket.Symbol, ticket.Quantity, ticket.AverageFillPrice));
+                                algorithm.Error($"{algorithm.Time.ToStringInvariant()} - Executed MarginCallOrder: {ticket.Symbol} - " +
+                                    $"Quantity: {ticket.Quantity.ToStringInvariant()} @ {ticket.AverageFillPrice.ToStringInvariant()}"
+                                );
                             }
                         }
                         catch (Exception err)
@@ -411,7 +413,7 @@ namespace QuantConnect.Lean.Engine
                             algorithm.RunTimeError = err;
                             _algorithm.Status = AlgorithmStatus.RuntimeError;
                             var locator = executingMarginCall ? "Portfolio.MarginCallModel.ExecuteMarginCall" : "OnMarginCall";
-                            Log.Error(string.Format("AlgorithmManager.Run(): RuntimeError: {0}: ", locator) + err);
+                            Log.Error($"AlgorithmManager.Run(): RuntimeError: {locator}: {err}");
                             return;
                         }
                     }
