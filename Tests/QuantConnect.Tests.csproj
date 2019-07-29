@@ -263,6 +263,7 @@
     <Compile Include="Algorithm\Framework\Execution\StandardDeviationExecutionModelTests.cs" />
     <Compile Include="Algorithm\Framework\FrameworkModelsPythonInheritanceTests.cs" />
     <Compile Include="Algorithm\Framework\InsightTests.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\DuplicateKeyPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\BlackLittermanOptimizationPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\InsightWeightingPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetCollectionTests.cs" />
