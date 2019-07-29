@@ -44,11 +44,12 @@ namespace QuantConnect.Lean.Engine.Alphas
         private FitnessScoreManager _fitnessScore;
         private DateTime _lastFitnessScoreCalculation;
         private readonly object _lock = new object();
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// The cancellation token that will be cancelled when requested to exit
         /// </summary>
-        protected CancellationTokenSource CancellationTokenSource { get; set; }
+        protected CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
         /// <summary>
         /// Gets a flag indicating if this handler's thread is still running and processing messages
@@ -183,7 +184,6 @@ namespace QuantConnect.Lean.Engine.Alphas
         public virtual void Run()
         {
             IsActive = true;
-            CancellationTokenSource = new CancellationTokenSource();
 
             using (LiveMode ? new Timer(_ => StoreInsights(),
                 null,
@@ -191,7 +191,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                 TimeSpan.FromMinutes(10)) : null)
             {
                 // run main loop until canceled, will clean out work queues separately
-                while (!CancellationTokenSource.IsCancellationRequested)
+                while (!CancellationToken.IsCancellationRequested)
                 {
                     try
                     {
@@ -223,7 +223,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         {
             Log.Trace("DefaultAlphaHandler.Exit(): Exiting Thread...");
 
-            CancellationTokenSource?.Cancel(false);
+            _cancellationTokenSource.Cancel(false);
         }
 
         /// <summary>
