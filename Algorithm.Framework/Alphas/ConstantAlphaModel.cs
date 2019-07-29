@@ -93,7 +93,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             foreach (var security in _securities)
             {
-                if (ShouldEmitInsight(algorithm.UtcTime, security.Symbol))
+                // security price could be zero until we get the first data point. e.g. this could happen
+                // when adding both forex and equities, we will first get a forex data point
+                if (security.Price != 0
+                    && ShouldEmitInsight(algorithm.UtcTime, security.Symbol))
                 {
                     yield return new Insight(security.Symbol, _period, _type, _direction, _magnitude, _confidence, weight: _weight);
                 }
