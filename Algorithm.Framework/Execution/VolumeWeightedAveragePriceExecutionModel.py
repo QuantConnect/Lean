@@ -153,7 +153,7 @@ class IntradayVwap:
         '''Computes the new VWAP'''
         success, volume, averagePrice = self.GetVolumeAndAveragePrice(input)
         if not success:
-            return
+            return self.IsReady
 
         # reset vwap on daily boundaries
         if self.lastDate != input.EndTime.date():
@@ -168,10 +168,10 @@ class IntradayVwap:
         if self.sumOfVolume == 0.0:
            # if we have no trade volume then use the current price as VWAP
            self.Value = input.Value
-           return
+           return self.IsReady
 
         self.Value = self.sumOfPriceTimesVolume / self.sumOfVolume
-
+        return self.IsReady
 
     def GetVolumeAndAveragePrice(self, input):
         '''Determines the volume and price to be used for the current input in the VWAP computation'''

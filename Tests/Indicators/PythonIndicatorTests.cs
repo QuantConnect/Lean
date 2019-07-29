@@ -20,8 +20,10 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
+using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Indicators;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -163,6 +165,46 @@ class CustomSimpleMovingAverage(PythonIndicator):
             TestHelper.AssertIndicatorIsInDefaultState(sma.RollingSum);
             sma.Update(DateTime.UtcNow, 2.0m);
             Assert.AreEqual(sma.Current.Value, 2.0m);
+        }
+
+        [Test]
+        public void RegisterPythonCustomIndicatorProperly()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            var spy = algorithm.AddEquity("SPY").Symbol;
+
+            using (Py.GIL())
+            {
+                var module = PythonEngine.ModuleFromString(
+                    Guid.NewGuid().ToString(),
+                    @"
+from clr import AddReference
+AddReference('QuantConnect.Indicators')
+from QuantConnect.Indicators import PythonIndicator
+class GoodCustomIndicator(PythonIndicator):
+    def __init__(self):
+        self.Value = 0
+    def Update(self, input):
+        self.Value = input.Value
+        return True
+class BadCustomIndicator(PythonIndicator):
+    def __init__(self):
+        self.Valeu = 0
+    def Update(self, input):
+        self.Value = input.Value
+        return True"
+                );
+
+                var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
+                Assert.DoesNotThrow(() => algorithm.RegisterIndicator(spy, goodIndicator, Resolution.Minute));
+
+                var actual = algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
+                Assert.AreEqual(1, actual);
+
+                var badIndicator = module.GetAttr("BadCustomIndicator").Invoke();
+                Assert.Throws<NotImplementedException>(() => algorithm.RegisterIndicator(spy, badIndicator, Resolution.Minute));
+            }
         }
     }
 }
