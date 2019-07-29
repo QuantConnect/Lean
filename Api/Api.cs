@@ -558,11 +558,11 @@ namespace QuantConnect.Api
             var request = new RestRequest("data/read", Method.GET);
 
             request.AddParameter("format", "link");
-            request.AddParameter("ticker", symbol.Value.ToLower());
+            request.AddParameter("ticker", symbol.Value.ToLowerInvariant());
             request.AddParameter("type", symbol.ID.SecurityType.ToLower());
             request.AddParameter("market", symbol.ID.Market);
             request.AddParameter("resolution", resolution);
-            request.AddParameter("date", date.ToString("yyyyMMdd"));
+            request.AddParameter("date", date.ToStringInvariant("yyyyMMdd"));
 
             Link result;
             ApiConnection.TryRequest(request, out result);
@@ -714,8 +714,8 @@ namespace QuantConnect.Api
         public List<Data.Market.Split> GetSplits(DateTime from, DateTime to)
         {
             var request = new RestRequest("splits", Method.POST);
-            request.AddParameter("from", from.ToString("yyyyMMdd"));
-            request.AddParameter("to", from.ToString("yyyyMMdd"));
+            request.AddParameter("from", from.ToStringInvariant("yyyyMMdd"));
+            request.AddParameter("to", from.ToStringInvariant("yyyyMMdd"));
 
             SplitList splits;
             ApiConnection.TryRequest(request, out splits);
@@ -738,8 +738,8 @@ namespace QuantConnect.Api
         public List<Data.Market.Dividend> GetDividends(DateTime from, DateTime to)
         {
             var request = new RestRequest("dividends", Method.POST);
-            request.AddParameter("from", from.ToString("yyyyMMdd"));
-            request.AddParameter("to", from.ToString("yyyyMMdd"));
+            request.AddParameter("from", from.ToStringInvariant("yyyyMMdd"));
+            request.AddParameter("to", from.ToStringInvariant("yyyyMMdd"));
 
             DividendList dividends;
             ApiConnection.TryRequest(request, out dividends);
@@ -799,7 +799,7 @@ namespace QuantConnect.Api
         {
             // Create a new hash using current UTC timestamp.
             // Hash must be generated fresh each time.
-            var data = string.Format("{0}:{1}", token, timestamp);
+            var data = $"{token}:{timestamp.ToStringInvariant()}";
             return data.ToSHA256();
         }
     }
