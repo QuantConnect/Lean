@@ -670,6 +670,7 @@
     <Compile Include="Algorithm\Framework\Alphas\InsightType.cs" />
     <Compile Include="Statistics\AlgorithmPerformance.cs" />
     <Compile Include="Statistics\FitnessScoreManager.cs" />
+    <Compile Include="Statistics\KellyCriterionManager.cs" />
     <Compile Include="Statistics\PortfolioStatistics.cs" />
     <Compile Include="Statistics\StatisticsBuilder.cs" />
     <Compile Include="Statistics\StatisticsResults.cs" />

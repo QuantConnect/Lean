@@ -33,6 +33,8 @@ namespace QuantConnect
         private decimal _overrideEstimatedMonthlyAlphaValue;
         private readonly IAccountCurrencyProvider _accountCurrencyProvider;
         private decimal _fitnessScore;
+        private decimal _kellyCriterionEstimate;
+        private decimal _kellyCriterionProbabilityValue;
         private decimal _portfolioTurnover;
         private decimal _returnOverMaxDrawdown;
         private decimal _sortinoRatio;
@@ -82,6 +84,40 @@ namespace QuantConnect
         /// The total accumulated estimated value of trading all insights
         /// </summary>
         public decimal TotalAccumulatedEstimatedAlphaValue { get; set; }
+
+        /// <summary>
+        /// Score of the strategy's insights predictive power
+        /// </summary>
+        /// <remarks>See https://www.quantconnect.com/forum/discussion/6194/insight-scoring-metric/p1.
+        /// For performance we only truncate when the value is gotten</remarks>
+        public decimal KellyCriterionEstimate
+        {
+            get
+            {
+                return _kellyCriterionEstimate.TruncateTo3DecimalPlaces();
+            }
+            set
+            {
+                _kellyCriterionEstimate = value;
+            }
+        }
+
+        /// <summary>
+        /// The p-value or probability value of the <see cref="KellyCriterionEstimate"/>
+        /// </summary>
+        /// <remarks>See https://www.quantconnect.com/forum/discussion/6194/insight-scoring-metric/p1.
+        /// For performance we only truncate when the value is gotten</remarks>
+        public decimal KellyCriterionProbabilityValue
+        {
+            get
+            {
+                return _kellyCriterionProbabilityValue.TruncateTo3DecimalPlaces();
+            }
+            set
+            {
+                _kellyCriterionProbabilityValue = value;
+            }
+        }
 
         /// <summary>
         /// Score of the strategy's performance, and suitability for the Alpha Stream Market
@@ -198,6 +234,8 @@ namespace QuantConnect
             return new Dictionary<string, string>
             {
                 {"Fitness Score", $"{FitnessScore}"},
+                {"Kelly Criterion Estimate", $"{KellyCriterionEstimate}"},
+                {"Kelly Criterion Probability Value", $"{KellyCriterionProbabilityValue}"},
                 {"Sortino Ratio", $"{SortinoRatio}"},
                 {"Return Over Maximum Drawdown", $"{ReturnOverMaxDrawdown}"},
                 {"Portfolio Turnover", $"{PortfolioTurnover}"},
