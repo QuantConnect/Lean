@@ -123,6 +123,9 @@
     <Reference Include="QLNet, Version=1.9.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\QLNet.1.9.2\lib\net45\QLNet.dll</HintPath>
     </Reference>
+    <Reference Include="StringInterpolationBridge, Version=0.9.1.0, Culture=neutral, PublicKeyToken=761dcf67ba0bf74d, processorArchitecture=MSIL">
+      <HintPath>..\packages\StringInterpolationBridgeStrong.0.9.1\lib\net40\StringInterpolationBridge.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
@@ -696,6 +699,8 @@
     <Compile Include="Statistics\TradeStatistics.cs" />
     <Compile Include="Statistics\Statistics.cs" />
     <Compile Include="RealTimeSynchronizedTimer.cs" />
+    <Compile Include="StringExtensions.cs" />
+    <Compile Include="Parse.cs" />
     <Compile Include="Symbol.cs" />
     <Compile Include="Statistics\Trade.cs" />
     <Compile Include="Statistics\TradeBuilder.cs" />
