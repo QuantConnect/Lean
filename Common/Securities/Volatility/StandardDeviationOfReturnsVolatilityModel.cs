@@ -93,7 +93,7 @@ namespace QuantConnect.Securities
                         if (LastFactor.HasValue)
                         {
                             _lastPrice *= LastFactor.Value;
-                            SetLastFactor(null);
+                            LastFactor = null;
                         }
 
                         _needsUpdate = true;

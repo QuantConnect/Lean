@@ -27,6 +27,8 @@ namespace QuantConnect.Securities.Volatility
     /// </summary>
     public class BaseVolatilityModel : IVolatilityModel
     {
+        private decimal? _lastFactor;
+
         /// <summary>
         /// Provides access to registered <see cref="SubscriptionDataConfig"/>
         /// </summary>
@@ -40,7 +42,23 @@ namespace QuantConnect.Securities.Volatility
         /// <summary>
         /// Latest price factor to be applied
         /// </summary>
-        public decimal? LastFactor { get; private set; }
+        protected decimal? LastFactor
+        {
+            get
+            {
+                return _lastFactor;
+            }
+            set
+            {
+                if (!_lastFactor.HasValue || !value.HasValue)
+                {
+                    _lastFactor = value;
+                    return;
+                }
+
+                _lastFactor *= value;
+            }
+        }
 
         /// <summary>
         /// Sets the <see cref="ISubscriptionDataConfigProvider"/> instance to use.
@@ -77,7 +95,7 @@ namespace QuantConnect.Securities.Volatility
             }
 
             var factor = 1 - dividend.Distribution / dividend.ReferencePrice;
-            SetLastFactor(factor);
+            LastFactor = factor;
         }
 
         /// <summary>
@@ -94,22 +112,7 @@ namespace QuantConnect.Securities.Volatility
                 return;
             }
 
-            SetLastFactor(split.SplitFactor);
-        }
-
-        /// <summary>
-        /// Sets the value of the latest price factor
-        /// </summary>
-        /// <param name="factor">Latest price factor to be applied</param>
-        public void SetLastFactor(decimal? factor)
-        {
-            if (!LastFactor.HasValue || !factor.HasValue)
-            {
-                LastFactor = factor;
-                return;
-            }
-
-            LastFactor *= factor;
+            LastFactor = split.SplitFactor;
         }
 
         /// <summary>

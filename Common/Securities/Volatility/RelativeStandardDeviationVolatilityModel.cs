@@ -104,7 +104,7 @@ namespace QuantConnect.Securities
                             _window[i] *= (double) LastFactor.Value;
                         }
 
-                        SetLastFactor(null);
+                        LastFactor = null;
                     }
 
                     _needsUpdate = true;

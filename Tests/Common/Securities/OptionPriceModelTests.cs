@@ -22,6 +22,7 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Option;
 using System.Collections.Generic;
+using QuantConnect.Securities.Volatility;
 
 namespace QuantConnect.Tests.Common
 {
@@ -308,37 +309,13 @@ namespace QuantConnect.Tests.Common
         /// <summary>
         /// Dummy implementation of volatility model (for tests only)
         /// </summary>
-        class DummyVolatilityModel : IVolatilityModel
+        class DummyVolatilityModel : BaseVolatilityModel
         {
-            private decimal _volatility;
+            public override decimal Volatility { get; }
 
             public DummyVolatilityModel(decimal volatility)
             {
-                _volatility = volatility;
-            }
-            public decimal Volatility
-            {
-                get
-                {
-                    return _volatility;
-                }
-            }
-
-            public IEnumerable<HistoryRequest> GetHistoryRequirements(Security security, DateTime date)
-            {
-                return Enumerable.Empty<HistoryRequest>();
-            }
-
-            public void Update(Security security, BaseData data)
-            {
-            }
-
-            public void ApplyDividend(Dividend dividend, bool liveMode, DataNormalizationMode mode)
-            {
-            }
-
-            public void ApplySplit(Split split, bool liveMode, DataNormalizationMode mode)
-            {
+                Volatility = volatility;
             }
         }
     }
