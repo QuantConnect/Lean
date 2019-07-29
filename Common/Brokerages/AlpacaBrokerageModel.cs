@@ -53,7 +53,7 @@ namespace QuantConnect.Brokerages
         {
             if (accountType == AccountType.Margin)
             {
-                throw new Exception("The Alpaca brokerage does not currently support Margin trading.");
+                throw new ArgumentException("The Alpaca brokerage does not currently support Margin trading.");
             }
         }
 

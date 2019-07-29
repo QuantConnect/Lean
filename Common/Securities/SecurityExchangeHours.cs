@@ -241,7 +241,7 @@ namespace QuantConnect.Securities
             }
             while (time < oneWeekLater);
 
-            throw new Exception("Unable to locate next market open within two weeks.");
+            throw new ArgumentException("Unable to locate next market open within two weeks.");
         }
 
         /// <summary>
@@ -285,7 +285,7 @@ namespace QuantConnect.Securities
             }
             while (time < oneWeekLater);
 
-            throw new Exception("Unable to locate next market close within two weeks.");
+            throw new ArgumentException("Unable to locate next market close within two weeks.");
         }
 
         /// <summary>

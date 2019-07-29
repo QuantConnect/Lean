@@ -425,7 +425,7 @@ namespace QuantConnect.Securities
                             $"{targetOrderValue}. Current order value is {orderValue}. Order quantity {orderQuantity}. " +
                             $"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol " +
                             $"{parameters.Security.Symbol}";
-                        throw new Exception(message);
+                        throw new ArgumentException(message);
                     }
 
                     lastOrderQuantity = orderQuantity;

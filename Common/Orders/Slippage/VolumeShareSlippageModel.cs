@@ -62,7 +62,9 @@ namespace QuantConnect.Orders.Slippage
                         : ((QuoteBar)lastData).LastAskSize;
                     break;
                 default:
-                    throw new Exception("VolumeShareSlippageModel.GetSlippageApproximation: Cannot use this model with market data type " + lastData.GetType());
+                    throw new InvalidOperationException(
+                        $"VolumeShareSlippageModel.GetSlippageApproximation: Cannot use this model with market data type {lastData.GetType()}"
+                    );
             }
 
             // If volume is zero or negative, we use the maximum slippage percentage since the impact of any quantity is infinite

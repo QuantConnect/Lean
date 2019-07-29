@@ -79,7 +79,7 @@ namespace QuantConnect.Securities
             LotSize = lotSize;
             if(LotSize <= 0)
             {
-                throw new Exception("SymbolProperties LotSize can not be less than or equal to 0");
+                throw new ArgumentException("SymbolProperties LotSize can not be less than or equal to 0");
             }
         }
 

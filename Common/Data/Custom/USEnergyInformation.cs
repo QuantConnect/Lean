@@ -216,7 +216,7 @@ namespace QuantConnect.Data.Custom
                     range = new[] { $"{year}1001", $"{1 + year}0101" };
                     break;
                 default:
-                    throw (new Exception("invalid quarter input"));
+                    throw (new ArgumentException("invalid quarter input"));
             }
 
             var dates = range

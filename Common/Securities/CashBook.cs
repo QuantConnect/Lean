@@ -151,12 +151,12 @@ namespace QuantConnect.Securities
 
             if (source.ConversionRate == 0)
             {
-                throw new Exception($"The conversion rate for {sourceCurrency} is not available.");
+                throw new ArgumentException($"The conversion rate for {sourceCurrency} is not available.");
             }
 
             if (destination.ConversionRate == 0)
             {
-                throw new Exception($"The conversion rate for {destinationCurrency} is not available.");
+                throw new ArgumentException($"The conversion rate for {destinationCurrency} is not available.");
             }
 
             var conversionRate = source.ConversionRate / destination.ConversionRate;
@@ -334,7 +334,7 @@ namespace QuantConnect.Securities
                 Cash cash;
                 if (!_currencies.TryGetValue(symbol, out cash))
                 {
-                    throw new Exception("This cash symbol (" + symbol + ") was not found in your cash book.");
+                    throw new KeyNotFoundException("This cash symbol (" + symbol + ") was not found in your cash book.");
                 }
                 return cash;
             }

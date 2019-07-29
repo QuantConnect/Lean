@@ -420,8 +420,9 @@ namespace QuantConnect.Securities
             {
                 if (_localTimeKeeper == null)
                 {
-                    throw new Exception("Security.SetLocalTimeKeeper(LocalTimeKeeper) must be called in order to use the LocalTime property.");
+                    throw new InvalidOperationException("Security.SetLocalTimeKeeper(LocalTimeKeeper) must be called in order to use the LocalTime property.");
                 }
+
                 return _localTimeKeeper.LocalTime;
             }
         }

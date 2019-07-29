@@ -117,7 +117,7 @@ namespace QuantConnect.Securities
         {
             if (SubscriptionDataConfigProvider == null)
             {
-                throw new Exception(
+                throw new InvalidOperationException(
                     "RelativeStandardDeviationVolatilityModel.GetHistoryRequirements(): " +
                     "SubscriptionDataConfigProvider was not set."
                 );

@@ -185,7 +185,7 @@ namespace QuantConnect.Securities
         {
             if (_algorithm != null && _algorithm.IsWarmingUp)
             {
-                throw new Exception("This operation is not allowed in Initialize or during warm up: CancelOpenOrders. Please move this code to the OnWarmupFinished() method.");
+                throw new InvalidOperationException("This operation is not allowed in Initialize or during warm up: CancelOpenOrders. Please move this code to the OnWarmupFinished() method.");
             }
 
             var cancelledOrders = new List<OrderTicket>();
@@ -207,7 +207,7 @@ namespace QuantConnect.Securities
         {
             if (_algorithm != null && _algorithm.IsWarmingUp)
             {
-                throw new Exception("This operation is not allowed in Initialize or during warm up: CancelOpenOrders. Please move this code to the OnWarmupFinished() method.");
+                throw new InvalidOperationException("This operation is not allowed in Initialize or during warm up: CancelOpenOrders. Please move this code to the OnWarmupFinished() method.");
             }
 
             var cancelledOrders = new List<OrderTicket>();

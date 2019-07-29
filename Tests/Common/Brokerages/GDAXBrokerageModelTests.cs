@@ -275,7 +275,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void ThrowsWhenCalledWithMarginAccountType()
         {
-            Assert.Throws<Exception>(() =>
+            Assert.Throws<ArgumentException>(() =>
             {
                 new GDAXBrokerageModel(AccountType.Margin);
             }, "The GDAX brokerage does not currently support Margin trading.");

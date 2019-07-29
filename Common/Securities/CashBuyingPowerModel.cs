@@ -257,7 +257,7 @@ namespace QuantConnect.Securities
 
                 if (lastOrderQuantity == orderQuantity)
                 {
-                    throw new Exception($"GetMaximumOrderQuantityForTargetValue failed to converge to target order value {targetOrderValue}. " +
+                    throw new ArgumentException($"GetMaximumOrderQuantityForTargetValue failed to converge to target order value {targetOrderValue}. " +
                                         $"Current order value is {currentOrderValue}. Order quantity {orderQuantity}. Lot size is " +
                                         $"{parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol {parameters.Security.Symbol}");
                 }
