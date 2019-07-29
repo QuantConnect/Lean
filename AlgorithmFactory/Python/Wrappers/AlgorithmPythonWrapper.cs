@@ -33,7 +33,6 @@ using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -61,16 +60,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                 {
                     Logging.Log.Trace($"AlgorithmPythonWrapper(): Python version {PythonEngine.Version}: Importing python module {moduleName}");
 
-                    var benchmark = Stopwatch.StartNew();
                     var module = Py.Import(moduleName);
-                    Logging.Log.Trace("AlgorithmPythonWrapper(): Python Import Completed: " + benchmark.Elapsed.TotalSeconds + "s.");
-                    benchmark.Restart();
-
-
                     var pyList = module.Dir();
-                    Logging.Log.Trace("AlgorithmPythonWrapper(): Module Dir Loaded: " + benchmark.Elapsed.TotalSeconds + "s.");
-                    benchmark.Restart();
-
                     foreach (var name in pyList)
                     {
                         Type type;
@@ -101,7 +92,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                         }
                         attr.Dispose();
                     }
-                    Logging.Log.Trace("AlgorithmPythonWrapper(): Object invoke completed: " + benchmark.Elapsed.TotalSeconds + "s.");
                     module.Dispose();
                     pyList.Dispose();
                     // If _algorithm could not be set, throw exception

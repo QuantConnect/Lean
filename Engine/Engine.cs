@@ -124,7 +124,8 @@ namespace QuantConnect.Lean.Engine
                     var marketHoursDatabase = marketHoursDatabaseTask.Result;
 
                     // start worker thread
-                    workerThread = _algorithmHandlers.WorkerThread;
+                    workerThread = new WorkerThread();
+                    _algorithmHandlers.Setup.WorkerThread = workerThread;
 
                     // Save algorithm to cache, load algorithm instance:
                     algorithm = _algorithmHandlers.Setup.CreateAlgorithmInstance(job, assemblyPath);

@@ -156,22 +156,30 @@ namespace QuantConnect.AlgorithmFactory
                 return false;
             }
 
-            try
-            {
-                PythonInitializer.Initialize(assemblyPath);
-            }
-            catch (Exception e)
-            {
-                Log.Error(e);
-                errorMessage = $"Loader.TryCreatePythonAlgorithm(): Failed to initialize PythonEngine. {e.Message}";
-                return false;
-            }
-
             var pythonFile = new FileInfo(assemblyPath);
             var moduleName = pythonFile.Name.Replace(".pyc", "").Replace(".py", "");
 
+            // Set the python path for loading python algorithms.
+            var pythonPath = new List<string>
+            {
+                pythonFile.Directory.FullName,
+                new DirectoryInfo(Environment.CurrentDirectory).FullName,
+            };
+            
+            // Don't include an empty environment variable in pythonPath, otherwise the PYTHONPATH
+            // environment variable won't be used in the module import process
+            var pythonPathEnvironmentVariable = Environment.GetEnvironmentVariable("PYTHONPATH");
+            if (!string.IsNullOrEmpty(pythonPathEnvironmentVariable))
+            {
+                pythonPath.Add(pythonPathEnvironmentVariable);
+            }
+
+            Environment.SetEnvironmentVariable("PYTHONPATH", string.Join(OS.IsLinux ? ":" : ";", pythonPath));
+
             try
             {
+                PythonInitializer.Initialize();
+
                 algorithmInstance = new AlgorithmPythonWrapper(moduleName);
             }
             catch (Exception e)
