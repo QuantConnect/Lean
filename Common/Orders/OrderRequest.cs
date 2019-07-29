@@ -14,6 +14,7 @@
 */
 
 using System;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {
@@ -95,7 +96,7 @@ namespace QuantConnect.Orders
         {
             if (response == null)
             {
-                throw new ArgumentNullException("response", "Response can not be null");
+                throw new ArgumentNullException(nameof(response), "Response can not be null");
             }
 
             // if the response is an error, ignore the input status
@@ -112,7 +113,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("{0} UTC: Order: ({1}) - {2} Status: {3}", Time, OrderId, Tag, Status);
+            return Invariant($"{Time} UTC: Order: ({OrderId.ToStringInvariant()}) - {Tag} Status: {Status}");
         }
     }
 }

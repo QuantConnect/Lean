@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities.Future
 {
@@ -82,7 +82,9 @@ namespace QuantConnect.Securities.Future
 
             if(n > daysInMonth)
             {
-                throw new ArgumentOutOfRangeException("n",String.Format("Number of days ({0}) is larger than the size of month({1})", n, daysInMonth));
+                throw new ArgumentOutOfRangeException(nameof(n), Invariant(
+                    $"Number of days ({n}) is larger than the size of month({daysInMonth})"
+                ));
             }
             // Count the number of days in the month after the third to last business day
             var businessDays = n;
@@ -112,11 +114,15 @@ namespace QuantConnect.Securities.Future
             var daysInMonth = DateTime.DaysInMonth(time.Year, time.Month);
             if (nthBusinessDay > daysInMonth)
             {
-                throw new ArgumentOutOfRangeException($"Argument nthBusinessDay (${nthBusinessDay}) is larger than the amount of days in the current month (${daysInMonth})");
+                throw new ArgumentOutOfRangeException(Invariant(
+                    $"Argument nthBusinessDay (${nthBusinessDay}) is larger than the amount of days in the current month (${daysInMonth})"
+                ));
             }
             if (nthBusinessDay < 1)
             {
-                throw new ArgumentOutOfRangeException($"Argument nthBusinessDay (${nthBusinessDay}) is less than one. Provide a number greater than one and less than the days in month");
+                throw new ArgumentOutOfRangeException(Invariant(
+                    $"Argument nthBusinessDay (${nthBusinessDay}) is less than one. Provide a number greater than one and less than the days in month"
+                ));
             }
 
             time = new DateTime(time.Year, time.Month, 1);
@@ -130,7 +136,7 @@ namespace QuantConnect.Securities.Future
             while (daysCounted < nthBusinessDay || holidays.Contains(time) || USHoliday.Dates.Contains(time) || !time.IsCommonBusinessDay())
             {
                 // The asset continues trading on days contained within `USHoliday.Dates`, but
-                // the last trade date is affected by those holidays. We check for 
+                // the last trade date is affected by those holidays. We check for
                 // both MHDB entries and holidays to get accurate business days
                 if (holidays.Contains(time) || USHoliday.Dates.Contains(time))
                 {
@@ -159,7 +165,7 @@ namespace QuantConnect.Securities.Future
                 i++;
             }
 
-            return time; 
+            return time;
         }
 
         /// <summary>
@@ -207,7 +213,7 @@ namespace QuantConnect.Securities.Future
                                   where new DateTime(time.Year, time.Month, day).DayOfWeek == DayOfWeek.Wednesday
                                   select new DateTime(time.Year, time.Month, day)).ElementAt(2);
         }
-        
+
         /// <summary>
         /// Method to check whether a given time is holiday or not
         /// </summary>
@@ -254,7 +260,7 @@ namespace QuantConnect.Securities.Future
         /// <returns></returns>
         public static DateTime DairyLastTradeDate(DateTime time, TimeSpan? lastTradeTime = null)
         {
-            // Trading shall terminate on the business day immediately preceding the day on which the USDA announces the <DAIRY_PRODUCT> price for that contract month. (LTD 12:10 p.m.) 
+            // Trading shall terminate on the business day immediately preceding the day on which the USDA announces the <DAIRY_PRODUCT> price for that contract month. (LTD 12:10 p.m.)
             var contractMonth = new DateTime(time.Year, time.Month, 1);
             var lastTradeTs = lastTradeTime ?? new TimeSpan(17, 10, 0);
 

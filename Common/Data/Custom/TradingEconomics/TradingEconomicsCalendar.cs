@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Data.UniverseSelection;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Custom.TradingEconomics
 {
@@ -129,13 +130,13 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         public string Revised { get; set; }
 
         /// <summary>
-        /// Country’s original name
+        /// Countryï¿½s original name
         /// </summary>
         [JsonProperty(PropertyName = "OCountry")]
         public string OCountry { get; set; }
 
         /// <summary>
-        /// Category’s original name
+        /// Categoryï¿½s original name
         /// </summary>
         [JsonProperty(PropertyName = "OCategory")]
         public string OCategory { get; set; }
@@ -161,14 +162,14 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// <returns>Subscription Data Source.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            if (!config.Symbol.Value.EndsWith(".C"))
+            if (!config.Symbol.Value.EndsWithInvariant(".C"))
             {
                 throw new ArgumentException($"TradingEconomicsCalendar.GetSource(): Invalid symbol {config.Symbol}");
             }
 
-            var symbol = config.Symbol.Value.ToLower();
+            var symbol = config.Symbol.Value.ToLowerInvariant();
             symbol = symbol.Substring(0, symbol.Length - 2);
-            var source = Path.Combine(Globals.DataFolder, "alternative", "trading-economics", "calendar", symbol, $"{date:yyyyMMdd}.zip");
+            var source = Path.Combine(Globals.DataFolder, "alternative", "trading-economics", "calendar", symbol, Invariant($"{date:yyyyMMdd}.zip"));
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Collection);
         }
 
@@ -236,7 +237,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         public override string ToString()
         {
             var symbol = string.IsNullOrWhiteSpace(TESymbol) ? Ticker : TESymbol;
-            return $"{symbol} ({Country} - {Category}): {Event} : Importance.{Importance}";
+            return Invariant($"{symbol} ({Country} - {Category}): {Event} : Importance.{Importance}");
         }
     }
 

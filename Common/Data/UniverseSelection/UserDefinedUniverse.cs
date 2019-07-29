@@ -150,7 +150,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>A symbol for user defined universe of the specified security type and market</returns>
         public static Symbol CreateSymbol(SecurityType securityType, string market)
         {
-            var ticker = string.Format("qc-universe-userdefined-{0}-{1}", market.ToLower(), securityType);
+            var ticker = $"qc-universe-userdefined-{market.ToLowerInvariant()}-{securityType}";
             SecurityIdentifier sid;
             switch (securityType)
             {
@@ -185,7 +185,7 @@ namespace QuantConnect.Data.UniverseSelection
 
                 case SecurityType.Commodity:
                 default:
-                    throw new NotImplementedException("The specified security type is not implemented yet: " + securityType);
+                    throw new NotImplementedException($"The specified security type is not implemented yet: {securityType}");
             }
 
             return new Symbol(sid, ticker);

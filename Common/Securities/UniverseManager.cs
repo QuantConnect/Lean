@@ -216,7 +216,7 @@ namespace QuantConnect.Securities
             {
                 if (!_universes.ContainsKey(symbol))
                 {
-                    throw new Exception(string.Format("This universe symbol ({0}) was not found in your universe list. Please add this security or check it exists before using it with 'Universes.ContainsKey(\"{1}\")'", symbol, SymbolCache.GetTicker(symbol)));
+                    throw new KeyNotFoundException($"This universe symbol ({symbol}) was not found in your universe list. Please add this security or check it exists before using it with 'Universes.ContainsKey(\"{SymbolCache.GetTicker(symbol)}\")'");
                 }
                 return _universes[symbol];
             }
@@ -225,7 +225,7 @@ namespace QuantConnect.Securities
                 Universe existing;
                 if (_universes.TryGetValue(symbol, out existing) && existing != value)
                 {
-                    throw new ArgumentException("Unable to over write existing Universe: " + symbol.Value);
+                    throw new ArgumentException($"Unable to over write existing Universe: {symbol.Value}");
                 }
 
                 // no security exists for the specified symbol key, add it now

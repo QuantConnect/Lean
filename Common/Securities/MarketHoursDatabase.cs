@@ -199,7 +199,7 @@ namespace QuantConnect.Securities
                     Log.Error($"MarketHoursDatabase.GetExchangeHours(): Unable to locate exchange hours for {key}.Available keys: {keys}");
 
                     // there was nothing that really matched exactly... what should we do here?
-                    throw new ArgumentException("Unable to locate exchange hours for " + key);
+                    throw new ArgumentException($"Unable to locate exchange hours for {key}");
                 }
             }
 

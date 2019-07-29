@@ -98,7 +98,7 @@ namespace QuantConnect.Packets
             }
             catch (Exception err)
             {
-                Log.Trace("LiveResultPacket(): Error converting json: " + err);
+                Log.Trace($"LiveResultPacket(): Error converting json: {err}");
             }
         }
 

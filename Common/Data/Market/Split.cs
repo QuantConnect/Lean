@@ -16,6 +16,7 @@
 
 using System;
 using Newtonsoft.Json;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Market
 {
@@ -114,7 +115,7 @@ namespace QuantConnect.Data.Market
         public override string ToString()
         {
             var type = Type == SplitType.Warning ? "Split Warning" : "Split";
-            return $"{type}: {Symbol}: {SplitFactor} | {ReferencePrice}";
+            return Invariant($"{type}: {Symbol}: {SplitFactor} | {ReferencePrice}");
         }
 
         /// <summary>

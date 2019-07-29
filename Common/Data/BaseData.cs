@@ -281,7 +281,7 @@ namespace QuantConnect.Data
         /// <returns>string - a string formatted as SPY: 167.753</returns>
         public override string ToString()
         {
-            return string.Format("{0}: {1}", Symbol, Value.ToString("C"));
+            return $"{Symbol}: {Value.ToStringInvariant("C")}";
         }
 
         /// <summary>
@@ -297,7 +297,9 @@ namespace QuantConnect.Data
         [Obsolete("Reader(SubscriptionDataConfig, string, DateTime, DataFeedEndpoint) method has been made obsolete, use Reader(SubscriptionDataConfig, string, DateTime, bool) instead.")]
         public virtual BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
         {
-            throw new InvalidOperationException("Please implement Reader(SubscriptionDataConfig, string, DateTime, bool) on your custom data type: " + GetType().Name);
+            throw new InvalidOperationException(
+                $"Please implement Reader(SubscriptionDataConfig, string, DateTime, bool) on your custom data type: {GetType().Name}"
+            );
         }
 
         /// <summary>
@@ -311,7 +313,9 @@ namespace QuantConnect.Data
         [Obsolete("GetSource(SubscriptionDataConfig, DateTime, DataFeedEndpoint) method has been made obsolete, use GetSource(SubscriptionDataConfig, DateTime, bool) instead.")]
         public virtual string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
         {
-            throw new InvalidOperationException("Please implement GetSource(SubscriptionDataConfig, DateTime, bool) on your custom data type: " + GetType().Name);
+            throw new InvalidOperationException(
+                $"Please implement GetSource(SubscriptionDataConfig, DateTime, bool) on your custom data type: {GetType().Name}"
+            );
         }
 
         /// <summary>

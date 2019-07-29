@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using static System.FormattableString;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
@@ -72,7 +73,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
                 {
                     if (_securityValuesBySymbolFunc == null)
                     {
-                        throw new KeyNotFoundException($"SecurityValues for symbol {symbol} was not found");
+                        throw new KeyNotFoundException(Invariant($"SecurityValues for symbol {symbol} was not found"));
                     }
                     result = _securityValuesBySymbolFunc(symbol);
                     _securityValuesBySymbol[symbol] = result;

@@ -16,6 +16,7 @@
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders.Fees
 {
@@ -56,7 +57,7 @@ namespace QuantConnect.Orders.Fees
             if (!_feeRates.TryGetValue(security.Type, out feeRate))
             {
                 throw new ArgumentException(
-                    $"Unsupported security type: {security.Type}. For direct-to-exchange assets such as Crypto, use the fee model specified by the exchange."
+                    Invariant($"Unsupported security type: {security.Type}. For direct-to-exchange assets such as Crypto, use the fee model specified by the exchange.")
                 );
             }
 

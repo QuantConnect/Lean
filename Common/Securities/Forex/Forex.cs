@@ -116,8 +116,9 @@ namespace QuantConnect.Securities.Forex
         {
             if (currencyPair == null || currencyPair.Length != 6)
             {
-                throw new ArgumentException("Currency pairs must be exactly 6 characters: " + currencyPair);
+                throw new ArgumentException($"Currency pairs must be exactly 6 characters: {currencyPair}");
             }
+
             baseCurrency = currencyPair.Substring(0, 3);
             quoteCurrency = currencyPair.Substring(3);
         }

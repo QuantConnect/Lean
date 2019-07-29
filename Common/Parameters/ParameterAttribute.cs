@@ -59,7 +59,7 @@ namespace QuantConnect.Parameters
         /// <param name="instance">The instance to set parameters on</param>
         public static void ApplyAttributes(Dictionary<string, string> parameters, object instance)
         {
-            if (instance == null) throw new ArgumentNullException("instance");
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
 
             var type = instance.GetType();
 
@@ -90,7 +90,7 @@ namespace QuantConnect.Parameters
                 // if it's a read-only property with a parameter value we can't really do anything, bail
                 if (propertyInfo != null && !propertyInfo.CanWrite)
                 {
-                    var message = string.Format("The specified property is read only: {0}.{1}", propertyInfo.DeclaringType, propertyInfo.Name);
+                    var message = $"The specified property is read only: {propertyInfo.DeclaringType}.{propertyInfo.Name}";
                     throw new InvalidOperationException(message);
                 }
 
@@ -122,7 +122,7 @@ namespace QuantConnect.Parameters
             var parameters = new Dictionary<string, string>();
             foreach (var type in assembly.GetTypes())
             {
-                Log.Debug("ParameterAttribute.GetParametersFromAssembly(): Checking type " + type.Name);
+                Log.Debug($"ParameterAttribute.GetParametersFromAssembly(): Checking type {type.Name}");
                 foreach (var kvp in GetParametersFromType(type))
                 {
                     parameters[kvp.Key] = kvp.Value;

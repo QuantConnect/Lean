@@ -17,6 +17,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Custom
 {
@@ -109,8 +110,7 @@ namespace QuantConnect.Data.Custom
 
             if (isLiveMode)
             {
-                var source = string.Format("{0}&ver={1}&sid={2}&interval={3}&offerID={4}", _baseUrl, _ver, _sid,
-                                           interval, symbolId);
+                var source = Invariant($"{_baseUrl}&ver={_ver}&sid={_sid}&interval={interval}&offerID={symbolId}");
                 return new SubscriptionDataSource(source, SubscriptionTransportMedium.Rest, FileFormat.Csv);
             }
             else
@@ -142,8 +142,8 @@ namespace QuantConnect.Data.Custom
                     var obs = line.Split('\n')[2].Split(';');
                     var stringDate = obs[0].Substring(startIndex: 3);
                     fxcmVolume.Time = DateTime.ParseExact(stringDate, "yyyyMMddHHmm", DateTimeFormatInfo.InvariantInfo);
-                    fxcmVolume.Volume = _volumeIdx.Select(x => long.Parse(obs[x])).Sum();
-                    fxcmVolume.Transactions = _transactionsIdx.Select(x => int.Parse(obs[x])).Sum();
+                    fxcmVolume.Volume = _volumeIdx.Select(x => Parse.Long(obs[x])).Sum();
+                    fxcmVolume.Transactions = _transactionsIdx.Select(x => Parse.Int(obs[x])).Sum();
                     fxcmVolume.Value = fxcmVolume.Volume;
                 }
                 catch (Exception exception)
@@ -157,14 +157,14 @@ namespace QuantConnect.Data.Custom
                 var obs = line.Split(',');
                 if (config.Resolution == Resolution.Minute)
                 {
-                    fxcmVolume.Time = date.Date.AddMilliseconds(int.Parse(obs[0]));
+                    fxcmVolume.Time = date.Date.AddMilliseconds(Parse.Int(obs[0]));
                 }
                 else
                 {
                     fxcmVolume.Time = DateTime.ParseExact(obs[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
                 }
-                fxcmVolume.Volume = long.Parse(obs[1]);
-                fxcmVolume.Transactions = int.Parse(obs[2]);
+                fxcmVolume.Volume = Parse.Long(obs[1]);
+                fxcmVolume.Transactions = obs[2].ConvertInvariant<int>();
                 fxcmVolume.Value = fxcmVolume.Volume;
             }
             return fxcmVolume;
@@ -175,15 +175,15 @@ namespace QuantConnect.Data.Custom
             var source = Path.Combine(new[] { Globals.DataFolder, "forex", "fxcm", config.Resolution.ToLower() });
             string filename;
 
-            var symbol = config.Symbol.Value.Split('_').First().ToLower();
+            var symbol = config.Symbol.Value.Split('_').First().ToLowerInvariant();
             if (config.Resolution == Resolution.Minute)
             {
-                filename = string.Format("{0:yyyyMMdd}_volume.zip", date);
+                filename = Invariant($"{date:yyyyMMdd}_volume.zip");
                 source = Path.Combine(source, symbol, filename);
             }
             else
             {
-                filename = string.Format("{0}_volume.zip", symbol);
+                filename = $"{symbol}_volume.zip";
                 source = Path.Combine(source, filename);
             }
             return source;

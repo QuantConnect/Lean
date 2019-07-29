@@ -89,7 +89,7 @@ namespace QuantConnect.Data.UniverseSelection
             var futuresUniverseDataCollection = data as FuturesChainUniverseDataCollection;
             if (futuresUniverseDataCollection == null)
             {
-                throw new ArgumentException(string.Format("Expected data of type '{0}'", typeof (FuturesChainUniverseDataCollection).Name));
+                throw new ArgumentException($"Expected data of type '{typeof(FuturesChainUniverseDataCollection).Name}'");
             }
 
             var underlying = new Tick { Time = utcTime };

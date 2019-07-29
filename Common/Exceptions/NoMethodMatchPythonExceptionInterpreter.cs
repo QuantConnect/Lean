@@ -52,7 +52,7 @@ namespace QuantConnect.Exceptions
         {
             var pe = (PythonException)exception;
 
-            var startIndex = pe.Message.LastIndexOf(" ");
+            var startIndex = pe.Message.LastIndexOfInvariant(" ");
             var methodName = pe.Message.Substring(startIndex).Trim();
             var message = $"Trying to dynamically access a method that does not exist throws a TypeError exception. To prevent the exception, ensure each parameter type matches those required by the {methodName} method. Please checkout the API documentation.";
 

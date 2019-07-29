@@ -46,7 +46,7 @@ namespace QuantConnect.Data
         /// <returns>Returns the input value back to the caller</returns>
         public object SetProperty(string name, object value)
         {
-            name = name.ToLower();
+            name = name.ToLowerInvariant();
 
             if (name == "time")
             {
@@ -83,7 +83,7 @@ namespace QuantConnect.Data
         /// <returns>object value of BaseData</returns>
         public object GetProperty(string name)
         {
-            name = name.ToLower();
+            name = name.ToLowerInvariant();
 
             // redirect these calls to the base types properties
             if (name == "time")
@@ -123,7 +123,7 @@ namespace QuantConnect.Data
         /// <returns>True if the property exists, false otherwise</returns>
         public bool HasProperty(string name)
         {
-            return _storage.ContainsKey(name.ToLower());
+            return _storage.ContainsKey(name.ToLowerInvariant());
         }
 
         /// <summary>

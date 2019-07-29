@@ -14,12 +14,9 @@
 */
 
 using Newtonsoft.Json;
-using QuantConnect.Data.UniverseSelection;
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Custom.Estimize
 {
@@ -115,15 +112,15 @@ namespace QuantConnect.Data.Custom.Estimize
             // CreatedAt[0], Id[1], AnalystId[2], UserName[3], FiscalYear[4], FiscalQuarter[5], Eps[6], Revenue[7], Flagged[8]"
             var csv = csvLine.Split(',');
 
-            CreatedAt = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+            CreatedAt = Parse.DateTimeExact(csv[0], "yyyyMMdd HH:mm:ss");
             Id = csv[1];
             AnalystId = csv[2];
             UserName = csv[3];
-            FiscalYear = Convert.ToInt32(csv[4], CultureInfo.InvariantCulture);
-            FiscalQuarter = Convert.ToInt32(csv[5], CultureInfo.InvariantCulture);
-            Eps = string.IsNullOrWhiteSpace(csv[6]) ? (decimal?)null : Convert.ToDecimal(csv[6], CultureInfo.InvariantCulture);
-            Revenue =  string.IsNullOrWhiteSpace(csv[7]) ? (decimal?)null : Convert.ToDecimal(csv[7], CultureInfo.InvariantCulture);
-            Flagged = Convert.ToBoolean(csv[8]);
+            FiscalYear = Parse.Int(csv[4]);
+            FiscalQuarter = Parse.Int(csv[5]);
+            Eps = csv[6].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            Revenue = csv[7].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            Flagged = csv[8].ConvertInvariant<bool>();
         }
 
         /// <summary>
@@ -148,7 +145,7 @@ namespace QuantConnect.Data.Custom.Estimize
                 "alternative",
                 "estimize",
                 "estimate",
-                $"{symbol.ToLower()}.csv"
+                $"{symbol.ToLowerInvariant()}.csv"
             );
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
@@ -176,7 +173,11 @@ namespace QuantConnect.Data.Custom.Estimize
         /// </summary>
         public override string ToString()
         {
-            return $"{Ticker}(Q{FiscalQuarter} {FiscalYear}) :: EPS: {Eps} Revenue: {Revenue} on {EndTime:yyyyMMdd} by {UserName}({AnalystId})";
+            return Invariant($"{Ticker}(Q{FiscalQuarter} {FiscalYear}) :: ") +
+                   Invariant($"EPS: {Eps} ") +
+                   Invariant($"Revenue: {Revenue} on ") +
+                   Invariant($"{EndTime:yyyyMMdd} by ") +
+                   Invariant($"{UserName}({AnalystId})");
         }
     }
 }

@@ -24,6 +24,7 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
@@ -183,7 +184,7 @@ namespace QuantConnect
                 var market = QuantConnect.Market.Decode((int)marketCode);
 
                 // if we couldn't find it, send back the numeric representation
-                return market ?? marketCode.ToString();
+                return market ?? marketCode.ToStringInvariant();
             }
         }
 
@@ -265,11 +266,11 @@ namespace QuantConnect
         {
             if (symbol == null)
             {
-                throw new ArgumentNullException("symbol", "SecurityIdentifier requires a non-null string 'symbol'");
+                throw new ArgumentNullException(nameof(symbol), "SecurityIdentifier requires a non-null string 'symbol'");
             }
             if (symbol.IndexOfAny(InvalidCharacters) != -1)
             {
-                throw new ArgumentException("symbol must not contain the characters '|' or ' '.", "symbol");
+                throw new ArgumentException("symbol must not contain the characters '|' or ' '.", nameof(symbol));
             }
             _symbol = symbol;
             _properties = properties;
@@ -291,7 +292,7 @@ namespace QuantConnect
         {
             if (symbol == null)
             {
-                throw new ArgumentNullException("symbol", "SecurityIdentifier requires a non-null string 'symbol'");
+                throw new ArgumentNullException(nameof(symbol), "SecurityIdentifier requires a non-null string 'symbol'");
             }
             _symbol = symbol;
             _properties = properties;
@@ -493,22 +494,23 @@ namespace QuantConnect
         {
             if ((ulong)securityType >= SecurityTypeWidth || securityType < 0)
             {
-                throw new ArgumentOutOfRangeException("securityType", "securityType must be between 0 and 99");
+                throw new ArgumentOutOfRangeException(nameof(securityType), "securityType must be between 0 and 99");
             }
             if ((int)optionRight > 1 || optionRight < 0)
             {
-                throw new ArgumentOutOfRangeException("optionRight", "optionType must be either 0 or 1");
+                throw new ArgumentOutOfRangeException(nameof(optionRight), "optionType must be either 0 or 1");
             }
 
             // normalize input strings
-            market = market.ToLower();
+            market = market.ToLowerInvariant();
             symbol = symbol.LazyToUpper();
 
             var marketIdentifier = QuantConnect.Market.Encode(market);
             if (!marketIdentifier.HasValue)
             {
-                throw new ArgumentOutOfRangeException("market", string.Format("The specified market wasn't found in the markets lookup. Requested: {0}. " +
-                    "You can add markets by calling QuantConnect.Market.AddMarket(string,ushort)", market));
+                throw new ArgumentOutOfRangeException(nameof(market), "The specified market wasn't found in the  markets lookup. " +
+                    $"Requested: {market}. You can add markets by calling QuantConnect.Market.AddMarket(string,ushort)"
+                );
             }
 
             var days = (ulong)date.ToOADate() * DaysOffset;
@@ -593,7 +595,7 @@ namespace QuantConnect
 
             if (strike >= 1000000)
             {
-                throw new ArgumentException("The specified strike price's precision is too high: " + str);
+                throw new ArgumentException(Invariant($"The specified strike price\'s precision is too high: {str}"));
             }
 
             return (ulong)strike;
@@ -710,7 +712,7 @@ namespace QuantConnect
             catch (Exception error)
             {
                 exception = error;
-                Log.Error("SecurityIdentifier.TryParseProperties(): Error parsing SecurityIdentifier: '{0}', Exception: {1}", value, exception);
+                Log.Error($"SecurityIdentifier.TryParseProperties(): Error parsing SecurityIdentifier: '{value}', Exception: {exception}");
                 return false;
             }
 

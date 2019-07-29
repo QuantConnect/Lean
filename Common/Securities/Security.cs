@@ -329,7 +329,7 @@ namespace QuantConnect.Securities
         {
             if (symbolProperties == null)
             {
-                throw new ArgumentNullException("symbolProperties", "Security requires a valid SymbolProperties instance.");
+                throw new ArgumentNullException(nameof(symbolProperties), "Security requires a valid SymbolProperties instance.");
             }
 
             if (symbolProperties.QuoteCurrency != quoteCurrency.Symbol)

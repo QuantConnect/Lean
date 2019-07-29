@@ -183,11 +183,12 @@ namespace QuantConnect
         {
             if (identifier >= MaxMarketIdentifier)
             {
-                var message = string.Format("The market identifier is limited to positive values less than {0}.", MaxMarketIdentifier);
-                throw new ArgumentOutOfRangeException("identifier", message);
+                throw new ArgumentOutOfRangeException(nameof(identifier),
+                    $"The market identifier is limited to positive values less than {MaxMarketIdentifier.ToStringInvariant()}."
+                );
             }
 
-            market = market.ToLower();
+            market = market.ToLowerInvariant();
 
             // we lock since we don't want multiple threads getting these two dictionaries out of sync
             lock (_lock)
@@ -195,13 +196,18 @@ namespace QuantConnect
                 int marketIdentifier;
                 if (Markets.TryGetValue(market, out marketIdentifier) && identifier != marketIdentifier)
                 {
-                    throw new ArgumentException("Attempted to add an already added market with a different identifier. Market: " + market);
+                    throw new ArgumentException(
+                        $"Attempted to add an already added market with a different identifier. Market: {market}"
+                    );
                 }
 
                 string existingMarket;
                 if (ReverseMarkets.TryGetValue(identifier, out existingMarket))
                 {
-                    throw new ArgumentException("Attempted to add a market identifier that is already in use. New Market: " + market + " Existing Market: " + existingMarket);
+                    throw new ArgumentException(
+                        "Attempted to add a market identifier that is already in use. " +
+                        $"New Market: {market} Existing Market: {existingMarket}"
+                    );
                 }
 
                 // update our maps

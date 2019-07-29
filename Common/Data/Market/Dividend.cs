@@ -15,6 +15,7 @@
 */
 
 using System;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Market
 {
@@ -146,7 +147,7 @@ namespace QuantConnect.Data.Market
         /// <returns>string - a string formatted as SPY: 167.753</returns>
         public override string ToString()
         {
-            return $"Dividend: {Symbol}: {Distribution} | {ReferencePrice}";
+            return Invariant($"Dividend: {Symbol}: {Distribution} | {ReferencePrice}");
         }
     }
 }

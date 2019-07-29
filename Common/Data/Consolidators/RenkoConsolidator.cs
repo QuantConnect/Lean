@@ -102,7 +102,7 @@ namespace QuantConnect.Data.Consolidators
         {
             if (barSize < Extensions.GetDecimalEpsilon())
             {
-                throw new ArgumentOutOfRangeException("barSize", "RenkoConsolidator bar size must be positve and greater than 1e-28");
+                throw new ArgumentOutOfRangeException(nameof(barSize), "RenkoConsolidator bar size must be positve and greater than 1e-28");
             }
 
             _barSize = barSize;
@@ -127,7 +127,7 @@ namespace QuantConnect.Data.Consolidators
         {
             if (barSize < Extensions.GetDecimalEpsilon())
             {
-                throw new ArgumentOutOfRangeException("barSize", "RenkoConsolidator bar size must be positve and greater than 1e-28");
+                throw new ArgumentOutOfRangeException(nameof(barSize), "RenkoConsolidator bar size must be positve and greater than 1e-28");
             }
 
             if (selector != null)

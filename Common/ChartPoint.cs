@@ -15,6 +15,7 @@
 
 using System;
 using Newtonsoft.Json;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
@@ -65,7 +66,7 @@ namespace QuantConnect
         /// </summary>
         public override string ToString()
         {
-            return Time.UnixTimeStampToDateTime(x).ToString("o") + " - " + y;
+            return Invariant($"{Time.UnixTimeStampToDateTime(x):o} - {y}");
         }
     }
 }

@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -73,15 +74,15 @@ namespace QuantConnect.Brokerages
             switch (message.Type)
             {
                 case BrokerageMessageType.Information:
-                    _algorithm.Debug("Brokerage Info: " + message.Message);
+                    _algorithm.Debug($"Brokerage Info: {message.Message}");
                     break;
 
                 case BrokerageMessageType.Warning:
-                    _algorithm.Error("Brokerage Warning: " + message.Message);
+                    _algorithm.Error($"Brokerage Warning: {message.Message}");
                     break;
 
                 case BrokerageMessageType.Error:
-                    _algorithm.Error("Brokerage Error: " + message.Message);
+                    _algorithm.Error($"Brokerage Error: {message.Message}");
                     _algorithm.RunTimeError = new Exception(message.Message);
                     break;
 
@@ -106,7 +107,9 @@ namespace QuantConnect.Brokerages
                     // if any are open then we need to kill the algorithm
                     if (open)
                     {
-                        Log.Trace("DefaultBrokerageMessageHandler.Handle(): Disconnect when exchanges are open, trying to reconnect for " + _initialDelay.TotalMinutes + " minutes.");
+                        Log.Trace("DefaultBrokerageMessageHandler.Handle(): Disconnect when exchanges are open, " +
+                            Invariant($"trying to reconnect for {_initialDelay.TotalMinutes} minutes.")
+                        );
 
                         // wait 15 minutes before killing algorithm
                         StartCheckReconnected(_initialDelay, message);
@@ -138,7 +141,7 @@ namespace QuantConnect.Brokerages
                         }
 
                         var timeUntilNextMarketOpen = nextMarketOpenUtc - DateTime.UtcNow - _openThreshold;
-                        Log.Trace("DefaultBrokerageMessageHandler.Handle(): TimeUntilNextMarketOpen: " + timeUntilNextMarketOpen);
+                        Log.Trace(Invariant($"DefaultBrokerageMessageHandler.Handle(): TimeUntilNextMarketOpen: {timeUntilNextMarketOpen}"));
 
                         // wake up 5 minutes before market open and check if we've reconnected
                         StartCheckReconnected(timeUntilNextMarketOpen, message);
@@ -178,7 +181,7 @@ namespace QuantConnect.Brokerages
             if (!_connected)
             {
                 Log.Error("DefaultBrokerageMessageHandler.Handle(): Still disconnected, goodbye.");
-                _algorithm.Error("Brokerage Disconnect: " + message.Message);
+                _algorithm.Error($"Brokerage Disconnect: {message.Message}");
                 _algorithm.RunTimeError = new Exception(message.Message);
             }
         }

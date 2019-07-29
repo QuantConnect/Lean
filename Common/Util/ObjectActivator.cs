@@ -119,7 +119,7 @@ namespace QuantConnect.Util
             var clone = Clone((object)instanceToClone) as T;
             if (clone == null)
             {
-                throw new ArgumentException("Unable to clone instance of type " + instanceToClone.GetType().Name + " to " + typeof(T).Name);
+                throw new ArgumentException($"Unable to clone instance of type {instanceToClone.GetType().Name} to {typeof(T).Name}");
             }
             return clone;
         }

@@ -19,6 +19,7 @@ using System.Globalization;
 using NodaTime;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
@@ -146,7 +147,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error(err, "UnixTimeStamp: " + unixTimeStamp);
+                Log.Error(err, Invariant($"UnixTimeStamp: {unixTimeStamp}"));
                 time = DateTime.Now;
             }
             return time;
@@ -167,7 +168,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error(err, "UnixTimeStamp: " + unixTimeStamp);
+                Log.Error(err, Invariant($"UnixTimeStamp: {unixTimeStamp}"));
                 time = DateTime.Now;
             }
             return time;
@@ -187,7 +188,7 @@ namespace QuantConnect
             }
             catch (Exception err)
             {
-                Log.Error(err, time.ToString("o"));
+                Log.Error(err, Invariant($"{time:o}"));
             }
             return timestamp;
         }
@@ -422,7 +423,7 @@ namespace QuantConnect
         public static int TradeableDates(ICollection<Security> securities, DateTime start, DateTime finish)
         {
             var count = 0;
-            Log.Trace("Time.TradeableDates(): Security Count: " + securities.Count);
+            Log.Trace(Invariant($"Time.TradeableDates(): Security Count: {securities.Count}"));
             try
             {
                 foreach (var day in EachDay(start, finish))

@@ -158,7 +158,7 @@ namespace QuantConnect.Packets
             }
             catch (Exception err)
             {
-                Log.Trace("BacktestResultPacket(): Error converting json: " + err);
+                Log.Trace($"BacktestResultPacket(): Error converting json: {err}");
             }
         }
 

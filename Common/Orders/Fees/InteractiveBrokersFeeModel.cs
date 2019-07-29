@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Securities;
-
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders.Fees
 {
@@ -154,7 +154,7 @@ namespace QuantConnect.Orders.Fees
 
                 default:
                     // unsupported security type
-                    throw new ArgumentException($"Unsupported security type: {security.Type}");
+                    throw new ArgumentException(Invariant($"Unsupported security type: {security.Type}"));
             }
 
             return new OrderFee(new CashAmount(
