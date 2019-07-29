@@ -148,7 +148,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
                                     foreach (var kvp in estimates)
                                     {
-                                        var csvContents = kvp.Select(x => $"{x.CreatedAt.ToUniversalTime():yyyyMMdd HH:mm},{x.Id},{x.AnalystId},{x.UserName},{x.FiscalYear},{x.FiscalQuarter},{x.Eps},{x.Revenue},{x.Flagged.ToString().ToLower()}");
+                                        var csvContents = kvp.Select(x => $"{x.CreatedAt.ToUniversalTime():yyyyMMdd HH:mm:ss},{x.Id},{x.AnalystId},{x.UserName},{x.FiscalYear},{x.FiscalQuarter},{x.Eps},{x.Revenue},{x.Flagged.ToString().ToLower()}");
                                         SaveContentToFile(_destinationFolder, kvp.Key, csvContents);
                                     }
 

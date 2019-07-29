@@ -121,7 +121,7 @@ namespace QuantConnect.Data.Custom.Estimize
             // UpdatedAt[0], Id[1], Source[2], Type[3], Mean[4], High[5], Low[6], StandardDeviation[7], FiscalYear[8], FiscalQuarter[9], Count[10]
             var csv = csvLine.Split(',');
 
-            UpdatedAt = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
+            UpdatedAt = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
             Time = UpdatedAt;
             Id = csv[1];
             Source = (Source)Enum.Parse(typeof(Source), csv[2]);

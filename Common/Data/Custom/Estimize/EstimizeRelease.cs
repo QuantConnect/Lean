@@ -127,7 +127,7 @@ namespace QuantConnect.Data.Custom.Estimize
             // ReleaseDate[0], Id[1], FiscalYear[2], FiscalQuarter[3], Eps[4], Revenue[5], ConsensusEpsEstimate[6], ConsensusRevenueEstimate[7], WallStreetEpsEstimate[8], WallStreetRevenueEstimate[9], ConsensusWeightedEpsEstimate[10], ConsensusWeightedRevenueEstimate[11]");
             var csv = csvLine.Split(',');
 
-            ReleaseDate = DateTime.ParseExact(csv[0].Trim(), DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
+            ReleaseDate = DateTime.ParseExact(csv[0].Trim(), "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
             Time = ReleaseDate;
             Id = csv[1];
             FiscalYear = Convert.ToInt32(csv[2], CultureInfo.InvariantCulture);

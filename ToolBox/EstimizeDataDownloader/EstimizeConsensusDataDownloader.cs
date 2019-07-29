@@ -127,13 +127,11 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
                     Task.WaitAll(tasks.ToArray());
 
-                    foreach (var consensusPair in tasks.Select(x => x.Result))
-                    {
-                        var csvContents = consensusPair.OrderBy(x => x.UpdatedAt)
-                            .Select(x => $"{x.UpdatedAt.ToUniversalTime():yyyyMMdd HH:mm},{x.Id},{x.Source},{x.Type},{x.Mean},{x.High},{x.Low},{x.StandardDeviation},{x.FiscalYear},{x.FiscalQuarter},{x.Count}");
+                    var csvContents = tasks.SelectMany(x => x.Result)
+                        .OrderBy(x => x.UpdatedAt)
+                        .Select(x => $"{x.UpdatedAt.ToUniversalTime():yyyyMMdd HH:mm:ss},{x.Id},{x.Source},{x.Type},{x.Mean},{x.High},{x.Low},{x.StandardDeviation},{x.FiscalYear},{x.FiscalQuarter},{x.Count}");
 
-                        SaveContentToFile(_destinationFolder, ticker, csvContents);
-                    }
+                    SaveContentToFile(_destinationFolder, ticker, csvContents);
 
                     Log.Trace($"EstimizeConsensusDataDownloader.Run(): EstimizeConsensus files for {ticker} created : {stopwatch.Elapsed}");
                 }

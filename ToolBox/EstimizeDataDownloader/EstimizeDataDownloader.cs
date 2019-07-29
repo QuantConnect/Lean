@@ -148,7 +148,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                 Log.Trace($"EstimizeDataDownloader.SaveContentToZipFile(): Writing to file: {finalPath}");
             }
 
-            var finalLines = lines.OrderBy(x => DateTime.ParseExact(x.Split(',').First(), "yyyyMMdd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
+            var finalLines = lines.OrderBy(x => DateTime.ParseExact(x.Split(',').First(), "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
                 .ToList();
 
             File.WriteAllLines(finalPath, finalLines);

@@ -115,7 +115,7 @@ namespace QuantConnect.Data.Custom.Estimize
             // CreatedAt[0], Id[1], AnalystId[2], UserName[3], FiscalYear[4], FiscalQuarter[5], Eps[6], Revenue[7], Flagged[8]"
             var csv = csvLine.Split(',');
 
-            CreatedAt = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
+            CreatedAt = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
             Id = csv[1];
             AnalystId = csv[2];
             UserName = csv[3];
