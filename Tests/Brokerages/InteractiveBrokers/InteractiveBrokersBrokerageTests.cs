@@ -608,7 +608,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
             stopwatch.Stop();
             Console.WriteLine("Total executions fetched: {0}, elapsed time: {1} ms", executions.Count, stopwatch.ElapsedMilliseconds);
 
-            Assert.IsTrue(executions.Any(x => order.BrokerId.Any(id => executions.Any(e => e.Execution.OrderId == int.Parse(id)))));
+            Assert.IsTrue(executions.Any(x => order.BrokerId.Any(id => executions.Any(e => e.Execution.OrderId == Parse.Int(id)))));
         }
 
         [Test]

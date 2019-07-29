@@ -219,23 +219,23 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(symbol.SecurityType, SecurityType.Forex);
             Assert.AreEqual(symbol.ID.Market, Market.Oanda);
             Assert.AreEqual(resolution, Resolution.Tick);
-            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "eurusd");
-            Assert.AreEqual(date.Date, DateTime.Parse("2017-01-04").Date);
+            Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "eurusd");
+            Assert.AreEqual(date.Date, Parse.DateTime("2017-01-04").Date);
 
             var mixedPathSeperators = @"Data//forex/fxcm\/minute//eurusd\\20160101_quote.zip";
             Assert.IsTrue(LeanData.TryParsePath(mixedPathSeperators, out symbol, out date, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Forex);
             Assert.AreEqual(symbol.ID.Market, Market.FXCM);
             Assert.AreEqual(resolution, Resolution.Minute);
-            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "eurusd");
-            Assert.AreEqual(date.Date, DateTime.Parse("2016-01-01").Date);
+            Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "eurusd");
+            Assert.AreEqual(date.Date, Parse.DateTime("2016-01-01").Date);
 
             var longRelativePath = "../../../../../../../../../Data/forex/fxcm/hour/gbpusd.zip";
             Assert.IsTrue(LeanData.TryParsePath(longRelativePath, out symbol, out date, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Forex);
             Assert.AreEqual(symbol.ID.Market, Market.FXCM);
             Assert.AreEqual(resolution, Resolution.Hour);
-            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "gbpusd");
+            Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "gbpusd");
             Assert.AreEqual(date.Date, DateTime.MinValue);
 
             var shortRelativePath = "Data/forex/fxcm/minute/eurusd/20160102_quote.zip";
@@ -243,15 +243,15 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(symbol.SecurityType, SecurityType.Forex);
             Assert.AreEqual(symbol.ID.Market, Market.FXCM);
             Assert.AreEqual(resolution, Resolution.Minute);
-            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "eurusd");
-            Assert.AreEqual(date.Date, DateTime.Parse("2016-01-02").Date);
+            Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "eurusd");
+            Assert.AreEqual(date.Date, Parse.DateTime("2016-01-02").Date);
 
             var dailyEquitiesPath = "Data/equity/usa/daily/aapl.zip";
             Assert.IsTrue(LeanData.TryParsePath(dailyEquitiesPath, out symbol, out date, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Equity);
             Assert.AreEqual(symbol.ID.Market, Market.USA);
             Assert.AreEqual(resolution, Resolution.Daily);
-            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "aapl");
+            Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "aapl");
             Assert.AreEqual(date.Date, DateTime.MinValue);
 
             var minuteEquitiesPath = "Data/equity/usa/minute/googl/20070103_trade.zip";
@@ -259,16 +259,16 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(symbol.SecurityType, SecurityType.Equity);
             Assert.AreEqual(symbol.ID.Market, Market.USA);
             Assert.AreEqual(resolution, Resolution.Minute);
-            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "goog");
-            Assert.AreEqual(date.Date, DateTime.Parse("2007-01-03").Date);
+            Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "goog");
+            Assert.AreEqual(date.Date, Parse.DateTime("2007-01-03").Date);
 
             var cfdPath = "Data/cfd/oanda/minute/bcousd/20160101_trade.zip";
             Assert.IsTrue(LeanData.TryParsePath(cfdPath, out symbol, out date, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Cfd);
             Assert.AreEqual(symbol.ID.Market, Market.Oanda);
             Assert.AreEqual(resolution, Resolution.Minute);
-            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "bcousd");
-            Assert.AreEqual(date.Date, DateTime.Parse("2016-01-01").Date);
+            Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "bcousd");
+            Assert.AreEqual(date.Date, Parse.DateTime("2016-01-01").Date);
         }
 
         [Test]
@@ -283,22 +283,22 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
             Assert.AreEqual(symbol.ID.Market, Market.GDAX);
             Assert.AreEqual(resolution, Resolution.Daily);
-            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "btcusd");
+            Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "btcusd");
 
             cryptoPath = "Data\\crypto\\gdax\\hour\\btcusd_quote.zip";
             Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
             Assert.AreEqual(symbol.ID.Market, Market.GDAX);
             Assert.AreEqual(resolution, Resolution.Hour);
-            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "btcusd");
+            Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "btcusd");
 
             cryptoPath = "Data\\crypto\\gdax\\minute\\btcusd\\20161007_quote.zip";
             Assert.IsTrue(LeanData.TryParsePath(cryptoPath, out symbol, out date, out resolution));
             Assert.AreEqual(symbol.SecurityType, SecurityType.Crypto);
             Assert.AreEqual(symbol.ID.Market, Market.GDAX);
             Assert.AreEqual(resolution, Resolution.Minute);
-            Assert.AreEqual(symbol.ID.Symbol.ToLower(), "btcusd");
-            Assert.AreEqual(date.Date, DateTime.Parse("2016-10-07").Date);
+            Assert.AreEqual(symbol.ID.Symbol.ToLowerInvariant(), "btcusd");
+            Assert.AreEqual(date.Date, Parse.DateTime("2016-10-07").Date);
         }
 
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
@@ -506,7 +506,7 @@ namespace QuantConnect.Tests.Common.Util
                 TickType = tickType;
                 ExpectedZipFileName = expectedZipFileName;
                 ExpectedZipEntryName = expectedZipEntryName;
-                ExpectedRelativeZipFilePath = Path.Combine(expectedRelativeZipFileDirectory, expectedZipFileName).Replace("/", Path.DirectorySeparatorChar.ToString());
+                ExpectedRelativeZipFilePath = Path.Combine(expectedRelativeZipFileDirectory, expectedZipFileName).Replace("/", Path.DirectorySeparatorChar.ToStringInvariant());
                 ExpectedZipFilePath = Path.Combine(Globals.DataFolder, ExpectedRelativeZipFilePath);
 
                 Name = SecurityType + "_" + resolution + "_" + symbol.Value + "_" + tickType;

@@ -16,6 +16,7 @@
 using NUnit.Framework;
 using QuantConnect.Brokerages.Bitfinex;
 using System;
+using System.Globalization;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
@@ -92,7 +93,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             var mapper = new BitfinexSymbolMapper();
 
             var symbol = mapper.GetLeanSymbol(pair);
-            Assert.AreEqual(pair.ToUpper(), symbol.Value);
+            Assert.AreEqual(pair.ToUpper(CultureInfo.InvariantCulture), symbol.Value);
             Assert.AreEqual(SecurityType.Crypto, symbol.ID.SecurityType);
             Assert.AreEqual(Market.Bitfinex, symbol.ID.Market);
         }
@@ -104,7 +105,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             var mapper = new BitfinexSymbolMapper();
 
             var symbol = mapper.GetLeanSymbol(pair);
-            Assert.AreEqual(pair.ToUpper(), symbol.Value);
+            Assert.AreEqual(pair.ToUpper(CultureInfo.InvariantCulture), symbol.Value);
             Assert.AreEqual(SecurityType.Crypto, symbol.ID.SecurityType);
             Assert.AreEqual(Market.Bitfinex, symbol.ID.Market);
         }
@@ -115,7 +116,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         {
             var mapper = new BitfinexSymbolMapper();
 
-            Assert.AreEqual(symbol.Value.ToUpper(), mapper.GetBrokerageSymbol(symbol));
+            Assert.AreEqual(symbol.Value.ToUpper(CultureInfo.InvariantCulture), mapper.GetBrokerageSymbol(symbol));
         }
 
         [Test]
@@ -174,7 +175,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
 
             Assert.IsTrue(mapper.IsKnownBrokerageSymbol(pair));
             Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(pair, type, market));
-            Assert.AreEqual(pair.ToUpper(), mapper.GetBrokerageSymbol(Symbol.Create(pair, type, market)));
+            Assert.AreEqual(pair.ToUpper(CultureInfo.InvariantCulture), mapper.GetBrokerageSymbol(Symbol.Create(pair, type, market)));
         }
     }
 }

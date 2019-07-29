@@ -356,7 +356,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 .Range(0, 10)
                 .Select(i =>
                 {
-                    var line = $"{DateTime.UtcNow.AddDays(i).ToString(format)},{i + 101},{i + 102},{i + 100},{i + 101},{i + 101}";
+                    var line = $"{DateTime.UtcNow.AddDays(i).ToStringInvariant(format)},{i + 101},{i + 102},{i + 100},{i + 101},{i + 101}";
                     return custom.Reader(config, line, DateTime.UtcNow.AddDays(i), false);
                 })
                 .ToArray();

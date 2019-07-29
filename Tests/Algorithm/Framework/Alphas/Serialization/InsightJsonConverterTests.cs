@@ -30,9 +30,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
         {
             var jObject = JObject.Parse(jsonNoScore);
             var result = JsonConvert.DeserializeObject<Insight>(jsonNoScore);
-            Assert.AreEqual(jObject["id"].Value<string>(), result.Id.ToString("N"));
+            Assert.AreEqual(jObject["id"].Value<string>(), result.Id.ToStringInvariant("N"));
             Assert.AreEqual(jObject["source-model"].Value<string>(), result.SourceModel);
-            Assert.AreEqual(jObject["group-id"]?.Value<string>(), result.GroupId?.ToString("N"));
+            Assert.AreEqual(jObject["group-id"]?.Value<string>(), result.GroupId?.ToStringInvariant("N"));
             Assert.AreEqual(jObject["generated-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.GeneratedTimeUtc), 5e-4);
             Assert.AreEqual(jObject["close-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.CloseTimeUtc), 5e-4);
             Assert.AreEqual(jObject["symbol"].Value<string>(), result.Symbol.ID.ToString());
@@ -56,9 +56,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
         {
             var jObject = JObject.Parse(jsonWithScore);
             var result = JsonConvert.DeserializeObject<Insight>(jsonWithScore);
-            Assert.AreEqual(jObject["id"].Value<string>(), result.Id.ToString("N"));
+            Assert.AreEqual(jObject["id"].Value<string>(), result.Id.ToStringInvariant("N"));
             Assert.AreEqual(jObject["source-model"].Value<string>(), result.SourceModel);
-            Assert.AreEqual(jObject["group-id"]?.Value<string>(), result.GroupId?.ToString("N"));
+            Assert.AreEqual(jObject["group-id"]?.Value<string>(), result.GroupId?.ToStringInvariant("N"));
             Assert.AreEqual(jObject["generated-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.GeneratedTimeUtc), 5e-4);
             Assert.AreEqual(jObject["close-time"].Value<double>(), Time.DateTimeToUnixTimeStamp(result.CloseTimeUtc), 5e-4);
             Assert.AreEqual(jObject["symbol"].Value<string>(), result.Symbol.ID.ToString());
