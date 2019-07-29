@@ -169,7 +169,7 @@ namespace QuantConnect.Brokerages.Tradier
             if (tsd.TradeSize == 0) return null;
 
             // Tradier trades are US NY time only. Convert local server time to NY Time:
-            var unix = Convert.ToInt64(tsd.UnixDate) / 1000;
+            var unix = tsd.UnixDate.ConvertInvariant<long>() / 1000;
             var utc = Time.UnixTimeStampToDateTime(unix);
 
             // Occassionally Tradier sends old ticks every 20sec-ish if no trading?

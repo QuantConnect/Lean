@@ -154,7 +154,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 case OrderType.Limit:
                 case OrderType.Market:
-                    outputOrderType = orderType.ToString().ToLower();
+                    outputOrderType = orderType.ToLower();
                     break;
                 case OrderType.StopMarket:
                     outputOrderType = "stop";
@@ -170,7 +170,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         {
             if (orderDirection == OrderDirection.Buy || orderDirection == OrderDirection.Sell)
             {
-                return orderDirection.ToString().ToLower();
+                return orderDirection.ToLower();
             }
 
             throw new NotSupportedException($"BitfinexBrokerage.ConvertOrderDirection: Unsupported order direction: {orderDirection}");
@@ -274,7 +274,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             var payload = new JsonObject();
             payload.Add("request", endpoint);
-            payload.Add("nonce", GetNonce().ToString());
+            payload.Add("nonce", GetNonce().ToStringInvariant());
             payload.Add("symbol", _symbolMapper.GetBrokerageSymbol(order.Symbol));
             payload.Add("amount", Math.Abs(order.Quantity).ToString(CultureInfo.InvariantCulture));
             payload.Add("side", ConvertOrderDirection(order.Direction));
@@ -283,7 +283,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             if (order.BrokerId.Any())
             {
-                payload.Add("order_id", long.Parse(order.BrokerId.FirstOrDefault()));
+                payload.Add("order_id", Parse.Long(order.BrokerId.FirstOrDefault()));
             }
 
             var orderProperties = order.Properties as BitfinexOrderProperties;

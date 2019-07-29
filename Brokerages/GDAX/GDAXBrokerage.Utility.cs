@@ -71,7 +71,7 @@ namespace QuantConnect.Brokerages.GDAX
             }
 
 
-            var token = GetAuthenticationToken(body?.Value.ToString() ?? string.Empty, request.Method.ToString().ToUpper(), url);
+            var token = GetAuthenticationToken(body?.Value.ToString() ?? string.Empty, request.Method.ToString().ToUpperInvariant(), url);
 
             request.AddHeader(SignHeader, token.Signature);
             request.AddHeader(KeyHeader, ApiKey);
@@ -115,7 +115,7 @@ namespace QuantConnect.Brokerages.GDAX
         {
             if (orderType == Orders.OrderType.Limit || orderType == Orders.OrderType.Market)
             {
-                return orderType.ToString().ToLower();
+                return orderType.ToLower();
             }
             else if (orderType == Orders.OrderType.StopMarket)
             {
@@ -126,7 +126,7 @@ namespace QuantConnect.Brokerages.GDAX
                 return "limit";
             }
 
-            throw new NotSupportedException("GDAXBrokerage.ConvertOrderType: Unsupported order type:" + orderType.ToString());
+            throw new NotSupportedException($"GDAXBrokerage.ConvertOrderType: Unsupported order type:{orderType.ToStringInvariant()}");
         }
 
         /// <summary>
@@ -146,7 +146,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <returns>gdax product id</returns>
         protected static string ConvertSymbol(Symbol symbol)
         {
-            return symbol.Value.Substring(0, 3).ToUpper() + "-" + symbol.Value.Substring(3, 3).ToUpper();
+            return $"{symbol.Value.Substring(0, 3).ToUpperInvariant()}-{symbol.Value.Substring(3, 3).ToUpperInvariant()}";
         }
 
         private static Orders.OrderStatus ConvertOrderStatus(Messages.Order order)
