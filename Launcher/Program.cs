@@ -86,6 +86,9 @@ namespace QuantConnect.Lean.Launcher
                 throw;
             }
 
+            //Setup packeting, queue and controls system: These don't do much locally.
+            leanEngineSystemHandlers.Initialize();
+
             LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
             try
             {
@@ -96,9 +99,6 @@ namespace QuantConnect.Lean.Launcher
                 Log.Error("Engine.Main(): Failed to load library: " + compositionException);
                 throw;
             }
-
-            //Setup packeting, queue and controls system: These don't do much locally.
-            leanEngineSystemHandlers.Initialize();
 
             //-> Pull job from QuantConnect job queue, or, pull local build:
             string assemblyPath;
