@@ -56,7 +56,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                 updateMode = jtoken.Value<bool>();
                 if (config.TryGetValue("update-time-of-day", out jtoken))
                 {
-                    updateTime = TimeSpan.Parse(jtoken.Value<string>());
+                    updateTime = Parse.TimeSpan(jtoken.Value<string>());
                 }
             }
 
@@ -164,14 +164,14 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             var marketDirectoryInfo = new DirectoryInfo(dailyFolder).Parent;
             if (marketDirectoryInfo == null)
             {
-                throw new Exception("Unable to resolve market for daily folder: " + dailyFolder);
+                throw new Exception($"Unable to resolve market for daily folder: {dailyFolder}");
             }
-            var market = marketDirectoryInfo.Name.ToLower();
+            var market = marketDirectoryInfo.Name.ToLowerInvariant();
 
             var fundamentalDirectoryInfo = new DirectoryInfo(coarseFolder).Parent;
             if (fundamentalDirectoryInfo == null)
             {
-                throw new Exception("Unable to resolve fundamental path for coarse folder: " + coarseFolder);
+                throw new Exception($"Unable to resolve fundamental path for coarse folder: {coarseFolder}");
             }
             var fineFundamentalFolder = Path.Combine(marketDirectoryInfo.FullName, "fundamental", "fine");
 
@@ -202,7 +202,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                         ticker = symbolResolver(ticker);
                     }
 
-                    ticker = ticker.ToUpper();
+                    ticker = ticker.ToUpperInvariant();
 
                     if (exclusions != null && exclusions.Contains(ticker))
                     {
@@ -234,12 +234,12 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                                 }
                             }
 
-                            var close = decimal.Parse(csv[4]) / scaleFactor;
-                            var volume = long.Parse(csv[5]);
+                            var close = Parse.Decimal(csv[4]) / scaleFactor;
+                            var volume = Parse.Long(csv[5]);
 
                             var dollarVolume = close * volume;
 
-                            var coarseFile = Path.Combine(coarseFolder, date.ToString("yyyyMMdd") + ".csv");
+                            var coarseFile = Path.Combine(coarseFolder, date.ToStringInvariant("yyyyMMdd") + ".csv");
                             dates.Add(date);
 
                             // try to resolve a map file and if found, regen the sid
@@ -255,7 +255,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             if (mapFile == null && ignoreMapless)
                             {
                                 // if we're ignoring mapless files then we should always be able to resolve this
-                                Log.Error(string.Format("CoarseGenerator.ProcessDailyFolder(): Unable to resolve map file for {0} as of {1}", ticker, date.ToShortDateString()));
+                                Log.Error($"CoarseGenerator.ProcessDailyFolder(): Unable to resolve map file for {ticker} as of {date.ToStringInvariant("d")}");
                                 continue;
                             }
 
@@ -278,7 +278,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                             // The following section handles mergers and acquisitions cases.
                             // e.g. YHOO -> AABA (YHOO R735QTJ8XC9X)
                             // The dates right after the acquisition, valid fine fundamental data for AABA are still under the former ticker folder.
-                            // Therefore if no fine fundamental data is found in the 'fundamental/fine/aaba' folder, it searches into the 'yhoo' folder. 
+                            // Therefore if no fine fundamental data is found in the 'fundamental/fine/aaba' folder, it searches into the 'yhoo' folder.
                             if (mapFile != null && mapFile.Count() > 2 && !hasFundamentalDataForDate)
                             {
                                 var previousTicker = mapFile.LastOrDefault(m => m.Date < date)?.MappedSymbol;
@@ -310,7 +310,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 
                     if (symbols % 1000 == 0)
                     {
-                        Log.Trace("CoarseGenerator.ProcessDailyFolder(): Completed processing {0} symbols. Current elapsed: {1} seconds", symbols, (DateTime.UtcNow - start).TotalSeconds.ToString("0.00"));
+                        Log.Trace($"CoarseGenerator.ProcessDailyFolder(): Completed processing {symbols} symbols. Current elapsed: {(DateTime.UtcNow - start).TotalSeconds.ToStringInvariant("0.00")} seconds");
                     }
                 }
                 catch (Exception err)
@@ -330,8 +330,8 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 
             var stop = DateTime.UtcNow;
 
-            Log.Trace("CoarseGenerator.ProcessDailyFolder(): Processed {0} symbols into {1} coarse files in {2} seconds", symbols, dates.Count, (stop - start).TotalSeconds.ToString("0.00"));
-            Log.Trace("CoarseGenerator.ProcessDailyFolder(): Excluded {0} mapless symbols.", maplessCount);
+            Log.Trace($"CoarseGenerator.ProcessDailyFolder(): Processed {symbols} symbols into {dates.Count} coarse files in {(stop - start).TotalSeconds.ToStringInvariant("0.00")} seconds");
+            Log.Trace($"CoarseGenerator.ProcessDailyFolder(): Excluded {maplessCount} mapless symbols.");
 
             return writers.Keys;
         }

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
 using System;
 using System.Globalization;
 using QuantConnect.Logging;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.ToolBox.IQFeed
 {
@@ -48,7 +49,7 @@ namespace QuantConnect.ToolBox.IQFeed
         public double Bid { get { return _bid; } }
         public double Ask { get { return _ask; } }
         public int TickId { get { return _tickId; } }
-        public char Basis { get { return _basis; } } 
+        public char Basis { get { return _basis; } }
 
         #region private
         private DateTime _dateTimeStamp;
@@ -181,7 +182,7 @@ namespace QuantConnect.ToolBox.IQFeed
             for (var i = 5; i < fields.Length; i++) _description += fields[i];
         }
 
-        public string Sic { get { return _sic; } } 
+        public string Sic { get { return _sic; } }
         public string Symbol { get { return _symbol; } }
         public string MarketId { get { return _marketId; } }
         public string SecurityId { get { return _securityId; } }
@@ -210,7 +211,7 @@ namespace QuantConnect.ToolBox.IQFeed
             _description = "";
             for (var i = 5; i < fields.Length; i++) _description += fields[i];
         }
-        public string Naic { get { return _naic; } } 
+        public string Naic { get { return _naic; } }
         public string Symbol { get { return _symbol; } }
         public string MarketId { get { return _marketId; } }
         public string SecurityId { get { return _securityId; } }
@@ -225,7 +226,7 @@ namespace QuantConnect.ToolBox.IQFeed
         #endregion
     }
 
-    public class IQLookupHistorySymbolClient : SocketClient 
+    public class IQLookupHistorySymbolClient : SocketClient
     {
         // Delegates for event
         public event EventHandler<LookupEventArgs> LookupEvent;
@@ -259,10 +260,9 @@ namespace QuantConnect.ToolBox.IQFeed
         public int RequestTickData(string symbol, int dataPoints, bool oldToNew)
         {
             _lastRequestNumber++;
-            var reqNo = LookupType.REQ_HST_TCK.ToString() + _lastRequestNumber.ToString("0000000");
+            var reqNo = $"{LookupType.REQ_HST_TCK}{_lastRequestNumber.ToStringInvariant("0000000")}";
 
-            var reqString = string.Format("HTX,{0},{1},{2},{3},{4}\r\n", symbol, dataPoints.ToString("0000000"), oldToNew ? "1" : "0",
-                reqNo, _histDataPointsPerSend.ToString("0000000"));
+            var reqString = $"HTX,{symbol},{dataPoints.ToStringInvariant("0000000")},{(oldToNew ? "1" : "0")},{reqNo},{_histDataPointsPerSend.ToStringInvariant("0000000")}\r\n";
             Send(reqString);
             OnLookupEvent(new LookupEventArgs(reqNo, LookupType.REQ_HST_TCK, LookupSequence.MessageStart));
             return _lastRequestNumber;
@@ -270,12 +270,11 @@ namespace QuantConnect.ToolBox.IQFeed
         public int RequestTickData(string symbol, int days, bool oldToNew, Time timeStartInDay = null, Time timeEndInDay = null)
         {
             _lastRequestNumber++;
-            var reqNo = LookupType.REQ_HST_TCK.ToString() + _lastRequestNumber.ToString("0000000");
+            var reqNo = $"{LookupType.REQ_HST_TCK}{_lastRequestNumber.ToStringInvariant("0000000")}";
             if (timeStartInDay == null) timeStartInDay = _timeMarketOpen;
             if (timeEndInDay == null) timeEndInDay = _timeMarketClose;
 
-            var reqString = string.Format("HTD,{0},{1},{2},{3},{4},{5},{6},{7}\r\n", symbol, days.ToString("0000000"), _histMaxDataPoints.ToString("0000000"),
-                timeStartInDay.IQFeedFormat, timeEndInDay.IQFeedFormat, oldToNew ? "1" : "0", reqNo, _histDataPointsPerSend.ToString("0000000"));
+            var reqString = $"HTD,{symbol},{days.ToStringInvariant("0000000")},{_histMaxDataPoints.ToStringInvariant("0000000")},{timeStartInDay.IQFeedFormat},{timeEndInDay.IQFeedFormat},{(oldToNew ? "1" : "0")},{reqNo},{_histDataPointsPerSend.ToStringInvariant("0000000")}\r\n";
             Send(reqString);
             OnLookupEvent(new LookupEventArgs(reqNo, LookupType.REQ_HST_TCK, LookupSequence.MessageStart));
 
@@ -284,13 +283,14 @@ namespace QuantConnect.ToolBox.IQFeed
         public int RequestTickData(string symbol, DateTime start, DateTime? end, bool oldToNew, Time timeStartInDay = null, Time timeEndInDay = null)
         {
             _lastRequestNumber++;
-            var reqNo = LookupType.REQ_HST_TCK.ToString() + _lastRequestNumber.ToString("0000000");
+            var reqNo = $"{LookupType.REQ_HST_TCK}{_lastRequestNumber.ToStringInvariant("0000000")}";
             //if (timeStartInDay == null) timeStartInDay = _timeMarketOpen;
             //if (timeEndInDay == null) timeEndInDay = _timeMarketClose;
 
-            var reqString = string.Format("HTT,{0},{1},{2},{3},{4},{5},{6},{7},{8}\r\n", symbol, start.ToString("yyyyMMdd HHmmss"),
-                end.HasValue ? end.Value.ToString("yyyyMMdd HHmmss") : "", _histMaxDataPoints.ToString("0000000"),
-                timeStartInDay == null ? "" : timeStartInDay.IQFeedFormat, timeEndInDay == null ? "" : timeEndInDay.IQFeedFormat, oldToNew ? "1" : "0", reqNo, _histDataPointsPerSend.ToString("0000000"));
+            var reqString = Invariant($"HTT,{symbol},{start:yyyyMMdd HHmmss},") +
+                Invariant($"{(end.HasValue ? end.Value.ToStringInvariant("yyyyMMdd HHmmss") : "")},{_histMaxDataPoints:0000000)},") +
+                Invariant($"{(timeStartInDay == null ? "" : timeStartInDay.IQFeedFormat)},{(timeEndInDay == null ? "" : timeEndInDay.IQFeedFormat)},") +
+                Invariant($"{(oldToNew ? "1" : "0")},{reqNo},{_histDataPointsPerSend:0000000)}\r\n");
             Send(reqString);
             OnLookupEvent(new LookupEventArgs(reqNo, LookupType.REQ_HST_TCK, LookupSequence.MessageStart));
 
@@ -299,10 +299,11 @@ namespace QuantConnect.ToolBox.IQFeed
         public int RequestIntervalData(string symbol, Interval interval, int dataPoints, bool oldToNew)
         {
             _lastRequestNumber++;
-            var reqNo = LookupType.REQ_HST_INT.ToString() + _lastRequestNumber.ToString("0000000");
- 
-            var reqString = string.Format("HIX,{0},{1},{2},{3},{4},{5}\r\n", symbol, interval.Seconds.ToString("0000000"),
-                dataPoints.ToString("0000000"), oldToNew ? "1" : "0", reqNo, _histDataPointsPerSend.ToString("0000000"));
+            var reqNo = $"{LookupType.REQ_HST_INT}{_lastRequestNumber.ToStringInvariant("0000000")}";
+
+            var reqString = $"HIX,{symbol},{interval.Seconds.ToStringInvariant("0000000")}," +
+                $"{dataPoints.ToStringInvariant("0000000")},{(oldToNew ? "1" : "0")}," +
+                $"{reqNo},{_histDataPointsPerSend.ToStringInvariant("0000000")}\r\n";
             Send(reqString);
             OnLookupEvent(new LookupEventArgs(reqNo, LookupType.REQ_HST_INT, LookupSequence.MessageStart));
 
@@ -311,14 +312,15 @@ namespace QuantConnect.ToolBox.IQFeed
         public int RequestIntervalData(string symbol, Interval interval, int days, bool oldToNew, Time timeStartInDay = null, Time timeEndInDay = null)
         {
             _lastRequestNumber++;
-            var reqNo = LookupType.REQ_HST_INT.ToString() + _lastRequestNumber.ToString("0000000");
+            var reqNo = $"{LookupType.REQ_HST_INT}{_lastRequestNumber.ToStringInvariant("0000000")}";
             if (timeStartInDay == null) timeStartInDay = _timeMarketOpen;
             if (timeEndInDay == null) timeEndInDay = _timeMarketClose;
 
-            var reqString = string.Format("HID,{0},{1},{2},{3},{4},{5},{6},{7},{8}\r\n", symbol, interval.Seconds.ToString("0000000"),
-                days.ToString("0000000"), _histMaxDataPoints.ToString("0000000"), timeStartInDay.IQFeedFormat, timeEndInDay.IQFeedFormat,
-                oldToNew ? "1" : "0", reqNo, _histDataPointsPerSend.ToString("0000000"));
-                 
+            var reqString = $"HID,{symbol},{interval.Seconds.ToStringInvariant("0000000")}," +
+                $"{days.ToStringInvariant("0000000")},{_histMaxDataPoints.ToStringInvariant("0000000")}," +
+                $"{timeStartInDay.IQFeedFormat},{timeEndInDay.IQFeedFormat},{(oldToNew ? "1" : "0")}," +
+                $"{reqNo},{_histDataPointsPerSend.ToStringInvariant("0000000")}\r\n";
+
             Send(reqString);
             OnLookupEvent(new LookupEventArgs(reqNo, LookupType.REQ_HST_INT, LookupSequence.MessageStart));
 
@@ -327,14 +329,14 @@ namespace QuantConnect.ToolBox.IQFeed
         public int RequestIntervalData(string symbol, Interval interval, DateTime start, DateTime? end, bool oldToNew, Time timeStartInDay = null, Time timeEndInDay = null)
         {
             _lastRequestNumber++;
-            var reqNo = LookupType.REQ_HST_INT.ToString() + _lastRequestNumber.ToString("0000000");
+            var reqNo = $"{LookupType.REQ_HST_INT}{_lastRequestNumber.ToStringInvariant("0000000")}";
             //if (timeStartInDay == null) timeStartInDay = _timeMarketOpen;
             //if (timeEndInDay == null) timeEndInDay = _timeMarketClose;
 
-            var reqString = string.Format("HIT,{0},{1},{2},{3},{4},{5},{6},{7},{8},{9}\r\n", symbol, interval.Seconds.ToString("0000000"),
-                start.ToString("yyyyMMdd HHmmss"), end.HasValue ? end.Value.ToString("yyyyMMdd HHmmss") : "",
-                "", timeStartInDay == null ? "" : timeStartInDay.IQFeedFormat, timeEndInDay == null ? "" : timeEndInDay.IQFeedFormat,  oldToNew ? "1" : "0",
-                 reqNo, _histDataPointsPerSend.ToString("0000000"));
+            var reqString = $"HIT,{symbol},{interval.Seconds.ToStringInvariant("0000000")}," +
+                $"{start.ToStringInvariant("yyyyMMdd HHmmss")},{(end.HasValue ? end.Value.ToStringInvariant("yyyyMMdd HHmmss") : "")},," +
+                $"{(timeStartInDay == null ? "" : timeStartInDay.IQFeedFormat)},{(timeEndInDay == null ? "" : timeEndInDay.IQFeedFormat)}," +
+                $"{(oldToNew ? "1" : "0")},{reqNo},{_histDataPointsPerSend.ToStringInvariant("0000000")}\r\n";
 
             Send(reqString);
             OnLookupEvent(new LookupEventArgs(reqNo, LookupType.REQ_HST_INT, LookupSequence.MessageStart));
@@ -344,10 +346,10 @@ namespace QuantConnect.ToolBox.IQFeed
         public int RequestDailyData(string symbol, int dataPoints, bool oldToNew)
         {
             _lastRequestNumber++;
-            var reqNo = LookupType.REQ_HST_DWM.ToString() + _lastRequestNumber.ToString("0000000");
+            var reqNo = $"{LookupType.REQ_HST_DWM}{_lastRequestNumber.ToStringInvariant("0000000")}";
 
-            var reqString = string.Format("HDX,{0},{1},{2},{3},{4}\r\n", symbol, dataPoints.ToString("0000000"),
-                 oldToNew ? "1" : "0", reqNo, _histDataPointsPerSend.ToString("0000000"));
+            var reqString = $"HDX,{symbol},{dataPoints.ToStringInvariant("0000000")},{(oldToNew ? "1" : "0")}," +
+                $"{reqNo},{_histDataPointsPerSend.ToStringInvariant("0000000")}\r\n";
 
             Send(reqString);
             OnLookupEvent(new LookupEventArgs(reqNo, LookupType.REQ_HST_DWM, LookupSequence.MessageStart));
@@ -357,12 +359,11 @@ namespace QuantConnect.ToolBox.IQFeed
         public int RequestDailyData(string symbol, DateTime start, DateTime? end, bool oldToNew)
         {
             _lastRequestNumber++;
-            var reqNo = LookupType.REQ_HST_DWM.ToString() + _lastRequestNumber.ToString("0000000");
- 
-            var reqString = string.Format("HDT,{0},{1},{2},{3},{4},{5},{6}\r\n", symbol, 
-                start.ToString("yyyyMMdd"), end.HasValue ? end.Value.ToString("yyyyMMdd") : "",
-                  _histMaxDataPoints.ToString("0000000"), oldToNew ? "1" : "0",
-                 reqNo, _histDataPointsPerSend.ToString("0000000"));
+            var reqNo = $"{LookupType.REQ_HST_DWM}{_lastRequestNumber.ToStringInvariant("0000000")}";
+
+            var reqString = $"HDT,{symbol},{start.ToStringInvariant("yyyyMMdd")},{(end.HasValue ? end.Value.ToStringInvariant("yyyyMMdd") : "")}," +
+                $"{_histMaxDataPoints.ToStringInvariant("0000000")},{(oldToNew ? "1" : "0")},{reqNo}," +
+                $"{_histDataPointsPerSend.ToStringInvariant("0000000")}\r\n";
 
             Send(reqString);
             OnLookupEvent(new LookupEventArgs(reqNo, LookupType.REQ_HST_DWM, LookupSequence.MessageStart));
@@ -372,10 +373,10 @@ namespace QuantConnect.ToolBox.IQFeed
         public int RequestWeeklyData(string symbol, int dataPoints, bool oldToNew)
         {
             _lastRequestNumber++;
-            var reqNo = LookupType.REQ_HST_DWM.ToString() + _lastRequestNumber.ToString("0000000");
+            var reqNo = $"{LookupType.REQ_HST_DWM}{_lastRequestNumber.ToStringInvariant("0000000")}";
 
-            var reqString = string.Format("HWX,{0},{1},{2},{3},{4}\r\n", symbol, dataPoints.ToString("0000000"),
-                 oldToNew ? "1" : "0", reqNo, _histDataPointsPerSend.ToString("0000000"));
+            var reqString = $"HWX,{symbol},{dataPoints.ToStringInvariant("0000000")},{(oldToNew ? "1" : "0")},{reqNo}," +
+                $"{_histDataPointsPerSend.ToStringInvariant("0000000")}\r\n";
 
             Send(reqString);
             OnLookupEvent(new LookupEventArgs(reqNo, LookupType.REQ_HST_DWM, LookupSequence.MessageStart));
@@ -385,10 +386,10 @@ namespace QuantConnect.ToolBox.IQFeed
         public int RequestMonthlyData(string symbol, int dataPoints, bool oldToNew)
         {
             _lastRequestNumber++;
-            var reqNo = LookupType.REQ_HST_DWM.ToString() + _lastRequestNumber.ToString("0000000");
+            var reqNo = $"{LookupType.REQ_HST_DWM}{_lastRequestNumber.ToStringInvariant("0000000")}";
 
-            var reqString = string.Format("HMX,{0},{1},{2},{3},{4}\r\n", symbol, dataPoints.ToString("0000000"),
-                 oldToNew ? "1" : "0", reqNo, _histDataPointsPerSend.ToString("0000000"));
+            var reqString = $"HMX,{symbol},{dataPoints.ToStringInvariant("0000000")},{(oldToNew ? "1" : "0")},{reqNo}," +
+                $"{_histDataPointsPerSend.ToStringInvariant("0000000")}\r\n";
 
             Send(reqString);
             OnLookupEvent(new LookupEventArgs(reqNo, LookupType.REQ_HST_DWM, LookupSequence.MessageStart));
@@ -402,10 +403,10 @@ namespace QuantConnect.ToolBox.IQFeed
         public int RequestSymbols(SearchField searchField, string searchText, FilterType filterType, string[] filterValue)
         {
             _lastRequestNumber++;
-            var reqNo = LookupType.REQ_SYM_SYM.ToString() + _lastRequestNumber.ToString("0000000");
+            var reqNo = $"{LookupType.REQ_SYM_SYM}{_lastRequestNumber.ToStringInvariant("0000000")}";
 
-            var reqString = string.Format("SBF,{0},{1},{2},{3},{4}\r\n", (searchField == SearchField.Symbol) ? "s" : "d",
-                searchText, (filterType == FilterType.Market) ? "e" : "t",  String.Join(" ", filterValue), reqNo);
+            var reqString = $"SBF,{((searchField == SearchField.Symbol) ? "s" : "d")},{searchText},{(filterType == FilterType.Market ? "e" : "t")}," +
+                $"{string.Join(" ", filterValue)},{reqNo}\r\n";
 
             Send(reqString);
             OnLookupEvent(new LookupEventArgs(reqNo, LookupType.REQ_SYM_SYM, LookupSequence.MessageStart));
@@ -415,9 +416,9 @@ namespace QuantConnect.ToolBox.IQFeed
         public int RequestSymbolBySic(string searchText)
         {
             _lastRequestNumber++;
-            var reqNo = LookupType.REQ_SYM_SIC.ToString() + _lastRequestNumber.ToString("0000000");
+            var reqNo = $"{LookupType.REQ_SYM_SIC}{_lastRequestNumber.ToStringInvariant("0000000")}";
 
-            var reqString = string.Format("SBS,{0},{1}\r\n", searchText, reqNo);
+            var reqString = $"SBS,{searchText},{reqNo}\r\n";
 
             Send(reqString);
             OnLookupEvent(new LookupEventArgs(reqNo, LookupType.REQ_SYM_SIC, LookupSequence.MessageStart));
@@ -427,9 +428,9 @@ namespace QuantConnect.ToolBox.IQFeed
         public int RequestSymbolByNaic(string searchText)
         {
             _lastRequestNumber++;
-            var reqNo = LookupType.REQ_SYM_NAC.ToString() + _lastRequestNumber.ToString("0000000");
+            var reqNo = $"{LookupType.REQ_SYM_NAC}{_lastRequestNumber.ToStringInvariant("0000000")}";
 
-            var reqString = string.Format("SBN,{0},{1}\r\n", searchText, reqNo);
+            var reqString = $"SBN,{searchText},{reqNo}\r\n";
 
             Send(reqString);
             OnLookupEvent(new LookupEventArgs(reqNo, LookupType.REQ_SYM_NAC, LookupSequence.MessageStart));

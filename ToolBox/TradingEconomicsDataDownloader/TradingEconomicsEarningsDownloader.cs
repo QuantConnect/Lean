@@ -103,7 +103,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 
                 foreach (var earningsDataByDate in kvp.GroupBy(x => x.LastUpdate.Date))
                 {
-                    var date = earningsDataByDate.Key.ToString("yyyyMMdd");
+                    var date = earningsDataByDate.Key.ToStringInvariant("yyyyMMdd");
                     var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
                     var tempZipPath = tempPath.Replace(".json", ".zip");
                     var finalZipPath = Path.Combine(_destinationFolder, kvp.Key, $"{date}.zip");
@@ -176,7 +176,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                 return string.Empty;
             }
 
-            return symbol.ToLower();
+            return symbol.ToLowerInvariant();
         }
     }
 }

@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2017 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using QuantConnect.Data;
 using System.Net;
 using Newtonsoft.Json;
@@ -52,7 +53,7 @@ namespace QuantConnect.ToolBox.KrakenDownloader
 
             var startUnixTime = Convert.ToInt64(Time.DateTimeToUnixTimeStamp(startUtc) * 1000000000); // Multiply by 10^9 per Kraken API
             var endUnixTime = Convert.ToInt64(Time.DateTimeToUnixTimeStamp(endUtc) * 1000000000);
-            var url = string.Format(UrlPrototype, symbol.Value, startUnixTime);
+            var url = string.Format(CultureInfo.InvariantCulture, UrlPrototype, symbol.Value, startUnixTime);
             List<List<string>> data;
 
             using (var client = new WebClient())
@@ -71,14 +72,14 @@ namespace QuantConnect.ToolBox.KrakenDownloader
 
                 foreach (var i in data)
                 {
-                    var time = Time.UnixTimeStampToDateTime(Convert.ToDouble(i[2].Split('.')[0]));
+                    var time = Time.UnixTimeStampToDateTime(Parse.Double(i[2].Split('.')[0]));
                     if (time > endUtc)
                     {
                         break;
                     }
 
-                    var value = Decimal.Parse(i[0]);
-                    var volume = Decimal.Parse(i[1]);
+                    var value = Parse.Decimal(i[0]);
+                    var volume = Parse.Decimal(i[1]);
 
                     yield return new Tick
                     {
@@ -119,14 +120,14 @@ namespace QuantConnect.ToolBox.KrakenDownloader
 
                     foreach (var i in data)
                     {
-                        var time = Time.UnixTimeStampToDateTime(Convert.ToDouble(i[2].Split('.')[0]));
+                        var time = Time.UnixTimeStampToDateTime(Parse.Double(i[2].Split('.')[0]));
                         if (time > endUtc)
                         {
                             break;
                         }
 
-                        var value = Decimal.Parse(i[0]);
-                        var volume = Decimal.Parse(i[1]);
+                        var value = Parse.Decimal(i[0]);
+                        var volume = Parse.Decimal(i[1]);
 
                         yield return new Tick
                         {

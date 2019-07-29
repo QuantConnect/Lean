@@ -95,10 +95,10 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         {
             if (string.IsNullOrWhiteSpace(ticker))
             {
-                return (category + country).ToLower().Replace(" ", "-");
+                return (category + country).ToLowerInvariant().Replace(" ", "-");
             }
 
-            return ticker.ToLower().Replace(" ", "-");
+            return ticker.ToLowerInvariant().Replace(" ", "-");
         }
     }
 }

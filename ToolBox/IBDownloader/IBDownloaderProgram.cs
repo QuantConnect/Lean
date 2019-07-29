@@ -39,7 +39,7 @@ namespace QuantConnect.ToolBox.IBDownloader
             }
             try
             {
-                var allResolutions = resolution.ToLower() == "all";
+                var allResolutions = resolution.ToLowerInvariant() == "all";
                 var castResolution = allResolutions ? Resolution.Second : (Resolution)Enum.Parse(typeof(Resolution), resolution);
                 var startDate = fromDate.ConvertToUtc(TimeZones.NewYork);
                 var endDate = toDate.ConvertToUtc(TimeZones.NewYork);

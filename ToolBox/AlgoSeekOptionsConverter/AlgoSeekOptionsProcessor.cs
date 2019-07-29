@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ using System.Linq;
 namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
 {
     /// <summary>
-    /// Processor for caching and consolidating ticks; 
+    /// Processor for caching and consolidating ticks;
     /// then flushing the ticks in memory to disk when triggered.
     /// </summary>
     public class AlgoSeekOptionsProcessor
@@ -54,7 +54,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 if (_entryPath == null)
                 {
                     _entryPath = SafeName(LeanData.GenerateZipEntryName(_symbol, _referenceDate, _resolution, _tickType));
-                }   
+                }
                 return _entryPath;
             }
             set { _entryPath = value; }
@@ -101,7 +101,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         }
 
         /// <summary>
-        /// Type of this option processor. 
+        /// Type of this option processor.
         /// ASOP's are grouped trade type for file writing.
         /// </summary>
         public TickType TickType
@@ -190,8 +190,8 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         {
             if (OS.IsWindows)
             {
-                if (_windowsRestrictedNames.Contains(symbol.Value.ToLower()) || 
-                    _windowsRestrictedNames.Contains(symbol.Underlying.Value.ToLower()))
+                if (_windowsRestrictedNames.Contains(symbol.Value.ToLowerInvariant()) ||
+                    _windowsRestrictedNames.Contains(symbol.Underlying.Value.ToLowerInvariant()))
                 {
                     symbol = Symbol.CreateOption(SafeName(symbol.Underlying.Value), Market.USA, OptionStyle.American, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
                 }
@@ -203,7 +203,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
         {
             if (OS.IsWindows)
             {
-                if (_windowsRestrictedNames.Contains(fileName.ToLower()))
+                if (_windowsRestrictedNames.Contains(fileName.ToLowerInvariant()))
                     return "_" + fileName;
             }
             return fileName;

@@ -130,7 +130,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
         /// <param name="contents">Contents to write</param>
         protected void SaveContentToFile(string destinationFolder, string ticker, IEnumerable<string> contents)
         {
-            ticker = ticker.ToLower();
+            ticker = ticker.ToLowerInvariant();
             var finalPath = Path.Combine(destinationFolder, $"{ticker}.csv");
             var finalFileExists = File.Exists(finalPath);
 

@@ -31,6 +31,7 @@ using System.Text;
 using QuantConnect.Interfaces;
 using NodaTime;
 using System.Globalization;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.ToolBox.IEX
 {
@@ -360,7 +361,9 @@ namespace QuantConnect.ToolBox.IEX
                 yield break;
             }
 
-            Log.Trace(string.Format("IEXDataQueueHandler.ProcessHistoryRequests(): Submitting request: {0}-{1}: {2} {3}->{4}", request.Symbol.SecurityType, ticker, request.Resolution, start, end));
+            Log.Trace("IEXDataQueueHandler.ProcessHistoryRequests(): Submitting request: " +
+                Invariant($"{request.Symbol.SecurityType}-{ticker}: {request.Resolution} {start}->{end}")
+            );
 
             var span = end.Date - start.Date;
             var suffixes = new List<string>();
@@ -369,7 +372,7 @@ namespace QuantConnect.ToolBox.IEX
                 var begin = start;
                 while (begin < end)
                 {
-                    suffixes.Add("date/" + begin.ToString("yyyyMMdd"));
+                    suffixes.Add("date/" + begin.ToStringInvariant("yyyyMMdd"));
                     begin = begin.AddDays(1);
                 }
             }
@@ -416,7 +419,7 @@ namespace QuantConnect.ToolBox.IEX
                     }
                     else
                     {
-                        date = DateTime.Parse(item["date"].Value<string>());
+                        date = Parse.DateTime(item["date"].Value<string>());
                     }
 
                     if (date.Date < start.Date || date.Date > end.Date)

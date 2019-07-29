@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@ using QuantConnect.Data.Market;
 namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
 {
     /// <summary>
-    /// Quandl Bitfinex Data Downloader class 
+    /// Quandl Bitfinex Data Downloader class
     /// </summary>
     public class QuandlBitfinexDownloader : IDataDownloader
     {
@@ -56,7 +56,7 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
             const string collapse = "daily";
 
             var url = "https://www.quandl.com/api/v3/datasets/BCHARTS/BITFINEXUSD.csv?order=asc&collapse=" + collapse + "&api_key=" + _apiKey + "&start_date="
-                + startUtc.ToString("yyyy-MM-dd");
+                + startUtc.ToStringInvariant("yyyy-MM-dd");
             using (var cl = new WebClient())
             {
                 var data = cl.DownloadString(url);
@@ -72,13 +72,13 @@ namespace QuantConnect.ToolBox.QuandlBitfinexDownloader
 
                     var bar = new TradeBar
                     {
-                        Time = DateTime.Parse(line[0]),
-                        Open = decimal.Parse(line[1]),
-                        High = decimal.Parse(line[2]),
-                        Low = decimal.Parse(line[3]),
-                        Close = decimal.Parse(line[4]),
-                        Value = decimal.Parse(line[7]),
-                        Volume = (long) (decimal.Parse(line[5])),
+                        Time = Parse.DateTime(line[0]),
+                        Open = Parse.Decimal(line[1]),
+                        High = Parse.Decimal(line[2]),
+                        Low = Parse.Decimal(line[3]),
+                        Close = Parse.Decimal(line[4]),
+                        Value = Parse.Decimal(line[7]),
+                        Volume = (long) Parse.Decimal(line[5]),
                         Symbol = symbol,
                         DataType = MarketDataType.TradeBar,
                         Period = Time.OneDay

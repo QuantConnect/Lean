@@ -23,7 +23,7 @@ using System.Linq;
 namespace QuantConnect.ToolBox.CryptoiqDownloader
 {
     /// <summary>
-    /// Cryptoiq Data Downloader class 
+    /// Cryptoiq Data Downloader class
     /// </summary>
     public class CryptoiqDownloader : IDataDownloader
     {
@@ -56,7 +56,6 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
 
             var hour = 1;
             var counter = startUtc;
-            const string url = "http://cryptoiq.io/api/marketdata/ticker/{3}/{2}/{0}/{1}";
 
             while (counter <= endUtc)
             {
@@ -64,7 +63,7 @@ namespace QuantConnect.ToolBox.CryptoiqDownloader
                 {
                     using (var cl = new WebClient())
                     {
-                        var request = string.Format(url, counter.ToString("yyyy-MM-dd"), hour, symbol.Value, _exchange);
+                        var request = $"http://cryptoiq.io/api/marketdata/ticker/{_exchange}/{symbol.Value}/{counter.ToStringInvariant("yyyy-MM-dd")}/{hour}";
                         var data = cl.DownloadString(request);
 
                         var mbtc = JsonConvert.DeserializeObject<List<CryptoiqBitcoin>>(data);

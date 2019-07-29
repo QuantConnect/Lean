@@ -68,7 +68,7 @@ namespace QuantConnect.ToolBox.USTreasuryYieldCurve
                 var lines = 0;
                 var csvBuilder = new StringBuilder();
                 var sortedFilteredData = xmlData.entry.SelectMany(x => x.content)
-                    .OrderBy(x => DateTime.Parse(x.properties.NEW_DATE.Value))
+                    .OrderBy(x => Parse.DateTime(x.properties.NEW_DATE.Value))
                     .ToList();
 
                 if (finalPath.Exists)
@@ -78,7 +78,7 @@ namespace QuantConnect.ToolBox.USTreasuryYieldCurve
                     // Since the date is the first entry in the CSV file, we don't have to worry about null values
                     var csvDataDate = DateTime.ParseExact(csvData.Split(',').First(), DateFormat.EightCharacter, CultureInfo.InvariantCulture);
 
-                    sortedFilteredData = sortedFilteredData.Where(x => DateTime.Parse(x.properties.NEW_DATE.Value) > csvDataDate).ToList();
+                    sortedFilteredData = sortedFilteredData.Where(x => Parse.DateTime(x.properties.NEW_DATE.Value) > csvDataDate).ToList();
                 }
 
                 foreach (var entry in sortedFilteredData)
@@ -88,7 +88,7 @@ namespace QuantConnect.ToolBox.USTreasuryYieldCurve
 
                     var data = new List<string>
                     {
-                        DateTime.Parse(entry.properties.NEW_DATE.Value).Date.ToString(DateFormat.EightCharacter),
+                        Parse.DateTime(entry.properties.NEW_DATE.Value).Date.ToStringInvariant(DateFormat.EightCharacter),
                         entry.properties.BC_1MONTH.Value,
                         entry.properties.BC_2MONTH.Value,
                         entry.properties.BC_3MONTH.Value,

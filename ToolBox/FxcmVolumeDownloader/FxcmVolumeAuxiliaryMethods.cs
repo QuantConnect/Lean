@@ -21,8 +21,8 @@ namespace QuantConnect.ToolBox
                 {
                     DataType = MarketDataType.Base,
                     Time = time,
-                    Value = long.Parse(obs[1]),
-                    Transactions = int.Parse(obs[2])
+                    Value = Parse.Long(obs[1]),
+                    Transactions = Parse.Int(obs[2])
                 });
             }
             return output;
@@ -61,11 +61,11 @@ namespace QuantConnect.ToolBox
             {
                 case Resolution.Daily:
                 case Resolution.Hour:
-                    var expectedFilePath = Path.Combine(folderPath,
-                                                        String.Format("{0}_volume.zip", symbol.Value.ToLower()));
+                    var expectedFilePath = Path.Combine(folderPath, $"{symbol.Value.ToLowerInvariant()}_volume.zip"
+                    );
                     if (File.Exists(expectedFilePath))
                     {
-                        var lastStrDate = ReadZipFileData(expectedFilePath).Last()     // last observation                       
+                        var lastStrDate = ReadZipFileData(expectedFilePath).Last()     // last observation
                                                                            .First()    // first string (date)
                                                                            .Substring(startIndex: 0, length: 8);
                         lastAvailableDate = DateTime.ParseExact(lastStrDate, DateFormat.EightCharacter, CultureInfo.InvariantCulture);

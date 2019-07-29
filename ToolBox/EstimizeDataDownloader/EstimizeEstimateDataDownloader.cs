@@ -64,7 +64,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                 var percent = 0.05;
                 var i = 0;
 
-                Log.Trace($"EstimizeEstimateDataDownloader.Run(): Start processing {count} companies");
+                Log.Trace($"EstimizeEstimateDataDownloader.Run(): Start processing {count.ToStringInvariant()} companies");
 
                 var tasks = new List<Task>();
 
@@ -136,7 +136,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                                                 newTicker = mapFile.GetMappedSymbol(createdAt);
                                                 if (string.IsNullOrWhiteSpace(newTicker))
                                                 {
-                                                    Log.Trace($"EstimizeEstimateDataDownloader.Run(): New ticker is null. Old ticker: {oldTicker} - on: {createdAt}");
+                                                    Log.Trace($"EstimizeEstimateDataDownloader.Run(): New ticker is null. Old ticker: {oldTicker} - on: {createdAt.ToStringInvariant()}");
                                                     return string.Empty;
                                                 }
 
@@ -159,14 +159,24 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
                                     foreach (var kvp in estimates)
                                     {
-                                        var csvContents = kvp.Select(x => $"{x.CreatedAt.ToUniversalTime():yyyyMMdd HH:mm:ss},{x.Id},{x.AnalystId},{x.UserName},{x.FiscalYear},{x.FiscalQuarter},{x.Eps},{x.Revenue},{x.Flagged.ToString().ToLower()}");
+                                        var csvContents = kvp.Select(x =>
+                                            $"{x.CreatedAt.ToStringInvariant("yyyyMMdd HH:mm:ss")}," +
+                                            $"{x.Id}," +
+                                            $"{x.AnalystId}," +
+                                            $"{x.UserName}," +
+                                            $"{x.FiscalYear.ToStringInvariant()}," +
+                                            $"{x.FiscalQuarter.ToStringInvariant()}," +
+                                            $"{x.Eps.ToStringInvariant()}," +
+                                            $"{x.Revenue.ToStringInvariant()}," +
+                                            $"{x.Flagged.ToStringInvariant().ToLowerInvariant()}"
+                                        );
                                         SaveContentToFile(_destinationFolder, kvp.Key, csvContents);
                                     }
 
                                     var percentageDone = i / count;
                                     if (percentageDone >= currentPercent)
                                     {
-                                        Log.Trace($"EstimizeEstimateDataDownloader.Run(): {percentageDone:P2} complete");
+                                        Log.Trace($"EstimizeEstimateDataDownloader.Run(): {percentageDone.ToStringInvariant("P2")} complete");
                                         currentPercent += percent;
                                     }
                                 }
@@ -182,7 +192,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                 return false;
             }
 
-            Log.Trace($"EstimizeEstimateDataDownloader.Run(): Finished in {stopwatch.Elapsed}");
+            Log.Trace($"EstimizeEstimateDataDownloader.Run(): Finished in {stopwatch.Elapsed.ToStringInvariant(null)}");
             return true;
         }
     }

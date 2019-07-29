@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,8 +66,6 @@ namespace QuantConnect.ToolBox.YahooDownloader
 
             try
             {
-                var url = "https://query1.finance.yahoo.com/v7/finance/download/{0}?period1={1}&period2={2}&interval=1d&events={3}&crumb={4}";
-
                 //if no token found, refresh it
                 if (string.IsNullOrEmpty(Token.Cookie) | string.IsNullOrEmpty(Token.Crumb))
                 {
@@ -77,7 +75,11 @@ namespace QuantConnect.ToolBox.YahooDownloader
                     }
                 }
 
-                url = string.Format(url, symbol, Math.Round(Time.DateTimeToUnixTimeStamp(start), 0), Math.Round(Time.DateTimeToUnixTimeStamp(end), 0), eventCode, Token.Crumb);
+                var url = $"https://query1.finance.yahoo.com/v7/finance/download/{symbol}" +
+                   $"?period1={Math.Round(Time.DateTimeToUnixTimeStamp(start), 0).ToStringInvariant()}" +
+                   $"&period2={Math.Round(Time.DateTimeToUnixTimeStamp(end), 0).ToStringInvariant()}" +
+                   $"&interval=1d&events={eventCode}&crumb={Token.Crumb}";
+
                 using (var wc = new WebClient())
                 {
                     wc.Headers.Add(HttpRequestHeader.Cookie, Token.Cookie);
@@ -123,7 +125,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
             {
                 var rows = csvData.Split(Convert.ToChar(10));
 
-                //row(0) was ignored because is column names 
+                //row(0) was ignored because is column names
                 //data is read from oldest to latest
                 for (var i = 1; i <= rows.Length - 1; i++)
                 {
@@ -142,18 +144,18 @@ namespace QuantConnect.ToolBox.YahooDownloader
 
                     var hp = new HistoryPrice
                     {
-                        Date = DateTime.Parse(cols[0]),
-                        Open = Convert.ToDecimal(cols[1]),
-                        High = Convert.ToDecimal(cols[2]),
-                        Low = Convert.ToDecimal(cols[3]),
-                        Close = Convert.ToDecimal(cols[4]),
-                        AdjClose = Convert.ToDecimal(cols[5])
+                        Date = QuantConnect.Parse.DateTime(cols[0]),
+                        Open = QuantConnect.Parse.Decimal(cols[1]),
+                        High = QuantConnect.Parse.Decimal(cols[2]),
+                        Low = QuantConnect.Parse.Decimal(cols[3]),
+                        Close = QuantConnect.Parse.Decimal(cols[4]),
+                        AdjClose = QuantConnect.Parse.Decimal(cols[5])
                     };
 
                     //fixed issue in some currencies quote (e.g: SGDAUD=X)
                     if (cols[6] != "null")
                     {
-                        hp.Volume = Convert.ToDecimal(cols[6]);
+                        hp.Volume = QuantConnect.Parse.Decimal(cols[6]);
                     }
 
                     hps.Add(hp);

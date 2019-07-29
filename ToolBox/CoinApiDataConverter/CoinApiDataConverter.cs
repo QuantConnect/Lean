@@ -56,7 +56,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         {
             _market = market;
             _processingDate = date;
-            _rawDataFolder = new DirectoryInfo(Path.Combine(rawDataFolder, SecurityType.Crypto.ToLower(), market.ToLower(), date.ToString(DateFormat.EightCharacter)));
+            _rawDataFolder = new DirectoryInfo(Path.Combine(rawDataFolder, SecurityType.Crypto.ToLower(), market.ToLowerInvariant(), date.ToStringInvariant(DateFormat.EightCharacter)));
             if (!_rawDataFolder.Exists)
             {
                 throw new ArgumentException($"CoinApiDataConverter(): Source folder not found: {_rawDataFolder.FullName}");
@@ -65,7 +65,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             _destinationFolder = new DirectoryInfo(destinationFolder);
             _destinationFolder.Create();
 
-            if (!SupportedMarkets.Contains(market.ToLower()))
+            if (!SupportedMarkets.Contains(market.ToLowerInvariant()))
             {
                 throw new ArgumentException($"CoinApiDataConverter(): Market/Exchange {market} not supported, yet. Supported Markets/Exchanges are {string.Join(" ", SupportedMarkets)}", market);
             }

@@ -45,7 +45,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 Logger.getRootLogger().setLevel(Level.ERROR);
                 BasicConfigurator.configure(new FileAppender(new SimpleLayout(), "FxcmDownloader.log", append: false));
 
-                var allResolutions = resolution.ToLower() == "all";
+                var allResolutions = resolution.ToLowerInvariant() == "all";
                 var castResolution = allResolutions ? Resolution.Tick : (Resolution)Enum.Parse(typeof(Resolution), resolution);
                 endDate = endDate.AddDays(1).AddMilliseconds(-1);
 

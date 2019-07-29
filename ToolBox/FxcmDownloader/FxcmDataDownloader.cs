@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,7 +41,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         private readonly string _userName;
         private readonly string _password;
 
-        
+
         private IGateway _gateway;
         private readonly object _locker = new object();
         private string _currentRequest;
@@ -72,7 +72,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             cal.setTimeZone(TimeZone.getTimeZone("UTC"));
             cal.setTime(javaDate);
 
-            // note that the Month component of java.util.Date  
+            // note that the Month component of java.util.Date
             // from 0-11 (i.e. Jan == 0)
             return new DateTime(cal.get(Calendar.YEAR),
                                 cal.get(Calendar.MONTH) + 1,
@@ -140,7 +140,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
             // initialize session
             RequestTradingSessionStatus();
 
-            Console.WriteLine("Downloading {0} data from {1} to {2}...", resolution, startUtc.ToString("yyyyMMdd HH:mm:ss"), endUtc.ToString("yyyyMMdd HH:mm:ss"));
+            Console.WriteLine($"Downloading {resolution.ToStringInvariant()} data from {startUtc.ToStringInvariant("yyyyMMdd HH:mm:ss")} to {endUtc.ToStringInvariant("yyyyMMdd HH:mm:ss")}...");
 
             // Find best FXCM parameters
             var interval = FxcmBrokerage.ToFxcmInterval(resolution);
@@ -152,7 +152,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
 
             var end = endUtc;
 
-            do // 
+            do //
             {
                 //show progress
                 progressBar(Math.Abs((end - endUtc).Ticks), totalTicks, Console.WindowWidth / 2,'█');
@@ -186,7 +186,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
 
                 // Add data
                 totalBaseData.InsertRange(0, _currentBaseData.Where(x => x.Time.Date >= startUtc.Date));
-                
+
                 if (end != _currentBaseData[0].Time)
                 {
                     // new end date = first datapoint date.
@@ -196,8 +196,8 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 {
                     break;
                 }
-               
-              
+
+
 
             } while (end > startUtc);
 
@@ -227,7 +227,9 @@ namespace QuantConnect.ToolBox.FxcmDownloader
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
-                throw new TimeoutException(string.Format("FxcmBrokerage.LoadInstruments(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
+                throw new TimeoutException("FxcmBrokerage.LoadInstruments(): Operation took " +
+                    $"longer than {((decimal) ResponseTimeout / 1000).ToStringInvariant()} seconds."
+                );
         }
 
         #region IGenericMessageListener implementation
@@ -359,7 +361,7 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         #region Console Helper
 
         /// <summary>
-        /// Draw a progress bar 
+        /// Draw a progress bar
         /// </summary>
         /// <param name="complete"></param>
         /// <param name="maxVal"></param>
@@ -367,14 +369,14 @@ namespace QuantConnect.ToolBox.FxcmDownloader
         /// <param name="progressCharacter"></param>
         private static void progressBar(long complete, long maxVal, long barSize, char progressCharacter)
         {
-          
+
             decimal p   = (decimal)complete / (decimal)maxVal;
             int chars   = (int)Math.Floor(p / ((decimal)1 / (decimal)barSize));
             string bar = string.Empty;
             bar = bar.PadLeft(chars, progressCharacter);
             bar = bar.PadRight(Convert.ToInt32(barSize)-1);
-            
-            Console.Write(string.Format("\r[{0}] {1}%", bar, (p * 100).ToString("N2")));           
+
+            Console.Write($"\r[{bar}] {(p * 100).ToStringInvariant("N2")}%");
         }
 
         #endregion
