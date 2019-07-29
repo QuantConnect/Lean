@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // we'll submit the next type of order from the queue
                 var orderType = _orderTypesQueue.Dequeue();
                 //Log("");
-                Log("\r\n--------------MONTH: " + Time.ToString("MMMM") + ":: " + orderType + "\r\n");
+                Log($"\r\n--------------MONTH: {Time.ToStringInvariant("MMMM")}:: {orderType}\r\n");
                 //Log("");
                 LastMonth = Time.Month;
                 Log("ORDER TYPE:: " + orderType);

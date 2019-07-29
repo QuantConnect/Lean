@@ -105,7 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var orderedObjScores = _symbolData.OrderByDescending(x => x.ObjectiveScore).ToList();
                     foreach (var orderedObjScore in orderedObjScores)
                     {
-                        Log(">>SCORE>>" + orderedObjScore.Symbol + ">>" + orderedObjScore.ObjectiveScore);
+                        Log($">>SCORE>>{orderedObjScore.Symbol}>>{orderedObjScore.ObjectiveScore.ToStringInvariant()}");
                     }
                     var bestGrowth = orderedObjScores.First();
 
@@ -116,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
                             Log("PREBUY>>LIQUIDATE>>");
                             Liquidate();
                         }
-                        Log(">>BUY>>" + bestGrowth.Symbol + "@" + (100 * bestGrowth.OneMonthPerformance).ToString("00.00"));
+                        Log($">>BUY>>{bestGrowth.Symbol}@{(100 * bestGrowth.OneMonthPerformance).ToStringInvariant("00.00")}");
                         var qty = Portfolio.MarginRemaining / Securities[bestGrowth.Symbol].Close;
                         MarketOrder(bestGrowth.Symbol, (int) qty);
                     }

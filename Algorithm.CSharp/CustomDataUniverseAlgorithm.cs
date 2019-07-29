@@ -128,7 +128,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         Time = DateTime.ParseExact(csv[0], "yyyyMMdd", null),
                         Symbol = Symbol.Create(csv[1], SecurityType.Equity, Market.USA),
-                        TopGainersRank = int.Parse(csv[2])
+                        TopGainersRank = Parse.Int(csv[2])
                     };
                 }
 

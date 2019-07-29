@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 Console.WriteLine("Buying BTC 'Shares': BTC: " + data.Close);
             }
-            Console.WriteLine("Time: " + Time.ToLongDateString() + " " + Time.ToLongTimeString() + data.Close.ToString());
+            Console.WriteLine("Time: " + Time.ToStringInvariant("T") + " " + Time.ToStringInvariant("T") + data.Close.ToStringInvariant());
         }
 
         /// <summary>

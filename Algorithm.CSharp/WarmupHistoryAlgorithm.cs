@@ -53,8 +53,8 @@ namespace QuantConnect.Algorithm.CSharp
                 slow.Update(bar.EndTime, bar.Close);
             }
 
-            Log(string.Format("FAST IS {0} READY. Samples: {1}", fast.IsReady ? "" : "NOT", fast.Samples));
-            Log(string.Format("SLOW IS {0} READY. Samples: {1}", slow.IsReady ? "" : "NOT", slow.Samples));
+            Log($"FAST IS {(fast.IsReady ? "" : "NOT")} READY. Samples: {fast.Samples.ToStringInvariant()}");
+            Log($"SLOW IS {(slow.IsReady ? "" : "NOT")} READY. Samples: {slow.Samples.ToStringInvariant()}");
         }
 
         /// <summary>

@@ -85,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 SetHoldings(data.Symbol, 1.0);
             }
-            Log($"CLOSE - {data.Time.ToString("o")} - {data.Open} {data.Close}");
+            Log($"CLOSE - {data.Time.ToIso8601Invariant()} - {data.Open} {data.Close}");
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Liquidate(data.Symbol);
             }
-            Log($"7BAR - {data.Time.ToString("o")} - {data.Open} {data.Close}");
+            Log($"7BAR - {data.Time.ToIso8601Invariant()} - {data.Open} {data.Close}");
         }
 
         /// <summary>

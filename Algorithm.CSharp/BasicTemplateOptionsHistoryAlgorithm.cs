@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(1000000);
 
             var option = AddOption("GOOG");
-            // add the initial contract filter 
+            // add the initial contract filter
             option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180));
 
             // set the pricing model for Greeks and volatility
@@ -65,20 +65,20 @@ namespace QuantConnect.Algorithm.CSharp
                     var underlying = Securities[chain.Key.Underlying];
                     foreach (var contract in chain.Value)
                     {
-                        Log(String.Format(@"{0},Bid={1} Ask={2} Last={3} OI={4} σ={5:0.000} NPV={6:0.000} Δ={7:0.000} Γ={8:0.000} ν={9:0.000} ρ={10:0.00} Θ={11:0.00} IV={12:0.000}",
-                             contract.Symbol.Value,
-                             contract.BidPrice,
-                             contract.AskPrice,
-                             contract.LastPrice,
-                             contract.OpenInterest,
-                             underlying.VolatilityModel.Volatility,
-                             contract.TheoreticalPrice,
-                             contract.Greeks.Delta,
-                             contract.Greeks.Gamma,
-                             contract.Greeks.Vega,
-                             contract.Greeks.Rho,
-                             contract.Greeks.Theta / 365.0m,
-                             contract.ImpliedVolatility));
+                        Log($"{contract.Symbol.Value}," +
+                            $"Bid={contract.BidPrice.ToStringInvariant()} " +
+                            $"Ask={contract.AskPrice.ToStringInvariant()} " +
+                            $"Last={contract.LastPrice.ToStringInvariant()} " +
+                            $"OI={contract.OpenInterest.ToStringInvariant()} " +
+                            $"σ={underlying.VolatilityModel.Volatility.ToStringInvariant("0.000")} " +
+                            $"NPV={contract.TheoreticalPrice.ToStringInvariant("0.000")} " +
+                            $"Δ={contract.Greeks.Delta.ToStringInvariant("0.000")} " +
+                            $"Γ={contract.Greeks.Gamma.ToStringInvariant("0.000")} " +
+                            $"ν={contract.Greeks.Vega.ToStringInvariant("0.000")} " +
+                            $"ρ={contract.Greeks.Rho.ToStringInvariant("0.00")} " +
+                            $"Θ={(contract.Greeks.Theta / 365.0m).ToStringInvariant("0.00")} " +
+                            $"IV={contract.ImpliedVolatility.ToStringInvariant("0.000")}"
+                        );
                     }
                 }
             }
