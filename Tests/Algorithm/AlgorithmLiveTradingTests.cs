@@ -89,6 +89,9 @@ namespace QuantConnect.Tests.Algorithm
             public void Disconnect() {}
             public bool AccountInstantlyUpdated { get; } = true;
             public IEnumerable<BaseData> GetHistory(HistoryRequest request) { return Enumerable.Empty<BaseData>(); }
+            public DateTime LastSyncDateTimeUtc { get; } = DateTime.UtcNow;
+            public bool ShouldPerformCashSync(DateTime currentTimeUtc) { return false; }
+            public bool PerformCashSync(IAlgorithm algorithm, DateTime currentTimeUtc, Func<TimeSpan> getTimeSinceLastFill) { return true; }
         }
     }
 }

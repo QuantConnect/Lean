@@ -18,7 +18,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -37,7 +36,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     {
         private IAlgorithm _algorithm;
         private IBrokerage _brokerage;
-        private bool _syncedLiveBrokerageCashToday;
 
         // Counter to keep track of total amount of processed orders
         private int _totalOrderCount;
@@ -47,11 +45,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         // this value is used for determining how confident we are in our cash balance update
         private long _lastFillTimeTicks;
-        private long _lastSyncTimeTicks;
-        private readonly object _performCashSyncReentranceGuard = new object();
-
-        // 7:45 AM (New York time zone)
-        private static readonly TimeSpan LiveBrokerageCashSyncTime = new TimeSpan(7, 45, 0);
 
         private const int MaxCashSyncAttempts = 5;
         private int _failedCashSyncAttempts;
@@ -149,8 +142,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _orderRequestQueue = new BusyBlockingCollection<OrderRequest>();
             // we don't need to do this today because we just initialized/synced
             _resultHandler = resultHandler;
-            _syncedLiveBrokerageCashToday = true;
-            _lastSyncTimeTicks = CurrentTimeUtc.Ticks;
 
             _brokerage = brokerage;
             _brokerage.OrderStatusChanged += (sender, fill) =>
@@ -559,21 +550,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             Log.Debug("BrokerageTransactionHandler.ProcessSynchronousEvents(): Enter");
 
-            // every morning flip this switch back
-            var currentTimeNewYork = CurrentTimeUtc.ConvertFromUtc(TimeZones.NewYork);
-            if (_syncedLiveBrokerageCashToday && currentTimeNewYork.Date != LastSyncDate)
-            {
-                _syncedLiveBrokerageCashToday = false;
-                _failedCashSyncAttempts = 0;
-            }
-
-            // we want to sync up our cash balance before market open
-            if (_algorithm.LiveMode && !_syncedLiveBrokerageCashToday && currentTimeNewYork.TimeOfDay >= LiveBrokerageCashSyncTime)
+            // check if the brokerage should perform cash sync now
+            if (_brokerage.ShouldPerformCashSync(CurrentTimeUtc))
             {
                 // only perform cash syncs if we haven't had a fill for at least 10 seconds
                 if (TimeSinceLastFill > TimeSpan.FromSeconds(10))
                 {
-                    if (!PerformCashSync())
+                    if (!_brokerage.PerformCashSync(_algorithm, CurrentTimeUtc, () => TimeSinceLastFill))
                     {
                         if (++_failedCashSyncAttempts >= MaxCashSyncAttempts)
                         {
@@ -615,107 +598,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _completeOrderTickets.AddOrUpdate(order.Id, orderTicket);
         }
 
-        /// <summary>
-        /// Syncs cash from brokerage with portfolio object
-        /// </summary>
-        private bool PerformCashSync()
-        {
-            try
-            {
-                // prevent reentrance in this method
-                if (!Monitor.TryEnter(_performCashSyncReentranceGuard))
-                {
-                    Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Reentrant call, cash sync not performed");
-                    return false;
-                }
-
-                Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Sync cash balance");
-
-                var balances = new List<CashAmount>();
-                try
-                {
-                    balances = _brokerage.GetCashBalance();
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err, "Error in GetCashBalance:");
-                }
-
-                if (balances.Count == 0)
-                {
-                    Log.Trace("BrokerageTransactionHandler.PerformCashSync(): No cash balances available, cash sync not performed");
-                    return false;
-                }
-
-                //Adds currency to the cashbook that the user might have deposited
-                foreach (var balance in balances)
-                {
-                    Cash cash;
-                    if (!_algorithm.Portfolio.CashBook.TryGetValue(balance.Currency, out cash))
-                    {
-                        Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): Unexpected cash found {0} {1}", balance.Currency, balance.Amount);
-                        _algorithm.Portfolio.SetCash(balance.Currency, balance.Amount, 0);
-                    }
-                }
-
-                // if we were returned our balances, update everything and flip our flag as having performed sync today
-                foreach (var kvp in _algorithm.Portfolio.CashBook)
-                {
-                    var cash = kvp.Value;
-
-                    //update the cash if the entry if found in the balances
-                    var balanceCash = balances.Find(balance => balance.Currency == cash.Symbol);
-                    if (balanceCash != default(CashAmount))
-                    {
-                        // compare in account currency
-                        var delta = cash.Amount - balanceCash.Amount;
-                        if (Math.Abs(_algorithm.Portfolio.CashBook.ConvertToAccountCurrency(delta, cash.Symbol)) > 5)
-                        {
-                            // log the delta between
-                            Log.LogHandler.Trace("BrokerageTransactionHandler.PerformCashSync(): {0} Delta: {1}", balanceCash.Currency,
-                                delta.ToString("0.00"));
-                        }
-                        _algorithm.Portfolio.CashBook[cash.Symbol].SetAmount(balanceCash.Amount);
-                    }
-                    else
-                    {
-                        //Set the cash amount to zero if cash entry not found in the balances
-                        Log.LogHandler.Trace($"BrokerageTransactionHandler.PerformCashSync(): {cash.Symbol} was not found " +
-                            "in brokerage cash balance, setting the amount to 0");
-                        _algorithm.Portfolio.CashBook[cash.Symbol].SetAmount(0);
-                    }
-                }
-                _syncedLiveBrokerageCashToday = true;
-                _lastSyncTimeTicks = CurrentTimeUtc.Ticks;
-            }
-            finally
-            {
-                Monitor.Exit(_performCashSyncReentranceGuard);
-            }
-
-            // fire off this task to check if we've had recent fills, if we have then we'll invalidate the cash sync
-            // and do it again until we're confident in it
-            Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(_ =>
-            {
-                // we want to make sure this is a good value, so check for any recent fills
-                if (TimeSinceLastFill <= TimeSpan.FromSeconds(20))
-                {
-                    // this will cause us to come back in and reset cash again until we
-                    // haven't processed a fill for +- 10 seconds of the set cash time
-                    _syncedLiveBrokerageCashToday = false;
-                    _failedCashSyncAttempts = 0;
-                    Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Unverified cash sync - resync required.");
-                }
-                else
-                {
-                    Log.Trace("BrokerageTransactionHandler.PerformCashSync(): Verified cash sync.");
-
-                    _algorithm.Portfolio.LogMarginInformation();
-                }
-            });
-
-            return true;
-        }
 
         /// <summary>
         /// Signal a end of thread request to stop monitoring the transactions.
@@ -1193,18 +1075,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Gets the amount of time since the last call to algorithm.Portfolio.ProcessFill(fill)
         /// </summary>
-        protected virtual TimeSpan TimeSinceLastFill
-        {
-            get { return CurrentTimeUtc - new DateTime(Interlocked.Read(ref _lastFillTimeTicks)); }
-        }
-
-        /// <summary>
-        /// Gets the date of the last sync (New York time zone)
-        /// </summary>
-        protected DateTime LastSyncDate
-        {
-            get { return new DateTime(Interlocked.Read(ref _lastSyncTimeTicks)).ConvertFromUtc(TimeZones.NewYork).Date; }
-        }
+        protected virtual TimeSpan TimeSinceLastFill =>
+            CurrentTimeUtc - new DateTime(Interlocked.Read(ref _lastFillTimeTicks));
 
         /// <summary>
         /// Gets current time UTC. This is here to facilitate testing
