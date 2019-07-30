@@ -142,6 +142,7 @@ namespace QuantConnect.Data.Custom.USTreasury
                 TenYear = csvDecimals[9],
                 TwentyYear = csvDecimals[10],
                 ThirtyYear = csvDecimals[11],
+                Symbol = config.Symbol
             };
         }
 
@@ -167,7 +168,8 @@ namespace QuantConnect.Data.Custom.USTreasury
                 SevenYear = SevenYear,
                 TenYear = TenYear,
                 TwentyYear = TwentyYear,
-                ThirtyYear = ThirtyYear
+                ThirtyYear = ThirtyYear,
+                Symbol = Symbol
             };
         }
     }

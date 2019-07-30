@@ -37,7 +37,10 @@ class USTreasuryYieldCurveDataAlgorithm(QCAlgorithm):
         # Define the symbol and "type" of our generic data:
         self.symbol = self.AddData(USTreasuryYieldCurveRate, "USTYC").Symbol
 
-
     def OnData(self, slice):
-        for curve in slice.Values:
-            self.Log(f"{curve.Time} - 1M: {curve.OneMonth}, 2M: {curve.TwoMonth}, 3M: {curve.ThreeMonth}, 6M: {curve.SixMonth}, 1Y: {curve.OneYear}, 2Y: {curve.TwoYear}, 3Y: {curve.ThreeYear}, 5Y: {curve.FiveYear}, 10Y: {curve.TenYear}, 20Y: {curve.TwentyYear}, 30Y: {curve.ThirtyYear}")
+        if not slice.ContainsKey(self.symbol):
+            return
+
+        curve = slice[self.symbol]
+        self.Log(f"{self.Time} - 1M: {curve.OneMonth}, 2M: {curve.TwoMonth}, 3M: {curve.ThreeMonth}, 6M: {curve.SixMonth}, 1Y: {curve.OneYear}, 2Y: {curve.TwoYear}, 3Y: {curve.ThreeYear}, 5Y: {curve.FiveYear}, 10Y: {curve.TenYear}, 20Y: {curve.TwentyYear}, 30Y: {curve.ThirtyYear}")
+
