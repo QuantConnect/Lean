@@ -244,6 +244,7 @@ class LeanReportCreator(object):
                 .page {
                     width: 1200px;
                     height: 1686px;
+                    page-break-inside: avoid;
                 }
 
                 .page .content {
