@@ -58,7 +58,7 @@ namespace QuantConnect.Brokerages.GDAX
             var body = request.Parameters.SingleOrDefault(b => b.Type == ParameterType.RequestBody);
 
             string url;
-            if (request.Parameters.Count > 0)
+            if (request.Method == Method.GET && request.Parameters.Count > 0)
             {
                 var parameters = request.Parameters.Count > 0
                     ? string.Join("&", request.Parameters.Select(x => $"{x.Name}={x.Value}"))

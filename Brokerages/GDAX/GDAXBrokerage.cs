@@ -79,7 +79,7 @@ namespace QuantConnect.Brokerages.GDAX
                 payload.stop_price = (order as StopLimitOrder).StopPrice;
             }
 
-            req.AddJsonBody(payload);
+            req.AddJsonBody(JsonConvert.SerializeObject(payload));
 
             GetAuthenticationToken(req);
             var response = ExecuteRestRequest(req, GdaxEndpointType.Private);
