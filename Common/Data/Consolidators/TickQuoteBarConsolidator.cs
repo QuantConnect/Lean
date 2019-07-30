@@ -24,7 +24,7 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     public class TickQuoteBarConsolidator : PeriodCountConsolidatorBase<Tick, QuoteBar>
     {
-        private readonly Func<Tick, bool> _condition;
+        private readonly Func<Tick, bool> _condition = t => true;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TickQuoteBarConsolidator"/> class.

@@ -24,7 +24,7 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     public class TickConsolidator : TradeBarConsolidatorBase<Tick>
     {
-        private readonly Func<Tick, bool> _condition;
+        private readonly Func<Tick, bool> _condition = t => true;
 
         /// <summary>
         /// Creates a consolidator to produce a new 'TradeBar' representing the period
