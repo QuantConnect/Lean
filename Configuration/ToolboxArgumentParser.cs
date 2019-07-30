@@ -40,7 +40,8 @@ namespace QuantConnect.Configuration
                                                      + "/SECDataConverter or SECCV/YahooDownloader or YDL/AlgoSeekFuturesConverter or ASFC/AlgoSeekOptionsConverter or ASOC"
                                                      + "/IVolatilityEquityConverter or IVEC/KaikoDataConverter or KDC/NseMarketDataConverter or NMDC"
                                                      + "/QuantQuoteConverter or QQC/CoarseUniverseGenerator or CUG/PSDL or PsychSignalDownloader\n"
-                                                     + "PsychSignalConverter or PSDC/RandomDataGenerator or RDG"
+                                                     + "PsychSignalConverter or PSDC/RandomDataGenerator or RDG/USTYCDL or USTreasuryYieldCurveDownloader"
+                                                     + "/USTYCCV or USTreasuryYieldCurveConverter"
                                                      + "Example 1: --app=DDL\n"
                                                      + "Example 2: --app=NseMarketDataConverter\n"
                                                      + "Example 3: --app=RDG"),
@@ -58,9 +59,9 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("date", CommandOptionType.SingleValue, "[REQUIRED for AlgoSeekFuturesConverter, AlgoSeekOptionsConverter, KaikoDataConverter, SECDataConverter, PsychSignalDataConverter] "
                                                                              + "Date for the option bz files: --date=yyyyMMdd"),
                 new CommandLineOption("source-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter, KaikoDataConverter,"
-                                                                                   + " CoinApiDataConverter, NseMarketDataConverter, QuantQuoteConverter, SECDataConverter, PsychSignalDataConverter]"),
+                                                                                   + " CoinApiDataConverter, NseMarketDataConverter, QuantQuoteConverter, SECDataConverter, PsychSignalDataConverter, USTreasuryYieldCurveConverter]"),
                 new CommandLineOption("destination-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter, "
-                                                                                        + "NseMarketDataConverter, QuantQuoteConverter, SECDataDownloader, SECDataConverter, PsychSignalDataDownloader, PsychSignalDataConverter]"),
+                                                                                        + "NseMarketDataConverter, QuantQuoteConverter, SECDataDownloader, SECDataConverter, PsychSignalDataDownloader, PsychSignalDataConverter, USTreasuryYieldCurveDownloader, USTreasuryYieldCurveConverter]"),
                 new CommandLineOption("source-meta-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter]"),
                 new CommandLineOption("start", CommandOptionType.SingleValue, "[REQUIRED for RandomDataGenerator. Format yyyyMMdd Example: --start=20010101]"),
                 new CommandLineOption("end", CommandOptionType.SingleValue, "[REQUIRED for RandomDataGenerator. Format yyyyMMdd Example: --end=20020101]"),
