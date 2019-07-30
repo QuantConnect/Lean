@@ -122,22 +122,25 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void RegisterPythonCustomIndicatorProperly()
         {
+            const string code = @"
+class GoodCustomIndicator :
+    def __init__(self):
+        self.IsReady = True
+        self.Value = 0
+    def Update(self, input):
+        self.Value = input.Value
+        return True
+class BadCustomIndicator:
+    def __init__(self):
+        self.IsReady = True
+        self.Value = 0
+    def Updat(self, input):
+        self.Value = input.Value
+        return True";
+
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "class GoodCustomIndicator:\n" +
-                    "    def __init__(self):\n" +
-                    "        self.IsReady = True\n" +
-                    "        self.Value = 0\n" +
-                    "        pass\n" +
-                    "    def Update(self, input):\n" +
-                    "        return input\n" +
-                    "class BadCustomIndicator:\n" +
-                    "    def __init__(self):\n" +
-                    "        self.IsReady = True\n" +
-                    "        self.Value = 0\n" +
-                    "    def Updat(self, input):\n" +
-                    "        return input");
+                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(), code);
 
                 var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
                 Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, goodIndicator, Resolution.Minute));
@@ -153,7 +156,8 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void RegistersIndicatorProperlyPythonScript()
         {
-            var code = @"from clr import AddReference
+            const string code = @"
+from clr import AddReference
 AddReference('System')
 AddReference('QuantConnect.Algorithm')
 AddReference('QuantConnect.Indicators')

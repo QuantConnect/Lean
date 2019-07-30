@@ -15,17 +15,17 @@
 
 using Python.Runtime;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using System;
 
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Provides a wrapper for <see cref="IndicatorBase{IBaseDataBar}"/> implementations written in python
+    /// Provides a wrapper for <see cref="IndicatorBase{IBaseData}"/> implementations written in python
     /// </summary>
-    public class PythonIndicator : IndicatorBase<IBaseDataBar>
+    public class PythonIndicator : IndicatorBase<IBaseData>
     {
-        private readonly dynamic _indicator;
+        private bool _isReady;
+        private dynamic _indicator;
 
         /// <summary>
         /// Get the indicator Name. If not defined, use the class name
@@ -47,19 +47,55 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the PythonIndicator class using the specified name.
         /// </summary>
+        /// <remarks>This overload allows inheritance for python classes with no arguments</remarks>
+        public PythonIndicator()
+            : base("")
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the PythonIndicator class using the specified name.
+        /// </summary>
+        /// <remarks>This overload allows inheritance for python classes with multiple arguments</remarks>
+        public PythonIndicator(params PyObject[] args)
+            : base (GetIndicatorName(args[0]))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the PythonIndicator class using the specified name.
+        /// </summary>
         /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
         public PythonIndicator(PyObject indicator)
             : base(GetIndicatorName(indicator))
         {
+            SetIndicator(indicator);
+        }
+
+        /// <summary>
+        /// Sets the python implementation of the indicator
+        /// </summary>
+        /// <param name="indicator">The python implementation of <see cref="IndicatorBase{IBaseDataBar}"/></param>
+        public void SetIndicator(PyObject indicator)
+        {
             using (Py.GIL())
             {
-                foreach (var attributeName in new[] {"Update", "IsReady", "Value"})
+                foreach (var attributeName in new[] {"IsReady", "Update", "Value"})
                 {
                     if (!indicator.HasAttr(attributeName))
                     {
-                        throw new NotImplementedException(
-                            $"Indicator.{attributeName} must be implemented. Please implement this missing method on {indicator.GetPythonType()}"
-                        );
+                        var name = indicator.GetAttr("__class__").GetAttr("__name__");
+
+                        var message = $"Indicator.{attributeName} must be implemented. " +
+                                      $"Please implement this missing method in {name}";
+
+                        if (attributeName == "IsReady")
+                        {
+                            message += " or use PythonIndicator as base:" +
+                                       $"{Environment.NewLine}class {name}(PythonIndicator):";
+                        }
+
+                        throw new NotImplementedException(message);
                     }
                 }
             }
@@ -68,47 +104,20 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
-        /// Updates the state of this indicator with the given value and returns true
-        /// if this indicator is ready, false otherwise
-        /// </summary>
-        /// <param name="input">The value to use to update this indicator</param>
-        /// <returns>True if this indicator is ready, false otherwise</returns>
-        public new bool Update(IBaseData input)
-        {
-            using (Py.GIL())
-            {
-                _indicator.Update(input);
-            }
-
-            return IsReady;
-        }
-
-        /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        /// <remarks>If IsReady is not defined in the Python indicator, always returns false</remarks>
-        public override bool IsReady
-        {
-            get
-            {
-                using (Py.GIL())
-                {
-                    return _indicator.IsReady;
-                }
-            }
-        }
+        public override bool IsReady => _isReady;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IBaseDataBar input)
+        protected override decimal ComputeNextValue(IBaseData input)
         {
-            Update(input);
-
             using (Py.GIL())
             {
+                _isReady = _indicator.Update(input);
                 return _indicator.Value;
             }
         }
