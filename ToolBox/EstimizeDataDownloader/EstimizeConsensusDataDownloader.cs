@@ -28,6 +28,7 @@ using QuantConnect.Data.Custom.Estimize;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 using Type = QuantConnect.Data.Custom.Estimize.Type;
+using System.Threading;
 
 namespace QuantConnect.ToolBox.EstimizeDataDownloader
 {
@@ -96,8 +97,19 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                         }
 
                         Log.Trace($"EstimizeConsensusDataDownloader.Run(): Earnings release: {release.ReleaseDate:yyyy-MM-dd} - Parsing Estimate {release.Id} for: {ticker}");
-                        // Makes sure we don't overrun Estimize rate limits accidentally
-                        IndexGate.WaitToProceed();
+
+                        try
+                        {
+                            // Makes sure we don't overrun Estimize rate limits accidentally
+                            IndexGate.WaitToProceed();
+                        }
+                        // This is super super rare, but it failures in RateGate (RG) can still happen nonetheless. Let's not
+                        // rely on RG operating successfully all the time so that if RG fails, our download process doesn't fail
+                        catch (ArgumentOutOfRangeException e)
+                        {
+                            Log.Error(e, $"EstimizeConsensusDataDownloader.Run(): RateGate failed. Sleeping for 110 milliseconds with Thread.Sleep()");
+                            Thread.Sleep(110);
+                        }
 
                         tasks.Add(
                             HttpRequester($"/releases/{release.Id}/consensus")

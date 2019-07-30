@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.EstimizeDataDownloader
@@ -69,8 +70,19 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
                 foreach (var company in companies)
                 {
-                    // Makes sure we don't overrun Estimize rate limits accidentally
-                    IndexGate.WaitToProceed();
+
+                    try
+                    {
+                        // Makes sure we don't overrun Estimize rate limits accidentally
+                        IndexGate.WaitToProceed();
+                    }
+                    // This is super super rare, but it failures in RateGate (RG) can still happen nonetheless. Let's not
+                    // rely on RG operating successfully all the time so that if RG fails, our download process doesn't fail
+                    catch (ArgumentOutOfRangeException e)
+                    {
+                        Log.Error(e, $"EstimizeReleaseDataDownloader.Run(): RateGate failed. Sleeping for 110 milliseconds with Thread.Sleep()");
+                        Thread.Sleep(110);
+                    }
 
                     var ticker = company.Ticker;
                     if (ticker.IndexOf("defunct", StringComparison.OrdinalIgnoreCase) > 0)
