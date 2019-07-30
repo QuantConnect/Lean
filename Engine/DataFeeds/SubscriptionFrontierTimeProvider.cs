@@ -57,6 +57,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             long earlyBirdTicks = MaxDateTimeTicks;
             foreach (var subscription in _subscriptionManager.DataFeedSubscriptions)
             {
+                if (subscription.Current == null
+                    && !subscription.IsUniverseSelectionSubscription
+                    && subscription.UtcStartTime == _utcNow)
+                {
+                    // this is a data subscription we just added
+                    // lets move it next to find the initial emit time
+                    subscription.MoveNext();
+                }
+
                 if (subscription.Current != null)
                 {
                     if (earlyBirdTicks == MaxDateTimeTicks)

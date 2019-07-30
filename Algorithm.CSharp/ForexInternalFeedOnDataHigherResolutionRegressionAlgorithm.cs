@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var symbol = kvp.Key;
                 _dataPointsPerSymbol[symbol]++;
 
-                Log($"{Time} {symbol.Value} {kvp.Value.Price}");
+                Log($"{Time} {symbol.Value} {kvp.Value.Price} EndTime {kvp.Value.EndTime}");
             }
         }
 
@@ -94,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedDataPointsPerSymbol = new Dictionary<string, int>
             {
                 { "EURGBP", 3 },
-                { "EURUSD", 25 }
+                { "EURUSD", 47 }
             };
 
             foreach (var kvp in _dataPointsPerSymbol)
