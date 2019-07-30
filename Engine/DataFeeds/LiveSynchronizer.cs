@@ -20,6 +20,7 @@ using System.Threading;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -69,14 +70,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var shouldSendExtraEmptyPacket = false;
             var nextEmit = DateTime.MinValue;
 
+            var enumerator = SubscriptionSynchronizer
+                .Sync(SubscriptionManager.DataFeedSubscriptions, cancellationToken)
+                .GetEnumerator();
+
+            var previousWasTimePulse = false;
             while (!cancellationToken.IsCancellationRequested)
             {
-                _newLiveDataEmitted.WaitOne(NewLiveDataTimeout);
+                if (!previousWasTimePulse)
+                {
+                    _newLiveDataEmitted.WaitOne(NewLiveDataTimeout);
+                }
 
                 TimeSlice timeSlice;
                 try
                 {
-                    timeSlice = SubscriptionSynchronizer.Sync(SubscriptionManager.DataFeedSubscriptions);
+                    if (!enumerator.MoveNext())
+                    {
+                        // the enumerator ended
+                        break;
+                    }
+                    timeSlice = enumerator.Current;
                 }
                 catch (Exception err)
                 {
@@ -89,14 +103,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // check for cancellation
-                if (cancellationToken.IsCancellationRequested) break;
+                if (timeSlice == null || cancellationToken.IsCancellationRequested) break;
 
                 var frontierUtc = FrontierTimeProvider.GetUtcNow();
                 // emit on data or if we've elapsed a full second since last emit or there are security changes
                 if (timeSlice.SecurityChanges != SecurityChanges.None
+                    || timeSlice.IsTimePulse
                     || timeSlice.Data.Count != 0
                     || frontierUtc >= nextEmit)
                 {
+                    previousWasTimePulse = timeSlice.IsTimePulse;
                     yield return timeSlice;
 
                     // force emitting every second since the data feed is
@@ -122,6 +138,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            enumerator.DisposeSafely();
             Log.Trace("LiveSynchronizer.GetEnumerator(): Exited thread.");
         }
 

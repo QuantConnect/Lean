@@ -73,6 +73,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public Dictionary<Universe, BaseDataCollection> UniverseData { get; }
 
         /// <summary>
+        /// True indicates this time slice is a time pulse for the algorithm containing no data
+        /// </summary>
+        public bool IsTimePulse { get; }
+
+        /// <summary>
         /// Initializes a new <see cref="TimeSlice"/> containing the specified data
         /// </summary>
         public TimeSlice(DateTime time,
@@ -83,7 +88,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             List<UpdateData<SubscriptionDataConfig>> consolidatorUpdateData,
             List<UpdateData<ISecurityPrice>> customData,
             SecurityChanges securityChanges,
-            Dictionary<Universe, BaseDataCollection> universeData)
+            Dictionary<Universe, BaseDataCollection> universeData,
+            bool isTimePulse = false)
         {
             Time = time;
             Data = data;
@@ -94,6 +100,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             ConsolidatorUpdateData = consolidatorUpdateData;
             SecurityChanges = securityChanges;
             UniverseData = universeData;
+            IsTimePulse = isTimePulse;
         }
     }
 }

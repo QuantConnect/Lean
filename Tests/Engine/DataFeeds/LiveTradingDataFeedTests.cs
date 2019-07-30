@@ -1136,6 +1136,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                      $". TimeSlice.Time (EDT): {timeSlice.Time.ConvertFromUtc(TimeZones.NewYork):o}");
                 }
 
+                if (timeSlice.IsTimePulse)
+                {
+                    continue;
+                }
                 if (!startedReceivingata
                     && (timeSlice.Slice.Count != 0
                         || sendUniverseData && timeSlice.UniverseData.Count > 0))

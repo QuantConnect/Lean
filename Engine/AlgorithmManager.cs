@@ -286,6 +286,12 @@ namespace QuantConnect.Lean.Engine
                 //Set the algorithm and real time handler's time
                 algorithm.SetDateTime(time);
 
+                // the time pulse are just to advance algorithm time, lets shortcut the loop here
+                if (timeSlice.IsTimePulse)
+                {
+                    continue;
+                }
+
                 // Update the current slice before firing scheduled events or any other task
                 algorithm.SetCurrentSlice(timeSlice.Slice);
 

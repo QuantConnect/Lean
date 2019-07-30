@@ -55,6 +55,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Creates a new empty <see cref="TimeSlice"/> to be used as a time pulse
+        /// </summary>
+        /// <remarks>The objective of this method is to standardize the time pulse creation</remarks>
+        /// <param name="utcDateTime">The UTC frontier date time</param>
+        /// <returns>A new <see cref="TimeSlice"/> time pulse</returns>
+        public TimeSlice CreateTimePulse(DateTime utcDateTime)
+        {
+            // setting all data collections to null, this time slice shouldn't be used
+            // for its data, we want to see fireworks it someone tries
+            return new TimeSlice(utcDateTime,
+                0,
+                null,
+                null,
+                null,
+                null,
+                null,
+                SecurityChanges.None,
+                null,
+                isTimePulse:true);
+        }
+
+        /// <summary>
         /// Creates a new <see cref="TimeSlice"/> for the specified time using the specified data
         /// </summary>
         /// <param name="utcDateTime">The UTC frontier date time</param>
