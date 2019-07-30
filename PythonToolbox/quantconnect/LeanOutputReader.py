@@ -740,24 +740,29 @@ class LeanOutputReader(object):
                                      "Sharpe Ratio": 0,
                                      "Information Ratio": 0,
                                      "Trades Per Day": 0}}
-
         if self.is_drawable and "TotalPerformance" in self.data:
-            SecurityTypeName = ['Equity', 'Option', 'Commodity', 'Forex', 'Future', 'Cfd', 'Crypto']
-            output["Key Characteristics"] = {
-                "Significant Period": (self.df.index[-1] - self.df.index[0]).days/365 > 5,
-                "Significant Trading": len(self.orders) >= 100,
-                "Diversified": len(set(self.df_values["Symbol"])) > 7,
-                "Risk Control": self.data["TotalPerformance"]["PortfolioStatistics"]["Drawdown"] < 0.1,
-                "Markets": [SecurityTypeName[x-1] for x in list(set(self.df_values["Type"])) if x > 0]
-                }
+            try:
+                SecurityTypeName = ['Equity', 'Option', 'Commodity', 'Forex', 'Future', 'Cfd', 'Crypto']
+                output["Key Characteristics"] = {
+                    "Significant Period": (self.df.index[-1] - self.df.index[0]).days/365 > 5,
+                    "Significant Trading": len(self.orders) >= 100,
+                    "Diversified": len(set(self.df_values["Symbol"])) > 7,
+                    "Risk Control": self.data["TotalPerformance"]["PortfolioStatistics"]["Drawdown"] < 0.1,
+                    "Markets": [SecurityTypeName[x-1] for x in list(set(self.df_values["Type"])) if x > 0]
+                    }
+            except Exception as err:
+                print(f'Error in Total Performance evaluation: {err}')
+            try:
+                stats = self.data.pop("TotalPerformance").pop("PortfolioStatistics")
+                output["Key Statistics"] = {
+                    "CAGR": str(round(100 * stats.pop('CompoundingAnnualReturn', 0), 2)) + '%',
+                    "Drawdown": str(round(100 * stats.pop('Drawdown', 0), 2)) + '%',
+                    "Sharpe Ratio": round(stats.pop('SharpeRatio', 0), 3),
+                    "Information Ratio": round(stats.pop('InformationRatio', 0), 3),
+                    "Trades Per Day": round(len(self.orders) / max((self.df.index[-1] - self.df.index[0]).days, 1), 6)
+                     }
+            except Exception as err:
+                print(f'Error in Portfolio Statistics evaluation: {err}')
 
-            stats = self.data.pop("TotalPerformance").pop("PortfolioStatistics")
-            output["Key Statistics"] = {
-                "CAGR": str(round(100 * stats.pop('CompoundingAnnualReturn', 0), 2)) + '%',
-                "Drawdown": str(round(100 * stats.pop('Drawdown', 0), 2)) + '%',
-                "Sharpe Ratio": round(stats.pop('SharpeRatio', 0), 3),
-                "Information Ratio": round(stats.pop('InformationRatio', 0), 3),
-                "Trades Per Day": round(len(self.orders) / max((self.df.index[-1] - self.df.index[0]).days, 1), 6)
-                 }
 
         return output
