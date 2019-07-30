@@ -62,7 +62,7 @@ namespace QuantConnect.ToolBox.USTreasuryYieldCurve
                 // I don't think this should happen, but let's make sure before we work with the type
                 if (xmlData == null)
                 {
-                    throw new NullReferenceException("XML data is null. Perhaps we're deserializing the wrong XML data?");
+                    throw new InvalidOperationException("XML data is null. Perhaps we're deserializing the wrong XML data?");
                 }
 
                 var lines = 0;

@@ -23,7 +23,7 @@ namespace QuantConnect.Data.Custom.USTreasury
     /// <summary>
     /// U.S. Treasury yield curve data
     /// </summary>
-    public class YieldCurve : BaseData
+    public class USTreasuryYieldCurveRate : BaseData
     {
         /// <summary>
         /// One month yield curve
@@ -121,7 +121,7 @@ namespace QuantConnect.Data.Custom.USTreasury
                 return null;
             }
 
-            return new YieldCurve
+            return new USTreasuryYieldCurveRate
             {
                 // "These market yields are calculated from composites of indicative, bid-side
                 // market quotations (not actual transactions) obtained by the
@@ -150,10 +150,10 @@ namespace QuantConnect.Data.Custom.USTreasury
         /// so that we don't have any null values for our properties
         /// when the user attempts to use it in backtesting/live trading
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Cloned instance</returns>
         public override BaseData Clone()
         {
-            return new YieldCurve
+            return new USTreasuryYieldCurveRate
             {
                 Time = Time,
                 OneMonth = OneMonth,

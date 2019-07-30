@@ -38,12 +38,12 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             // Since yield data isn't associated with any ticker, we must put a placeholder ticker
-            AddData<YieldCurve>("PLACEHOLDER");
+            AddData<USTreasuryYieldCurveRate>("USTYC");
         }
 
         public override void OnData(Slice slice)
         {
-            var data = slice.Get<YieldCurve>();
+            var data = slice.Get<USTreasuryYieldCurveRate>();
 
             foreach (var curve in data.Values)
             {

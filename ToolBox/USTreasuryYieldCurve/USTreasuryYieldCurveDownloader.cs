@@ -43,8 +43,6 @@ namespace QuantConnect.ToolBox.USTreasuryYieldCurve
         /// <summary>
         /// Downloads all available yield curve data
         /// </summary>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
         public void Download()
         {
             Log.Trace($"USTreasuryYieldCurveRateDownloader.Download(): Downloading yield curve data");
