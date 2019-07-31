@@ -13,11 +13,19 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
+using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Custom.Estimize;
+using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.EstimizeDataDownloader
@@ -25,6 +33,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
     public class EstimizeEstimateDataDownloader : EstimizeDataDownloader
     {
         private readonly string _destinationFolder;
+        private readonly MapFileResolver _mapFileResolver;
 
         /// <summary>
         /// Creates a new instance of <see cref="EstimizeEstimateDataDownloader"/>
@@ -33,6 +42,9 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
         public EstimizeEstimateDataDownloader(string destinationFolder)
         {
             _destinationFolder = Path.Combine(destinationFolder, "estimate");
+            _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
+                .Get(Market.USA);
+
             Directory.CreateDirectory(_destinationFolder);
         }
 
@@ -46,8 +58,13 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
             try
             {
-                var companies = GetCompanies().Result;
-                Log.Trace($"EstimizeEstimateDataDownloader.Run(): Start processing {companies.Count} companies");
+                var companies = GetCompanies().Result.DistinctBy(x => x.Ticker).ToList();
+                var count = companies.Count;
+                var currentPercent = 0.05;
+                var percent = 0.05;
+                var i = 0;
+
+                Log.Trace($"EstimizeEstimateDataDownloader.Run(): Start processing {count} companies");
 
                 var tasks = new List<Task>();
 
@@ -63,21 +80,95 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                         ticker = ticker.Substring(0, length).Trim();
                     }
 
-                    // Makes sure we don't overrun Estimize rate limits accidentally
-                    IndexGate.WaitToProceed();
+                    Log.Trace($"EstimizeEstimateDataDownloader.Run(): Processing {ticker}");
+
+                    try
+                    {
+                        // Makes sure we don't overrun Estimize rate limits accidentally
+                        IndexGate.WaitToProceed();
+                    }
+                    // This is super super rare, but it failures in RateGate (RG) can still happen nonetheless. Let's not
+                    // rely on RG operating successfully all the time so that if RG fails, our download process doesn't fail
+                    catch (ArgumentOutOfRangeException e)
+                    {
+                        Log.Error(e, $"EstimizeEstimateDataDownloader.Run(): RateGate failed. Sleeping for 110 milliseconds with Thread.Sleep()");
+                        Thread.Sleep(110);
+                    }
 
                     tasks.Add(
                         HttpRequester($"/companies/{ticker}/estimates")
                             .ContinueWith(
                                 y =>
                                 {
+                                    i++;
+
                                     if (y.IsFaulted)
                                     {
                                         Log.Error($"EstimizeEstimateDataDownloader.Run(): Failed to get data for {company}");
                                         return;
                                     }
 
-                                    SaveContentToZipFile(ticker, y.Result);
+                                    var result = y.Result;
+                                    if (string.IsNullOrEmpty(result))
+                                    {
+                                        // We've already logged inside HttpRequester
+                                        return;
+                                    }
+
+                                    var estimates = JsonConvert.DeserializeObject<List<EstimizeEstimate>>(result)
+                                        .GroupBy(estimate =>
+                                        {
+                                            var oldTicker = ticker;
+                                            var newTicker = ticker;
+                                            var createdAt = estimate.CreatedAt;
+
+                                            try
+                                            {
+                                                var mapFile = _mapFileResolver.ResolveMapFile(ticker, createdAt);
+
+                                                // Ensure we're writing to the correct historical ticker
+                                                if (!mapFile.Any())
+                                                {
+                                                    Log.Trace($"EstimizeEstimateDataDownloader.Run(): Failed to find map file for: {newTicker} - on: {createdAt}");
+                                                    return string.Empty;
+                                                }
+
+                                                newTicker = mapFile.GetMappedSymbol(createdAt);
+                                                if (string.IsNullOrWhiteSpace(newTicker))
+                                                {
+                                                    Log.Trace($"EstimizeEstimateDataDownloader.Run(): New ticker is null. Old ticker: {oldTicker} - on: {createdAt}");
+                                                    return string.Empty;
+                                                }
+
+                                                if (oldTicker != newTicker)
+                                                {
+                                                    Log.Trace($"EstimizeEstimateDataDonwloader.Run(): Remapping {oldTicker} to {newTicker}");
+                                                }
+                                            }
+                                            // We get a failure inside the map file constructor rarely. It tries
+                                            // to access the last element of an empty list. Maybe this is a bug?
+                                            catch (InvalidOperationException e)
+                                            {
+                                                Log.Error(e, $"EstimizeEstimateDataDownloader.Run(): Failed to load map file for: {oldTicker} - on {createdAt}");
+                                                return string.Empty;
+                                            }
+
+                                            return newTicker;
+                                        })
+                                        .Where(kvp => !string.IsNullOrEmpty(kvp.Key));
+
+                                    foreach (var kvp in estimates)
+                                    {
+                                        var csvContents = kvp.Select(x => $"{x.CreatedAt.ToUniversalTime():yyyyMMdd HH:mm:ss},{x.Id},{x.AnalystId},{x.UserName},{x.FiscalYear},{x.FiscalQuarter},{x.Eps},{x.Revenue},{x.Flagged.ToString().ToLower()}");
+                                        SaveContentToFile(_destinationFolder, kvp.Key, csvContents);
+                                    }
+
+                                    var percentageDone = i / count;
+                                    if (percentageDone >= currentPercent)
+                                    {
+                                        Log.Trace($"EstimizeEstimateDataDownloader.Run(): {percentageDone:P2} complete");
+                                        currentPercent += percent;
+                                    }
                                 }
                             )
                     );
@@ -93,19 +184,6 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
             Log.Trace($"EstimizeEstimateDataDownloader.Run(): Finished in {stopwatch.Elapsed}");
             return true;
-        }
-
-        private void SaveContentToZipFile(string ticker, string contents)
-        {
-            ticker = ticker.ToLower();
-            var zipEntryName = $"{ticker}.json";
-
-            var path = Path.Combine(_destinationFolder, zipEntryName);
-            File.WriteAllText(path, contents);
-
-            // Write out this data string to a zip file
-            var zipPath = Path.Combine(_destinationFolder, $"{ticker}.zip");
-            Compression.Zip(path, zipPath, zipEntryName, true);
         }
     }
 }
