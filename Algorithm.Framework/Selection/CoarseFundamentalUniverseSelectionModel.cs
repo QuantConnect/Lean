@@ -56,10 +56,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
             )
             : base(false, universeSettings, securityInitializer)
         {
-            Func<IEnumerable<CoarseFundamental>, Symbol[]> func;
+            Func<IEnumerable<CoarseFundamental>, object> func;
             if (coarseSelector.TryConvertToDelegate(out func))
             {
-                _coarseSelector = func;
+                _coarseSelector = func.ConvertToUniverseSelectionSymbolDelegate();
             }
         }
 

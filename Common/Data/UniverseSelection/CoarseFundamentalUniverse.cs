@@ -54,14 +54,8 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="securityInitializer">Initializes securities when they're added to the universe</param>
         /// <param name="selector">Returns the symbols that should be included in the universe</param>
         public CoarseFundamentalUniverse(UniverseSettings universeSettings, ISecurityInitializer securityInitializer, PyObject selector)
-            : base(CreateConfiguration(CoarseFundamental.CreateUniverseSymbol(QuantConnect.Market.USA)), securityInitializer)
+            : this(CoarseFundamental.CreateUniverseSymbol(QuantConnect.Market.USA), universeSettings,  securityInitializer, selector)
         {
-            _universeSettings = universeSettings;
-            Func<IEnumerable<CoarseFundamental>, Symbol[]> func;
-            if (selector.TryConvertToDelegate(out func))
-            {
-                _selector = func;
-            }
         }
 
         /// <summary>
@@ -89,10 +83,10 @@ namespace QuantConnect.Data.UniverseSelection
             : base(CreateConfiguration(symbol), securityInitializer)
         {
             _universeSettings = universeSettings;
-            Func<IEnumerable<CoarseFundamental>, Symbol[]> func;
+            Func<IEnumerable<CoarseFundamental>, object> func;
             if (selector.TryConvertToDelegate(out func))
             {
-                _selector = func;
+                _selector = func.ConvertToUniverseSelectionSymbolDelegate();
             }
         }
 
