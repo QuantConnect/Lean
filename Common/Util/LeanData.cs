@@ -79,11 +79,9 @@ namespace QuantConnect.Util
                             var quoteBar = data as QuoteBar;
                             if (quoteBar != null)
                             {
-                                var bidClose = quoteBar.Bid != null ? Scale(quoteBar.Bid.Close) : 0;
-                                var askClose = quoteBar.Ask != null ? Scale(quoteBar.Ask.Close) : 0;
                                 return ToCsv(milliseconds,
-                                    bidClose, quoteBar.LastBidSize,
-                                    askClose, quoteBar.LastAskSize);
+                                    ToScaledCsv(quoteBar.Bid), quoteBar.LastBidSize,
+                                    ToScaledCsv(quoteBar.Ask), quoteBar.LastAskSize);
                             }
                             break;
 
@@ -98,8 +96,8 @@ namespace QuantConnect.Util
                             if (bigQuoteBar != null)
                             {
                                 return ToCsv(longTime,
-                                    Scale(bigQuoteBar.Bid.Close), bigQuoteBar.LastBidSize,
-                                    Scale(bigQuoteBar.Ask.Close), bigQuoteBar.LastAskSize);
+                                    ToScaledCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
+                                    ToScaledCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
                             }
                             break;
                     }
