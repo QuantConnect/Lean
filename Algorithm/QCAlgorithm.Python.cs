@@ -52,56 +52,57 @@ namespace QuantConnect.Algorithm
         /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time)
         /// </summary>
         /// <param name="type">Data source type</param>
-        /// <param name="symbol">Key/Symbol for data</param>
+        /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="resolution">Resolution of the data</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(PyObject type, string symbol, Resolution resolution = Resolution.Minute)
+        public Security AddData(PyObject type, string ticker, Resolution resolution = Resolution.Minute)
         {
-            return AddData(type, symbol, resolution, TimeZones.NewYork, false, 1m);
+            return AddData(type, ticker, resolution, TimeZones.NewYork, false, 1m);
         }
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
         /// </summary>
         /// <param name="type">Data source type</param>
-        /// <param name="symbol">Key/Symbol for data</param>
+        /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(PyObject type, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(PyObject type, string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            return AddData(CreateType(type), symbol, resolution, timeZone, fillDataForward, leverage);
+            return AddData(CreateType(type), ticker, resolution, timeZone, fillDataForward, leverage);
         }
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
         /// </summary>
         /// <param name="dataType">Data source type</param>
-        /// <param name="symbol">Key/Symbol for data</param>
+        /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(Type dataType, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(Type dataType, string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, symbol, SecurityType.Base, timeZone);
+            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, ticker, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
-            var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA, dataType.GetBaseDataInstance().RequiresMapping()), symbol);
+            var symbol = new Symbol(SecurityIdentifier.GenerateBase(ticker, Market.USA), ticker);
 
             //Add this new generic data as a tradeable security:
-            var config = SubscriptionManager.SubscriptionDataConfigService.Add(dataType,
-                symbolObject,
+            var config = SubscriptionManager.SubscriptionDataConfigService.Add(
+                dataType,
+                symbol,
                 resolution,
                 fillDataForward,
                 isCustomData: true,
                 extendedMarketHours: true);
-            var security = Securities.CreateSecurity(symbolObject, config, leverage);
+            var security = Securities.CreateSecurity(symbol, config, leverage);
 
-            AddToUserDefinedUniverse(security, new List<SubscriptionDataConfig>{ config });
+            AddToUserDefinedUniverse(security, new List<SubscriptionDataConfig> {config});
             return security;
         }
 

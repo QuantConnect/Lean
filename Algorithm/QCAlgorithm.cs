@@ -1806,23 +1806,7 @@ namespace QuantConnect.Algorithm
         public Security AddData<T>(string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
             where T : IBaseData, new()
         {
-            //Add this custom symbol to our market hours database
-            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, ticker, SecurityType.Base, timeZone);
-
-            //Add this to the data-feed subscriptions
-            var symbol = new Symbol(SecurityIdentifier.GenerateBase(ticker, Market.USA, typeof(T).GetBaseDataInstance().RequiresMapping()), ticker);
-
-            //Add this new generic data as a tradeable security:
-            var config = SubscriptionManager.SubscriptionDataConfigService.Add(typeof(T),
-                symbol,
-                resolution,
-                fillDataForward,
-                extendedMarketHours: true,
-                isCustomData: true);
-            var security = Securities.CreateSecurity(symbol, config, leverage);
-
-            AddToUserDefinedUniverse(security, new List<SubscriptionDataConfig>{ config });
-            return security;
+            return AddData(typeof(T), ticker, resolution, timeZone, fillDataForward, leverage);
         }
 
         /// <summary>
