@@ -1,19 +1,4 @@
-﻿/*
- * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
- * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
@@ -78,14 +63,12 @@ namespace QuantConnect.ToolBox
         }
 
         /// <summary>
-        /// Creates the correct <see cref="TickAggregator"/> instances for the specified tick types, resolution and condition.
+        /// Creates the correct <see cref="TickAggregator"/> instances for the specified tick types and resolution.
+        /// <see cref="QuantConnect.TickType.OpenInterest"/> will ignore <paramref name="resolution"/> and use <see cref="QuantConnect.Resolution.Daily"/>
         /// </summary>
-        /// <param name="resolution">The resolution.</param>
-        /// <param name="condition">A condition that ticks must meet in order to be aggregated.</param>
-        /// <param name="tickTypes">The tick types.</param>
-        /// <exception cref="ArgumentOutOfRangeException">tickType - null</exception>
-        public static IEnumerable<TickAggregator> ForTickTypes(Resolution resolution, Func<Tick, bool> condition, params TickType[] tickTypes)
-        {if (resolution == Resolution.Tick)
+        public static IEnumerable<TickAggregator> ForTickTypes(Resolution resolution, params TickType[] tickTypes)
+        {
+            if (resolution == Resolution.Tick)
             {
                 foreach (var tickType in tickTypes)
                 {
@@ -107,11 +90,11 @@ namespace QuantConnect.ToolBox
                 switch (tickType)
                 {
                     case TickType.Trade:
-                        yield return new TradeTickAggregator(resolution, condition);
+                        yield return new TradeTickAggregator(resolution);
                         break;
 
                     case TickType.Quote:
-                        yield return new QuoteTickAggregator(resolution, condition);
+                        yield return new QuoteTickAggregator(resolution);
                         break;
 
                     case TickType.OpenInterest:
@@ -123,16 +106,6 @@ namespace QuantConnect.ToolBox
                 }
             }
         }
-
-
-        /// <summary>
-        /// Creates the correct <see cref="TickAggregator"/> instances for the specified tick types and resolution.
-        /// <see cref="QuantConnect.TickType.OpenInterest"/> will ignore <paramref name="resolution"/> and use <see cref="QuantConnect.Resolution.Daily"/>
-        /// </summary>
-        public static IEnumerable<TickAggregator> ForTickTypes(Resolution resolution, params TickType[] tickTypes)
-        {
-            return ForTickTypes(resolution, null, tickTypes);
-        }
     }
 
     /// <summary>
@@ -140,14 +113,14 @@ namespace QuantConnect.ToolBox
     /// </summary>
     public class QuoteTickAggregator : TickAggregator
     {
-        public QuoteTickAggregator(Resolution resolution, Func<Tick, bool> condition = null)
+        public QuoteTickAggregator(Resolution resolution)
             : base(resolution, TickType.Quote)
         {
             Consolidated = new List<BaseData>();
-            Consolidator = new TickQuoteBarConsolidator(resolution.ToTimeSpan(), condition);
+            Consolidator = new TickQuoteBarConsolidator(resolution.ToTimeSpan());
             Consolidator.DataConsolidated += (sender, consolidated) =>
             {
-                    Consolidated.Add(consolidated as QuoteBar);
+                Consolidated.Add(consolidated as QuoteBar);
             };
         }
     }
@@ -157,14 +130,14 @@ namespace QuantConnect.ToolBox
     /// </summary>
     public class TradeTickAggregator : TickAggregator
     {
-        public TradeTickAggregator(Resolution resolution, Func<Tick, bool> condition = null)
+        public TradeTickAggregator(Resolution resolution)
             : base(resolution, TickType.Trade)
         {
             Consolidated = new List<BaseData>();
-            Consolidator = new TickConsolidator(resolution.ToTimeSpan(), condition);
+            Consolidator = new TickConsolidator(resolution.ToTimeSpan());
             Consolidator.DataConsolidated += (sender, consolidated) =>
             {
-                    Consolidated.Add(consolidated as TradeBar);
+                Consolidated.Add(consolidated as TradeBar);
             };
         }
     }
