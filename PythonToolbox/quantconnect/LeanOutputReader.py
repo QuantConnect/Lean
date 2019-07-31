@@ -280,7 +280,12 @@ class LeanOutputReader(object):
         plt.yticks(range(len(df_this.index.values)),df_this.index.values, fontsize = 8)
         plt.xticks(range(12),["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"])
         for (j,i),label in np.ndenumerate(df_this):
-            plt.text(i,j,round(label,1),ha='center',va='center', fontsize = 7)
+            if j == 0:
+                plt.text(i,j+0.1,round(label,1),ha='center',va='top', fontsize = 7)
+            elif j == (df_this.shape[0] - 1):
+                plt.text(i,j-0.1,round(label,1),ha='center',va='bottom', fontsize = 7)
+            else:
+                plt.text(i,j,round(label,1),ha='center',va='center', fontsize = 7)
         fig.set_size_inches(width, height)
         base64 = self.fig_to_base64(name, fig)
         plt.cla()
