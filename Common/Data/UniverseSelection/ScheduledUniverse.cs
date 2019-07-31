@@ -80,11 +80,11 @@ namespace QuantConnect.Data.UniverseSelection
         public ScheduledUniverse(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null, ISecurityInitializer securityInitializer = null)
             : base(CreateConfiguration(timeZone, dateRule, timeRule))
         {
-            Func<DateTime, Symbol[]> func;
+            Func<DateTime, object> func;
             selector.TryConvertToDelegate(out func);
             _dateRule = dateRule;
             _timeRule = timeRule;
-            _selector = func;
+            _selector = func.ConvertToUniverseSelectionSymbolDelegate();
             UniverseSettings = settings;
         }
 
