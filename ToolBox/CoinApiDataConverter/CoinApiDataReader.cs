@@ -121,9 +121,12 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             while ((line = reader.ReadLine()) != null)
             {
                 var lineParts = line.Split(';');
+                var price = lineParts[columnPrice].ToDecimal();
+
+                // Occasionally, crypto exchanges have outages, in those cases CoinApi sends tick with -1 price, we skip those bad ticks.
+                if (price <= 0) continue;
 
                 var time = DateTime.Parse(lineParts[columnTime], CultureInfo.InvariantCulture);
-                var price = lineParts[columnPrice].ToDecimal();
                 var quantity = lineParts[columnQuantity].ToDecimal();
 
                 yield return new Tick
@@ -165,6 +168,9 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
                 var askSize = lineParts[columnAskSize].ToDecimal();
                 var bidPrice = lineParts[columnBidPrice].ToDecimal();
                 var bidSize = lineParts[columnBidSize].ToDecimal();
+
+                // Occasionally, crypto exchanges have outages, in those cases CoinApi sends tick with -1 price, we skip those bad ticks.
+                if (askPrice <= 0 || bidPrice <= 0) continue;
 
                 if (askPrice == previousAskPrice && bidPrice == previousBidPrice)
                 {
