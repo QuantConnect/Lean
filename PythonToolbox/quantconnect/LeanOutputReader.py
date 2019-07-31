@@ -702,7 +702,6 @@ class LeanOutputReader(object):
                     asset_alloc_final = [x[1] for x in descendingSort]
                     asset_symbols = [x[0] for x in descendingSort]
                     df_pie["Value"] = asset_alloc_final
-    #                    df_pie["Weight"] = [round(x/sum(df_pie["Value"])*100,1) for x in df_pie["Value"]]
                     df_pie["AbsWeight"] = [round(abs(x)/sum(abs(df_pie["Value"]))*100,1) for x in df_pie["Value"]]
                     df_pie["Labels"] = asset_symbols
                 else:
@@ -710,11 +709,8 @@ class LeanOutputReader(object):
                     asset_alloc_final = [x[1] for x in top6] + [np.sum([x[1] for x in sorted(asset_alloc.items(), key = lambda x: abs(x[1]), reverse = True)[6:]])]
                     asset_symbols = [x[0] for x in top6] + ['Others']
                     df_pie["Value"] = asset_alloc_final
-    #                    df_pie["Weight"] = [round(x/sum(df_pie["Value"])*100,1) for x in df_pie["Value"]]
                     df_pie["AbsWeight"] = [round(abs(x)/sum(abs(df_pie["Value"]))*100,1) for x in df_pie["Value"]]
                     df_pie["Labels"] = asset_symbols
-                    if len([x for x in df_pie["AbsWeight"] if x < 5]) > 1:
-                        df_pie["Labels"] = [ df_pie["Labels"].iloc[i] if df_pie["AbsWeight"].iloc[i] >= 5 else "Others" for i in range(len(df_pie)) ]
                 df_pie = df_pie.groupby(by = "Labels").sum()
                 df_pie.reset_index(inplace = True)
                 df_pie.sort_values(by = ['AbsWeight','Value'],ascending = False, inplace = True)
