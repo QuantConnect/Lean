@@ -253,6 +253,35 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(_algorithm.OrderEvents.Count(orderEvent => orderEvent.Status == OrderStatus.Canceled), 1);
         }
 
+        [TestCase(0.9, 1.123456789, 1.12)]
+        [TestCase(0.9, 0.987654321, 0.9877)]
+        [TestCase(0.9, 0.999999999, 1)]
+        [TestCase(0.9, 1, 1)]
+        [TestCase(0.9, 1.000000001, 1)]
+        [TestCase(1.1, 1.123456789, 1.12)]
+        [TestCase(1.1, 0.987654321, 0.9877)]
+        [TestCase(1.1, 0.999999999, 1)]
+        [TestCase(1.1, 1, 1)]
+        [TestCase(1.1, 1.000000001, 1)]
+        public void RoundsEquityLimitOrderPricesCorrectly(decimal securityPrice, decimal orderPrice, decimal expected)
+        {
+            var algo = new QCAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
+            algo.SetLiveMode(true);
+
+            var security = algo.AddEquity("YGTY");
+            security.SetMarketPrice(new Tick { Value = securityPrice });
+
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            var brokerage = new Mock<IBrokerage>();
+            transactionHandler.Initialize(algo, brokerage.Object, null);
+
+            var order = new LimitOrder(security.Symbol, 1000, orderPrice, DateTime.UtcNow);
+            transactionHandler.RoundOrderPrices(order, security);
+
+            Assert.AreEqual(expected, order.LimitPrice);
+        }
+
         [Test]
         public void RoundOff_Long_Fractional_Orders()
         {
