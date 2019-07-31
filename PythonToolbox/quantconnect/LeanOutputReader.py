@@ -686,27 +686,31 @@ class LeanOutputReader(object):
             df_tmp = df_values.where(df_values["Type"] == SecurityType).copy()
             asset_symbols = list(set(df_tmp["Symbol"].dropna(axis = 0)))
             if asset_symbols:
-                asset_alloc = []
+                asset_alloc = {}
                 for sym in asset_symbols:
                     df_tmp2 = df_tmp.where(df_tmp["Symbol"]==sym).iloc[:,0].copy()
                     df_tmp2 = df_tmp2.groupby(df_tmp2.index).sum().cumsum()
                     list_timestamp = list(df_tmp2.index)
                     list_timestamp.append(timeEnd)
                     timeWeightedValue = sum([(list_timestamp[i+1] - list_timestamp[i]).total_seconds()/timeDuration*df_tmp2[i] for i in range(len(df_tmp2))])
-                    asset_alloc.append(timeWeightedValue)
-                    asset_symbols = [asset_symbols[i] if i < 7 else "Others" for i in range(len(asset_symbols))]
-                    if len(asset_alloc) > 7:
-                        asset_alloc = list(asset_alloc[0:7] + [sum(asset_alloc[7:])])
-                        asset_symbols = asset_symbols[0:8]
-                if not sum([abs(x) for x in asset_alloc]):
+                    asset_alloc[sym] = timeWeightedValue
+                if not sum([abs(x) for x in asset_alloc.values()]):
                     continue
                 df_pie = pd.DataFrame()
-                df_pie["Value"] = asset_alloc
-#                    df_pie["Weight"] = [round(x/sum(df_pie["Value"])*100,1) for x in df_pie["Value"]]
-                df_pie["AbsWeight"] = [round(abs(x)/sum(abs(df_pie["Value"]))*100,1) for x in df_pie["Value"]]
-                df_pie["Labels"] = asset_symbols
-                if len([x for x in df_pie["AbsWeight"] if x < 5]) > 1:
-                    df_pie["Labels"] = [ df_pie["Labels"].iloc[i] if df_pie["AbsWeight"].iloc[i] >= 5 else "Others" for i in range(len(df_pie)) ]
+                if len(asset_alloc) < 6:
+                    descendingSort = sorted(asset_alloc.items(), key = lambda x: abs(x[1]), reverse = True)
+                    asset_alloc_final = [x[1] for x in descendingSort]
+                    asset_symbols = [x[0] for x in descendingSort]
+                    df_pie["Value"] = asset_alloc_final
+                    df_pie["AbsWeight"] = [round(abs(x)/sum(abs(df_pie["Value"]))*100,1) for x in df_pie["Value"]]
+                    df_pie["Labels"] = asset_symbols
+                else:
+                    top6 = sorted(asset_alloc.items(), key = lambda x: abs(x[1]), reverse = True)[:6]
+                    asset_alloc_final = [x[1] for x in top6] + [np.sum([x[1] for x in sorted(asset_alloc.items(), key = lambda x: abs(x[1]), reverse = True)[6:]])]
+                    asset_symbols = [x[0] for x in top6] + ['Others']
+                    df_pie["Value"] = asset_alloc_final
+                    df_pie["AbsWeight"] = [round(abs(x)/sum(abs(df_pie["Value"]))*100,1) for x in df_pie["Value"]]
+                    df_pie["Labels"] = asset_symbols
                 df_pie = df_pie.groupby(by = "Labels").sum()
                 df_pie.reset_index(inplace = True)
                 df_pie.sort_values(by = ['AbsWeight','Value'],ascending = False, inplace = True)
