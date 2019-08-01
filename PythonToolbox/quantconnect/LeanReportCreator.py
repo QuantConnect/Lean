@@ -52,7 +52,7 @@ class LeanReportCreator(object):
         if tmp is None:
             tmp = f'--output={input[:-5]}.html'
         output = os.path.abspath(tmp[9:])
-        
+
         # create output directory
         os.makedirs(os.path.dirname(output), exist_ok = True)
 
@@ -128,6 +128,7 @@ class LeanReportCreator(object):
             <script src="''' + locationPrefix + '''/js/libraries/bootstrap.min.js"></script>
             <script src="''' + locationPrefix + '''/js/libraries/jquery.growl.js"></script>
             <link rel="stylesheet" href="''' + locationPrefix + '''/css/libraries/jquery.growl.css">
+            <link href="https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,700&display=swap" rel="stylesheet">
 
             <style>
                 #table-summary .fa-times {
@@ -181,11 +182,14 @@ class LeanReportCreator(object):
                     font-weight: bold;
                     font-size: 18px;
                     padding-top: 15px;
+                    font-family: 'Open Sans Condensed', sans-serif;
                 }
 
                 table.table > tbody > tr > td {
                     border-top: none;
-                    font-size: 18px;
+                    font-size: 15px;
+                    padding-top: 10px;
+                    padding-bottom: 10px;
                 }
 
                 table#key-characteristics {
@@ -235,6 +239,10 @@ class LeanReportCreator(object):
                 }
 
                 table#description-box > thead > tr > th > p > span {
+                    font-weight: 100;
+                }
+
+                table#description-box > thead > tr > th > p > span {
                     margin-right: 10px;
                     width: 1px;
                     height: 24px;
@@ -243,7 +251,8 @@ class LeanReportCreator(object):
 
                 .page {
                     width: 1200px;
-                    height: 1686px;
+                    height: 1697px;
+                    page-break-inside: avoid;
                 }
 
                 .page .content {
@@ -270,10 +279,10 @@ class LeanReportCreator(object):
                 }
 
                 .header .header-right {
-                    font-family: Helvetica, Arial, sans-serif;
+                    font-family: 'Open Sans Condensed', sans-serif;
                     font-weight: bold;
                     margin-top: 40px;
-                    line-height: 18px;
+                    line-height: 23px;
                     float: right;
                     font-size: 18px;
                     max-width: 70%;
@@ -313,7 +322,7 @@ class LeanReportCreator(object):
                 span.checkmark:after {
                     content: "";
                     position: absolute;
-                    left: 7px;
+                    left: 8px;
                     top: 3px;
                     width: 5px;
                     height: 10px;
@@ -328,7 +337,7 @@ class LeanReportCreator(object):
                     background-color:#bc4143;
                     color: white;
                     font-size: 12px;
-                    padding: 3px 5px;
+                    padding: 4px 5px;
                     padding-top: 4px;
                     line-height: 1;
                 }
