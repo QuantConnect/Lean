@@ -181,7 +181,10 @@ namespace QuantConnect.Data.Custom.Estimize
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            return new EstimizeRelease(line);
+            return new EstimizeRelease(line)
+            {
+                Symbol = config.Symbol
+            };
         }
 
         /// <summary>
