@@ -1116,7 +1116,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// This procedure is needed to meet brokerage precision requirements.
         /// </remarks>
         /// </summary>
-        public void RoundOrderPrices(Order order, Security security)
+        protected void RoundOrderPrices(Order order, Security security)
         {
             // Do not need to round market orders
             if (order.Type == OrderType.Market ||

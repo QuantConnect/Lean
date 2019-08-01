@@ -1060,6 +1060,11 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             {
                 // nop
             }
+
+            public new void RoundOrderPrices(Order order, Security security)
+            {
+                base.RoundOrderPrices(order, security);
+            }
         }
     }
 }
