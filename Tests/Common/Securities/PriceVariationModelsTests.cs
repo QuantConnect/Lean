@@ -37,18 +37,21 @@ namespace QuantConnect.Tests.Common.Securities.Equity
             var adjutedEquity = mode == DataNormalizationMode.Adjusted && securityType == SecurityType.Equity;
 
             security.SetMarketPrice(new IndicatorDataPoint(symbol, DateTime.Now, 10m));
-            var actual = security.PriceVariationModel.GetMinimumPriceVariation(security, security.Price);
+            var actual = security.PriceVariationModel.GetMinimumPriceVariation(
+                new GetMinimumPriceVariationParameters(security, security.Price));
             Assert.AreEqual(adjutedEquity ? 0 : expected, actual);
 
             security.SetMarketPrice(new IndicatorDataPoint(symbol, DateTime.Now, 1m));
-            actual = security.PriceVariationModel.GetMinimumPriceVariation(security, security.Price);
+            actual = security.PriceVariationModel.GetMinimumPriceVariation(
+                new GetMinimumPriceVariationParameters(security, security.Price));
             Assert.AreEqual(adjutedEquity ? 0 : expected, actual);
 
             // Special case, if stock price less than $1, minimum price variation is $0.0001
             if (securityType == SecurityType.Equity) expected = 0.0001m;
 
             security.SetMarketPrice(new IndicatorDataPoint(symbol, DateTime.Now, .99m));
-            actual = security.PriceVariationModel.GetMinimumPriceVariation(security, security.Price);
+            actual = security.PriceVariationModel.GetMinimumPriceVariation(
+                new GetMinimumPriceVariationParameters(security, security.Price));
             Assert.AreEqual(adjutedEquity ? 0 : expected, actual);
         }
 
@@ -69,7 +72,8 @@ namespace QuantConnect.Tests.Common.Securities.Equity
 
             security.SetMarketPrice(new Tick { Value = securityPrice });
 
-            var actual = security.PriceVariationModel.GetMinimumPriceVariation(security, orderPrice);
+            var actual = security.PriceVariationModel.GetMinimumPriceVariation(
+                new GetMinimumPriceVariationParameters(security, orderPrice));
             Assert.AreEqual(expected, actual);
         }
 

@@ -25,10 +25,9 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Get the minimum price variation from a security
         /// </summary>
-        /// <param name="security">Security which we want the minimum price variation from</param>
-        /// <param name="referencePrice">The reference price to be used for the calculation (usually the limit/stop order price)</param>
+        /// <param name="parameters">An object containing the method parameters</param>
         /// <returns>Zero</returns>
-        public virtual decimal GetMinimumPriceVariation(Security security, decimal referencePrice)
+        public virtual decimal GetMinimumPriceVariation(GetMinimumPriceVariationParameters parameters)
         {
             return 0;
         }

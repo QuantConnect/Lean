@@ -1136,18 +1136,21 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 case OrderType.Limit:
                     {
                         limitPrice = ((LimitOrder) order).LimitPrice;
-                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(security, limitPrice);
+                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                            new GetMinimumPriceVariationParameters(security, limitPrice));
                         if (increment > 0)
                         {
                             limitRound = Math.Round(limitPrice / increment) * increment;
-                            ((LimitOrder)order).LimitPrice = limitRound;
+                            ((LimitOrder) order).LimitPrice = limitRound;
                         }
                     }
                     break;
+
                 case OrderType.StopMarket:
                     {
-                        stopPrice = ((StopMarketOrder)order).StopPrice;
-                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(security, stopPrice);
+                        stopPrice = ((StopMarketOrder) order).StopPrice;
+                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                            new GetMinimumPriceVariationParameters(security, stopPrice));
                         if (increment > 0)
                         {
                             stopRound = Math.Round(stopPrice / increment) * increment;
@@ -1155,26 +1158,27 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         }
                     }
                     break;
+
                 case OrderType.StopLimit:
                     {
                         limitPrice = ((StopLimitOrder) order).LimitPrice;
-                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(security, limitPrice);
+                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                            new GetMinimumPriceVariationParameters(security, limitPrice));
                         if (increment > 0)
                         {
                             limitRound = Math.Round(limitPrice / increment) * increment;
                             ((StopLimitOrder) order).LimitPrice = limitRound;
                         }
 
-                        increment = security.PriceVariationModel.GetMinimumPriceVariation(security, stopPrice);
+                        stopPrice = ((StopLimitOrder) order).StopPrice;
+                        increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                            new GetMinimumPriceVariationParameters(security, stopPrice));
                         if (increment > 0)
                         {
-                            stopPrice = ((StopLimitOrder) order).StopPrice;
                             stopRound = Math.Round(stopPrice / increment) * increment;
                             ((StopLimitOrder) order).StopPrice = stopRound;
                         }
                     }
-                    break;
-                default:
                     break;
             }
 

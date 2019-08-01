@@ -17,19 +17,29 @@
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Provides default implementation of <see cref="IPriceVariationModel"/>
-    /// for use in defining the minimum price variation.
+    /// Defines the parameters for <see cref="IPriceVariationModel.GetMinimumPriceVariation"/>
     /// </summary>
-    public class SecurityPriceVariationModel : IPriceVariationModel
+    public class GetMinimumPriceVariationParameters
     {
         /// <summary>
-        /// Get the minimum price variation from a security
+        /// Gets the security
         /// </summary>
-        /// <param name="parameters">An object containing the method parameters</param>
-        /// <returns>Decimal minimum price variation of a given security</returns>
-        public virtual decimal GetMinimumPriceVariation(GetMinimumPriceVariationParameters parameters)
+        public Security Security { get; }
+
+        /// <summary>
+        /// Gets the reference price to be used for the calculation
+        /// </summary>
+        public decimal ReferencePrice { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GetMinimumPriceVariationParameters"/> class
+        /// </summary>
+        /// <param name="security">The security</param>
+        /// <param name="referencePrice">The reference price to be used for the calculation</param>
+        public GetMinimumPriceVariationParameters(Security security, decimal referencePrice)
         {
-            return parameters.Security.SymbolProperties.MinimumPriceVariation;
+            Security = security;
+            ReferencePrice = referencePrice;
         }
     }
 }
