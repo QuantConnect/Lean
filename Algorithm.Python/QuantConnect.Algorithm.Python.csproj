@@ -60,6 +60,7 @@
     <Content Include="TradingEconomicsCalendarIndicatorAlgorithm.py" />
     <Content Include="OnEndOfDayRegressionAlgorithm.py" />
     <Content Include="SECReportDataAlgorithm.py" />
+    <Content Include="UniverseUnchangedRegressionAlgorithm.py" />
     <Content Include="USEnergyInformationAdministrationAlgorithm.py" />
     <None Include="NLTKSentimentTradingAlgorithm.py" />
     <None Include="PytorchNeuralNetworkAlgorithm.py" />

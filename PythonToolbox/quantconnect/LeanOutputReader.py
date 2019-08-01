@@ -280,7 +280,12 @@ class LeanOutputReader(object):
         plt.yticks(range(len(df_this.index.values)),df_this.index.values, fontsize = 8)
         plt.xticks(range(12),["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"])
         for (j,i),label in np.ndenumerate(df_this):
-            plt.text(i,j,round(label,1),ha='center',va='center', fontsize = 7)
+            if j == 0:
+                plt.text(i,j+0.1,round(label,1),ha='center',va='top', fontsize = 7)
+            elif j == (df_this.shape[0] - 1):
+                plt.text(i,j-0.1,round(label,1),ha='center',va='bottom', fontsize = 7)
+            else:
+                plt.text(i,j,round(label,1),ha='center',va='center', fontsize = 7)
         fig.set_size_inches(width, height)
         base64 = self.fig_to_base64(name, fig)
         plt.cla()
@@ -681,27 +686,31 @@ class LeanOutputReader(object):
             df_tmp = df_values.where(df_values["Type"] == SecurityType).copy()
             asset_symbols = list(set(df_tmp["Symbol"].dropna(axis = 0)))
             if asset_symbols:
-                asset_alloc = []
+                asset_alloc = {}
                 for sym in asset_symbols:
                     df_tmp2 = df_tmp.where(df_tmp["Symbol"]==sym).iloc[:,0].copy()
                     df_tmp2 = df_tmp2.groupby(df_tmp2.index).sum().cumsum()
                     list_timestamp = list(df_tmp2.index)
                     list_timestamp.append(timeEnd)
                     timeWeightedValue = sum([(list_timestamp[i+1] - list_timestamp[i]).total_seconds()/timeDuration*df_tmp2[i] for i in range(len(df_tmp2))])
-                    asset_alloc.append(timeWeightedValue)
-                    asset_symbols = [asset_symbols[i] if i < 7 else "Others" for i in range(len(asset_symbols))]
-                    if len(asset_alloc) > 7:
-                        asset_alloc = list(asset_alloc[0:7] + [sum(asset_alloc[7:])])
-                        asset_symbols = asset_symbols[0:8]
-                if not sum([abs(x) for x in asset_alloc]):
+                    asset_alloc[sym] = timeWeightedValue
+                if not sum([abs(x) for x in asset_alloc.values()]):
                     continue
                 df_pie = pd.DataFrame()
-                df_pie["Value"] = asset_alloc
-#                    df_pie["Weight"] = [round(x/sum(df_pie["Value"])*100,1) for x in df_pie["Value"]]
-                df_pie["AbsWeight"] = [round(abs(x)/sum(abs(df_pie["Value"]))*100,1) for x in df_pie["Value"]]
-                df_pie["Labels"] = asset_symbols
-                if len([x for x in df_pie["AbsWeight"] if x < 5]) > 1:
-                    df_pie["Labels"] = [ df_pie["Labels"].iloc[i] if df_pie["AbsWeight"].iloc[i] >= 5 else "Others" for i in range(len(df_pie)) ]
+                if len(asset_alloc) < 6:
+                    descendingSort = sorted(asset_alloc.items(), key = lambda x: abs(x[1]), reverse = True)
+                    asset_alloc_final = [x[1] for x in descendingSort]
+                    asset_symbols = [x[0] for x in descendingSort]
+                    df_pie["Value"] = asset_alloc_final
+                    df_pie["AbsWeight"] = [round(abs(x)/sum(abs(df_pie["Value"]))*100,1) for x in df_pie["Value"]]
+                    df_pie["Labels"] = asset_symbols
+                else:
+                    top6 = sorted(asset_alloc.items(), key = lambda x: abs(x[1]), reverse = True)[:6]
+                    asset_alloc_final = [x[1] for x in top6] + [np.sum([x[1] for x in sorted(asset_alloc.items(), key = lambda x: abs(x[1]), reverse = True)[6:]])]
+                    asset_symbols = [x[0] for x in top6] + ['Others']
+                    df_pie["Value"] = asset_alloc_final
+                    df_pie["AbsWeight"] = [round(abs(x)/sum(abs(df_pie["Value"]))*100,1) for x in df_pie["Value"]]
+                    df_pie["Labels"] = asset_symbols
                 df_pie = df_pie.groupby(by = "Labels").sum()
                 df_pie.reset_index(inplace = True)
                 df_pie.sort_values(by = ['AbsWeight','Value'],ascending = False, inplace = True)
@@ -740,24 +749,29 @@ class LeanOutputReader(object):
                                      "Sharpe Ratio": 0,
                                      "Information Ratio": 0,
                                      "Trades Per Day": 0}}
-
         if self.is_drawable and "TotalPerformance" in self.data:
-            SecurityTypeName = ['Equity', 'Option', 'Commodity', 'Forex', 'Future', 'Cfd', 'Crypto']
-            output["Key Characteristics"] = {
-                "Significant Period": (self.df.index[-1] - self.df.index[0]).days/365 > 5,
-                "Significant Trading": len(self.orders) >= 100,
-                "Diversified": len(set(self.df_values["Symbol"])) > 7,
-                "Risk Control": self.data["TotalPerformance"]["PortfolioStatistics"]["Drawdown"] < 0.1,
-                "Markets": [SecurityTypeName[x-1] for x in list(set(self.df_values["Type"])) if x > 0]
-                }
+            try:
+                SecurityTypeName = ['Equity', 'Option', 'Commodity', 'Forex', 'Future', 'Cfd', 'Crypto']
+                output["Key Characteristics"] = {
+                    "Significant Period": (self.df.index[-1] - self.df.index[0]).days/365 > 5,
+                    "Significant Trading": len(self.orders) >= 100,
+                    "Diversified": len(set(self.df_values["Symbol"])) > 7,
+                    "Risk Control": self.data["TotalPerformance"]["PortfolioStatistics"]["Drawdown"] < 0.1,
+                    "Markets": [SecurityTypeName[x-1] for x in list(set(self.df_values["Type"])) if x > 0]
+                    }
+            except Exception as err:
+                print(f'Error in Total Performance evaluation: {err}')
+            try:
+                stats = self.data.pop("TotalPerformance").pop("PortfolioStatistics")
+                output["Key Statistics"] = {
+                    "CAGR": str(round(100 * stats.pop('CompoundingAnnualReturn', 0), 2)) + '%',
+                    "Drawdown": str(round(100 * stats.pop('Drawdown', 0), 2)) + '%',
+                    "Sharpe Ratio": round(stats.pop('SharpeRatio', 0), 3),
+                    "Information Ratio": round(stats.pop('InformationRatio', 0), 3),
+                    "Trades Per Day": round(len(self.orders) / max((self.df.index[-1] - self.df.index[0]).days, 1), 6)
+                     }
+            except Exception as err:
+                print(f'Error in Portfolio Statistics evaluation: {err}')
 
-            stats = self.data.pop("TotalPerformance").pop("PortfolioStatistics")
-            output["Key Statistics"] = {
-                "CAGR": str(round(100 * stats.pop('CompoundingAnnualReturn', 0), 2)) + '%',
-                "Drawdown": str(round(100 * stats.pop('Drawdown', 0), 2)) + '%',
-                "Sharpe Ratio": round(stats.pop('SharpeRatio', 0), 3),
-                "Information Ratio": round(stats.pop('InformationRatio', 0), 3),
-                "Trades Per Day": round(len(self.orders) / max((self.df.index[-1] - self.df.index[0]).days, 1), 6)
-                 }
 
         return output

@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -40,7 +41,7 @@ namespace QuantConnect.Data.Custom.Estimize
         public int FiscalYear { get; set; }
 
         /// <summary>
-        /// The fiscal quarter for the release 
+        /// The fiscal quarter for the release
         /// </summary>
         [JsonProperty(PropertyName = "fiscal_quarter")]
         public int FiscalQuarter { get; set; }
@@ -68,7 +69,7 @@ namespace QuantConnect.Data.Custom.Estimize
         public override decimal Value => Eps ?? 0m;
 
         /// <summary>
-        /// The revenue for the specified fiscal quarter 
+        /// The revenue for the specified fiscal quarter
         /// </summary>
         [JsonProperty(PropertyName = "revenue")]
         public decimal? Revenue { get; set; }
@@ -80,13 +81,13 @@ namespace QuantConnect.Data.Custom.Estimize
         public decimal? WallStreetEpsEstimate { get; set; }
 
         /// <summary>
-        /// The estimated revenue from Wall Street 
+        /// The estimated revenue from Wall Street
         /// </summary>
         [JsonProperty(PropertyName = "wallstreet_revenue_estimate")]
         public decimal? WallStreetRevenueEstimate { get; set; }
 
         /// <summary>
-        /// The mean EPS consensus by the Estimize community 
+        /// The mean EPS consensus by the Estimize community
         /// </summary>
         [JsonProperty(PropertyName = "consensus_eps_estimate")]
         public decimal? ConsensusEpsEstimate { get; set; }
@@ -110,6 +111,38 @@ namespace QuantConnect.Data.Custom.Estimize
         public decimal? ConsensusWeightedRevenueEstimate { get; set; }
 
         /// <summary>
+        /// Without a default constructor, Json.NET will call the
+        /// other constructor with `null` for the string parameter
+        /// </summary>
+        public EstimizeRelease()
+        {
+        }
+
+        /// <summary>
+        /// Creates EstimizeRelease instance from a line of CSV
+        /// </summary>
+        /// <param name="csvLine">CSV line</param>
+        public EstimizeRelease(string csvLine)
+        {
+            // ReleaseDate[0], Id[1], FiscalYear[2], FiscalQuarter[3], Eps[4], Revenue[5], ConsensusEpsEstimate[6], ConsensusRevenueEstimate[7], WallStreetEpsEstimate[8], WallStreetRevenueEstimate[9], ConsensusWeightedEpsEstimate[10], ConsensusWeightedRevenueEstimate[11]");
+            var csv = csvLine.Split(',');
+
+            ReleaseDate = DateTime.ParseExact(csv[0].Trim(), "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+            Time = ReleaseDate;
+            Id = csv[1];
+            FiscalYear = Convert.ToInt32(csv[2], CultureInfo.InvariantCulture);
+            FiscalQuarter = Convert.ToInt32(csv[3], CultureInfo.InvariantCulture);
+            Eps = string.IsNullOrWhiteSpace(csv[4]) ? (decimal?)null : Convert.ToDecimal(csv[4], CultureInfo.InvariantCulture);
+            Revenue = string.IsNullOrWhiteSpace(csv[5]) ? (decimal?)null : Convert.ToDecimal(csv[5], CultureInfo.InvariantCulture);
+            ConsensusEpsEstimate = string.IsNullOrWhiteSpace(csv[6]) ? (decimal?)null : Convert.ToDecimal(csv[6], CultureInfo.InvariantCulture);
+            ConsensusRevenueEstimate = string.IsNullOrWhiteSpace(csv[7]) ? (decimal?)null : Convert.ToDecimal(csv[7], CultureInfo.InvariantCulture);
+            WallStreetEpsEstimate = string.IsNullOrWhiteSpace(csv[8]) ? (decimal?)null : Convert.ToDecimal(csv[8], CultureInfo.InvariantCulture);
+            WallStreetRevenueEstimate = string.IsNullOrWhiteSpace(csv[9]) ? (decimal?)null : Convert.ToDecimal(csv[9], CultureInfo.InvariantCulture);
+            ConsensusWeightedEpsEstimate = string.IsNullOrWhiteSpace(csv[10]) ? (decimal?)null : Convert.ToDecimal(csv[10], CultureInfo.InvariantCulture);
+            ConsensusWeightedRevenueEstimate = string.IsNullOrWhiteSpace(csv[11]) ? (decimal?)null : Convert.ToDecimal(csv[11], CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
         /// Return the Subscription Data Source gained from the URL
         /// </summary>
         /// <param name="config">Configuration object</param>
@@ -131,32 +164,24 @@ namespace QuantConnect.Data.Custom.Estimize
                 "alternative",
                 "estimize",
                 "release",
-                $"{symbol.ToLower()}.zip"
+                $"{symbol.ToLower()}.csv"
             );
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Collection);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
         /// <summary>
         /// Reader converts each line of the data source into BaseData objects.
         /// </summary>
         /// <param name="config">Subscription data config setup object</param>
-        /// <param name="content">Content of the source document</param>
+        /// <param name="line">Content of the source document</param>
         /// <param name="date">Date of the requested data</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>
-        /// Collection of USEnergyInformation objects
+        /// Estimize Release object
         /// </returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var objectList = JsonConvert.DeserializeObject<List<EstimizeRelease>>(content);
-
-            foreach (var obj in objectList)
-            {
-                obj.Symbol = config.Symbol;
-                obj.Time = new DateTime(obj.FiscalYear, obj.FiscalQuarter * 3 - 2, 1);
-            }
-
-            return new BaseDataCollection(date, config.Symbol, objectList.OrderBy(x => x.EndTime));
+            return new EstimizeRelease(line);
         }
 
         /// <summary>

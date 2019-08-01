@@ -63,7 +63,9 @@ class ConstantAlphaModel(AlphaModel):
         insights = []
 
         for security in self.securities:
-            if self.ShouldEmitInsight(algorithm.UtcTime, security.Symbol):
+            # security price could be zero until we get the first data point. e.g. this could happen
+            # when adding both forex and equities, we will first get a forex data point
+            if security.Price != 0 and self.ShouldEmitInsight(algorithm.UtcTime, security.Symbol):
                 insights.append(Insight(security.Symbol, self.period, self.type, self.direction, self.magnitude, self.confidence))
 
         return insights
