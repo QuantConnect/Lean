@@ -1116,7 +1116,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// This procedure is needed to meet brokerage precision requirements.
         /// </remarks>
         /// </summary>
-        private void RoundOrderPrices(Order order, Security security)
+        protected void RoundOrderPrices(Order order, Security security)
         {
             // Do not need to round market orders
             if (order.Type == OrderType.Market ||
@@ -1126,35 +1126,59 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return;
             }
 
-            var increment = security.PriceVariationModel.GetMinimumPriceVariation(security);
-            if (increment == 0) return;
-
             var limitPrice = 0m;
-            var limitRound = 0m;
             var stopPrice = 0m;
+            var limitRound = 0m;
             var stopRound = 0m;
 
             switch (order.Type)
             {
                 case OrderType.Limit:
-                    limitPrice = ((LimitOrder)order).LimitPrice;
-                    limitRound = Math.Round(limitPrice / increment) * increment;
-                    ((LimitOrder)order).LimitPrice = limitRound;
+                    {
+                        limitPrice = ((LimitOrder) order).LimitPrice;
+                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                            new GetMinimumPriceVariationParameters(security, limitPrice));
+                        if (increment > 0)
+                        {
+                            limitRound = Math.Round(limitPrice / increment) * increment;
+                            ((LimitOrder) order).LimitPrice = limitRound;
+                        }
+                    }
                     break;
+
                 case OrderType.StopMarket:
-                    stopPrice = ((StopMarketOrder)order).StopPrice;
-                    stopRound = Math.Round(stopPrice / increment) * increment;
-                    ((StopMarketOrder)order).StopPrice = stopRound;
+                    {
+                        stopPrice = ((StopMarketOrder) order).StopPrice;
+                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                            new GetMinimumPriceVariationParameters(security, stopPrice));
+                        if (increment > 0)
+                        {
+                            stopRound = Math.Round(stopPrice / increment) * increment;
+                            ((StopMarketOrder) order).StopPrice = stopRound;
+                        }
+                    }
                     break;
+
                 case OrderType.StopLimit:
-                    limitPrice = ((StopLimitOrder)order).LimitPrice;
-                    limitRound = Math.Round(limitPrice / increment) * increment;
-                    ((StopLimitOrder)order).LimitPrice = limitRound;
-                    stopPrice = ((StopLimitOrder)order).StopPrice;
-                    stopRound = Math.Round(stopPrice / increment) * increment;
-                    ((StopLimitOrder)order).StopPrice = stopRound;
-                    break;
-                default:
+                    {
+                        limitPrice = ((StopLimitOrder) order).LimitPrice;
+                        var increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                            new GetMinimumPriceVariationParameters(security, limitPrice));
+                        if (increment > 0)
+                        {
+                            limitRound = Math.Round(limitPrice / increment) * increment;
+                            ((StopLimitOrder) order).LimitPrice = limitRound;
+                        }
+
+                        stopPrice = ((StopLimitOrder) order).StopPrice;
+                        increment = security.PriceVariationModel.GetMinimumPriceVariation(
+                            new GetMinimumPriceVariationParameters(security, stopPrice));
+                        if (increment > 0)
+                        {
+                            stopRound = Math.Round(stopPrice / increment) * increment;
+                            ((StopLimitOrder) order).StopPrice = stopRound;
+                        }
+                    }
                     break;
             }
 
