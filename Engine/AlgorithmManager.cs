@@ -477,8 +477,8 @@ namespace QuantConnect.Lean.Engine
                 {
                     Log.Debug($"AlgorithmManager.Run(): {algorithm.Time}: Applying Dividend: {dividend}");
 
-                    Security security = null;
-                    if (_liveMode & algorithm.Securities.TryGetValue(dividend.Symbol, out security))
+                    Security security;
+                    if (algorithm.Securities.TryGetValue(dividend.Symbol, out security) && _liveMode)
                     {
                         Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Dividend: {dividend}. " +
                             $"Security Holdings: {security.Holdings.Quantity} Account Currency Holdings: " +
@@ -516,8 +516,8 @@ namespace QuantConnect.Lean.Engine
 
                         Log.Debug($"AlgorithmManager.Run(): {algorithm.Time}: Applying Split for {split.Symbol}");
 
-                        Security security = null;
-                        if (_liveMode & algorithm.Securities.TryGetValue(split.Symbol, out security))
+                        Security security;
+                        if (algorithm.Securities.TryGetValue(split.Symbol, out security) && _liveMode)
                         {
                             Log.Trace($"AlgorithmManager.Run(): {algorithm.Time}: Pre-Split for {split}. Security Price: {security.Price} Holdings: {security.Holdings.Quantity}");
                         }
