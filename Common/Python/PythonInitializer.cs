@@ -15,6 +15,7 @@
 */
 
 using Python.Runtime;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Python
 {
@@ -33,12 +34,14 @@ namespace QuantConnect.Python
         {
             if (!_isBeginAllowThreadsCalled)
             {
+                Log.Trace("PythonInitializer.Initialize(): start...");
                 PythonEngine.Initialize();
 
                 // required for multi-threading usage
                 PythonEngine.BeginAllowThreads();
 
                 _isBeginAllowThreadsCalled = true;
+                Log.Trace("PythonInitializer.Initialize(): ended");
             }
         }
     }
