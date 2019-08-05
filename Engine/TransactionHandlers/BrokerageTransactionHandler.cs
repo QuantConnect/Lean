@@ -1126,71 +1126,69 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return;
             }
 
-            var limitPrice = 0m;
-            var stopPrice = 0m;
-            var limitRound = 0m;
-            var stopRound = 0m;
-
             switch (order.Type)
             {
                 case OrderType.Limit:
                     {
-                        limitPrice = ((LimitOrder) order).LimitPrice;
+                        var limitPrice = ((LimitOrder) order).LimitPrice;
                         var increment = security.PriceVariationModel.GetMinimumPriceVariation(
                             new GetMinimumPriceVariationParameters(security, limitPrice));
                         if (increment > 0)
                         {
-                            limitRound = Math.Round(limitPrice / increment) * increment;
+                            var limitRound = Math.Round(limitPrice / increment) * increment;
                             ((LimitOrder) order).LimitPrice = limitRound;
+                            SendWarningOnPriceChange("Limit", limitRound, limitPrice);
                         }
                     }
                     break;
 
                 case OrderType.StopMarket:
                     {
-                        stopPrice = ((StopMarketOrder) order).StopPrice;
+                        var stopPrice = ((StopMarketOrder) order).StopPrice;
                         var increment = security.PriceVariationModel.GetMinimumPriceVariation(
                             new GetMinimumPriceVariationParameters(security, stopPrice));
                         if (increment > 0)
                         {
-                            stopRound = Math.Round(stopPrice / increment) * increment;
+                            var stopRound = Math.Round(stopPrice / increment) * increment;
                             ((StopMarketOrder) order).StopPrice = stopRound;
+                            SendWarningOnPriceChange("Stop", stopRound, stopPrice);
                         }
                     }
                     break;
 
                 case OrderType.StopLimit:
                     {
-                        limitPrice = ((StopLimitOrder) order).LimitPrice;
+                        var limitPrice = ((StopLimitOrder) order).LimitPrice;
                         var increment = security.PriceVariationModel.GetMinimumPriceVariation(
                             new GetMinimumPriceVariationParameters(security, limitPrice));
                         if (increment > 0)
                         {
-                            limitRound = Math.Round(limitPrice / increment) * increment;
+                            var limitRound = Math.Round(limitPrice / increment) * increment;
                             ((StopLimitOrder) order).LimitPrice = limitRound;
+                            SendWarningOnPriceChange("Limit", limitRound, limitPrice);
                         }
 
-                        stopPrice = ((StopLimitOrder) order).StopPrice;
+                        var stopPrice = ((StopLimitOrder) order).StopPrice;
                         increment = security.PriceVariationModel.GetMinimumPriceVariation(
                             new GetMinimumPriceVariationParameters(security, stopPrice));
                         if (increment > 0)
                         {
-                            stopRound = Math.Round(stopPrice / increment) * increment;
+                            var stopRound = Math.Round(stopPrice / increment) * increment;
                             ((StopLimitOrder) order).StopPrice = stopRound;
+                            SendWarningOnPriceChange("Stop", stopRound, stopPrice);
                         }
                     }
                     break;
             }
+        }
 
-            var format = "Warning: To meet brokerage precision requirements, order {0}Price was rounded to {1} from {2}";
-
-            if (!limitPrice.Equals(limitRound))
+        private void SendWarningOnPriceChange(string priceType, decimal priceRound, decimal priceOriginal)
+        {
+            if (!priceOriginal.Equals(priceRound))
             {
-                _algorithm.Error(string.Format(format, "Limit", limitRound, limitPrice));
-            }
-            if (!stopPrice.Equals(stopRound))
-            {
-                _algorithm.Error(string.Format(format, "Stop", stopRound, stopPrice));
+                _algorithm.Error(
+                    $"Warning: To meet brokerage precision requirements, order {priceType}Price was rounded to {priceRound} from {priceOriginal}"
+                );
             }
         }
     }
