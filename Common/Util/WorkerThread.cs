@@ -52,7 +52,14 @@ namespace QuantConnect.Util
                     foreach (var action in _blockingCollection.GetConsumingEnumerable(_threadCancellationTokenSource.Token))
                     {
                         FinishedWorkItem.Reset();
-                        action();
+                        try
+                        {
+                            action();
+                        }
+                        catch (Exception exception)
+                        {
+                            Log.Error(exception, "WorkerThread(): exception thrown when running task");
+                        }
                         FinishedWorkItem.Set();
                     }
                 }
