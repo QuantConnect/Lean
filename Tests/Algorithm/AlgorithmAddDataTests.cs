@@ -224,12 +224,62 @@ namespace QuantConnect.Tests.Algorithm
                 DateTimeZone.Utc));
         }
 
+        [Test]
+        public void AppendsCustomDataTypeName_ToSecurityIdentifierSymbol()
+        {
+            const string ticker = "ticker";
+            var algorithm = Algorithm();
+
+            var security = algorithm.AddData<Quandl>(ticker);
+            Assert.AreEqual(ticker.ToUpperInvariant(), security.Symbol.Value);
+            Assert.AreEqual($"{ticker.ToUpperInvariant()}.{typeof(Quandl).Name}", security.Symbol.ID.Symbol);
+            Assert.AreEqual(SecurityIdentifier.GenerateBaseSymbol(typeof(Quandl), ticker), security.Symbol.ID.Symbol);
+        }
+
+        [Test]
+        public void RegistersSecurityIdentifierSymbol_AsTickerString_InSymbolCache()
+        {
+            var algorithm = Algorithm();
+
+            Symbol cachedSymbol;
+            var security = algorithm.AddData<Quandl>("ticker");
+            var symbolCacheAlias = security.Symbol.ID.Symbol;
+
+            Assert.IsTrue(SymbolCache.TryGetSymbol(symbolCacheAlias, out cachedSymbol));
+            Assert.AreSame(security.Symbol, cachedSymbol);
+        }
+
+        [Test]
+        public void DoesNotCauseCollision_WhenRegisteringMultipleDifferentCustomDataTypes_WithSameTicker()
+        {
+            const string ticker = "ticker";
+            var algorithm = Algorithm();
+
+            var security1 = algorithm.AddData<Quandl>(ticker);
+            var security2 = algorithm.AddData<Bitcoin>(ticker);
+
+            var quandl = algorithm.Securities[security1.Symbol];
+            Assert.AreSame(security1, quandl);
+
+            var bitcoin = algorithm.Securities[security2.Symbol];
+            Assert.AreSame(security2, bitcoin);
+
+            Assert.AreNotSame(quandl, bitcoin);
+        }
+
         private static SubscriptionDataConfig GetMatchingSubscription(Security security, Type type)
         {
             // find a subscription matchin the requested type with a higher resolution than requested
             return (from sub in security.Subscriptions.OrderByDescending(s => s.Resolution)
                     where type.IsAssignableFrom(sub.Type)
                     select sub).FirstOrDefault();
+        }
+
+        private static QCAlgorithm Algorithm()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            return algorithm;
         }
 
         private class TestHistoryProvider : HistoryProviderBase

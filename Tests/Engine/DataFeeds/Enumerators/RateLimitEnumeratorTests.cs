@@ -55,9 +55,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         private static Symbol CreateSymbol(int x)
         {
             return new Symbol(
-                SecurityIdentifier.GenerateBase(x.ToString(CultureInfo.InvariantCulture), Market.USA),
-                x.ToString(CultureInfo.InvariantCulture)
-            );
+                SecurityIdentifier.GenerateBase(null, x.ToString(CultureInfo.InvariantCulture), Market.USA),
+                 x.ToString(CultureInfo.InvariantCulture));
         }
     }
 }

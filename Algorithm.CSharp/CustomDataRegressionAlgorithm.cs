@@ -60,7 +60,8 @@ namespace QuantConnect.Algorithm.CSharp
                 //Bitcoin used as a tradable asset, like stocks, futures etc.
                 if (data.Close != 0)
                 {
-                    Order("BTC", Portfolio.MarginRemaining / Math.Abs(data.Close + 1));
+                    //Access custom data symbols using <ticker>.<custom-type>
+                    Order("BTC.Bitcoin", Portfolio.MarginRemaining / Math.Abs(data.Close + 1));
                 }
             }
         }

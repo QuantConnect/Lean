@@ -377,13 +377,30 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Generates a new <see cref="SecurityIdentifier"/> for a custom security with the first date found in map files
+        /// Generates the <see cref="Symbol"/> property for <see cref="QuantConnect.SecurityType.Base"/> security identifiers
         /// </summary>
+        /// <param name="dataType">The base data custom data type if namespacing is required, null otherwise</param>
+        /// <param name="symbol">The ticker symbol</param>
+        /// <returns>The value used for the security identifier's <see cref="Symbol"/></returns>
+        public static string GenerateBaseSymbol(Type dataType, string symbol)
+        {
+            if (dataType == null)
+            {
+                return symbol;
+            }
+
+            return $"{symbol.ToUpperInvariant()}.{dataType.Name}";
+        }
+
+        /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a custom security
+        /// </summary>
+        /// <param name="dataType">The custom data type</param>
         /// <param name="symbol">The ticker symbol of this security</param>
         /// <param name="market">The security's market</param>
         /// <param name="mapSymbol">Whether or not we should map this symbol</param>
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified base security</returns>
-        public static SecurityIdentifier GenerateBase(string symbol, string market, bool mapSymbol = false)
+        public static SecurityIdentifier GenerateBase(Type dataType, string symbol, string market, bool mapSymbol = false)
         {
             var firstDate = DefaultDate;
             if (mapSymbol)
@@ -393,7 +410,13 @@ namespace QuantConnect
                 symbol = firstTickerDate.Item1;
             }
 
-            return Generate(firstDate, symbol, SecurityType.Base, market);
+            return Generate(
+                firstDate,
+                GenerateBaseSymbol(dataType, symbol),
+                SecurityType.Base,
+                market,
+                forceSymbolToUpper: false
+            );
         }
 
         /// <summary>
@@ -440,7 +463,8 @@ namespace QuantConnect
             decimal strike = 0,
             OptionRight optionRight = 0,
             OptionStyle optionStyle = 0,
-            SecurityIdentifier? underlying = null)
+            SecurityIdentifier? underlying = null,
+            bool forceSymbolToUpper = true)
         {
             if ((ulong)securityType >= SecurityTypeWidth || securityType < 0)
             {
@@ -453,7 +477,7 @@ namespace QuantConnect
 
             // normalize input strings
             market = market.ToLowerInvariant();
-            symbol = symbol.LazyToUpper();
+            symbol = forceSymbolToUpper ? symbol.LazyToUpper() : symbol;
 
             var marketIdentifier = QuantConnect.Market.Encode(market);
             if (!marketIdentifier.HasValue)
