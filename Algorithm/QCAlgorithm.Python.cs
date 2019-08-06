@@ -87,10 +87,12 @@ namespace QuantConnect.Algorithm
         /// <returns>The new <see cref="Security"/></returns>
         public Security AddData(Type dataType, string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, ticker, SecurityType.Base, timeZone);
-
             //Add this to the data-feed subscriptions
-            var symbol = new Symbol(SecurityIdentifier.GenerateBase(ticker, Market.USA), ticker);
+            var symbol = new Symbol(SecurityIdentifier.GenerateBase(dataType, ticker, Market.USA), ticker);
+
+            var alias = symbol.ID.Symbol;
+            SymbolCache.Set(alias, symbol);
+            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, alias, SecurityType.Base, timeZone);
 
             //Add this new generic data as a tradeable security:
             var config = SubscriptionManager.SubscriptionDataConfigService.Add(
@@ -100,7 +102,7 @@ namespace QuantConnect.Algorithm
                 fillDataForward,
                 isCustomData: true,
                 extendedMarketHours: true);
-            var security = Securities.CreateSecurity(symbol, config, leverage);
+            var security = Securities.CreateSecurity(symbol, config, leverage, addToSymbolCache: false);
 
             AddToUserDefinedUniverse(security, new List<SubscriptionDataConfig> {config});
             return security;
@@ -299,7 +301,7 @@ namespace QuantConnect.Algorithm
             var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
-            var symbol = QuantConnect.Symbol.Create(name, securityType, market);
+            var symbol = QuantConnect.Symbol.Create(name, securityType, market, baseDataType: dataType);
             var config = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true, isFilteredSubscription: false);
 
             var selector = pySelector.ConvertToDelegate<Func<IEnumerable<IBaseData>, object>>();
@@ -309,7 +311,7 @@ namespace QuantConnect.Algorithm
                 var result = selector(baseDatas);
                 return ReferenceEquals(result, Universe.Unchanged)
                     ? Universe.Unchanged : ((object[])result)
-                        .Select(x => x is Symbol ? (Symbol)x : QuantConnect.Symbol.Create((string)x, securityType, market));
+                        .Select(x => x is Symbol ? (Symbol)x : QuantConnect.Symbol.Create((string)x, securityType, market, baseDataType: dataType));
                 }
             ));
         }

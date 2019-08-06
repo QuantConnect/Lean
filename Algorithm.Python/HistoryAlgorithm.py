@@ -34,9 +34,9 @@ from datetime import datetime, timedelta
 ### <meta name="tag" content="history" />
 ### <meta name="tag" content="warm up" />
 class HistoryAlgorithm(QCAlgorithm):
-    
+
     def Initialize(self):
-    
+
         self.SetStartDate(2013,10, 8)  #Set Start Date
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
@@ -44,7 +44,7 @@ class HistoryAlgorithm(QCAlgorithm):
         self.AddEquity("SPY", Resolution.Daily)
         self.AddData(QuandlFuture,"CHRIS/CME_SP1", Resolution.Daily)
         # specifying the exchange will allow the history methods that accept a number of bars to return to work properly
-        self.Securities["CHRIS/CME_SP1"].Exchange = EquityExchange()
+        self.Securities["CHRIS/CME_SP1.QuandlFuture"].Exchange = EquityExchange()
 
         # we can get history in initialize to set up indicators and such
         self.spyDailySma = SimpleMovingAverage(14)
@@ -69,21 +69,21 @@ class HistoryAlgorithm(QCAlgorithm):
         # we can use these TradeBars to initialize indicators or perform other math
         for index, tradeBar in tradeBarHistory.loc["SPY"].iterrows():
             self.spyDailySma.Update(index, tradeBar["close"])
-        
+
         # get the last calendar year's worth of quandl data at the configured resolution (daily)
-        quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1", timedelta(365))
-        self.AssertHistoryCount("History(QuandlFuture, \"CHRIS/CME_SP1\", timedelta(365))", quandlHistory, 250)
+        quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1.QuandlFuture", timedelta(365))
+        self.AssertHistoryCount("History(QuandlFuture, \"CHRIS/CME_SP1.QuandlFuture\", timedelta(365))", quandlHistory, 250)
 
         # get the last 14 bars of SPY at the configured resolution (daily)
-        quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1", 14)
-        self.AssertHistoryCount("History(QuandlFuture, \"CHRIS/CME_SP1\", 14)", quandlHistory, 14)
+        quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1.QuandlFuture", 14)
+        self.AssertHistoryCount("History(QuandlFuture, \"CHRIS/CME_SP1.QuandlFuture\", 14)", quandlHistory, 14)
 
         # we can loop over the return values from these functions and we'll get Quandl data
         # this can be used in much the same way as the tradeBarHistory above
         self.spyDailySma.Reset()
-        for index, quandl in quandlHistory.loc["CHRIS/CME_SP1"].iterrows():
+        for index, quandl in quandlHistory.loc["CHRIS/CME_SP1.QuandlFuture"].iterrows():
             self.spyDailySma.Update(index, quandl["settle"])
-        
+
         # get the last year's worth of all configured Quandl data at the configured resolution (daily)
         #allQuandlData = self.History(QuandlFuture, timedelta(365))
         #self.AssertHistoryCount("History(QuandlFuture, timedelta(365))", allQuandlData, 250)
@@ -95,8 +95,8 @@ class HistoryAlgorithm(QCAlgorithm):
         # NOTE: using different resolutions require that they are properly implemented in your data type, since
         #  Quandl doesn't support minute data, this won't actually work, but if your custom data source has
         #  different resolutions, it would need to be implemented in the GetSource and Reader methods properly
-        #quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1", timedelta(7), Resolution.Minute)
-        #quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1", 14, Resolution.Minute)
+        #quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1.QuandlFuture", timedelta(7), Resolution.Minute)
+        #quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1.QuandlFuture", 14, Resolution.Minute)
         #allQuandlData = self.History(QuandlFuture, timedelta(365), Resolution.Minute)
         #allQuandlData = self.History(QuandlFuture, self.Securities.Keys, 14, Resolution.Minute)
         #allQuandlData = self.History(QuandlFuture, self.Securities.Keys, timedelta(1), Resolution.Minute)
@@ -108,16 +108,16 @@ class HistoryAlgorithm(QCAlgorithm):
 
         # we can also access the return value from the multiple symbol functions to request a single
         # symbol and then loop over it
-        singleSymbolQuandl = allQuandlData.loc["CHRIS/CME_SP1"]
-        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1\"]", singleSymbolQuandl, 250)
+        singleSymbolQuandl = allQuandlData.loc["CHRIS/CME_SP1.QuandlFuture"]
+        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1.QuandlFuture\"]", singleSymbolQuandl, 250)
         for  quandl in singleSymbolQuandl:
-            # do something with 'CHRIS/CME_SP1' quandl data
+            # do something with 'CHRIS/CME_SP1.QuandlFuture' quandl data
             pass
 
-        quandlSpyLows = allQuandlData.loc["CHRIS/CME_SP1"]["low"]
-        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1\"][\"low\"]", quandlSpyLows, 250)
+        quandlSpyLows = allQuandlData.loc["CHRIS/CME_SP1.QuandlFuture"]["low"]
+        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1.QuandlFuture\"][\"low\"]", quandlSpyLows, 250)
         for  low in quandlSpyLows:
-            # do something with 'CHRIS/CME_SP1' quandl data
+            # do something with 'CHRIS/CME_SP1.QuandlFuture' quandl data
             pass
 
 
@@ -134,7 +134,7 @@ class HistoryAlgorithm(QCAlgorithm):
         count = len(tradeBarHistory.index)
         if count != expected:
             raise Exception("{} expected {}, but received {}".format(methodCall, expected, count))
-         
+
 
 class QuandlFuture(PythonQuandl):
     '''Custom quandl data type for setting customized value column name. Value column is used for the primary trading calculations and charting.'''

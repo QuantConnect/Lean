@@ -18,6 +18,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using QuantConnect.Algorithm.CSharp;
+using QuantConnect.Data;
+using QuantConnect.Data.Custom;
 using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -112,7 +115,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void Generates12Character()
         {
-            var sid1 = SecurityIdentifier.GenerateBase("123456789012", Market.USA);
+            var sid1 = SecurityIdentifier.GenerateBase(null, "123456789012", Market.USA);
             Assert.AreEqual("123456789012", sid1.Symbol);
             Console.WriteLine(sid1);
         }
@@ -254,7 +257,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void DeserializesFromSimpleStringWithinContainerClass()
         {
-            var sid = new Container { sid = SPY };
+            var sid = new Container{sid =SPY};
             var str =
 @"
 {
@@ -319,10 +322,30 @@ namespace QuantConnect.Tests.Common.Securities
         public void GenerateBaseDataWithTickerUsingMapFile()
         {
             var expectedFirstDate = new DateTime(1998, 1, 2);
-            var sid = SecurityIdentifier.GenerateBase("TWX", Market.USA, mapSymbol: true);
+            var sid = SecurityIdentifier.GenerateBase(null, "TWX", Market.USA, mapSymbol: true);
 
             Assert.AreEqual(sid.Date, expectedFirstDate);
             Assert.AreEqual(sid.Symbol, "AOL");
+        }
+
+        [Test]
+        public void GenerateBase_SymbolAppendsDptTypeName_WhenBaseDataTypeIsNotNull()
+        {
+            var symbol = "BTC";
+            var expected = "BTC.Bitcoin";
+            var baseDataType = typeof(LiveTradingFeaturesAlgorithm.Bitcoin);
+            var sid = SecurityIdentifier.GenerateBase(baseDataType, symbol, Market.USA);
+            Assert.AreEqual(expected, sid.Symbol);
+        }
+
+        [Test]
+        public void GenerateBase_UsesProvidedSymbol_WhenBaseDataTypeIsNull()
+        {
+            var symbol = "BTC";
+            var expected = "BTC";
+            var baseDataType = (Type) null;
+            var sid = SecurityIdentifier.GenerateBase(baseDataType, symbol, Market.USA);
+            Assert.AreEqual(expected, sid.Symbol);
         }
 
         class Container

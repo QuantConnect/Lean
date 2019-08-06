@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [Test]
         public void AddContainsAndRemoveWork()
         {
-            var symbol = new Symbol(SecurityIdentifier.GenerateBase(_symbol, Market.USA), _symbol);
+            var symbol = new Symbol(SecurityIdentifier.GenerateBase(null, _symbol, Market.USA), _symbol);
             var collection = new PortfolioTargetCollection();
             var target = new PortfolioTarget(symbol, 1);
             collection.Add(target);

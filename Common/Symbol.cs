@@ -35,7 +35,7 @@ namespace QuantConnect
         public static readonly Symbol Empty = new Symbol(SecurityIdentifier.Empty, string.Empty);
 
         /// <summary>
-        /// Provides a convience method for creating a Symbol for most security types.
+        /// Provides a convenience method for creating a Symbol for most security types.
         /// This method currently does not support Commodities
         /// </summary>
         /// <param name="ticker">The string ticker symbol</param>
@@ -43,15 +43,16 @@ namespace QuantConnect
         /// <param name="market">The market the ticker resides in</param>
         /// <param name="alias">An alias to be used for the symbol cache. Required when
         /// adding the same security from different markets</param>
+        /// <param name="baseDataType">Optional for <see cref="SecurityType.Base"/> and used for generating the base data SID</param>
         /// <returns>A new Symbol object for the specified ticker</returns>
-        public static Symbol Create(string ticker, SecurityType securityType, string market, string alias = null)
+        public static Symbol Create(string ticker, SecurityType securityType, string market, string alias = null, Type baseDataType = null)
         {
             SecurityIdentifier sid;
 
             switch (securityType)
             {
                 case SecurityType.Base:
-                    sid = SecurityIdentifier.GenerateBase(ticker, market);
+                    sid = SecurityIdentifier.GenerateBase(baseDataType, ticker, market);
                     break;
 
                 case SecurityType.Equity:
@@ -95,7 +96,7 @@ namespace QuantConnect
         /// <param name="strike">The option strike price</param>
         /// <param name="expiry">The option expiry date</param>
         /// <param name="alias">An alias to be used for the symbol cache. Required when
-        /// adding the same security from diferent markets</param>
+        /// adding the same security from different markets</param>
         /// <param name="mapSymbol">Specifies if symbol should be mapped using map file provider</param>
         /// <returns>A new Symbol object for the specified option contract</returns>
         public static Symbol CreateOption(string underlying, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null, bool mapSymbol = true)
