@@ -220,6 +220,10 @@
     <Compile Include="ChartPoint.cs" />
     <Compile Include="Data\Consolidators\CalendarType.cs" />
     <Compile Include="Data\Consolidators\FilteredIdentityDataConsolidator.cs" />
+    <Compile Include="Data\Custom\BrainData\BrainDataRankingsTenDay.cs" />
+    <Compile Include="Data\Custom\BrainData\BrainDataSentimentMonthly.cs" />
+    <Compile Include="Data\Custom\BrainData\BrainDataRankingsFiveDay.cs" />
+    <Compile Include="Data\Custom\BrainData\BrainDataSentimentWeekly.cs" />
     <Compile Include="Data\Custom\FxcmVolume.cs" />
     <Compile Include="Data\Custom\SEC\ISECReport.cs" />
     <Compile Include="Data\Custom\SEC\SECReportBusinessAddress.cs" />

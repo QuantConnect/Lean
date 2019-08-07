@@ -41,7 +41,7 @@ namespace QuantConnect.Configuration
                                                      + "/SmartInsiderConverter or SICV"
                                                      + "/IVolatilityEquityConverter or IVEC/KaikoDataConverter or KDC/NseMarketDataConverter or NMDC"
                                                      + "/QuantQuoteConverter or QQC/CoarseUniverseGenerator or CUG/PSDL or PsychSignalDownloader\n"
-                                                     + "PsychSignalConverter or PSDC/RandomDataGenerator or RDG/USTYCDL or USTreasuryYieldCurveDownloader"
+                                                     + "PsychSignalConverter or PSDC/RandomDataGenerator or RDG/USTYCDL or USTreasuryYieldCurveDownloader/BrainDataConverter or BDCV"
                                                      + "/USTYCCV or USTreasuryYieldCurveConverter"
                                                      + "Example 1: --app=DDL\n"
                                                      + "Example 2: --app=NseMarketDataConverter\n"
@@ -57,16 +57,16 @@ namespace QuantConnect.Configuration
                                                                                 + "be used. --to-date=yyyyMMdd-HH:mm:ss"),
                 new CommandLineOption("exchange", CommandOptionType.SingleValue, "[REQUIRED for CryptoiqDownloader] [Optional for KaikoDataConverter] The exchange to process, if not defined, all exchanges will be processed."),
                 new CommandLineOption("api-key", CommandOptionType.SingleValue, "[REQUIRED for QuandlBitfinexDownloader, IEXDownloader, PsychSignalDataDownloader]"),
-                new CommandLineOption("date", CommandOptionType.SingleValue, "[REQUIRED for AlgoSeekFuturesConverter, AlgoSeekOptionsConverter, KaikoDataConverter, SECDataConverter, PsychSignalDataConverter, SmartInsiderConverter]"
+                new CommandLineOption("date", CommandOptionType.SingleValue, "[REQUIRED for AlgoSeekFuturesConverter, AlgoSeekOptionsConverter, KaikoDataConverter, SECDataConverter, PsychSignalDataConverter, SmartInsiderConverter, BrainDataConverter] "
                                                                              + "Date for the option bz files: --date=yyyyMMdd"),
                 new CommandLineOption("source-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter, KaikoDataConverter,"
-                                                                                   + " CoinApiDataConverter, NseMarketDataConverter, QuantQuoteConverter, SECDataConverter, PsychSignalDataConverter, USTreasuryYieldCurveConverter, SmartInsiderConverter]"),
+                                                                                   + " CoinApiDataConverter, NseMarketDataConverter, QuantQuoteConverter, SECDataConverter, PsychSignalDataConverter, USTreasuryYieldCurveConverter, SmartInsiderConverter, BrainDataConverter]"),
                 new CommandLineOption("destination-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter, "
-                                                                                        + "NseMarketDataConverter, QuantQuoteConverter, SECDataDownloader, SECDataConverter, PsychSignalDataDownloader, PsychSignalDataConverter, USTreasuryYieldCurveDownloader, USTreasuryYieldCurveConverter, SmartInsiderConverter]"),
+                                                                                        + "NseMarketDataConverter, QuantQuoteConverter, SECDataDownloader, SECDataConverter, PsychSignalDataDownloader, PsychSignalDataConverter, USTreasuryYieldCurveDownloader, USTreasuryYieldCurveConverter, SmartInsiderConverter, BrainDataConverter]"),
                 new CommandLineOption("source-meta-dir", CommandOptionType.SingleValue, "[REQUIRED for IVolatilityEquityConverter]"),
                 new CommandLineOption("start", CommandOptionType.SingleValue, "[REQUIRED for RandomDataGenerator. Format yyyyMMdd Example: --start=20010101]"),
                 new CommandLineOption("end", CommandOptionType.SingleValue, "[REQUIRED for RandomDataGenerator. Format yyyyMMdd Example: --end=20020101]"),
-                new CommandLineOption("market", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Market of generated symbols. Defaults to default market for security type: Example: --market=usa]"),
+                new CommandLineOption("market", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator, BrainDataConverter. Market of generated symbols. Defaults to default market for security type: Example: --market=usa]"),
                 new CommandLineOption("symbol-count", CommandOptionType.SingleValue, "[REQUIRED for RandomDataGenerator. Number of symbols to generate data for: Example: --symbol-count=10]"),
                 new CommandLineOption("security-type", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Security type of generated symbols, defaults to Equity: Example: --security-type=Equity/Option/Forex/Future/Cfd/Crypto]"),
                 new CommandLineOption("data-density", CommandOptionType.SingleValue, "[OPTIONAL for RandomDataGenerator. Defaults to Dense. Valid values: --data-density=Dense/Sparse/VerySparse ]"),
