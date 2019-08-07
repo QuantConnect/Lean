@@ -1237,20 +1237,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             new TestCaseData(Symbols.BTCUSD, Resolution.Hour, 1, 0, 24, 24, 0),
             new TestCaseData(Symbols.BTCUSD, Resolution.Minute, 1, 0, 24 * 60, 24 * 60, 0),
             // x2 because counting trades and quotes
-            // new TestCaseData(Symbols.BTCUSD, Resolution.Tick, 1, 24 * 2, 0, 0, 0),
+            new TestCaseData(Symbols.BTCUSD, Resolution.Tick, 1, 24 * 2, 0, 0, 0),
 
             // Futures
             // ES has two session breaks totalling 1h 15m, so total trading hours = 22.75
             new TestCaseData(Symbols.Future_ESZ18_Dec2018, Resolution.Hour, 1, 0, 23, 23, 0),
             new TestCaseData(Symbols.Future_ESZ18_Dec2018, Resolution.Minute, 1, 0, (int)(22.75 * 60), (int)(22.75 * 60), 0),
             // x2 because counting trades and quotes
-            // new TestCaseData(Symbols.Future_ESZ18_Dec2018, Resolution.Tick, 1, 23 * 2, 0, 0, 0),
+            new TestCaseData(Symbols.Future_ESZ18_Dec2018, Resolution.Tick, 1, 23 * 2, 0, 0, 0),
 
             // Options
             new TestCaseData(Symbols.SPY_C_192_Feb19_2016, Resolution.Hour, 1, 0, 7, 7, 0),
             new TestCaseData(Symbols.SPY_C_192_Feb19_2016, Resolution.Minute, 1, 0, (int)(6.5 * 60), (int)(6.5 * 60), 0),
             // x2 because counting trades and quotes
-            // new TestCaseData(Symbols.SPY_C_192_Feb19_2016, Resolution.Tick, 1, (7 - 1) * 2, 0, 0, 0),
+            new TestCaseData(Symbols.SPY_C_192_Feb19_2016, Resolution.Tick, 1, (7 - 1) * 2, 0, 0, 0),
 
             // Custom (streaming not supported yet)
             new TestCaseData(Symbol.Create("CUSTOM", SecurityType.Base, Market.USA), Resolution.Daily, 4, 0, 0, 0, 0)
@@ -1464,6 +1464,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var sliceCount = 0;
             foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
             {
+                if (timeSlice.IsTimePulse)
+                {
+                    continue;
+                }
+
                 sliceCount++;
 
                 if (!startedReceivingData && (timeSlice.Slice.Count != 0 || timeSlice.UniverseData.Count > 0))
