@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             UniverseSettings.Resolution = Resolution.Daily;
-            SetStartDate(2014, 03, 24);
+            SetStartDate(2014, 03, 25);
             SetEndDate(2014, 04, 07);
 
             SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1), 0.025, null));
@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
         public IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
         {
             // the first and second selection
-            if (Time.Date <= new DateTime(2014, 3, 25))
+            if (Time.Date <= new DateTime(2014, 3, 26))
             {
                 return new List<Symbol>
                 {
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
         public IEnumerable<Symbol> FineSelectionFunction(IEnumerable<FineFundamental> fine)
         {
             // just the first selection
-            if (Time.Date == new DateTime(2014, 3, 24))
+            if (Time.Date == new DateTime(2014, 3, 25))
             {
                 var sortedByPeRatio = fine.OrderByDescending(x => x.ValuationRatios.PERatio);
                 var topFine = sortedByPeRatio.Take(NumberOfSymbolsFine);
@@ -103,21 +103,21 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "11"},
             {"Average Win", "0.01%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-5.642%"},
+            {"Compounding Annual Return", "-6.032%"},
             {"Drawdown", "2.100%"},
             {"Expectancy", "1.171"},
             {"Net Profit", "-0.238%"},
-            {"Sharpe Ratio", "-0.305"},
+            {"Sharpe Ratio", "-0.317"},
             {"Loss Rate", "40%"},
             {"Win Rate", "60%"},
             {"Profit-Loss Ratio", "2.62"},
-            {"Alpha", "-0.067"},
-            {"Beta", "1.056"},
-            {"Annual Standard Deviation", "0.137"},
-            {"Annual Variance", "0.019"},
-            {"Information Ratio", "-0.707"},
-            {"Tracking Error", "0.093"},
-            {"Treynor Ratio", "-0.039"},
+            {"Alpha", "-0.185"},
+            {"Beta", "1.119"},
+            {"Annual Standard Deviation", "0.143"},
+            {"Annual Variance", "0.021"},
+            {"Information Ratio", "-1.795"},
+            {"Tracking Error", "0.095"},
+            {"Treynor Ratio", "-0.041"},
             {"Total Fees", "$14.03"}
         };
     }

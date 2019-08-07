@@ -31,7 +31,7 @@ class UniverseUnchangedRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.UniverseSettings.Resolution = Resolution.Daily
-        self.SetStartDate(2014,3,24)
+        self.SetStartDate(2014,3,25)
         self.SetEndDate(2014,4,7)
 
         self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(days = 1), 0.025, None))
@@ -43,7 +43,7 @@ class UniverseUnchangedRegressionAlgorithm(QCAlgorithm):
 
     def CoarseSelectionFunction(self, coarse):
         # the first and second selection
-        if self.Time.date() <= date(2014, 3, 25):
+        if self.Time.date() <= date(2014, 3, 26):
             tickers = [ "AAPL", "AIG", "IBM" ]
             return [ Symbol.Create(x, SecurityType.Equity, Market.USA) for x in tickers ]
 
@@ -51,7 +51,7 @@ class UniverseUnchangedRegressionAlgorithm(QCAlgorithm):
         return Universe.Unchanged
 
     def FineSelectionFunction(self, fine):
-        if self.Time.date() == date(2014, 3, 24):
+        if self.Time.date() == date(2014, 3, 25):
             sortedByPeRatio = sorted(fine, key=lambda x: x.ValuationRatios.PERatio, reverse=True)
             return [ x.Symbol for x in sortedByPeRatio[:self.numberOfSymbolsFine] ]
 

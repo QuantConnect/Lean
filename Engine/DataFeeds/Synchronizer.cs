@@ -21,6 +21,7 @@ using NodaTime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -88,12 +89,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var previousEmitTime = DateTime.MaxValue;
 
+            var enumerator = SubscriptionSynchronizer
+                .Sync(SubscriptionManager.DataFeedSubscriptions, cancellationToken)
+                .GetEnumerator();
+            var previousWasTimePulse = false;
             while (!cancellationToken.IsCancellationRequested)
             {
                 TimeSlice timeSlice;
                 try
                 {
-                    timeSlice = SubscriptionSynchronizer.Sync(SubscriptionManager.DataFeedSubscriptions);
+                    if (!enumerator.MoveNext())
+                    {
+                        // the enumerator ended
+                        break;
+                    }
+                    timeSlice = enumerator.Current;
                 }
                 catch (Exception err)
                 {
@@ -105,12 +115,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // check for cancellation
-                if (cancellationToken.IsCancellationRequested) break;
+                if (timeSlice == null || cancellationToken.IsCancellationRequested) break;
 
                 // SubscriptionFrontierTimeProvider will return twice the same time if there are no more subscriptions or if Subscription.Current is null
-                if (timeSlice.Time != previousEmitTime)
+                if (timeSlice.Time != previousEmitTime || previousWasTimePulse)
                 {
                     previousEmitTime = timeSlice.Time;
+                    previousWasTimePulse = timeSlice.IsTimePulse;
                     yield return timeSlice;
                 }
                 else if (timeSlice.SecurityChanges == SecurityChanges.None)
@@ -120,6 +131,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
+            enumerator.DisposeSafely();
             Log.Trace("Synchronizer.GetEnumerator(): Exited thread.");
         }
 
