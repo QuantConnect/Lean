@@ -28,87 +28,87 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// <summary>
         /// Date traded through the market
         /// </summary>
-        public DateTime? BuybackDate { get; private set; }
+        public DateTime? BuybackDate { get; set; }
 
         /// <summary>
         /// Describes how transaction was executed
         /// </summary>
-        public string BuybackVia { get; private set; }
+        public string BuybackVia { get; set; }
 
         /// <summary>
         /// Describes which entity carried out the transaction
         /// </summary>
-        public string BuybackBy { get; private set; }
+        public string BuybackBy { get; set; }
 
         /// <summary>
         /// Describes what will be done with those shares following repurchase
         /// </summary>
-        public string HoldingType { get; private set; }
+        public string HoldingType { get; set; }
 
         /// <summary>
         /// Currency of transation (ISO Code)
         /// </summary>
-        public string Currency { get; private set; }
+        public string Currency { get; set; }
 
         /// <summary>
         /// Denominated in Currency of Transaction
         /// </summary>
-        public new decimal? Price { get; private set; }
+        public new decimal? Price { get; set; }
 
         /// <summary>
         /// Number of shares traded
         /// </summary>
-        public int? TransactionAmount { get; private set; }
+        public decimal? TransactionAmount { get; set; }
 
         /// <summary>
         /// Currency conversion rates are updated daily and values are calculated at rate prevailing on the trade date
         /// </summary>
-        public int? GBPValue { get; private set; }
+        public decimal? GBPValue { get; set; }
 
         /// <summary>
         /// Currency conversion rates are updated daily and values are calculated at rate prevailing on the trade date
         /// </summary>
-        public int? EURValue { get; private set; }
+        public decimal? EURValue { get; set; }
 
         /// <summary>
         /// Currency conversion rates are updated daily and values are calculated at rate prevailing on the trade date
         /// </summary>
-        public int? USDValue { get; private set; }
+        public decimal? USDValue { get; set; }
 
         /// <summary>
         /// Free text which expains futher details about the trade
         /// </summary>
-        public string NoteText { get; private set; }
+        public string NoteText { get; set; }
 
         /// <summary>
         /// Percentage of value of the trade as part of the issuers total Market Cap
         /// </summary>
-        public decimal? BuybackPercentage { get; private set; }
+        public decimal? BuybackPercentage { get; set; }
 
         /// <summary>
         /// Percentage of the volume traded on the day of the buyback.
         /// </summary>
-        public decimal? VolumePercentage { get; private set; }
+        public decimal? VolumePercentage { get; set; }
 
         /// <summary>
         /// Rate used to calculate 'Value (GBP)' from 'Price' multiplied by 'Amount'. Will be 1 where Currency is also 'GBP'
         /// </summary>
-        public decimal? ConversionRate { get; private set; }
+        public decimal? ConversionRate { get; set; }
 
         /// <summary>
         /// Multiplier which can be applied to 'Amount' field to account for subsequent corporate action
         /// </summary>
-        public decimal? AmountAdjustedFactor { get; private set; }
+        public decimal? AmountAdjustedFactor { get; set; }
 
         /// <summary>
         /// Multiplier which can be applied to 'Price' and 'LastClose' fields to account for subsequent corporate actions
         /// </summary>
-        public decimal? PriceAdjustedFactor { get; private set; }
+        public decimal? PriceAdjustedFactor { get; set; }
 
         /// <summary>
         /// Post trade holding of the Treasury or Trust in the security traded
         /// </summary>
-        public int? TreasuryHolding { get; private set; }
+        public int? TreasuryHolding { get; set; }
 
         /// <summary>
         /// Empty contsructor required for <see cref="Slice.Get{T}()"/>
@@ -123,80 +123,80 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// <param name="line">Line of formatted CSV</param>
         public SmartInsiderTransaction(string line) : base(line)
         {
-            var csv = line.Split('\t');
+            var tsv = line.Split('\t');
 
-            BuybackDate = string.IsNullOrWhiteSpace(csv[26]) ? (DateTime?)null : DateTime.ParseExact(csv[26], "yyyyMMdd", CultureInfo.InvariantCulture);
-            BuybackVia = string.IsNullOrWhiteSpace(csv[27]) ? null : csv[27];
-            BuybackBy = string.IsNullOrWhiteSpace(csv[28]) ? null : csv[28];
-            HoldingType = string.IsNullOrWhiteSpace(csv[29]) ? null : csv[29];
-            Currency = string.IsNullOrWhiteSpace(csv[30]) ? null : csv[30];
-            Price = string.IsNullOrWhiteSpace(csv[31]) ? (decimal?)null : Convert.ToDecimal(csv[31], CultureInfo.InvariantCulture);
-            TransactionAmount = string.IsNullOrWhiteSpace(csv[32]) ? (int?)null : Convert.ToInt32(csv[32], CultureInfo.InvariantCulture);
-            GBPValue = string.IsNullOrWhiteSpace(csv[33]) ? (int?)null : Convert.ToInt32(csv[33], CultureInfo.InvariantCulture);
-            EURValue = string.IsNullOrWhiteSpace(csv[34]) ? (int?)null : Convert.ToInt32(csv[34], CultureInfo.InvariantCulture);
-            USDValue = string.IsNullOrWhiteSpace(csv[35]) ? (int?)null : Convert.ToInt32(csv[35], CultureInfo.InvariantCulture);
-            NoteText = string.IsNullOrWhiteSpace(csv[36]) ? null : csv[36];
-            BuybackPercentage = string.IsNullOrWhiteSpace(csv[37]) ? (decimal?)null : Convert.ToDecimal(csv[37], CultureInfo.InvariantCulture);
-            VolumePercentage = string.IsNullOrWhiteSpace(csv[38]) ? (decimal?)null : Convert.ToDecimal(csv[38], CultureInfo.InvariantCulture);
-            ConversionRate = string.IsNullOrWhiteSpace(csv[39]) ? (decimal?)null : Convert.ToDecimal(csv[39], CultureInfo.InvariantCulture);
-            AmountAdjustedFactor = string.IsNullOrWhiteSpace(csv[40]) ? (decimal?)null : Convert.ToDecimal(csv[40], CultureInfo.InvariantCulture);
-            PriceAdjustedFactor = string.IsNullOrWhiteSpace(csv[41]) ? (decimal?)null : Convert.ToDecimal(csv[41], CultureInfo.InvariantCulture);
-            TreasuryHolding = string.IsNullOrWhiteSpace(csv[42]) ? (int?)null : Convert.ToInt32(csv[42], CultureInfo.InvariantCulture);
+            BuybackDate = string.IsNullOrWhiteSpace(tsv[26]) ? (DateTime?)null : DateTime.ParseExact(tsv[26], "yyyyMMdd", CultureInfo.InvariantCulture);
+            BuybackVia = string.IsNullOrWhiteSpace(tsv[27]) ? null : tsv[27];
+            BuybackBy = string.IsNullOrWhiteSpace(tsv[28]) ? null : tsv[28];
+            HoldingType = string.IsNullOrWhiteSpace(tsv[29]) ? null : tsv[29];
+            Currency = string.IsNullOrWhiteSpace(tsv[30]) ? null : tsv[30];
+            Price = string.IsNullOrWhiteSpace(tsv[31]) ? (decimal?)null : Convert.ToDecimal(tsv[31], CultureInfo.InvariantCulture);
+            TransactionAmount = string.IsNullOrWhiteSpace(tsv[32]) ? (decimal?)null : Convert.ToDecimal(tsv[32], CultureInfo.InvariantCulture);
+            GBPValue = string.IsNullOrWhiteSpace(tsv[33]) ? (decimal?)null : Convert.ToDecimal(tsv[33], CultureInfo.InvariantCulture);
+            EURValue = string.IsNullOrWhiteSpace(tsv[34]) ? (decimal?)null : Convert.ToDecimal(tsv[34], CultureInfo.InvariantCulture);
+            USDValue = string.IsNullOrWhiteSpace(tsv[35]) ? (decimal?)null : Convert.ToDecimal(tsv[35], CultureInfo.InvariantCulture);
+            NoteText = string.IsNullOrWhiteSpace(tsv[36]) ? null : tsv[36];
+            BuybackPercentage = string.IsNullOrWhiteSpace(tsv[37]) ? (decimal?)null : Convert.ToDecimal(tsv[37], CultureInfo.InvariantCulture);
+            VolumePercentage = string.IsNullOrWhiteSpace(tsv[38]) ? (decimal?)null : Convert.ToDecimal(tsv[38], CultureInfo.InvariantCulture);
+            ConversionRate = string.IsNullOrWhiteSpace(tsv[39]) ? (decimal?)null : Convert.ToDecimal(tsv[39], CultureInfo.InvariantCulture);
+            AmountAdjustedFactor = string.IsNullOrWhiteSpace(tsv[40]) ? (decimal?)null : Convert.ToDecimal(tsv[40], CultureInfo.InvariantCulture);
+            PriceAdjustedFactor = string.IsNullOrWhiteSpace(tsv[41]) ? (decimal?)null : Convert.ToDecimal(tsv[41], CultureInfo.InvariantCulture);
+            TreasuryHolding = string.IsNullOrWhiteSpace(tsv[42]) ? (int?)null : Convert.ToInt32(tsv[42], CultureInfo.InvariantCulture);
         }
 
         /// <summary>
         /// Creates an instance of the object by taking a formatted CSV line
         /// </summary>
         /// <param name="line">Line of formatted CSV</param>
-        public override void FromRawCsv(string line)
+        public override void FromRawData(string line)
         {
-            var csv = line.Split('\t');
+            var tsv = line.Split('\t');
 
-            TransactionID = string.IsNullOrWhiteSpace(csv[0]) ? null : csv[0];
-            BuybackType = string.IsNullOrWhiteSpace(csv[1]) ? null : csv[1];
-            LastUpdate = DateTime.ParseExact(csv[2], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            LastIDsUpdate = string.IsNullOrWhiteSpace(csv[3]) ? (DateTime?)null : DateTime.ParseExact(csv[3], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            ISIN = string.IsNullOrWhiteSpace(csv[4]) ? null : csv[4];
-            USDMarketCap = string.IsNullOrWhiteSpace(csv[5]) ? (decimal?)null : Convert.ToDecimal(csv[5], CultureInfo.InvariantCulture);
-            CompanyID = string.IsNullOrWhiteSpace(csv[6]) ? (int?)null : Convert.ToInt32(csv[6], CultureInfo.InvariantCulture);
-            ICBIndustry = string.IsNullOrWhiteSpace(csv[7]) ? null : csv[7];
-            ICBSuperSector = string.IsNullOrWhiteSpace(csv[8]) ? null : csv[8];
-            ICBSector = string.IsNullOrWhiteSpace(csv[9]) ? null : csv[9];
-            ICBSubSector = string.IsNullOrWhiteSpace(csv[10]) ? null : csv[10];
-            ICBCode = string.IsNullOrWhiteSpace(csv[11]) ? (int?)null : Convert.ToInt32(csv[11], CultureInfo.InvariantCulture);
-            CompanyName = string.IsNullOrWhiteSpace(csv[12]) ? null : csv[12];
-            PreviousResultsAnnouncementDate = string.IsNullOrWhiteSpace(csv[13]) ? (DateTime?)null : DateTime.ParseExact(csv[13], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            NextResultsAnnouncementsDate = string.IsNullOrWhiteSpace(csv[14]) ? (DateTime?)null : DateTime.ParseExact(csv[14], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            NextCloseBegin = string.IsNullOrWhiteSpace(csv[15]) ? (DateTime?)null : DateTime.ParseExact(csv[15], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            LastCloseEnded = string.IsNullOrWhiteSpace(csv[16]) ? (DateTime?)null : DateTime.ParseExact(csv[16], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            SecurityDescription = string.IsNullOrWhiteSpace(csv[17]) ? null : csv[17];
-            TickerCountry = string.IsNullOrWhiteSpace(csv[18]) ? null : csv[18];
-            TickerSymbol = string.IsNullOrWhiteSpace(csv[19]) ? null : csv[19];
+            TransactionID = string.IsNullOrWhiteSpace(tsv[0]) ? null : tsv[0];
+            BuybackType = string.IsNullOrWhiteSpace(tsv[1]) ? null : tsv[1];
+            LastUpdate = DateTime.ParseExact(tsv[2], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            LastIDsUpdate = string.IsNullOrWhiteSpace(tsv[3]) ? (DateTime?)null : DateTime.ParseExact(tsv[3], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            ISIN = string.IsNullOrWhiteSpace(tsv[4]) ? null : tsv[4];
+            USDMarketCap = string.IsNullOrWhiteSpace(tsv[5]) ? (decimal?)null : Convert.ToDecimal(tsv[5], CultureInfo.InvariantCulture);
+            CompanyID = string.IsNullOrWhiteSpace(tsv[6]) ? (int?)null : Convert.ToInt32(tsv[6], CultureInfo.InvariantCulture);
+            ICBIndustry = string.IsNullOrWhiteSpace(tsv[7]) ? null : tsv[7];
+            ICBSuperSector = string.IsNullOrWhiteSpace(tsv[8]) ? null : tsv[8];
+            ICBSector = string.IsNullOrWhiteSpace(tsv[9]) ? null : tsv[9];
+            ICBSubSector = string.IsNullOrWhiteSpace(tsv[10]) ? null : tsv[10];
+            ICBCode = string.IsNullOrWhiteSpace(tsv[11]) ? (int?)null : Convert.ToInt32(tsv[11], CultureInfo.InvariantCulture);
+            CompanyName = string.IsNullOrWhiteSpace(tsv[12]) ? null : tsv[12];
+            PreviousResultsAnnouncementDate = string.IsNullOrWhiteSpace(tsv[13]) ? (DateTime?)null : DateTime.ParseExact(tsv[13], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            NextResultsAnnouncementsDate = string.IsNullOrWhiteSpace(tsv[14]) ? (DateTime?)null : DateTime.ParseExact(tsv[14], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            NextCloseBegin = string.IsNullOrWhiteSpace(tsv[15]) ? (DateTime?)null : DateTime.ParseExact(tsv[15], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            LastCloseEnded = string.IsNullOrWhiteSpace(tsv[16]) ? (DateTime?)null : DateTime.ParseExact(tsv[16], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            SecurityDescription = string.IsNullOrWhiteSpace(tsv[17]) ? null : tsv[17];
+            TickerCountry = string.IsNullOrWhiteSpace(tsv[18]) ? null : tsv[18];
+            TickerSymbol = string.IsNullOrWhiteSpace(tsv[19]) ? null : tsv[19];
 
-            BuybackDate = string.IsNullOrWhiteSpace(csv[20]) ? (DateTime?)null : DateTime.ParseExact(csv[20], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            BuybackVia = string.IsNullOrWhiteSpace(csv[21]) ? null : csv[21];
-            BuybackBy = string.IsNullOrWhiteSpace(csv[22]) ? null : csv[22];
-            HoldingType = string.IsNullOrWhiteSpace(csv[23]) ? null : csv[23];
-            Currency = string.IsNullOrWhiteSpace(csv[24]) ? null : csv[24];
-            Price = string.IsNullOrWhiteSpace(csv[25]) ? (decimal?)null : Convert.ToDecimal(csv[25], CultureInfo.InvariantCulture);
-            TransactionAmount = string.IsNullOrWhiteSpace(csv[26]) ? (int?)null : Convert.ToInt32(csv[26], CultureInfo.InvariantCulture);
-            GBPValue = string.IsNullOrWhiteSpace(csv[27]) ? (int?)null : Convert.ToInt32(csv[27], CultureInfo.InvariantCulture);
-            EURValue = string.IsNullOrWhiteSpace(csv[28]) ? (int?)null : Convert.ToInt32(csv[28], CultureInfo.InvariantCulture);
-            USDValue = string.IsNullOrWhiteSpace(csv[29]) ? (int?)null : Convert.ToInt32(csv[29], CultureInfo.InvariantCulture);
-            NoteText = string.IsNullOrWhiteSpace(csv[30]) ? null : csv[30];
-            BuybackPercentage = string.IsNullOrWhiteSpace(csv[31]) ? (decimal?)null : Convert.ToDecimal(csv[31], CultureInfo.InvariantCulture);
-            VolumePercentage = string.IsNullOrWhiteSpace(csv[32]) ? (decimal?)null : Convert.ToDecimal(csv[32], CultureInfo.InvariantCulture);
-            ConversionRate = string.IsNullOrWhiteSpace(csv[33]) ? (decimal?)null : Convert.ToDecimal(csv[33], CultureInfo.InvariantCulture);
-            AmountAdjustedFactor = string.IsNullOrWhiteSpace(csv[34]) ? (decimal?)null : Convert.ToDecimal(csv[34], CultureInfo.InvariantCulture);
-            PriceAdjustedFactor = string.IsNullOrWhiteSpace(csv[35]) ? (decimal?)null : Convert.ToDecimal(csv[35], CultureInfo.InvariantCulture);
-            TreasuryHolding = string.IsNullOrWhiteSpace(csv[36]) ? (int?)null : Convert.ToInt32(csv[36], CultureInfo.InvariantCulture);
+            BuybackDate = string.IsNullOrWhiteSpace(tsv[20]) ? (DateTime?)null : DateTime.ParseExact(tsv[20], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            BuybackVia = string.IsNullOrWhiteSpace(tsv[21]) ? null : tsv[21];
+            BuybackBy = string.IsNullOrWhiteSpace(tsv[22]) ? null : tsv[22];
+            HoldingType = string.IsNullOrWhiteSpace(tsv[23]) ? null : tsv[23];
+            Currency = string.IsNullOrWhiteSpace(tsv[24]) ? null : tsv[24];
+            Price = string.IsNullOrWhiteSpace(tsv[25]) ? (decimal?)null : Convert.ToDecimal(tsv[25], CultureInfo.InvariantCulture);
+            TransactionAmount = string.IsNullOrWhiteSpace(tsv[26]) ? (decimal?)null : Convert.ToDecimal(tsv[26], CultureInfo.InvariantCulture);
+            GBPValue = string.IsNullOrWhiteSpace(tsv[27]) ? (decimal?)null : Convert.ToDecimal(tsv[27], CultureInfo.InvariantCulture);
+            EURValue = string.IsNullOrWhiteSpace(tsv[28]) ? (decimal?)null : Convert.ToDecimal(tsv[28], CultureInfo.InvariantCulture);
+            USDValue = string.IsNullOrWhiteSpace(tsv[29]) ? (decimal?)null : Convert.ToDecimal(tsv[29], CultureInfo.InvariantCulture);
+            NoteText = string.IsNullOrWhiteSpace(tsv[30]) ? null : tsv[30];
+            BuybackPercentage = string.IsNullOrWhiteSpace(tsv[31]) ? (decimal?)null : Convert.ToDecimal(tsv[31], CultureInfo.InvariantCulture);
+            VolumePercentage = string.IsNullOrWhiteSpace(tsv[32]) ? (decimal?)null : Convert.ToDecimal(tsv[32], CultureInfo.InvariantCulture);
+            ConversionRate = string.IsNullOrWhiteSpace(tsv[33]) ? (decimal?)null : Convert.ToDecimal(tsv[33], CultureInfo.InvariantCulture);
+            AmountAdjustedFactor = string.IsNullOrWhiteSpace(tsv[34]) ? (decimal?)null : Convert.ToDecimal(tsv[34], CultureInfo.InvariantCulture);
+            PriceAdjustedFactor = string.IsNullOrWhiteSpace(tsv[35]) ? (decimal?)null : Convert.ToDecimal(tsv[35], CultureInfo.InvariantCulture);
+            TreasuryHolding = string.IsNullOrWhiteSpace(tsv[36]) ? (int?)null : Convert.ToInt32(tsv[36], CultureInfo.InvariantCulture);
 
-            AnnouncementDate = string.IsNullOrWhiteSpace(csv[37]) ? (DateTime?)null : DateTime.ParseExact(csv[37], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            TimeReleased = string.IsNullOrWhiteSpace(csv[38]) ? (DateTime?)null : DateTime.ParseExact(csv[38].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
-            TimeProcessed = string.IsNullOrWhiteSpace(csv[39]) ? (DateTime?)null : DateTime.ParseExact(csv[39].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
-            TimeReleasedUtc = string.IsNullOrWhiteSpace(csv[40]) ? (DateTime?)null : DateTime.ParseExact(csv[40].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
-            TimeProcessedUtc = string.IsNullOrWhiteSpace(csv[41]) ? (DateTime?)null : DateTime.ParseExact(csv[41].Replace(" ", "").Trim(), "yyyy-MM-ddHH:mm:ss", CultureInfo.InvariantCulture);
-            AnnouncedIn = string.IsNullOrWhiteSpace(csv[42]) ? null : csv[42];
+            AnnouncementDate = string.IsNullOrWhiteSpace(tsv[37]) ? (DateTime?)null : DateTime.ParseExact(tsv[37], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            TimeReleased = string.IsNullOrWhiteSpace(tsv[38]) ? (DateTime?)null : DateTime.ParseExact(tsv[38].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
+            TimeProcessed = string.IsNullOrWhiteSpace(tsv[39]) ? (DateTime?)null : DateTime.ParseExact(tsv[39].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
+            TimeReleasedUtc = string.IsNullOrWhiteSpace(tsv[40]) ? (DateTime?)null : DateTime.ParseExact(tsv[40].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
+            TimeProcessedUtc = string.IsNullOrWhiteSpace(tsv[41]) ? (DateTime?)null : DateTime.ParseExact(tsv[41].Replace(" ", "").Trim(), "yyyy-MM-ddHH:mm:ss", CultureInfo.InvariantCulture);
+            AnnouncedIn = string.IsNullOrWhiteSpace(tsv[42]) ? null : tsv[42];
         }
 
         /// <summary>
@@ -214,7 +214,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
                     "alternative",
                     "smartinsider",
                     "transactions",
-                    $"{config.Symbol.Value.ToLower()}.csv"
+                    $"{config.Symbol.Value.ToLower()}.tsv"
                 ),
                 SubscriptionTransportMedium.LocalFile,
                 FileFormat.Csv
@@ -235,6 +235,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
             {
                 Symbol = config.Symbol
             };
+            // Files are made available at the earliest @ 17:00 U.K. time
             transaction.Time = transaction.Time.AddHours(17).ConvertTo(TimeZones.London, config.DataTimeZone);
 
             return transaction;
@@ -307,68 +308,52 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// </summary>
         /// <returns>String of CSV</returns>
         /// <remarks>Parsable by the constructor should you need to recreate the object from CSV</remarks>
-        public override string ToCsv()
+        public override string ToLine()
         {
-            return $"{TransactionID}\t{BuybackType}\t{LastUpdate:yyyyMMdd}\t{LastIDsUpdate:yyyyMMdd}\t{ISIN}\t{USDMarketCap}\t{CompanyID}\t{ICBIndustry}\t{ICBSuperSector}\t{ICBSector}\t{ICBSubSector}\t{ICBCode}\t{CompanyName}\t{PreviousResultsAnnouncementDate:yyyyMMdd}\t{NextResultsAnnouncementsDate:yyyyMMdd}\t{NextCloseBegin:yyyyMMdd}\t{LastCloseEnded:yyyyMMdd}\t{SecurityDescription}\t{TickerCountry}\t{TickerSymbol}\t{AnnouncementDate:yyyyMMdd}\t{TimeReleased:yyyyMMdd HH:mm:ss}\t{TimeProcessed:yyyyMMdd HH:mm:ss}\t{TimeReleasedUtc:yyyyMMdd HH:mm:ss}\t{TimeProcessedUtc:yyyyMMdd HH:mm:ss}\t{AnnouncedIn}\t{BuybackDate:yyyyMMdd}\t{BuybackVia}\t{BuybackBy}\t{HoldingType}\t{Currency}\t{Price}\t{TransactionAmount}\t{GBPValue}\t{EURValue}\t{USDValue}\t{NoteText}\t{BuybackPercentage}\t{VolumePercentage}\t{ConversionRate}\t{AmountAdjustedFactor}\t{PriceAdjustedFactor}\t{TreasuryHolding}";
-        }
-
-        /// <summary>
-        /// Determines equality to another SmartInsiderTransaction instance
-        /// </summary>
-        /// <param name="other">Another SmartInsiderTransaction instance</param>
-        /// <returns>Boolean value indicating equality</returns>
-        public override bool Equals(SmartInsiderEvent other)
-        {
-            var otherTransaction = other as SmartInsiderTransaction;
-            if (otherTransaction == null)
-            {
-                return false;
-            }
-
-            return otherTransaction.TransactionID == TransactionID &&
-                otherTransaction.BuybackType == BuybackType &&
-                otherTransaction.LastUpdate == LastUpdate &&
-                otherTransaction.LastIDsUpdate == LastIDsUpdate &&
-                otherTransaction.ISIN == ISIN &&
-                otherTransaction.USDMarketCap == USDMarketCap &&
-                otherTransaction.CompanyID == CompanyID &&
-                otherTransaction.ICBIndustry == ICBIndustry &&
-                otherTransaction.ICBSuperSector == ICBSuperSector &&
-                otherTransaction.ICBSector == ICBSector &&
-                otherTransaction.ICBSubSector == ICBSubSector &&
-                otherTransaction.ICBCode == ICBCode &&
-                otherTransaction.CompanyName == CompanyName &&
-                otherTransaction.PreviousResultsAnnouncementDate == PreviousResultsAnnouncementDate &&
-                otherTransaction.NextResultsAnnouncementsDate == NextResultsAnnouncementsDate &&
-                otherTransaction.NextCloseBegin == NextCloseBegin &&
-                otherTransaction.LastCloseEnded == LastCloseEnded &&
-                otherTransaction.SecurityDescription == SecurityDescription &&
-                otherTransaction.TickerCountry == TickerCountry &&
-                otherTransaction.TickerSymbol == TickerSymbol &&
-                otherTransaction.AnnouncementDate == AnnouncementDate &&
-                otherTransaction.TimeReleased == TimeReleased &&
-                otherTransaction.TimeProcessed == TimeProcessed &&
-                otherTransaction.TimeReleasedUtc == TimeReleasedUtc &&
-                otherTransaction.TimeProcessedUtc == TimeProcessedUtc &&
-                otherTransaction.AnnouncedIn == AnnouncedIn &&
-
-                otherTransaction.BuybackDate == BuybackDate &&
-                otherTransaction.BuybackVia == BuybackVia &&
-                otherTransaction.BuybackBy == BuybackBy &&
-                otherTransaction.HoldingType == HoldingType &&
-                otherTransaction.Currency == Currency &&
-                otherTransaction.Price == Price &&
-                otherTransaction.TransactionAmount == TransactionAmount &&
-                otherTransaction.GBPValue == GBPValue &&
-                otherTransaction.EURValue == EURValue &&
-                otherTransaction.USDValue == USDValue &&
-                otherTransaction.NoteText == NoteText &&
-                otherTransaction.BuybackPercentage == BuybackPercentage &&
-                otherTransaction.VolumePercentage == VolumePercentage &&
-                otherTransaction.ConversionRate == ConversionRate &&
-                otherTransaction.AmountAdjustedFactor == AmountAdjustedFactor &&
-                otherTransaction.PriceAdjustedFactor == PriceAdjustedFactor &&
-                otherTransaction.TreasuryHolding == TreasuryHolding;
+            return string.Join("\t",
+                TransactionID,
+                BuybackType,
+                LastUpdate.ToString("yyyyMMdd"),
+                LastIDsUpdate?.ToString("yyyyMMdd"),
+                ISIN,
+                USDMarketCap,
+                CompanyID,
+                ICBIndustry,
+                ICBSuperSector,
+                ICBSector,
+                ICBSubSector,
+                ICBCode,
+                CompanyName,
+                PreviousResultsAnnouncementDate?.ToString("yyyyMMdd"),
+                NextResultsAnnouncementsDate?.ToString("yyyyMMdd"),
+                NextCloseBegin?.ToString("yyyyMMdd"),
+                LastCloseEnded?.ToString("yyyyMMdd"),
+                SecurityDescription,
+                TickerCountry,
+                TickerSymbol,
+                AnnouncementDate?.ToString("yyyyMMdd"),
+                TimeReleased?.ToString("yyyyMMdd HH:mm:ss"),
+                TimeProcessed?.ToString("yyyyMMdd HH:mm:ss"),
+                TimeReleasedUtc?.ToString("yyyyMMdd HH:mm:ss"),
+                TimeProcessedUtc?.ToString("yyyyMMdd HH:mm:ss"),
+                AnnouncedIn,
+                BuybackDate?.ToString("yyyyMMdd"),
+                BuybackVia,
+                BuybackBy,
+                HoldingType,
+                Currency,
+                Price,
+                TransactionAmount,
+                GBPValue,
+                EURValue,
+                USDValue,
+                NoteText,
+                BuybackPercentage,
+                VolumePercentage,
+                ConversionRate,
+                AmountAdjustedFactor,
+                PriceAdjustedFactor,
+                TreasuryHolding);
         }
     }
 }

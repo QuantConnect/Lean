@@ -32,67 +32,67 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// <summary>
         /// Describes how the transaction was executed
         /// </summary>
-        public string IntentionVia { get; private set; }
+        public string IntentionVia { get; set; }
 
         /// <summary>
         /// Describes which entity carried out the transaction
         /// </summary>
-        public string IntentionBy { get; private set; }
+        public string IntentionBy { get; set; }
 
         /// <summary>
         /// Describes what will be done with those shares following repurchase
         /// </summary>
-        public string BuybackIntentionHoldingType { get; private set; }
+        public string BuybackIntentionHoldingType { get; set; }
 
         /// <summary>
         /// Number of shares to be or authorised to be traded
         /// </summary>
-        public int? IntentionAmount { get; private set; }
+        public int? IntentionAmount { get; set; }
 
         /// <summary>
         /// Currency of the value of shares to be/Authorised to be traded (ISO Code)
         /// </summary>
-        public string ValueCurrency { get; private set; }
+        public string ValueCurrency { get; set; }
 
         /// <summary>
         /// Valueof shares to be authorised to be traded
         /// </summary>
-        public long? IntentionValue { get; private set; }
+        public long? IntentionValue { get; set; }
 
         /// <summary>
         /// Percentage of oustanding shares to be authorised to be traded
         /// </summary>
-        public decimal? IntentionPercentage { get; private set; }
+        public decimal? IntentionPercentage { get; set; }
 
         /// <summary>
         /// start of the period the intention/authorisation applies to
         /// </summary>
-        public DateTime? IntentionAuthorisationStartDate { get; private set; }
+        public DateTime? IntentionAuthorisationStartDate { get; set; }
 
         /// <summary>
         /// End of the period the intention/authorisation applies to
         /// </summary>
-        public DateTime? IntentionAuthorisationEndDate { get; private set; }
+        public DateTime? IntentionAuthorisationEndDate { get; set; }
 
         /// <summary>
         /// Currency of min/max prices (ISO Code)
         /// </summary>
-        public string PriceCurrency { get; private set; }
+        public string PriceCurrency { get; set; }
 
         /// <summary>
         /// Minimum price shares will or may be purchased at
         /// </summary>
-        public decimal? MinimumPrice { get; private set; }
+        public decimal? MinimumPrice { get; set; }
 
         /// <summary>
         /// Maximum price shares will or may be purchased at
         /// </summary>
-        public decimal? MaximumPrice { get; private set; }
+        public decimal? MaximumPrice { get; set; }
 
         /// <summary>
         /// Free text which explains further details about the trade
         /// </summary>
-        public string BuybackIntentionNoteText { get; private set; }
+        public string BuybackIntentionNoteText { get; set; }
 
         /// <summary>
         /// Empty constructor required for <see cref="Slice.Get{T}()"/>
@@ -104,24 +104,24 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// <summary>
         /// Constructs instance of this via a *formatted* CSV line (tab delimited)
         /// </summary>
-        /// <param name="csvLine">Line of formatted CSV data</param>
-        public SmartInsiderIntention(string csvLine) : base(csvLine)
+        /// <param name="line">Line of formatted CSV data</param>
+        public SmartInsiderIntention(string line) : base(line)
         {
-            var csv = csvLine.Split('\t');
+            var tsv = line.Split('\t');
 
-            IntentionVia = string.IsNullOrWhiteSpace(csv[26]) ? null : csv[26];
-            IntentionBy = string.IsNullOrWhiteSpace(csv[27]) ? null : csv[27];
-            BuybackIntentionHoldingType = string.IsNullOrWhiteSpace(csv[28]) ? null : csv[28];
-            IntentionAmount = string.IsNullOrWhiteSpace(csv[29]) ? (int?)null : Convert.ToInt32(csv[29], CultureInfo.InvariantCulture);
-            ValueCurrency = string.IsNullOrWhiteSpace(csv[30]) ? null : csv[30];
-            IntentionValue = string.IsNullOrWhiteSpace(csv[31]) ? (long?)null : Convert.ToInt64(csv[31], CultureInfo.InvariantCulture);
-            IntentionPercentage = string.IsNullOrWhiteSpace(csv[32]) ? (decimal?)null : Convert.ToDecimal(csv[32], CultureInfo.InvariantCulture);
-            IntentionAuthorisationStartDate = string.IsNullOrWhiteSpace(csv[33]) ? (DateTime?)null : DateTime.ParseExact(csv[33], "yyyyMMdd", CultureInfo.InvariantCulture);
-            IntentionAuthorisationEndDate = string.IsNullOrWhiteSpace(csv[34]) ? (DateTime?)null : DateTime.ParseExact(csv[34], "yyyyMMdd", CultureInfo.InvariantCulture);
-            PriceCurrency = string.IsNullOrWhiteSpace(csv[35]) ? null : csv[35];
-            MinimumPrice = string.IsNullOrWhiteSpace(csv[36]) ? (decimal?)null : Convert.ToDecimal(csv[36], CultureInfo.InvariantCulture);
-            MaximumPrice = string.IsNullOrWhiteSpace(csv[37]) ? (decimal?)null : Convert.ToDecimal(csv[37], CultureInfo.InvariantCulture);
-            BuybackIntentionNoteText = csv.Length == 39? (string.IsNullOrWhiteSpace(csv[38]) ? null : csv[38]) : null;
+            IntentionVia = string.IsNullOrWhiteSpace(tsv[26]) ? null : tsv[26];
+            IntentionBy = string.IsNullOrWhiteSpace(tsv[27]) ? null : tsv[27];
+            BuybackIntentionHoldingType = string.IsNullOrWhiteSpace(tsv[28]) ? null : tsv[28];
+            IntentionAmount = string.IsNullOrWhiteSpace(tsv[29]) ? (int?)null : Convert.ToInt32(tsv[29], CultureInfo.InvariantCulture);
+            ValueCurrency = string.IsNullOrWhiteSpace(tsv[30]) ? null : tsv[30];
+            IntentionValue = string.IsNullOrWhiteSpace(tsv[31]) ? (long?)null : Convert.ToInt64(tsv[31], CultureInfo.InvariantCulture);
+            IntentionPercentage = string.IsNullOrWhiteSpace(tsv[32]) ? (decimal?)null : Convert.ToDecimal(tsv[32], CultureInfo.InvariantCulture);
+            IntentionAuthorisationStartDate = string.IsNullOrWhiteSpace(tsv[33]) ? (DateTime?)null : DateTime.ParseExact(tsv[33], "yyyyMMdd", CultureInfo.InvariantCulture);
+            IntentionAuthorisationEndDate = string.IsNullOrWhiteSpace(tsv[34]) ? (DateTime?)null : DateTime.ParseExact(tsv[34], "yyyyMMdd", CultureInfo.InvariantCulture);
+            PriceCurrency = string.IsNullOrWhiteSpace(tsv[35]) ? null : tsv[35];
+            MinimumPrice = string.IsNullOrWhiteSpace(tsv[36]) ? (decimal?)null : Convert.ToDecimal(tsv[36], CultureInfo.InvariantCulture);
+            MaximumPrice = string.IsNullOrWhiteSpace(tsv[37]) ? (decimal?)null : Convert.ToDecimal(tsv[37], CultureInfo.InvariantCulture);
+            BuybackIntentionNoteText = tsv.Length == 39? (string.IsNullOrWhiteSpace(tsv[38]) ? null : tsv[38]) : null;
         }
 
         /// <summary>
@@ -129,51 +129,51 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// </summary>
         /// <param name="line">Line of raw CSV (raw with fields 46, 36, 14, 7 removed in descending order)</param>
         /// <returns>Instance of the object</returns>
-        public override void FromRawCsv(string line)
+        public override void FromRawData(string line)
         {
-            var csv = line.Split('\t');
+            var tsv = line.Split('\t');
 
-            TransactionID = string.IsNullOrWhiteSpace(csv[0]) ? null : csv[0];
-            BuybackType = string.IsNullOrWhiteSpace(csv[1]) ? null : csv[1];
-            LastUpdate = DateTime.ParseExact(csv[2], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            LastIDsUpdate = string.IsNullOrWhiteSpace(csv[3]) ? (DateTime?)null : DateTime.ParseExact(csv[3], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            ISIN = string.IsNullOrWhiteSpace(csv[4]) ? null : csv[4];
-            USDMarketCap = string.IsNullOrWhiteSpace(csv[5]) ? (decimal?)null : Convert.ToDecimal(csv[5], CultureInfo.InvariantCulture);
-            CompanyID = string.IsNullOrWhiteSpace(csv[6]) ? (int?)null : Convert.ToInt32(csv[6], CultureInfo.InvariantCulture);
-            ICBIndustry = string.IsNullOrWhiteSpace(csv[7]) ? null : csv[7];
-            ICBSuperSector = string.IsNullOrWhiteSpace(csv[8]) ? null : csv[8];
-            ICBSector = string.IsNullOrWhiteSpace(csv[9]) ? null : csv[9];
-            ICBSubSector = string.IsNullOrWhiteSpace(csv[10]) ? null : csv[10];
-            ICBCode = string.IsNullOrWhiteSpace(csv[11]) ? (int?)null : Convert.ToInt32(csv[11], CultureInfo.InvariantCulture);
-            CompanyName = string.IsNullOrWhiteSpace(csv[12]) ? null : csv[12];
-            PreviousResultsAnnouncementDate = string.IsNullOrWhiteSpace(csv[13]) ? (DateTime?)null : DateTime.ParseExact(csv[13], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            NextResultsAnnouncementsDate = string.IsNullOrWhiteSpace(csv[14]) ? (DateTime?)null : DateTime.ParseExact(csv[14], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            NextCloseBegin = string.IsNullOrWhiteSpace(csv[15]) ? (DateTime?)null : DateTime.ParseExact(csv[15], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            LastCloseEnded = string.IsNullOrWhiteSpace(csv[16]) ? (DateTime?)null : DateTime.ParseExact(csv[16], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            SecurityDescription = string.IsNullOrWhiteSpace(csv[17]) ? null : csv[17];
-            TickerCountry = string.IsNullOrWhiteSpace(csv[18]) ? null : csv[18];
-            TickerSymbol = string.IsNullOrWhiteSpace(csv[19]) ? null : csv[19];
+            TransactionID = string.IsNullOrWhiteSpace(tsv[0]) ? null : tsv[0];
+            BuybackType = string.IsNullOrWhiteSpace(tsv[1]) ? null : tsv[1];
+            LastUpdate = DateTime.ParseExact(tsv[2], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            LastIDsUpdate = string.IsNullOrWhiteSpace(tsv[3]) ? (DateTime?)null : DateTime.ParseExact(tsv[3], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            ISIN = string.IsNullOrWhiteSpace(tsv[4]) ? null : tsv[4];
+            USDMarketCap = string.IsNullOrWhiteSpace(tsv[5]) ? (decimal?)null : Convert.ToDecimal(tsv[5], CultureInfo.InvariantCulture);
+            CompanyID = string.IsNullOrWhiteSpace(tsv[6]) ? (int?)null : Convert.ToInt32(tsv[6], CultureInfo.InvariantCulture);
+            ICBIndustry = string.IsNullOrWhiteSpace(tsv[7]) ? null : tsv[7];
+            ICBSuperSector = string.IsNullOrWhiteSpace(tsv[8]) ? null : tsv[8];
+            ICBSector = string.IsNullOrWhiteSpace(tsv[9]) ? null : tsv[9];
+            ICBSubSector = string.IsNullOrWhiteSpace(tsv[10]) ? null : tsv[10];
+            ICBCode = string.IsNullOrWhiteSpace(tsv[11]) ? (int?)null : Convert.ToInt32(tsv[11], CultureInfo.InvariantCulture);
+            CompanyName = string.IsNullOrWhiteSpace(tsv[12]) ? null : tsv[12];
+            PreviousResultsAnnouncementDate = string.IsNullOrWhiteSpace(tsv[13]) ? (DateTime?)null : DateTime.ParseExact(tsv[13], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            NextResultsAnnouncementsDate = string.IsNullOrWhiteSpace(tsv[14]) ? (DateTime?)null : DateTime.ParseExact(tsv[14], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            NextCloseBegin = string.IsNullOrWhiteSpace(tsv[15]) ? (DateTime?)null : DateTime.ParseExact(tsv[15], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            LastCloseEnded = string.IsNullOrWhiteSpace(tsv[16]) ? (DateTime?)null : DateTime.ParseExact(tsv[16], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            SecurityDescription = string.IsNullOrWhiteSpace(tsv[17]) ? null : tsv[17];
+            TickerCountry = string.IsNullOrWhiteSpace(tsv[18]) ? null : tsv[18];
+            TickerSymbol = string.IsNullOrWhiteSpace(tsv[19]) ? null : tsv[19];
 
-            AnnouncementDate = string.IsNullOrWhiteSpace(csv[37]) ? (DateTime?)null : DateTime.ParseExact(csv[37], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            TimeReleased = string.IsNullOrWhiteSpace(csv[38]) ? (DateTime?)null : DateTime.ParseExact(csv[38].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
-            TimeProcessed = string.IsNullOrWhiteSpace(csv[39]) ? (DateTime?)null : DateTime.ParseExact(csv[39].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
-            TimeReleasedUtc = string.IsNullOrWhiteSpace(csv[40]) ? (DateTime?)null : DateTime.ParseExact(csv[40].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
-            TimeProcessedUtc = string.IsNullOrWhiteSpace(csv[41]) ? (DateTime?)null : DateTime.ParseExact(csv[41].Replace(" ", "").Trim(), "yyyy-MM-ddHH:mm:ss", CultureInfo.InvariantCulture);
-            AnnouncedIn = string.IsNullOrWhiteSpace(csv[42]) ? null : csv[42];
+            AnnouncementDate = string.IsNullOrWhiteSpace(tsv[37]) ? (DateTime?)null : DateTime.ParseExact(tsv[37], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            TimeReleased = string.IsNullOrWhiteSpace(tsv[38]) ? (DateTime?)null : DateTime.ParseExact(tsv[38].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
+            TimeProcessed = string.IsNullOrWhiteSpace(tsv[39]) ? (DateTime?)null : DateTime.ParseExact(tsv[39].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
+            TimeReleasedUtc = string.IsNullOrWhiteSpace(tsv[40]) ? (DateTime?)null : DateTime.ParseExact(tsv[40].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
+            TimeProcessedUtc = string.IsNullOrWhiteSpace(tsv[41]) ? (DateTime?)null : DateTime.ParseExact(tsv[41].Replace(" ", "").Trim(), "yyyy-MM-ddHH:mm:ss", CultureInfo.InvariantCulture);
+            AnnouncedIn = string.IsNullOrWhiteSpace(tsv[42]) ? null : tsv[42];
 
-            IntentionVia = string.IsNullOrWhiteSpace(csv[43]) ? null : csv[43];
-            IntentionBy = string.IsNullOrWhiteSpace(csv[44]) ? null : csv[44];
-            BuybackIntentionHoldingType = string.IsNullOrWhiteSpace(csv[45]) ? null : csv[45];
-            IntentionAmount = string.IsNullOrWhiteSpace(csv[46]) ? (int?)null : Convert.ToInt32(csv[46], CultureInfo.InvariantCulture);
-            ValueCurrency = string.IsNullOrWhiteSpace(csv[47]) ? null : csv[47];
-            IntentionValue = string.IsNullOrWhiteSpace(csv[48]) ? (long?)null : Convert.ToInt64(csv[48], CultureInfo.InvariantCulture);
-            IntentionPercentage = string.IsNullOrWhiteSpace(csv[49]) ? (decimal?)null : Convert.ToDecimal(csv[49], CultureInfo.InvariantCulture);
-            IntentionAuthorisationStartDate = string.IsNullOrWhiteSpace(csv[50]) ? (DateTime?)null : DateTime.ParseExact(csv[50], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            IntentionAuthorisationEndDate = string.IsNullOrWhiteSpace(csv[51]) ? (DateTime?)null : DateTime.ParseExact(csv[51], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            PriceCurrency = string.IsNullOrWhiteSpace(csv[52]) ? null : csv[52];
-            MinimumPrice = string.IsNullOrWhiteSpace(csv[53]) ? (decimal?)null : Convert.ToDecimal(csv[53], CultureInfo.InvariantCulture);
-            MaximumPrice = string.IsNullOrWhiteSpace(csv[54]) ? (decimal?)null : Convert.ToDecimal(csv[54], CultureInfo.InvariantCulture);
-            BuybackIntentionNoteText = csv.Length == 56 ? (string.IsNullOrWhiteSpace(csv[55]) ? null : csv[55]) : null;
+            IntentionVia = string.IsNullOrWhiteSpace(tsv[43]) ? null : tsv[43];
+            IntentionBy = string.IsNullOrWhiteSpace(tsv[44]) ? null : tsv[44];
+            BuybackIntentionHoldingType = string.IsNullOrWhiteSpace(tsv[45]) ? null : tsv[45];
+            IntentionAmount = string.IsNullOrWhiteSpace(tsv[46]) ? (int?)null : Convert.ToInt32(tsv[46], CultureInfo.InvariantCulture);
+            ValueCurrency = string.IsNullOrWhiteSpace(tsv[47]) ? null : tsv[47];
+            IntentionValue = string.IsNullOrWhiteSpace(tsv[48]) ? (long?)null : Convert.ToInt64(tsv[48], CultureInfo.InvariantCulture);
+            IntentionPercentage = string.IsNullOrWhiteSpace(tsv[49]) ? (decimal?)null : Convert.ToDecimal(tsv[49], CultureInfo.InvariantCulture);
+            IntentionAuthorisationStartDate = string.IsNullOrWhiteSpace(tsv[50]) ? (DateTime?)null : DateTime.ParseExact(tsv[50], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            IntentionAuthorisationEndDate = string.IsNullOrWhiteSpace(tsv[51]) ? (DateTime?)null : DateTime.ParseExact(tsv[51], "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            PriceCurrency = string.IsNullOrWhiteSpace(tsv[52]) ? null : tsv[52];
+            MinimumPrice = string.IsNullOrWhiteSpace(tsv[53]) ? (decimal?)null : Convert.ToDecimal(tsv[53], CultureInfo.InvariantCulture);
+            MaximumPrice = string.IsNullOrWhiteSpace(tsv[54]) ? (decimal?)null : Convert.ToDecimal(tsv[54], CultureInfo.InvariantCulture);
+            BuybackIntentionNoteText = tsv.Length == 56 ? (string.IsNullOrWhiteSpace(tsv[55]) ? null : tsv[55]) : null;
         }
 
         /// <summary>
@@ -191,7 +191,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
                     "alternative",
                     "smartinsider",
                     "intentions",
-                    $"{config.Symbol.Value.ToLower()}.csv"
+                    $"{config.Symbol.Value.ToLower()}.tsv"
                 ),
                 SubscriptionTransportMedium.LocalFile,
                 FileFormat.Csv
@@ -212,6 +212,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
             {
                 Symbol = config.Symbol
             };
+            // Files are made available at the earliest @ 17:00 U.K. time
             intention.Time = intention.Time.AddHours(17).ConvertTo(TimeZones.London,config.DataTimeZone);
 
             return intention;
@@ -276,64 +277,48 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// </summary>
         /// <returns>String of CSV</returns>
         /// <remarks>Parsable by the constructor should you need to recreate the object from CSV</remarks>
-        public override string ToCsv()
+        public override string ToLine()
         {
-            return $"{TransactionID}\t{BuybackType}\t{LastUpdate:yyyyMMdd}\t{LastIDsUpdate:yyyyMMdd}\t{ISIN}\t{USDMarketCap}\t{CompanyID}\t{ICBIndustry}\t{ICBSuperSector}\t{ICBSector}\t{ICBSubSector}\t{ICBCode}\t{CompanyName}\t{PreviousResultsAnnouncementDate:yyyyMMdd}\t{NextResultsAnnouncementsDate:yyyyMMdd}\t{NextCloseBegin:yyyyMMdd}\t{LastCloseEnded:yyyyMMdd}\t{SecurityDescription}\t{TickerCountry}\t{TickerSymbol}\t{AnnouncementDate:yyyyMMdd}\t{TimeReleased:yyyyMMdd HH:mm:ss}\t{TimeProcessed:yyyyMMdd HH:mm:ss}\t{TimeReleasedUtc:yyyyMMdd HH:mm:ss}\t{TimeProcessedUtc:yyyyMMdd HH:mm:ss}\t{AnnouncedIn}\t{IntentionVia}\t{IntentionBy}\t{BuybackIntentionHoldingType}\t{IntentionAmount}\t{ValueCurrency}\t{IntentionValue}\t{IntentionPercentage}\t{IntentionAuthorisationStartDate:yyyyMMdd}\t{IntentionAuthorisationEndDate:yyyyMMdd}\t{PriceCurrency}\t{MinimumPrice}\t{MaximumPrice}\t{BuybackIntentionNoteText}";
-        }
-
-        /// <summary>
-        /// Determines equality to another SmartInsiderIntention instance
-        /// </summary>
-        /// <param name="other">Another SmartInsiderIntention instance</param>
-        /// <returns>Boolean value indicating equality</returns>
-        public override bool Equals(SmartInsiderEvent other)
-        {
-            var otherIntention = other as SmartInsiderIntention;
-            if (otherIntention == null)
-            {
-                return false;
-            }
-
-            return otherIntention.TransactionID == TransactionID &&
-                otherIntention.BuybackType == BuybackType &&
-                otherIntention.LastUpdate == LastUpdate &&
-                otherIntention.LastIDsUpdate == LastIDsUpdate &&
-                otherIntention.ISIN == ISIN &&
-                otherIntention.USDMarketCap == USDMarketCap &&
-                otherIntention.CompanyID == CompanyID &&
-                otherIntention.ICBIndustry == ICBIndustry &&
-                otherIntention.ICBSuperSector == ICBSuperSector &&
-                otherIntention.ICBSector == ICBSector &&
-                otherIntention.ICBSubSector == ICBSubSector &&
-                otherIntention.ICBCode == ICBCode &&
-                otherIntention.CompanyName == CompanyName &&
-                otherIntention.PreviousResultsAnnouncementDate == PreviousResultsAnnouncementDate &&
-                otherIntention.NextResultsAnnouncementsDate == NextResultsAnnouncementsDate &&
-                otherIntention.NextCloseBegin == NextCloseBegin &&
-                otherIntention.LastCloseEnded == LastCloseEnded &&
-                otherIntention.SecurityDescription == SecurityDescription &&
-                otherIntention.TickerCountry == TickerCountry &&
-                otherIntention.TickerSymbol == TickerSymbol &&
-                otherIntention.AnnouncementDate == AnnouncementDate &&
-                otherIntention.TimeReleased == TimeReleased &&
-                otherIntention.TimeProcessed == TimeProcessed &&
-                otherIntention.TimeReleasedUtc == TimeReleasedUtc &&
-                otherIntention.TimeProcessedUtc == TimeProcessedUtc &&
-                otherIntention.AnnouncedIn == AnnouncedIn &&
-
-                otherIntention.IntentionVia == IntentionVia &&
-                otherIntention.IntentionBy == IntentionBy &&
-                otherIntention.BuybackIntentionHoldingType == BuybackIntentionHoldingType &&
-                otherIntention.IntentionAmount == IntentionAmount &&
-                otherIntention.ValueCurrency == ValueCurrency &&
-                otherIntention.IntentionValue == IntentionValue &&
-                otherIntention.IntentionPercentage == IntentionPercentage &&
-                otherIntention.IntentionAuthorisationStartDate == IntentionAuthorisationStartDate &&
-                otherIntention.IntentionAuthorisationEndDate == IntentionAuthorisationEndDate &&
-                otherIntention.PriceCurrency == PriceCurrency &&
-                otherIntention.MinimumPrice == MinimumPrice &&
-                otherIntention.MaximumPrice == MaximumPrice &&
-                otherIntention.BuybackIntentionNoteText == BuybackIntentionNoteText;
+            return string.Join("\t",
+                TransactionID,
+                BuybackType,
+                LastUpdate.ToString("yyyyMMdd"),
+                LastIDsUpdate?.ToString("yyyyMMdd"),
+                ISIN,
+                USDMarketCap,
+                CompanyID,
+                ICBIndustry,
+                ICBSuperSector,
+                ICBSector,
+                ICBSubSector,
+                ICBCode,
+                CompanyName,
+                PreviousResultsAnnouncementDate?.ToString("yyyyMMdd"),
+                NextResultsAnnouncementsDate?.ToString("yyyyMMdd"),
+                NextCloseBegin?.ToString("yyyyMMdd"),
+                LastCloseEnded?.ToString("yyyyMMdd"),
+                SecurityDescription,
+                TickerCountry,
+                TickerSymbol,
+                AnnouncementDate?.ToString("yyyyMMdd"),
+                TimeReleased?.ToString("yyyyMMdd HH:mm:ss"),
+                TimeProcessed?.ToString("yyyyMMdd HH:mm:ss"),
+                TimeReleasedUtc?.ToString("yyyyMMdd HH:mm:ss"),
+                TimeProcessedUtc?.ToString("yyyyMMdd HH:mm:ss"),
+                AnnouncedIn,
+                IntentionVia,
+                IntentionBy,
+                BuybackIntentionHoldingType,
+                IntentionAmount,
+                ValueCurrency,
+                IntentionValue,
+                IntentionPercentage,
+                IntentionAuthorisationStartDate?.ToString("yyyyMMdd"),
+                IntentionAuthorisationEndDate?.ToString("yyyyMMdd"),
+                PriceCurrency,
+                MinimumPrice,
+                MaximumPrice,
+                BuybackIntentionNoteText);
         }
     }
 }

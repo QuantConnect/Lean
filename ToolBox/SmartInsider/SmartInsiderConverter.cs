@@ -138,13 +138,13 @@ namespace QuantConnect.ToolBox.SmartInsider
                 {
                     // Yes, there are ONE HUNDRED total fields in this dataset.
                     // However, we will only take the first 60 since the rest are reserved fields
-                    var csv = line.Split('\t')
+                    var tsv = line.Split('\t')
                         .Take(60)
                         .Select(x => x.Replace("\"", ""))
                         .ToList();
 
                     // If we have a null value on a non-nullable field, consider it invalid data
-                    if (string.IsNullOrWhiteSpace(csv[2]))
+                    if (string.IsNullOrWhiteSpace(tsv[2]))
                     {
                         Log.Trace($"SmartInsiderConverter.Process(): Null value encountered on non-nullable value on line {i}");
                         continue;
@@ -152,15 +152,15 @@ namespace QuantConnect.ToolBox.SmartInsider
 
                     // Remove in descending order to maintain index order
                     // while we delete lower indexed values
-                    csv.RemoveAt(46); // ShowOriginal
-                    csv.RemoveAt(36); // PreviousClosePrice
-                    csv.RemoveAt(14); // ShortCompanyName
-                    csv.RemoveAt(7);  // CompanyPageURL
+                    tsv.RemoveAt(46); // ShowOriginal
+                    tsv.RemoveAt(36); // PreviousClosePrice
+                    tsv.RemoveAt(14); // ShortCompanyName
+                    tsv.RemoveAt(7);  // CompanyPageURL
 
-                    var finalLine = string.Join("\t", csv);
+                    var finalLine = string.Join("\t", tsv);
 
                     var dataInstance = new T();
-                    dataInstance.FromRawCsv(finalLine);
+                    dataInstance.FromRawData(finalLine);
 
                     var ticker = dataInstance.TickerSymbol;
 
@@ -239,7 +239,7 @@ namespace QuantConnect.ToolBox.SmartInsider
             {
                 var ticker = kvp.Key.ToLower();
 
-                var finalFile = new FileInfo(Path.Combine(destinationDirectory.FullName, $"{ticker}.csv"));
+                var finalFile = new FileInfo(Path.Combine(destinationDirectory.FullName, $"{ticker}.tsv"));
                 var fileContents = new List<T>();
 
                 if (finalFile.Exists)
@@ -256,12 +256,12 @@ namespace QuantConnect.ToolBox.SmartInsider
 
                 fileContents.AddRange(kvp.Value);
 
-                var csvContents = fileContents
+                var tsvContents = fileContents
                     .OrderBy(x => x.LastUpdate)
-                    .Select(x => x.ToCsv())
+                    .Select(x => x.ToLine())
                     .Distinct();
 
-                File.WriteAllLines(finalFile.FullName, csvContents);
+                File.WriteAllLines(finalFile.FullName, tsvContents);
             }
         }
 
@@ -271,15 +271,16 @@ namespace QuantConnect.ToolBox.SmartInsider
         /// <typeparam name="T"><see cref="SmartInsiderEvent"/> derived class</typeparam>
         /// <param name="line">CSV line</param>
         /// <returns>SmartInsiderEvent derived class</returns>
-        private SmartInsiderEvent CreateSmartInsiderInstance<T>(string line)
+        private T CreateSmartInsiderInstance<T>(string line)
+            where T : SmartInsiderEvent
         {
             if (typeof(T) == typeof(SmartInsiderIntention))
             {
-                return new SmartInsiderIntention(line);
+                return (T)(SmartInsiderEvent)new SmartInsiderIntention(line);
             }
             if (typeof(T) == typeof(SmartInsiderTransaction))
             {
-                return new SmartInsiderTransaction(line);
+                return (T)(SmartInsiderEvent)new SmartInsiderTransaction(line);
             }
 
             throw new InvalidOperationException($"Smart Insider custom data source '{typeof(T).Name}' is not supported");
