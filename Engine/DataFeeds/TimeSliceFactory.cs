@@ -143,7 +143,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         custom = new List<UpdateData<ISecurityPrice>>(1);
                     }
                     // This is all the custom data
-                    custom.Add(new UpdateData<ISecurityPrice>(packet.Security, packet.Configuration.Type, list));
+                    custom.Add(new UpdateData<ISecurityPrice>(packet.Security, packet.Configuration.Type, list, packet.Configuration.IsInternalFeed));
                 }
 
                 var securityUpdate = new List<BaseData>(list.Count);
@@ -179,7 +179,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     {
                                         tradeBars = new TradeBars(algorithmTime);
                                     }
-                                    tradeBars[baseData.Symbol] = (TradeBar)baseData;
+
+                                    var newTradeBar = (TradeBar)baseData;
+                                    TradeBar existingTradeBar;
+                                    // if we have an existing bar keep the highest resolution one
+                                    // e.g Hour and Minute resolution subscriptions for the same symbol
+                                    // see CustomUniverseWithBenchmarkRegressionAlgorithm
+                                    if (!tradeBars.TryGetValue(baseData.Symbol, out existingTradeBar)
+                                        || existingTradeBar.Period > newTradeBar.Period)
+                                    {
+                                        tradeBars[baseData.Symbol] = newTradeBar;
+                                    }
                                     break;
 
                                 case MarketDataType.QuoteBar:
@@ -187,7 +197,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     {
                                         quoteBars = new QuoteBars(algorithmTime);
                                     }
-                                    quoteBars[baseData.Symbol] = (QuoteBar)baseData;
+
+                                    var newQuoteBar = (QuoteBar)baseData;
+                                    QuoteBar existingQuoteBar;
+                                    // if we have an existing bar keep the highest resolution one
+                                    // e.g Hour and Minute resolution subscriptions for the same symbol
+                                    // see CustomUniverseWithBenchmarkRegressionAlgorithm
+                                    if (!quoteBars.TryGetValue(baseData.Symbol, out existingQuoteBar)
+                                        || existingQuoteBar.Period > newQuoteBar.Period)
+                                    {
+                                        quoteBars[baseData.Symbol] = newQuoteBar;
+                                    }
                                     break;
 
                                 case MarketDataType.OptionChain:
@@ -257,54 +277,58 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         securityUpdate.Add(baseData);
 
                         // option underlying security update
-                        if (symbol.SecurityType == SecurityType.Equity)
+                        if (!packet.Configuration.IsInternalFeed
+                            && symbol.SecurityType == SecurityType.Equity)
                         {
                             optionUnderlyingUpdates[symbol] = baseData;
                         }
                     }
-                    // include checks for various aux types so we don't have to construct the dictionaries in Slice
-                    else if ((delisting = baseData as Delisting) != null)
+                    else if (!packet.Configuration.IsInternalFeed)
                     {
-                        if (delistings == null)
+                        // include checks for various aux types so we don't have to construct the dictionaries in Slice
+                        if ((delisting = baseData as Delisting) != null)
                         {
-                            delistings = new Delistings(algorithmTime);
+                            if (delistings == null)
+                            {
+                                delistings = new Delistings(algorithmTime);
+                            }
+                            delistings[symbol] = delisting;
                         }
-                        delistings[symbol] = delisting;
-                    }
-                    else if ((dividend = baseData as Dividend) != null)
-                    {
-                        if (dividends == null)
+                        else if ((dividend = baseData as Dividend) != null)
                         {
-                            dividends = new Dividends(algorithmTime);
+                            if (dividends == null)
+                            {
+                                dividends = new Dividends(algorithmTime);
+                            }
+                            dividends[symbol] = dividend;
                         }
-                        dividends[symbol] = dividend;
-                    }
-                    else if ((split = baseData as Split) != null)
-                    {
-                        if (splits == null)
+                        else if ((split = baseData as Split) != null)
                         {
-                            splits = new Splits(algorithmTime);
+                            if (splits == null)
+                            {
+                                splits = new Splits(algorithmTime);
+                            }
+                            splits[symbol] = split;
                         }
-                        splits[symbol] = split;
-                    }
-                    else if ((symbolChange = baseData as SymbolChangedEvent) != null)
-                    {
-                        if (symbolChanges == null)
+                        else if ((symbolChange = baseData as SymbolChangedEvent) != null)
                         {
-                            symbolChanges = new SymbolChangedEvents(algorithmTime);
+                            if (symbolChanges == null)
+                            {
+                                symbolChanges = new SymbolChangedEvents(algorithmTime);
+                            }
+                            // symbol changes is keyed by the requested symbol
+                            symbolChanges[packet.Configuration.Symbol] = symbolChange;
                         }
-                        // symbol changes is keyed by the requested symbol
-                        symbolChanges[packet.Configuration.Symbol] = symbolChange;
                     }
                 }
 
                 if (securityUpdate.Count > 0)
                 {
-                    security.Add(new UpdateData<ISecurityPrice>(packet.Security, packet.Configuration.Type, securityUpdate));
+                    security.Add(new UpdateData<ISecurityPrice>(packet.Security, packet.Configuration.Type, securityUpdate, packet.Configuration.IsInternalFeed));
                 }
                 if (consolidatorUpdate.Count > 0)
                 {
-                    consolidator.Add(new UpdateData<SubscriptionDataConfig>(packet.Configuration, packet.Configuration.Type, consolidatorUpdate));
+                    consolidator.Add(new UpdateData<SubscriptionDataConfig>(packet.Configuration, packet.Configuration.Type, consolidatorUpdate, packet.Configuration.IsInternalFeed));
                 }
             }
 

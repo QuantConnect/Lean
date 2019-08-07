@@ -199,7 +199,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 changes += newChanges;
             }
             while (newChanges != SecurityChanges.None
-                || _universeSelection.AddPendingCurrencyDataFeeds(frontierUtc));
+                || _universeSelection.AddPendingInternalDataFeeds(frontierUtc));
 
             var timeSlice = _timeSliceFactory.Create(frontierUtc, data, changes, universeDataForTimeSliceCreate);
 

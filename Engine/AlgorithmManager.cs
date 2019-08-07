@@ -338,8 +338,11 @@ namespace QuantConnect.Lean.Engine
                         security.SetMarketPrice(data);
                     }
 
-                    // Send market price updates to the TradeBuilder
-                    algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
+                    if (!update.IsInternalConfig)
+                    {
+                        // Send market price updates to the TradeBuilder
+                        algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
+                    }
                 }
 
                 //Update the securities properties with any universe data

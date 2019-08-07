@@ -36,7 +36,7 @@ class CustomBenchmarkAlgorithm(QCAlgorithm):
         # Find more symbols here: http://quantconnect.com/data
         self.AddEquity("SPY", Resolution.Second)
 
-        self.SetBenchmark("SPY")
+        self.SetBenchmark(Symbol.Create("AAPL", SecurityType.Equity, Market.USA))
 
     def OnData(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.'''

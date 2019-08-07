@@ -39,7 +39,8 @@ namespace QuantConnect.Data
         /// <summary>
         ///     Returns an IEnumerable of Subscriptions
         /// </summary>
-        public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptionManager.SubscriptionManagerSubscriptions;
+        /// <remarks>Will not return internal subscriptions</remarks>
+        public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptionManager.SubscriptionManagerSubscriptions.Where(config => !config.IsInternalFeed);
 
         /// <summary>
         ///     Flags the existence of custom data in the subscriptions

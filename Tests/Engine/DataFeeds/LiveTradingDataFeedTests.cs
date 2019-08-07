@@ -233,7 +233,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 securityChanges += ts.SecurityChanges.Count;
                 if (!firstTime)
                 {
-                    Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count);
+                    // benchmark SPY and EURUSD
+                    Assert.AreEqual(2, dataQueueHandler.Subscriptions.Count);
                     _algorithm.AddUniverse("TestUniverse", time => new List<string> { "AAPL", "SPY" });
                     firstTime = true;
                 }
@@ -343,6 +344,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                     Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
                     _dataManager.RemoveSubscription(_dataManager.DataFeedSubscriptions
+                        .Where(subscription => !subscription.Configuration.IsInternalFeed)
                         .Single(sub => sub.Configuration.Symbol == Symbols.SPY).Configuration);
                     emittedData = true;
                 }
@@ -892,7 +894,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void HandlesAllTickTypesAtTickResolution()
         {
             var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.GDAX);
-
+            // setting func benchmark so we don't add SPY
+            _algorithm.SetBenchmark(time => 1);
             var feed = RunDataFeed(
                 Resolution.Tick,
                 crypto: new List<string> { symbol.Value },

@@ -42,16 +42,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public readonly Type DataType;
 
         /// <summary>
+        /// True if this update data corresponds to an internal subscription
+        /// such as currency or security benchmark
+        /// </summary>
+        public readonly bool IsInternalConfig;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="UpdateData{T}"/> class
         /// </summary>
         /// <param name="target">The end consumer/user of the dat</param>
         /// <param name="dataType">The type of data in the list</param>
         /// <param name="data">The update data</param>
-        public UpdateData(T target, Type dataType, IReadOnlyList<BaseData> data)
+        /// <param name="isInternalConfig">True if this update data corresponds to an internal subscription
+        /// such as currency or security benchmark</param>
+        public UpdateData(T target, Type dataType, IReadOnlyList<BaseData> data, bool isInternalConfig)
         {
             Target = target;
             Data = data;
             DataType = dataType;
+            IsInternalConfig = isInternalConfig;
         }
     }
 }

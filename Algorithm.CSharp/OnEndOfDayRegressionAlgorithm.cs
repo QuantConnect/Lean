@@ -115,7 +115,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception($"OnEndOfDay(IBM) unexpected count call {_onEndOfDayIbmCallCount}");
             }
-            if (_onEndOfDayCallCount != 4)
+            if (_onEndOfDayCallCount != 5)
             {
                 throw new Exception($"OnEndOfDay() unexpected count call {_onEndOfDayCallCount}");
             }
@@ -139,21 +139,21 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "484.423%"},
+            {"Compounding Annual Return", "419.532%"},
             {"Drawdown", "1.200%"},
             {"Expectancy", "0"},
             {"Net Profit", "2.283%"},
-            {"Sharpe Ratio", "5.996"},
+            {"Sharpe Ratio", "5.506"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.191"},
-            {"Beta", "121.939"},
-            {"Annual Standard Deviation", "0.193"},
-            {"Annual Variance", "0.037"},
-            {"Information Ratio", "5.942"},
-            {"Tracking Error", "0.193"},
-            {"Treynor Ratio", "0.009"},
+            {"Alpha", "0.956"},
+            {"Beta", "0.076"},
+            {"Annual Standard Deviation", "0.175"},
+            {"Annual Variance", "0.031"},
+            {"Information Ratio", "3.584"},
+            {"Tracking Error", "0.244"},
+            {"Treynor Ratio", "12.715"},
             {"Total Fees", "$20.75"}
         };
     }
