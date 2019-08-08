@@ -948,6 +948,11 @@ namespace QuantConnect.Lean.Engine
 
             foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
             {
+                if (timeSlice.IsTimePulse)
+                {
+                    continue;
+                }
+
                 if (!setStartTime)
                 {
                     setStartTime = true;
