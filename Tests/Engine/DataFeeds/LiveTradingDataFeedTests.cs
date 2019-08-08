@@ -1266,8 +1266,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             int expectedQuoteBarsReceived,
             int expectedAuxPointsReceived)
         {
-            var locker = new object();
-
             // startDate and endDate are in algorithm time zone
             var startDate = new DateTime(2019, 6, 3);
             var endDate = startDate.AddDays(days);
@@ -1290,109 +1288,105 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var actualPricePointsEnqueued = 0;
             var actualAuxPointsEnqueued = 0;
             var lastTime = DateTime.MinValue;
-            var startedReceivingData = false;
 
             var dataQueueHandler = new FuncDataQueueHandler(fdqh =>
             {
-                lock (locker)
+                var utcTime = timeProvider.GetUtcNow();
+                var time = utcTime.ConvertFromUtc(exchangeTimeZone);
+                if (time == lastTime || time > endDate.ConvertTo(algorithmTimeZone, exchangeTimeZone))
                 {
-                    var utcTime = timeProvider.GetUtcNow();
-                    var time = utcTime.ConvertFromUtc(exchangeTimeZone);
-                    if (time == lastTime || time > endDate.ConvertTo(algorithmTimeZone, exchangeTimeZone) || !startedReceivingData)
+                    return Enumerable.Empty<BaseData>();
+                }
+                lastTime = time;
+
+                var algorithmTime = utcTime.ConvertFromUtc(algorithmTimeZone);
+
+                var dataPoints = new List<BaseData>();
+
+                if (symbol.SecurityType == SecurityType.Base)
+                {
+                    var dataPoint = new Quandl
                     {
-                        return Enumerable.Empty<BaseData>();
+                        Symbol = symbol,
+                        EndTime = time,
+                        Value = actualPricePointsEnqueued
+                    };
+
+                    dataPoints.Add(dataPoint);
+                    actualPricePointsEnqueued++;
+
+                    if (LogsEnabled)
+                    {
+                        Log.Trace($"{algorithmTime} - FuncDataQueueHandler emitted custom data point: {dataPoint}");
                     }
-                    lastTime = time;
-
-                    var algorithmTime = utcTime.ConvertFromUtc(algorithmTimeZone);
-
-                    var dataPoints = new List<BaseData>();
-
-                    if (symbol.SecurityType == SecurityType.Base)
+                }
+                else
+                {
+                    if (symbol.SecurityType == SecurityType.Equity && time.Day == startDate.Day + 1 && time.Hour == 0 && time.Minute == 0)
                     {
-                        var dataPoint = new Quandl
+                        var dividend = new Dividend
                         {
                             Symbol = symbol,
+                            Time = time,
                             EndTime = time,
-                            Value = actualPricePointsEnqueued
+                            Value = actualAuxPointsEnqueued
                         };
 
-                        dataPoints.Add(dataPoint);
-                        actualPricePointsEnqueued++;
+                        dataPoints.Add(dividend);
+                        actualAuxPointsEnqueued++;
 
                         if (LogsEnabled)
                         {
-                            Log.Trace($"{algorithmTime} - FuncDataQueueHandler emitted custom data point: {dataPoint}");
+                            Log.Trace($"{algorithmTime} - FuncDataQueueHandler emitted dividend: {dividend}");
                         }
                     }
                     else
                     {
-                        if (symbol.SecurityType == SecurityType.Equity && time.Day == startDate.Day + 1 && time.Hour == 0 && time.Minute == 0)
+                        var tickType = symbol.SecurityType == SecurityType.Equity ? TickType.Trade : TickType.Quote;
+
+                        var dataPoint = new Tick
                         {
-                            var dividend = new Dividend
-                            {
-                                Symbol = symbol,
-                                Time = time,
-                                EndTime = time,
-                                Value = actualAuxPointsEnqueued
-                            };
+                            Symbol = symbol,
+                            Time = time,
+                            EndTime = time,
+                            TickType = tickType,
+                            Value = actualPricePointsEnqueued
+                        };
+                        dataPoints.Add(dataPoint);
 
-                            dataPoints.Add(dividend);
-                            actualAuxPointsEnqueued++;
-
-                            if (LogsEnabled)
-                            {
-                                Log.Trace($"{algorithmTime} - FuncDataQueueHandler emitted dividend: {dividend}");
-                            }
+                        if (LogsEnabled)
+                        {
+                            Log.Trace($"{algorithmTime} - FuncDataQueueHandler emitted {tickType} tick: {dataPoint}");
                         }
-                        else
-                        {
-                            var tickType = symbol.SecurityType == SecurityType.Equity ? TickType.Trade : TickType.Quote;
 
-                            var dataPoint = new Tick
+                        if (symbol.SecurityType == SecurityType.Crypto ||
+                            symbol.SecurityType == SecurityType.Option ||
+                            symbol.SecurityType == SecurityType.Future)
+                        {
+                            dataPoint = new Tick
                             {
                                 Symbol = symbol,
                                 Time = time,
                                 EndTime = time,
-                                TickType = tickType,
+                                TickType = TickType.Trade,
                                 Value = actualPricePointsEnqueued
                             };
+
                             dataPoints.Add(dataPoint);
 
                             if (LogsEnabled)
                             {
-                                Log.Trace($"{algorithmTime} - FuncDataQueueHandler emitted {tickType} tick: {dataPoint}");
-                            }
-
-                            if (symbol.SecurityType == SecurityType.Crypto ||
-                                symbol.SecurityType == SecurityType.Option ||
-                                symbol.SecurityType == SecurityType.Future)
-                            {
-                                dataPoint = new Tick
-                                {
-                                    Symbol = symbol,
-                                    Time = time,
-                                    EndTime = time,
-                                    TickType = TickType.Trade,
-                                    Value = actualPricePointsEnqueued
-                                };
-
-                                dataPoints.Add(dataPoint);
-
-                                if (LogsEnabled)
-                                {
-                                    Log.Trace($"{algorithmTime} - FuncDataQueueHandler emitted Trade tick: {dataPoint}");
-                                }
-
-                                actualPricePointsEnqueued++;
+                                Log.Trace($"{algorithmTime} - FuncDataQueueHandler emitted Trade tick: {dataPoint}");
                             }
 
                             actualPricePointsEnqueued++;
                         }
-                    }
 
-                    return dataPoints;
+                        actualPricePointsEnqueued++;
+                    }
                 }
+
+                return dataPoints;
             });
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler);
@@ -1471,73 +1465,60 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                 sliceCount++;
 
-                if (!startedReceivingData && (timeSlice.Slice.Count != 0 || timeSlice.UniverseData.Count > 0))
+                if (resolution == Resolution.Tick)
                 {
-                    startedReceivingData = true;
-                }
-
-                if (LogsEnabled)
-                {
-                    Log.Trace($"{algorithm.Time} - timeslice count: {sliceCount}, startedReceivingData: {startedReceivingData}");
-                }
-
-                if (startedReceivingData)
-                {
-                    if (resolution == Resolution.Tick)
+                    if (timeSlice.Slice.Ticks.ContainsKey(symbol))
                     {
-                        if (timeSlice.Slice.Ticks.ContainsKey(symbol))
+                        foreach (var tick in timeSlice.Slice.Ticks[symbol].ToList())
                         {
-                            foreach (var tick in timeSlice.Slice.Ticks[symbol].ToList())
-                            {
-                                actualTicksReceived++;
-
-                                if (LogsEnabled)
-                                {
-                                    Log.Trace($"{algorithm.Time} - Tick received, value: {tick.Value} {tick.TickType} (count: {actualTicksReceived})");
-                                }
-                            }
-                        }
-
-                        if (timeSlice.Slice.Dividends.ContainsKey(symbol))
-                        {
-                            actualAuxPointsReceived++;
+                            actualTicksReceived++;
 
                             if (LogsEnabled)
                             {
-                                Log.Trace($"{algorithm.Time} - Dividend received, value: {timeSlice.Slice.Dividends[symbol].Value} (count: {actualAuxPointsReceived})");
+                                Log.Trace($"{algorithm.Time} - Tick received, value: {tick.Value} {tick.TickType} (count: {actualTicksReceived})");
                             }
                         }
                     }
-                    else
+
+                    if (timeSlice.Slice.Dividends.ContainsKey(symbol))
                     {
-                        if (timeSlice.Slice.Bars.ContainsKey(symbol))
-                        {
-                            actualTradeBarsReceived++;
+                        actualAuxPointsReceived++;
 
-                            if (LogsEnabled)
-                            {
-                                Log.Trace($"{algorithm.Time} - TradeBar received, value: {timeSlice.Slice.Bars[symbol].Value} (count: {actualTradeBarsReceived})");
-                            }
+                        if (LogsEnabled)
+                        {
+                            Log.Trace($"{algorithm.Time} - Dividend received, value: {timeSlice.Slice.Dividends[symbol].Value} (count: {actualAuxPointsReceived})");
                         }
+                    }
+                }
+                else
+                {
+                    if (timeSlice.Slice.Bars.ContainsKey(symbol))
+                    {
+                        actualTradeBarsReceived++;
 
-                        if (timeSlice.Slice.Dividends.ContainsKey(symbol))
+                        if (LogsEnabled)
                         {
-                            actualAuxPointsReceived++;
-
-                            if (LogsEnabled)
-                            {
-                                Log.Trace($"{algorithm.Time} - Dividend received, value: {timeSlice.Slice.Dividends[symbol].Value} (count: {actualAuxPointsReceived})");
-                            }
+                            Log.Trace($"{algorithm.Time} - TradeBar received, value: {timeSlice.Slice.Bars[symbol].Value} (count: {actualTradeBarsReceived})");
                         }
+                    }
 
-                        if (timeSlice.Slice.QuoteBars.ContainsKey(symbol))
+                    if (timeSlice.Slice.Dividends.ContainsKey(symbol))
+                    {
+                        actualAuxPointsReceived++;
+
+                        if (LogsEnabled)
                         {
-                            actualQuoteBarsReceived++;
+                            Log.Trace($"{algorithm.Time} - Dividend received, value: {timeSlice.Slice.Dividends[symbol].Value} (count: {actualAuxPointsReceived})");
+                        }
+                    }
 
-                            if (LogsEnabled)
-                            {
-                                Log.Trace($"{algorithm.Time} - QuoteBar received, value: {timeSlice.Slice.QuoteBars[symbol].Value} (count: {actualQuoteBarsReceived})");
-                            }
+                    if (timeSlice.Slice.QuoteBars.ContainsKey(symbol))
+                    {
+                        actualQuoteBarsReceived++;
+
+                        if (LogsEnabled)
+                        {
+                            Log.Trace($"{algorithm.Time} - QuoteBar received, value: {timeSlice.Slice.QuoteBars[symbol].Value} (count: {actualQuoteBarsReceived})");
                         }
                     }
                 }
@@ -1566,24 +1547,30 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         break;
                 }
 
-                lock (locker)
+                timeProvider.Advance(advanceTimeSpan);
+
+                if (resolution == Resolution.Tick &&
+                    (symbol.SecurityType == SecurityType.Crypto ||
+                        symbol.SecurityType == SecurityType.Option ||
+                        symbol.SecurityType == SecurityType.Future))
                 {
-                    timeProvider.Advance(advanceTimeSpan);
+                    // give enough time to the producer to emit both tick types
+                    Thread.Sleep(200);
+                }
 
-                    var currentTime = timeProvider.GetUtcNow();
-                    algorithm.SetDateTime(currentTime);
+                var currentTime = timeProvider.GetUtcNow();
+                algorithm.SetDateTime(currentTime);
 
-                    if (LogsEnabled)
-                    {
-                        Log.Trace($"Algorithm time set to {currentTime.ConvertFromUtc(algorithmTimeZone)}");
-                    }
+                if (LogsEnabled)
+                {
+                    Log.Trace($"Algorithm time set to {currentTime.ConvertFromUtc(algorithmTimeZone)}");
+                }
 
-                    if (currentTime.ConvertFromUtc(algorithmTimeZone) > endDate)
-                    {
-                        feed.Exit();
-                        cancellationTokenSource.Cancel();
-                        break;
-                    }
+                if (currentTime.ConvertFromUtc(algorithmTimeZone) > endDate)
+                {
+                    feed.Exit();
+                    cancellationTokenSource.Cancel();
+                    break;
                 }
             }
 
