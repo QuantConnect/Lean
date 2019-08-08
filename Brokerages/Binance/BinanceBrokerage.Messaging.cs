@@ -59,6 +59,7 @@ namespace QuantConnect.Brokerages.Binance
                 WebSocketMessage e;
                 _messageBuffer.TryDequeue(out e);
                 OnMessageImpl(this, e);
+                OnTickerMessageImpl(this, e);
             }
             Log.Trace("BinanceBrokerage.Messaging.UnlockStream(): Stream Unlocked.");
             // Once dequeued in order; unlock stream.
@@ -66,6 +67,32 @@ namespace QuantConnect.Brokerages.Binance
         }
 
         private void OnMessageImpl(object sender, WebSocketMessage e)
+        {
+            try
+            {
+                var wrapped = JObject.Parse(e.Message);
+                var message = wrapped.GetValue("data").ToObject<Messages.BaseMessage>();
+                switch (message.Event)
+                {
+                    case "executionReport":
+                        var upd = wrapped.GetValue("data").ToObject<Messages.Execution>();
+                        if (upd.ExecutionType.Equals("TRADE", StringComparison.OrdinalIgnoreCase))
+                        {
+                            OnFillOrder(upd);
+                        }
+                        break;
+                    default:
+                        return;
+                }
+            }
+            catch (Exception exception)
+            {
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {exception}"));
+                throw;
+            }
+        }
+
+        private void OnTickerMessageImpl(object sender, WebSocketMessage e)
         {
             try
             {
@@ -85,13 +112,6 @@ namespace QuantConnect.Brokerages.Binance
                             trade.Price,
                             trade.Quantity
                         );
-                        break;
-                    case "executionReport":
-                        var upd = wrapped.GetValue("data").ToObject<Messages.Execution>();
-                        if (upd.ExecutionType.Equals("TRADE", StringComparison.OrdinalIgnoreCase))
-                        {
-                            OnFillOrder(upd);
-                        }
                         break;
                     default:
                         return;
