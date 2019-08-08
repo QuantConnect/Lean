@@ -49,7 +49,9 @@ namespace QuantConnect.Brokerages.Binance
         private readonly IAlgorithm _algorithm;
         private readonly ISecurityProvider _securityProvider;
         private readonly BinanceSymbolMapper _symbolMapper = new BinanceSymbolMapper();
-
+        private readonly IWebSocket TickerWebSocket;
+        private RealTimeSynchronizedTimer _keepAliveTimer;
+        private RealTimeSynchronizedTimer _reconnectTimer;
         /// <summary>
         /// Constructor for brokerage
         /// </summary>
@@ -66,10 +68,29 @@ namespace QuantConnect.Brokerages.Binance
             _securityProvider = algorithm?.Portfolio;
 
             _wssUrl = wssUrl;
+
             WebSocket = new WebSocketWrapper();
 
             WebSocket.Message += OnMessage;
             WebSocket.Error += OnError;
+            WebSocket.Open += (s, e) => {
+                _keepAliveTimer = new RealTimeSynchronizedTimer(TimeSpan.FromMinutes(30), (d) => SessionKeepAlive());
+                _keepAliveTimer.Start();
+            };
+            WebSocket.Closed += (s, e) => { _keepAliveTimer.Stop(); }; 
+
+            TickerWebSocket = new BinanceWebSocketWrapper(
+                new DefaultConnectionHandler()
+            );
+
+            TickerWebSocket.Message += OnTickerMessage;
+            TickerWebSocket.Message += (s, e) => (s as BinanceWebSocketWrapper)?.ConnectionHandler.KeepAlive(DateTime.UtcNow);
+            TickerWebSocket.Error += OnError;
+
+            _reconnectTimer = new RealTimeSynchronizedTimer(TimeSpan.FromHours(12), (d) => {
+                Reconnect();
+                ConnectStream();
+            });
         }
 
         #region IBrokerage
@@ -85,8 +106,9 @@ namespace QuantConnect.Brokerages.Binance
         {
             if (IsConnected)
                 return;
+            _reconnectTimer.Start();
 
-            StartSession();
+            CreateListenKey();
             WebSocket.Initialize($"{_wssUrl}/stream?streams={SessionId}");
 
             base.Connect();
@@ -98,9 +120,16 @@ namespace QuantConnect.Brokerages.Binance
         public override void Disconnect()
         {
             base.Disconnect();
+            _reconnectTimer.Stop();
 
             WebSocket?.Close();
             StopSession();
+
+            (TickerWebSocket as BinanceWebSocketWrapper)?.ConnectionHandler.DisposeSafely();
+            if (TickerWebSocket.IsOpen)
+            {
+                TickerWebSocket.Close();
+            }
         }
 
         /// <summary>
@@ -249,7 +278,7 @@ namespace QuantConnect.Brokerages.Binance
                     ticker = GetTickerPrice(order);
                     stopPrice = (order as StopLimitOrder).StopPrice;
                     if (order.Direction == OrderDirection.Sell)
-                        body["type"] = stopPrice <= ticker? "STOP_LOSS_LIMIT" : "TAKE_PROFIT_LIMIT";
+                        body["type"] = stopPrice <= ticker ? "STOP_LOSS_LIMIT" : "TAKE_PROFIT_LIMIT";
                     else
                         body["type"] = stopPrice <= ticker ? "TAKE_PROFIT_LIMIT" : "STOP_LOSS_LIMIT";
                     body["timeInForce"] = "GTC";
@@ -283,7 +312,8 @@ namespace QuantConnect.Brokerages.Binance
                         order,
                         DateTime.UtcNow,
                         OrderFee.Zero,
-                        "Binance Order Event") { Status = OrderStatus.Invalid, Message = errorMessage });
+                        "Binance Order Event")
+                    { Status = OrderStatus.Invalid, Message = errorMessage });
                     OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
 
                     UnlockStream();
@@ -307,7 +337,8 @@ namespace QuantConnect.Brokerages.Binance
                     order,
                     Time.UnixMillisecondTimeStampToDateTime(raw.TransactionTime),
                     OrderFee.Zero,
-                    "Binance Order Event") { Status = OrderStatus.Submitted }
+                    "Binance Order Event")
+                { Status = OrderStatus.Submitted }
                 );
                 Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
 
@@ -320,7 +351,8 @@ namespace QuantConnect.Brokerages.Binance
                 order,
                 DateTime.UtcNow,
                 OrderFee.Zero,
-                "Binance Order Event") { Status = OrderStatus.Invalid });
+                "Binance Order Event")
+            { Status = OrderStatus.Invalid });
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
 
             UnlockStream();
@@ -379,7 +411,8 @@ namespace QuantConnect.Brokerages.Binance
                 OnOrderEvent(new OrderEvent(order,
                     DateTime.UtcNow,
                     OrderFee.Zero,
-                    "Binance Order Event") { Status = OrderStatus.Canceled });
+                    "Binance Order Event")
+                { Status = OrderStatus.Canceled });
 
                 canceled = true;
             }
@@ -475,7 +508,9 @@ namespace QuantConnect.Brokerages.Binance
             }
 
             if (refresh)
+            {
                 ConnectStream();
+            }
         }
 
         /// <summary>
@@ -505,6 +540,24 @@ namespace QuantConnect.Brokerages.Binance
             OnMessageImpl(sender, e);
         }
 
+        private void OnTickerMessage(object sender, WebSocketMessage e)
+        {
+            try
+            {
+                if (_streamLocked)
+                {
+                    _messageBuffer.Enqueue(e);
+                    return;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+
+            OnTickerMessageImpl(sender, e);
+        }
+
         /// <summary>
         /// Gets a list of current subscriptions
         /// </summary>
@@ -522,20 +575,56 @@ namespace QuantConnect.Brokerages.Binance
             return list;
         }
 
+        /// <summary>
+        /// Force reconnect
+        /// </summary>
+        protected override void Reconnect()
+        {
+            if (WebSocket.IsOpen)
+            {
+                WebSocket?.Close();
+            }
+            base.Reconnect();
+        }
+
         private void ConnectStream()
         {
             if (ChannelList.Count == 0)
                 return;
 
             //close current connection
-            WebSocket.Close();
-            Wait(() => !WebSocket.IsOpen);
+            if (TickerWebSocket.IsOpen)
+            {
+                TickerWebSocket.Close();
+            }
+            Wait(() => !TickerWebSocket.IsOpen);
 
             var streams = ChannelList.Select((pair) => string.Format("{0}@depth/{0}@trade", pair.Value.Name));
-            WebSocket.Initialize($"{_wssUrl}/stream?streams={SessionId}/{string.Join("/", streams)}");
+            TickerWebSocket.Initialize($"{_wssUrl}/stream?streams={string.Join("/", streams)}");
 
-            // connect to new endpoing
-            Reconnect();
+            Log.Trace($"BaseWebsocketsBrokerage(): Reconnecting... IsConnected: {IsConnected}");
+
+            var subscribed = GetSubscribed();
+            TickerWebSocket.Error -= this.OnError;
+            try
+            {
+                //try to clean up state
+                if (TickerWebSocket.IsOpen)
+                {
+                    TickerWebSocket.Close();
+                    Wait(() => !TickerWebSocket.IsOpen);
+                }
+                if (!TickerWebSocket.IsOpen)
+                {
+                    TickerWebSocket.Connect();
+                    Wait(() => TickerWebSocket.IsOpen);
+                }
+            }
+            finally
+            {
+                TickerWebSocket.Error += this.OnError;
+                this.Subscribe(subscribed);
+            }
 
             Log.Trace("BinanceBrokerage.Subscribe: Sent subscribe.");
         }
