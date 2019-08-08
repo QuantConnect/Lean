@@ -237,6 +237,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 _maxRuntime += _maxRuntime;
             }
 
+            _maxOrders = job.Controls.BacktestingMaxOrders;
+
             //Set back to the algorithm,
             algorithm.SetMaximumOrders(_maxOrders);
 
