@@ -948,11 +948,6 @@ namespace QuantConnect.Lean.Engine
 
             foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
             {
-                if (timeSlice.IsTimePulse)
-                {
-                    continue;
-                }
-
                 if (!setStartTime)
                 {
                     setStartTime = true;
@@ -960,6 +955,11 @@ namespace QuantConnect.Lean.Engine
                 }
                 if (algorithm.LiveMode && algorithm.IsWarmingUp)
                 {
+                    if (timeSlice.IsTimePulse)
+                    {
+                        continue;
+                    }
+
                     // this is hand-over logic, we spin up the data feed first and then request
                     // the history for warmup, so there will be some overlap between the data
                     if (lastHistoryTimeUtc.HasValue)
