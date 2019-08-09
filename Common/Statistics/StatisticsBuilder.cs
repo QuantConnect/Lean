@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,13 +39,13 @@ namespace QuantConnect.Statistics
         /// <param name="totalTransactions">The total number of transactions</param>
         /// <returns>Returns a <see cref="StatisticsResults"/> object</returns>
         public static StatisticsResults Generate(
-            List<Trade> trades, 
+            List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
-            List<ChartPoint> pointsEquity, 
-            List<ChartPoint> pointsPerformance, 
-            List<ChartPoint> pointsBenchmark, 
-            decimal startingCapital, 
-            decimal totalFees, 
+            List<ChartPoint> pointsEquity,
+            List<ChartPoint> pointsPerformance,
+            List<ChartPoint> pointsBenchmark,
+            decimal startingCapital,
+            decimal totalFees,
             int totalTransactions)
         {
             var equity = ChartPointToDictionary(pointsEquity);
@@ -73,13 +73,13 @@ namespace QuantConnect.Statistics
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <returns>The algorithm performance</returns>
         private static AlgorithmPerformance GetAlgorithmPerformance(
-            DateTime fromDate, 
-            DateTime toDate, 
-            List<Trade> trades, 
-            SortedDictionary<DateTime, decimal> profitLoss, 
-            SortedDictionary<DateTime, decimal> equity, 
-            List<ChartPoint> pointsPerformance, 
-            List<ChartPoint> pointsBenchmark, 
+            DateTime fromDate,
+            DateTime toDate,
+            List<Trade> trades,
+            SortedDictionary<DateTime, decimal> profitLoss,
+            SortedDictionary<DateTime, decimal> equity,
+            List<ChartPoint> pointsPerformance,
+            List<ChartPoint> pointsBenchmark,
             decimal startingCapital)
         {
             var periodTrades = trades.Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1)).ToList();
@@ -122,17 +122,17 @@ namespace QuantConnect.Statistics
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <returns>A dictionary with the rolling performances</returns>
         private static Dictionary<string, AlgorithmPerformance> GetRollingPerformances(
-            DateTime firstDate, 
-            DateTime lastDate, 
-            List<Trade> trades, 
-            SortedDictionary<DateTime, decimal> profitLoss, 
-            SortedDictionary<DateTime, decimal> equity, 
-            List<ChartPoint> pointsPerformance, 
-            List<ChartPoint> pointsBenchmark, 
+            DateTime firstDate,
+            DateTime lastDate,
+            List<Trade> trades,
+            SortedDictionary<DateTime, decimal> profitLoss,
+            SortedDictionary<DateTime, decimal> equity,
+            List<ChartPoint> pointsPerformance,
+            List<ChartPoint> pointsBenchmark,
             decimal startingCapital)
         {
             var rollingPerformances = new Dictionary<string, AlgorithmPerformance>();
-            
+
             var monthPeriods = new[] { 1, 3, 6, 12 };
             foreach (var monthPeriod in monthPeriods)
             {
@@ -140,7 +140,7 @@ namespace QuantConnect.Statistics
 
                 foreach (var period in ranges)
                 {
-                    var key = "M" + monthPeriod + "_" + period.EndDate.ToString("yyyyMMdd");
+                    var key = $"M{monthPeriod}_{period.EndDate:yyyyMMdd}";
                     var periodPerformance = GetAlgorithmPerformance(period.StartDate, period.EndDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
                     rollingPerformances[key] = periodPerformance;
                 }
@@ -154,8 +154,8 @@ namespace QuantConnect.Statistics
         /// </summary>
         private static Dictionary<string, string> GetSummary(AlgorithmPerformance totalPerformance, decimal totalFees, int totalTransactions)
         {
-            return new Dictionary<string, string> 
-            { 
+            return new Dictionary<string, string>
+            {
                 { "Total Trades", totalTransactions.ToString(CultureInfo.InvariantCulture) },
                 { "Average Win", Math.Round(totalPerformance.PortfolioStatistics.AverageWinRate.SafeMultiply100(), 2).ToString(CultureInfo.InvariantCulture) + "%"  },
                 { "Average Loss", Math.Round(totalPerformance.PortfolioStatistics.AverageLossRate.SafeMultiply100(), 2).ToString(CultureInfo.InvariantCulture) + "%" },
@@ -165,7 +165,7 @@ namespace QuantConnect.Statistics
                 { "Net Profit", Math.Round(totalPerformance.PortfolioStatistics.TotalNetProfit.SafeMultiply100(), 3).ToString(CultureInfo.InvariantCulture) + "%"},
                 { "Sharpe Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.SharpeRatio, 3).ToString(CultureInfo.InvariantCulture) },
                 { "Loss Rate", Math.Round(totalPerformance.PortfolioStatistics.LossRate.SafeMultiply100()).ToString(CultureInfo.InvariantCulture) + "%" },
-                { "Win Rate", Math.Round(totalPerformance.PortfolioStatistics.WinRate.SafeMultiply100()).ToString(CultureInfo.InvariantCulture) + "%" }, 
+                { "Win Rate", Math.Round(totalPerformance.PortfolioStatistics.WinRate.SafeMultiply100()).ToString(CultureInfo.InvariantCulture) + "%" },
                 { "Profit-Loss Ratio", Math.Round(totalPerformance.PortfolioStatistics.ProfitLossRatio, 2).ToString(CultureInfo.InvariantCulture) },
                 { "Alpha", Math.Round((double)totalPerformance.PortfolioStatistics.Alpha, 3).ToString(CultureInfo.InvariantCulture) },
                 { "Beta", Math.Round((double)totalPerformance.PortfolioStatistics.Beta, 3).ToString(CultureInfo.InvariantCulture) },
@@ -194,7 +194,6 @@ namespace QuantConnect.Statistics
             internal DateTime EndDate { get; set; }
         }
 
-        // 
         /// <summary>
         /// Gets a list of date ranges for the requested monthly period
         /// </summary>
@@ -249,7 +248,7 @@ namespace QuantConnect.Statistics
 
                 if (fromDate != null && x.Date < fromDate) continue;
                 if (toDate != null && x.Date >= ((DateTime)toDate).AddDays(1)) break;
-                    
+
                 dictionary[x] = point.y;
             }
 
@@ -266,7 +265,7 @@ namespace QuantConnect.Statistics
         {
             // to find the delta in benchmark for first day, we need to know the price at
             // the opening moment of the day, but since we cannot find this, we cannot find
-            // the first benchmark's delta, so we start looking for data in a inexistent day. 
+            // the first benchmark's delta, so we start looking for data in a inexistent day.
             // If running a short backtest this will skew results, longer backtests will not be affected much
             var dtPrevious = new DateTime();
 
@@ -316,6 +315,5 @@ namespace QuantConnect.Statistics
                 Log.Trace("StatisticsBuilder.EnsureSameLength(): Padded Benchmark");
             }
         }
-
     }
 }
