@@ -717,7 +717,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     list.Data.Add(new CoarseFundamental
                     {
                         Symbol = Symbols.AAPL,
-                        Time = new DateTime(2014, 04, 24)
+                        Time = new DateTime(2014, 04, 24),
+                        HasFundamentalData = true
                     });
                 }
             }, lck, TimeSpan.FromSeconds(0.5), TimeSpan.FromMilliseconds(-1));
