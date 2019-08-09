@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
 {
@@ -82,9 +83,16 @@ namespace QuantConnect.Statistics
             List<ChartPoint> pointsBenchmark,
             decimal startingCapital)
         {
+            var periodEquity = new SortedDictionary<DateTime, decimal>(equity.Where(x => x.Key.Date >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
+
+            // No portfolio equity for the period means that there is no performance to be computed
+            if (periodEquity.IsNullOrEmpty())
+            {
+                return new AlgorithmPerformance();
+            }
+
             var periodTrades = trades.Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1)).ToList();
             var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
-            var periodEquity = new SortedDictionary<DateTime, decimal>(equity.Where(x => x.Key.Date >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
 
             var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
             var performance = ChartPointToDictionary(pointsPerformance, fromDate, toDate);
