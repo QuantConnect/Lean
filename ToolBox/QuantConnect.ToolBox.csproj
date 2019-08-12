@@ -266,6 +266,8 @@
     <Compile Include="SECDataDownloader\SECDataDownloader.cs" />
     <Compile Include="SECDataDownloader\SECDataConverter.cs" />
     <Compile Include="SECDataDownloader\SECDataDownloaderProgram.cs" />
+    <Compile Include="SmartInsider\SmartInsiderConverter.cs" />
+    <Compile Include="SmartInsider\SmartInsiderProgram.cs" />
     <Compile Include="TickAggregator.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />

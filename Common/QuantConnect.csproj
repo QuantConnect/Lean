@@ -251,6 +251,9 @@
     <Compile Include="Data\HistoryProviderBase.cs" />
     <Compile Include="Data\HistoryProviderInitializeParameters.cs" />
     <Compile Include="Data\HistoryRequestFactory.cs" />
+    <Compile Include="Data\Custom\SmartInsider\SmartInsiderEvent.cs" />
+    <Compile Include="Data\Custom\SmartInsider\SmartInsiderIntention.cs" />
+    <Compile Include="Data\Custom\SmartInsider\SmartInsiderTransaction.cs" />
     <Compile Include="Data\SubscriptionDataConfigExtensions.cs" />
     <Compile Include="Expiry.cs" />
     <Compile Include="HistoryProviderEvents.cs" />
