@@ -30,6 +30,7 @@ from QuantConnect.Data.Custom.TradingEconomics import *
 
 class InterestReleaseFrameworkAlgorithm(QCAlgorithm):
 
+    '''Algorithm that uses the Interest rate released by Fed to create trading signals'''
     def Initialize(self):
         self.SetStartDate(2018, 1, 1)  # Set Start Date
         self.SetEndDate(2019, 4, 30)    # Set End Date

@@ -29,6 +29,9 @@ using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
+    /// <summary>
+    /// Algorithm that uses the Interest rate released by Fed to create trading signals
+    /// </summary>
     public class InterestReleaseFrameworkAlgorithm : QCAlgorithm
     {
         public override void Initialize()
@@ -120,7 +123,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas
 
         /// <summary>
         /// Event fired each time the we add/remove securities from the data feed.
-        /// This initializes the MACD for each added security and cleans up the indicator for each removed security.
         /// </summary>
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
