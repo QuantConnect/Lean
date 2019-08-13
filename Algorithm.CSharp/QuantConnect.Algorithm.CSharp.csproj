@@ -150,6 +150,7 @@
     <Compile Include="CustomUniverseWithBenchmarkRegressionAlgorithm.cs" />
     <Compile Include="CoarseSelectionTimeRegressionAlgorithm.cs" />
     <Compile Include="CustomUniverseSelectionRegressionAlgorithm.cs" />
+    <Compile Include="InterestRateForexFrameworkAlgorithm.cs" />
     <Compile Include="OnEndOfDayRegressionAlgorithm.cs" />
     <Compile Include="UniverseUnchangedRegressionAlgorithm.cs" />
     <Compile Include="USTreasuryYieldCurveDataAlgorithm.cs" />
