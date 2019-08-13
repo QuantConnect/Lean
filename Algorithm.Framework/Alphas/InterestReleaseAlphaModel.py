@@ -25,7 +25,10 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Data.Custom.TradingEconomics import *
 
 class InterestReleaseAlphaModel(AlphaModel):
-    '''Alpha model that uses the Interest rate released by Fed to create insights'''
+    '''
+    Alpha model that uses the Interest rate released by Fed to create insights
+    When Forecast Interest Rate is larger than Previous Interest Rate, we assume USD value goes up.
+    '''
     
     def __init__(self, algorithm, period = 30, resolution = Resolution.Daily):
         '''
@@ -58,11 +61,12 @@ class InterestReleaseAlphaModel(AlphaModel):
         
         fore_IR = data[self.calendar].Forecast      # Forecast Interest Rate
         prev_IR = data[self.calendar].Previous      # Previous released actual Interest Rate
-        usdValueUp = fore_IR >= prev_IR
+        usdValueUp = fore_IR >= prev_IR             # Judge whether USD value goes up
             
         for pair in self.pairs:
             
             direction = InsightDirection.Down
+            # when USD value goes up, the value of XXXUSD pairs would go down and USDXXX would go up
             if (pair.Value.startswith("USD") and usdValueUp) or (pair.Value.endswith("USD") and not usdValueUp):
                 direction = InsightDirection.Up
             
