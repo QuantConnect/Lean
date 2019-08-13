@@ -476,31 +476,27 @@ class LeanReportCreator(object):
             </table>
         </div>'''
 
-    def get_image_from_dict(self, dict, len_dict1, num_empty_block):
-        ret = '''<div class="content">'''
-        titles = list(dict.keys())
-        stop = min(15, len(titles) + num_empty_block)
-        index = 0;
+    def get_image_from_dict(self, dict):
+            ret = '''<div class="content">'''
+            titles = list(dict.keys())
+            stop = min(15, len(titles))
 
-        for i in range(0, stop, 3):
-            ret += '''<div class="container-row">'''
-            for j in range(0, 3):
-                if i + j >= stop: continue
-                if i + j >= len_dict1 and i + j < len_dict1 + num_empty_block:
-                    ret += '''<div class="col-xs-4" style="height: 305px;"></div>'''
-                else:
-                    ret += dict.pop(titles[index])
-                    index += 1
-            ret += '''</div>'''
+            for i in range(0, stop, 3):
+                ret += '''<div class="container-row">'''
+                for j in range(0, 3):
+                    if i + j >= stop: break
+                    elif titles:
+                        ret += dict.pop(titles[i+j])
+                ret += '''</div>'''
 
-        return ret + '''</div>'''
+            return ret + '''</div>'''
 
     def get_pages_from_two_dict(self, dict1, dict2):
         num_empty_block = 0
         if (len(dict1) % 15) % 3  != 0:
             num_empty_block = 3 - (len(dict1) % 15) % 3
-
-        len_og_dict1 = len(dict1)
+            for i in range (0, num_empty_block):
+                dict1["empty_space" + str(i)] = '''<div class="col-xs-4" style="height: 305px;"></div>'''
         dict1.update(dict2)
 
         ret = ''''''
@@ -512,6 +508,6 @@ class LeanReportCreator(object):
                         <img src="https://cdn.quantconnect.com/web/i/logo.png">
                     </div>
                     <div class="header-right">Strategy Report Summary: ''' + self.user['projectName'] + '''</div>
-                </div> ''' + self.get_image_from_dict(dict1, len_og_dict1, num_empty_block) + '''
+                </div> ''' + self.get_image_from_dict(dict1) + '''
             </div>'''
         return ret
