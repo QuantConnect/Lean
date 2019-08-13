@@ -56,8 +56,7 @@
     <Content Include="BasicSetAccountCurrencyAlgorithm.py" />
     <None Include="USTreasuryYieldCurveDataAlgorithm.py" />
     <None Include="SmartInsiderDataAlgorithm.py" />
-    <Content Include="InterestRateForexAlgorithm.py" />
-    <Content Include="InterestRateForexFrameworkAlgorithm.py" />
+    <Content Include="InterestReleaseFrameworkAlgorithm.py" />
     <Content Include="KerasNeuralNetworkAlgorithm.py" />
     <None Include="PsychSignalSentimentRegressionAlgorithm.py" />
     <Content Include="TradingEconomicsCalendarIndicatorAlgorithm.py" />
