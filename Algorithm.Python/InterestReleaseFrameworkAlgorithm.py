@@ -28,7 +28,7 @@ from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Data.Custom.TradingEconomics import *
 
-class InterestRateForexFrameworkAlgorithm(QCAlgorithm):
+class InterestReleaseFrameworkAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2018, 1, 1)  # Set Start Date

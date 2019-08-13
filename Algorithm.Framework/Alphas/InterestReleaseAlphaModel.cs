@@ -17,50 +17,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Algorithm.Framework.Execution;
-using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Algorithm.Framework.Selection;
-using QuantConnect.Algorithm.Framework.Risk;
-using QuantConnect.Orders;
 using System.Globalization;
-using QuantConnect.Data.Custom.TradingEconomics;
 using QuantConnect.Data.UniverseSelection;
-
-namespace QuantConnect.Algorithm.CSharp
-{
-    public class InterestRateForexFrameworkAlgorithm : QCAlgorithm
-    {
-        public override void Initialize()
-        {
-            SetStartDate(2018, 1, 1);       // Set Start Date
-            SetEndDate(2019, 4, 30);        // Set End Date
-            SetCash(100000);                // Set Strategy Cash
-
-            UniverseSettings.Resolution = Resolution.Daily;     // Set requested data resolution
-
-            var symbols = new[]
-                {
-                    "AUDUSD", "EURUSD", "NZDUSD", "GBPUSD",
-                    "USDCAD", "USDMXN", "USDJPY", "USDSEK"
-                }
-                .Select(x => QuantConnect.Symbol.Create(x, SecurityType.Forex, Market.Oanda));
-
-            UniverseSettings.Resolution = Resolution.Daily;
-            SetUniverseSelection(new ManualUniverseSelectionModel(symbols));
-            SetAlpha(new InterestReleaseAlphaModel(this));
-            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
-            SetExecution(new ImmediateExecutionModel());
-            SetRiskManagement(new NullRiskManagementModel());
-        }
-
-        public override void OnOrderEvent(OrderEvent orderEvent)
-        {
-            var order = Transactions.GetOrderById(orderEvent.OrderId);
-            Debug($"{Time}: {order.Type}: {orderEvent}");
-        }
-    }
-}
+using QuantConnect.Data.Custom.TradingEconomics;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
