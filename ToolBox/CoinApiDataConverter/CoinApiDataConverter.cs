@@ -127,7 +127,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             }
 
             // materialize the enumerable into a list, since we need to enumerate over it twice
-            var ticks = coinapiDataReader.ProcessCoinApiEntry(entryData, file).ToList();
+            var ticks = coinapiDataReader.ProcessCoinApiEntry(entryData, file).OrderBy(t => t.Time).ToList();
 
             var writer = new LeanDataWriter(Resolution.Tick, entryData.Symbol, _destinationFolder.FullName, entryData.TickType);
             writer.Write(ticks);
