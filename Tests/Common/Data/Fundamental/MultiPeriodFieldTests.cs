@@ -195,5 +195,13 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
             Assert.AreEqual(2, values.First().Value);
             Assert.AreEqual(QuantConnect.Data.Fundamental.Period.OneYear, values.First().Key);
         }
+
+        [Test]
+        public void UpdateValuesWithNull()
+        {
+            var field = new NormalizedBasicEPSGrowth();
+            Assert.DoesNotThrow(() => field.UpdateValues(new NormalizedBasicEPSGrowth(null)));
+
+        }
     }
 }
