@@ -108,23 +108,6 @@ namespace QuantConnect.Lean.Launcher
                 throw;
             }
 
-            if (environment.EndsWith("-desktop"))
-            {
-                if (!File.Exists(Config.Get("desktop-exe")))
-                {
-                    var message = $"desktop-exe path ({Config.Get("desktop-exe")}) does not exist. You may need to update this path with the build configuration (currently ${mode})";
-                    Log.Error(message);
-                    throw new FileNotFoundException(message);
-                }
-                var info = new ProcessStartInfo
-                {
-                    UseShellExecute = false,
-                    FileName  = Config.Get("desktop-exe"),
-                    Arguments = Config.Get("desktop-http-port")
-                };
-                Process.Start(info);
-            }
-
             // if the job version doesn't match this instance version then we can't process it
             // we also don't want to reprocess redelivered jobs
             if (VersionHelper.IsNotEqualVersion(job.Version) || job.Redelivered)
