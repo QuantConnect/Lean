@@ -212,7 +212,7 @@ namespace QuantConnect.Data.Fundamental
         /// <param name="update">The next data update for this instance</param>
         public void UpdateValues(MultiPeriodField update)
         {
-            if (update == null)
+            if (update?.Store == null)
                 return;
 
             foreach (var kvp in update.Store)
