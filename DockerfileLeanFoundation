@@ -1,5 +1,5 @@
 #
-#   LEAN Foundation Docker Container 20190104
+#   LEAN Foundation Docker Container 20190710
 #   Cross platform deployment for multiple brokerages
 #   Intended to be used in conjunction with Dockerfile. This is just the foundation common OS+Dependencies required.
 #
@@ -17,17 +17,13 @@ RUN env TZ=UTC
 
 # Install OS Packages:
 # Misc tools for running Python.NET and IB inside a headless container.
-RUN apt-get update && apt-get install -y git bzip2 unzip wget python3-pip python-opengl && \
-    apt-get install -y clang cmake curl xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev && \
+RUN apt-get update && apt-get install -y git bzip2 unzip wget python3-pip python-opengl zlib1g-dev && \
+    apt-get install -y clang cmake curl xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev && \
 # Install R
     apt-get install -y r-base pandoc libcurl4-openssl-dev
 
 # Java for running IB inside container:
-# https://github.com/dockerfile/java/blob/master/oracle-java8/Dockerfile
-RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
-    add-apt-repository -y ppa:webupd8team/java && \
-    apt-get update && apt-get install -y oracle-java8-installer && \
-    rm -rf /var/lib/apt/lists/* && rm -rf /var/cache/oracle-jdk8-installer
+RUN apt-get install -y openjdk-8-jdk openjdk-8-jre
 
 # Install IB Gateway: Installs to ~/Jts
 RUN wget http://cdn.quantconnect.com/interactive/ibgateway-latest-standalone-linux-x64-v974.4g.sh && \
@@ -44,25 +40,66 @@ RUN echo "deb http://download.mono-project.com/repo/ubuntu stable-xenial/snapsho
     apt-get update && apt-get install -y binutils mono-complete ca-certificates-mono mono-vbnc nuget referenceassemblies-pcl && \
     apt-get install -y fsharp && rm -rf /var/lib/apt/lists/* /tmp/*
 
-# Install miniconda and supported third party python packages
+# Install miniconda
+ENV CONDA="Miniconda3-4.5.12-Linux-x86_64.sh"
 ENV PATH="/opt/miniconda3/bin:${PATH}"
-RUN wget https://cdn.quantconnect.com/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh && \
-    bash Miniconda3-4.3.31-Linux-x86_64.sh -b -p /opt/miniconda3 && \
-    rm -rf Miniconda3-latest-Linux-x86_64.sh && \
-    ln -s /opt/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so && \
-    conda update -y conda pip && \
-    conda install -y python=3.6.7 && \
-    conda install -y numpy=1.14.5 && \
-    conda install -y pandas=0.23.4 && \
-    conda install -y jsonschema lxml plotly seaborn quandl && \
-    conda install -y blaze cython cvxopt keras nltk tensorflow theano && \
-    conda install -y pytorch torchvision -c pytorch && \
-    conda install -y -c conda-forge rauth && \
-    pip install --upgrade pip && \
-    pip install arch copulalib cvxpy deap gym pykalman pyro-ppl  && \
-    pip install sklearn statistics tensorforce xgboost && \
-    pip install QuantLib-Python && \
-    conda clean -y --all
+RUN wget https://cdn.quantconnect.com/miniconda/${CONDA} && \
+    bash ${CONDA} -b -p /opt/miniconda3 && rm -rf ${CONDA} && \
+    ln -s /opt/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
+
+# Install supported third party python packages
+RUN conda update -y conda pip 
+RUN conda install -y python=3.6.8   \
+    blaze=0.11.3                    \
+    cvxopt=1.2.0                    \
+    cython=0.29.11                  \
+    dill=0.2.9                      \
+    jsonschema=3.0.1                \
+    keras=2.2.4                     \
+    lxml=4.3.4                      \
+    msgpack-python=0.5.6            \
+    nltk=3.4.3                      \
+    numpy=1.16.1                    \
+    pandas=0.23.4                   \
+    pomegranate=0.10.0              \
+    wrapt=1.10.11                   \
+    nltk=3.4.3                      \
+    tensorflow=1.13.1
+RUN conda install -y -c conda-forge \
+    fbprophet=0.5                   \
+    rauth=0.7.3                     \
+    setuptools-git>=1.2
+RUN conda install -y -c pytorch     \
+    pytorch=1.1.0                   \
+    torchvision=0.3.0
+RUN conda install -y -c fastai      \
+    nvidia-ml-py3=7.352.0           \
+    fastai=1.0.54
+RUN conda clean -y --all
+
+RUN pip install --upgrade pip
+RUN pip install gym==0.13.1         \
+    arch==4.8.1                     \
+    beautifulsoup4==4.7.1           \
+    copulalib==1.1.0                \
+    copulas==0.2.1                  \
+    cvxpy==1.0.24                   \
+    deap==1.3.0                     \
+    lightgbm==2.2.3                 \
+    pykalman==0.9.5                 \
+    pyramid-arima==0.9.0            \
+    pyro-ppl==0.3.3                 \
+    QuantLib-Python==1.15           \
+    sklearn==0.0                    \
+    stable-baselines==2.6.0         \
+    statistics==1.0.3.5             \
+    tensorforce==0.4.3              \
+    theano==1.0.4                   \
+    tsfresh==0.12.0                 \
+    xgboost==0.90
+RUN pip install --upgrade --user hmmlearn==0.2.2
+RUN python -c "import nltk; nltk.download('punkt')"
+RUN conda clean -y --all
 
 # Install TA-lib for python
 RUN wget http://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \

@@ -17,7 +17,7 @@ MAINTAINER QuantConnect <contact@quantconnect.com>
 #	sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj && \
 #	wget https://nuget.org/nuget.exe && \
 #	mono nuget.exe restore QuantConnect.Lean.sln -NonInteractive && \
-#	xbuild /property:Configuration=Release && \
+#	msbuild /property:Configuration=Release && \
 #	cd /root/Lean/Launcher/bin/Release/
 #################################
 

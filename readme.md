@@ -105,7 +105,7 @@ sudo apt-get update && sudo apt-get install -y nuget
 - Restore NuGet packages then compile:
 ```
 nuget restore QuantConnect.Lean.sln
-xbuild QuantConnect.Lean.sln
+msbuild QuantConnect.Lean.sln
 ```
 If you get: "Error initializing task Fsc: Not registered task Fsc." -> `sudo apt-get upgrade mono-complete`
 

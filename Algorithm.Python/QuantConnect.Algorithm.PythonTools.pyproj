@@ -100,7 +100,6 @@
     <Compile Include="OrderTicketDemoAlgorithm.py" />
     <Compile Include="ParameterizedAlgorithm.py" />
     <Compile Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.py" />
-    <Compile Include="PythonPackageTestAlgorithm.py" />
     <Compile Include="QCUWeatherBasedRebalancing.py" />
     <Compile Include="QuandlFuturesDataAlgorithm.py" />
     <Compile Include="QuandlImporterAlgorithm.py" />
