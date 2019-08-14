@@ -222,16 +222,26 @@ namespace QuantConnect.Securities
                 markets.Add(SecurityType.Cfd, markets[SecurityType.Forex]);
             }
 
-            var potentials = Currencies.CurrencyPairs.Select(fx => CreateSymbol(marketMap, fx, markets, SecurityType.Forex))
-                .Concat(Currencies.CfdCurrencyPairs.Select(cfd => CreateSymbol(marketMap, cfd, markets, SecurityType.Cfd)))
-                .Concat(Currencies.CryptoCurrencyPairs.Select(crypto => CreateSymbol(marketMap, crypto, markets, SecurityType.Crypto)));
-
+            // min resolution
             var minimumResolution = subscriptions.Subscriptions.Select(x => x.Resolution).DefaultIfEmpty(Resolution.Minute).Min();
 
-            foreach (var symbol in potentials)
+            var potentialsDictionary = new Dictionary<IReadOnlyList<string>, SecurityType>
             {
-                if (symbol.Value == normal || symbol.Value == invert)
+                { Currencies.CurrencyPairs, SecurityType.Forex },
+                { Currencies.CfdCurrencyPairs, SecurityType.Cfd },
+                { Currencies.CryptoCurrencyPairs, SecurityType.Crypto }
+            };
+
+            foreach (var kvp in potentialsDictionary)
+            {
+                foreach (var pair in kvp.Key)
                 {
+                    // continue till appropriate conversion rate pair is not found
+                    if (pair != normal && pair != invert) continue;
+
+                    // appropriate pair has been found - create that symbol
+                    var symbol = CreateSymbol(marketMap, pair, markets, kvp.Value);
+
                     _invertRealTimePrice = symbol.Value == invert;
                     var securityType = symbol.ID.SecurityType;
 
