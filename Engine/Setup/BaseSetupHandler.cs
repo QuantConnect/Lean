@@ -54,12 +54,6 @@ namespace QuantConnect.Lean.Engine.Setup
             var historyRequests = new List<HistoryRequest>();
             foreach (var cash in cashToUpdate)
             {
-                // if we already added a history request for this security, skip
-                if (historyRequests.Any(x => x.Symbol == cash.ConversionRateSecurity.Symbol))
-                {
-                    continue;
-                }
-
                 var configs = algorithm
                     .SubscriptionManager
                     .SubscriptionDataConfigService
