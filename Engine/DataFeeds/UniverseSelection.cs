@@ -127,7 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     if (!_anyDoesNotHaveFundamentalDataWarningLogged && anyDoesNotHaveFundamentalData)
                     {
-                        Log.Error("Warning: Please do not include securities without fundamental data when performing fine fundamental selection. Check out the documentation for details.");
+                        _algorithm.Debug("Note: Your coarse selection filter was updated to exclude symbols without fine fundamental data. Make sure your coarse filter excludes symbols where HasFundamental is false.");
                         _anyDoesNotHaveFundamentalDataWarningLogged = true;
                     }
 
