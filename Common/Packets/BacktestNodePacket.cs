@@ -15,6 +15,8 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Packets
@@ -63,9 +65,26 @@ namespace QuantConnect.Packets
         public RunMode RunMode = RunMode.Series;
 
         /// <summary>
+        /// The initial breakpoints for debugging, if any
+        /// </summary>
+        [JsonProperty(PropertyName = "aBreakpoints")]
+        public List<Breakpoint> Breakpoints = new List<Breakpoint>();
+
+        /// <summary>
+        /// The initial Watchlist for debugging, if any
+        /// </summary>
+        [JsonProperty(PropertyName = "aWatchlist")]
+        public List<string> Watchlist = new List<string>();
+
+        /// <summary>
+        /// True, if this is a debugging backtest
+        /// </summary>
+        public bool IsDebugging => Breakpoints.Any();
+
+        /// <summary>
         /// Default constructor for JSON
         /// </summary>
-        public BacktestNodePacket() 
+        public BacktestNodePacket()
             : base(PacketType.BacktestNode)
         {
             Controls = new Controls

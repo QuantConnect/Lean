@@ -33,7 +33,6 @@ using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -99,11 +98,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                     if (_algorithm == null)
                     {
                         throw new Exception("Please ensure that one class inherits from QCAlgorithm.");
-                    }
-
-                    if (Config.GetBool("mute-python-library-logging", true))
-                    {
-                        PythonEngine.Exec("import os, sys; sys.stdout = open(os.devnull, 'w')");
                     }
                 }
             }

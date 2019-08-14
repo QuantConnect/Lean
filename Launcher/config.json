@@ -27,6 +27,10 @@
   // engine
   "data-folder": "../../../Data/",
 
+  // debugging configuration
+  "debugging": false,
+  "debugging-method": "LocalCmdline",
+
   // handlers
   "log-handler": "QuantConnect.Logging.CompositeLogHandler",
   "messaging-handler": "QuantConnect.Messaging.Messaging",

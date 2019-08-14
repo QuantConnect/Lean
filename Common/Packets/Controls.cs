@@ -84,6 +84,12 @@ namespace QuantConnect.Packets
         public int MaximumDataPointsPerChartSeries;
 
         /// <summary>
+        /// The amount seconds used for timeout limits
+        /// </summary>
+        [JsonProperty(PropertyName = "iSecondTimeOut")]
+        public int SecondTimeOut;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
         public Controls()
@@ -98,6 +104,7 @@ namespace QuantConnect.Packets
             RemainingLogAllowance = 10000;
             BacktestingMaxInsights = 10000;
             MaximumDataPointsPerChartSeries = 4000;
+            SecondTimeOut = 300;
         }
 
         /// <summary>

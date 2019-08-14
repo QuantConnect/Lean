@@ -299,6 +299,7 @@
     <Compile Include="Common\Orders\Fees\InteractiveBrokersFeeModelTests.cs" />
     <Compile Include="Common\Orders\Fees\OrderFeesTests.cs" />
     <Compile Include="Common\Orders\Fills\BackwardsCompatibilityFillModelsTests.cs" />
+    <Compile Include="Common\Packets\BreakpointTests.cs" />
     <Compile Include="Common\Securities\CashAmountTests.cs" />
     <Compile Include="Common\Data\Custom\QuandlTests.cs" />
     <Compile Include="Common\Securities\Cryptos\CryptoTests.cs" />
