@@ -105,7 +105,6 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Alphas\InterestReleaseAlphaModel.cs" />
     <Compile Include="Alphas\PearsonCorrelationPairsTradingAlphaModel.cs" />
     <Compile Include="Alphas\EmaCrossAlphaModel.cs" />
     <Compile Include="Alphas\BasePairsTradingAlphaModel.cs" />
@@ -155,7 +154,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <Content Include="Alphas\InterestReleaseAlphaModel.py" />
     <Content Include="Portfolio\BlackLittermanOptimizationPortfolioConstructionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
