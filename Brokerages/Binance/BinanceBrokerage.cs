@@ -30,6 +30,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Binance
 {
@@ -50,8 +51,14 @@ namespace QuantConnect.Brokerages.Binance
         private readonly ISecurityProvider _securityProvider;
         private readonly BinanceSymbolMapper _symbolMapper = new BinanceSymbolMapper();
         private readonly IWebSocket TickerWebSocket;
+        private readonly TimeSpan _subscribeDelay = TimeSpan.FromMilliseconds(250);
+        private HashSet<Symbol> SubscribedSymbols = new HashSet<Symbol>();
         private RealTimeSynchronizedTimer _keepAliveTimer;
         private RealTimeSynchronizedTimer _reconnectTimer;
+        private readonly object _lockerSubscriptions = new object();
+        private DateTime _lastSubscribeRequestUtcTime = DateTime.MinValue;
+        private bool _subscriptionsPending;
+
         /// <summary>
         /// Constructor for brokerage
         /// </summary>
@@ -73,23 +80,27 @@ namespace QuantConnect.Brokerages.Binance
 
             WebSocket.Message += OnMessage;
             WebSocket.Error += OnError;
-            WebSocket.Open += (s, e) => {
+            WebSocket.Open += (s, e) =>
+            {
                 _keepAliveTimer = new RealTimeSynchronizedTimer(TimeSpan.FromMinutes(30), (d) => SessionKeepAlive());
                 _keepAliveTimer.Start();
             };
-            WebSocket.Closed += (s, e) => { _keepAliveTimer.Stop(); }; 
+            WebSocket.Closed += (s, e) => { _keepAliveTimer.Stop(); };
 
+            var tickerConnectionHandler = new DefaultConnectionHandler();
+            tickerConnectionHandler.ReconnectRequested += (s, e) => { ProcessSubscriptionRequest(); };
             TickerWebSocket = new BinanceWebSocketWrapper(
-                new DefaultConnectionHandler()
+                tickerConnectionHandler
             );
 
             TickerWebSocket.Message += OnTickerMessage;
             TickerWebSocket.Message += (s, e) => (s as BinanceWebSocketWrapper)?.ConnectionHandler.KeepAlive(DateTime.UtcNow);
             TickerWebSocket.Error += OnError;
 
-            _reconnectTimer = new RealTimeSynchronizedTimer(TimeSpan.FromHours(12), (d) => {
+            _reconnectTimer = new RealTimeSynchronizedTimer(TimeSpan.FromHours(12), (d) =>
+            {
                 Reconnect();
-                ConnectStream();
+                ProcessSubscriptionRequest();
             });
         }
 
@@ -481,39 +492,6 @@ namespace QuantConnect.Brokerages.Binance
         }
 
         /// <summary>
-        /// Subscribes to the requested symbols (using an individual streaming channel)
-        /// </summary>
-        /// <param name="symbols">The list of symbols to subscribe</param>
-        public override void Subscribe(IEnumerable<Symbol> symbols)
-        {
-            bool refresh = false;
-            foreach (var symbol in symbols)
-            {
-                if (symbol.Value.Contains("UNIVERSE") ||
-                    string.IsNullOrEmpty(_symbolMapper.GetBrokerageSymbol(symbol)) ||
-                    symbol.SecurityType != _symbolMapper.GetLeanSecurityType(symbol.Value))
-                {
-                    continue;
-                }
-
-                if (!ChannelList.ContainsKey(symbol.Value))
-                {
-                    ChannelList.Add(symbol.Value, new Channel()
-                    {
-                        Name = _symbolMapper.GetBrokerageSymbol(symbol).ToLower(),
-                        Symbol = _symbolMapper.GetBrokerageSymbol(symbol)
-                    });
-                    refresh = true;
-                }
-            }
-
-            if (refresh)
-            {
-                ConnectStream();
-            }
-        }
-
-        /// <summary>
         /// Wss message handler
         /// </summary>
         /// <param name="sender"></param>
@@ -559,23 +537,6 @@ namespace QuantConnect.Brokerages.Binance
         }
 
         /// <summary>
-        /// Gets a list of current subscriptions
-        /// </summary>
-        /// <returns></returns>
-        protected override IList<Symbol> GetSubscribed()
-        {
-            IList<Symbol> list = new List<Symbol>();
-            lock (ChannelList)
-            {
-                foreach (var ticker in ChannelList.Select(x => x.Value.Symbol).Distinct())
-                {
-                    list.Add(_symbolMapper.GetLeanSymbol(ticker));
-                }
-            }
-            return list;
-        }
-
-        /// <summary>
         /// Force reconnect
         /// </summary>
         protected override void Reconnect()
@@ -587,9 +548,50 @@ namespace QuantConnect.Brokerages.Binance
             base.Reconnect();
         }
 
-        private void ConnectStream()
+        private void ProcessSubscriptionRequest()
         {
-            if (ChannelList.Count == 0)
+            if (_subscriptionsPending) return;
+
+            _lastSubscribeRequestUtcTime = DateTime.UtcNow;
+            _subscriptionsPending = true;
+
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    DateTime requestTime;
+                    List<Symbol> symbolsToSubscribe;
+                    lock (_lockerSubscriptions)
+                    {
+                        requestTime = _lastSubscribeRequestUtcTime.Add(_subscribeDelay);
+                        symbolsToSubscribe = SubscribedSymbols.ToList();
+                    }
+
+                    if (DateTime.UtcNow > requestTime)
+                    {
+                        // restart streaming session
+                        SubscribeSymbols(symbolsToSubscribe);
+
+                        lock (_lockerSubscriptions)
+                        {
+                            _lastSubscribeRequestUtcTime = DateTime.UtcNow;
+                            if (SubscribedSymbols.Count == symbolsToSubscribe.Count)
+                            {
+                                // no more subscriptions pending, task finished
+                                _subscriptionsPending = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    await Task.Delay(200).ConfigureAwait(false);
+                }
+            });
+        }
+
+        private void SubscribeSymbols(List<Symbol> symbolsToSubscribe)
+        {
+            if (symbolsToSubscribe.Count == 0)
                 return;
 
             //close current connection
@@ -599,12 +601,11 @@ namespace QuantConnect.Brokerages.Binance
             }
             Wait(() => !TickerWebSocket.IsOpen);
 
-            var streams = ChannelList.Select((pair) => string.Format("{0}@depth/{0}@trade", pair.Value.Name));
+            var streams = symbolsToSubscribe.Select((s) => string.Format(CultureInfo.InvariantCulture, "{0}@depth/{0}@trade", s.Value.LazyToLower()));
             TickerWebSocket.Initialize($"{_wssUrl}/stream?streams={string.Join("/", streams)}");
 
             Log.Trace($"BaseWebsocketsBrokerage(): Reconnecting... IsConnected: {IsConnected}");
 
-            var subscribed = GetSubscribed();
             TickerWebSocket.Error -= this.OnError;
             try
             {
@@ -623,7 +624,7 @@ namespace QuantConnect.Brokerages.Binance
             finally
             {
                 TickerWebSocket.Error += this.OnError;
-                this.Subscribe(subscribed);
+                this.Subscribe(symbolsToSubscribe);
             }
 
             Log.Trace("BinanceBrokerage.Subscribe: Sent subscribe.");
@@ -677,21 +678,65 @@ namespace QuantConnect.Brokerages.Binance
         }
 
         /// <summary>
+        /// Subscribes to the requested symbols (using an individual streaming channel)
+        /// </summary>
+        /// <param name="symbols">The list of symbols to subscribe</param>
+        public override void Subscribe(IEnumerable<Symbol> symbols)
+        {
+            lock (_lockerSubscriptions)
+            {
+                List<Symbol> symbolsToSubscribe = new List<Symbol>();
+                foreach (var symbol in symbols)
+                {
+                    if (symbol.Value.Contains("UNIVERSE") ||
+                        string.IsNullOrEmpty(_symbolMapper.GetBrokerageSymbol(symbol)) ||
+                        symbol.SecurityType != _symbolMapper.GetLeanSecurityType(symbol.Value) ||
+                        SubscribedSymbols.Contains(symbol))
+                    {
+                        continue;
+                    }
+
+                    symbolsToSubscribe.Add(symbol);
+                }
+
+                if (symbolsToSubscribe.Count == 0)
+                    return;
+
+                Log.Trace("BinanceBrokerage.Subscribe(): {0}", string.Join(",", symbolsToSubscribe.Select(x => x.Value)));
+
+                SubscribedSymbols = symbolsToSubscribe
+                    .Union(SubscribedSymbols.ToList())
+                    .ToList()
+                    .ToHashSet();
+
+                ProcessSubscriptionRequest();
+            }
+        }
+
+        /// <summary>
         /// Ends current subscriptions
         /// </summary>
         private void Unsubscribe(IEnumerable<Symbol> symbols)
         {
-            if (WebSocket.IsOpen)
+            lock (_lockerSubscriptions)
             {
-                foreach (var symbol in symbols)
+                if (WebSocket.IsOpen)
                 {
-                    if (ChannelList.ContainsKey(symbol.Value))
-                    {
-                        ChannelList.Remove(symbol.Value);
-                    }
-                }
+                    var symbolsToUnsubscribe = (from symbol in symbols
+                                                where SubscribedSymbols.Contains(symbol)
+                                                select symbol).ToList();
+                    if (symbolsToUnsubscribe.Count == 0)
+                        return;
 
-                ConnectStream();
+                    Log.Trace("BinanceBrokerage.Unsubscribe(): {0}", string.Join(",", symbolsToUnsubscribe.Select(x => x.Value)));
+
+                    SubscribedSymbols = SubscribedSymbols
+                        .ToList()
+                        .Where(x => !symbolsToUnsubscribe.Contains(x))
+                        .ToHashSet();
+
+                    ProcessSubscriptionRequest();
+                }
             }
         }
     }
