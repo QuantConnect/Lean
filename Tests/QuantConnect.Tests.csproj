@@ -777,7 +777,6 @@
   <ItemGroup>
     <Folder Include="Adapters\" />
     <Folder Include="Tasks\" />
-    <Folder Include="UserInterface\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj">

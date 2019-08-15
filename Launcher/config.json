@@ -246,42 +246,6 @@
       "history-provider": "BrokerageHistoryProvider"
     },
 
-    // defines the 'backtesting-desktop' environment
-    "backtesting-desktop": {
-      "live-mode": false,
-      "send-via-api": true,
-
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
-      "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
-      "log-handler": "QuantConnect.Logging.QueueLogHandler",
-      "desktop-http-port": "1234",
-      "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
-    },
-
-    // defines the 'live-desktop' environment
-    "live-desktop": {
-      "live-mode": true,
-      "send-via-api": true,
-
-      // Set your own brokerage and data queue handlers here.
-      // Live desktop charting isn't as cool as on quantconnect.com but its pretty neat!
-      "live-mode-brokerage": "FxcmBrokerage",
-      "data-queue-handler": "FxcmBrokerage",
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
-      "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
-      "log-handler": "QuantConnect.Logging.QueueLogHandler",
-      "desktop-http-port": "1234",
-      "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
-    },
-
     "live-gdax": {
       "live-mode": true,
 

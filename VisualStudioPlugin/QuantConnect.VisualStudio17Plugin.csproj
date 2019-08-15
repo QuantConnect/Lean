@@ -146,13 +146,13 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Resource Include="..\UserInterface\Icons\dialog-close-32.png">
+    <Resource Include="Resources\dialog-close-32.png">
       <Link>Resources\dialog-close-32.png</Link>
     </Resource>
-    <Resource Include="..\UserInterface\Icons\dialog-ok-apply-32.png">
+    <Resource Include="Resources\dialog-ok-apply-32.png">
       <Link>Resources\dialog-ok-apply-32.png</Link>
     </Resource>
-    <Content Include="..\UserInterface\Icons\icon_128x128.png">
+    <Content Include="Resources\icon_128x128.png">
       <Link>icon_128x128.png</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
