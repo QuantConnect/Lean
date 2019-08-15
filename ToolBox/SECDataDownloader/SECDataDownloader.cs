@@ -13,14 +13,17 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using QuantConnect.Data.Custom.SEC;
 using QuantConnect.Logging;
 using QuantConnect.Util;
+using System.Globalization;
 
 namespace QuantConnect.ToolBox.SECDataDownloader
 {
@@ -29,6 +32,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         // SEC imposes rate limits of 10 requests per second. Set to 10 req / 1.1 sec just to be safe.
         private readonly RateGate _indexGate = new RateGate(10, TimeSpan.FromSeconds(1.1));
         private readonly HashSet<string> _downloadedIndexFiles = new HashSet<string>();
+        private readonly Dictionary<string, SECReportIndexFile> _archiveIndexFileCache = new Dictionary<string, SECReportIndexFile>();
 
         /// <summary>
         /// Base URL to query the SEC website for reports
@@ -72,6 +76,37 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 var dailyIndexTmp = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.idx"));
                 var dailyIndexRaw = new FileInfo(Path.Combine(rawDestination, "indexes", $"{currentDate:yyyyMMdd}.idx"));
 
+                var cacheKey = $"{currentDate.Year}/{quarter}";
+                SECReportIndexFile indexFile;
+                if (!_archiveIndexFileCache.TryGetValue(cacheKey, out indexFile))
+                {
+                    indexFile = GetArchiveIndexFile(currentDate.Year, quarter);
+                    _archiveIndexFileCache[cacheKey] = indexFile;
+                }
+
+                // Attempt to parse the archive index file. Skip downloading the data for
+                // the day if we can't determine its size pre-emptively
+                string rawSize;
+                try
+                {
+                    rawSize = indexFile.Directory.Items.Find(item => item.Name == $"{currentDate:yyyyMMdd}.nc.tar.gz").Size;
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, $"SECDataDownloader.TryGetFileSizeFromIndex(): Failed to find {currentDate:yyyyMMdd}.nc.tar.gz in the index file. Skipping...");
+                    continue;
+                }
+
+                // Strip out kilobyte unit. All SEC data is reported in kilobytes
+                rawSize = rawSize.Replace("KB", "");
+
+                decimal fileSizeInKB;
+                if (!decimal.TryParse(rawSize, NumberStyles.Number, CultureInfo.InvariantCulture, out fileSizeInKB))
+                {
+                    Log.Error($"SECDataDownloader.TryGetFileSizeFromIndex(): Failed to convert {rawSize} to decimal");
+                    continue;
+                }
+
                 // Sometimes, requests to the SEC can fail for no apparent reason.
                 // We implement retry logic here to mitigate that potential issue
                 for (var retries = 0; retries < MaxRetries; retries++)
@@ -89,6 +124,17 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                             Log.Trace($"SECDataDownloader.Download(): Downloading temp filing archive to: {tmpFile}");
                             client.DownloadFile($"{BaseUrl}/Feed/{currentDate.Year}/{quarter}/{currentDate:yyyyMMdd}.nc.tar.gz", tmpFile);
 
+                            var tmpFileStat = new FileInfo(tmpFile);
+                            var tmpFileSizeInKB = tmpFileStat.Length / 1024;
+
+                            // Have max and low be +-1% of the stated file size
+                            if (tmpFileSizeInKB > fileSizeInKB + (fileSizeInKB * 0.01m) || tmpFileSizeInKB < fileSizeInKB - (fileSizeInKB * 0.01m))
+                            {
+                                Log.Error($"Temporary file is {tmpFileSizeInKB}KB, but is supposed to be {fileSizeInKB}KB. Deleting temp file and retrying...");
+                                tmpFileStat.Delete();
+                                continue;
+                            }
+
                             Log.Trace($"SECDataDownloader.Download(): Moving temp archive to: {rawFile}");
                             File.Move(tmpFile, rawFile);
 
@@ -99,7 +145,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     }
                     catch (WebException e)
                     {
-                        var response = (HttpWebResponse) e.Response;
+                        var response = (HttpWebResponse)e.Response;
 
                         if (response == null)
                         {
@@ -304,6 +350,52 @@ namespace QuantConnect.ToolBox.SECDataDownloader
             {
                 Log.Error(e);
             }
+        }
+
+        /// <summary>
+        /// Downloads the archive index file
+        /// </summary>
+        /// <param name="year">Year to download index file for</param>
+        /// <param name="quarter">Quarter to download index file for</param>
+        /// <returns>SEC index directory</returns>
+        private SECReportIndexFile GetArchiveIndexFile(int year, string quarter)
+        {
+            for (var retries = 0; retries < MaxRetries; retries++)
+            {
+                // Download the index file for the quarter archive files before we download the archive so we know
+                // its size and make sure it's within +-1% of the original file on the server
+                try
+                {
+                    using (var client = new WebClient())
+                    {
+                        Log.Trace($"SECDataDownloader.GetFileSize(): Downloading archive index file for file size verification");
+                        var contents = client.DownloadString($"{BaseUrl}/Feed/{year}/{quarter}/index.json");
+
+                        var indexFile = JsonConvert.DeserializeObject<SECReportIndexFile>(contents);
+                        Log.Trace($"SECDataDownloader.GetFileSize(): Successfully downloaded {BaseUrl}/Feed/{year}/{quarter}/index.json");
+
+                        return indexFile;
+                    }
+                }
+                catch (WebException e)
+                {
+                    var response = (HttpWebResponse)e.Response;
+
+                    if (response == null)
+                    {
+                        Log.Error("SECDataDownloader.GetFileSize(): Archive download response is null");
+                        continue;
+                    }
+
+                    Log.Error($"SECDataDownloader.GetFileSize(): Received status code {(int)response.StatusCode} - Retrying...");
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Retrying...");
+                }
+            }
+
+            throw new Exception("Failed to download SEC archive index file. No more retries remaining");
         }
     }
 }
