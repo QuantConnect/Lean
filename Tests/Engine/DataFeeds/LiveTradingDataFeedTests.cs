@@ -795,7 +795,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var currentTime = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
                 Console.WriteLine(currentTime + ": timer.Elapsed");
 
-                lock (state)
+                lock (lck)
                 {
                     list = new BaseDataCollection { Symbol = symbol };
                     list.Data.AddRange(Enumerable.Range(0, coarseDataPointCount).Select(x => new CoarseFundamental
@@ -830,11 +830,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
                 Assert.IsTrue(_dataManager.DataFeedSubscriptions
-                    .Any(x => x.IsUniverseSelectionSubscription));
+                    .Any(x => x.IsUniverseSelectionSubscription), "No universe selection subscriptions found.");
             });
 
             timer.Dispose();
-            Assert.IsTrue(yieldedUniverseData);
+            Assert.IsTrue(yieldedUniverseData, "No data points yielded.");
         }
 
 
