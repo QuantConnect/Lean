@@ -43,6 +43,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly PendingRemovalsManager _pendingRemovalsManager;
         private readonly CurrencySubscriptionDataConfigManager _currencySubscriptionDataConfigManager;
         private bool _initializedSecurityBenchmark;
+        private bool _anyDoesNotHaveFundamentalDataWarningLogged;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -105,6 +106,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var fineCollection = new BaseDataCollection();
                     var dataProvider = new DefaultDataProvider();
 
+                    // Create a dictionary of CoarseFundamental keyed by Symbol that also has FineFundamental
+                    // Coarse raw data has SID collision on: CRHCY R735QTJ8XC9X
+                    var coarseData = universeData.Data.OfType<CoarseFundamental>()
+                        .Where(c => c.HasFundamentalData)
+                        .DistinctBy(c => c.Symbol)
+                        .ToDictionary(c => c.Symbol);
+
+                    // Remove selected symbols that does not have fine fundamental data
+                    var anyDoesNotHaveFundamentalData = false;
+                    selectSymbolsResult = selectSymbolsResult
+                        .Where(
+                            symbol =>
+                            {
+                                var result = coarseData.ContainsKey(symbol);
+                                anyDoesNotHaveFundamentalData |= !result;
+                                return result;
+                            }
+                        );
+
+                    if (!_anyDoesNotHaveFundamentalDataWarningLogged && anyDoesNotHaveFundamentalData)
+                    {
+                        _algorithm.Debug("Note: Your coarse selection filter was updated to exclude symbols without fine fundamental data. Make sure your coarse filter excludes symbols where HasFundamental is false.");
+                        _anyDoesNotHaveFundamentalDataWarningLogged = true;
+                    }
+
                     // use all available threads, the entire system is waiting for this to complete
                     var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
                     Parallel.ForEach(selectSymbolsResult, options, symbol =>
@@ -136,11 +162,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // in place for this function to return such data. The following lines are tightly coupled
                     // to the universeData dictionaries in SubscriptionSynchronizer and LiveTradingDataFeed and
                     // rely on reference semantics to work.
-
-                    // Coarse raw data has SID collision on: CRHCY R735QTJ8XC9X
-                    var coarseData = universeData.Data.OfType<CoarseFundamental>()
-                        .DistinctBy(c => c.Symbol)
-                        .ToDictionary(c => c.Symbol);
 
                     universeData.Data = new List<BaseData>();
                     foreach (var fine in fineCollection.Data.OfType<FineFundamental>())
