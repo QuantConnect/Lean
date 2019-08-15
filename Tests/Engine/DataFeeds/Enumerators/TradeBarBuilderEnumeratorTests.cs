@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsNotNull(enumerator.Current);
 
             // in the spirit of not duplicating the above code 5 times (OHLCV, we'll assert these here as well)
-            var bar = (TradeBar)enumerator.Current;
+            var bar = (TradeBar) enumerator.Current;
             Assert.AreEqual(currentTime.AddSeconds(-1), bar.Time);
             Assert.AreEqual(currentTime, bar.EndTime);
             Assert.AreEqual(Symbols.SPY, bar.Symbol);
@@ -74,6 +74,47 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(ticks.Min(x => x.LastPrice), bar.Low);
             Assert.AreEqual(ticks.Last().LastPrice, bar.Close);
             Assert.AreEqual(ticks.Sum(x => x.Quantity), bar.Volume);
+        }
+
+        [Test]
+        public void AggregatesHourlyTicksIntoHourlyBars()
+        {
+            var timeProvider = new ManualTimeProvider(TimeZones.NewYork);
+            var enumerator = new TradeBarBuilderEnumerator(Time.OneHour, TimeZones.NewYork, timeProvider, false);
+
+            // noon new york time
+            var currentTime = new DateTime(2015, 10, 08, 12, 0, 0);
+            timeProvider.SetCurrentTime(currentTime);
+
+            var price = 0m;
+
+            for (var i = 0; i < 5; i++)
+            {
+                // advance one hour
+                currentTime = currentTime.AddHours(1);
+                timeProvider.SetCurrentTime(currentTime);
+
+                // we advanced time, a new bar should be generated
+                Assert.IsTrue(enumerator.MoveNext());
+
+                // the first loop no trade bar was generated yet, end time not reached
+                if (i > 0)
+                {
+                    Assert.IsNotNull(enumerator.Current);
+
+                    var bar = (TradeBar) enumerator.Current;
+                    Assert.AreEqual(currentTime.AddHours(-1), bar.Time);
+                    Assert.AreEqual(currentTime, bar.EndTime);
+                    Assert.AreEqual(price, bar.Open);
+                    Assert.AreEqual(price, bar.High);
+                    Assert.AreEqual(price, bar.Low);
+                    Assert.AreEqual(price, bar.Close);
+                }
+
+                // add a tick, will generate a new bar
+                price++;
+                enumerator.ProcessData(new Tick(currentTime, Symbols.SPY, price, price, price));
+            }
         }
     }
 }
