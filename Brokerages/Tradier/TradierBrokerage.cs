@@ -1223,7 +1223,7 @@ namespace QuantConnect.Brokerages.Tradier
                             if (updatedOrderLocal == null)
                             {
                                 Log.Error(string.Format("TradierBrokerage.CheckForFills(): Unable to locate order {0} in cached open orders.", cachedOrderLocal.Key));
-                                throw new Exception("TradierBrokerage.CheckForFills(): GetOrder() return null response");
+                                throw new InvalidOperationException("TradierBrokerage.CheckForFills(): GetOrder() return null response");
                             }
 
                             UpdateCachedOpenOrder(cachedOrderLocal.Key, updatedOrderLocal);

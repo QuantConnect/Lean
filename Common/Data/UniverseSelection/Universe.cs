@@ -229,7 +229,7 @@ namespace QuantConnect.Data.UniverseSelection
         [Obsolete("CreateSecurity is obsolete and will not be called. The system will create the required Securities based on selected symbols")]
         public virtual Security CreateSecurity(Symbol symbol, IAlgorithm algorithm, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
         {
-            throw new Exception("CreateSecurity is obsolete and should not be called." +
+            throw new InvalidOperationException("CreateSecurity is obsolete and should not be called." +
                 "The system will create the required Securities based on selected symbols");
         }
 
@@ -243,7 +243,7 @@ namespace QuantConnect.Data.UniverseSelection
         [Obsolete("This overload is obsolete and will not be called. It was not capable of creating new SubscriptionDataConfig due to lack of information")]
         public virtual IEnumerable<SubscriptionRequest> GetSubscriptionRequests(Security security, DateTime currentTimeUtc, DateTime maximumEndTimeUtc)
         {
-            throw new Exception("This overload is obsolete and should not be called." +
+            throw new InvalidOperationException("This overload is obsolete and should not be called." +
                 "It was not capable of creating new SubscriptionDataConfig due to lack of information");
         }
 

@@ -73,7 +73,7 @@ namespace QuantConnect.Parameters
                 // this line make static analysis a little happier, but should never actually throw
                 if (fieldInfo == null && propertyInfo == null)
                 {
-                    throw new Exception("Resolved member that is neither FieldInfo or PropertyInfo");
+                    throw new InvalidOperationException("Resolved member that is neither FieldInfo or PropertyInfo");
                 }
 
                 // check the member for our custom attribute
@@ -91,7 +91,7 @@ namespace QuantConnect.Parameters
                 if (propertyInfo != null && !propertyInfo.CanWrite)
                 {
                     var message = string.Format("The specified property is read only: {0}.{1}", propertyInfo.DeclaringType, propertyInfo.Name);
-                    throw new Exception(message);
+                    throw new InvalidOperationException(message);
                 }
 
                 // resolve the member type

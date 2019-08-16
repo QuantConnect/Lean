@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
                 {
                     if (_securityValuesBySymbolFunc == null)
                     {
-                        throw new Exception($"SecurityValues for symbol {symbol} was not found");
+                        throw new KeyNotFoundException($"SecurityValues for symbol {symbol} was not found");
                     }
                     result = _securityValuesBySymbolFunc(symbol);
                     _securityValuesBySymbol[symbol] = result;
