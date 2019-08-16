@@ -168,18 +168,24 @@ namespace QuantConnect.Lean.Engine.Setup
                         sleepIntervalMillis: 50,
                         workerThread: WorkerThread);
 
+                    // set start and end date if present in the job
+                    if (backtestJob.PeriodStart.HasValue)
+                    {
+                        algorithm.SetStartDate(backtestJob.PeriodStart.Value);
+                    }
+                    if (backtestJob.PeriodFinish.HasValue)
+                    {
+                        algorithm.SetEndDate(backtestJob.PeriodFinish.Value);
+                    }
+
                     //Finalize Initialization
                     algorithm.PostInitialize();
 
                     //Set the time frontier of the algorithm
                     algorithm.SetDateTime(algorithm.StartDate.ConvertToUtc(algorithm.TimeZone));
 
-                    //Construct the backtest job packet:
-                    backtestJob.PeriodStart = algorithm.StartDate;
-                    backtestJob.PeriodFinish = algorithm.EndDate;
-
                     //Backtest Specific Parameters:
-                    StartingDate = backtestJob.PeriodStart;
+                    StartingDate = algorithm.StartDate;
 
                     BaseSetupHandler.SetupCurrencyConversions(algorithm, parameters.UniverseSelection);
                     StartingPortfolioValue = algorithm.Portfolio.Cash;

@@ -47,13 +47,13 @@ namespace QuantConnect.Packets
         /// Backtest start-date as defined in the Initialize() method.
         /// </summary>
         [JsonProperty(PropertyName = "dtPeriodStart")]
-        public DateTime PeriodStart = DateTime.Now;
+        public DateTime? PeriodStart;
 
         /// <summary>
         /// Backtest end date as defined in the Initialize() method.
         /// </summary>
         [JsonProperty(PropertyName = "dtPeriodFinish")]
-        public DateTime PeriodFinish = DateTime.Now;
+        public DateTime? PeriodFinish;
 
         /// <summary>
         /// Estimated number of trading days in this backtest task based on the start-end dates.

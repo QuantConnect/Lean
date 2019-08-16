@@ -538,6 +538,11 @@ namespace QuantConnect.Algorithm
         /// </summary>
         public virtual void PostInitialize()
         {
+            if (_endDate < _startDate)
+            {
+                throw new ArgumentException("Please select an algorithm end date greater than start date.");
+            }
+
             FrameworkPostInitialize();
 
             // if the benchmark hasn't been set yet, set it
@@ -1200,11 +1205,10 @@ namespace QuantConnect.Algorithm
         /// <param name="day">Int starting date 1-30</param>
         /// <param name="month">Int month starting date</param>
         /// <param name="year">Int year starting date</param>
-        /// <remarks>
-        ///     Wrapper for SetStartDate(DateTime).
-        ///     Must be less than end date.
-        ///     Ignored in live trading mode.
-        /// </remarks>
+        /// <remarks>Wrapper for SetStartDate(DateTime).
+        /// Must be less than end date.
+        /// Ignored in live trading mode.</remarks>
+        /// <seealso cref="SetStartDate(DateTime)"/>
         public void SetStartDate(int year, int month, int day)
         {
             try
@@ -1262,7 +1266,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="start">Datetime Start date for backtest</param>
         /// <remarks>Must be less than end date and within data available</remarks>
-        /// <seealso cref="SetStartDate(DateTime)"/>
+        /// <seealso cref="SetStartDate(int, int, int)"/>
         public void SetStartDate(DateTime start)
         {
             // no need to set this value in live mode, will be set using the current time.
@@ -1285,24 +1289,11 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentOutOfRangeException(nameof(start), "Please select start date less than today");
             }
 
-            //3. Check end date greater:
-            if (_endDate != new DateTime())
-            {
-                if (start > _endDate)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(start), "Please select start date less than end date.");
-                }
-            }
-
-            //4. Check not locked already:
+            //3. Check not locked already:
             if (!_locked)
             {
-                // this is only or backtesting
-                if (!LiveMode)
-                {
-                    _startDate = start;
-                    SetDateTime(_startDate.ConvertToUtc(TimeZone));
-                }
+                _startDate = start;
+                SetDateTime(_startDate.ConvertToUtc(TimeZone));
             }
             else
             {
@@ -1315,7 +1306,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="end">Datetime value for end date</param>
         /// <remarks>Must be greater than the start date</remarks>
-        /// <seealso cref="SetEndDate(DateTime)"/>
+        /// <seealso cref="SetEndDate(int, int, int)"/>
         public void SetEndDate(DateTime end)
         {
             // no need to set this value in live mode, will be set using the current time.
@@ -1328,19 +1319,10 @@ namespace QuantConnect.Algorithm
                 end = DateTime.Now.Date.AddDays(-1);
             }
 
-            //2. Check start date less:
-            if (_startDate != new DateTime())
-            {
-                if (end < _startDate)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(end), "Please select end date greater than start date.");
-                }
-            }
-
-            //3. Make this at the very end of the requested date
+            //2. Make this at the very end of the requested date
             end = end.RoundDown(TimeSpan.FromDays(1)).AddDays(1).AddTicks(-1);
 
-            //4. Check not locked already:
+            //3. Check not locked already:
             if (!_locked)
             {
                 _endDate = end;
