@@ -32,7 +32,6 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Server;
-using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -75,8 +74,8 @@ namespace QuantConnect.Tests.Engine
             algorithm.Initialize();
             algorithm.PostInitialize();
 
-            results.Initialize(job, new QuantConnect.Messaging.Messaging(), new Api.Api(), new BacktestingSetupHandler(), transactions);
-            results.SetAlgorithm(algorithm);
+            results.Initialize(job, new QuantConnect.Messaging.Messaging(), new Api.Api(), transactions);
+            results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, new BacktestingBrokerage(algorithm), results);
             feed.Initialize(algorithm, job, results, null, null, null, dataManager, null);
 
@@ -156,7 +155,6 @@ namespace QuantConnect.Tests.Engine
             public void Initialize(AlgorithmNodePacket job,
                 IMessagingHandler messagingHandler,
                 IApi api,
-                ISetupHandler setupHandler,
                 ITransactionHandler transactionHandler)
             {
             }
@@ -213,7 +211,7 @@ namespace QuantConnect.Tests.Engine
             {
             }
 
-            public void SetAlgorithm(IAlgorithm algorithm)
+            public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
             {
             }
 

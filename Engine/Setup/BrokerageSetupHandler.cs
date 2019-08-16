@@ -456,9 +456,8 @@ namespace QuantConnect.Lean.Engine.Setup
             return dataFeeds;
         }
 
-
         /// <summary>
-        /// Adds initializaion error to the Errors list
+        /// Adds initialization error to the Errors list
         /// </summary>
         /// <param name="message">The error message to be added</param>
         /// <param name="inner">The inner exception being wrapped</param>
