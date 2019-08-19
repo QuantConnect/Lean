@@ -178,5 +178,14 @@ namespace QuantConnect.Data.Custom.Tiingo
 
             return new BaseDataCollection(date, config.Symbol, list);
         }
+
+        /// <summary>
+        /// Indicates if there is support for map files
+        /// </summary>
+        /// <returns>True indicates map files should be used</returns>
+        public override bool UsesMapFiles()
+        {
+            return true;
+        }
     }
 }

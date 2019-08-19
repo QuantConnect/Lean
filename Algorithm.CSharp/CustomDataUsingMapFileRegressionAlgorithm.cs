@@ -13,12 +13,11 @@
  * limitations under the License.
 */
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom.SEC;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -29,7 +28,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="custom data" />
     /// <meta name="tag" content="regression test" />
-    /// <meta name="tag" content="SEC" />
     /// <meta name="tag" content="rename event" />
     /// <meta name="tag" content="map" />
     /// <meta name="tag" content="mapping" />
@@ -37,52 +35,51 @@ namespace QuantConnect.Algorithm.CSharp
     public class CustomDataUsingMapFileRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
-        private bool _changedSymbol;
-        private Dictionary<DateTime, string> _tickers = new Dictionary<DateTime, string>();
-
-        /// <summary>
-        /// Ticker we use for testing
-        /// </summary>
-        public const string Ticker = "TWX";
+        private bool _initialMapping;
+        private bool _executionMapping;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2001, 1, 1);
-            SetEndDate(2003, 12, 31);
-            SetCash(100000);
+            SetStartDate(2013, 06, 27);
+            SetEndDate(2013, 07, 02);
 
-            // AOL renames to TWX in 2003
-            _symbol = AddData<SECReport8K>(Ticker, Resolution.Daily).Symbol;
-            AddEquity(Ticker, Resolution.Daily);
+            _symbol = AddData<CustomDataUsingMapping>("FOXA").Symbol;
         }
 
         /// <summary>
         /// Checks to see if the stock has been renamed, and places an order once the symbol has changed
         /// </summary>
-        /// <param name="slice"></param>
         public override void OnData(Slice slice)
         {
             if (slice.SymbolChangedEvents.ContainsKey(_symbol))
             {
-                // Check to see if it was renamed on the 16th
-                _changedSymbol = Time.Date == new DateTime(2003, 10, 16);
-                Log($"{Time} - Ticker changed from: {slice.SymbolChangedEvents[_symbol].OldSymbol} to {slice.SymbolChangedEvents[_symbol].NewSymbol}");
-            }
-
-            foreach (var report in slice.Get<SECReport8K>())
-            {
-                var ticker = report.Key.Value;
-                var date = Time.Date;
-
-                if (date == new DateTime(2001, 1, 26) || date == new DateTime(2003, 10, 22))
+                var mappingEvent = slice.SymbolChangedEvents.Single().Value;
+                Log($"{Time} - Ticker changed from: {mappingEvent.OldSymbol} to {mappingEvent.NewSymbol}");
+                if (Time.Date == new DateTime(2013, 06, 27))
                 {
-                    _tickers[date] = ticker;
-                }
+                    // initial mapping event since we added FOXA and it's currently NWSA - GH issue 3327
+                    if (mappingEvent.NewSymbol != "NWSA"
+                        || mappingEvent.OldSymbol != "FOXA")
+                    {
+                        throw new Exception($"Unexpected mapping event {mappingEvent}");
+                    }
 
-                Log($"{Time} - Received 8-K report for {ticker}");
+                    _initialMapping = true;
+                }
+                else if(Time.Date == new DateTime(2013, 06, 29))
+                {
+                    if (mappingEvent.NewSymbol != "FOXA"
+                        || mappingEvent.OldSymbol != "NWSA")
+                    {
+                        throw new Exception($"Unexpected mapping event {mappingEvent}");
+                    }
+
+                    _executionMapping = true;
+                    SetHoldings(_symbol, 1);
+                }
             }
         }
 
@@ -91,30 +88,20 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnEndOfAlgorithm()
         {
-            if (!_changedSymbol)
+            if (!_initialMapping)
+            {
+                throw new Exception("The ticker did not generate the initial rename event");
+            }
+            if (!_executionMapping)
             {
                 throw new Exception("The ticker did not rename throughout the course of its life even though it should have");
-            }
-
-            var expectedTickers = new Dictionary<DateTime, string>
-            {
-                { new DateTime(2001, 1, 26), "AOL" },
-                { new DateTime(2003, 10, 22), "TWX" },
-            };
-
-            // Check for dictionary equality: https://stackoverflow.com/a/3804852
-            if (_tickers.Count != expectedTickers.Count && _tickers.Except(expectedTickers).Any())
-            {
-                Log($"Found: {JsonConvert.SerializeObject(_tickers, Formatting.None)}");
-                Log($"Expected: {JsonConvert.SerializeObject(expectedTickers, Formatting.None)}");
-                throw new Exception("SEC data event tickers do not match test case");
             }
         }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = false;
+        public bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
@@ -126,25 +113,56 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "0"},
+            {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
+            {"Compounding Annual Return", "-99.882%"},
+            {"Drawdown", "52.600%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
+            {"Net Profit", "-10.486%"},
+            {"Sharpe Ratio", "-8.145"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
+            {"Alpha", "-4.451"},
+            {"Beta", "-0.082"},
+            {"Annual Standard Deviation", "0.55"},
+            {"Annual Variance", "0.302"},
+            {"Information Ratio", "-8.63"},
+            {"Tracking Error", "0.556"},
+            {"Treynor Ratio", "54.53"},
             {"Total Fees", "$0.00"},
         };
+
+        /// <summary>
+        /// Test example custom data showing how to enable the use of map files.
+        /// Implemented as a wrapper of existing NWSA->FOXA equity
+        /// </summary>
+        private class CustomDataUsingMapping : TradeBar
+        {
+            /// <summary>
+            /// Indicates if there is support for map files
+            /// </summary>
+            /// <returns>True indicates map files should be used</returns>
+            public override bool UsesMapFiles()
+            {
+                return true;
+            }
+
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                return base.GetSource(new SubscriptionDataConfig(config,
+                        typeof(CustomDataUsingMapping),
+                    // create a new symbol as equity so we find the existing data files
+                    Symbol.Create(config.MappedSymbol, SecurityType.Equity, config.Market)),
+                    date,
+                    isLiveMode);
+            }
+
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+            {
+                return ParseEquity(config, line, date);
+            }
+        }
     }
 }

@@ -27,7 +27,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Logging;
 using QuantConnect.Securities.Option;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -168,25 +167,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             //Save the type of data we'll be getting from the source.
-
-            //Create the dynamic type-activators:
-            var objectActivator = ObjectActivator.GetActivator(_config.Type);
-
-            if (objectActivator == null)
+            try
             {
-                OnInvalidConfigurationDetected(
-                    new InvalidConfigurationDetectedEventArgs(
-                        $"Custom data type \'{_config.Type.Name}\' missing parameterless constructor " +
-                        $"E.g. public {_config.Type.Name}() {{ }}"));
-
+                _dataFactory = (BaseData) _config.Type.GetBaseDataInstance();
+            }
+            catch (ArgumentException exception)
+            {
+                OnInvalidConfigurationDetected(new InvalidConfigurationDetectedEventArgs(exception.Message));
                 _endOfStream = true;
                 return;
             }
-
-            //Create an instance of the "Type":
-            var userObj = objectActivator.Invoke(new object[] { _config.Type });
-
-            _dataFactory = userObj as BaseData;
 
             //If its quandl set the access token in data factory:
             var quandl = _dataFactory as Quandl;
@@ -223,7 +213,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // load up the map files for equities, options, and custom data if it supports it.
             // Only load up factor files for equities
-            if (_config.UsesMapFiles)
+            if (_config.ShouldUseMapFiles())
             {
                 try
                 {

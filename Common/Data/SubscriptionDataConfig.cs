@@ -19,9 +19,6 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using NodaTime;
 using QuantConnect.Data.Consolidators;
-using QuantConnect.Data.Custom;
-using QuantConnect.Data.Custom.SEC;
-using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -117,24 +114,6 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Some custom data sources should support symbol mapping because the custom data
-        /// is directly related to symbols/tickers. For example, SEC data and sentiment data on US equities.
-        /// </summary>
-        public static HashSet<Type> MapFileTypes = new HashSet<Type>
-        {
-            typeof(TiingoDailyData),
-            typeof(Quandl),
-            typeof(SECReport8K),
-            typeof(SECReport10K),
-            typeof(SECReport10Q),
-        };
-        
-        /// <summary>
-        /// Indicates if there is support for map files.
-        /// </summary>
-        public bool UsesMapFiles { get; }
-
-        /// <summary>
         /// Gets the market / scope of the symbol
         /// </summary>
         public readonly string Market;
@@ -210,7 +189,6 @@ namespace QuantConnect.Data
             IsFilteredSubscription = isFilteredSubscription;
             Consolidators = new HashSet<IDataConsolidator>();
             DataNormalizationMode = dataNormalizationMode;
-            UsesMapFiles = SecurityType == SecurityType.Equity || SecurityType == SecurityType.Option || MapFileTypes.Contains(Type);
 
             TickType = tickType ?? LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);
 
@@ -287,7 +265,6 @@ namespace QuantConnect.Data
             PriceScaleFactor = config.PriceScaleFactor;
             SumOfDividends = config.SumOfDividends;
             Consolidators = config.Consolidators;
-            UsesMapFiles = config.UsesMapFiles;
         }
 
         /// <summary>
@@ -334,8 +311,7 @@ namespace QuantConnect.Data
                 && IsCustomData == other.IsCustomData
                 && DataTimeZone.Equals(other.DataTimeZone)
                 && ExchangeTimeZone.Equals(other.ExchangeTimeZone)
-                && IsFilteredSubscription == other.IsFilteredSubscription
-                && UsesMapFiles == other.UsesMapFiles;
+                && IsFilteredSubscription == other.IsFilteredSubscription;
         }
 
         /// <summary>
@@ -374,7 +350,6 @@ namespace QuantConnect.Data
                 hashCode = (hashCode*397) ^ DataTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
                 hashCode = (hashCode*397) ^ ExchangeTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
                 hashCode = (hashCode*397) ^ IsFilteredSubscription.GetHashCode();
-                hashCode = (hashCode*397) ^ UsesMapFiles.GetHashCode();
                 return hashCode;
             }
         }

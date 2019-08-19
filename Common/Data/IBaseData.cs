@@ -94,6 +94,12 @@ namespace QuantConnect.Data
         string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed);
 
         /// <summary>
+        /// Indicates if there is support for map files
+        /// </summary>
+        /// <returns>True indicates map files should be used</returns>
+        bool UsesMapFiles();
+
+        /// <summary>
         /// Return a new instance clone of this object
         /// </summary>
         /// <returns></returns>

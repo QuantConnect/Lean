@@ -101,6 +101,15 @@ namespace QuantConnect.Data.Custom.SEC
         }
 
         /// <summary>
+        /// Indicates if there is support for map files
+        /// </summary>
+        /// <returns>True indicates map files should be used</returns>
+        public override bool UsesMapFiles()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Clones the current object into a new object
         /// </summary>
         /// <returns>BaseData clone of the current object</returns>

@@ -184,6 +184,15 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Indicates if there is support for map files
+        /// </summary>
+        /// <returns>True indicates map files should be used</returns>
+        public virtual bool UsesMapFiles()
+        {
+            return Symbol.SecurityType == SecurityType.Equity || Symbol.SecurityType == SecurityType.Option;
+        }
+
+        /// <summary>
         /// Updates this base data with a new trade
         /// </summary>
         /// <param name="lastTrade">The price of the last trade</param>

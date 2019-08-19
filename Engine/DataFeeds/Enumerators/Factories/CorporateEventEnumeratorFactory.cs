@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             var hasUnderlying = config.Symbol.HasUnderlying;
 
             // load up the map and factor files for equities, options, and custom data
-            if (config.UsesMapFiles)
+            if (config.ShouldUseMapFiles())
             {
                 try
                 {
@@ -93,7 +93,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     var mapFile = mapFileResolver.ResolveMapFile(symbol, date);
 
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
-                    if (mapFile.Any()) mapFileToUse = mapFile;
+                    if (mapFile.Any())
+                    {
+                        mapFileToUse = mapFile;
+                    }
                 }
                 catch (Exception err)
                 {

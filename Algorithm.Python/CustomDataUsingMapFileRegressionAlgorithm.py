@@ -18,19 +18,18 @@ AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
+from QuantConnect.Data import *
+from QuantConnect.Python import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Data.Custom.SEC import *
-
+from QuantConnect.Data.Market import *
 from datetime import datetime
-import json
 
 ### <summary>
-### Demonstration algorithm showing how to use and access SEC data
+### Regression algorithm demonstrating use of map files with custom data
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="custom data" />
 ### <meta name="tag" content="regression test" />
-### <meta name="tag" content="SEC" />
 ### <meta name="tag" content="rename event" />
 ### <meta name="tag" content="map" />
 ### <meta name="tag" content="mapping" />
@@ -39,51 +38,47 @@ class CustomDataUsingMapFileRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        self.SetStartDate(2001, 1, 1)
-        self.SetEndDate(2003, 12, 31)
-        self.SetCash(100000)
+        self.SetStartDate(2013, 6, 27)
+        self.SetEndDate(2013, 7, 2)
 
-        self.tickers = {}
-
-        self.ticker = "TWX"
-        self.symbol = self.AddData(SECReport8K, self.ticker).Symbol
-        self.AddEquity(self.ticker, Resolution.Daily)
+        self.initialMapping = False
+        self.executionMapping = False
+        self.symbol = self.AddData(CustomDataUsingMapping, "FOXA").Symbol
 
     def OnData(self, slice):
-        if slice.SymbolChangedEvents.ContainsKey(self.symbol):
-            self.changed_symbol = True
-            self.Log("{0} - Ticker changed from: {1} to {2}".format(str(self.Time), slice.SymbolChangedEvents[self.symbol].OldSymbol, slice.SymbolChangedEvents[self.symbol].NewSymbol))
-
-        if not slice.ContainsKey(self.symbol):
-            return
-
-        data = slice[self.symbol]
-
-        if not isinstance(data, SECReport8K):
-            return
-
-        report = data.Report
-        ticker = data.Symbol.Value
         date = self.Time.date()
+        if slice.SymbolChangedEvents.ContainsKey(self.symbol):
+            mappingEvent = slice.SymbolChangedEvents[self.symbol]
+            self.Log("{0} - Ticker changed from: {1} to {2}".format(str(self.Time), mappingEvent.OldSymbol, mappingEvent.NewSymbol))
 
-        if date == datetime(2001, 1, 26).date() or date == datetime(2003, 10, 22).date():
-            self.tickers[str(date)] = ticker
+            if date == datetime(2013, 6, 27).date():
+                # initial mapping event since we added FOXA and it's currently NWSA - GH issue 3327
+                if mappingEvent.NewSymbol != "NWSA" or mappingEvent.OldSymbol != "FOXA":
+                    raise Exception("Unexpected mapping event mappingEvent")
+                self.initialMapping = True
 
-        self.Log(f"{str(self.Time)} - Received 8-K report for {data.Symbol.Value}")
+            if date == datetime(2013, 6, 29).date():
+                if mappingEvent.NewSymbol != "FOXA" or mappingEvent.OldSymbol != "NWSA":
+                    raise Exception("Unexpected mapping event mappingEvent")
+                self.SetHoldings(self.symbol, 1)
+                self.executionMapping = True
 
     def OnEndOfAlgorithm(self):
-        if not self.changed_symbol:
+        if not self.initialMapping:
+            raise Exception("The ticker did not generate the initial rename event")
+        if not self.executionMapping:
             raise Exception("The ticker did not rename throughout the course of its life even though it should have")
 
-        expected_tickers = {}
-        expected_tickers[str(datetime(2001, 1, 26).date())] = "AOL"
-        expected_tickers[str(datetime(2003, 10, 22).date())] = "TWX"
+class CustomDataUsingMapping(PythonData):
+    def GetSource(self, config, date, isLiveMode):
+        return TradeBar().GetSource(SubscriptionDataConfig(config, CustomDataUsingMapping,
+            # create a new symbol as equity so we find the existing data files
+            Symbol.Create(config.MappedSymbol, SecurityType.Equity, config.Market)),
+            date,
+            isLiveMode);
 
-        # Check for dict equality: https://stackoverflow.com/a/4527978
-        if not all([k in self.tickers and expected_tickers[k] == self.tickers[k] for k in expected_tickers]):
-            self.Log(f"Found: {json.dumps(self.tickers)}")
-            self.Log(f"Expected: {json.dumps(expected_tickers)}")
-            raise Exception("SEC data event tickers do not match test case")
+    def Reader(self, config, line, date, isLiveMode):
+        return TradeBar.ParseEquity(config, line, date)
 
-
-
+    def UsesMapFiles(self):
+        return True

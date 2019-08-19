@@ -39,7 +39,6 @@ using QuantConnect.Util;
 using System.Collections.Concurrent;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Crypto;
-using System.Net;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers;
 using QuantConnect.Algorithm.Framework.Execution;
@@ -1810,7 +1809,7 @@ namespace QuantConnect.Algorithm
             MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, ticker, SecurityType.Base, timeZone);
 
             //Add this to the data-feed subscriptions
-            var symbol = new Symbol(SecurityIdentifier.GenerateBase(ticker, Market.USA, SubscriptionDataConfig.MapFileTypes.Contains(typeof(T))), ticker);
+            var symbol = new Symbol(SecurityIdentifier.GenerateBase(ticker, Market.USA, typeof(T).GetBaseDataInstance().UsesMapFiles()), ticker);
 
             //Add this new generic data as a tradeable security:
             var config = SubscriptionManager.SubscriptionDataConfigService.Add(typeof(T),

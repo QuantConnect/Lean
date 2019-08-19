@@ -407,7 +407,7 @@ namespace QuantConnect
                 case SecurityType.Equity:
                     return GenerateEquity(firstDate, symbol, market);
                 case SecurityType.Base:
-                    return GenerateBase(firstDate, symbol, market);
+                    return Generate(firstDate, symbol, SecurityType.Base, market);
                 default:
                     // Should never happen because we previously filtered non-base or non-equity SecurityType
                     throw new Exception("SecurityType is not Base or Equity even though we've previously filtered them");
@@ -443,17 +443,6 @@ namespace QuantConnect
         public static SecurityIdentifier GenerateBase(string symbol, string market, bool mapSymbol = false)
         {
             return GenerateWithFirstDate(symbol, market, SecurityType.Base, mapSymbol);
-        }
-
-        /// <summary>
-        /// Generates a new <see cref="SecurityIdentifier"/> for a custom security
-        /// </summary>
-        /// <param name="symbol">The ticker symbol of this security</param>
-        /// <param name="market">The security's market</param>
-        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified base security</returns>
-        public static SecurityIdentifier GenerateBase(DateTime date, string symbol, string market)
-        {
-            return Generate(date, symbol, SecurityType.Base, market);
         }
 
         /// <summary>

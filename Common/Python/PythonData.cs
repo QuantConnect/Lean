@@ -26,6 +26,7 @@ namespace QuantConnect.Python
     public class PythonData : DynamicData
     {
         private readonly dynamic _pythonData;
+        private readonly bool _usesMapFiles;
 
         /// <summary>
         /// Constructor for initialising the PythonData class
@@ -42,6 +43,13 @@ namespace QuantConnect.Python
         public PythonData(PyObject pythonData)
         {
             _pythonData = pythonData;
+            using (Py.GIL())
+            {
+                if (pythonData.HasAttr("UsesMapFiles"))
+                {
+                    _usesMapFiles = _pythonData.UsesMapFiles();
+                }
+            }
         }
 
         /// <summary>
@@ -75,6 +83,15 @@ namespace QuantConnect.Python
                 var data = _pythonData.Reader(config, line, date, isLiveMode);
                 return (data as PyObject).GetAndDispose<BaseData>();
             }
+        }
+
+        /// <summary>
+        /// Indicates if there is support for map files
+        /// </summary>
+        /// <returns>True indicates map files should be used</returns>
+        public override bool UsesMapFiles()
+        {
+            return _usesMapFiles;
         }
 
         /// <summary>
