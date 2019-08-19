@@ -26,6 +26,7 @@
 	JFKKW
 	TBLTU
 	TBLTW
+	PSTVZ
 # Traded as an equity tracking the VMware portion of Dell's business while Dell was private.
-#Dell resumed public trading 12-28-2018 and in so doing bought out the shares of DVMT that were remaining
+# Dell resumed public trading 12-28-2018 and in so doing bought out the shares of DVMT that were remaining
 	DVMT
