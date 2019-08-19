@@ -311,6 +311,7 @@
     <Compile Include="IWebSocket.cs" />
     <Compile Include="GDAX\Messages.cs" />
     <Compile Include="ApiPriceProvider.cs" />
+    <Compile Include="WebSocketCloseData.cs" />
     <Compile Include="WebSocketError.cs" />
     <Compile Include="WebSocketMessage.cs" />
     <Compile Include="WebSocketWrapper.cs" />
