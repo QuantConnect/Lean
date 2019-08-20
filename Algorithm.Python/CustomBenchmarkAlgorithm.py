@@ -43,3 +43,7 @@ class CustomBenchmarkAlgorithm(QCAlgorithm):
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
             self.Debug("Purchased Stock")
+
+        tupleResult = SymbolCache.TryGetSymbol("AAPL", None)
+        if tupleResult[0]:
+            raise Exception("Benchmark Symbol is not expected to be added to the Symbol cache")
