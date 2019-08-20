@@ -39,7 +39,8 @@ class QuandlImporterAlgorithm(QCAlgorithm):
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
         self.quandlCode = "WIKI/IBM"
-        Quandl.SetAuthCode("JjAt5_5Ggmmoe5zUKipm")
+        ## Optional argument - personal token necessary for restricted dataset
+        # Quandl.SetAuthCode("your-quandl-token")
         self.SetStartDate(2014,4,1)                                 #Set Start Date
         self.SetEndDate(datetime.today() - timedelta(1))            #Set End Date
         self.SetCash(25000)                                         #Set Strategy Cash
