@@ -21,3 +21,12 @@
 	
 #http://www.4-traders.com/NYSE-TEST-SYMBOL-6396573/
 	ZZZ
+
+# Listed as an equity but trades as a warrant -- causes error when selected in algorithm to trade on IB.
+	JFKKW
+	TBLTU
+	TBLTW
+	PSTVZ
+# Traded as an equity tracking the VMware portion of Dell's business while Dell was private.
+# Dell resumed public trading 12-28-2018 and in so doing bought out the shares of DVMT that were remaining
+	DVMT
