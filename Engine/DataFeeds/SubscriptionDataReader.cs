@@ -169,7 +169,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Save the type of data we'll be getting from the source.
             try
             {
-                _dataFactory = (BaseData) _config.Type.GetBaseDataInstance();
+                _dataFactory = _config.Type.GetBaseDataInstance();
             }
             catch (ArgumentException exception)
             {

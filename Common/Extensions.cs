@@ -48,7 +48,7 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>One of the objectives of this method is to normalize the creation of the
         /// IBaseData instances while reducing code duplication</remarks>
-        public static IBaseData GetBaseDataInstance(this Type type)
+        public static BaseData GetBaseDataInstance(this Type type)
         {
             var objectActivator = ObjectActivator.GetActivator(type);
             if (objectActivator == null)
@@ -64,10 +64,12 @@ namespace QuantConnect
                 throw new ArgumentException($"Failed to create instance of type \'{type.Name}\'");
             }
 
-            var result = instance as IBaseData;
+            // we expect 'instance' to inherit BaseData in most cases so we use 'as' versus 'IsAssignableFrom'
+            // since it is slightly cheaper
+            var result = instance as BaseData;
             if (result == null)
             {
-                throw new ArgumentException($"Data type \'{type.Name}\' does not inherit required {nameof(IBaseData)}");
+                throw new ArgumentException($"Data type \'{type.Name}\' does not inherit required {nameof(BaseData)}");
             }
             return result;
         }
