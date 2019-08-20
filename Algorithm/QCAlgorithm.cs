@@ -551,7 +551,8 @@ namespace QuantConnect.Algorithm
 
                 var security = Securities.CreateSecurity(_benchmarkSymbol,
                     new List<SubscriptionDataConfig>(),
-                    leverage: 1);
+                    leverage: 1,
+                    addToSymbolCache:false);
 
                 Benchmark = new SecurityBenchmark(security);
             }

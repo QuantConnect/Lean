@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -50,6 +51,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 SetHoldings("SPY", 1);
                 Debug("Purchased Stock");
+            }
+
+            Symbol symbol;
+            if (SymbolCache.TryGetSymbol("AAPL", out symbol))
+            {
+                throw new Exception("Benchmark Symbol is not expected to be added to the Symbol cache");
             }
         }
 

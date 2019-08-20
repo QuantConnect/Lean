@@ -50,6 +50,8 @@ namespace QuantConnect.Tests
             var algorithmManager = new AlgorithmManager(false);
 
             Composer.Instance.Reset();
+            SymbolCache.Clear();
+
             var ordersLogFile = string.Empty;
             var logFile = $"./regression/{algorithm}.{language.ToLower()}.log";
             Directory.CreateDirectory(Path.GetDirectoryName(logFile));
