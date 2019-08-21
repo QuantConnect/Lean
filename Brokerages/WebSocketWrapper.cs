@@ -45,7 +45,9 @@ namespace QuantConnect.Brokerages
                 Log =
                 {
                     Level = Config.GetBool("websocket-log-trace") ? LogLevel.Trace : LogLevel.Error,
-                    Output = (data, file) => { Log.Trace(WhoCalledMe.GetMethodName(3) + "(): " + data.Message, true); }
+
+                    // The stack frame number of 3 was derived from the usage of the Logger class in the WebSocketSharp library
+                    Output = (data, file) => { Log.Trace($"{WhoCalledMe.GetMethodName(3)}(): {data.Message}", true); }
                 }
             };
 
