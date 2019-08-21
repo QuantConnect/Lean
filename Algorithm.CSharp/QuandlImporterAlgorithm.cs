@@ -43,6 +43,9 @@ namespace QuantConnect.Algorithm.CSharp
             //Cash allocation
             SetCash(25000);
 
+            // Optional argument - personal token necessary for restricted dataset
+            // Quandl.SetAuthCode("your-quandl-token");
+
             //Add Generic Quandl Data:
             AddData<Quandl>(_quandlCode, Resolution.Daily);
 
