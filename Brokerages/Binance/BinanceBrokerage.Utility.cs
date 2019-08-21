@@ -109,7 +109,9 @@ namespace QuantConnect.Brokerages.Binance
                 var tickers = GetTickers();
                 var ticker = tickers.FirstOrDefault(t => t.Symbol == _symbolMapper.GetBrokerageSymbol(order.Symbol));
                 if (ticker == null)
-                    throw new NotSupportedException($"BinanceBrokerage: Unable to resolve currency conversion pair: {order.Symbol}");
+                {
+                    throw new KeyNotFoundException($"BinanceBrokerage: Unable to resolve currency conversion pair: {order.Symbol}");
+                }
                 tickerPrice = ticker.Price;
             }
             return tickerPrice;
