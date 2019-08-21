@@ -56,6 +56,8 @@ namespace QuantConnect.Tests.Common.Util
 
                 Assert.GreaterOrEqual(elapsed, lowerBound, $"RateGate was early: {lowerBound - elapsed}");
                 Assert.LessOrEqual(elapsed, upperBound, $"RateGate was late: {elapsed - upperBound}");
+
+                gate.Dispose();
             }
         }
 
@@ -87,6 +89,8 @@ namespace QuantConnect.Tests.Common.Util
 
                 Assert.GreaterOrEqual(elapsed, lowerBound, $"RateGate was early: {lowerBound - elapsed}");
                 Assert.LessOrEqual(elapsed, upperBound, $"RateGate was late: {elapsed - upperBound}");
+
+                gate.Dispose();
             });
         }
 
