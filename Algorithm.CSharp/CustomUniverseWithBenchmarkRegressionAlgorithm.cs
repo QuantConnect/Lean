@@ -60,6 +60,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             // internal daily resolution
             SetBenchmark("SPY");
+
+            Symbol symbol;
+            if (!SymbolCache.TryGetSymbol("SPY", out symbol)
+                || !ReferenceEquals(_spy, symbol))
+            {
+                throw new Exception("We expected 'SPY' to be added to the Symbol cache," +
+                                    " since the algorithm is also using it");
+            }
         }
 
         /// <summary>
