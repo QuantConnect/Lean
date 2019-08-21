@@ -17,7 +17,7 @@ using System.Threading;
 
 namespace QuantConnect.Tests.Brokerages.Binance
 {
-    [TestFixture, Ignore("This test requires a configured and testable Oanda practice account")]
+    [TestFixture, Ignore("This test requires a configured and testable Binance practice account")]
     public partial class BinanceBrokerageTests : BrokerageTests
     {
         /// <summary>
