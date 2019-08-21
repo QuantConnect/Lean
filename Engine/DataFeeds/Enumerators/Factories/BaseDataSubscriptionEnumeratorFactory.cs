@@ -69,7 +69,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
             var sourceFactory = request.Configuration.Type.GetBaseDataInstance();
-            var useMapFiles = request.Configuration.ShouldUseMapFiles();
+            var useMapFiles = request.Configuration.TickerShouldBeMapped();
 
             using (var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider))
             {

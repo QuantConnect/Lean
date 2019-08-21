@@ -101,10 +101,10 @@ namespace QuantConnect.Data.Custom.SEC
         }
 
         /// <summary>
-        /// Indicates if there is support for map files
+        /// Indicates if there is support for mapping
         /// </summary>
-        /// <returns>True indicates map files should be used</returns>
-        public override bool UsesMapFiles()
+        /// <returns>True indicates mapping should be used</returns>
+        public override bool RequiresMapping()
         {
             return true;
         }

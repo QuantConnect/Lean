@@ -44,10 +44,10 @@ namespace QuantConnect
     {
         /// <summary>
         /// Given a type will create a new instance using the parameterless constructor
-        /// and assert the type implements <see cref="IBaseData"/>
+        /// and assert the type implements <see cref="BaseData"/>
         /// </summary>
         /// <remarks>One of the objectives of this method is to normalize the creation of the
-        /// IBaseData instances while reducing code duplication</remarks>
+        /// BaseData instances while reducing code duplication</remarks>
         public static BaseData GetBaseDataInstance(this Type type)
         {
             var objectActivator = ObjectActivator.GetActivator(type);

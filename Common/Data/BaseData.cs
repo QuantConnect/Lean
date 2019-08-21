@@ -184,10 +184,10 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Indicates if there is support for map files
+        /// Indicates if there is support for mapping
         /// </summary>
-        /// <returns>True indicates map files should be used</returns>
-        public virtual bool UsesMapFiles()
+        /// <returns>True indicates mapping should be used</returns>
+        public virtual bool RequiresMapping()
         {
             return Symbol.SecurityType == SecurityType.Equity || Symbol.SecurityType == SecurityType.Option;
         }

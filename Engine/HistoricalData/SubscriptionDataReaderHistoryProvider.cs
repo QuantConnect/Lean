@@ -106,7 +106,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             );
 
             var mapFileResolver = MapFileResolver.Empty;
-            if (config.ShouldUseMapFiles())
+            if (config.TickerShouldBeMapped())
             {
                 mapFileResolver = _mapFileProvider.Get(config.Market);
                 var mapFile = mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);

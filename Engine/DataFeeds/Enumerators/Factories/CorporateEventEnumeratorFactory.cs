@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             var hasUnderlying = config.Symbol.HasUnderlying;
 
             // load up the map and factor files for equities, options, and custom data
-            if (config.ShouldUseMapFiles())
+            if (config.TickerShouldBeMapped())
             {
                 try
                 {

@@ -70,6 +70,9 @@ class CustomDataUsingMapFileRegressionAlgorithm(QCAlgorithm):
             raise Exception("The ticker did not rename throughout the course of its life even though it should have")
 
 class CustomDataUsingMapping(PythonData):
+    '''Test example custom data showing how to enable the use of mapping.
+    Implemented as a wrapper of existing NWSA->FOXA equity'''
+
     def GetSource(self, config, date, isLiveMode):
         return TradeBar().GetSource(SubscriptionDataConfig(config, CustomDataUsingMapping,
             # create a new symbol as equity so we find the existing data files
@@ -80,5 +83,6 @@ class CustomDataUsingMapping(PythonData):
     def Reader(self, config, line, date, isLiveMode):
         return TradeBar.ParseEquity(config, line, date)
 
-    def UsesMapFiles(self):
+    def RequiresMapping(self):
+        '''True indicates mapping should be done'''
         return True

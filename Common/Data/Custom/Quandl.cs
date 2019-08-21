@@ -142,15 +142,6 @@ namespace QuantConnect.Data.Custom
         }
 
         /// <summary>
-        /// Indicates if there is support for map files
-        /// </summary>
-        /// <returns>True indicates map files should be used</returns>
-        public override bool UsesMapFiles()
-        {
-            return true;
-        }
-
-        /// <summary>
         /// Set the auth code for the quandl set to the QuantConnect auth code.
         /// </summary>
         /// <param name="authCode"></param>
