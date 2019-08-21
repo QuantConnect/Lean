@@ -64,6 +64,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             TestCustomData.ThrowException = false;
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _dataManager?.RemoveAllSubscriptions();
+        }
+
         [Test]
         public void EmitsData()
         {
@@ -251,7 +257,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count(x => x.Value.Contains("TESTUNIVERSE")));
                     }
-                    else if(dataQueueHandler.Subscriptions.Count == 4)
+                    else if (dataQueueHandler.Subscriptions.Count == 4)
                     {
                         Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count(x => x.Value.Contains("TESTUNIVERSE")));
                         Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
@@ -666,7 +672,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     yieldedUniverseData = true;
                     var currentTime = _manualTimeProvider.GetUtcNow();
                     var data = new BaseDataCollection(currentTime, CoarseFundamental.CreateUniverseSymbol(Market.USA, false),
-                        new []{new CoarseFundamental
+                        new[]{new CoarseFundamental
                         {
                             Symbol = Symbols.SPY,
                             Time = currentTime - Time.OneDay
@@ -701,7 +707,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     receivedCoarseData = true;
                 }
             }, sendUniverseData: true,
-                alwaysInvoke:true,
+                alwaysInvoke: true,
                 secondsTimeStep: 3600,
                 endDate: startDate.AddDays(1));
 
@@ -759,7 +765,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         fineWasCalled = true;
                     }
-                    return new[] {symbol};
+                    return new[] { symbol };
                 });
 
             var receivedFundamentalsData = false;
@@ -781,74 +787,62 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandlesCoarseFundamentalData()
         {
-            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
-
-            var lck = new object();
-            BaseDataCollection list = null;
-            var timer = new Timer(state =>
-            {
-                lock (lck)
-                {
-                    list = new BaseDataCollection
-                    {
-                        Symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false)
-                    };
-                    list.Data.AddRange(Enumerable.Range(0, 1000).Select(x => new CoarseFundamental
-                    {
-                        Symbol = Symbol.Create($"{x}", SecurityType.Equity, Market.USA)
-                    }));
-                }
-            }, lck, TimeSpan.FromSeconds(1), Timeout.InfiniteTimeSpan);
-
             var yieldedUniverseData = false;
-            var feed = RunDataFeed(getNextTicksFunction : fdqh =>
-            {
-                lock (lck)
-                {
-                    if (list != null)
-                    {
-                        try
-                        {
-                            var tmp = list;
-                            return new List<BaseData> { tmp };
-                        }
-                        finally
-                        {
-                            list = null;
-                            yieldedUniverseData = true;
-                        }
-                    }
-                }
-                return Enumerable.Empty<BaseData>();
-            });
+            var lastEmission = DateTime.MinValue;
+            var feed = RunDataFeed(getNextTicksFunction: fdqh =>
+           {
+               var now = DateTime.UtcNow;
+               if (now - lastEmission > Time.OneSecond)
+               {
+                   _manualTimeProvider.AdvanceSeconds(1);
+                   lastEmission = now;
+                   var list = new BaseDataCollection
+                   {
+                       Symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false),
+                       Time = now.AddDays(-1)
+                   };
+                   list.Data.AddRange(Enumerable.Range(0, 50).Select(x => new CoarseFundamental
+                   {
+                       Symbol = Symbol.Create($"{x}", SecurityType.Equity, Market.USA)
+                   }));
+                   yieldedUniverseData = true;
+                   return new[] { list };
+               }
+               return Enumerable.Empty<BaseData>();
+           });
 
             var dataReachedSelection = false;
             _algorithm.AddUniverse(new FuncUniverse(
-                new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
+                new SubscriptionDataConfig(typeof(CoarseFundamental),
+                    CoarseFundamental.CreateUniverseSymbol(Market.USA),
+                    Resolution.Daily,
+                    TimeZones.NewYork,
+                    TimeZones.NewYork,
+                    false,
+                    false,
+                    false),
                 new UniverseSettings(Resolution.Second, 1, true, false, TimeSpan.Zero), SecurityInitializer.Null,
                 coarse =>
                 {
                     dataReachedSelection = true;
-                    return coarse.Take(10).Select(x => x.Symbol);
+                    var data = coarse.ToList();
+                    for (var i = 0; i < 10; i++)
+                    {
+                        dataReachedSelection &= data.Any(baseData => baseData.Symbol.Value == $"{i}");
+                    }
+                    return Enumerable.Empty<Symbol>();
                 }
             ));
 
-            ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(3), ts =>
             {
                 Assert.IsTrue(_dataManager.DataFeedSubscriptions
                     .Any(x => x.IsUniverseSelectionSubscription), "No universe selection subscriptions found.");
             });
 
-            timer.Dispose();
-            for (int i = 0; i < 10; i++)
-            {
-                Assert.IsTrue(_dataManager.DataFeedSubscriptions
-                    .Any(subscription => subscription.Configuration.Symbol.Value == $"{i}"));
-            }
             Assert.IsTrue(yieldedUniverseData, "No data points yielded.");
-            Assert.IsTrue(dataReachedSelection, "Data did not reach selection.");
+            Assert.IsTrue(dataReachedSelection, "Data did not reach universe selection.");
         }
-
 
         [Test]
         public void FastExitsDoNotThrowUnhandledExceptions()
@@ -1039,7 +1033,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     return Enumerable.Range(0, 2)
                         .Select(
                             x => x % 2 == 0
-                                ? (BaseData) new Tick { Symbol = symbol, TickType = TickType.Trade }
+                                ? (BaseData)new Tick { Symbol = symbol, TickType = TickType.Trade }
                                 : new Dividend { Symbol = symbol, Value = x })
                         .ToList();
                 });
@@ -1552,6 +1546,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             }
 
+            dataManager.RemoveAllSubscriptions();
+
             Log.Trace($"SliceCount:{sliceCount} - PriceData: Enqueued:{actualPricePointsEnqueued} TicksReceived:{actualTicksReceived}");
             Log.Trace($"SliceCount:{sliceCount} - PriceData: Enqueued:{actualPricePointsEnqueued} TradeBarsReceived:{actualTradeBarsReceived}");
             Log.Trace($"SliceCount:{sliceCount} - PriceData: Enqueued:{actualPricePointsEnqueued} QuoteBarsReceived:{actualQuoteBarsReceived}");
@@ -1648,7 +1644,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 throw new Exception("Custom data Reader threw exception");
             }
-            else if(ReturnNull)
+            else if (ReturnNull)
             {
                 return null;
             }
