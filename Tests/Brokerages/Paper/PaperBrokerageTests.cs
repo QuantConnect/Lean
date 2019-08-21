@@ -28,7 +28,6 @@ using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Messaging;
 using QuantConnect.Packets;
@@ -117,8 +116,8 @@ namespace QuantConnect.Tests.Brokerages.Paper
             var brokerage = new PaperBrokerage(algorithm, job);
 
             // initialize results and transactions
-            results.Initialize(job, new EventMessagingHandler(), new Api.Api(), new BrokerageSetupHandler(), transactions);
-            results.SetAlgorithm(algorithm);
+            results.Initialize(job, new EventMessagingHandler(), new Api.Api(), transactions);
+            results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, brokerage, results);
 
             // run algorithm manager

@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -85,11 +84,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// Initialize the result handler with this result packet.
         /// </summary>
         /// <param name="job">Algorithm job packet for this result handler</param>
-        /// <param name="messagingHandler"></param>
-        /// <param name="api"></param>
-        /// <param name="setupHandler"></param>
+        /// <param name="messagingHandler">The messaging handler provider to use</param>
+        /// <param name="api">The api implementation to use</param>
         /// <param name="transactionHandler"></param>
-        void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ISetupHandler setupHandler, ITransactionHandler transactionHandler);
+        void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler);
 
         /// <summary>
         /// Primary result thread entry point to process the result message queue and send it to whatever endpoint is set.
@@ -191,7 +189,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// Set the algorithm of the result handler after its been initialized.
         /// </summary>
         /// <param name="algorithm">Algorithm object matching IAlgorithm interface</param>
-        void SetAlgorithm(IAlgorithm algorithm);
+        /// <param name="startingPortfolioValue">Algorithm starting capital for statistics calculations</param>
+        void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue);
 
         /// <summary>
         /// Sets the current alpha runtime statistics

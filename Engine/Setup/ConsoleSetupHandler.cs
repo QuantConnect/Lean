@@ -211,7 +211,7 @@ namespace QuantConnect.Lean.Engine.Setup
         {
             var dataFeedsConfigString = Config.Get("security-data-feeds");
 
-            Dictionary<SecurityType, List<TickType>> dataFeeds = new Dictionary<SecurityType, List<TickType>>();
+            var dataFeeds = new Dictionary<SecurityType, List<TickType>>();
             if (dataFeedsConfigString != string.Empty)
             {
                 dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
