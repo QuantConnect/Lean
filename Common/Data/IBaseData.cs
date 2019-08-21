@@ -94,6 +94,12 @@ namespace QuantConnect.Data
         string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed);
 
         /// <summary>
+        /// Indicates if there is support for mapping
+        /// </summary>
+        /// <returns>True indicates mapping should be used</returns>
+        bool RequiresMapping();
+
+        /// <summary>
         /// Return a new instance clone of this object
         /// </summary>
         /// <returns></returns>

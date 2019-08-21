@@ -101,6 +101,15 @@ namespace QuantConnect.Data.Custom.SEC
         }
 
         /// <summary>
+        /// Indicates if there is support for mapping
+        /// </summary>
+        /// <returns>True indicates mapping should be used</returns>
+        public override bool RequiresMapping()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Clones the current object into a new object
         /// </summary>
         /// <returns>BaseData clone of the current object</returns>

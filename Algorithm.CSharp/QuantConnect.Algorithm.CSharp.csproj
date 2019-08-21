@@ -165,6 +165,7 @@
     <Compile Include="UniverseUnchangedRegressionAlgorithm.cs" />
     <Compile Include="USTreasuryYieldCurveDataAlgorithm.cs" />
     <Compile Include="SECReportDataAlgorithm.cs" />
+    <Compile Include="CustomDataUsingMapFileRegressionAlgorithm.cs" />
     <Compile Include="G10CurrencySelectionModelFrameworkAlgorithm.cs" />
     <Compile Include="ExpiryHelperAlphaModelFrameworkAlgorithm.cs" />
     <Compile Include="CfdTimeZonesRegressionAlgorithm.cs" />

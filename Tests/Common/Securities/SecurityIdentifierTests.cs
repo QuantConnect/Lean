@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -253,7 +254,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void DeserializesFromSimpleStringWithinContainerClass()
         {
-            var sid = new Container{sid =SPY};
+            var sid = new Container { sid = SPY };
             var str =
 @"
 {
@@ -304,6 +305,26 @@ namespace QuantConnect.Tests.Common.Securities
             new SecurityIdentifier(input, 0);
         }
 
+        [Test]
+        public void GenerateEquityWithTickerUsingMapFile()
+        {
+            var expectedFirstDate = new DateTime(1998, 1, 2);
+            var sid = SecurityIdentifier.GenerateEquity("TWX", Market.USA, mapSymbol: true, mapFileProvider: new LocalDiskMapFileProvider());
+
+            Assert.AreEqual(sid.Date, expectedFirstDate);
+            Assert.AreEqual(sid.Symbol, "AOL");
+        }
+        
+        [Test]
+        public void GenerateBaseDataWithTickerUsingMapFile()
+        {
+            var expectedFirstDate = new DateTime(1998, 1, 2);
+            var sid = SecurityIdentifier.GenerateBase("TWX", Market.USA, mapSymbol: true);
+
+            Assert.AreEqual(sid.Date, expectedFirstDate);
+            Assert.AreEqual(sid.Symbol, "AOL");
+        }
+        
         class Container
         {
             public SecurityIdentifier sid;

@@ -20,7 +20,6 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -69,13 +68,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <returns>An enumerator reading the subscription request</returns>
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
-            var sourceFactory = (BaseData)ObjectActivator.GetActivator(request.Configuration.Type).Invoke(new object[] { request.Configuration.Type });
+            var sourceFactory = request.Configuration.Type.GetBaseDataInstance();
+            var useMapFiles = request.Configuration.TickerShouldBeMapped();
 
             using (var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider))
             {
                 foreach (var date in _tradableDaysProvider(request))
                 {
-                    request.Configuration.MappedSymbol = GetMappedSymbol(request, date);
+                    if (useMapFiles)
+                    {
+                        request.Configuration.MappedSymbol = GetMappedSymbol(request.Configuration, date);
+                    }
                     var source = sourceFactory.GetSource(request.Configuration, date, _isLiveMode);
                     var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, request.Configuration, date, _isLiveMode);
                     var entriesForDate = factory.Read(source);
@@ -87,19 +90,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             }
         }
 
-        private string GetMappedSymbol(SubscriptionRequest request, DateTime date)
+        private string GetMappedSymbol(SubscriptionDataConfig config, DateTime date)
         {
-            var config = request.Configuration;
-            if (config.Symbol.ID.SecurityType == SecurityType.Option ||
-                config.Symbol.ID.SecurityType == SecurityType.Equity )
-            {
-                var mapFile = config.Symbol.HasUnderlying ?
-                        _mapFileResolver.ResolveMapFile(config.Symbol.Underlying.ID.Symbol, config.Symbol.Underlying.ID.Date) :
-                        _mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
+            var mapFile = config.Symbol.HasUnderlying ?
+                    _mapFileResolver.ResolveMapFile(config.Symbol.Underlying.ID.Symbol, config.Symbol.Underlying.ID.Date) :
+                    _mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
 
-                return mapFile.GetMappedSymbol(date, config.MappedSymbol);
-            }
-            return config.MappedSymbol;
+            return mapFile.GetMappedSymbol(date, config.MappedSymbol);
         }
     }
 }

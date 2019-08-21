@@ -104,12 +104,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 SymbolProperties.GetDefault(Currencies.NullCurrency),
                 ErrorCurrencyConverter.Instance
             );
-            var mapFileResolver = config.SecurityType == SecurityType.Equity
-                ? _mapFileProvider.Get(config.Market)
-                : MapFileResolver.Empty;
 
-            if (config.SecurityType == SecurityType.Equity)
+            var mapFileResolver = MapFileResolver.Empty;
+            if (config.TickerShouldBeMapped())
             {
+                mapFileResolver = _mapFileProvider.Get(config.Market);
                 var mapFile = mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
                 config.MappedSymbol = mapFile.GetMappedSymbol(start, config.MappedSymbol);
             }

@@ -148,13 +148,14 @@ namespace QuantConnect
                 var stype = SecurityType;
                 switch (stype)
                 {
+                    case SecurityType.Base:
                     case SecurityType.Equity:
                     case SecurityType.Option:
                     case SecurityType.Future:
                         var oadate = ExtractFromProperties(DaysOffset, DaysWidth);
                         return DateTime.FromOADate(oadate);
                     default:
-                        throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option and SecurityType.Future");
+                        throw new InvalidOperationException("Date is only defined for SecurityType.Equity, SecurityType.Option, SecurityType.Future, and SecurityType.Base");
                 }
             }
         }
@@ -350,6 +351,30 @@ namespace QuantConnect
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified symbol today</returns>
         public static SecurityIdentifier GenerateEquity(string symbol, string market, bool mapSymbol = true, IMapFileProvider mapFileProvider = null)
         {
+            return GenerateWithFirstDate(symbol, market, SecurityType.Equity, mapSymbol, mapFileProvider);
+        }
+
+        /// <summary>
+        /// This implementation uses the configured <see cref="IMapFileProvider"/> via the <see cref="Composer.Instance"/>
+        /// </summary>
+        /// <param name="symbol">The symbol as it is known today</param>
+        /// <param name="market">The market</param>
+        /// <param name="securityType">The security type of the symbol</param>
+        /// <param name="mapSymbol">Specifies if symbol should be mapped using map file provider</param>
+        /// <param name="mapFileProvider">Specifies the IMapFileProvider to use for resolving symbols, specify null to load from Composer</param>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified symbol today</returns>
+        private static SecurityIdentifier GenerateWithFirstDate(string symbol, string market, SecurityType securityType, bool mapSymbol = true, IMapFileProvider mapFileProvider = null)
+        {
+            // Check if we're trying to load map files for forex, crypto, cfd, futures, etc.
+            // This ensures that we don't get a confusing error message if we attempted to load
+            // map files for a security type that doesn't use them.
+            if (securityType != SecurityType.Base && securityType != SecurityType.Equity)
+            {
+                throw new ArgumentException("This method only supports SecurityType of Base and Equity");
+            }
+
+            var firstDate = DefaultDate;
+
             if (mapSymbol)
             {
                 MapFile mapFile;
@@ -370,19 +395,23 @@ namespace QuantConnect
                     mapFile = GetMapFile(mapFileProvider, market, symbol);
                 }
 
-                var firstDate = mapFile.FirstDate;
+                firstDate = mapFile.FirstDate;
                 if (mapFile.Any())
                 {
                     symbol = mapFile.FirstTicker;
                 }
-
-                return GenerateEquity(firstDate, symbol, market);
             }
-            else
+
+            switch (securityType)
             {
-                return GenerateEquity(DefaultDate, symbol, market);
+                case SecurityType.Equity:
+                    return GenerateEquity(firstDate, symbol, market);
+                case SecurityType.Base:
+                    return Generate(firstDate, symbol, SecurityType.Base, market);
+                default:
+                    // Should never happen because we previously filtered non-base or non-equity SecurityType
+                    throw new Exception("SecurityType is not Base or Equity even though we've previously filtered them");
             }
-
         }
 
         public static MapFile GetMapFile(IMapFileProvider mapFileProvider, string market, string symbol)
@@ -405,14 +434,15 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Generates a new <see cref="SecurityIdentifier"/> for a custom security
+        /// Generates a new <see cref="SecurityIdentifier"/> for a custom security with the first date found in map files
         /// </summary>
         /// <param name="symbol">The ticker symbol of this security</param>
         /// <param name="market">The security's market</param>
+        /// <param name="mapSymbol">Whether or not we should map this symbol</param>
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified base security</returns>
-        public static SecurityIdentifier GenerateBase(string symbol, string market)
+        public static SecurityIdentifier GenerateBase(string symbol, string market, bool mapSymbol = false)
         {
-            return Generate(DefaultDate, symbol, SecurityType.Base, market);
+            return GenerateWithFirstDate(symbol, market, SecurityType.Base, mapSymbol);
         }
 
         /// <summary>
