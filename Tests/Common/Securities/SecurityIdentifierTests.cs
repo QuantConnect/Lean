@@ -314,7 +314,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(sid.Date, expectedFirstDate);
             Assert.AreEqual(sid.Symbol, "AOL");
         }
-        
+
         [Test]
         public void GenerateBaseDataWithTickerUsingMapFile()
         {
@@ -324,7 +324,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(sid.Date, expectedFirstDate);
             Assert.AreEqual(sid.Symbol, "AOL");
         }
-        
+
         class Container
         {
             public SecurityIdentifier sid;
