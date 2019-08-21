@@ -781,38 +781,32 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void HandlesCoarseFundamentalData()
         {
-            Symbol symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
-            _algorithm.AddUniverse(new FuncUniverse(
-                new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
-                new UniverseSettings(Resolution.Second, 1, true, false, TimeSpan.Zero), SecurityInitializer.Null,
-                coarse => coarse.Take(10).Select(x => x.Symbol)
-                ));
+            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
 
             var lck = new object();
             BaseDataCollection list = null;
-            const int coarseDataPointCount = 100000;
             var timer = new Timer(state =>
             {
-                var currentTime = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
-                Console.WriteLine(currentTime + ": timer.Elapsed");
-
                 lock (lck)
                 {
-                    list = new BaseDataCollection { Symbol = symbol };
-                    list.Data.AddRange(Enumerable.Range(0, coarseDataPointCount).Select(x => new CoarseFundamental
+                    list = new BaseDataCollection
                     {
-                        Symbol = SymbolCache.GetSymbol(x.ToString()),
-                        Time = currentTime - Time.OneDay, // hard-coded coarse period of one day
+                        Symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false)
+                    };
+                    list.Data.AddRange(Enumerable.Range(0, 1000).Select(x => new CoarseFundamental
+                    {
+                        Symbol = Symbol.Create($"{x}", SecurityType.Equity, Market.USA)
                     }));
                 }
-            }, lck, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(500));
+            }, lck, TimeSpan.FromSeconds(1), Timeout.InfiniteTimeSpan);
 
-            bool yieldedUniverseData = false;
+            var yieldedUniverseData = false;
             var feed = RunDataFeed(getNextTicksFunction : fdqh =>
             {
                 lock (lck)
                 {
                     if (list != null)
+                    {
                         try
                         {
                             var tmp = list;
@@ -823,19 +817,36 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             list = null;
                             yieldedUniverseData = true;
                         }
+                    }
                 }
                 return Enumerable.Empty<BaseData>();
             });
 
+            var dataReachedSelection = false;
+            _algorithm.AddUniverse(new FuncUniverse(
+                new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false),
+                new UniverseSettings(Resolution.Second, 1, true, false, TimeSpan.Zero), SecurityInitializer.Null,
+                coarse =>
+                {
+                    dataReachedSelection = true;
+                    return coarse.Take(10).Select(x => x.Symbol);
+                }
+            ));
 
-            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts =>
             {
                 Assert.IsTrue(_dataManager.DataFeedSubscriptions
                     .Any(x => x.IsUniverseSelectionSubscription), "No universe selection subscriptions found.");
             });
 
             timer.Dispose();
+            for (int i = 0; i < 10; i++)
+            {
+                Assert.IsTrue(_dataManager.DataFeedSubscriptions
+                    .Any(subscription => subscription.Configuration.Symbol.Value == $"{i}"));
+            }
             Assert.IsTrue(yieldedUniverseData, "No data points yielded.");
+            Assert.IsTrue(dataReachedSelection, "Data did not reach selection.");
         }
 
 
