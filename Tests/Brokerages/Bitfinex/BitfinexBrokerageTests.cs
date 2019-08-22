@@ -25,9 +25,14 @@ using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
-    [TestFixture, Ignore("This test requires a configured and testable Oanda practice account")]
+    [TestFixture]
+    [Ignore("This test requires a configured Bitfinex account")]
     public partial class BitfinexBrokerageTests : BrokerageTests
     {
+        // api keys
+        protected const string PublicKey = "";
+        protected const string PrivateKey = "";
+
         /// <summary>
         /// Creates the brokerage under test and connects it
         /// </summary>
@@ -52,8 +57,8 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             return new BitfinexBrokerage(
                     Config.Get("bitfinex-url", "wss://api.bitfinex.com/ws"),
                     Config.Get("bitfinex-rest", "https://api.bitfinex.com"),
-                    Config.Get("bitfinex-api-key"),
-                    Config.Get("bitfinex-api-secret"),
+                    PublicKey,
+                    PrivateKey,
                     algorithm.Object,
                     priceProvider.Object
                 );
