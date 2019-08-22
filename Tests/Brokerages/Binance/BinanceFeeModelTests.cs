@@ -78,6 +78,22 @@ namespace QuantConnect.Tests.Brokerages.Binance
             new TestCaseData(new LimitOrderTestParameters(Symbol, LowPrice, HighPrice) { OrderSubmissionData = OrderSubmissionData})
         };
 
+        public TestCaseData[] CustomMakerOrders => new[]
+        {
+            new TestCaseData(0.001m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)),
+            new TestCaseData(0.0009m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice) { OrderSubmissionData = OrderSubmissionData}),
+            new TestCaseData(0.0008m, 0.001m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties())),
+            new TestCaseData(0.0007m, 0.0009m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice, new BinanceOrderProperties() { PostOnly = true }){ OrderSubmissionData = OrderSubmissionData}),
+            new TestCaseData(0.0006m, 0.0008m, new LimitOrderTestParameters(Symbol, HighPrice, LowPrice, new BinanceOrderProperties() { PostOnly = true }))
+        };
+
+        public TestCaseData[] CustomTakerOrders => new[]
+        {
+            new TestCaseData(0.0007m, 0.0009m, new MarketOrderTestParameters(Symbol)),
+            new TestCaseData(0.0006m, 0.0008m, new MarketOrderTestParameters(Symbol, new BinanceOrderProperties() { PostOnly = true })),
+            new TestCaseData(0.0005m, 0.0006m, new LimitOrderTestParameters(Symbol, LowPrice, HighPrice) { OrderSubmissionData = OrderSubmissionData})
+        };
+
         [Test]
         public void GetFeeModelTest()
         {
@@ -96,7 +112,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                BinanceFeeModel.MakerFee * price * Math.Abs(Quantity),
+                BinanceFeeModel.MakerTear1Fee * price * Math.Abs(Quantity),
                 fee.Value.Amount);
             Assert.AreEqual("USDT", fee.Value.Currency);
         }
@@ -112,7 +128,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                BinanceFeeModel.TakerFee * price * Math.Abs(Quantity),
+                BinanceFeeModel.TakerTear1Fee * price * Math.Abs(Quantity),
                 fee.Value.Amount);
             Assert.AreEqual("USDT", fee.Value.Currency);
         }
@@ -128,7 +144,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                BinanceFeeModel.MakerFee * price * Math.Abs(Quantity),
+                BinanceFeeModel.MakerTear1Fee * price * Math.Abs(Quantity),
                 fee.Value.Amount);
             Assert.AreEqual("USDT", fee.Value.Currency);
         }
@@ -144,7 +160,71 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
 
             Assert.AreEqual(
-                BinanceFeeModel.TakerFee * price * Math.Abs(Quantity),
+                BinanceFeeModel.TakerTear1Fee * price * Math.Abs(Quantity),
+                fee.Value.Amount);
+            Assert.AreEqual("USDT", fee.Value.Currency);
+        }
+
+        [Test]
+        [TestCaseSource("CustomMakerOrders")]
+        public void ReturnShortOrderCustomMakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
+        {
+            IFeeModel feeModel = new BinanceFeeModel(mFee, tFee);
+
+            Order order = parameters.CreateShortOrder(Quantity);
+            var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
+            var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
+
+            Assert.AreEqual(
+                mFee * price * Math.Abs(Quantity),
+                fee.Value.Amount);
+            Assert.AreEqual("USDT", fee.Value.Currency);
+        }
+
+        [Test]
+        [TestCaseSource("CustomTakerOrders")]
+        public void ReturnShortOrderCustomTakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
+        {
+            IFeeModel feeModel = new BinanceFeeModel(mFee, tFee);
+
+            Order order = parameters.CreateShortOrder(Quantity);
+            var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : LowPrice;
+            var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
+
+            Assert.AreEqual(
+                tFee * price * Math.Abs(Quantity),
+                fee.Value.Amount);
+            Assert.AreEqual("USDT", fee.Value.Currency);
+        }
+
+        [Test]
+        [TestCaseSource("CustomMakerOrders")]
+        public void ReturnLongOrderCustomMakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
+        {
+            IFeeModel feeModel = new BinanceFeeModel(mFee, tFee);
+
+            Order order = parameters.CreateLongOrder(Quantity);
+            var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
+            var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
+
+            Assert.AreEqual(
+                mFee * price * Math.Abs(Quantity),
+                fee.Value.Amount);
+            Assert.AreEqual("USDT", fee.Value.Currency);
+        }
+
+        [Test]
+        [TestCaseSource("CustomTakerOrders")]
+        public void ReturnLongOrderCustomTakerFees(decimal mFee, decimal tFee, OrderTestParameters parameters)
+        {
+            IFeeModel feeModel = new BinanceFeeModel(mFee, tFee);
+
+            Order order = parameters.CreateLongOrder(Quantity);
+            var price = order.Type == OrderType.Limit ? ((LimitOrder)order).LimitPrice : HighPrice;
+            var fee = feeModel.GetOrderFee(new OrderFeeParameters(Security, order));
+
+            Assert.AreEqual(
+                tFee * price * Math.Abs(Quantity),
                 fee.Value.Amount);
             Assert.AreEqual("USDT", fee.Value.Currency);
         }
