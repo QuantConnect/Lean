@@ -58,31 +58,35 @@ namespace QuantConnect.Brokerages.Binance
             {
                 WebSocketMessage e;
                 _messageBuffer.TryDequeue(out e);
-                OnMessageImpl(this, e);
-                OnTickerMessageImpl(this, e);
+                OnMessageImpl(this, e, (msg) =>
+                {
+                    switch (msg.Event)
+                    {
+                        case EventType.Execution:
+                            OnUserMessageImpl(msg);
+                            break;
+                        case EventType.Trade:
+                        case EventType.OrderBook:
+                            OnStreamMessageImpl(msg);
+                            break;
+                        default:
+                            break;
+                    }
+                });
             }
             Log.Trace("BinanceBrokerage.Messaging.UnlockStream(): Stream Unlocked.");
             // Once dequeued in order; unlock stream.
             _streamLocked = false;
         }
 
-        private void OnMessageImpl(object sender, WebSocketMessage e)
+        private void OnMessageImpl(object sender, WebSocketMessage e, Action<BaseMessage> handler)
         {
             try
             {
-                var wrapped = JObject.Parse(e.Message);
-                var message = wrapped.GetValue("data").ToObject<Messages.BaseMessage>();
-                switch (message.Event)
+                var msg = Messages.BaseMessage.Parse(e.Message);
+                if (msg != null)
                 {
-                    case "executionReport":
-                        var upd = wrapped.GetValue("data").ToObject<Messages.Execution>();
-                        if (upd.ExecutionType.Equals("TRADE", StringComparison.OrdinalIgnoreCase))
-                        {
-                            OnFillOrder(upd);
-                        }
-                        break;
-                    default:
-                        return;
+                    handler(msg);
                 }
             }
             catch (Exception exception)
@@ -92,35 +96,41 @@ namespace QuantConnect.Brokerages.Binance
             }
         }
 
-        private void OnTickerMessageImpl(object sender, WebSocketMessage e)
+        private void OnUserMessageImpl(BaseMessage message)
         {
-            try
+            switch (message.Event)
             {
-                var wrapped = JObject.Parse(e.Message);
-                var message = wrapped.GetValue("data").ToObject<Messages.BaseMessage>();
-                switch (message.Event)
-                {
-                    case "depthUpdate":
-                        var updates = wrapped.GetValue("data").ToObject<Messages.OrderBookUpdateMessage>();
-                        OnOrderBookUpdate(updates);
-                        break;
-                    case "trade":
-                        var trade = wrapped.GetValue("data").ToObject<Messages.Trade>();
-                        EmitTradeTick(
-                            _symbolMapper.GetLeanSymbol(trade.Symbol),
-                            Time.UnixMillisecondTimeStampToDateTime(trade.Time),
-                            trade.Price,
-                            trade.Quantity
-                        );
-                        break;
-                    default:
-                        return;
-                }
+                case EventType.Execution:
+                    var upd = message.ToObject<Messages.Execution>();
+                    if (upd.ExecutionType.Equals("TRADE", StringComparison.OrdinalIgnoreCase))
+                    {
+                        OnFillOrder(upd);
+                    }
+                    break;
+                default:
+                    return;
             }
-            catch (Exception exception)
+        }
+
+        private void OnStreamMessageImpl(BaseMessage message)
+        {
+            switch (message.Event)
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, $"Parsing wss message failed. Data: {e.Message} Exception: {exception}"));
-                throw;
+                case EventType.OrderBook:
+                    var updates = message.ToObject<Messages.OrderBookUpdateMessage>();
+                    OnOrderBookUpdate(updates);
+                    break;
+                case EventType.Trade:
+                    var trade = message.ToObject<Messages.Trade>();
+                    EmitTradeTick(
+                        _symbolMapper.GetLeanSymbol(trade.Symbol),
+                        Time.UnixMillisecondTimeStampToDateTime(trade.Time),
+                        trade.Price,
+                        trade.Quantity
+                    );
+                    break;
+                default:
+                    return;
             }
         }
 
