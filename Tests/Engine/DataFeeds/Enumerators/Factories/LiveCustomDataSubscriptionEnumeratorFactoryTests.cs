@@ -26,6 +26,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 {
@@ -73,6 +74,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
+            }
+
+            [TearDown]
+            public void TearDown()
+            {
+                _enumerator?.DisposeSafely();
             }
 
             [Test]
@@ -147,6 +154,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
+            }
+
+            [TearDown]
+            public void TearDown()
+            {
+                _enumerator?.DisposeSafely();
             }
 
             [Test]
@@ -230,6 +243,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 _enumerator = factory.CreateEnumerator(request, null);
             }
 
+            [TearDown]
+            public void TearDown()
+            {
+                _enumerator?.DisposeSafely();
+            }
+
             [Test]
             public void YieldsDataEachSecondAsTimePasses()
             {
@@ -304,6 +323,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
                 var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(_timeProvider, _dataSourceReader.Object);
                 _enumerator = factory.CreateEnumerator(request, null);
+            }
+
+            [TearDown]
+            public void TearDown()
+            {
+                _enumerator?.DisposeSafely();
             }
 
             [Test]

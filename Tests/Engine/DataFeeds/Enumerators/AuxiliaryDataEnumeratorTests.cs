@@ -69,6 +69,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsTrue(enumerator.MoveNext());
             Assert.Null(enumerator.Current);
+
+            enumerator.Dispose();
         }
     }
 

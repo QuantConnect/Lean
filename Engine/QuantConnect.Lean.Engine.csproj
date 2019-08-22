@@ -184,6 +184,7 @@
     <Compile Include="DataFeeds\Enumerators\Factories\LiveCustomDataSubscriptionEnumeratorFactory.cs" />
     <Compile Include="DataFeeds\Enumerators\QuoteBarFillForwardEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\AuxiliaryDataEnumerator.cs" />
+    <Compile Include="DataFeeds\Enumerators\SubscriptionDataEnumerator.cs" />
     <Compile Include="DataFeeds\IDataFeedSubscriptionManager.cs" />
     <Compile Include="DataFeeds\IDataFeedTimeProvider.cs" />
     <Compile Include="DataFeeds\IDataManager.cs" />

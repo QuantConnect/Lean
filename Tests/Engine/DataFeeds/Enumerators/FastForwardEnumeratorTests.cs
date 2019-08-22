@@ -43,6 +43,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsTrue(fastForward.MoveNext());
             Assert.AreEqual(start, fastForward.Current.Time);
+            fastForward.Dispose();
         }
         [Test]
         public void FastForwardsOldDataAllowsEquals()
@@ -61,6 +62,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsTrue(fastForward.MoveNext());
             Assert.AreEqual(start.AddSeconds(-1), fastForward.Current.Time);
+            fastForward.Dispose();
         }
         [Test]
         public void FiltersOutPastData()
@@ -83,6 +85,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsTrue(fastForward.MoveNext());
             Assert.AreEqual(start.AddSeconds(2), fastForward.Current.Time);
+            fastForward.Dispose();
         }
 
         [Test]
@@ -102,6 +105,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsFalse(fastForward.MoveNext());
             Assert.IsNull(fastForward.Current);
+            fastForward.Dispose();
         }
     }
 }

@@ -169,7 +169,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             });
 
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, start, end);
-            var subscriptionDataEnumerator = SubscriptionData.Enumerator(config, security, timeZoneOffsetProvider, reader);
+            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, reader);
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, start, end);
             return new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
         }

@@ -74,6 +74,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -137,6 +138,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -195,6 +197,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -240,6 +243,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -289,6 +293,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -337,6 +342,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -393,6 +399,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -464,6 +471,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(300, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -557,6 +565,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -618,6 +627,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -668,6 +678,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -711,6 +722,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(200, ((TradeBar)fillForwardEnumerator.Current).Volume);
 
             Assert.IsFalse(fillForwardEnumerator.MoveNext());
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -753,6 +765,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             // we expect 6 days worth of ff hourly bars at 7 bars a day
             Assert.AreEqual(42, hourlyBars);
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -800,6 +813,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(new DateTime(2012, 7, 19, 20, 0, 0), fillForwardBars[0].Time);
             Assert.AreEqual(new DateTime(2012, 7, 21, 20, 0, 0), fillForwardBars[1].Time);
             Assert.AreEqual(new DateTime(2012, 7, 22, 20, 0, 0), fillForwardBars[2].Time);
+            fillForwardEnumerator.Dispose();
         }
 
         [Test]
@@ -842,6 +856,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(2, dailyBarsEmitted);
             Assert.AreEqual(new DateTime(2018, 3, 10, 19, 0, 0), fillForwardBars[0].Time);
             Assert.AreEqual(new DateTime(2018, 3, 11, 20, 0, 0), fillForwardBars[1].Time);
+            fillForwardEnumerator.Dispose();
         }
     }
 }

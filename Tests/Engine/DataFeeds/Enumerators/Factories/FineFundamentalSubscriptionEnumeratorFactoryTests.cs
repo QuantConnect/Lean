@@ -82,6 +82,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.AreEqual(parameters.EquityPerShareGrowth1Y, row.EarningRatios.EquityPerShareGrowth);
             Assert.AreEqual(parameters.PeRatio, row.ValuationRatios.PERatio);
             Assert.AreEqual(parameters.NetIncomeExtraordinary3M, row.FinancialStatements.IncomeStatement.NetIncomeExtraordinary.ThreeMonths);
+            enumerator.Dispose();
         }
 
         [Test]
@@ -107,7 +108,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var fine = (FineFundamental)enumerator.Current;
             Assert.AreEqual(438783011299, fine.CompanyProfile.EnterpriseValue);
             Assert.AreEqual(311, fine.AssetClassification.MorningstarSectorCode);
-
+            enumerator.Dispose();
         }
 
         [Test]
