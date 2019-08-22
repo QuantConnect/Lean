@@ -14,8 +14,10 @@
 */
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Orders;
 using System;
+using System.Globalization;
 
 namespace QuantConnect.Brokerages.Binance.Messages
 {
@@ -69,16 +71,55 @@ namespace QuantConnect.Brokerages.Binance.Messages
         public long TransactionTime { get; set; }
     }
 
+    public enum EventType
+    {
+        None,
+        OrderBook,
+        Trade,
+        Execution
+    }
+
     public class BaseMessage
     {
+        public virtual EventType @Event { get; } = EventType.None;
+
         [JsonProperty("e")]
-        public string @Event { get; set; }
+        public string EventName { get; set; }
 
         [JsonProperty("E")]
         public long Time { get; set; }
 
         [JsonProperty("s")]
         public string Symbol { get; set; }
+
+        public static BaseMessage Parse(string data)
+        {
+            var wrapped = JObject.Parse(data);
+            var eventType = wrapped["data"]["e"].ToObject<string>();
+            switch (eventType)
+            {
+                case "executionReport":
+                    return wrapped.GetValue("data").ToObject<Messages.Execution>();
+                case "depthUpdate":
+                    return wrapped.GetValue("data").ToObject<Messages.OrderBookUpdateMessage>();
+                case "trade":
+                    return wrapped.GetValue("data").ToObject<Messages.Trade>();
+                default:
+                    return null;
+            }
+        }
+
+        public T ToObject<T>() where T : BaseMessage
+        {
+            try
+            {
+                return (T)Convert.ChangeType(this, typeof(T), CultureInfo.InvariantCulture);
+            }
+            catch
+            {
+                return default(T);
+            }
+        }
     }
 
     public class OrderBookSnapshotMessage
@@ -92,6 +133,8 @@ namespace QuantConnect.Brokerages.Binance.Messages
 
     public class OrderBookUpdateMessage : BaseMessage
     {
+        public override EventType @Event => EventType.OrderBook;
+
         [JsonProperty("U")]
         public long FirstUpdate { get; set; }
 
@@ -107,6 +150,8 @@ namespace QuantConnect.Brokerages.Binance.Messages
 
     public class Trade : BaseMessage
     {
+        public override EventType @Event => EventType.Trade;
+
         [JsonProperty("T")]
         public new long Time { get; set; }
 
@@ -119,6 +164,8 @@ namespace QuantConnect.Brokerages.Binance.Messages
 
     public class Execution : BaseMessage
     {
+        public override EventType @Event => EventType.Execution;
+
         [JsonProperty("i")]
         public string OrderId { get; set; }
 

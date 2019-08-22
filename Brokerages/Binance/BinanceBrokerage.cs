@@ -86,6 +86,7 @@ namespace QuantConnect.Brokerages.Binance
                 _keepAliveTimer.Start();
             };
             WebSocket.Closed += (s, e) => { _keepAliveTimer.Stop(); };
+            WebSocket.Message += (s, e) => OnSocketMessage(s, e, OnUserMessageImpl);
 
             var tickerConnectionHandler = new DefaultConnectionHandler();
             tickerConnectionHandler.ReconnectRequested += (s, e) => { ProcessSubscriptionRequest(); };
@@ -93,7 +94,7 @@ namespace QuantConnect.Brokerages.Binance
                 tickerConnectionHandler
             );
 
-            TickerWebSocket.Message += OnTickerMessage;
+            TickerWebSocket.Message += (s, e) => OnSocketMessage(s, e, OnStreamMessageImpl);
             TickerWebSocket.Message += (s, e) => (s as BinanceWebSocketWrapper)?.ConnectionHandler.KeepAlive(DateTime.UtcNow);
             TickerWebSocket.Error += OnError;
 
@@ -499,26 +500,9 @@ namespace QuantConnect.Brokerages.Binance
         public override void OnMessage(object sender, WebSocketMessage e)
         {
             LastHeartbeatUtcTime = DateTime.UtcNow;
-
-            // Verify if we're allowed to handle the streaming packet yet; while we're placing an order we delay the
-            // stream processing a touch.
-            try
-            {
-                if (_streamLocked)
-                {
-                    _messageBuffer.Enqueue(e);
-                    return;
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-
-            OnMessageImpl(sender, e);
         }
 
-        private void OnTickerMessage(object sender, WebSocketMessage e)
+        private void OnSocketMessage(object sender, WebSocketMessage e, Action<Messages.BaseMessage> handler)
         {
             try
             {
@@ -533,7 +517,7 @@ namespace QuantConnect.Brokerages.Binance
                 Log.Error(err);
             }
 
-            OnTickerMessageImpl(sender, e);
+            OnMessageImpl(sender, e, handler);
         }
 
         /// <summary>
