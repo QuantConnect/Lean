@@ -186,6 +186,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             timer.Value.Dispose();
+            dataManager.RemoveAllSubscriptions();
             Assert.AreEqual(14 * tickers.Length, dataPointsEmitted);
         }
 
@@ -280,6 +281,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             timer.Value.Dispose();
+            dataManager.RemoveAllSubscriptions();
             Assert.AreEqual(14, slicesEmitted);
             Assert.AreEqual(14 * symbols.Count, dataPointsEmitted);
         }

@@ -56,6 +56,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var quoteBar2 = (QuoteBar)fillForwardEnumerator.Current;
             Assert.AreSame(quoteBar1.Bid, quoteBar2.Bid);
             Assert.AreSame(quoteBar1.Ask, quoteBar2.Ask);
+
+            fillForwardEnumerator.Dispose();
         }
     }
 }

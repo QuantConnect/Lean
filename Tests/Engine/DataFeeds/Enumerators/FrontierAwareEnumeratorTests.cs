@@ -42,6 +42,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsTrue(frontierAware.MoveNext());
             Assert.IsNull(frontierAware.Current);
+            frontierAware.Dispose();
         }
 
         [Test]
@@ -62,6 +63,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(frontierAware.MoveNext());
             Assert.IsNotNull(frontierAware.Current);
             Assert.AreEqual(underlying[0], frontierAware.Current);
+            frontierAware.Dispose();
         }
 
         [Test]
@@ -91,6 +93,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                     Assert.AreEqual(underlying[0], frontierAware.Current);
                 }
             }
+            frontierAware.Dispose();
         }
     }
 }

@@ -55,6 +55,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.IsFalse(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
+
+            enumerator.Dispose();
         }
 
         [Test]
@@ -76,6 +78,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             enumerator.MoveNext();
             Assert.AreEqual(0, enumerator.Count);
+
+            enumerator.Dispose();
         }
 
         [Test]
@@ -98,6 +102,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             enumerator.MoveNext();
             Assert.AreEqual(tick2, enumerator.Current);
+
+            enumerator.Dispose();
         }
 
         [Test, Category("TravisExclude")]
@@ -147,6 +153,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsFalse(enumerator.MoveNext());
             Assert.IsFalse(encounteredError);
             Assert.AreEqual(count, dequeuedCount);
+
+            enumerator.Dispose();
         }
     }
 }

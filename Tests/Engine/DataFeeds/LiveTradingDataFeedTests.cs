@@ -664,10 +664,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // we just want to emit one single coarse data packet
             var yieldUniverseData = false;
             var yieldedUniverseData = false;
+            var emittedData = new ManualResetEvent(false);
             var feed = RunDataFeed(getNextTicksFunction: fdqh =>
             {
                 // just once
-                if (yieldUniverseData)
+                if (yieldUniverseData && !yieldedUniverseData)
                 {
                     yieldedUniverseData = true;
                     var currentTime = _manualTimeProvider.GetUtcNow();
@@ -678,10 +679,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             Time = currentTime - Time.OneDay
                         }});
                     Console.WriteLine($"Emitted BaseDataCollection {data.Time} {data.EndTime}");
-                    yieldUniverseData = false;
 
                     // Assert data gets emitted in an 'invalid' time
                     Assert.IsTrue(data.Time.Hour > 23 || data.Time.Hour < 5);
+                    emittedData.Set();
                     return new[] { data };
                 }
                 return Enumerable.Empty<BaseData>();
@@ -692,6 +693,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var receivedCoarseData = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
             {
+                if (yieldUniverseData)
+                {
+                    if (!emittedData.WaitOne(1000))
+                    {
+                        Assert.Fail("Timeout waiting for data to be produced");
+                    }
+                }
                 if (!yieldedUniverseData)
                 {
                     yieldUniverseData = true;
@@ -703,7 +711,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     Console.WriteLine($"Received BaseDataCollection {now}");
 
                     // Assert data got hold until time was right
-                    Assert.IsTrue(now.Hour < 23 && now.Hour > 5);
+                    Assert.IsTrue(now.Hour < 23 && now.Hour > 5, $"Unexpected now value: {now}");
                     receivedCoarseData = true;
                 }
             }, sendUniverseData: true,
@@ -713,8 +721,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Console.WriteLine($"EndTime {_manualTimeProvider.GetUtcNow()}");
 
-            Assert.IsTrue(yieldedUniverseData);
-            Assert.IsTrue(receivedCoarseData);
+            Assert.IsTrue(yieldedUniverseData, "No universe data points yielded.");
+            Assert.IsTrue(receivedCoarseData, "Did not receive Coarse data.");
         }
 
         [Test]
@@ -930,15 +938,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         foreach (var config in security.Subscriptions)
                         {
-                            Assert.IsTrue(ts.ConsolidatorUpdateData.Count == 2); // Trades + Quotes
-                            Assert.IsTrue(ts.ConsolidatorUpdateData.Select(x => x.Target).Contains(config));
-                            Assert.IsTrue(ts.ConsolidatorUpdateData.All(x => x.Data.Count > 0));
+                            Assert.AreEqual(2, ts.ConsolidatorUpdateData.Count); // Trades + Quotes
+                            Assert.IsTrue(ts.ConsolidatorUpdateData.Select(x => x.Target).Contains(config), "Config not found");
+                            Assert.IsTrue(ts.ConsolidatorUpdateData.All(x => x.Data.Count > 0), "Data is empty");
                         }
                     }
                 }
             });
 
-            Assert.IsTrue(emittedData);
+            Assert.IsTrue(emittedData, "No data was emitted");
         }
 
         [Test]
@@ -1292,6 +1300,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var actualPricePointsEnqueued = 0;
             var actualAuxPointsEnqueued = 0;
             var lastTime = DateTime.MinValue;
+            var emittedData = new ManualResetEvent(false);
 
             var dataQueueHandler = new FuncDataQueueHandler(fdqh =>
             {
@@ -1299,6 +1308,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var exchangeTime = utcTime.ConvertFromUtc(exchangeTimeZone);
                 if (exchangeTime == lastTime || exchangeTime > endDate.ConvertTo(algorithmTimeZone, exchangeTimeZone))
                 {
+                    emittedData.Set();
                     return Enumerable.Empty<BaseData>();
                 }
                 lastTime = exchangeTime;
@@ -1373,6 +1383,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 }
 
+                emittedData.Set();
                 return dataPoints;
             });
 
@@ -1522,15 +1533,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         break;
                 }
 
+                emittedData.Reset();
                 timeProvider.Advance(advanceTimeSpan);
 
-                if (resolution == Resolution.Tick &&
-                    (symbol.SecurityType == SecurityType.Crypto ||
-                        symbol.SecurityType == SecurityType.Option ||
-                        symbol.SecurityType == SecurityType.Future))
+                // give enough time to the producer to emit
+                if (!emittedData.WaitOne(300))
                 {
-                    // give enough time to the producer to emit both tick types
-                    Thread.Sleep(200);
+                    Assert.Fail("Timeout waiting for data generation");
                 }
 
                 var currentTime = timeProvider.GetUtcNow();
@@ -1545,8 +1554,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     break;
                 }
             }
-
-            dataManager.RemoveAllSubscriptions();
 
             Log.Trace($"SliceCount:{sliceCount} - PriceData: Enqueued:{actualPricePointsEnqueued} TicksReceived:{actualTicksReceived}");
             Log.Trace($"SliceCount:{sliceCount} - PriceData: Enqueued:{actualPricePointsEnqueued} TradeBarsReceived:{actualTradeBarsReceived}");
@@ -1585,6 +1592,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(expectedTradeBarsReceived, actualTradeBarsReceived);
             Assert.AreEqual(expectedQuoteBarsReceived, actualQuoteBarsReceived);
             Assert.AreEqual(expectedAuxPointsReceived, actualAuxPointsReceived);
+
+            dataManager.RemoveAllSubscriptions();
         }
     }
 

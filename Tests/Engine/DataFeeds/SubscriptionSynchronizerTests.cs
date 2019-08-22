@@ -116,6 +116,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var kps = count / 1000d / stopwatch.Elapsed.TotalSeconds;
             Console.WriteLine($"Current Time: {currentTime:u}  Elapsed time: {(int)stopwatch.Elapsed.TotalSeconds,4}s  KPS: {kps,7:.00}  COUNT: {count,10}");
             Assert.GreaterOrEqual(count, 100); // this assert is for sanity purpose
+            dataManager.RemoveAllSubscriptions();
         }
 
         private Subscription CreateSubscription(QCAlgorithm algorithm, Security security, DateTime startTimeUtc, DateTime endTimeUtc, out int dataPointCount)

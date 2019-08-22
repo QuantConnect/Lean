@@ -35,6 +35,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             refresher.MoveNext();
             Assert.IsTrue(refreshed);
+
+            refresher.Dispose();
         }
 
         [Test]
@@ -42,6 +44,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         {
             var refresher = new RefreshEnumerator<int?>(() => new List<int?>().GetEnumerator());
             Assert.IsTrue(refresher.MoveNext());
+
+            refresher.Dispose();
         }
 
         [Test]
@@ -50,6 +54,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var refresher = new RefreshEnumerator<int?>(() => new List<int?>().GetEnumerator());
             refresher.MoveNext();
             Assert.AreEqual(default(int?), refresher.Current);
+
+            refresher.Dispose();
         }
 
         [Test]
@@ -62,6 +68,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             refresher.MoveNext();
 
             fakeEnumerator.Verify(enumerator => enumerator.Dispose(), Times.Once);
+
+            refresher.Dispose();
         }
 
         [Test]
@@ -75,6 +83,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             refresher.Dispose();
 
             fakeEnumerator.Verify(enumerator => enumerator.Dispose(), Times.Once);
+
+            refresher.Dispose();
         }
 
         [Test]
@@ -88,6 +98,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             refresher.Reset();
 
             fakeEnumerator.Verify(enumerator => enumerator.Reset(), Times.Once);
+
+            refresher.Dispose();
         }
 
         [Test]
@@ -120,6 +132,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(refresher.MoveNext());
             Assert.AreEqual(2, refreshCount);
             Assert.AreEqual(2, refresher.Current);
+
+            refresher.Dispose();
         }
     }
 }
