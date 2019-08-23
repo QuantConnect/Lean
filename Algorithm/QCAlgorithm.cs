@@ -2113,7 +2113,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="insights">The collection of insights generaed at the current time step</param>
         /// <param name="clone">Will emit a clone of the generated insights</param>
-        private void OnInsightsGenerated(IEnumerable<Insight> insights, bool clone = true)
+        protected void OnInsightsGenerated(IEnumerable<Insight> insights, bool clone = true)
         {
             var insightCollection = insights.ToArray();
 

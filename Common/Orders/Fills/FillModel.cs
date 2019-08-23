@@ -462,7 +462,7 @@ namespace QuantConnect.Orders.Fills
         /// This is required due to a limitation in PythonNet to resolved
         /// overriden methods. <see cref="GetPrices"/>
         /// </summary>
-        private Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
+        protected Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
         {
             if (PythonWrapper != null)
             {
@@ -536,7 +536,7 @@ namespace QuantConnect.Orders.Fills
         /// <summary>
         /// Determines if the exchange is open using the current time of the asset
         /// </summary>
-        private static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
+        protected static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
         {
             if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
             {
