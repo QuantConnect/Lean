@@ -29,7 +29,6 @@ using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.IO;
 using QuantConnect.Lean.Engine.Alphas;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -385,22 +384,20 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Send a final analysis result back to the IDE.
         /// </summary>
-        /// <param name="job">Lean AlgorithmJob task</param>
-        /// <param name="orders">Collection of orders from the algorithm</param>
-        /// <param name="profitLoss">Collection of time-profit values for the algorithm</param>
-        /// <param name="holdings">Current holdings state for the algorithm</param>
-        /// <param name="cashbook">Cashbook for the holdingss</param>
-        /// <param name="statisticsResults">Statistics information for the algorithm (empty if not finished)</param>
-        /// <param name="banner">Runtime statistics banner information</param>
-        public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, CashBook cashbook, StatisticsResults statisticsResults, Dictionary<string, string> banner)
+        public void SendFinalResult()
         {
             try
             {
-                FinalStatistics = statisticsResults.Summary;
+                _processingFinalPacket = true;
 
                 //Convert local dictionary:
                 var charts = new Dictionary<string, Chart>(Charts);
-                _processingFinalPacket = true;
+                var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
+                var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
+                var runtime = new Dictionary<string, string>();
+                var statisticsResults = GenerateStatisticsResults(charts, runtime, profitLoss);
+
+                FinalStatistics = statisticsResults.Summary;
 
                 // clear the trades collection before placing inside the backtest result
                 foreach (var ap in statisticsResults.RollingPerformances.Values)
@@ -409,8 +406,8 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Create a result packet to send to the browser.
-                var result = new BacktestResultPacket((BacktestNodePacket) job,
-                    new BacktestResult(charts, orders, profitLoss, statisticsResults.Summary, banner, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance)
+                var result = new BacktestResultPacket(_job,
+                    new BacktestResult(charts, orders, profitLoss, statisticsResults.Summary, runtime, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance)
                         { AlphaRuntimeStatistics = AlphaRuntimeStatistics })
                 {
                     ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds,
