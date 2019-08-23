@@ -74,6 +74,11 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the start time required for the specified bar count in terms of the algorithm's time zone
         /// </summary>
+        /// <param name="symbol">The symbol to select proper <see cref="SubscriptionDataConfig"/> config</param>
+        /// <param name="periods">The number of bars requested</param>
+        /// <param name="resolution">The length of each bar</param>
+        /// <param name="exchange">The exchange hours used for market open hours</param>
+        /// <returns>The start time that would provide the specified number of bars ending at the algorithm's current time</returns>
         public DateTime GetStartTimeAlgoTz(
             Symbol symbol,
             int periods,

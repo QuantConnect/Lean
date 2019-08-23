@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.Results
     public class RegressionResultHandler : BacktestingResultHandler
     {
         private Language Language => Config.GetValue<Language>("algorithm-language");
-        private readonly Lazy<StreamWriter> OrdersLogStreamWriter;
+        private readonly Lazy<StreamWriter> _ordersLogStreamWriter;
 
         /// <summary>
         /// Gets the path used for logging all order events
@@ -41,7 +41,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public RegressionResultHandler()
         {
-            OrdersLogStreamWriter = new Lazy<StreamWriter>(() =>
+            _ordersLogStreamWriter = new Lazy<StreamWriter>(() =>
             {
                 var fileInfo = new FileInfo(OrdersLogFilePath);
                 Directory.CreateDirectory(fileInfo.DirectoryName);
@@ -59,7 +59,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             // log order events to a separate file for easier diffing of regression runs
             var order = Algorithm.Transactions.GetOrderById(newEvent.OrderId);
-            OrdersLogStreamWriter.Value.WriteLine($"{Algorithm.UtcTime}: Order: {order}  OrderEvent: {newEvent}");
+            _ordersLogStreamWriter.Value.WriteLine($"{Algorithm.UtcTime}: Order: {order}  OrderEvent: {newEvent}");
 
             base.OrderEvent(newEvent);
         }
@@ -71,9 +71,9 @@ namespace QuantConnect.Lean.Engine.Results
         public override void Exit()
         {
             base.Exit();
-            if (OrdersLogStreamWriter.IsValueCreated)
+            if (_ordersLogStreamWriter.IsValueCreated)
             {
-                OrdersLogStreamWriter.Value.DisposeSafely();
+                _ordersLogStreamWriter.Value.DisposeSafely();
             }
         }
     }

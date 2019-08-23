@@ -17,11 +17,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.AlgorithmFactory;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
+using QuantConnect.Packets;
+using QuantConnect.Util;
+using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Lean.Engine.Setup
 {
@@ -54,16 +58,11 @@ namespace QuantConnect.Lean.Engine.Setup
             var historyRequests = new List<HistoryRequest>();
             foreach (var cash in cashToUpdate)
             {
-                // if we already added a history request for this security, skip
-                if (historyRequests.Any(x => x.Symbol == cash.ConversionRateSecurity.Symbol))
-                {
-                    continue;
-                }
-
                 var configs = algorithm
                     .SubscriptionManager
                     .SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(cash.ConversionRateSecurity.Symbol);
+                    .GetSubscriptionDataConfigs(cash.ConversionRateSecurity.Symbol,
+                        includeInternalConfigs:true);
 
                 var resolution = configs.GetHighestResolution();
                 var startTime = historyRequestFactory.GetStartTimeAlgoTz(
@@ -97,6 +96,21 @@ namespace QuantConnect.Lean.Engine.Setup
 
             Log.Trace("BaseSetupHandler.SetupCurrencyConversions():" +
                 $"{Environment.NewLine}{algorithm.Portfolio.CashBook}");
+        }
+
+        /// <summary>
+        /// Initialize the debugger
+        /// </summary>
+        /// <param name="algorithmNodePacket">The algorithm node packet</param>
+        /// <param name="workerThread">The worker thread instance to use</param>
+        public static bool InitializeDebugging(AlgorithmNodePacket algorithmNodePacket, WorkerThread workerThread)
+        {
+            var isolator = new Isolator();
+            return isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5),
+                () => DebuggerHelper.Initialize(algorithmNodePacket.Language),
+                algorithmNodePacket.RamAllocation,
+                sleepIntervalMillis: 100,
+                workerThread: workerThread);
         }
     }
 }

@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.IsTrue(content.Contains("\"eps\":1.2"));
         }
 
-        [Test]
+        [Test, Ignore("Requires Estimize data")]
         public void EstimizeReleaseReaderTest()
         {
             var dataCacheProvider = new SingleEntryDataCacheProvider(new DefaultDataProvider());
@@ -186,7 +186,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.IsTrue(content.Contains("\"eps\":1.2"));
         }
 
-        [Test]
+        [Test, Ignore("Requires Estimize data")]
         public void EstimizeEstimateReaderTest()
         {
             var dataCacheProvider = new SingleEntryDataCacheProvider(new DefaultDataProvider());
@@ -214,7 +214,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
         }
 
 
-        [Test]
+        [Test, Ignore("Requires Estimize data")]
         public void EstimizeConsensusReaderTest()
         {
             var dataCacheProvider = new SingleEntryDataCacheProvider(new DefaultDataProvider());

@@ -36,73 +36,49 @@ namespace QuantConnect.Lean.Engine.Setup
     /// </summary>
     public class BacktestingSetupHandler : ISetupHandler
     {
-        private TimeSpan _maxRuntime = TimeSpan.FromSeconds(300);
-        private int _maxOrders = 0;
-        private DateTime _startingDate = new DateTime(1998, 01, 01);
-
         /// <summary>
         /// The worker thread instance the setup handler should use
         /// </summary>
         public WorkerThread WorkerThread { get; set; }
 
         /// <summary>
-        /// Internal errors list from running the setup proceedures.
+        /// Internal errors list from running the setup procedures.
         /// </summary>
-        public List<Exception> Errors
-        {
-            get;
-            set;
-        }
+        public List<Exception> Errors { get; set; }
 
         /// <summary>
         /// Maximum runtime of the algorithm in seconds.
         /// </summary>
         /// <remarks>Maximum runtime is a formula based on the number and resolution of symbols requested, and the days backtesting</remarks>
-        public TimeSpan MaximumRuntime
-        {
-            get
-            {
-                return _maxRuntime;
-            }
-        }
+        public TimeSpan MaximumRuntime { get; private set; }
 
         /// <summary>
         /// Starting capital according to the users initialize routine.
         /// </summary>
         /// <remarks>Set from the user code.</remarks>
         /// <seealso cref="QCAlgorithm.SetCash(decimal)"/>
-        public decimal StartingPortfolioValue { get; private set; } = 0;
+        public decimal StartingPortfolioValue { get; private set; }
 
         /// <summary>
         /// Start date for analysis loops to search for data.
         /// </summary>
         /// <seealso cref="QCAlgorithm.SetStartDate(DateTime)"/>
-        public DateTime StartingDate
-        {
-            get
-            {
-                return _startingDate;
-            }
-        }
+        public DateTime StartingDate { get; private set; }
 
         /// <summary>
         /// Maximum number of orders for this backtest.
         /// </summary>
         /// <remarks>To stop algorithm flooding the backtesting system with hundreds of megabytes of order data we limit it to 100 per day</remarks>
-        public int MaxOrders
-        {
-            get
-            {
-                return _maxOrders;
-            }
-        }
+        public int MaxOrders { get; private set; }
 
         /// <summary>
         /// Initialize the backtest setup handler.
         /// </summary>
         public BacktestingSetupHandler()
         {
+            MaximumRuntime = TimeSpan.FromSeconds(300);
             Errors = new List<Exception>();
+            StartingDate = new DateTime(1998, 01, 01);
         }
 
         /// <summary>
@@ -116,8 +92,16 @@ namespace QuantConnect.Lean.Engine.Setup
             string error;
             IAlgorithm algorithm;
 
+            var debugNode = algorithmNodePacket as BacktestNodePacket;
+            var debugging = debugNode != null && debugNode.IsDebugging || Config.GetBool("debugging", false);
+
+            if (debugging && !BaseSetupHandler.InitializeDebugging(algorithmNodePacket, WorkerThread))
+            {
+                throw new AlgorithmSetupException("Failed to initialize debugging");
+            }
+
             // limit load times to 60 seconds and force the assembly to have exactly one derived type
-            var loader = new Loader(algorithmNodePacket.Language, TimeSpan.FromSeconds(60), names => names.SingleOrAlgorithmTypeName(Config.Get("algorithm-type-name")), WorkerThread);
+            var loader = new Loader(debugging, algorithmNodePacket.Language, TimeSpan.FromSeconds(60), names => names.SingleOrAlgorithmTypeName(Config.Get("algorithm-type-name")), WorkerThread);
             var complete = loader.TryCreateAlgorithmInstanceWithIsolator(assemblyPath, algorithmNodePacket.RamAllocation, out algorithm, out error);
             if (!complete) throw new AlgorithmSetupException($"During the algorithm initialization, the following exception has occurred: {error}");
 
@@ -215,12 +199,12 @@ namespace QuantConnect.Lean.Engine.Setup
             job.PeriodFinish = algorithm.EndDate;
 
             //Calculate the max runtime for the strategy
-            _maxRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager, algorithm.UniverseManager, parameters.AlgorithmNodePacket.Controls);
+            MaximumRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager, algorithm.UniverseManager, parameters.AlgorithmNodePacket.Controls);
 
             // Python takes forever; lets give it 10x longer to finish.
             if (job.Language == Language.Python)
             {
-                _maxRuntime = _maxRuntime.Add(TimeSpan.FromSeconds(_maxRuntime.TotalSeconds * 9));
+                MaximumRuntime = MaximumRuntime.Add(TimeSpan.FromSeconds(MaximumRuntime.TotalSeconds * 9));
             }
 
             BaseSetupHandler.SetupCurrencyConversions(algorithm, parameters.UniverseSelection);
@@ -229,19 +213,21 @@ namespace QuantConnect.Lean.Engine.Setup
             //Max Orders: 10k per backtest:
             if (job.UserPlan == UserPlan.Free)
             {
-                _maxOrders = 10000;
+                MaxOrders = 10000;
             }
             else
             {
-                _maxOrders = int.MaxValue;
-                _maxRuntime += _maxRuntime;
+                MaxOrders = int.MaxValue;
+                MaximumRuntime += MaximumRuntime;
             }
 
+            MaxOrders = job.Controls.BacktestingMaxOrders;
+
             //Set back to the algorithm,
-            algorithm.SetMaximumOrders(_maxOrders);
+            algorithm.SetMaximumOrders(MaxOrders);
 
             //Starting date of the algorithm:
-            _startingDate = job.PeriodStart;
+            StartingDate = job.PeriodStart;
 
             //Put into log for debugging:
             Log.Trace("SetUp Backtesting: User: " + job.UserId + " ProjectId: " + job.ProjectId + " AlgoId: " + job.AlgorithmId);

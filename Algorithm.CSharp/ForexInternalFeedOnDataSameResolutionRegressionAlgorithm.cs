@@ -29,6 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private readonly Dictionary<Symbol, int> _dataPointsPerSymbol = new Dictionary<Symbol, int>();
         private bool _added;
+        private Symbol _eurusd;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -39,6 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 8);
             SetCash(100000);
 
+            _eurusd = QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM);
             var eurgbp = AddForex("EURGBP", Resolution.Daily);
             _dataPointsPerSymbol.Add(eurgbp.Symbol, 0);
         }
@@ -51,7 +53,9 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_added)
             {
-                var eurUsdSubscription = SubscriptionManager.Subscriptions.Single(x => x.Symbol.Value == "EURUSD");
+                var eurUsdSubscription = SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(_eurusd, includeInternalConfigs: true)
+                    .Single();
                 if (eurUsdSubscription.IsInternalFeed)
                 {
                     throw new Exception("Unexpected internal 'EURUSD' Subscription");
@@ -59,7 +63,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (!_added)
             {
-                var eurUsdSubscription = SubscriptionManager.Subscriptions.Single(x => x.Symbol.Value == "EURUSD");
+                var eurUsdSubscription = SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(_eurusd, includeInternalConfigs: true)
+                    .Single();
                 if (!eurUsdSubscription.IsInternalFeed)
                 {
                     throw new Exception("Unexpected not internal 'EURUSD' Subscription");
@@ -75,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var symbol = kvp.Key;
                 _dataPointsPerSymbol[symbol]++;
 
-                Log($"{Time} {symbol.Value} {kvp.Value.Price}");
+                Log($"{Time} {symbol.Value} {kvp.Value.Price} EndTime {kvp.Value.EndTime}");
             }
         }
 

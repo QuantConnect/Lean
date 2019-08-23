@@ -17,9 +17,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Custom.TradingEconomics;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,6 +34,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
     public class TradingEconomicsIndicatorDownloader : TradingEconomicsDataDownloader
     {
         private readonly string _destinationFolder;
+        private readonly RateGate _requestGate;
         private readonly DateTime _fromDate;
         private readonly DateTime _toDate;
         private string _indicator;
@@ -40,7 +43,9 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         {
             _fromDate = fromDate;
             _toDate = toDate;
-            _destinationFolder = destinationFolder;
+            _destinationFolder = Path.Combine(destinationFolder, "indicator");
+            _requestGate = new RateGate(1, TimeSpan.FromSeconds(1));
+
             Directory.CreateDirectory(destinationFolder);
         }
 
@@ -50,10 +55,36 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         /// <returns>True if process all downloads successfully</returns>
         public override bool Run()
         {
+            Log.Trace("TradingEconomicsIndicatorDownloader.Run(): Begin downloading indicator data");
+
+            // Create the destination directory so that we don't error out in case there's no data
+            Directory.CreateDirectory(Path.Combine(_destinationFolder, "indicator"));
+
             var stopwatch = Stopwatch.StartNew();
+
+            // Makes sure we don't request for data immediately after we query the `/indicators` endpoint
+            _requestGate.WaitToProceed(TimeSpan.FromSeconds(1));
+
+            Log.Trace("TradingEconomicsIndicatorDownloader.Run(): Getting list of indicators");
 
             var json = HttpRequester("/indicators").Result;
             var indicators = JArray.Parse(json).Select(x => x["Category"].Value<string>().ToLower());
+            var availableFiles = Directory.GetFiles(_destinationFolder, "*.zip", SearchOption.AllDirectories)
+                .Select(
+                    x =>
+                    {
+                        try
+                        {
+                            return DateTime.ParseExact(Path.GetFileName(x).Substring(0, 8), "yyyyMMdd", CultureInfo.InvariantCulture);
+                        }
+                        catch
+                        {
+                            return DateTime.MinValue;
+                        }
+                    }
+                )
+                .Where(x => x != DateTime.MinValue)
+                .ToHashSet();
 
             foreach (var indicator in indicators)
             {
@@ -67,44 +98,94 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                     try
                     {
                         var endUtc = startUtc.AddMonths(1).AddDays(-1);
+
+                        if (availableFiles.Contains(endUtc))
+                        {
+                            Log.Trace($"TradingEconomicsIndicatorDownloader.Run(): Skipping data because it already exists for month: {startUtc:MMMM}");
+                            startUtc = startUtc.AddMonths(1);
+                            continue;
+                        }
+
+                        Log.Trace($"TradingEconomicsIndicatorDownloader.Run(): Collecting data for indicator: {indicator} - from {startUtc:yyyy-MM-dd} to {endUtc:yyyy-MM-dd}");
+
+                        _requestGate.WaitToProceed(TimeSpan.FromSeconds(1));
+
                         var content = Get(startUtc, endUtc).Result;
                         var collection = JsonConvert.DeserializeObject<List<TradingEconomicsIndicator>>(content);
 
                         data.AddRange(collection);
-
                         startUtc = startUtc.AddMonths(1);
                     }
                     catch (Exception e)
                     {
-                        Log.Error(e, $"TradingEconomicsIndicatorsDownloader(): Error parsing data for date {startUtc:yyyyMMdd}");
+                        Log.Error(e, $"TradingEconomicsIndicatorDownloader.Run(): Error parsing data for date {startUtc:yyyyMMdd}");
                         return false;
                     }
                 }
 
-                Log.Trace($"TradingEconomicsIndicatorsDownloader(): {data.Count} {indicator} indicator entries read in {stopwatch.Elapsed}");
+                Log.Trace($"TradingEconomicsIndicatorDownloader.Run(): {data.Count} {indicator} indicator entries read in {stopwatch.Elapsed}");
 
-                foreach (var kvp in data.GroupBy(GetFileName))
+                // Return status code. We default to `true` so that we can identify if an error occured during the loop
+                var status = true;
+
+                Parallel.ForEach(data.GroupBy(x => GetTicker(x.HistoricalDataSymbol, x.Category, x.Country)),
+                    (kvp, state) =>
+                    {
+                        // Create the destination directory, otherwise we risk having it fail when we move
+                        // the temp file to its final destination
+                        Directory.CreateDirectory(Path.Combine(_destinationFolder, kvp.Key));
+
+                        foreach (var indicatorByDate in kvp.GroupBy(x => x.LastUpdate))
+                        {
+                            var date = indicatorByDate.Key.ToString("yyyyMMdd");
+                            var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
+                            var tempZipPath = tempPath.Replace(".json", ".zip");
+                            var finalZipPath = Path.Combine(_destinationFolder, kvp.Key, $"{date}.zip");
+                            var dataFolderZipPath = Path.Combine(Globals.DataFolder, "alternative", "trading-economics", "indicator", kvp.Key, $"{date}.zip");
+
+                            if (File.Exists(finalZipPath))
+                            {
+                                Log.Trace($"TradingEconomicsIndicatorDownloader.Run(): {date} - Skipping file because it already exists: {finalZipPath}");
+                                continue;
+                            }
+                            if (File.Exists(dataFolderZipPath))
+                            {
+                                Log.Trace($"TradingEconomicsIndicatorDownloader.Run(): {date} - Skipping file because it already exists: {dataFolderZipPath}");
+                                continue;
+                            }
+
+                            try
+                            {
+                                var contents = JsonConvert.SerializeObject(indicatorByDate.ToList());
+
+                                Log.Trace($"TradingEconomicsIndicatorDownloader.Run(): {date} - Writing file before compression: {tempPath}");
+                                File.WriteAllText(tempPath, contents);
+
+                                Log.Trace($"TradingEconomicsIndicatorDownloader.Run(): {date} - Compressing to: {tempZipPath}");
+                                // Write out this data string to a zip file
+                                Compression.Zip(tempPath, tempZipPath, $"{date}.json", true);
+
+                                Log.Trace($"TradingEconomicsIndicatorDownloader.Run(): {date} - Moving temp file: {tempZipPath} to {finalZipPath}");
+                                File.Move(tempZipPath, finalZipPath);
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Error(e, $"TradingEconomicsIndicatorDownloader.Run(): {date} - Error creating zip file for ticker: {kvp.Key}");
+                                status = false;
+                                state.Stop();
+                            }
+                        }
+                    }
+                );
+
+                // Exit the indicator download loop early if we've had an error inside the loop
+                if (!status)
                 {
-                    var path = Path.Combine(_destinationFolder, kvp.Key);
-                    var zipPath = path.Replace(".json", ".zip");
-
-                    try
-                    {
-                        var contents = JsonConvert.SerializeObject(kvp.ToList());
-                        File.WriteAllText(path, contents);
-                        // Write out this data string to a zip file
-                        Compression.Zip(path, zipPath, kvp.Key, true);
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e, $"TradingEconomicsIndicatorsDownloader(): Error creating {path}");
-                        return false;
-                    }
+                    return status;
                 }
-
             }
 
-            Log.Trace($"TradingEconomicsIndicatorsDownloader(): Finished in {stopwatch.Elapsed}");
+            Log.Trace($"TradingEconomicsIndicatorDownloader.Run(): Finished in {stopwatch.Elapsed}");
             return true;
         }
 
@@ -118,15 +199,6 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         {
             var url = $"/historical/country/all/indicator/{_indicator}/{startUtc:yyyy-MM-dd}/{endUtc:yyyy-MM-dd}";
             return HttpRequester(url);
-        }
-
-        private string GetFileName(TradingEconomicsIndicator tradingEconomicsIndicator)
-        {
-            var ticker = tradingEconomicsIndicator.HistoricalDataSymbol;
-            if (string.IsNullOrWhiteSpace(ticker))
-                ticker = tradingEconomicsIndicator.Category + tradingEconomicsIndicator.Country;
-
-            return ticker.Replace(" ", "-").ToLower() + "_indicator.json";
         }
     }
 }

@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -26,7 +27,7 @@ namespace QuantConnect.Data.Custom.Estimize
     /// Consensus of the specified release
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
-    public class EstimizeConsensus : BaseData 
+    public class EstimizeConsensus : BaseData
     {
         /// <summary>
         /// The unique identifier for the estimate
@@ -94,7 +95,7 @@ namespace QuantConnect.Data.Custom.Estimize
         public int? FiscalYear { get; set; }
 
         /// <summary>
-        /// The fiscal quarter for the release 
+        /// The fiscal quarter for the release
         /// </summary>
         [JsonProperty(PropertyName = "fiscal_quarter")]
         public int? FiscalQuarter { get; set; }
@@ -103,6 +104,36 @@ namespace QuantConnect.Data.Custom.Estimize
         /// The timestamp of this consensus (UTC)
         /// </summary>
         public override DateTime EndTime => UpdatedAt;
+
+        /// <summary>
+        /// Empty constructor required for successful Json.NET deserialization
+        /// </summary>
+        public EstimizeConsensus()
+        {
+        }
+
+        /// <summary>
+        /// Creates an instance from CSV lines
+        /// </summary>
+        /// <param name="csvLine">CSV file</param>
+        public EstimizeConsensus(string csvLine)
+        {
+            // UpdatedAt[0], Id[1], Source[2], Type[3], Mean[4], High[5], Low[6], StandardDeviation[7], FiscalYear[8], FiscalQuarter[9], Count[10]
+            var csv = csvLine.Split(',');
+
+            UpdatedAt = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+            Time = UpdatedAt;
+            Id = csv[1];
+            Source = (Source)Enum.Parse(typeof(Source), csv[2]);
+            Type = string.IsNullOrWhiteSpace(csv[3]) ? (Type?)null : (Type)Enum.Parse(typeof(Type), csv[3]);
+            Mean = string.IsNullOrWhiteSpace(csv[4]) ? (decimal?) null : Convert.ToDecimal(csv[4], CultureInfo.InvariantCulture);
+            High = string.IsNullOrWhiteSpace(csv[5]) ? (decimal?) null : Convert.ToDecimal(csv[5], CultureInfo.InvariantCulture);
+            Low = string.IsNullOrWhiteSpace(csv[6]) ? (decimal?) null : Convert.ToDecimal(csv[6], CultureInfo.InvariantCulture);
+            StandardDeviation = string.IsNullOrWhiteSpace(csv[7]) ? (decimal?) null : Convert.ToDecimal(csv[7], CultureInfo.InvariantCulture);
+            FiscalYear =  string.IsNullOrWhiteSpace(csv[8]) ? (int?) null : Convert.ToInt32(csv[8], CultureInfo.InvariantCulture);
+            FiscalQuarter = string.IsNullOrWhiteSpace(csv[9]) ? (int?) null : Convert.ToInt32(csv[9], CultureInfo.InvariantCulture);
+            Count = string.IsNullOrWhiteSpace(csv[10]) ? (int?) null : Convert.ToInt32(csv[10], CultureInfo.InvariantCulture);
+        }
 
         /// <summary>
         /// Return the Subscription Data Source gained from the URL
@@ -126,32 +157,27 @@ namespace QuantConnect.Data.Custom.Estimize
                 "alternative",
                 "estimize",
                 "consensus",
-                symbol.ToLower(),
-                $"{date:yyyyMMdd}.zip"
+                $"{symbol.ToLower()}.csv"
             );
-            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Collection);
+            return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
         /// <summary>
         /// Reader converts each line of the data source into BaseData objects.
         /// </summary>
         /// <param name="config">Subscription data config setup object</param>
-        /// <param name="content">Content of the source document</param>
+        /// <param name="line">Content of the source document</param>
         /// <param name="date">Date of the requested data</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>
-        /// Collection of USEnergyInformation objects
+        /// Estimize consensus object
         /// </returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var objectList = JsonConvert.DeserializeObject<List<EstimizeConsensus>>(content);
-
-            foreach (var obj in objectList)
+            return new EstimizeConsensus(line)
             {
-                obj.Symbol = config.Symbol;
-            }
-
-            return new BaseDataCollection(date, config.Symbol, objectList.OrderBy(x => x.EndTime));
+                Symbol = config.Symbol
+            };
         }
 
         /// <summary>

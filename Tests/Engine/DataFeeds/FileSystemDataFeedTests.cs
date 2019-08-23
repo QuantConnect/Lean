@@ -79,6 +79,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Console.WriteLine("Count: " + count);
             stopwatch.Stop();
             feed.Exit();
+            dataManager.RemoveAllSubscriptions();
             Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}   KPS: {count/1000d/stopwatch.Elapsed.TotalSeconds}");
         }
 
@@ -125,6 +126,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Console.WriteLine("Count: " + count);
 
             stopwatch.Stop();
+            enumerator.Dispose();
             Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
         }
     }

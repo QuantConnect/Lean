@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using QuantConnect.Util;
@@ -69,7 +70,7 @@ namespace QuantConnect.Data.Auxiliary
                         // check to verify it' the same data
                         if (!entries[mapFileRowEntry.MapFileRow.Date].Equals(mapFileRowEntry))
                         {
-                            throw new Exception("Attempted to assign different history for symbol.");
+                            throw new DuplicateNameException("Attempted to assign different history for symbol.");
                         }
                     }
                     else

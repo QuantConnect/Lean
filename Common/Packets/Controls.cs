@@ -72,10 +72,22 @@ namespace QuantConnect.Packets
         public int BacktestingMaxInsights;
 
         /// <summary>
+        /// Maximimum number of orders we'll allow in a backtest.
+        /// </summary>
+        [JsonProperty(PropertyName = "iBacktestingMaxOrders")]
+        public int BacktestingMaxOrders { get; set; }
+
+        /// <summary>
         /// Limits the amount of data points per chart series. Applies only for backtesting
         /// </summary>
         [JsonProperty(PropertyName = "iMaximumDataPointsPerChartSeries")]
         public int MaximumDataPointsPerChartSeries;
+
+        /// <summary>
+        /// The amount seconds used for timeout limits
+        /// </summary>
+        [JsonProperty(PropertyName = "iSecondTimeOut")]
+        public int SecondTimeOut;
 
         /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
@@ -87,10 +99,12 @@ namespace QuantConnect.Packets
             TickLimit = 30;
             RamAllocation = 1024;
             BacktestLogLimit = 10000;
+            BacktestingMaxOrders = int.MaxValue;
             DailyLogLimit = 3000000;
             RemainingLogAllowance = 10000;
             BacktestingMaxInsights = 10000;
             MaximumDataPointsPerChartSeries = 4000;
+            SecondTimeOut = 300;
         }
 
         /// <summary>

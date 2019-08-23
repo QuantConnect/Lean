@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Securities;
 
@@ -65,22 +64,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var emitTimeUtc = offsetProvider.ConvertToUtc(data.EndTime);
             data.Time = data.Time.ExchangeRoundDownInTimeZone(configuration.Increment, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
             return new SubscriptionData(data, emitTimeUtc);
-        }
-
-        /// <summary>
-        /// Wraps an existing <see cref="IEnumerator{BaseData}"/> to produce an <see cref="IEnumerator{SubscriptionData}"/>.
-        /// </summary>
-        /// <param name="configuration">The subscription's configuration</param>
-        /// <param name="security">The subscription's security</param>
-        /// <param name="offsetProvider">The subscription's time zone offset provider</param>
-        /// <param name="enumerator">The underlying data enumerator</param>
-        /// <returns>A subscription data enumerator</returns>
-        public static IEnumerator<SubscriptionData> Enumerator(SubscriptionDataConfig configuration, Security security, TimeZoneOffsetProvider offsetProvider, IEnumerator<BaseData> enumerator)
-        {
-            while (enumerator.MoveNext())
-            {
-                yield return Create(configuration, security.Exchange.Hours, offsetProvider, enumerator.Current);
-            }
         }
     }
 }

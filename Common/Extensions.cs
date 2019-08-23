@@ -28,8 +28,11 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NodaTime;
 using Python.Runtime;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Data;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 
 namespace QuantConnect
@@ -39,6 +42,38 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
+        /// <summary>
+        /// Given a type will create a new instance using the parameterless constructor
+        /// and assert the type implements <see cref="BaseData"/>
+        /// </summary>
+        /// <remarks>One of the objectives of this method is to normalize the creation of the
+        /// BaseData instances while reducing code duplication</remarks>
+        public static BaseData GetBaseDataInstance(this Type type)
+        {
+            var objectActivator = ObjectActivator.GetActivator(type);
+            if (objectActivator == null)
+            {
+                throw new ArgumentException($"Data type \'{type.Name}\' missing parameterless constructor " +
+                    $"E.g. public {type.Name}() {{ }}");
+            }
+
+            var instance = objectActivator.Invoke(new object[] { type });
+            if(instance == null)
+            {
+                // shouldn't happen but just in case...
+                throw new ArgumentException($"Failed to create instance of type \'{type.Name}\'");
+            }
+
+            // we expect 'instance' to inherit BaseData in most cases so we use 'as' versus 'IsAssignableFrom'
+            // since it is slightly cheaper
+            var result = instance as BaseData;
+            if (result == null)
+            {
+                throw new ArgumentException($"Data type \'{type.Name}\' does not inherit required {nameof(BaseData)}");
+            }
+            return result;
+        }
+
         /// <summary>
         /// Helper method that will cast the provided <see cref="PyObject"/>
         /// to a T type and dispose of it.
@@ -1328,6 +1363,40 @@ namespace QuantConnect
                 locals.Dispose();
             }
             return false;
+        }
+
+        /// <summary>
+        /// Wraps the provided universe selection selector checking if it returned <see cref="Universe.Unchanged"/>
+        /// and returns it instead, else enumerates result as <see cref="IEnumerable{Symbol}"/>
+        /// </summary>
+        /// <remarks>This method is a work around for the fact that currently we can not create a delegate which returns
+        /// an <see cref="IEnumerable{Symbol}"/> from a python method returning an array, plus the fact that
+        /// <see cref="Universe.Unchanged"/> can not be cast to an array</remarks>
+        public static Func<T, IEnumerable<Symbol>> ConvertToUniverseSelectionSymbolDelegate<T>(this Func<T, object> selector)
+        {
+            return data =>
+            {
+                var result = selector(data);
+                return ReferenceEquals(result, Universe.Unchanged)
+                    ? Universe.Unchanged : ((object[])result).Select(x => (Symbol)x);
+            };
+        }
+
+        /// <summary>
+        /// Wraps the provided universe selection selector checking if it returned <see cref="Universe.Unchanged"/>
+        /// and returns it instead, else enumerates result as <see cref="IEnumerable{String}"/>
+        /// </summary>
+        /// <remarks>This method is a work around for the fact that currently we can not create a delegate which returns
+        /// an <see cref="IEnumerable{String}"/> from a python method returning an array, plus the fact that
+        /// <see cref="Universe.Unchanged"/> can not be cast to an array</remarks>
+        public static Func<T, IEnumerable<string>> ConvertToUniverseSelectionStringDelegate<T>(this Func<T, object> selector)
+        {
+            return data =>
+            {
+                var result = selector(data);
+                return ReferenceEquals(result, Universe.Unchanged)
+                    ? Universe.Unchanged : ((object[])result).Select(x => (string)x);
+            };
         }
 
         /// <summary>

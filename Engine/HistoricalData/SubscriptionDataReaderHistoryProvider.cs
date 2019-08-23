@@ -104,12 +104,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 SymbolProperties.GetDefault(Currencies.NullCurrency),
                 ErrorCurrencyConverter.Instance
             );
-            var mapFileResolver = config.SecurityType == SecurityType.Equity
-                ? _mapFileProvider.Get(config.Market)
-                : MapFileResolver.Empty;
 
-            if (config.SecurityType == SecurityType.Equity)
+            var mapFileResolver = MapFileResolver.Empty;
+            if (config.TickerShouldBeMapped())
             {
+                mapFileResolver = _mapFileProvider.Get(config.Market);
                 var mapFile = mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
                 config.MappedSymbol = mapFile.GetMappedSymbol(start, config.MappedSymbol);
             }
@@ -170,7 +169,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             });
 
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, start, end);
-            var subscriptionDataEnumerator = SubscriptionData.Enumerator(config, security, timeZoneOffsetProvider, reader);
+            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, reader);
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, start, end);
             return new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
         }

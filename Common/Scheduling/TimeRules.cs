@@ -190,7 +190,7 @@ namespace QuantConnect.Scheduling
             Security security;
             if (!_securities.TryGetValue(symbol, out security))
             {
-                throw new Exception(symbol.ToString() + " not found in portfolio. Request this data when initializing the algorithm.");
+                throw new KeyNotFoundException(symbol.ToString() + " not found in portfolio. Request this data when initializing the algorithm.");
             }
             return security;
         }

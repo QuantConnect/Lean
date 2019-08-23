@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
@@ -78,7 +79,7 @@ namespace QuantConnect
             }
             else
             {
-                throw new Exception("Chart.AddSeries(): Chart series name already exists");
+                throw new DuplicateNameException("Chart.AddSeries(): Chart series name already exists");
             }
         }
 

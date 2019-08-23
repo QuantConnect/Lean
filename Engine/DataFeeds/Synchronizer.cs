@@ -21,6 +21,7 @@ using NodaTime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -88,12 +89,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var previousEmitTime = DateTime.MaxValue;
 
+            var enumerator = SubscriptionSynchronizer
+                .Sync(SubscriptionManager.DataFeedSubscriptions, cancellationToken)
+                .GetEnumerator();
+            var previousWasTimePulse = false;
+            // this is a just in case flag to stop looping if time does not advance
+            var retried = false;
             while (!cancellationToken.IsCancellationRequested)
             {
                 TimeSlice timeSlice;
                 try
                 {
-                    timeSlice = SubscriptionSynchronizer.Sync(SubscriptionManager.DataFeedSubscriptions);
+                    if (!enumerator.MoveNext())
+                    {
+                        // the enumerator ended
+                        break;
+                    }
+                    timeSlice = enumerator.Current;
                 }
                 catch (Exception err)
                 {
@@ -105,21 +117,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // check for cancellation
-                if (cancellationToken.IsCancellationRequested) break;
+                if (timeSlice == null || cancellationToken.IsCancellationRequested) break;
 
                 // SubscriptionFrontierTimeProvider will return twice the same time if there are no more subscriptions or if Subscription.Current is null
-                if (timeSlice.Time != previousEmitTime)
+                if (timeSlice.Time != previousEmitTime || previousWasTimePulse)
                 {
                     previousEmitTime = timeSlice.Time;
+                    previousWasTimePulse = timeSlice.IsTimePulse;
+                    // if we emitted, clear retry flag
+                    retried = false;
                     yield return timeSlice;
                 }
                 else if (timeSlice.SecurityChanges == SecurityChanges.None)
                 {
-                    // there's no more data to pull off, we're done (frontier is max value and no security changes)
-                    break;
+                    // if the slice has data lets retry just once more... this could happen
+                    // with subscriptions added after initialize using algorithm.AddSecurity() API,
+                    // where the subscription start time is the current time loop (but should just happen once)
+                    if (!timeSlice.Slice.HasData || retried)
+                    {
+                        // there's no more data to pull off, we're done (frontier is max value and no security changes)
+                        break;
+                    }
+                    retried = true;
                 }
             }
 
+            enumerator.DisposeSafely();
             Log.Trace("Synchronizer.GetEnumerator(): Exited thread.");
         }
 

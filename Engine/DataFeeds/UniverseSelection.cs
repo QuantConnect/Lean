@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using QuantConnect.Benchmarks;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -41,6 +42,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly Dictionary<DateTime, Dictionary<Symbol, Security>> _pendingSecurityAdditions = new Dictionary<DateTime, Dictionary<Symbol, Security>>();
         private readonly PendingRemovalsManager _pendingRemovalsManager;
         private readonly CurrencySubscriptionDataConfigManager _currencySubscriptionDataConfigManager;
+        private bool _initializedSecurityBenchmark;
+        private bool _anyDoesNotHaveFundamentalDataWarningLogged;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -103,6 +106,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var fineCollection = new BaseDataCollection();
                     var dataProvider = new DefaultDataProvider();
 
+                    // Create a dictionary of CoarseFundamental keyed by Symbol that also has FineFundamental
+                    // Coarse raw data has SID collision on: CRHCY R735QTJ8XC9X
+                    var coarseData = universeData.Data.OfType<CoarseFundamental>()
+                        .Where(c => c.HasFundamentalData)
+                        .DistinctBy(c => c.Symbol)
+                        .ToDictionary(c => c.Symbol);
+
+                    // Remove selected symbols that does not have fine fundamental data
+                    var anyDoesNotHaveFundamentalData = false;
+                    selectSymbolsResult = selectSymbolsResult
+                        .Where(
+                            symbol =>
+                            {
+                                var result = coarseData.ContainsKey(symbol);
+                                anyDoesNotHaveFundamentalData |= !result;
+                                return result;
+                            }
+                        );
+
+                    if (!_anyDoesNotHaveFundamentalDataWarningLogged && anyDoesNotHaveFundamentalData)
+                    {
+                        _algorithm.Debug("Note: Your coarse selection filter was updated to exclude symbols without fine fundamental data. Make sure your coarse filter excludes symbols where HasFundamental is false.");
+                        _anyDoesNotHaveFundamentalDataWarningLogged = true;
+                    }
+
                     // use all available threads, the entire system is waiting for this to complete
                     var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
                     Parallel.ForEach(selectSymbolsResult, options, symbol =>
@@ -134,11 +162,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // in place for this function to return such data. The following lines are tightly coupled
                     // to the universeData dictionaries in SubscriptionSynchronizer and LiveTradingDataFeed and
                     // rely on reference semantics to work.
-
-                    // Coarse raw data has SID collision on: CRHCY R735QTJ8XC9X
-                    var coarseData = universeData.Data.OfType<CoarseFundamental>()
-                        .DistinctBy(c => c.Symbol)
-                        .ToDictionary(c => c.Symbol);
 
                     universeData.Data = new List<BaseData>();
                     foreach (var fine in fineCollection.Data.OfType<FineFundamental>())
@@ -336,9 +359,46 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="utcStart">The current date time in utc</param>
         /// <returns>Will return true if any subscription was added</returns>
-        public bool AddPendingCurrencyDataFeeds(DateTime utcStart)
+        public bool AddPendingInternalDataFeeds(DateTime utcStart)
         {
             var added = false;
+            if (!_initializedSecurityBenchmark)
+            {
+                _initializedSecurityBenchmark = true;
+
+                var securityBenchmark = _algorithm.Benchmark as SecurityBenchmark;
+                if (securityBenchmark != null)
+                {
+                    // we want to start from the previous tradable bar so the benchmark security
+                    // never has 0 price
+                    var previousTradableBar = Time.GetStartTimeForTradeBars(
+                        securityBenchmark.Security.Exchange.Hours,
+                        utcStart.ConvertFromUtc(securityBenchmark.Security.Exchange.TimeZone),
+                        _algorithm.LiveMode ? Time.OneMinute : Time.OneDay,
+                        1,
+                        false).ConvertToUtc(securityBenchmark.Security.Exchange.TimeZone);
+
+                    var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
+                        securityBenchmark.Security.Symbol,
+                        _algorithm.LiveMode ? Resolution.Minute : Resolution.Daily,
+                        isInternalFeed: true,
+                        fillForward: false).First();
+
+                    if (dataConfig != null)
+                    {
+                        added |= _dataManager.AddSubscription(new SubscriptionRequest(
+                            false,
+                            null,
+                            securityBenchmark.Security,
+                            dataConfig,
+                            previousTradableBar,
+                            _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone)));
+
+                        Log.Trace($"UniverseSelection.AddPendingInternalDataFeeds(): Adding internal benchmark data feed {dataConfig}");
+                    }
+                }
+            }
+
             if (_currencySubscriptionDataConfigManager.UpdatePendingSubscriptionDataConfigs())
             {
                 foreach (var subscriptionDataConfig in _currencySubscriptionDataConfigManager

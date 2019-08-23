@@ -23,15 +23,17 @@ namespace QuantConnect.Benchmarks
     /// </summary>
     public class SecurityBenchmark : IBenchmark
     {
-        private readonly Security _security;
+        /// <summary>
+        /// The benchmark security
+        /// </summary>
+        public Security Security { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityBenchmark"/> class
         /// </summary>
-        /// <param name="security">The security to use as the benchmark</param>
         public SecurityBenchmark(Security security)
         {
-            _security = security;
+            Security = security;
         }
 
         /// <summary>
@@ -42,7 +44,7 @@ namespace QuantConnect.Benchmarks
         /// in units of the account's currency.</returns>
         public decimal Evaluate(DateTime time)
         {
-            return _security.Price * _security.QuoteCurrency.ConversionRate;
+            return Security.Price * Security.QuoteCurrency.ConversionRate;
         }
     }
 }

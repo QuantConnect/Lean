@@ -98,7 +98,7 @@ namespace QuantConnect.Orders
                 type = Type.GetType(typeName);
                 if (type == null)
                 {
-                    throw new Exception($"Unable to find the type: {typeName}");
+                    throw new InvalidOperationException($"Unable to find the type: {typeName}");
                 }
             }
             else
@@ -110,7 +110,7 @@ namespace QuantConnect.Orders
             var constructor = type.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[0], null);
             if (constructor == null)
             {
-                throw new Exception($"Unable to find a constructor for type: {type.FullName}");
+                throw new NotImplementedException($"Unable to find a constructor for type: {type.FullName}");
             }
 
             var timeInForce = constructor.Invoke(null);

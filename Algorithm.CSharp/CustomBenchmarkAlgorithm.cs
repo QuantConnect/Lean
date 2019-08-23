@@ -13,7 +13,10 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -22,7 +25,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="benchmarks" />
-    public class CustomBenchmarkAlgorithm : QCAlgorithm
+    public class CustomBenchmarkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -35,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Find more symbols here: http://quantconnect.com/data
             AddSecurity(SecurityType.Equity, "SPY", Resolution.Second);
 
-            SetBenchmark("SPY");
+            SetBenchmark("AAPL");
         }
 
         /// <summary>
@@ -49,6 +52,48 @@ namespace QuantConnect.Algorithm.CSharp
                 SetHoldings("SPY", 1);
                 Debug("Purchased Stock");
             }
+
+            Symbol symbol;
+            if (SymbolCache.TryGetSymbol("AAPL", out symbol))
+            {
+                throw new Exception("Benchmark Symbol is not expected to be added to the Symbol cache");
+            }
         }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Trades", "1"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "233.235%"},
+            {"Drawdown", "2.200%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "1.663%"},
+            {"Sharpe Ratio", "4.076"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0.533"},
+            {"Beta", "0.287"},
+            {"Annual Standard Deviation", "0.173"},
+            {"Annual Variance", "0.03"},
+            {"Information Ratio", "0.518"},
+            {"Tracking Error", "0.198"},
+            {"Treynor Ratio", "2.464"},
+            {"Total Fees", "$3.26"}
+        };
     }
 }

@@ -184,6 +184,15 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Indicates if there is support for mapping
+        /// </summary>
+        /// <returns>True indicates mapping should be used</returns>
+        public virtual bool RequiresMapping()
+        {
+            return Symbol.SecurityType == SecurityType.Equity || Symbol.SecurityType == SecurityType.Option;
+        }
+
+        /// <summary>
         /// Updates this base data with a new trade
         /// </summary>
         /// <param name="lastTrade">The price of the last trade</param>

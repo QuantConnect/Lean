@@ -105,6 +105,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
             Assert.AreEqual(2, symbolUniverse.TotalLookupCalls);
+
+            enumerator.Dispose();
         }
 
         public class TestDataQueueUniverseProvider : IDataQueueUniverseProvider

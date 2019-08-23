@@ -38,8 +38,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Compression", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Api", "Api\QuantConnect.Api.csproj", "{C5D44209-49A0-4505-A870-043C5EF5FDDF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Views", "UserInterface\QuantConnect.Views.csproj", "{C68BEEED-B0C0-4002-94D4-1E871133D02A}"
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "QuantConnect.Algorithm.FSharp", "Algorithm.FSharp\QuantConnect.Algorithm.FSharp.fsproj", "{7702711A-0C09-40D4-B151-E308D1520738}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.Algorithm.CSharp", "Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj", "{39A81C16-A1E8-425E-A8F2-1433ADB80228}"
@@ -160,14 +158,6 @@ Global
 		{C5D44209-49A0-4505-A870-043C5EF5FDDF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C5D44209-49A0-4505-A870-043C5EF5FDDF}.Release|x64.ActiveCfg = Release|x64
 		{C5D44209-49A0-4505-A870-043C5EF5FDDF}.Release|x64.Build.0 = Release|x64
-		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Debug|Any CPU.ActiveCfg = Release|Any CPU
-		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Debug|Any CPU.Build.0 = Release|Any CPU
-		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Debug|x64.ActiveCfg = Debug|x64
-		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Debug|x64.Build.0 = Debug|x64
-		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Release|x64.ActiveCfg = Release|x64
-		{C68BEEED-B0C0-4002-94D4-1E871133D02A}.Release|x64.Build.0 = Release|x64
 		{7702711A-0C09-40D4-B151-E308D1520738}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7702711A-0C09-40D4-B151-E308D1520738}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{7702711A-0C09-40D4-B151-E308D1520738}.Release|Any CPU.ActiveCfg = Release|Any CPU

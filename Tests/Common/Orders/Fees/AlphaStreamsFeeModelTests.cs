@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             var fee = feeModel.GetOrderFee(parameters);
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            var expected = 0.004m * Math.Abs(security.Price * quantity);
+            var expected = 0.004m * security.Price * quantity;
             Assert.AreEqual(expected, fee.Value.Amount);
         }
 

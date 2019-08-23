@@ -40,39 +40,45 @@ class CustomIndicatorAlgorithm(QCAlgorithm):
         # Create a QuantConnect indicator and a python custom indicator for comparison
         self.sma = self.SMA("SPY", 60, Resolution.Minute)
         self.custom = CustomSimpleMovingAverage('custom', 60)
+
+        # The python custom class must inherit from PythonIndicator to enable Updated event handler
+        self.custom.Updated += self.CustomUpdated
+
+        self.customWindow = RollingWindow[IndicatorDataPoint](5)
         self.RegisterIndicator("SPY", self.custom, Resolution.Minute)
+        self.PlotIndicator('cSMA', self.custom)
+
+    def CustomUpdated(self, sender, updated):
+        self.customWindow.Add(updated)
 
     def OnData(self, data):
         if not self.Portfolio.Invested:
             self.SetHoldings("SPY", 1)
 
         if self.Time.second == 0:
-            self.Log("   sma -> IsReady: {0}. Time: {1}. Value: {2}".format(self.sma.IsReady, self.sma.Current.Time, self.sma.Current.Value))
-            self.Log(str(self.custom))
+            self.Log(f"   sma -> IsReady: {self.sma.IsReady}. Value: {self.sma.Current.Value}")
+            self.Log(f"custom -> IsReady: {self.custom.IsReady}. Value: {self.custom.Value}")
 
         # Regression test: test fails with an early quit
         diff = abs(self.custom.Value - self.sma.Current.Value)
-        if diff > 1e-25:
-            self.Quit("Quit: indicators difference is {0}".format(diff))
+        if diff > 1e-10:
+            self.Quit(f"Quit: indicators difference is {diff}")
 
+    def OnEndOfAlgorithm(self):
+        for item in self.customWindow:
+            self.Log(f'{item}')
 
 # Python implementation of SimpleMovingAverage.
 # Represents the traditional simple moving average indicator (SMA).
-class CustomSimpleMovingAverage:
+class CustomSimpleMovingAverage(PythonIndicator):
     def __init__(self, name, period):
         self.Name = name
-        self.Time = datetime.min
         self.Value = 0
-        self.IsReady = False
         self.queue = deque(maxlen=period)
-
-    def __repr__(self):
-        return "{0} -> IsReady: {1}. Time: {2}. Value: {3}".format(self.Name, self.IsReady, self.Time, self.Value)
 
     # Update method is mandatory
     def Update(self, input):
-        self.queue.appendleft(input.Close)
+        self.queue.appendleft(input.Value)
         count = len(self.queue)
-        self.Time = input.EndTime
         self.Value = sum(self.queue) / count
-        self.IsReady = count == self.queue.maxlen
+        return count == self.queue.maxlen

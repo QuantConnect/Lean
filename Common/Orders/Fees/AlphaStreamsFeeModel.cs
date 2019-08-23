@@ -60,9 +60,17 @@ namespace QuantConnect.Orders.Fees
                 );
             }
 
-            var value = security.Type == SecurityType.Equity || security.Type == SecurityType.Forex
-                ? Math.Abs(order.GetValue(security))
-                : order.AbsoluteQuantity;
+            var value = order.AbsoluteQuantity;
+
+            switch (security.Type)
+            {
+                case SecurityType.Equity:
+                    value = order.GetValue(security);
+                    break;
+                case SecurityType.Forex:
+                    value = Math.Abs(order.GetValue(security));
+                    break;
+            }
 
             return new OrderFee(new CashAmount(feeRate * value, Currencies.USD));
         }

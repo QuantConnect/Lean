@@ -151,7 +151,7 @@ namespace QuantConnect
 
             if (throwOnFailure)
             {
-                throw new Exception(string.Format("Unable to save file: {0} after {1} attempts.", _filename, attempts));
+                throw new InvalidOperationException(string.Format("Unable to save file: {0} after {1} attempts.", _filename, attempts));
             }
         }
     }

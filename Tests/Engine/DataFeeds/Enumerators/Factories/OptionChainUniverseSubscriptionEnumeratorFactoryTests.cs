@@ -163,6 +163,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.IsNotNull(data);
             Assert.AreEqual(2, data.Data.Count);
             Assert.IsNotNull(data.Underlying);
+
+            enumerator.Dispose();
         }
 
         public class TestDataQueueUniverseProvider : IDataQueueUniverseProvider

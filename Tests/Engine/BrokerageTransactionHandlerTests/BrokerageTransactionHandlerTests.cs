@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Moq;
 using NodaTime;
 using NUnit.Framework;
@@ -32,13 +31,14 @@ using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.Setup;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 {
     [TestFixture]
-    class BrokerageTransactionHandlerTests
+    public class BrokerageTransactionHandlerTests
     {
         private const string Ticker = "EURUSD";
         private TestAlgorithm _algorithm;
@@ -251,6 +251,35 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(_algorithm.OrderEvents.Count(orderEvent => orderEvent.Status == OrderStatus.Submitted), 1);
             Assert.AreEqual(_algorithm.OrderEvents.Count(orderEvent => orderEvent.Status == OrderStatus.CancelPending), 1);
             Assert.AreEqual(_algorithm.OrderEvents.Count(orderEvent => orderEvent.Status == OrderStatus.Canceled), 1);
+        }
+
+        [TestCase(0.9, 1.123456789, 1.12)]
+        [TestCase(0.9, 0.987654321, 0.9877)]
+        [TestCase(0.9, 0.999999999, 1)]
+        [TestCase(0.9, 1, 1)]
+        [TestCase(0.9, 1.000000001, 1)]
+        [TestCase(1.1, 1.123456789, 1.12)]
+        [TestCase(1.1, 0.987654321, 0.9877)]
+        [TestCase(1.1, 0.999999999, 1)]
+        [TestCase(1.1, 1, 1)]
+        [TestCase(1.1, 1.000000001, 1)]
+        public void RoundsEquityLimitOrderPricesCorrectly(decimal securityPrice, decimal orderPrice, decimal expected)
+        {
+            var algo = new QCAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
+            algo.SetLiveMode(true);
+
+            var security = algo.AddEquity("YGTY");
+            security.SetMarketPrice(new Tick { Value = securityPrice });
+
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            var brokerage = new Mock<IBrokerage>();
+            transactionHandler.Initialize(algo, brokerage.Object, null);
+
+            var order = new LimitOrder(security.Symbol, 1000, orderPrice, DateTime.UtcNow);
+            transactionHandler.RoundOrderPrices(order, security);
+
+            Assert.AreEqual(expected, order.LimitPrice);
         }
 
         [Test]
@@ -760,10 +789,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         {
             // Initializes the transaction handler
             var transactionHandler = new TestBrokerageTransactionHandler();
-            var broker = new Mock<IBrokerage>();
+            var brokerage = new TestBrokerage();
 
-            broker.Setup(m => m.GetCashBalance()).Returns(new List<CashAmount> { new CashAmount(10, Currencies.USD) });
-            transactionHandler.Initialize(_algorithm, broker.Object, new BacktestingResultHandler());
+            transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
             _algorithm.SetLiveMode(true);
 
             var lastSyncDateBefore = transactionHandler.GetLastSyncDate();
@@ -780,7 +808,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var lastSyncDateAfterAgain = transactionHandler.GetLastSyncDate();
             Assert.AreEqual(lastSyncDateAfter, lastSyncDateAfterAgain);
 
-            broker.Verify(m => m.GetCashBalance(), Times.Once);
+            Assert.AreEqual(1, brokerage.GetCashBalanceCallCount);
         }
 
         [Test]
@@ -788,10 +816,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         {
             // Initializes the transaction handler
             var transactionHandler = new TestBrokerageTransactionHandler();
-            var broker = new Mock<IBrokerage>();
+            var brokerage = new TestBrokerage();
 
-            broker.Setup(m => m.GetCashBalance()).Returns(new List<CashAmount> { new CashAmount(10, Currencies.USD) });
-            transactionHandler.Initialize(_algorithm, broker.Object, new BacktestingResultHandler());
+            transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
             _algorithm.SetLiveMode(true);
 
             var lastSyncDateBefore = transactionHandler.GetLastSyncDate();
@@ -812,7 +839,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             transactionHandler.ProcessSynchronousEvents();
 
-            broker.Verify(m => m.GetCashBalance(), Times.Exactly(2));
+            Assert.AreEqual(2, brokerage.GetCashBalanceCallCount);
         }
 
         [Test]
@@ -820,14 +847,12 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         {
             // Initializes the transaction handler
             var transactionHandler = new TestBrokerageTransactionHandler();
-            var broker = new Mock<IBrokerage>();
-
-            broker.Setup(m => m.GetCashBalance()).Returns(new List<CashAmount> { new CashAmount(10, Currencies.USD) });
+            var brokerage = new TestBrokerage();
 
             // This is 2 am New York
             transactionHandler.TestCurrentTimeUtc = new DateTime(1, 1, 1, 7, 0, 0);
 
-            transactionHandler.Initialize(_algorithm, broker.Object, new BacktestingResultHandler());
+            transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
             _algorithm.SetLiveMode(true);
 
             var lastSyncDateBefore = transactionHandler.GetLastSyncDate();
@@ -840,7 +865,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             Assert.AreEqual(lastSyncDateAfter, lastSyncDateBefore);
 
-            broker.Verify(m => m.GetCashBalance(), Times.Exactly(0));
+            Assert.AreEqual(0, brokerage.GetCashBalanceCallCount);
         }
 
         [Test]
@@ -850,6 +875,21 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var ib = new Mock<IBrokerage>();
             ib.Setup(m => m.GetCashBalance()).Callback(() => { throw new Exception("Connection error in CashBalance"); });
             ib.Setup(m => m.IsConnected).Returns(false);
+            ib.Setup(m => m.ShouldPerformCashSync(It.IsAny<DateTime>())).Returns(true);
+            ib.Setup(m => m.PerformCashSync(It.IsAny<IAlgorithm>(), It.IsAny<DateTime>(), It.IsAny<Func<TimeSpan>>()))
+                .Returns(
+                    () =>
+                    {
+                        try
+                        {
+                            ib.Object.GetCashBalance();
+                        }
+                        catch (Exception)
+                        {
+                            return false;
+                        }
+                        return true;
+                    });
 
             var brokerage = ib.Object;
             Assert.IsFalse(brokerage.IsConnected);
@@ -992,6 +1032,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
         internal class TestBrokerageTransactionHandler : BrokerageTransactionHandler
         {
+            private IBrokerageCashSynchronizer _brokerage;
+
             public int CancelPendingOrdersSize => _cancelPendingOrders.GetCancelPendingOrdersSize;
 
             public TimeSpan TestTimeSinceLastFill = TimeSpan.FromDays(1);
@@ -1002,14 +1044,26 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             protected override TimeSpan TimeSinceLastFill => TestTimeSinceLastFill;
 
+            public override void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler)
+            {
+                _brokerage = brokerage;
+
+                base.Initialize(algorithm, brokerage, resultHandler);
+            }
+
             public DateTime GetLastSyncDate()
             {
-                return LastSyncDate;
+                return _brokerage.LastSyncDateTimeUtc.ConvertFromUtc(TimeZones.NewYork);
             }
 
             protected override void InitializeTransactionThread()
             {
                 // nop
+            }
+
+            public new void RoundOrderPrices(Order order, Security security)
+            {
+                base.RoundOrderPrices(order, security);
             }
         }
     }

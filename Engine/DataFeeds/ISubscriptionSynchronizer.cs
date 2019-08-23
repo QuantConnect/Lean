@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -34,6 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// managed internally and dependent upon previous synchronization operations.
         /// </summary>
         /// <param name="subscriptions">The subscriptions to sync</param>
-        TimeSlice Sync(IEnumerable<Subscription> subscriptions);
+        /// <param name="cancellationToken">The cancellation token to stop enumeration</param>
+        IEnumerable<TimeSlice> Sync(IEnumerable<Subscription> subscriptions, CancellationToken cancellationToken);
     }
 }

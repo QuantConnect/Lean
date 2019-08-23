@@ -77,7 +77,7 @@ namespace QuantConnect.Brokerages
                     return _maxLeverage;
 
                 default:
-                    throw new Exception($"Invalid security type: {security.Type}");
+                    throw new ArgumentException($"Invalid security type: {security.Type}", nameof(security));
             }
         }
 

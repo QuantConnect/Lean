@@ -213,6 +213,17 @@ namespace QuantConnect.Tests.Algorithm
             Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("SCF/CME_CL1_ON", quandlConsolidator));
         }
 
+        [Test]
+        public void AddingInvalidDataTypeThrows()
+        {
+            var qcAlgorithm = new QCAlgorithm();
+            qcAlgorithm.SubscriptionManager.SetDataManager(new DataManagerStub(qcAlgorithm));
+            Assert.Throws<ArgumentException>(() => qcAlgorithm.AddData(typeof(double),
+                "double",
+                Resolution.Daily,
+                DateTimeZone.Utc));
+        }
+
         private static SubscriptionDataConfig GetMatchingSubscription(Security security, Type type)
         {
             // find a subscription matchin the requested type with a higher resolution than requested

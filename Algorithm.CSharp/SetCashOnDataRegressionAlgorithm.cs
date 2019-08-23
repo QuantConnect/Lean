@@ -65,7 +65,10 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception("Expected 'EUR' Cash to be fully set");
                 }
 
-                var eurUsdSubscription = SubscriptionManager.Subscriptions.Single(x => x.Symbol.Value == "EURUSD");
+                var eurUsdSubscription = SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM),
+                        includeInternalConfigs: true)
+                    .Single();
                 if (!eurUsdSubscription.IsInternalFeed)
                 {
                     throw new Exception("Unexpected not internal 'EURUSD' Subscription");
@@ -105,13 +108,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.209"},
-            {"Beta", "-5.052"},
+            {"Alpha", "0.126"},
+            {"Beta", "0.981"},
             {"Annual Standard Deviation", "0.156"},
             {"Annual Variance", "0.024"},
-            {"Information Ratio", "0.748"},
-            {"Tracking Error", "0.156"},
-            {"Treynor Ratio", "-0.026"},
+            {"Information Ratio", "5.281"},
+            {"Tracking Error", "0.024"},
+            {"Treynor Ratio", "0.135"},
             {"Total Fees", "$2.60"}
         };
     }

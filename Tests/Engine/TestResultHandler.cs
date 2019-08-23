@@ -19,9 +19,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
@@ -79,7 +77,6 @@ namespace QuantConnect.Tests.Engine
         public void Initialize(AlgorithmNodePacket job,
             IMessagingHandler messagingHandler,
             IApi api,
-            ISetupHandler setupHandler,
             ITransactionHandler transactionHandler)
         {
             _job = job;
@@ -182,7 +179,7 @@ namespace QuantConnect.Tests.Engine
             }
         }
 
-        public void SetAlgorithm(IAlgorithm algorithm)
+        public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
         }
 

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace QuantConnect
 {
@@ -49,7 +50,7 @@ namespace QuantConnect
         {
             Symbol symbol;
             if (TryGetSymbol(ticker, out symbol)) return symbol;
-            throw new Exception(string.Format("We were unable to locate the ticker '{0}'.", ticker));
+            throw new KeyNotFoundException(string.Format("We were unable to locate the ticker '{0}'.", ticker));
         }
 
         /// <summary>

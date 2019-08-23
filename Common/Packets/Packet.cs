@@ -150,6 +150,9 @@ namespace QuantConnect.Packets
         RegressionAlgorithm,
 
         /// Packet containing a heartbeat
-        AlphaHeartbeat
+        AlphaHeartbeat,
+
+        /// Used when debugging to send status updates
+        DebuggingStatus
     }
 }

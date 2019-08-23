@@ -5,7 +5,7 @@ Before we enable python support, follow the [installation instructions](https://
 
 ### Install Python 3.6:
 #### [Windows](https://github.com/QuantConnect/Lean#windows)
-1. Use the Windows x86-64 MSI installer from [python.org](https://www.python.org/downloads/release/python-366/) or [Anaconda](https://repo.anaconda.com/archive/Anaconda3-5.2.0-Windows-x86_64.exe) for Windows installer
+1. Use the Windows x86-64 MSI **Python 3.6.6** installer from [python.org](https://www.python.org/downloads/release/python-366/) or [Anaconda](https://repo.anaconda.com/archive/Anaconda3-5.2.0-Windows-x86_64.exe) for Windows installer.
 2. When asked to select the features to be installed, make sure you select "Add python.exe to Path"
 3. `[Optional]` Create `PYTHONHOME` system variables which value must be the location of your python installation (e.g. `C:\Python36amd64` or `C:\Anaconda3`):
    1. Right mouse button on My Computer. Click Properties.
@@ -14,6 +14,7 @@ Before we enable python support, follow the [installation instructions](https://
         - Name of the variable: `PYTHONHOME`. 
         - Value of the variable: python installation path.
 4. Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
+5. Reboot computer to ensure changes are propogated. 
 
 #### [macOS](https://github.com/QuantConnect/Lean#macos)
 1. Use the macOS x86-64 package installer from [Anaconda](https://repo.anaconda.com/archive/Anaconda3-5.2.0-MacOSX-x86_64.pkg) and follow "[Installing on macOS](https://docs.anaconda.com/anaconda/install/mac-os)" instructions from Anaconda documentation page.

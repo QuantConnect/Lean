@@ -75,6 +75,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(expectedValue, tradeBar.High);
             Assert.AreEqual(expectedValue, tradeBar.Low);
             Assert.AreEqual(expectedValue, tradeBar.Value);
+
+            enumerator.Dispose();
         }
 
         [Test]
@@ -113,6 +115,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(expectedValue, quoteBar.Ask.Close);
             Assert.AreEqual(expectedValue, quoteBar.Ask.High);
             Assert.AreEqual(expectedValue, quoteBar.Ask.Low);
+
+            enumerator.Dispose();
         }
 
         [Test]
@@ -135,6 +139,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.Less(expectedValue, 10);
             Assert.AreEqual(expectedValue, tick.Price);
             Assert.AreEqual(expectedValue, tick.Value);
+
+            enumerator.Dispose();
         }
 
         [Test]
@@ -154,6 +160,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var tick = enumerator.Current as Tick;
             Assert.AreEqual(10, tick.Price);
             Assert.AreEqual(10, tick.Value);
+
+            enumerator.Dispose();
         }
 
         [Test]
@@ -172,6 +180,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             _rawDataEnumerator.MoveNextReturnValue = false;
             Assert.IsFalse(enumerator.MoveNext());
             Assert.AreEqual(_rawDataEnumerator.CurrentValue, enumerator.Current);
+
+            enumerator.Dispose();
         }
 
         [Test]
@@ -184,6 +194,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             _rawDataEnumerator.CurrentValue = null;
             Assert.IsTrue(enumerator.MoveNext());
             Assert.IsNull(enumerator.Current);
+
+            enumerator.Dispose();
         }
 
         [Test]
@@ -240,6 +252,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(expectedFactor3, _config.PriceScaleFactor);
             Assert.AreEqual(10 * expectedFactor3, tick3.Price);
             Assert.AreEqual(10 * expectedFactor3, tick3.Value);
+
+            enumerator.Dispose();
         }
 
         private class RawDataEnumerator : IEnumerator<BaseData>
@@ -266,7 +280,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             }
             public void Dispose()
             {
-                throw new NotImplementedException();
             }
         }
     }

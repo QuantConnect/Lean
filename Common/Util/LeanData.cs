@@ -60,17 +60,46 @@ namespace QuantConnect.Util
                     {
                         case Resolution.Tick:
                             var tick = (Tick) data;
-                            return ToCsv(milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
-
+                            if (tick.TickType == TickType.Trade)
+                            {
+                                return ToCsv(milliseconds, Scale(tick.LastPrice), tick.Quantity, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                            }
+                            if (tick.TickType == TickType.Quote)
+                            {
+                                return ToCsv(milliseconds, Scale(tick.BidPrice), tick.BidSize, Scale(tick.AskPrice), tick.AskSize, tick.Exchange, tick.SaleCondition, tick.Suspicious ? "1" : "0");
+                            }
+                            break;
                         case Resolution.Minute:
                         case Resolution.Second:
-                            var bar = (TradeBar) data;
-                            return ToCsv(milliseconds, Scale(bar.Open), Scale(bar.High), Scale(bar.Low), Scale(bar.Close), bar.Volume);
+                            var tradeBar = data as TradeBar;
+                            if (tradeBar != null)
+                            {
+                                return ToCsv(milliseconds, Scale(tradeBar.Open), Scale(tradeBar.High), Scale(tradeBar.Low), Scale(tradeBar.Close), tradeBar.Volume);
+                            }
+                            var quoteBar = data as QuoteBar;
+                            if (quoteBar != null)
+                            {
+                                return ToCsv(milliseconds,
+                                    ToScaledCsv(quoteBar.Bid), quoteBar.LastBidSize,
+                                    ToScaledCsv(quoteBar.Ask), quoteBar.LastAskSize);
+                            }
+                            break;
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var bigBar = (TradeBar) data;
-                            return ToCsv(longTime, Scale(bigBar.Open), Scale(bigBar.High), Scale(bigBar.Low), Scale(bigBar.Close), bigBar.Volume);
+                            var bigTradeBar = data as TradeBar;
+                            if (bigTradeBar != null)
+                            {
+                                return ToCsv(longTime, Scale(bigTradeBar.Open), Scale(bigTradeBar.High), Scale(bigTradeBar.Low), Scale(bigTradeBar.Close), bigTradeBar.Volume);
+                            }
+                            var bigQuoteBar = data as QuoteBar;
+                            if (bigQuoteBar != null)
+                            {
+                                return ToCsv(longTime,
+                                    ToScaledCsv(bigQuoteBar.Bid), bigQuoteBar.LastBidSize,
+                                    ToScaledCsv(bigQuoteBar.Ask), bigQuoteBar.LastAskSize);
+                            }
+                            break;
                     }
                     break;
 
@@ -79,8 +108,10 @@ namespace QuantConnect.Util
                     {
                         case Resolution.Tick:
                             var tick = data as Tick;
-                            if (tick == null) throw new NullReferenceException("Cryto tick could not be created");
-
+                            if (tick == null)
+                            {
+                                throw new ArgumentException("Cryto tick could not be created", nameof(data));
+                            }
                             if (tick.TickType == TickType.Trade)
                             {
                                 return ToCsv(milliseconds, tick.LastPrice, tick.Quantity);
@@ -104,7 +135,7 @@ namespace QuantConnect.Util
                             {
                                 return ToCsv(milliseconds, tradeBar.Open, tradeBar.High, tradeBar.Low, tradeBar.Close, tradeBar.Volume);
                             }
-                            throw new NullReferenceException("Cryto minute/second bar could not be created");
+                            throw new ArgumentException("Cryto minute/second bar could not be created", nameof(data));
 
                         case Resolution.Hour:
                         case Resolution.Daily:
@@ -125,7 +156,7 @@ namespace QuantConnect.Util
                                              bigTradeBar.Close,
                                              bigTradeBar.Volume);
                             }
-                            throw new NullReferenceException("Cryto hour/daily bar could not be created");
+                            throw new ArgumentException("Cryto hour/daily bar could not be created", nameof(data));
                     }
                     break;
                 case SecurityType.Forex:
@@ -134,13 +165,19 @@ namespace QuantConnect.Util
                     {
                         case Resolution.Tick:
                             var tick = data as Tick;
-                            if (tick == null) throw new NullReferenceException("tick");
+                            if (tick == null)
+                            {
+                                throw new ArgumentException("Expected data of type 'Tick'", nameof(data));
+                            }
                             return ToCsv(milliseconds, tick.BidPrice, tick.AskPrice);
 
                         case Resolution.Second:
                         case Resolution.Minute:
                             var bar = data as QuoteBar;
-                            if (bar == null) throw new NullReferenceException("bar");
+                            if (bar == null)
+                            {
+                                throw new ArgumentException("Expected data of type 'QuoteBar'", nameof(data));
+                            }
                             return ToCsv(milliseconds,
                                 ToNonScaledCsv(bar.Bid), bar.LastBidSize,
                                 ToNonScaledCsv(bar.Ask), bar.LastAskSize);
@@ -148,7 +185,10 @@ namespace QuantConnect.Util
                         case Resolution.Hour:
                         case Resolution.Daily:
                             var bigBar = data as QuoteBar;
-                            if (bigBar == null) throw new NullReferenceException("big bar");
+                            if (bigBar == null)
+                            {
+                                throw new ArgumentException("Expected data of type 'QuoteBar'", nameof(data));
+                            }
                             return ToCsv(longTime,
                                 ToNonScaledCsv(bigBar.Bid), bigBar.LastBidSize,
                                 ToNonScaledCsv(bigBar.Ask), bigBar.LastAskSize);

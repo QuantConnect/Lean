@@ -122,19 +122,25 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void RegisterPythonCustomIndicatorProperly()
         {
+            const string code = @"
+class GoodCustomIndicator :
+    def __init__(self):
+        self.IsReady = True
+        self.Value = 0
+    def Update(self, input):
+        self.Value = input.Value
+        return True
+class BadCustomIndicator:
+    def __init__(self):
+        self.IsReady = True
+        self.Value = 0
+    def Updat(self, input):
+        self.Value = input.Value
+        return True";
+
             using (Py.GIL())
             {
-                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(),
-                    "class GoodCustomIndicator:\n" +
-                    "    def __init__(self):\n" +
-                    "        pass\n" +
-                    "    def Update(self, input):\n" +
-                    "        return input\n" +
-                    "class BadCustomIndicator:\n" +
-                    "    def __init__(self):\n" +
-                    "        pass\n" +
-                    "    def Updat(self, input):\n" +
-                    "        return input");
+                var module = PythonEngine.ModuleFromString(Guid.NewGuid().ToString(), code);
 
                 var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
                 Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, goodIndicator, Resolution.Minute));
@@ -143,14 +149,15 @@ namespace QuantConnect.Tests.Algorithm
                 Assert.AreEqual(1, actual);
 
                 var badIndicator = module.GetAttr("BadCustomIndicator").Invoke();
-                Assert.Throws<ArgumentException>(() => _algorithm.RegisterIndicator(_spy, badIndicator, Resolution.Minute));
+                Assert.Throws<NotImplementedException>(() => _algorithm.RegisterIndicator(_spy, badIndicator, Resolution.Minute));
             }
         }
 
         [Test]
         public void RegistersIndicatorProperlyPythonScript()
         {
-            var code = @"from clr import AddReference
+            const string code = @"
+from clr import AddReference
 AddReference('System')
 AddReference('QuantConnect.Algorithm')
 AddReference('QuantConnect.Indicators')

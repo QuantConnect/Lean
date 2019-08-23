@@ -20,9 +20,11 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Policy;
+using Python.Runtime;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
+using QuantConnect.Configuration;
 using QuantConnect.Python;
 using QuantConnect.Util;
 
@@ -34,6 +36,9 @@ namespace QuantConnect.AlgorithmFactory
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class Loader : MarshalByRefObject
     {
+        // True if we are in a debugging session
+        private readonly bool _debugging;
+
         // Defines the maximum amount of time we will allow for instantiating an instance of IAlgorithm
         private readonly TimeSpan _loaderTimeLimit;
 
@@ -70,13 +75,14 @@ namespace QuantConnect.AlgorithmFactory
         /// Creates a new loader with a 10 second maximum load time that forces exactly one derived type to be found
         /// </summary>
         public Loader()
-            : this(Language.CSharp, TimeSpan.FromSeconds(10), names => names.SingleOrDefault())
+            : this(false, Language.CSharp, TimeSpan.FromSeconds(10), names => names.SingleOrDefault())
         {
         }
 
         /// <summary>
         /// Creates a new loader with the specified configuration
         /// </summary>
+        /// <param name="debugging">True if we are debugging</param>
         /// <param name="language">Which language are we trying to load</param>
         /// <param name="loaderTimeLimit">
         /// Used to limit how long it takes to create a new instance
@@ -89,8 +95,9 @@ namespace QuantConnect.AlgorithmFactory
         /// that's what this function does, it picks the correct type from the list of types found within the assembly.
         /// </param>
         /// <param name="workerThread">The worker thread instance the loader should use</param>
-        public Loader(Language language, TimeSpan loaderTimeLimit, Func<List<string>, string> multipleTypeNameResolverFunction, WorkerThread workerThread = null)
+        public Loader(bool debugging, Language language, TimeSpan loaderTimeLimit, Func<List<string>, string> multipleTypeNameResolverFunction, WorkerThread workerThread = null)
         {
+            _debugging = debugging;
             _language = language;
             _workerThread = workerThread;
             if (multipleTypeNameResolverFunction == null)
@@ -159,28 +166,20 @@ namespace QuantConnect.AlgorithmFactory
             var pythonFile = new FileInfo(assemblyPath);
             var moduleName = pythonFile.Name.Replace(".pyc", "").Replace(".py", "");
 
-            // Set the python path for loading python algorithms.
-            var pythonPath = new List<string>
-            {
-                pythonFile.Directory.FullName,
-                new DirectoryInfo(Environment.CurrentDirectory).FullName,
-            };
-            
-            // Don't include an empty environment variable in pythonPath, otherwise the PYTHONPATH
-            // environment variable won't be used in the module import process
-            var pythonPathEnvironmentVariable = Environment.GetEnvironmentVariable("PYTHONPATH");
-            if (!string.IsNullOrEmpty(pythonPathEnvironmentVariable))
-            {
-                pythonPath.Add(pythonPathEnvironmentVariable);
-            }
-
-            Environment.SetEnvironmentVariable("PYTHONPATH", string.Join(OS.IsLinux ? ":" : ";", pythonPath));
-
             try
             {
                 PythonInitializer.Initialize();
 
                 algorithmInstance = new AlgorithmPythonWrapper(moduleName);
+
+                // we need stdout for debugging
+                if (!_debugging && Config.GetBool("mute-python-library-logging", true))
+                {
+                    using (Py.GIL())
+                    {
+                        PythonEngine.Exec("import os, sys; sys.stdout = open(os.devnull, 'w')");
+                    }
+                }
             }
             catch (Exception e)
             {
@@ -240,12 +239,6 @@ namespace QuantConnect.AlgorithmFactory
                     Log.Trace("Loader.TryCreateILAlgorithm(): Loading debug information with algorithm");
                     var assemblyBytes = File.ReadAllBytes(assemblyPath);
                     assembly = Assembly.Load(assemblyBytes, debugInformationBytes);
-                }
-                if (assembly == null)
-                {
-                    errorMessage = "Assembly is null.";
-                    Log.Error("Loader.TryCreateILAlgorithm(): Assembly is null");
-                    return false;
                 }
 
                 //Get the list of extention classes in the library:
@@ -315,7 +308,18 @@ namespace QuantConnect.AlgorithmFactory
                 }
                 catch (ReflectionTypeLoadException e)
                 {
-                    assemblyTypes = e.Types;
+                    // We may want to exclude possible null values
+                    // See https://stackoverflow.com/questions/7889228/how-to-prevent-reflectiontypeloadexception-when-calling-assembly-gettypes
+                    assemblyTypes = e.Types.Where(t => t != null).ToArray();
+
+                    var countTypesNotLoaded = e.LoaderExceptions.Length;
+                    Log.Error($"Loader.GetExtendedTypeNames(): Unable to load {countTypesNotLoaded} of the requested types, " +
+                              "see below for more details on what causes an issue:");
+
+                    foreach (Exception inner in e.LoaderExceptions)
+                    {
+                        Log.Error($"Loader.GetExtendedTypeNames(): {inner.Message}");
+                    }
                 }
 
                 if (assemblyTypes != null && assemblyTypes.Length > 0)

@@ -5,12 +5,16 @@ mono:
 solution: QuantConnect.Lean.sln
 before_install:
   - export PATH="$HOME/miniconda3/bin:$PATH"
-  - wget https://cdn.quantconnect.com/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh
-  - bash Miniconda3-4.3.31-Linux-x86_64.sh -b
-  - rm -rf Miniconda3-4.3.31-Linux-x86_64.sh
+  - wget https://cdn.quantconnect.com/miniconda/Miniconda3-4.5.12-Linux-x86_64.sh
+  - bash Miniconda3-4.5.12-Linux-x86_64.sh -b
+  - rm -rf Miniconda3-4.5.12-Linux-x86_64.sh
   - sudo ln -s $HOME/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
   - conda update -y python conda pip
-  - conda install -y cython pandas scipy
+  - conda install -y python=3.6.8
+  - conda install -y numpy=1.16.1
+  - conda install -y pandas=0.23.4
+  - conda install -y cython=0.29.11
+  - conda install -y scipy=1.2.1
 install:
   - nuget restore QuantConnect.Lean.sln
   - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner

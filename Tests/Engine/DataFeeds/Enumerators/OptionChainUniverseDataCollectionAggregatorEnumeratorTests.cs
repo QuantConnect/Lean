@@ -48,6 +48,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(2, aggregator.Current.Data.Count);
             Assert.IsTrue(aggregator.Current.Data.All(x => x is ZipEntryName));
             Assert.AreEqual(list.Last(), aggregator.Current.Underlying);
+
+            aggregator.Dispose();
         }
     }
 }

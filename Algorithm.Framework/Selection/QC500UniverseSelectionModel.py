@@ -40,7 +40,7 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
         The stock must have positive previous-day close price
         The stock must have positive volume on the previous trading day'''
         if algorithm.Time.month == self.lastMonth: 
-            return self.symbols
+            return Universe.Unchanged
 
         filtered = [x for x in coarse if x.HasFundamentalData and x.Volume > 0 and x.Price > 0]
         sortedByDollarVolume = sorted(filtered, key = lambda x: x.DollarVolume, reverse=True)[:self.numberOfSymbolsCoarse]
