@@ -249,15 +249,7 @@ namespace QuantConnect.Lean.Engine.Results
                         runtimeStatistics.Add(pair.Key, pair.Value);
                     }
                 }
-                runtimeStatistics.Add("Unrealized", "$" + Algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
-                runtimeStatistics.Add("Fees", "-$" + Algorithm.Portfolio.TotalFees.ToString("N2"));
-                runtimeStatistics.Add("Net Profit", "$" + (Algorithm.Portfolio.TotalProfit - Algorithm.Portfolio.TotalFees).ToString("N2"));
-                // when there is an initialization error StartingPortfolioValue is 0, want to avoid dividing by zero
-                if (StartingPortfolioValue != 0)
-                {
-                    runtimeStatistics.Add("Return", ((Algorithm.Portfolio.TotalPortfolioValue - StartingPortfolioValue) / StartingPortfolioValue).ToString("P"));
-                }
-                runtimeStatistics.Add("Equity", "$" + Algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
+                GetAlgorithmRuntimeStatistics(runtimeStatistics);
 
                 //Profit Loss Changes:
                 var progress = Convert.ToDecimal(_daysProcessed / _jobDays);
@@ -394,8 +386,8 @@ namespace QuantConnect.Lean.Engine.Results
                 var charts = new Dictionary<string, Chart>(Charts);
                 var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                 var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                var runtime = new Dictionary<string, string>();
-                var statisticsResults = GenerateStatisticsResults(charts, runtime, profitLoss);
+                var runtime = GetAlgorithmRuntimeStatistics();
+                var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
 
                 FinalStatistics = statisticsResults.Summary;
 

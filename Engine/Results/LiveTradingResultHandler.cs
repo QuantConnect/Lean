@@ -251,19 +251,8 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                     Log.Debug("LiveTradingResultHandler.Update(): End build run time stats");
 
-                    //Some users have $0 in their brokerage account / starting cash of $0. Prevent divide by zero errors
-                    var netReturn = StartingPortfolioValue > 0 ?
-                                    (Algorithm.Portfolio.TotalPortfolioValue - StartingPortfolioValue) / StartingPortfolioValue
-                                    : 0;
-
                     //Add other fixed parameters.
-                    DictionarySafeAdd(runtimeStatistics, "Unrealized:", "$" + Algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"), "runtimeStatistics");
-                    DictionarySafeAdd(runtimeStatistics, "Fees:", "-$" + Algorithm.Portfolio.TotalFees.ToString("N2"), "runtimeStatistics");
-                    DictionarySafeAdd(runtimeStatistics, "Net Profit:", "$" + (Algorithm.Portfolio.TotalProfit - Algorithm.Portfolio.TotalFees).ToString("N2"), "runtimeStatistics");
-                    DictionarySafeAdd(runtimeStatistics, "Return:", netReturn.ToString("P"), "runtimeStatistics");
-                    DictionarySafeAdd(runtimeStatistics, "Equity:", "$" + Algorithm.Portfolio.TotalPortfolioValue.ToString("N2"), "runtimeStatistics");
-                    DictionarySafeAdd(runtimeStatistics, "Holdings:", "$" + Algorithm.Portfolio.TotalHoldingsValue.ToString("N2"), "runtimeStatistics");
-                    DictionarySafeAdd(runtimeStatistics, "Volume:", "$" + Algorithm.Portfolio.TotalSaleVolume.ToString("N2"), "runtimeStatistics");
+                    GetAlgorithmRuntimeStatistics(runtimeStatistics, addColon: true);
 
                     // since we're sending multiple packets, let's do it async and forget about it
                     // chart data can get big so let's break them up into groups
@@ -328,7 +317,7 @@ namespace QuantConnect.Lean.Engine.Results
                                 Algorithm.Portfolio.TotalProfit,
                                 Algorithm.Portfolio.TotalHoldingsValue,
                                 Algorithm.Portfolio.TotalPortfolioValue,
-                                netReturn,
+                                Convert.ToDecimal(runtimeStatistics["Return:"]),
                                 Algorithm.Portfolio.TotalSaleVolume,
                                 _lastOrderId, 0);
                         }
@@ -759,8 +748,8 @@ namespace QuantConnect.Lean.Engine.Results
                 var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                 var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
                 var holdings = new Dictionary<string, Holding>();
-                var runtime = new Dictionary<string, string>();
-                var statisticsResults = GenerateStatisticsResults(charts, runtime, profitLoss);
+                var runtime = GetAlgorithmRuntimeStatistics();
+                var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
 
                 //Create a packet:
                 var result = new LiveResultPacket(_job,

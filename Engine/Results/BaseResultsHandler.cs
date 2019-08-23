@@ -143,10 +143,40 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Gets the algorithm runtime statistics
+        /// </summary>
+        /// <remarks>
+        /// TODO: we should not be adding ':' in the collection key
+        /// </remarks>
+        protected Dictionary<string, string> GetAlgorithmRuntimeStatistics(
+            Dictionary<string, string> runtimeStatistics = null,
+            bool addColon = false)
+        {
+            //Some users have $0 in their brokerage account / starting cash of $0. Prevent divide by zero errors
+            var netReturn = StartingPortfolioValue > 0 ?
+                (Algorithm.Portfolio.TotalPortfolioValue - StartingPortfolioValue) / StartingPortfolioValue
+                : 0;
+
+            if (runtimeStatistics == null)
+            {
+                runtimeStatistics = new Dictionary<string, string>();
+            }
+
+            runtimeStatistics["Unrealized" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2");
+            runtimeStatistics["Fees" + (addColon ? ":" : string.Empty)] = "-$" + Algorithm.Portfolio.TotalFees.ToString("N2");
+            runtimeStatistics["Net Profit" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalProfit.ToString("N2");
+            runtimeStatistics["Return" + (addColon ? ":" : string.Empty)] = netReturn.ToString("P");
+            runtimeStatistics["Equity" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalPortfolioValue.ToString("N2");
+            runtimeStatistics["Holdings" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalHoldingsValue.ToString("N2");
+            runtimeStatistics["Volume" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalSaleVolume.ToString("N2");
+
+            return runtimeStatistics;
+        }
+
+        /// <summary>
         /// Will generate the statistics results and update the provided runtime statistics
         /// </summary>
         protected StatisticsResults GenerateStatisticsResults(Dictionary<string, Chart> charts,
-            Dictionary<string, string> runtimeStatistics,
             SortedDictionary<DateTime, decimal> profitLoss)
         {
             var statisticsResults = new StatisticsResults();
@@ -174,18 +204,6 @@ namespace QuantConnect.Lean.Engine.Results
 
                     statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity, performance, benchmark,
                         StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions);
-
-                    //Some users have $0 in their brokerage account / starting cash of $0. Prevent divide by zero errors
-                    var netReturn = StartingPortfolioValue > 0 ?
-                                    (Algorithm.Portfolio.TotalPortfolioValue - StartingPortfolioValue) / StartingPortfolioValue
-                                    : 0;
-
-                    //Add other fixed parameters.
-                    runtimeStatistics.Add("Unrealized", "$" + Algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
-                    runtimeStatistics.Add("Fees", "-$" + Algorithm.Portfolio.TotalFees.ToString("N2"));
-                    runtimeStatistics.Add("Net Profit", "$" + Algorithm.Portfolio.TotalProfit.ToString("N2"));
-                    runtimeStatistics.Add("Return", netReturn.ToString("P"));
-                    runtimeStatistics.Add("Equity", "$" + Algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
                 }
             }
             catch (Exception err)
