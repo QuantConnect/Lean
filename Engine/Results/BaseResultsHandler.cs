@@ -143,6 +143,17 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Gets the algorithm net return
+        /// </summary>
+        protected decimal GetNetReturn()
+        {
+            //Some users have $0 in their brokerage account / starting cash of $0. Prevent divide by zero errors
+            return StartingPortfolioValue > 0 ?
+                (Algorithm.Portfolio.TotalPortfolioValue - StartingPortfolioValue) / StartingPortfolioValue
+                : 0;
+        }
+
+        /// <summary>
         /// Gets the algorithm runtime statistics
         /// </summary>
         /// <remarks>
@@ -152,10 +163,6 @@ namespace QuantConnect.Lean.Engine.Results
             Dictionary<string, string> runtimeStatistics = null,
             bool addColon = false)
         {
-            //Some users have $0 in their brokerage account / starting cash of $0. Prevent divide by zero errors
-            var netReturn = StartingPortfolioValue > 0 ?
-                (Algorithm.Portfolio.TotalPortfolioValue - StartingPortfolioValue) / StartingPortfolioValue
-                : 0;
 
             if (runtimeStatistics == null)
             {
@@ -165,7 +172,7 @@ namespace QuantConnect.Lean.Engine.Results
             runtimeStatistics["Unrealized" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2");
             runtimeStatistics["Fees" + (addColon ? ":" : string.Empty)] = "-$" + Algorithm.Portfolio.TotalFees.ToString("N2");
             runtimeStatistics["Net Profit" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalProfit.ToString("N2");
-            runtimeStatistics["Return" + (addColon ? ":" : string.Empty)] = netReturn.ToString("P");
+            runtimeStatistics["Return" + (addColon ? ":" : string.Empty)] = GetNetReturn().ToString("P");
             runtimeStatistics["Equity" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalPortfolioValue.ToString("N2");
             runtimeStatistics["Holdings" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalHoldingsValue.ToString("N2");
             runtimeStatistics["Volume" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalSaleVolume.ToString("N2");

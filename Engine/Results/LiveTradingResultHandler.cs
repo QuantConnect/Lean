@@ -317,7 +317,7 @@ namespace QuantConnect.Lean.Engine.Results
                                 Algorithm.Portfolio.TotalProfit,
                                 Algorithm.Portfolio.TotalHoldingsValue,
                                 Algorithm.Portfolio.TotalPortfolioValue,
-                                Convert.ToDecimal(runtimeStatistics["Return:"]),
+                                GetNetReturn(),
                                 Algorithm.Portfolio.TotalSaleVolume,
                                 _lastOrderId, 0);
                         }
