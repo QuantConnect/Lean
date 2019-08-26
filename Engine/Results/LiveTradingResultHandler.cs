@@ -30,7 +30,6 @@ using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Statistics;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -252,19 +251,8 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                     Log.Debug("LiveTradingResultHandler.Update(): End build run time stats");
 
-                    //Some users have $0 in their brokerage account / starting cash of $0. Prevent divide by zero errors
-                    var netReturn = StartingPortfolioValue > 0 ?
-                                    (Algorithm.Portfolio.TotalPortfolioValue - StartingPortfolioValue) / StartingPortfolioValue
-                                    : 0;
-
                     //Add other fixed parameters.
-                    DictionarySafeAdd(runtimeStatistics, "Unrealized:", "$" + Algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"), "runtimeStatistics");
-                    DictionarySafeAdd(runtimeStatistics, "Fees:", "-$" + Algorithm.Portfolio.TotalFees.ToString("N2"), "runtimeStatistics");
-                    DictionarySafeAdd(runtimeStatistics, "Net Profit:", "$" + (Algorithm.Portfolio.TotalProfit - Algorithm.Portfolio.TotalFees).ToString("N2"), "runtimeStatistics");
-                    DictionarySafeAdd(runtimeStatistics, "Return:", netReturn.ToString("P"), "runtimeStatistics");
-                    DictionarySafeAdd(runtimeStatistics, "Equity:", "$" + Algorithm.Portfolio.TotalPortfolioValue.ToString("N2"), "runtimeStatistics");
-                    DictionarySafeAdd(runtimeStatistics, "Holdings:", "$" + Algorithm.Portfolio.TotalHoldingsValue.ToString("N2"), "runtimeStatistics");
-                    DictionarySafeAdd(runtimeStatistics, "Volume:", "$" + Algorithm.Portfolio.TotalSaleVolume.ToString("N2"), "runtimeStatistics");
+                    GetAlgorithmRuntimeStatistics(runtimeStatistics, addColon: true);
 
                     // since we're sending multiple packets, let's do it async and forget about it
                     // chart data can get big so let's break them up into groups
@@ -329,7 +317,7 @@ namespace QuantConnect.Lean.Engine.Results
                                 Algorithm.Portfolio.TotalProfit,
                                 Algorithm.Portfolio.TotalHoldingsValue,
                                 Algorithm.Portfolio.TotalPortfolioValue,
-                                netReturn,
+                                GetNetReturn(),
                                 Algorithm.Portfolio.TotalSaleVolume,
                                 _lastOrderId, 0);
                         }
@@ -742,14 +730,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Send a final analysis result back to the IDE.
         /// </summary>
-        /// <param name="job">Lean AlgorithmJob task</param>
-        /// <param name="orders">Collection of orders from the algorithm</param>
-        /// <param name="profitLoss">Collection of time-profit values for the algorithm</param>
-        /// <param name="holdings">Current holdings state for the algorithm</param>
-        /// <param name="cashbook">Cashbook of the current cash of the algorithm</param>
-        /// <param name="statisticsResults">Statistics information for the algorithm (empty if not finished)</param>
-        /// <param name="runtime">Runtime statistics banner information</param>
-        public void SendFinalResult(AlgorithmNodePacket job, Dictionary<int, Order> orders, Dictionary<DateTime, decimal> profitLoss, Dictionary<string, Holding> holdings, CashBook cashbook, StatisticsResults statisticsResults, Dictionary<string, string> runtime)
+        public void SendFinalResult()
         {
             Log.Trace("LiveTradingResultHandler.SendFinalResult(): Starting...");
             try
@@ -764,9 +745,15 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                 }
 
+                var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
+                var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
+                var holdings = new Dictionary<string, Holding>();
+                var runtime = GetAlgorithmRuntimeStatistics();
+                var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
+
                 //Create a packet:
-                var result = new LiveResultPacket((LiveNodePacket) job,
-                    new LiveResult(charts, orders, profitLoss, holdings, cashbook, statisticsResults.Summary, runtime))
+                var result = new LiveResultPacket(_job,
+                    new LiveResult(charts, orders, profitLoss, holdings, Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime))
                 {
                     ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds
                 };
