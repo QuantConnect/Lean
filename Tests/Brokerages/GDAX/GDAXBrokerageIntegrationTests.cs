@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
+using System.Threading;
 using QuantConnect.Brokerages.GDAX;
 using NUnit.Framework;
 using QuantConnect.Interfaces;
@@ -21,6 +24,8 @@ using QuantConnect.Configuration;
 using QuantConnect.Orders;
 using Moq;
 using QuantConnect.Brokerages;
+using QuantConnect.Logging;
+using QuantConnect.Tests.Common.Securities;
 using RestSharp;
 
 namespace QuantConnect.Tests.Brokerages.GDAX
@@ -29,34 +34,22 @@ namespace QuantConnect.Tests.Brokerages.GDAX
     public class GDAXBrokerageIntegrationTests : BrokerageTests
     {
         #region Properties
-        protected override Symbol Symbol
-        {
-            get { return Symbol.Create("ETHBTC", SecurityType, Market.GDAX); }
-        }
+        protected override Symbol Symbol => Symbol.Create("ETHBTC", SecurityType, Market.GDAX);
 
         /// <summary>
         ///     Gets the security type associated with the <see cref="BrokerageTests.Symbol" />
         /// </summary>
-        protected override SecurityType SecurityType
-        {
-            get { return SecurityType.Crypto; }
-        }
+        protected override SecurityType SecurityType => SecurityType.Crypto;
 
         /// <summary>
         ///     Gets a high price for the specified symbol so a limit sell won't fill
         /// </summary>
-        protected override decimal HighPrice
-        {
-            get { return 1m; }
-        }
+        protected override decimal HighPrice => 1m;
 
         /// <summary>
         /// Gets a low price for the specified symbol so a limit buy won't fill
         /// </summary>
-        protected override decimal LowPrice
-        {
-            get { return 0.0001m; }
-        }
+        protected override decimal LowPrice => 0.0001m;
 
         protected override decimal GetDefaultQuantity()
         {
@@ -66,17 +59,66 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
+            var securities =
+                new SecurityManager(new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork))
+                {
+                    { Symbol, CreateSecurity(Symbol) }
+                };
+            var transactions = new SecurityTransactionManager(null, securities);
+            transactions.SetOrderProcessor(new FakeOrderProcessor());
+
             var restClient = new RestClient("https://api.pro.coinbase.com");
             var webSocketClient = new WebSocketWrapper();
 
             var algorithm = new Mock<IAlgorithm>();
-            algorithm.Setup(a => a.BrokerageModel).Returns(new GDAXBrokerageModel(AccountType.Cash));
+            algorithm.Setup(a => a.Transactions).Returns(transactions);
+            algorithm.Setup(a => a.BrokerageModel).Returns(new GDAXBrokerageModel());
+            algorithm.Setup(a => a.Portfolio).Returns(new SecurityPortfolioManager(securities, transactions));
+            algorithm.Setup(a => a.Securities).Returns(securities);
 
             var priceProvider = new ApiPriceProvider(Config.GetInt("job-user-id"), Config.Get("api-access-token"));
 
             return new GDAXBrokerage(Config.Get("gdax-url", "wss://ws-feed.pro.coinbase.com"), webSocketClient, restClient,
                 Config.Get("gdax-api-key"), Config.Get("gdax-api-secret"), Config.Get("gdax-passphrase"), algorithm.Object,
                 priceProvider);
+        }
+
+        [Test]
+        public override void GetCashBalanceContainsUsd()
+        {
+            Log.Trace("");
+            Log.Trace("GET CASH BALANCE");
+            Log.Trace("");
+            var balance = Brokerage.GetCashBalance();
+
+            // Non US users cannot have USD balance so we check any fiat currency
+            Assert.AreEqual(1, balance.Count(x => x.Currency == Currencies.USD || x.Currency == "EUR" || x.Currency == "GBP"));
+        }
+
+        [Test]
+        public override void GetAccountHoldings()
+        {
+            // For GDAX we use GetCashBalance instead of GetAccountHoldings
+            // since GetAccountHoldings always returns an empty list
+            Log.Trace("");
+            Log.Trace("GET ACCOUNT HOLDINGS");
+            Log.Trace("");
+
+            var before = Brokerage.GetCashBalance();
+
+            PlaceOrderWaitForStatus(new MarketOrder(Symbol, GetDefaultQuantity(), DateTime.UtcNow));
+
+            Thread.Sleep(3000);
+
+            var after = Brokerage.GetCashBalance();
+
+            var beforeHoldings = before.FirstOrDefault(x => x.Currency == "ETH");
+            var afterHoldings = after.FirstOrDefault(x => x.Currency == "ETH");
+
+            var beforeQuantity = beforeHoldings.Amount;
+            var afterQuantity = afterHoldings.Amount;
+
+            Assert.AreEqual(GetDefaultQuantity(), afterQuantity - beforeQuantity);
         }
 
         /// <summary>
@@ -89,7 +131,7 @@ namespace QuantConnect.Tests.Brokerages.GDAX
 
         protected override decimal GetAskPrice(Symbol symbol)
         {
-            var tick = ((GDAXBrokerage)this.Brokerage).GetTick(symbol);
+            var tick = ((GDAXBrokerage)Brokerage).GetTick(symbol);
             return tick.AskPrice;
         }
 
@@ -98,12 +140,12 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             Assert.Pass("Order update not supported");
         }
 
-        //no stop limit support
+        // no stop market order support
         public override TestCaseData[] OrderParameters => new[]
         {
             new TestCaseData(new MarketOrderTestParameters(Symbol)).SetName("MarketOrder"),
-            new TestCaseData(new LimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
-            new TestCaseData(new StopMarketOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopMarketOrder"),
+            new TestCaseData(new NonUpdateableLimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("LimitOrder"),
+            new TestCaseData(new NonUpdateableStopLimitOrderTestParameters(Symbol, HighPrice, LowPrice)).SetName("StopLimitOrder")
         };
     }
 }

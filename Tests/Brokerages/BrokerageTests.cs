@@ -426,7 +426,7 @@ namespace QuantConnect.Tests.Brokerages
             // now go net short
             var order = PlaceOrderWaitForStatus(parameters.CreateShortOrder(2 * GetDefaultQuantity()), parameters.ExpectedStatus);
 
-            if (parameters.ModifyUntilFilled)
+            if (order.Type != OrderType.Market && parameters.ModifyUntilFilled)
             {
                 ModifyOrderUntilFilled(order, parameters);
             }
@@ -444,14 +444,14 @@ namespace QuantConnect.Tests.Brokerages
             // now go long
             var order = PlaceOrderWaitForStatus(parameters.CreateLongOrder(2 * GetDefaultQuantity()), parameters.ExpectedStatus);
 
-            if (parameters.ModifyUntilFilled)
+            if (order.Type != OrderType.Market && parameters.ModifyUntilFilled)
             {
                 ModifyOrderUntilFilled(order, parameters);
             }
         }
 
         [Test]
-        public void GetCashBalanceContainsUSD()
+        public virtual void GetCashBalanceContainsUsd()
         {
             Log.Trace("");
             Log.Trace("GET CASH BALANCE");
@@ -461,7 +461,7 @@ namespace QuantConnect.Tests.Brokerages
         }
 
         [Test]
-        public void GetAccountHoldings()
+        public virtual void GetAccountHoldings()
         {
             Log.Trace("");
             Log.Trace("GET ACCOUNT HOLDINGS");
