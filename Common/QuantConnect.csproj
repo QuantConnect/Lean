@@ -754,6 +754,7 @@
     <Compile Include="Util\VersionHelper.cs" />
     <Compile Include="Util\WorkerThread.cs" />
     <Compile Include="Util\XElementExtensions.cs" />
+    <Compile Include="Interfaces\IDataDownloaderPolygon.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
