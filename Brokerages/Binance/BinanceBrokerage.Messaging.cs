@@ -79,6 +79,19 @@ namespace QuantConnect.Brokerages.Binance
             _streamLocked = false;
         }
 
+        private void WithLockedStream(Action code)
+        {
+            try
+            {
+                LockStream();
+                code();
+            }
+            finally
+            {
+                UnlockStream();
+            }
+        }
+
         private void OnMessageImpl(object sender, WebSocketMessage e, Action<BaseMessage> handler)
         {
             try
@@ -273,32 +286,22 @@ namespace QuantConnect.Brokerages.Binance
 
         private void FetchOrderBookSnapshot(Symbol symbol, BinanceOrderBook orderBook)
         {
-            LockStream();
-
-            var endpoint = $"/api/v1/depth?symbol={_symbolMapper.GetBrokerageSymbol(symbol)}&limit=1000";
-            var request = new RestRequest(endpoint, Method.GET);
-            var response = ExecuteRestRequest(request);
-
-            if (response.StatusCode != HttpStatusCode.OK)
+            WithLockedStream(() =>
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, $"Can't fetch snapshot for symbol {symbol.Value}"));
-                return;
-            }
+                var snapshot = _apiClient.FetchOrderBookSnapshot(symbol);
 
-            var snapshot = JsonConvert.DeserializeObject<Messages.OrderBookSnapshotMessage>(response.Content);
+                orderBook.BestBidAskUpdated -= OnBestBidAskUpdated;
+                orderBook.LastUpdateId = snapshot.LastUpdateId;
+                ProcessOrderBookEvents(orderBook, snapshot.Bids, snapshot.Asks);
 
-            orderBook.BestBidAskUpdated -= OnBestBidAskUpdated;
-            orderBook.LastUpdateId = snapshot.LastUpdateId;
-            ProcessOrderBookEvents(orderBook, snapshot.Bids, snapshot.Asks);
-
-            EmitQuoteTick(
-                symbol,
-                orderBook.BestBidPrice,
-                orderBook.BestBidSize,
-                orderBook.BestAskPrice,
-                orderBook.BestAskSize);
-            orderBook.BestBidAskUpdated += OnBestBidAskUpdated;
-            UnlockStream();
+                EmitQuoteTick(
+                    symbol,
+                    orderBook.BestBidPrice,
+                    orderBook.BestBidSize,
+                    orderBook.BestAskPrice,
+                    orderBook.BestAskSize);
+                orderBook.BestBidAskUpdated += OnBestBidAskUpdated;
+            });
         }
 
         private void ProcessOrderBookEvents(DefaultOrderBook orderBook, object[][] bids, object[][] asks)

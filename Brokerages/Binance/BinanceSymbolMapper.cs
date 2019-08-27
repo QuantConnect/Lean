@@ -250,7 +250,7 @@ namespace QuantConnect.Brokerages.Binance
                 throw new ArgumentException($"Invalid Binance symbol: {BinanceSymbol}");
 
             // return as it is due to Binance has similar Symbol format
-            return BinanceSymbol.ToUpper();
+            return BinanceSymbol.LazyToUpper();
         }
 
         /// <summary>
@@ -262,7 +262,7 @@ namespace QuantConnect.Brokerages.Binance
                 throw new ArgumentException($"Invalid Lean symbol: {leanSymbol}");
 
             // return as it is due to Binance has similar Symbol format
-            return leanSymbol.ToUpper();
+            return leanSymbol.LazyToUpper();
         }
     }
 }
