@@ -177,7 +177,12 @@ namespace QuantConnect.AlgorithmFactory
                 {
                     using (Py.GIL())
                     {
-                        PythonEngine.Exec("import os, sys; sys.stdout = open(os.devnull, 'w')");
+                        PythonEngine.Exec(
+                            @"
+import logging, os, sys
+sys.stdout = open(os.devnull, 'w')
+logging.captureWarnings(True)"
+                        );
                     }
                 }
             }
