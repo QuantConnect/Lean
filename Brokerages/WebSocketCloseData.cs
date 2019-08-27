@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System.Net.WebSockets;
+
 namespace QuantConnect.Brokerages
 {
     /// <summary>
@@ -23,7 +25,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Gets the status code for the connection close.
         /// </summary>
-        public ushort Code { get; }
+        public WebSocketCloseStatus Code { get; }
 
         /// <summary>
         /// Gets the reason for the connection close.
@@ -31,21 +33,14 @@ namespace QuantConnect.Brokerages
         public string Reason { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the connection has been closed cleanly.
-        /// </summary>
-        public bool WasClean { get; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="WebSocketCloseData"/> class
         /// </summary>
         /// <param name="code">The status code for the connection close</param>
-        /// <param name="reason">The reaspn for the connection close</param>
-        /// <param name="wasClean">True if the connection has been closed cleanly, false otherwise</param>
-        public WebSocketCloseData(ushort code, string reason, bool wasClean)
+        /// <param name="reason">The reason for the connection close</param>
+        public WebSocketCloseData(WebSocketCloseStatus code, string reason)
         {
             Code = code;
             Reason = reason;
-            WasClean = wasClean;
         }
     }
 }

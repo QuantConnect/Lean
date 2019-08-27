@@ -79,7 +79,7 @@ namespace QuantConnect.ToolBox.CoinApi
 
             _webSocket.Connect();
 
-            new Thread(new ThreadStart(MessagesProcessorThread)).Start();
+            new Thread(MessagesProcessorThread).Start();
         }
 
         private void MessagesProcessorThread()
@@ -206,6 +206,8 @@ namespace QuantConnect.ToolBox.CoinApi
             {
                 _webSocket.Close();
             }
+
+            _webSocket.DisposeSafely();
         }
 
         /// <summary>

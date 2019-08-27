@@ -12,17 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 
 namespace QuantConnect.Brokerages
 {
-
     /// <summary>
-    /// Wrapper for WebSocket4Net to enhance testability
+    /// Wrapper for ClientWebSocket to enhance testability
     /// </summary>
-    public interface IWebSocket
+    public interface IWebSocket : IDisposable
     {
-
         /// <summary>
         /// Wraps constructor
         /// </summary>

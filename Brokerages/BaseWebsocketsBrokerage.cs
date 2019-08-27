@@ -21,16 +21,15 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
-
     /// <summary>
     /// Provides shared brokerage websockets implementation
     /// </summary>
     public abstract class BaseWebsocketsBrokerage : Brokerage
     {
-
         #region Declarations
         /// <summary>
         /// The list of queued ticks
@@ -270,6 +269,14 @@ namespace QuantConnect.Brokerages
             }
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public override void Dispose()
+        {
+            WebSocket.DisposeSafely();
+        }
+
         private void Wait(int timeout, Func<bool> state)
         {
             var StartTime = Environment.TickCount;
@@ -321,7 +328,5 @@ namespace QuantConnect.Brokerages
             /// </summary>
             public string Symbol { get; set; }
         }
-
     }
-
 }

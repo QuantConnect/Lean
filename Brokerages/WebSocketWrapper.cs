@@ -14,19 +14,25 @@
 */
 
 using System;
-using QuantConnect.Configuration;
+using System.IO;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Logging;
-using WebSocketSharp;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// Wrapper for WebSocketSharp to enhance testability
+    /// Wrapper for ClientWebSocket to enhance testability
     /// </summary>
     public class WebSocketWrapper : IWebSocket
     {
-        private WebSocket _wrapped;
+        private ClientWebSocket _wrapped;
         private string _url;
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private ArraySegment<byte> _receiveBuffer = new ArraySegment<byte>(new byte[1024 * 8]);
 
         /// <summary>
         /// Wraps constructor
@@ -40,21 +46,7 @@ namespace QuantConnect.Brokerages
             }
 
             _url = url;
-            _wrapped = new WebSocket(url)
-            {
-                Log =
-                {
-                    Level = Config.GetBool("websocket-log-trace") ? LogLevel.Trace : LogLevel.Error,
-
-                    // The stack frame number of 3 was derived from the usage of the Logger class in the WebSocketSharp library
-                    Output = (data, file) => { Log.Trace($"{WhoCalledMe.GetMethodName(3)}(): {data.Message}", true); }
-                }
-            };
-
-            _wrapped.OnOpen += (sender, args) => OnOpen();
-            _wrapped.OnMessage += (sender, args) => OnMessage(new WebSocketMessage(args.Data));
-            _wrapped.OnError += (sender, args) => OnError(new WebSocketError(args.Message, args.Exception));
-            _wrapped.OnClose += (sender, args) => OnClose(new WebSocketCloseData(args.Code, args.Reason, args.WasClean));
+            _wrapped = new ClientWebSocket();
         }
 
         /// <summary>
@@ -63,7 +55,23 @@ namespace QuantConnect.Brokerages
         /// <param name="data"></param>
         public void Send(string data)
         {
-            _wrapped.Send(data);
+            try
+            {
+                if (!IsOpen)
+                {
+                    Log.Trace($"WebSocketWrapper.Send(): Connection not open (IsOpen:{IsOpen}, State:{_wrapped.State}): attempting connection", true);
+
+                    Connect();
+                }
+
+                var sendBuffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(data));
+
+                _wrapped.SendAsync(sendBuffer, WebSocketMessageType.Text, true, _cancellationTokenSource.Token).SynchronouslyAwaitTask();
+            }
+            catch (Exception exception)
+            {
+                OnError(new WebSocketError(exception.Message, exception));
+            }
         }
 
         /// <summary>
@@ -71,9 +79,86 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void Connect()
         {
-            if (!IsOpen)
+            if (IsOpen)
             {
-                _wrapped.Connect();
+                return;
+            }
+
+            try
+            {
+                _wrapped.ConnectAsync(new Uri(_url), _cancellationTokenSource.Token).SynchronouslyAwaitTask();
+
+                if (IsOpen)
+                {
+                    OnOpen();
+
+                    new TaskFactory().StartNew(
+                        async () =>
+                        {
+                            try
+                            {
+                                await StartReceiving();
+                            }
+                            catch (Exception exception)
+                            {
+                                OnError(new WebSocketError(exception.Message, exception));
+                            }
+
+                            if (_wrapped.State == WebSocketState.Aborted)
+                            {
+                                // need to recreate ClientWebSocket instance, cannot be reused
+
+                                Log.Trace($"WebSocketWrapper.Connect(): Connection aborted (IsOpen:{IsOpen}, State:{_wrapped.State}): creating new ClientWebSocket instance", true);
+
+                                await new TaskFactory().StartNew(ResetAndConnect, _cancellationTokenSource.Token);
+                            }
+
+                        }, _cancellationTokenSource.Token);
+                }
+            }
+            catch (Exception exception)
+            {
+                OnError(new WebSocketError(exception.Message, exception));
+            }
+        }
+
+        private void ResetAndConnect()
+        {
+            _wrapped = new ClientWebSocket();
+            Connect();
+        }
+
+        private async Task StartReceiving()
+        {
+            while (_wrapped.State == WebSocketState.Open)
+            {
+                using (var stream = new MemoryStream(1024))
+                {
+                    WebSocketReceiveResult webSocketReceiveResult;
+                    do
+                    {
+                        webSocketReceiveResult = await _wrapped.ReceiveAsync(_receiveBuffer, _cancellationTokenSource.Token);
+                        await stream.WriteAsync(_receiveBuffer.Array, _receiveBuffer.Offset, webSocketReceiveResult.Count, _cancellationTokenSource.Token);
+                    } while (!webSocketReceiveResult.EndOfMessage);
+
+                    if (webSocketReceiveResult.MessageType == WebSocketMessageType.Text)
+                    {
+                        stream.Seek(0, SeekOrigin.Begin);
+                        using (var reader = new StreamReader(stream, Encoding.UTF8))
+                        {
+                            OnMessage(new WebSocketMessage(reader.ReadToEnd()));
+                        }
+                    }
+                    else if (webSocketReceiveResult.MessageType == WebSocketMessageType.Close)
+                    {
+                        if (webSocketReceiveResult.CloseStatus != null)
+                        {
+                            OnClose(new WebSocketCloseData(
+                                webSocketReceiveResult.CloseStatus.Value,
+                                webSocketReceiveResult.CloseStatusDescription));
+                        }
+                    }
+                }
             }
         }
 
@@ -82,18 +167,27 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void Close()
         {
-            _wrapped.Close();
+            try
+            {
+                _wrapped.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, _cancellationTokenSource.Token);
+
+                OnClose(new WebSocketCloseData(WebSocketCloseStatus.NormalClosure, string.Empty));
+            }
+            catch (Exception exception)
+            {
+                OnError(new WebSocketError(exception.Message, exception));
+            }
         }
 
         /// <summary>
-        /// Wraps IsAlive
+        /// Returns true if the WebSocketState is Open
         /// </summary>
-        public bool IsOpen => _wrapped.IsAlive;
+        public bool IsOpen => _wrapped.State == WebSocketState.Open;
 
         /// <summary>
         /// Wraps ReadyState
         /// </summary>
-        public WebSocketState ReadyState => _wrapped.ReadyState;
+        public WebSocketState ReadyState => _wrapped.State;
 
         /// <summary>
         /// Wraps message event
@@ -120,7 +214,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void OnMessage(WebSocketMessage e)
         {
-            //Logging.Log.Trace("WebSocketWrapper.OnMessage(): " + e.Message);
+            //Log.Trace($"WebSocketWrapper.OnMessage(): {e.Message}", true);
             Message?.Invoke(this, e);
         }
 
@@ -130,7 +224,7 @@ namespace QuantConnect.Brokerages
         /// <param name="e"></param>
         protected virtual void OnError(WebSocketError e)
         {
-            Log.Error(e.Exception, $"WebSocketWrapper.OnError(): (IsOpen:{IsOpen}, ReadyState:{_wrapped.ReadyState}): {e.Message}");
+            Log.Error(e.Exception, $"WebSocketWrapper.OnError(): (IsOpen:{IsOpen}, State:{_wrapped.State}): {e.Message}", true);
             Error?.Invoke(this, e);
         }
 
@@ -139,7 +233,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void OnOpen()
         {
-            Log.Trace($"WebSocketWrapper.OnOpen(): Connection opened (IsOpen:{IsOpen}, ReadyState:{_wrapped.ReadyState}): {_url}");
+            Log.Trace($"WebSocketWrapper.OnOpen(): Connection opened (IsOpen:{IsOpen}, State:{_wrapped.State}): {_url}", true);
             Open?.Invoke(this, EventArgs.Empty);
         }
 
@@ -148,8 +242,24 @@ namespace QuantConnect.Brokerages
         /// </summary>
         protected virtual void OnClose(WebSocketCloseData e)
         {
-            Log.Trace($"WebSocketWrapper.OnClose(): Connection closed (IsOpen:{IsOpen}, ReadyState:{_wrapped.ReadyState}, Code:{e.Code}, Reason:{e.Reason}, WasClean:{e.WasClean}): {_url}");
+            Log.Trace($"WebSocketWrapper.OnClose(): Connection closed (IsOpen:{IsOpen}, State:{_wrapped.State}, Code:{e.Code}, Reason:{e.Reason}): {_url}", true);
+
             Closed?.Invoke(this, e);
+
+            if (e.Code == WebSocketCloseStatus.EndpointUnavailable)
+            {
+                new TaskFactory().StartNew(ResetAndConnect, _cancellationTokenSource.Token);
+            }
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            _cancellationTokenSource.Cancel();
+
+            _wrapped.DisposeSafely();
         }
     }
 }
