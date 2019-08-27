@@ -222,7 +222,7 @@ namespace QuantConnect.Brokerages.Binance.Messages
 
         public Kline(object[] entries)
         {
-            OpenTime = Convert.ToInt64(entries[0]);
+            OpenTime = Convert.ToInt64(entries[0], CultureInfo.InvariantCulture);
             Open = ((string)entries[1]).ToDecimal();
             Close = ((string)entries[4]).ToDecimal();
             High = ((string)entries[2]).ToDecimal();

@@ -2244,5 +2244,22 @@ namespace QuantConnect
         {
             return data?.Scale(p => p * scale);
         }
+
+        /// <summary>
+        /// Returns a hex string of the byte array.
+        /// </summary>
+        /// <param name="source">the byte array to be represented as string</param>
+        /// <returns>A new string containing the items in the enumerable</returns>
+        public static string ToHexString(this byte[] source) {
+            if (source == null || source.Length == 0)
+            {
+                throw new ArgumentException($"Source cannot be null or empty.");
+            }
+
+            StringBuilder hex = new StringBuilder(source.Length * 2);
+            foreach (byte b in source)
+                hex.AppendFormat("{0:x2}", b);
+            return hex.ToString();
+        }
     }
 }

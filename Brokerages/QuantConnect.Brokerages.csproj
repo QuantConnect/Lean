@@ -341,10 +341,10 @@
     <Compile Include="Binance\BinanceBrokerage.cs" />
     <Compile Include="Binance\BinanceBrokerageFactory.cs" />
     <Compile Include="Binance\BinanceOrderBook.cs" />
+    <Compile Include="Binance\BinanceRestApiClient.cs" />
     <Compile Include="Binance\BinanceSymbolMapper.cs" />
     <Compile Include="Binance\BinanceWebSocketWrapper.cs" />
     <Compile Include="Binance\Messages.cs" />
-    <Compile Include="Binance\BinanceBrokerage.Streaming.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.Messaging.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerage.cs" />
     <Compile Include="Bitfinex\BitfinexBrokerageFactory.cs" />

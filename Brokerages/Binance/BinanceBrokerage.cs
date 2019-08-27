@@ -40,15 +40,9 @@ namespace QuantConnect.Brokerages.Binance
     [BrokerageFactory(typeof(BinanceBrokerageFactory))]
     public partial class BinanceBrokerage : BaseWebsocketsBrokerage, IDataQueueHandler
     {
-        /// <summary>
-        /// Key Header
-        /// </summary>
-        public const string KeyHeader = "X-MBX-APIKEY";
-
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
         private readonly string _wssUrl;
         private readonly IAlgorithm _algorithm;
-        private readonly ISecurityProvider _securityProvider;
         private readonly BinanceSymbolMapper _symbolMapper = new BinanceSymbolMapper();
         private readonly IWebSocket TickerWebSocket;
         private readonly TimeSpan _subscribeDelay = TimeSpan.FromMilliseconds(250);
@@ -58,6 +52,7 @@ namespace QuantConnect.Brokerages.Binance
         private readonly object _lockerSubscriptions = new object();
         private DateTime _lastSubscribeRequestUtcTime = DateTime.MinValue;
         private bool _subscriptionsPending;
+        private readonly BinanceRestApiClient _apiClient;
 
         /// <summary>
         /// Constructor for brokerage
@@ -72,9 +67,14 @@ namespace QuantConnect.Brokerages.Binance
             : base(new RestClient(restUrl), apiKey, apiSecret, Market.Binance, "Binance")
         {
             _algorithm = algorithm;
-            _securityProvider = algorithm?.Portfolio;
 
             _wssUrl = wssUrl;
+            _apiClient = new BinanceRestApiClient(
+                _symbolMapper,
+                algorithm?.Portfolio,
+                restUrl,
+                apiKey,
+                apiSecret);
 
             WebSocket = new WebSocketWrapper();
 
@@ -82,7 +82,7 @@ namespace QuantConnect.Brokerages.Binance
             WebSocket.Error += OnError;
             WebSocket.Open += (s, e) =>
             {
-                _keepAliveTimer = new RealTimeSynchronizedTimer(TimeSpan.FromMinutes(30), (d) => SessionKeepAlive());
+                _keepAliveTimer = new RealTimeSynchronizedTimer(TimeSpan.FromMinutes(30), (d) => _apiClient.SessionKeepAlive());
                 _keepAliveTimer.Start();
             };
             WebSocket.Closed += (s, e) => { _keepAliveTimer.Stop(); };
@@ -118,10 +118,10 @@ namespace QuantConnect.Brokerages.Binance
         {
             if (IsConnected)
                 return;
+            _apiClient.CreateListenKey();
             _reconnectTimer.Start();
 
-            CreateListenKey();
-            WebSocket.Initialize($"{_wssUrl}/stream?streams={SessionId}");
+            WebSocket.Initialize($"{_wssUrl}/stream?streams={_apiClient.SessionId}");
 
             base.Connect();
         }
@@ -135,7 +135,7 @@ namespace QuantConnect.Brokerages.Binance
             _reconnectTimer.Stop();
 
             WebSocket?.Close();
-            StopSession();
+            _apiClient.StopSession();
 
             (TickerWebSocket as BinanceWebSocketWrapper)?.ConnectionHandler.DisposeSafely();
             if (TickerWebSocket.IsOpen)
@@ -150,7 +150,7 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override List<Holding> GetAccountHoldings()
         {
-            return new List<Holding>();
+            return _apiClient.GetAccountHoldings();
         }
 
         /// <summary>
@@ -159,29 +159,14 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override List<CashAmount> GetCashBalance()
         {
-            var list = new List<CashAmount>();
-            var queryString = $"timestamp={GetNonce()}";
-            var endpoint = $"/api/v3/account?{queryString}&signature={AuthenticationToken(queryString)}";
-            var request = new RestRequest(endpoint, Method.GET);
-            request.AddHeader(KeyHeader, ApiKey);
-
-            var response = ExecuteRestRequest(request);
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                throw new Exception($"BinanceBrokerage.GetCashBalance: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
-            }
-
-            var account = JsonConvert.DeserializeObject<Messages.AccountInformation>(response.Content);
+            var account = _apiClient.GetCashBalance();
             var balances = account.Balances?.Where(balance => balance.Amount > 0);
             if (balances == null || !balances.Any())
-                return list;
+                return new List<CashAmount>();
 
-            foreach (var balance in balances)
-            {
-                list.Add(new CashAmount(balance.Amount, balance.Asset.ToUpper()));
-            }
-
-            return list;
+            return balances
+                .Select(b => new CashAmount(b.Amount, b.Asset.LazyToUpper()))
+                .ToList();
         }
 
         /// <summary>
@@ -190,23 +175,12 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns></returns>
         public override List<Order> GetOpenOrders()
         {
-            var list = new List<Order>();
-            var queryString = $"timestamp={GetNonce()}";
-            var endpoint = $"/api/v3/openOrders?{queryString}&signature={AuthenticationToken(queryString)}";
-            var request = new RestRequest(endpoint, Method.GET);
-            request.AddHeader(KeyHeader, ApiKey);
-
-            var response = ExecuteRestRequest(request);
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                throw new Exception($"BinanceBrokerage.GetCashBalance: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
-            }
-
-            var orders = JsonConvert.DeserializeObject<Messages.OpenOrder[]>(response.Content);
+            var orders = _apiClient.GetOpenOrders();
+            List<Order> list = new List<Order>();
             foreach (var item in orders)
             {
                 Order order;
-                switch (item.Type.ToUpper())
+                switch (item.Type.LazyToUpper())
                 {
                     case "MARKET":
                         order = new MarketOrder { Price = item.Price };
@@ -224,7 +198,7 @@ namespace QuantConnect.Brokerages.Binance
                         order = new StopLimitOrder { StopPrice = item.StopPrice, LimitPrice = item.Price };
                         break;
                     default:
-                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, (int)response.StatusCode,
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1,
                             "BinanceBrokerage.GetOpenOrders: Unsupported order type returned from brokerage: " + item.Type));
                         continue;
                 }
@@ -235,19 +209,17 @@ namespace QuantConnect.Brokerages.Binance
                 order.Time = Time.UnixMillisecondTimeStampToDateTime(item.Time);
                 order.Status = ConvertOrderStatus(item.Status);
                 order.Price = item.Price;
-                list.Add(order);
-            }
 
-            foreach (var item in list)
-            {
-                if (item.Status.IsOpen())
+                if (order.Status.IsOpen())
                 {
-                    var cached = CachedOrderIDs.Where(c => c.Value.BrokerId.Contains(item.BrokerId.First()));
+                    var cached = CachedOrderIDs.Where(c => c.Value.BrokerId.Contains(order.BrokerId.First()));
                     if (cached.Any())
                     {
-                        CachedOrderIDs[cached.First().Key] = item;
+                        CachedOrderIDs[cached.First().Key] = order;
                     }
                 }
+
+                list.Add(order);
             }
 
             return list;
@@ -260,115 +232,12 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            LockStream();
-
-            // supported time in force values {GTC, IOC, FOK}
-            // use GTC as LEAN doesn't support others yet
-            IDictionary<string, object> body = new Dictionary<string, object>()
+            bool submitted = false;
+            WithLockedStream(() =>
             {
-                { "symbol", _symbolMapper.GetBrokerageSymbol(order.Symbol) },
-                { "quantity", Math.Abs(order.Quantity).ToString(CultureInfo.InvariantCulture) },
-                { "side", ConvertOrderDirection(order.Direction) }
-            };
-
-            decimal ticker = 0, stopPrice = 0m;
-            switch (order.Type)
-            {
-                case OrderType.Limit:
-                    body["type"] = (order.Properties as BinanceOrderProperties)?.PostOnly == true
-                        ? "LIMIT_MAKER"
-                        : "LIMIT";
-                    body["price"] = (order as LimitOrder).LimitPrice.ToString(CultureInfo.InvariantCulture);
-                    // timeInForce is not required for LIMIT_MAKER
-                    if (Equals(body["type"], "LIMIT"))
-                        body["timeInForce"] = "GTC";
-                    break;
-                case OrderType.Market:
-                    body["type"] = "MARKET";
-                    break;
-                case OrderType.StopLimit:
-                    ticker = GetTickerPrice(order);
-                    stopPrice = (order as StopLimitOrder).StopPrice;
-                    if (order.Direction == OrderDirection.Sell)
-                        body["type"] = stopPrice <= ticker ? "STOP_LOSS_LIMIT" : "TAKE_PROFIT_LIMIT";
-                    else
-                        body["type"] = stopPrice <= ticker ? "TAKE_PROFIT_LIMIT" : "STOP_LOSS_LIMIT";
-                    body["timeInForce"] = "GTC";
-                    body["stopPrice"] = stopPrice.ToString(CultureInfo.InvariantCulture);
-                    body["price"] = (order as StopLimitOrder).LimitPrice.ToString(CultureInfo.InvariantCulture);
-                    break;
-                default:
-                    throw new NotSupportedException($"BinanceBrokerage.ConvertOrderType: Unsupported order type: {order.Type}");
-            }
-
-            var endpoint = $"/api/v3/order";
-            body["timestamp"] = GetNonce();
-            body["signature"] = AuthenticationToken(body.ToQueryString());
-            var request = new RestRequest(endpoint, Method.POST);
-            request.AddHeader(KeyHeader, ApiKey);
-            request.AddParameter(
-                "application/x-www-form-urlencoded",
-                Encoding.UTF8.GetBytes(body.ToQueryString()),
-                ParameterType.RequestBody
-            );
-
-            var response = ExecuteRestRequest(request);
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                var raw = JsonConvert.DeserializeObject<Messages.NewOrder>(response.Content);
-
-                if (string.IsNullOrEmpty(raw?.Id))
-                {
-                    var errorMessage = $"Error parsing response from place order: {response.Content}";
-                    OnOrderEvent(new OrderEvent(
-                        order,
-                        DateTime.UtcNow,
-                        OrderFee.Zero,
-                        "Binance Order Event")
-                    { Status = OrderStatus.Invalid, Message = errorMessage });
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, (int)response.StatusCode, errorMessage));
-
-                    UnlockStream();
-                    return true;
-                }
-
-                var brokerId = raw.Id;
-                if (CachedOrderIDs.ContainsKey(order.Id))
-                {
-                    order.BrokerId.Clear();
-                    order.BrokerId.Add(brokerId);
-                }
-                else
-                {
-                    order.BrokerId.Add(brokerId);
-                    CachedOrderIDs.TryAdd(order.Id, order);
-                }
-
-                // Generate submitted event
-                OnOrderEvent(new OrderEvent(
-                    order,
-                    Time.UnixMillisecondTimeStampToDateTime(raw.TransactionTime),
-                    OrderFee.Zero,
-                    "Binance Order Event")
-                { Status = OrderStatus.Submitted }
-                );
-                Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
-
-                UnlockStream();
-                return true;
-            }
-
-            var message = $"Order failed, Order Id: {order.Id} timestamp: {order.Time} quantity: {order.Quantity} content: {response.Content}";
-            OnOrderEvent(new OrderEvent(
-                order,
-                DateTime.UtcNow,
-                OrderFee.Zero,
-                "Binance Order Event")
-            { Status = OrderStatus.Invalid });
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, -1, message));
-
-            UnlockStream();
-            return true;
+                submitted = _apiClient.PlaceOrder(order);
+            });
+            return submitted;
         }
 
         /// <summary>
@@ -388,48 +257,12 @@ namespace QuantConnect.Brokerages.Binance
         /// <returns>True if the request was submitted for cancellation, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            LockStream();
-
-            var success = new List<bool>();
-            IDictionary<string, object> body = new Dictionary<string, object>()
+            bool submitted = false;
+            WithLockedStream(() =>
             {
-                { "symbol", _symbolMapper.GetBrokerageSymbol(order.Symbol) }
-            };
-            foreach (var id in order.BrokerId)
-            {
-                if (body.ContainsKey("signature"))
-                {
-                    body.Remove("signature");
-                }
-                body["orderId"] = id;
-                body["timestamp"] = GetNonce();
-                body["signature"] = AuthenticationToken(body.ToQueryString());
-
-                var request = new RestRequest("/api/v3/order", Method.DELETE);
-                request.AddHeader(KeyHeader, ApiKey);
-                request.AddParameter(
-                    "application/x-www-form-urlencoded",
-                    Encoding.UTF8.GetBytes(body.ToQueryString()),
-                    ParameterType.RequestBody
-                );
-
-                var response = ExecuteRestRequest(request);
-                success.Add(response.StatusCode == HttpStatusCode.OK);
-            }
-
-            var canceled = false;
-            if (success.All(a => a))
-            {
-                OnOrderEvent(new OrderEvent(order,
-                    DateTime.UtcNow,
-                    OrderFee.Zero,
-                    "Binance Order Event")
-                { Status = OrderStatus.Canceled });
-
-                canceled = true;
-            }
-            UnlockStream();
-            return canceled;
+                submitted = _apiClient.CancelOrder(order);
+            });
+            return submitted;
         }
 
         /// <summary>
@@ -446,49 +279,24 @@ namespace QuantConnect.Brokerages.Binance
                 yield break;
             }
 
-            string resolution = ConvertResolution(request.Resolution);
-            long resolutionInMS = (long)request.Resolution.ToTimeSpan().TotalMilliseconds;
-            string symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
-            long startMTS = (long)Time.DateTimeToUnixTimeStamp(request.StartTimeUtc) * 1000;
-            long endMTS = (long)Time.DateTimeToUnixTimeStamp(request.EndTimeUtc) * 1000;
-            string endpoint = $"/api/v1/klines?symbol={symbol}&interval={resolution}&limit=1000";
+            var period = request.Resolution.ToTimeSpan();
 
-            while ((endMTS - startMTS) > resolutionInMS)
+            foreach (var kline in _apiClient.GetHistory(request))
             {
-                var timeframe = $"&startTime={startMTS}&endTime={endMTS}";
-
-                var restRequest = new RestRequest(endpoint + timeframe, Method.GET);
-                var response = ExecuteRestRequest(restRequest);
-
-                if (response.StatusCode != HttpStatusCode.OK)
+                yield return new TradeBar()
                 {
-                    throw new Exception($"BinanceBrokerage.GetHistory: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
-                }
-
-                var klines = JsonConvert.DeserializeObject<object[][]>(response.Content)
-                    .Select(entries => new Messages.Kline(entries))
-                    .ToList();
-
-                startMTS = klines.Last().OpenTime + resolutionInMS;
-                var period = request.Resolution.ToTimeSpan();
-
-                foreach (var kline in klines)
-                {
-                    yield return new TradeBar()
-                    {
-                        Time = Time.UnixMillisecondTimeStampToDateTime(kline.OpenTime),
-                        Symbol = request.Symbol,
-                        Low = kline.Low,
-                        High = kline.High,
-                        Open = kline.Open,
-                        Close = kline.Close,
-                        Volume = kline.Volume,
-                        Value = kline.Close,
-                        DataType = MarketDataType.TradeBar,
-                        Period = period,
-                        EndTime = Time.UnixMillisecondTimeStampToDateTime(kline.OpenTime + (long)period.TotalMilliseconds)
-                    };
-                }
+                    Time = Time.UnixMillisecondTimeStampToDateTime(kline.OpenTime),
+                    Symbol = request.Symbol,
+                    Low = kline.Low,
+                    High = kline.High,
+                    Open = kline.Open,
+                    Close = kline.Close,
+                    Volume = kline.Volume,
+                    Value = kline.Close,
+                    DataType = MarketDataType.TradeBar,
+                    Period = period,
+                    EndTime = Time.UnixMillisecondTimeStampToDateTime(kline.OpenTime + (long)period.TotalMilliseconds)
+                };
             }
         }
 

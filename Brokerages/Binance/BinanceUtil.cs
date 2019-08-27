@@ -28,41 +28,16 @@ namespace QuantConnect.Brokerages.Binance
     /// <summary>
     /// Binance utility methods
     /// </summary>
-    public partial class BinanceBrokerage
+    public class BinanceUtil
     {
-        
         /// <summary>
-        /// If an IP address exceeds a certain number of requests per minute
-        /// HTTP 429 return code is used when breaking a request rate limit.
+        /// Convert binance status string value to native Lean OrderStatus
         /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        private IRestResponse ExecuteRestRequest(IRestRequest request)
+        /// <param name="status">The Binance order status value</param>
+        /// <returns>Lean order status</returns>
+        public static OrderStatus ConvertOrderStatus(string status)
         {
-            const int maxAttempts = 10;
-            var attempts = 0;
-            IRestResponse response;
-
-            do
-            {
-                if (!_restRateLimiter.WaitToProceed(TimeSpan.Zero))
-                {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "RateLimit",
-                        "The API request has been rate limited. To avoid this message, please reduce the frequency of API calls."));
-
-                    _restRateLimiter.WaitToProceed();
-                }
-
-                response = RestClient.Execute(request);
-                // 429 status code: Too Many Requests
-            } while (++attempts < maxAttempts && (int)response.StatusCode == 429);
-
-            return response;
-        }
-
-        private static OrderStatus ConvertOrderStatus(string raw)
-        {
-            switch (raw.LazyToUpper())
+            switch (status.LazyToUpper())
             {
                 case "NEW":
                     return OrderStatus.New;
