@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm
         public Security AddData(Type dataType, string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             //Add this to the data-feed subscriptions
-            var symbol = new Symbol(SecurityIdentifier.GenerateBase(dataType, ticker, Market.USA), ticker);
+            var symbol = new Symbol(SecurityIdentifier.GenerateBase(dataType, ticker, Market.USA, dataType.GetBaseDataInstance().RequiresMapping()), ticker);
 
             var alias = symbol.ID.Symbol;
             SymbolCache.Set(alias, symbol);
