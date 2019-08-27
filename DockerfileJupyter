@@ -13,10 +13,6 @@ RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.10.0/tini 
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
-RUN git clone https://github.com/QuantConnect/pythonnet && \
-    cd pythonnet && cp src/runtime/interop36.cs src/runtime/interop36m.cs && \
-    python setup.py install && cd .. && rm -irf pythonnet
-
 # Install Lean/PythonToolbox
 RUN git clone https://github.com/QuantConnect/Lean.git && cd Lean/PythonToolbox && \
     python setup.py install && cd ../.. && rm -irf Lean
@@ -42,11 +38,8 @@ ENV PYTHONPATH=${WORK}:${PYTHONPATH}
 
 # Copy Lean files to convenient locations
 COPY ./Launcher/bin/Debug/ ${WORK}
-RUN mkdir ${WORK}/pythonnet && \
-    mv ${WORK}/decimal.py ${WORK}/pythonnet/decimal.py && \
-    mv ${WORK}/nPython.exe ${WORK}/pythonnet/nPython.exe && \
-    mv ${WORK}/Python.Runtime.dll ${WORK}/pythonnet/Python.Runtime.dll && \
-    find ${WORK} -type f -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -delete && \
+# Copy pythonnet binaries for jupyter
+RUN cp ${WORK}/jupyter/* ${WORK}
     echo "{ \"data-folder\": \"/home/Data/\", \"composer-dll-directory\": \"$WORK\" }" > ${WORK}/config.json
 
 EXPOSE 8888
