@@ -19,8 +19,6 @@ using System.Diagnostics;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
-using QuantConnect.Data;
-using QuantConnect.Data.Custom;
 using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Tests.Common.Securities
@@ -274,6 +272,14 @@ namespace QuantConnect.Tests.Common.Securities
             SecurityIdentifier sid;
             Assert.IsTrue(SecurityIdentifier.TryParse(value, out sid));
             Assert.AreEqual(sid.ToString(), value);
+        }
+
+        [Test]
+        public void TryParseFailsInvalidProperties()
+        {
+            const string value = "SPY WhatEver";
+            SecurityIdentifier sid;
+            Assert.IsFalse(SecurityIdentifier.TryParse(value, out sid));
         }
 
         [Test, Category("TravisExclude")]

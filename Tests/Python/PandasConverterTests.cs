@@ -322,7 +322,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
 
-                var subDataFrame = dataFrame.loc[symbol.Value];
+                var subDataFrame = dataFrame.loc[symbol];
                 Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
 
                 Assert.IsTrue(subDataFrame.get("openinterest") != null);

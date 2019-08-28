@@ -20,7 +20,6 @@ using System.Linq;
 using System.Numerics;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -278,6 +277,10 @@ namespace QuantConnect
             _underlying = null;
             _strikePrice = -1;
             SecurityType = (SecurityType)ExtractFromProperties(SecurityTypeOffset, SecurityTypeWidth, properties);
+            if (!Enum.IsDefined(typeof(SecurityType), SecurityType))
+            {
+                throw new ArgumentException($"The provided properties do not march with a valid {nameof(SecurityType)}", "properties");
+            }
             _hashCode = unchecked (symbol.GetHashCode() * 397) ^ properties.GetHashCode();
         }
 

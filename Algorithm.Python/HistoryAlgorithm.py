@@ -44,7 +44,7 @@ class HistoryAlgorithm(QCAlgorithm):
         self.AddEquity("SPY", Resolution.Daily)
         self.AddData(QuandlFuture,"CHRIS/CME_SP1", Resolution.Daily)
         # specifying the exchange will allow the history methods that accept a number of bars to return to work properly
-        self.Securities["CHRIS/CME_SP1.QuandlFuture"].Exchange = EquityExchange()
+        self.Securities["CHRIS/CME_SP1"].Exchange = EquityExchange()
 
         # we can get history in initialize to set up indicators and such
         self.spyDailySma = SimpleMovingAverage(14)
@@ -71,17 +71,17 @@ class HistoryAlgorithm(QCAlgorithm):
             self.spyDailySma.Update(index, tradeBar["close"])
 
         # get the last calendar year's worth of quandl data at the configured resolution (daily)
-        quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1.QuandlFuture", timedelta(365))
-        self.AssertHistoryCount("History(QuandlFuture, \"CHRIS/CME_SP1.QuandlFuture\", timedelta(365))", quandlHistory, 250)
+        quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1", timedelta(365))
+        self.AssertHistoryCount("History(QuandlFuture, \"CHRIS/CME_SP1\", timedelta(365))", quandlHistory, 250)
 
         # get the last 14 bars of SPY at the configured resolution (daily)
-        quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1.QuandlFuture", 14)
-        self.AssertHistoryCount("History(QuandlFuture, \"CHRIS/CME_SP1.QuandlFuture\", 14)", quandlHistory, 14)
+        quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1", 14)
+        self.AssertHistoryCount("History(QuandlFuture, \"CHRIS/CME_SP1\", 14)", quandlHistory, 14)
 
         # we can loop over the return values from these functions and we'll get Quandl data
         # this can be used in much the same way as the tradeBarHistory above
         self.spyDailySma.Reset()
-        for index, quandl in quandlHistory.loc["CHRIS/CME_SP1.QuandlFuture"].iterrows():
+        for index, quandl in quandlHistory.loc["CHRIS/CME_SP1"].iterrows():
             self.spyDailySma.Update(index, quandl["settle"])
 
         # get the last year's worth of all configured Quandl data at the configured resolution (daily)
@@ -95,8 +95,8 @@ class HistoryAlgorithm(QCAlgorithm):
         # NOTE: using different resolutions require that they are properly implemented in your data type, since
         #  Quandl doesn't support minute data, this won't actually work, but if your custom data source has
         #  different resolutions, it would need to be implemented in the GetSource and Reader methods properly
-        #quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1.QuandlFuture", timedelta(7), Resolution.Minute)
-        #quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1.QuandlFuture", 14, Resolution.Minute)
+        #quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1", timedelta(7), Resolution.Minute)
+        #quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1", 14, Resolution.Minute)
         #allQuandlData = self.History(QuandlFuture, timedelta(365), Resolution.Minute)
         #allQuandlData = self.History(QuandlFuture, self.Securities.Keys, 14, Resolution.Minute)
         #allQuandlData = self.History(QuandlFuture, self.Securities.Keys, timedelta(1), Resolution.Minute)
@@ -108,14 +108,14 @@ class HistoryAlgorithm(QCAlgorithm):
 
         # we can also access the return value from the multiple symbol functions to request a single
         # symbol and then loop over it
-        singleSymbolQuandl = allQuandlData.loc["CHRIS/CME_SP1.QuandlFuture"]
-        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1.QuandlFuture\"]", singleSymbolQuandl, 250)
+        singleSymbolQuandl = allQuandlData.loc["CHRIS/CME_SP1"]
+        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1\"]", singleSymbolQuandl, 250)
         for  quandl in singleSymbolQuandl:
             # do something with 'CHRIS/CME_SP1.QuandlFuture' quandl data
             pass
 
-        quandlSpyLows = allQuandlData.loc["CHRIS/CME_SP1.QuandlFuture"]["low"]
-        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1.QuandlFuture\"][\"low\"]", quandlSpyLows, 250)
+        quandlSpyLows = allQuandlData.loc["CHRIS/CME_SP1"]["low"]
+        self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1\"][\"low\"]", quandlSpyLows, 250)
         for  low in quandlSpyLows:
             # do something with 'CHRIS/CME_SP1.QuandlFuture' quandl data
             pass

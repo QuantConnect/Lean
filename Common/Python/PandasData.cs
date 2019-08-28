@@ -31,6 +31,8 @@ namespace QuantConnect.Python
     public class PandasData
     {
         private static dynamic _pandas;
+        private static dynamic _remapper;
+        private static dynamic _symbolMapper;
         private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
 
         private readonly int _levels;
@@ -60,6 +62,35 @@ namespace QuantConnect.Python
                 using (Py.GIL())
                 {
                     _pandas = Py.Import("pandas");
+
+                    // this python Remapper class will work as a proxy and adjust the
+                    // input to its methods using the provided 'mapper' callable object
+                    _remapper = PythonEngine.ModuleFromString("remapper",
+                        @"import wrapt
+class Remapper(wrapt.ObjectProxy):
+    def __init__(self, wrapped, mapper):
+        super(Remapper, self).__init__(wrapped)
+        self._self_mapper = mapper
+
+    def __getitem__(self, name):
+        name = self._self_mapper(name)
+        return self.__wrapped__.__getitem__(name)
+
+    def __setitem__(self, name, value):
+        name = self._self_mapper(name)
+        return self.__wrapped__.__setitem__(name, value)
+
+    def __delitem__(self, name):
+        name = self._self_mapper(name)
+        return self.__wrapped__.__delitem__(name)
+
+    @property
+    def loc(self):
+        return Remapper(self.__wrapped__.loc, self._self_mapper)
+").GetAttr("Remapper");
+
+                    Func<dynamic, dynamic> mapper = SymbolMapper;
+                    _symbolMapper = mapper.ToPython();
                 }
             }
 
@@ -228,19 +259,19 @@ namespace QuantConnect.Python
         {
             var empty = new PyString(string.Empty);
             var list = Enumerable.Repeat<PyObject>(empty, 5).ToList();
-            list[3] = _symbol.ToString().ToPython();
+            list[3] = _symbol.ID.ToString().ToPython();
 
             if (_symbol.SecurityType == SecurityType.Future)
             {
                 list[0] = _symbol.ID.Date.ToPython();
-                list[3] = _symbol.Value.ToPython();
+                list[3] = _symbol.ID.ToString().ToPython();
             }
             if (_symbol.SecurityType == SecurityType.Option)
             {
                 list[0] = _symbol.ID.Date.ToPython();
                 list[1] = _symbol.ID.StrikePrice.ToPython();
                 list[2] = _symbol.ID.OptionRight.ToString().ToPython();
-                list[3] = _symbol.Value.ToPython();
+                list[3] = _symbol.ID.ToString().ToPython();
             }
 
             // Create the index labels
@@ -291,7 +322,7 @@ namespace QuantConnect.Python
                     pyDict.SetItem(kvp.Key, _pandas.Series(values, index));
                 }
                 _series.Clear();
-                return _pandas.DataFrame(pyDict);
+                return ApplySymbolMapper(_pandas.DataFrame(pyDict));
             }
         }
 
@@ -315,6 +346,25 @@ namespace QuantConnect.Python
             {
                 throw new ArgumentException($"PandasData.AddToSeries(): {key} key does not exist in series dictionary.");
             }
+        }
+
+        /// <summary>
+        /// Will wrap the provided pandas data frame using the <see cref="SymbolMapper"/>
+        /// </summary>
+        internal static dynamic ApplySymbolMapper(dynamic pandasDataFrame)
+        {
+            return _remapper.Invoke(new PyObject[] { pandasDataFrame, _symbolMapper });
+        }
+
+        private static dynamic SymbolMapper(dynamic index)
+        {
+            var stringIndex = index as string;
+            Symbol symbol;
+            if (stringIndex != null && SymbolCache.TryGetSymbol(stringIndex, out symbol))
+            {
+                return symbol.ID.ToString();
+            }
+            return index;
         }
     }
 }
