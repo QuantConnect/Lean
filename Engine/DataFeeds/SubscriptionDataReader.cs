@@ -217,11 +217,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 try
                 {
-                    // Load the symbol and date to complete the mapFile checks in one statement
-                    var symbol = _config.Symbol.HasUnderlying ? _config.Symbol.Underlying.ID.Symbol : _config.Symbol.ID.Symbol;
-                    var date = _config.Symbol.HasUnderlying ? _config.Symbol.Underlying.ID.Date : _config.Symbol.ID.Date;
-
-                    var mapFile = _mapFileResolver.ResolveMapFile(symbol, date);
+                    var mapFile = _mapFileResolver.ResolveMapFile(_config.Symbol, _config.Type);
 
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
