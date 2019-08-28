@@ -235,7 +235,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// </summary>
         public override string ToString()
         {
-            var symbol = string.IsNullOrWhiteSpace(TESymbol) ? TESymbol : Ticker;
+            var symbol = string.IsNullOrWhiteSpace(TESymbol) ? Ticker : TESymbol;
             return $"{symbol} ({Country} - {Category}): {Event} : Importance.{Importance}";
         }
     }
