@@ -114,6 +114,27 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         }
 
         /// <summary>
+        /// Clones the data. This is required for some custom data
+        /// </summary>
+        /// <returns>A new cloned instance</returns>
+        public override BaseData Clone()
+        {
+            return new TradingEconomicsIndicator
+            {
+                Country = Country,
+                Category = Category,
+                EndTime = EndTime,
+                Value = Value,
+                Frequency = Frequency,
+                LastUpdate = LastUpdate,
+                HistoricalDataSymbol = HistoricalDataSymbol,
+
+                Symbol = Symbol,
+                Time = Time,
+            };
+        }
+
+        /// <summary>
         /// Formats a string with the Trading Economics Indicator information.
         /// </summary>
         public override string ToString() => $"{HistoricalDataSymbol} ({Country} - {Category}): {Value}";

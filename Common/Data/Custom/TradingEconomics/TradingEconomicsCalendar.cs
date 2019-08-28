@@ -150,7 +150,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// Unique symbol used by Trading Economics
         /// </summary>
         [JsonProperty(PropertyName = "Symbol")]
-        public string Symbol { get; set; }
+        public string TESymbol { get; set; }
 
         /// <summary>
         /// Return the Subscription Data Source gained from the URL
@@ -197,11 +197,45 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         }
 
         /// <summary>
+        /// Clones the data. This is required for some custom data
+        /// </summary>
+        /// <returns>A new cloned instance</returns>
+        public override BaseData Clone()
+        {
+            return new TradingEconomicsCalendar
+            {
+                CalendarId = CalendarId,
+                EndTime = EndTime,
+                Country = Country,
+                Category = Category,
+                Event = Event,
+                Reference = Reference,
+                Source = Source,
+                Actual = Actual,
+                Previous = Previous,
+                Forecast = Forecast,
+                TradingEconomicsForecast = TradingEconomicsForecast,
+                Url = Url,
+                DateSpan = DateSpan,
+                Importance = Importance,
+                LastUpdate = LastUpdate,
+                Revised = Revised,
+                OCountry = Country,
+                OCategory = OCategory,
+                Ticker = Ticker,
+                TESymbol = TESymbol,
+                Symbol = Symbol,
+
+                Time = Time
+            };
+        }
+
+        /// <summary>
         /// Formats a string with the Trading Economics Calendar information.
         /// </summary>
         public override string ToString()
         {
-            var symbol = string.IsNullOrWhiteSpace(Symbol) ? Symbol : Ticker;
+            var symbol = string.IsNullOrWhiteSpace(TESymbol) ? Ticker : TESymbol;
             return $"{symbol} ({Country} - {Category}): {Event} : Importance.{Importance}";
         }
     }
