@@ -28,12 +28,12 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class RateGateTests
     {
-        [Test, Ignore("Running in combination with multiple tests causes this to fail")]
-        public void RateGate_400InstancesWaitOnAveragePlus100msMinus20ms()
+        [Test]
+        public void RateGate_200InstancesWaitOnAveragePlus150msMinus20ms()
         {
             var gates = new Dictionary<int, RateGate>();
 
-            for (var i = 100; i < 500; i++)
+            for (var i = 300; i < 500; i++)
             {
                 gates[i] = new RateGate(10, TimeSpan.FromMilliseconds(i));
             }
@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Common.Util
 
                 var elapsed = timer.Elapsed;
                 var lowerBound = TimeSpan.FromMilliseconds(kvp.Key - 20);
-                var upperBound = TimeSpan.FromMilliseconds(kvp.Key + 100);
+                var upperBound = TimeSpan.FromMilliseconds(kvp.Key + 150);
 
                 Assert.GreaterOrEqual(elapsed, lowerBound, $"RateGate was early: {lowerBound - elapsed}");
                 Assert.LessOrEqual(elapsed, upperBound, $"RateGate was late: {elapsed - upperBound}");
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
-        public void RateGate_400InstancesWaitOnAveragePlus100msMinus20msWithTimeout()
+        public void RateGate_400InstancesWaitOnAveragePlus150msMinus20msWithTimeout()
         {
             var gates = new Dictionary<int, RateGate>();
 
