@@ -701,11 +701,10 @@ namespace QuantConnect
         {
             //1. Initialize:
             var files = new List<string>();
-            var slash = zipFile.LastIndexOf(Path.DirectorySeparatorChar);
-            var outFolder = "";
-            if (slash > 0)
+            var outFolder = Path.GetDirectoryName(zipFile);
+            if (string.IsNullOrEmpty(outFolder))
             {
-                outFolder = zipFile.Substring(0, slash);
+                outFolder = Directory.GetCurrentDirectory();
             }
             ICSharpCode.SharpZipLib.Zip.ZipFile zf = null;
 
@@ -719,7 +718,7 @@ namespace QuantConnect
                     //Ignore Directories
                     if (!zipEntry.IsFile) continue;
 
-                    var buffer = new byte[4096];     // 4K is optimum
+                    var buffer = new byte[4096]; // 4K is optimum
                     var zipStream = zf.GetInputStream(zipEntry);
 
                     // Manipulate the output filename here as desired.
@@ -733,7 +732,6 @@ namespace QuantConnect
 
                     //Save the file name for later:
                     files.Add(fullZipToPath);
-                    //Log.Trace("Data.UnzipToFolder(): Input File: " + zipFile + ", Output Directory: " + fullZipToPath);
 
                     //Copy the data in buffer chunks
                     using (var streamWriter = File.Create(fullZipToPath))
@@ -741,6 +739,12 @@ namespace QuantConnect
                         StreamUtils.Copy(zipStream, streamWriter, buffer);
                     }
                 }
+            }
+            catch
+            {
+                // lets catch the exception just to log some information about the zip file
+                Log.Error($"Compression.UnzipToFolder(): Failure: zipFile: {zipFile} - outFolder: {outFolder} - files: {string.Join(",", files)}");
+                throw;
             }
             finally
             {
