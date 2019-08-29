@@ -64,6 +64,7 @@ RUN conda install -y python=3.6.8   \
     pomegranate=0.10.0              \
     wrapt=1.10.11                   \
     nltk=3.4.3                      \
+    wrapt=1.11.2                    \
     tensorflow=1.13.1
 RUN conda install -y -c conda-forge \
     fbprophet=0.5                   \

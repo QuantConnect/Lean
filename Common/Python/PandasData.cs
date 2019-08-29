@@ -84,9 +84,83 @@ class Remapper(wrapt.ObjectProxy):
         name = self._self_mapper(name)
         return self.__wrapped__.__delitem__(name)
 
+    # we wrap the result of 'unstack'
+    def unstack(self, level):
+        result = self.__wrapped__.unstack(level)
+        return Remapper(result, self._self_mapper)
+
+    # we wrap 'loc' to cover the: df.loc['SPY'] case
     @property
     def loc(self):
         return Remapper(self.__wrapped__.loc, self._self_mapper)
+
+    # we wrap the following properties so that when 'unstack', 'loc' are called we wrap them
+    @property
+    def open(self):
+        return Remapper(self.__wrapped__.open, self._self_mapper)
+    @property
+    def high(self):
+        return Remapper(self.__wrapped__.high, self._self_mapper)
+    @property
+    def close(self):
+        return Remapper(self.__wrapped__.close, self._self_mapper)
+    @property
+    def low(self):
+        return Remapper(self.__wrapped__.low, self._self_mapper)
+    @property
+    def lastprice(self):
+        return Remapper(self.__wrapped__.lastprice, self._self_mapper)
+    @property
+    def volume(self):
+        return Remapper(self.__wrapped__.volume, self._self_mapper)
+    @property
+    def askopen(self):
+        return Remapper(self.__wrapped__.askopen, self._self_mapper)
+    @property
+    def askhigh(self):
+        return Remapper(self.__wrapped__.askhigh, self._self_mapper)
+    @property
+    def asklow(self):
+        return Remapper(self.__wrapped__.asklow, self._self_mapper)
+    @property
+    def askclose(self):
+        return Remapper(self.__wrapped__.askclose, self._self_mapper)
+    @property
+    def askprice(self):
+        return Remapper(self.__wrapped__.askprice, self._self_mapper)
+    @property
+    def asksize(self):
+        return Remapper(self.__wrapped__.asksize, self._self_mapper)
+    @property
+    def quantity(self):
+        return Remapper(self.__wrapped__.quantity, self._self_mapper)
+    @property
+    def suspicious(self):
+        return Remapper(self.__wrapped__.suspicious, self._self_mapper)
+    @property
+    def bidopen(self):
+        return Remapper(self.__wrapped__.bidopen, self._self_mapper)
+    @property
+    def bidhigh(self):
+        return Remapper(self.__wrapped__.bidhigh, self._self_mapper)
+    @property
+    def bidlow(self):
+        return Remapper(self.__wrapped__.bidlow, self._self_mapper)
+    @property
+    def bidclose(self):
+        return Remapper(self.__wrapped__.bidclose, self._self_mapper)
+    @property
+    def bidprice(self):
+        return Remapper(self.__wrapped__.bidprice, self._self_mapper)
+    @property
+    def bidsize(self):
+        return Remapper(self.__wrapped__.bidsize, self._self_mapper)
+    @property
+    def exchange(self):
+        return Remapper(self.__wrapped__.exchange, self._self_mapper)
+    @property
+    def openinterest(self):
+        return Remapper(self.__wrapped__.openinterest, self._self_mapper)
 ").GetAttr("Remapper");
 
                     Func<dynamic, dynamic> mapper = SymbolMapper;
