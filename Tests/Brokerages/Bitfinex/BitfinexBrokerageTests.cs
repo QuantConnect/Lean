@@ -29,10 +29,6 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
     [Ignore("This test requires a configured Bitfinex account")]
     public partial class BitfinexBrokerageTests : BrokerageTests
     {
-        // api keys
-        protected const string PublicKey = "";
-        protected const string PrivateKey = "";
-
         /// <summary>
         /// Creates the brokerage under test and connects it
         /// </summary>
@@ -41,8 +37,11 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         /// <returns></returns>
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            var securities = new SecurityManager(new TimeKeeper(DateTime.UtcNow, new[] { TimeZones.NewYork }));
-            securities.Add(Symbol, CreateSecurity(Symbol));
+            var securities = new SecurityManager(new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork))
+            {
+                {Symbol, CreateSecurity(Symbol)}
+            };
+
             var transactions = new SecurityTransactionManager(null, securities);
             transactions.SetOrderProcessor(new FakeOrderProcessor());
 
@@ -57,8 +56,8 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
             return new BitfinexBrokerage(
                     Config.Get("bitfinex-url", "wss://api.bitfinex.com/ws"),
                     Config.Get("bitfinex-rest", "https://api.bitfinex.com"),
-                    PublicKey,
-                    PrivateKey,
+                    Config.Get("bitfinex-api-key"),
+                    Config.Get("bitfinex-api-secret"),
                     algorithm.Object,
                     priceProvider.Object
                 );

@@ -286,8 +286,9 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             if (request.StartTimeUtc >= request.EndTimeUtc)
             {
-                throw new ArgumentException("BitfinexBrokerage.GetHistory(): Indvalid history request parameters, " +
-                                            "StartTimeUtc is expected to be less then EndTimeUtc");
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidDateRange",
+                    "The history request start date must precede the end date, no history returned"));
+                yield break;
             }
 
             string resolution = ConvertResolution(request.Resolution);
@@ -325,9 +326,10 @@ namespace QuantConnect.Brokerages.Bitfinex
                 }
                 else
                 {
-                    Log.Error($"BitfinexBrokerage.GetHistory(): Exchange returned no data for {symbol}" +
-                              $"on history request from {request.StartTimeUtc:s} to {request.EndTimeUtc:s}");
-                    break;
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "NoHistoricalData",
+                        $"Exchange returned no data for {symbol} on history request " +
+                        $"from {request.StartTimeUtc:s} to {request.EndTimeUtc:s}"));
+                    yield break;
                 }
 
                 foreach (var candle in candles)
