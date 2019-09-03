@@ -110,6 +110,9 @@
   "bitfinex-api-secret": "",
   "bitfinex-api-key": "",
 
+  // polygon configuration
+  "polygon-api-key": "",
+
   // Required to access data from Quandl
   // To get your access token go to https://www.quandl.com/account/api
   "quandl-auth-token": "",
