@@ -37,7 +37,7 @@ namespace QuantConnect.ToolBox.CoinApi
     /// </summary>
     public class CoinApiDataQueueHandler : IDataQueueHandler, IDisposable
     {
-        private const string WebSocketUrl = "wss://ws.coinapi.io/v1/";
+        private const string WebSocketUrl = "wss://socket.polygon.io/stocks";
 
         private readonly string _apiKey = Config.Get("coinapi-api-key");
         private readonly WebSocketWrapper _webSocket = new WebSocketWrapper();
