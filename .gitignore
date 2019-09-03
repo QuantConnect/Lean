@@ -262,3 +262,6 @@ Launcher/Plugins/*
 /ApiPython/quantconnect.egg-info/*
 
 QuantConnect.Lean.sln.DotSettings*
+
+# OSX
+.DS_Store 
