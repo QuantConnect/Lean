@@ -90,7 +90,7 @@ namespace QuantConnect.Configuration
             return optionsObject;
         }
 
-        private static object ParseTypedArgument(string value)
+        public static object ParseTypedArgument(string value)
         {
             if (value == "true" || value == "false")
             {

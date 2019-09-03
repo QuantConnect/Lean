@@ -1,0 +1,122 @@
+﻿{
+
+  //REQUIRED ALL downloaders. Target tool.
+  //Example 1: --app=DukascopyDownloader
+  //Example 2: --app=NseMarketDataConverter
+  //Example 3: --app=RDG
+  "app": "bitfinexdownloader",
+
+  //REQUIRED ALL downloaders (except QBDL, SECDL)
+  //Example: --tickers=SPY,AAPL,etc"
+  "tickers": [
+    "ETHUSD",
+    "BTCUSD"
+
+  ],
+
+  //REQUIRED ALL downloaders (except QBDL, CDL, SECDL) and IVolatilityEquityConverter, QuantQuoteConverter
+  //OPTIONAL for RandomDataGenerator - same format as downloaders, Options only support Minute
+  //*Not all downloaders support all resolutions.*
+  //Example: --resolution=Tick/Second/Minute/Hour/Daily/All
+  "resolution": "Minute",
+
+  //REQUIRED ALL downloaders
+  //Example: --from-date=yyyyMMdd-HH:mm:ss
+  "from-date": "20190902-00:00:00",
+
+  //OPTIONAL ALL downloaders. If not provided 'DateTime.UtcNow' will be used. 
+  //Example: --to-date=yyyyMMdd-HH:mm:ss
+  "to-date": "",
+
+  //REQUIRED for CryptoiqDownloader 
+  //OPTIONAL for KaikoDataConverter
+  //The exchange to process. If not defined, all exchanges will be processed.
+  "exchange": "",
+
+  //REQUIRED for QuandlBitfinexDownloader, IEXDownloader, PsychSignalDataDownloader
+  "api-key": "",
+
+  //REQUIRED for AlgoSeekFuturesConverter, AlgoSeekOptionsConverter, KaikoDataConverter, SECDataConverter, 
+  //PsychSignalDataConverter, SmartInsiderConverter"
+  //Date for the option bz files: --date=yyyyMMdd"
+  "date": "",
+
+  //REQUIRED for IVolatilityEquityConverter, KaikoDataConverter, CoinApiDataConverter, NseMarketDataConverter, 
+  //QuantQuoteConverter, SECDataConverter, PsychSignalDataConverter, USTreasuryYieldCurveConverter, SmartInsiderConverter
+  "source-dir": "",
+
+  //REQUIRED for IVolatilityEquityConverter, NseMarketDataConverter, QuantQuoteConverter, SECDataDownloader, 
+  //SECDataConverter, PsychSignalDataDownloader, PsychSignalDataConverter, USTreasuryYieldCurveDownloader, 
+  //USTreasuryYieldCurveConverter, SmartInsiderConverter
+  "destination-dir": "",
+
+  //REQUIRED for IVolatilityEquityConverter
+  "source-meta-dir": "",
+
+  //REQUIRED for RandomDataGenerator. 
+  //Format yyyyMMdd Example: --start=20010101
+  "start": "",
+
+  //REQUIRED for RandomDataGenerator.
+  //Format yyyyMMdd Example: --end=20020101
+  "end": "",
+
+  //REQUIRED for RandomDataGenerator. Number of symbols to generate data for: 
+  //Example: --symbol-count=10
+  "symbol-count": "",
+
+  //OPTIONAL for RandomDataGenerator. Market of generated symbols. Defaults to default market for security type.
+  //Example: --market=usa
+  "market": "",
+
+  //OPTIONAL for RandomDataGenerator. Security type of generated symbols, defaults to Equity.
+  //Example: --security-type=Equity/Option/Forex/Future/Cfd/Crypto
+  "security-type": "",
+
+  //OPTIONAL for RandomDataGenerator. Defaults to Dense.
+  //Valid values: --data-density=Dense/Sparse/VerySparse 
+  "data-density": "",
+
+  //OPTIONAL for RandomDataGenerator. Only used for Equity, defaults to true: 
+  //Example: --include-coarse=true
+  "include-coarse": "",
+
+  //OPTIONAL for RandomDataGenerator. Sets the ratio of generated quotes to generated trades. 
+  //Values larger than 1 mean more quotes than trades. Only used for Option, Future and Crypto, defaults to 1: 
+  //Example: --quote-trade-ratio=1.75
+  "quote-trade-ratio": "",
+
+  //OPTIONAL for RandomDataGenerator. Sets the random number generator seed. Defaults to null (random seed). 
+  //Example: --random-seed=11399 
+  "random-seed": "",
+
+  //OPTIONAL for RandomDataGenerator. Sets the probability each equity generated will have an IPO event. 
+  //Note that this is not the total probability for all symbols generated. Only used for Equity. Defaults to 5.0: 
+  //Example: --ipo-percentage=43.25 
+  "ipo-percentage": "",
+
+  //OPTIONAL for RandomDataGenerator. Sets the probability each equity generated will have a rename event. 
+  //Note that this is not the total probability for all symbols generated. Only used for Equity. Defaults to 30.0: 
+  //Example: --rename-percentage=20.0 
+  "rename-percentage": "",
+
+  //OPTIONAL for RandomDataGenerator. Sets the probability each equity generated will have a stock split event. 
+  //Note that this is not the total probability for all symbols generated. Only used for Equity. Defaults to 15.0: 
+  //Example: --splits-percentage=10.0 
+  "splits-percentage": "",
+
+  //OPTIONAL for RandomDataGenerator. Sets the probability each equity generated will have dividends. 
+  //Note that this is not the probability for all symbols genearted. Only used for Equity. Defaults to 60.0: 
+  //Example: --dividends-percentage=25.5 
+  "dividends-percentage": "",
+
+  //OPTIONAL for RandomDataGenerator. Sets the probability each equity generated will have a dividend event every quarter. 
+  //Note that this is not the total probability for all symbols generated. Only used for Equity. Defaults to 30.0: 
+  //Example: --dividend-every-quarter-percentage=15.0 
+  "dividend-every-quarter-percentage": "",
+
+  //OPTIONAL for PsychSignalDataDownloader. This is the kind of data you want to get from PsychSignal's API. 
+  //Defaults to 'twitter_enhanced_withretweets,stocktwits'
+  "data-source": null
+
+}

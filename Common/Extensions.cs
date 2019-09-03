@@ -1514,5 +1514,13 @@ namespace QuantConnect
                 return s;
             }
         }
+
+        /// <summary>Indicates whether the specified string array is null or has a length of zero.</summary>
+        /// <param name="array">The array to test.</param>
+        /// <returns>true if the array parameter is null or has a length of zero, false otherwise.</returns>
+        public static bool IsNullOrEmpty(this string[] array)
+        {
+            return (array == null || array.Length == 0);
+        }
     }
 }
