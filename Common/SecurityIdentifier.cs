@@ -279,7 +279,7 @@ namespace QuantConnect
             SecurityType = (SecurityType)ExtractFromProperties(SecurityTypeOffset, SecurityTypeWidth, properties);
             if (!Enum.IsDefined(typeof(SecurityType), SecurityType))
             {
-                throw new ArgumentException($"The provided properties do not march with a valid {nameof(SecurityType)}", "properties");
+                throw new ArgumentException($"The provided properties do not match with a valid {nameof(SecurityType)}", "properties");
             }
             _hashCode = unchecked (symbol.GetHashCode() * 397) ^ properties.GetHashCode();
         }
