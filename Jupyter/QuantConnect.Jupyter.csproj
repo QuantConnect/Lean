@@ -78,10 +78,10 @@
   <Choose>
     <When Condition="$(IsWindows) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.22, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.22\lib\win\Python.Runtime.dll</HintPath>
+        <Reference Include="Python.Runtime, Version=1.0.5.23, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.23\lib\win\Python.Runtime.dll</HintPath>
         </Reference>
-        <Content Include="..\packages\QuantConnect.pythonnet.1.0.5.22\lib\win\clr.pyd">
+        <Content Include="..\packages\QuantConnect.pythonnet.1.0.5.23\lib\win\clr.pyd">
           <Link>clr.pyd</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -89,14 +89,14 @@
     </When>
     <When Condition="$(IsLinux) OR '$(ForceLinuxBuild)' == 'true'">
       <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.22, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.22\lib\linux\Python.Runtime.dll</HintPath>
+        <Reference Include="Python.Runtime, Version=1.0.5.23, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.23\lib\linux\Python.Runtime.dll</HintPath>
         </Reference>
-        <Content Include="..\packages\QuantConnect.pythonnet.1.0.5.22\lib\linux\jupyter\clr.cpython-36m-x86_64-linux-gnu.so">
+        <Content Include="..\packages\QuantConnect.pythonnet.1.0.5.23\lib\linux\jupyter\clr.cpython-36m-x86_64-linux-gnu.so">
           <Link>jupyter\clr.cpython-36m-x86_64-linux-gnu.so</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="..\packages\QuantConnect.pythonnet.1.0.5.22\lib\linux\jupyter\Python.Runtime.dll">
+        <Content Include="..\packages\QuantConnect.pythonnet.1.0.5.23\lib\linux\jupyter\Python.Runtime.dll">
           <Link>jupyter\Python.Runtime.dll</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -104,14 +104,14 @@
     </When>
     <When Condition="$(IsOSX) AND '$(ForceLinuxBuild)' != 'true'">
       <ItemGroup>
-        <Reference Include="Python.Runtime, Version=1.0.5.22, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.22\lib\osx\Python.Runtime.dll</HintPath>
+        <Reference Include="Python.Runtime, Version=1.0.5.23, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>..\packages\QuantConnect.pythonnet.1.0.5.23\lib\osx\Python.Runtime.dll</HintPath>
         </Reference>
-        <Content Include="..\packages\QuantConnect.pythonnet.1.0.5.22\lib\osx\jupyter\clr.cpython-36m-darwin.so">
+        <Content Include="..\packages\QuantConnect.pythonnet.1.0.5.23\lib\osx\jupyter\clr.cpython-36m-darwin.so">
           <Link>jupyter\clr.cpython-36m-darwin.so</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="..\packages\QuantConnect.pythonnet.1.0.5.22\lib\osx\jupyter\Python.Runtime.dll">
+        <Content Include="..\packages\QuantConnect.pythonnet.1.0.5.23\lib\osx\jupyter\Python.Runtime.dll">
           <Link>jupyter\Python.Runtime.dll</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -186,12 +186,12 @@
     <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.CSharp.Analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.22\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.22\build\QuantConnect.pythonnet.targets')" />
+  <Import Project="..\packages\QuantConnect.pythonnet.1.0.5.23\build\QuantConnect.pythonnet.targets" Condition="Exists('..\packages\QuantConnect.pythonnet.1.0.5.23\build\QuantConnect.pythonnet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.22\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.22\build\QuantConnect.pythonnet.targets'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.pythonnet.1.0.5.23\build\QuantConnect.pythonnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.pythonnet.1.0.5.23\build\QuantConnect.pythonnet.targets'))" />
     <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props'))" />

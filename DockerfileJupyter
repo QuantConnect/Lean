@@ -39,7 +39,7 @@ ENV PYTHONPATH=${WORK}:${PYTHONPATH}
 # Copy Lean files to convenient locations
 COPY ./Launcher/bin/Debug/ ${WORK}
 # Copy pythonnet binaries for jupyter
-RUN cp ${WORK}/jupyter/* ${WORK}
+RUN cp ${WORK}/jupyter/* ${WORK} && \
     echo "{ \"data-folder\": \"/home/Data/\", \"composer-dll-directory\": \"$WORK\" }" > ${WORK}/config.json
 
 EXPOSE 8888
