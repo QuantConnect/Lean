@@ -52,7 +52,7 @@ For more information on the system design and contributing please see the Lean W
 
 ## Installation Instructions ##
 
-Download the zip file with the [lastest master](https://github.com/QuantConnect/Lean/archive/master.zip) and unzip it to your favorite location.
+Download the zip file with the [latest master](https://github.com/QuantConnect/Lean/archive/master.zip) and unzip it to your favorite location.
 
 Alternatively, install [Git](https://git-scm.com/downloads) and clone the repo:
 ```
