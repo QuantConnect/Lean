@@ -26,6 +26,10 @@ using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.PsychSignal;
+using QuantConnect.Data.Custom.SEC;
+using QuantConnect.Data.Custom.TradingEconomics;
+using QuantConnect.Data.Custom.USTreasury;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
@@ -66,7 +70,6 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(forexQuote.Subscriptions.Count() == 1);
             Assert.IsTrue(GetMatchingSubscription(forexQuote, typeof(TradeBar)) != null);
         }
-
 
         [Test]
         public void DefaultDataFeeds_AreAdded_Successfully()
@@ -169,6 +172,338 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(testHistoryProvider.LastResolutionRequest, Resolution.Minute);
             Assert.IsNotNull(data);
             Assert.AreEqual(data.Price, 2);
+        }
+
+        [TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Cfd, false, false)]
+        [TestCase("BTCUSD", typeof(PsychSignalSentimentData), SecurityType.Crypto, false, false)]
+        [TestCase("CL", typeof(PsychSignalSentimentData), SecurityType.Future, false, false)]
+        [TestCase("AAPL", typeof(SECReport8K), SecurityType.Equity, true, true)]
+        [TestCase("AAPL", typeof(PsychSignalSentimentData), SecurityType.Equity, true, true)]
+        [TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Forex, false, false)]
+        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Cfd, false, false)]
+        [TestCase("BTCUSD", typeof(TradingEconomicsCalendar), SecurityType.Crypto, false, false)]
+        [TestCase("CL", typeof(TradingEconomicsCalendar), SecurityType.Future, false, false)]
+        [TestCase("AAPL", typeof(TradingEconomicsCalendar), SecurityType.Equity, true, false)]
+        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Forex, false, false)]
+        public void AddDataSecuritySymbolWithUnderlying(string ticker, Type customDataType, SecurityType securityType, bool securityShouldBeMapped, bool customDataShouldBeMapped)
+        {
+            SymbolCache.Clear();
+            var qcAlgorithm = new QCAlgorithm();
+
+            Security asset;
+
+            switch (securityType) {
+                case SecurityType.Cfd:
+                    asset = qcAlgorithm.AddCfd(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Crypto:
+                    asset = qcAlgorithm.AddCrypto(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Equity:
+                    asset = qcAlgorithm.AddEquity(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Forex:
+                    asset = qcAlgorithm.AddForex(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Future:
+                    asset = qcAlgorithm.AddFuture(ticker, Resolution.Daily);
+                    break;
+                default:
+                    throw new Exception($"SecurityType {securityType} is not valid for this test");
+            }
+
+            // Dummy here is meant to try to corrupt the SymbolCache. Ideally, SymbolCache should return non-custom data types with higher priority
+            // in case we want to add two custom data types, but still have them associated with the equity from the cache if we're using it
+            var dummy = qcAlgorithm.AddData<SECReport10Q>(asset.Symbol, Resolution.Daily);
+            var customData = qcAlgorithm.AddData(customDataType, asset.Symbol, Resolution.Daily, asset.Subscriptions.Single().DataTimeZone);
+
+            Assert.AreNotEqual(asset.GetType(), customData.GetType());
+            Assert.IsTrue(asset.IsTradable);
+            Assert.IsFalse(customData.IsTradable);
+
+            Assert.IsTrue(customData.Symbol.HasUnderlying, $"{customDataType.Name} added as {ticker} Symbol with SecurityType {securityType} does not have underlying");
+            Assert.AreEqual(customData.Symbol.Underlying, asset.Symbol, $"Custom data underlying does not match {securityType} Symbol for {ticker}");
+
+            Assert.AreEqual(securityShouldBeMapped, asset.Subscriptions.Single().TickerShouldBeMapped());
+            Assert.AreEqual(customDataShouldBeMapped, customData.Subscriptions.Single().TickerShouldBeMapped());
+        }
+
+        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Cfd, false, false)]
+        [TestCase("BTCUSD", typeof(TradingEconomicsCalendar), SecurityType.Crypto, false, false)]
+        [TestCase("CL", typeof(TradingEconomicsCalendar), SecurityType.Future, false, false)]
+        [TestCase("AAPL", typeof(TradingEconomicsCalendar), SecurityType.Equity, true, false)]
+        [TestCase("FDTR", typeof(TradingEconomicsCalendar), SecurityType.Equity, true, false)]
+        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Forex, false, false)]
+        public void AddDataSecuritySymbolNoUnderlying(string ticker, Type customDataType, SecurityType securityType, bool securityShouldBeMapped, bool customDataShouldBeMapped)
+        {
+            SymbolCache.Clear();
+            var qcAlgorithm = new QCAlgorithm();
+
+            Security asset;
+
+            switch (securityType) {
+                case SecurityType.Cfd:
+                    asset = qcAlgorithm.AddCfd(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Crypto:
+                    asset = qcAlgorithm.AddCrypto(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Equity:
+                    asset = qcAlgorithm.AddEquity(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Forex:
+                    asset = qcAlgorithm.AddForex(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Future:
+                    asset = qcAlgorithm.AddFuture(ticker, Resolution.Daily);
+                    break;
+                default:
+                    throw new Exception($"SecurityType {securityType} is not valid for this test");
+            }
+
+            // Dummy here is meant to try to corrupt the SymbolCache. Ideally, SymbolCache should return non-custom data types with higher priority
+            // in case we want to add two custom data types, but still have them associated with the equity from the cache if we're using it
+            var dummy = qcAlgorithm.AddData<SECReport10Q>(asset.Symbol, Resolution.Daily);
+            var customData = qcAlgorithm.AddData(customDataType, asset.Symbol, Resolution.Daily, asset.Subscriptions.Single().DataTimeZone);
+
+            // Ensures that the securities generated are distinct
+            Assert.AreNotEqual(asset.GetType(), customData.GetType());
+            Assert.IsTrue(asset.IsTradable);
+            // TODO: Should fail in master
+            Assert.IsFalse(customData.IsTradable);
+
+            // Check to see if we have an underlying symbol when we shouldn't
+            Assert.IsFalse(customData.Symbol.HasUnderlying, $"{customDataType.Name} has underlying symbol {customData.Symbol.Underlying.Value} for SecurityType {securityType} with original ticker {ticker}");
+            Assert.AreEqual(customData.Symbol.Underlying, null, $"{customDataType.Name} - Custom data underlying Symbol for SecurityType {securityType} is not null");
+
+            Assert.AreEqual(securityShouldBeMapped, asset.Subscriptions.Single().TickerShouldBeMapped());
+            Assert.AreEqual(customDataShouldBeMapped, customData.Subscriptions.Single().TickerShouldBeMapped());
+        }
+
+        [TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Cfd, false, false)]
+        [TestCase("BTCUSD", typeof(PsychSignalSentimentData), SecurityType.Crypto, false, false)]
+        [TestCase("CL", typeof(PsychSignalSentimentData), SecurityType.Future, false, false)]
+        [TestCase("AAPL", typeof(SECReport8K), SecurityType.Equity, true, true)]
+        [TestCase("AAPL", typeof(PsychSignalSentimentData), SecurityType.Equity, true, true)]
+        [TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Forex, false, false)]
+        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Cfd, false, false)]
+        [TestCase("BTCUSD", typeof(TradingEconomicsCalendar), SecurityType.Crypto, false, false)]
+        [TestCase("CL", typeof(TradingEconomicsCalendar), SecurityType.Future, false, false)]
+        [TestCase("AAPL", typeof(TradingEconomicsCalendar), SecurityType.Equity, true, false)]
+        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Forex, false, false)]
+        public void AddDataSecurityTickerWithUnderlying(string ticker, Type customDataType, SecurityType securityType, bool securityShouldBeMapped, bool customDataShouldBeMapped)
+        {
+            SymbolCache.Clear();
+            var qcAlgorithm = new QCAlgorithm();
+
+            Security asset;
+
+            switch (securityType) {
+                case SecurityType.Cfd:
+                    asset = qcAlgorithm.AddCfd(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Crypto:
+                    asset = qcAlgorithm.AddCrypto(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Equity:
+                    asset = qcAlgorithm.AddEquity(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Forex:
+                    asset = qcAlgorithm.AddForex(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Future:
+                    asset = qcAlgorithm.AddFuture(ticker, Resolution.Daily);
+                    break;
+                default:
+                    throw new Exception($"SecurityType {securityType} is not valid for this test");
+            }
+
+            // Dummy here is meant to try to corrupt the SymbolCache. Ideally, SymbolCache should return non-custom data types with higher priority
+            // in case we want to add two custom data types, but still have them associated with the equity from the cache if we're using it
+            var dummy = qcAlgorithm.AddData<SECReport10Q>(ticker, Resolution.Daily);
+            var customData = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, asset.Subscriptions.Single().DataTimeZone);
+
+            Assert.AreNotEqual(asset.GetType(), customData.GetType());
+            Assert.IsTrue(asset.IsTradable);
+            Assert.IsFalse(customData.IsTradable);
+
+            Assert.IsTrue(customData.Symbol.HasUnderlying, $"Custom data added as {ticker} Symbol with SecurityType {securityType} does not have underlying");
+            Assert.AreEqual(customData.Symbol.Underlying, asset.Symbol, $"Custom data underlying does not match {securityType} Symbol for {ticker}");
+
+            Assert.AreEqual(securityShouldBeMapped, asset.Subscriptions.Single().TickerShouldBeMapped());
+            Assert.AreEqual(customDataShouldBeMapped, customData.Subscriptions.Single().TickerShouldBeMapped());
+        }
+
+        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Cfd, false, false)]
+        [TestCase("BTCUSD", typeof(TradingEconomicsCalendar), SecurityType.Crypto, false, false)]
+        [TestCase("CL", typeof(TradingEconomicsCalendar), SecurityType.Future, false, false)]
+        [TestCase("AAPL", typeof(TradingEconomicsCalendar), SecurityType.Equity, true, false)]
+        [TestCase("FDTR", typeof(TradingEconomicsCalendar), SecurityType.Equity, true, false)]
+        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Forex, false, false)]
+        public void AddDataSecurityTickerNoUnderlying(string ticker, Type customDataType, SecurityType securityType, bool securityShouldBeMapped, bool customDataShouldBeMapped)
+        {
+            SymbolCache.Clear();
+            var qcAlgorithm = new QCAlgorithm();
+
+            Security asset;
+
+            switch (securityType) {
+                case SecurityType.Cfd:
+                    asset = qcAlgorithm.AddCfd(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Crypto:
+                    asset = qcAlgorithm.AddCrypto(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Equity:
+                    asset = qcAlgorithm.AddEquity(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Forex:
+                    asset = qcAlgorithm.AddForex(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Future:
+                    asset = qcAlgorithm.AddFuture(ticker, Resolution.Daily);
+                    break;
+                default:
+                    throw new Exception($"SecurityType {securityType} is not valid for this test");
+            }
+
+            // Dummy here is meant to try to corrupt the SymbolCache. Ideally, SymbolCache should return non-custom data types with higher priority
+            // in case we want to add two custom data types, but still have them associated with the equity from the cache if we're using it
+            var dummy = qcAlgorithm.AddData<SECReport10Q>(ticker, Resolution.Daily);
+            var customData = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, asset.Subscriptions.Single().DataTimeZone);
+
+            // Ensures that the securities generated are distinct
+            Assert.AreNotEqual(asset.GetType(), customData.GetType());
+            Assert.IsTrue(asset.IsTradable);
+            // TODO: Should fail in master
+            Assert.IsFalse(customData.IsTradable);
+
+            // Check to see if we have an underlying symbol when we shouldn't
+            Assert.IsFalse(customData.Symbol.HasUnderlying, $"{customDataType.Name} has underlying symbol for SecurityType {securityType} with ticker {ticker}");
+            Assert.AreEqual(customData.Symbol.Underlying, null, $"{customDataType.Name} - Custom data underlying Symbol for SecurityType {securityType} is not null");
+
+            Assert.AreEqual(securityShouldBeMapped, asset.Subscriptions.Single().TickerShouldBeMapped());
+            Assert.AreEqual(customDataShouldBeMapped, customData.Subscriptions.Single().TickerShouldBeMapped());
+        }
+
+        [TestCase("AAPL", typeof(PsychSignalSentimentData))]
+        [TestCase("TWX", typeof(PsychSignalSentimentData))]
+        [TestCase("FB", typeof(SECReport8K))]
+        [TestCase("NFLX", typeof(SECReport10K))]
+        public void AddDataOptionsSymbolHasChainedUnderlyingSymbols(string ticker, Type customDataType)
+        {
+            SymbolCache.Clear();
+            var qcAlgorithm = new QCAlgorithm();
+
+            var asset = qcAlgorithm.AddOption(ticker, Resolution.Daily);
+
+            // Dummy here is meant to try to corrupt the SymbolCache. Ideally, SymbolCache should return non-custom data types with higher priority
+            // in case we want to add two custom data types, but still have them associated with the equity from the cache if we're using it
+            var dummy = qcAlgorithm.AddData<SECReport10Q>(asset.Symbol, Resolution.Daily);
+            var customData = qcAlgorithm.AddData(customDataType, asset.Symbol, Resolution.Daily, asset.Subscriptions.Single().DataTimeZone);
+
+            // Ensures that the securities generated are distinct
+            Assert.AreNotEqual(asset.GetType(), customData.GetType());
+            Assert.IsTrue(asset.IsTradable);
+            // TODO: Should fail in master
+            Assert.IsFalse(customData.IsTradable);
+
+            // Check to see if we have an underlying symbol when we shouldn't
+            Assert.IsTrue(customData.Symbol.HasUnderlying, $"{customDataType.Name} - {ticker} has no underlying Symbol");
+            Assert.AreEqual(customData.Symbol.Underlying, asset.Symbol);
+            Assert.AreEqual(customData.Symbol.Underlying.Underlying, asset.Symbol.Underlying);
+            Assert.AreEqual(customData.Symbol.Underlying.Underlying.Underlying, null);
+
+            Assert.IsTrue(asset.Subscriptions.Single().TickerShouldBeMapped());
+            Assert.IsTrue(customData.Subscriptions.Single().TickerShouldBeMapped());
+        }
+
+        [TestCase("AAPL", typeof(TradingEconomicsCalendar))]
+        [TestCase("FDTR", typeof(TradingEconomicsCalendar))]
+        [TestCase("FOOBAR", typeof(USTreasuryYieldCurveRate))]
+        public void AddDataOptionsSymbolHasNoChainedUnderlyingSymbols(string ticker, Type customDataType)
+        {
+            SymbolCache.Clear();
+            var qcAlgorithm = new QCAlgorithm();
+
+            var asset = qcAlgorithm.AddOption(ticker, Resolution.Daily);
+
+            // Dummy here is meant to try to corrupt the SymbolCache. Ideally, SymbolCache should return non-custom data types with higher priority
+            // in case we want to add two custom data types, but still have them associated with the equity from the cache if we're using it
+            var dummy = qcAlgorithm.AddData<SECReport10Q>(asset.Symbol, Resolution.Daily);
+            var customData = qcAlgorithm.AddData(customDataType, asset.Symbol, Resolution.Daily, asset.Subscriptions.Single().DataTimeZone);
+
+            // Ensures that the securities generated are distinct
+            Assert.AreNotEqual(asset.GetType(), customData.GetType());
+            Assert.IsTrue(asset.IsTradable);
+            // TODO: Should fail in master
+            Assert.IsFalse(customData.IsTradable);
+
+            // Check to see if we have an underlying symbol when we shouldn't
+            Assert.IsFalse(customData.Symbol.HasUnderlying, $"{customDataType.Name} has an underlying Symbol");
+
+            Assert.IsTrue(asset.Subscriptions.Single().TickerShouldBeMapped());
+            Assert.IsFalse(customData.Subscriptions.Single().TickerShouldBeMapped());
+        }
+
+        [TestCase("AAPL", typeof(PsychSignalSentimentData))]
+        [TestCase("TWX", typeof(PsychSignalSentimentData))]
+        [TestCase("FB", typeof(SECReport8K))]
+        [TestCase("NFLX", typeof(SECReport10K))]
+        public void AddDataOptionsTickerHasChainedUnderlyingSymbols(string ticker, Type customDataType)
+        {
+            SymbolCache.Clear();
+            var qcAlgorithm = new QCAlgorithm();
+
+            var asset = qcAlgorithm.AddOption(ticker, Resolution.Daily);
+
+            // Dummy here is meant to try to corrupt the SymbolCache. Ideally, SymbolCache should return non-custom data types with higher priority
+            // in case we want to add two custom data types, but still have them associated with the equity from the cache if we're using it
+            var dummy = qcAlgorithm.AddData<SECReport10Q>(ticker, Resolution.Daily);
+            var customData = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, asset.Subscriptions.Single().DataTimeZone);
+
+            // Ensures that the securities generated are distinct
+            Assert.AreNotEqual(asset.GetType(), customData.GetType());
+            Assert.IsTrue(asset.IsTradable);
+            // TODO: Should fail in master
+            Assert.IsFalse(customData.IsTradable);
+
+            // Check to see if we have an underlying symbol when we shouldn't
+            Assert.IsTrue(customData.Symbol.HasUnderlying, $"{customDataType.Name} - {ticker} has no underlying Symbol");
+            Assert.AreEqual(customData.Symbol.Underlying, asset.Symbol);
+            Assert.AreEqual(customData.Symbol.Underlying.Underlying, asset.Symbol.Underlying);
+            Assert.AreEqual(customData.Symbol.Underlying.Underlying.Underlying, null);
+
+            Assert.IsTrue(asset.Subscriptions.Single().TickerShouldBeMapped());
+            Assert.IsTrue(customData.Subscriptions.Single().TickerShouldBeMapped());
+        }
+
+        [TestCase("AAPL", typeof(TradingEconomicsCalendar))]
+        [TestCase("FDTR", typeof(TradingEconomicsCalendar))]
+        [TestCase("FOOBAR", typeof(USTreasuryYieldCurveRate))]
+        public void AddDataOptionsTickerHasNoChainedUnderlyingSymbols(string ticker, Type customDataType)
+        {
+            SymbolCache.Clear();
+            var qcAlgorithm = new QCAlgorithm();
+
+            var asset = qcAlgorithm.AddOption(ticker, Resolution.Daily);
+
+            // Dummy here is meant to try to corrupt the SymbolCache. Ideally, SymbolCache should return non-custom data types with higher priority
+            // in case we want to add two custom data types, but still have them associated with the equity from the cache if we're using it
+            var dummy = qcAlgorithm.AddData<SECReport10Q>(ticker, Resolution.Daily);
+            var customData = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, asset.Subscriptions.Single().DataTimeZone);
+
+            // Ensures that the securities generated are distinct
+            Assert.AreNotEqual(asset.GetType(), customData.GetType());
+            Assert.IsTrue(asset.IsTradable);
+            // TODO: Should fail in master
+            Assert.IsFalse(customData.IsTradable);
+
+            // Check to see if we have an underlying symbol when we shouldn't
+            Assert.IsFalse(customData.Symbol.HasUnderlying, $"{customDataType.Name} has an underlying Symbol");
+
+            Assert.IsTrue(asset.Subscriptions.Single().TickerShouldBeMapped());
+            Assert.IsFalse(customData.Subscriptions.Single().TickerShouldBeMapped());
         }
 
         [Test]
