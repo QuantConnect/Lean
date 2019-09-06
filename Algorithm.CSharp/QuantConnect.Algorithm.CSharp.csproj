@@ -153,6 +153,8 @@
     <Compile Include="Alphas\VixDualThrustAlpha.cs" />
     <Compile Include="BasicPythonIntegrationTemplateAlgorithm.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
+    <Compile Include="CustomDataUnderlyingOptionSymbolMappingRegressionAlgorithm.cs" />
+    <Compile Include="CustomDataUnderlyingSymbolMappingRegressionAlgorithm.cs" />
     <Compile Include="SmartInsiderDataAlgorithm.cs" />
     <Compile Include="BasicTemplateAlgorithm.cs" />
     <Compile Include="Benchmarks\StatefulCoarseUniverseSelectionBenchmark.cs" />
