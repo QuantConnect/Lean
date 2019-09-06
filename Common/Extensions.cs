@@ -1419,6 +1419,48 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets Enumerable of <see cref="Symbol"/> from a PyObject
+        /// </summary>
+        /// <param name="pyObject">PyObject containing Symbol or Array of Symbol</param>
+        /// <returns>Enumerable of Symbol</returns>
+        public static IEnumerable<Symbol> ConvertToSymbolEnumerable(this PyObject pyObject)
+        {
+            using (Py.GIL())
+            {
+                if (!PyList.IsListType(pyObject))
+                {
+                    pyObject = new PyList(new[] {pyObject});
+                }
+
+                foreach (PyObject item in pyObject)
+                {
+                    if (PyString.IsStringType(item))
+                    {
+                        yield return SymbolCache.GetSymbol(item.GetAndDispose<string>());
+                    }
+                    else
+                    {
+                        Symbol symbol;
+                        try
+                        {
+                            symbol = item.GetAndDispose<Symbol>();
+                        }
+                        catch (Exception e)
+                        {
+                            throw new ArgumentException(
+                                "Argument type should be Symbol or a list of Symbol. " +
+                                $"Object: {item}. Type: {item.GetPythonType()}",
+                                e
+                            );
+                        }
+
+                        yield return symbol;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Converts the numeric value of one or more enumerated constants to an equivalent enumerated string.
         /// </summary>
         /// <param name="value">Numeric value</param>
