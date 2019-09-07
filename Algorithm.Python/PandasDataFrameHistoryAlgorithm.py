@@ -36,14 +36,13 @@ from datetime import datetime, timedelta
 class PandasDataFrameHistoryAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-
         self.SetStartDate(2014, 6, 9)   # Set Start Date
         self.SetEndDate(2014, 6, 9)     # Set End Date
 
         self.spy = self.AddEquity("SPY", Resolution.Daily).Symbol
         self.eur = self.AddForex("EURUSD", Resolution.Daily).Symbol
 
-        aapl = self.AddEquity("AAPL", Resolution.Daily).Symbol
+        aapl = self.AddEquity("AAPL", Resolution.Minute).Symbol
         self.option = Symbol.CreateOption(aapl, Market.USA, OptionStyle.American, OptionRight.Call, 750, datetime(2014, 10, 18))
         self.AddOptionContract(self.option)
 
@@ -72,7 +71,6 @@ class PandasDataFrameHistoryAlgorithm(QCAlgorithm):
         if self.Portfolio.Invested:
             return
 
-        return
         # we can get history in initialize to set up indicators and such
         self.spyDailySma = SimpleMovingAverage(14)
 
@@ -82,7 +80,7 @@ class PandasDataFrameHistoryAlgorithm(QCAlgorithm):
 
         # get the last calendar year's worth of EURUSD data at the configured resolution (daily)
         quoteBarHistory = self.History(["EURUSD"], timedelta(298))
-        self.AssertHistoryIndex(quoteBarHistory, "bidclose", 250, "EURUSD", self.eur)
+        self.AssertHistoryIndex(quoteBarHistory, "bidclose", 251, "EURUSD", self.eur)
 
         optionHistory = self.History([self.option], timedelta(3))
         optionHistory.index = optionHistory.index.droplevel(level=[0,1,2])
@@ -104,8 +102,7 @@ class PandasDataFrameHistoryAlgorithm(QCAlgorithm):
         for index, quandl in quandlHistory.loc["CHRIS/CME_SP1"].iterrows():
             self.spyDailySma.Update(index, quandl["settle"])
 
-        self.SetHoldings("SPY", 1)
-
+        self.SetHoldings(self.eur, 1)
 
     def AssertHistoryIndex(self, df, column, expected, ticker, symbol):
         

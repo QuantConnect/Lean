@@ -182,6 +182,55 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        public void BackwardsCompatibilityDataFrame_get_NewWay()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+def Test(dataFrame, symbol):
+    data = dataFrame['lastprice'].unstack(level=0).get(str(symbol.ID))
+    if data.empty:
+        raise Exception('Data is empty')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [Test]
+        public void BackwardsCompatibilityDataFrame_get_UsingTickerInCache()
+        {
+            using (Py.GIL())
+            {
+                SymbolCache.Set("SPY", Symbols.SPY);
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+def Test(dataFrame, symbol):
+    data = dataFrame['lastprice'].unstack(level=0).get('SPY')
+    if data.empty:
+        raise Exception('Data is empty')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [Test]
+        public void BackwardsCompatibilityDataFrame_get_OnPropertyUsingSymbol()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+def Test(dataFrame, symbol):
+    data = dataFrame.lastprice.get(str(symbol))
+    if data.empty:
+        raise Exception('Data is empty')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [Test]
         public void BackwardsCompatibilityDataFrame_loc_NewWay()
         {
             using (Py.GIL())
@@ -314,10 +363,11 @@ def Test(dataFrame, symbol):
         {
             using (Py.GIL())
             {
+                SymbolCache.Set("SPY", Symbols.SPY);
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
 def Test(dataFrame, symbol):
-    data = dataFrame.as[('SPY',), 'lastprice']").GetAttr("Test");
+    data = dataFrame.at[('SPY',), 'lastprice']").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
@@ -356,6 +406,7 @@ def Test(dataFrame, symbol):
         {
             using (Py.GIL())
             {
+                SymbolCache.Set("SPY", Symbols.SPY);
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
 def Test(dataFrame, symbol):
@@ -402,6 +453,7 @@ def Test(dataFrame, symbol):
         {
             using (Py.GIL())
             {
+                SymbolCache.Set("SPY", Symbols.SPY);
                 dynamic test = PythonEngine.ModuleFromString("testModule",
                     @"
 def Test(dataFrame, symbol):
@@ -506,7 +558,7 @@ def Test(dataFrame, symbol):
         }
 
         [Test]
-        public void NotBackwardsCompatibilityDataFrame_getitem_UsingTickerInCache()
+        public void BackwardsCompatibilityDataFrame_getitem_UsingTickerInCache()
         {
             using (Py.GIL())
             {
@@ -516,12 +568,12 @@ def Test(dataFrame, symbol):
 def Test(dataFrame, symbol):
     data = dataFrame['lastprice']['SPY']").GetAttr("Test");
 
-                Assert.Throws<PythonException>(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
         }
 
         [Test]
-        public void NotBackwardsCompatibilityDataFrame_getitem_UsingSymbol()
+        public void BackwardsCompatibilityDataFrame_getitem_UsingSymbol()
         {
             using (Py.GIL())
             {
@@ -531,7 +583,7 @@ def Test(dataFrame, symbol):
 def Test(dataFrame, symbol):
     data = dataFrame['lastprice'][str(symbol)]").GetAttr("Test");
 
-                Assert.Throws<PythonException>(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
             }
         }
 
