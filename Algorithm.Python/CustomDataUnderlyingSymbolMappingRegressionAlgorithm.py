@@ -35,7 +35,7 @@ from datetime import datetime
 ### <meta name="tag" content="map" />
 ### <meta name="tag" content="mapping" />
 ### <meta name="tag" content="map files" />
-class CustomDataRegressionAlgorithm(QCAlgorithm):
+class CustomDataUnderlyingSymbolMappingRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         self.SetStartDate(1998, 1, 1)
         self.SetEndDate(2004, 1, 1)
@@ -50,7 +50,7 @@ class CustomDataRegressionAlgorithm(QCAlgorithm):
         self.customDataSymbol = self.AddData(SECReport10K, self.equitySymbol)
 
         self.optionTicker = self.AddOption("BAC", Resolution.Daily)
-        # TODO: Maybe this might not work? Maybe we should prefix "BAC" with "?" liek option symbol values are stored in the Symbol Cache
+        # TODO: Maybe this might not work? Maybe we should prefix "BAC" with "?" like option symbol values are stored in the Symbol Cache
         self.customDataOptionTicker = self.AddData(SECReport10K, "BAC").Symbol
 
         self.optionSymbol = self.AddOption("TWX", Resolution.Daily).Symbol
