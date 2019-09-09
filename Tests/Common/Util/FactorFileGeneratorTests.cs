@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Common.Util
         private const string PermTick = "AAPL";
         private const string Market = "usa";
         readonly Symbol _symbol = new Symbol(SecurityIdentifier.GenerateEquity(PermTick, Market), PermTick);
-        private readonly string _dataPath = LeanData.GenerateZipFilePath(Config.Get("data-folder"),
+        private readonly string _dataPath = LeanData.GenerateZipFilePath(Config.Get("data-folder", "../../../Data"),
                                                                         new Symbol(SecurityIdentifier.GenerateEquity(PermTick, Market), PermTick),
                                                                         DateTime.MaxValue,
                                                                         Resolution.Daily,
@@ -66,11 +66,10 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsTrue(factorFile.Permtick == _symbol.Value);
         }
 
-        [Test, Ignore("Fix me - GH issue 3435")]
+        [Test]
         public void FactorFiles_CanBeGenerated_Accurately()
         {
             // Arrange
-            var yahooEvents = _yahooDataDownloader.DownloadSplitAndDividendData(_symbol, Parse.DateTime("01/01/1970"), DateTime.MaxValue);
             var filePath = LeanData.GenerateRelativeFactorFilePath(_symbol);
             var tolerance = 0.00001m;
 
@@ -79,6 +78,16 @@ namespace QuantConnect.Tests.Common.Util
                                             "Try using one of the pre-existing factor files ");
 
             var originalFactorFileInstance = FactorFile.Read(PermTick, Market);
+
+            // start date is the day of the first dividend/split entry in the table
+            var start = originalFactorFileInstance.SortedFactorFileData.Keys.Skip(1).First();
+
+            // end date is the day of the last dividend/split entry in the table
+            // we add the day because the real event is a day later; one more day is added to provide an upper bound to the interval 
+            var end = originalFactorFileInstance.SortedFactorFileData.Keys.OrderByDescending(x => x).Skip(1).First();
+            end = end.AddDays(2);
+
+            var yahooEvents = _yahooDataDownloader.DownloadSplitAndDividendData(_symbol, start, end);
 
             // Act
             var newFactorFileInstance = _factorFileGenerator.CreateFactorFile(yahooEvents.ToList());
