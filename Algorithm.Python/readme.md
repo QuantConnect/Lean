@@ -17,6 +17,7 @@ Before we enable python support, follow the [installation instructions](https://
 5. Reboot computer to ensure changes are propogated. 
 
 #### [macOS](https://github.com/QuantConnect/Lean#macos)
+
 1. Use the macOS x86-64 package installer from [Anaconda](https://repo.anaconda.com/archive/Anaconda3-5.2.0-MacOSX-x86_64.pkg) and follow "[Installing on macOS](https://docs.anaconda.com/anaconda/install/mac-os)" instructions from Anaconda documentation page.
 2. Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
 
@@ -31,6 +32,7 @@ Before we enable python support, follow the [installation instructions](https://
     <dllmap dll="python3.6m" target="{the path in step 1 including libpython3.6m.dylib}" os="!windows"/>
 </configuration>
 ```
+Note: Specify the install of v3.6.6 _exactly_, i.e. if with conda `conda install python=3.6.6` as this is a known compatible version and other versions may have issues as of this writing. 
 
 #### [Linux](https://github.com/QuantConnect/Lean#linux-debian-ubuntu)
 By default, **miniconda** is installed in the users home directory (`$HOME`):
