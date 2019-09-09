@@ -32,7 +32,7 @@ Before we enable python support, follow the [installation instructions](https://
     <dllmap dll="python3.6m" target="{the path in step 1 including libpython3.6m.dylib}" os="!windows"/>
 </configuration>
 ```
-3. Consider specifying the install of 3.6.6 exactly, e.g. with conda `conda install python=3.6.6` as this is a known compatible version and other versions may have issues as of this writing.
+Note: Specify the install of v3.6.6 _exactly_, i.e. if with conda `conda install python=3.6.6` as this is a known compatible version and other versions may have issues as of this writing. 
 
 #### [Linux](https://github.com/QuantConnect/Lean#linux-debian-ubuntu)
 By default, **miniconda** is installed in the users home directory (`$HOME`):
