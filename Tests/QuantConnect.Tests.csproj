@@ -475,7 +475,7 @@
     <Compile Include="Common\Util\BusyBlockingCollectionTests.cs" />
     <Compile Include="Common\Util\ColorJsonConverterTests.cs" />
     <Compile Include="Common\Util\DisposableExtensionsTests.cs" />
-    <Compile Include="Common\Util\FactorFileGeneratorTests.cs" />
+    <Compile Include="ToolBox\FactorFileGeneratorTests.cs" />
     <Compile Include="Common\Util\LeanDataPathComponentsTests.cs" />
     <Compile Include="Common\Util\LeanDataTests.cs" />
     <Compile Include="Common\Util\LinqExtensionsTests.cs" />
@@ -486,7 +486,7 @@
     <Compile Include="Common\Util\ReaderWriterLockSlimExtensionsTests.cs" />
     <Compile Include="Common\Util\VersionHelperTests.cs" />
     <Compile Include="Common\Util\WhoCalledMeTests.cs" />
-    <Compile Include="Common\Util\YahooDataDownloaderTests.cs" />
+    <Compile Include="ToolBox\YahooDataDownloaderTests.cs" />
     <Compile Include="Compression\CompressionTests.cs" />
     <Compile Include="Configuration\ConfigTests.cs" />
     <Compile Include="Engine\AlgorithmManagerTests.cs" />
