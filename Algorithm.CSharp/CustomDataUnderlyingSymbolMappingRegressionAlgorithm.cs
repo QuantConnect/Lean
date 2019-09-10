@@ -40,21 +40,13 @@ namespace QuantConnect.Algorithm.CSharp
 
         // Equity to add custom data with as Symbol
         private Symbol _equitySymbol;
-        // Equity to add custom data with as ticker
-        private Symbol _equityTicker;
 
         // Custom data that was added with Symbol
         private Symbol _customDataSymbol;
-        // Custom data that was added with ticker
-        private Symbol _customDataTicker;
 
         // Option to add custom data with as Symbol
         private Symbol _optionSymbol;
-        // Option to add custom data with as ticker
-        private Symbol _optionTicker;
 
-        // Custom data that was added with option Symbol
-        private Symbol _customDataOptionTicker;
         // Custom data that was added with option ticker
         private Symbol _customDataOptionSymbol;
 
@@ -64,21 +56,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(1998, 1, 1);
-            SetEndDate(2004, 1, 1);
+            SetStartDate(2003, 10, 14);
+            SetEndDate(2014, 4, 9);
             SetCash(100000);
 
             // Renames on 2003-10-16 from AOL to TWX
-            _equityTicker = AddEquity("TWX", Resolution.Daily).Symbol;
-            _customDataTicker = AddData<SECReport10K>("TWX").Symbol;
-
-            // Renames on 1998-09-30 from NB to BAC
-            _equitySymbol = AddEquity("BAC", Resolution.Daily).Symbol;
+            _equitySymbol = AddEquity("GOOGL", Resolution.Daily).Symbol;
             _customDataSymbol = AddData<SECReport10K>(_equitySymbol).Symbol;
-
-            _optionTicker = AddOption("BAC", Resolution.Daily).Symbol;
-            // TODO: Maybe this might not work? Maybe we should prefix "BAC" with "?" like option symbol values are stored in the Symbol Cache
-            _customDataOptionTicker = AddData<SECReport10K>("BAC").Symbol;
 
             _optionSymbol = AddOption("TWX", Resolution.Daily).Symbol;
             _customDataOptionSymbol = AddData<SECReport10K>(_optionSymbol).Symbol;
@@ -100,35 +84,21 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Symbol underlying;
                 Symbol symbol;
+                string expectedUnderlying;
 
-                if (data.SymbolChangedEvents.ContainsKey(_customDataTicker) && data.SymbolChangedEvents.ContainsKey(_equityTicker) && Time.Date == new DateTime(2003, 10, 16))
+                if (data.SymbolChangedEvents.ContainsKey(_customDataSymbol) && data.SymbolChangedEvents.ContainsKey(_equitySymbol))
                 {
-                    underlying = data.SymbolChangedEvents[_customDataTicker].Symbol.Underlying;
-                    symbol = data.SymbolChangedEvents[_equityTicker].Symbol;
-                }
-                else if (data.SymbolChangedEvents.ContainsKey(_customDataSymbol) && data.SymbolChangedEvents.ContainsKey(_equitySymbol) && Time.Date == new DateTime(1998, 9, 30))
-                {
+                    expectedUnderlying = "GOOGL";
                     underlying = data.SymbolChangedEvents[_customDataSymbol].Symbol.Underlying;
                     symbol = data.SymbolChangedEvents[_equitySymbol].Symbol;
                 }
                 // For options, handle the case a bit differently
-                else if ((data.SymbolChangedEvents.ContainsKey(_customDataOptionTicker) && data.SymbolChangedEvents.ContainsKey(_optionTicker)) ||
-                    (data.SymbolChangedEvents.ContainsKey(_customDataOptionSymbol) && data.SymbolChangedEvents.ContainsKey(_optionSymbol)))
+                else if (data.SymbolChangedEvents.ContainsKey(_customDataOptionSymbol) && data.SymbolChangedEvents.ContainsKey(_optionSymbol))
                 {
-                    if (Time.Date == new DateTime(1998, 9, 30))
-                    {
-                        underlying = data.SymbolChangedEvents[_customDataOptionTicker].Symbol.Underlying;
-                        symbol = data.SymbolChangedEvents[_optionTicker].Symbol;
-                    }
-                    else if (Time.Date == new DateTime(2003, 10, 16))
-                    {
-                        underlying = data.SymbolChangedEvents[_customDataOptionSymbol].Symbol.Underlying;
-                        symbol = data.SymbolChangedEvents[_optionSymbol].Symbol;
-                    }
-                    else
-                    {
-                        throw new Exception("Received unknown option symbol changed event");
-                    }
+                    expectedUnderlying = "TWX";
+                    underlying = data.SymbolChangedEvents[_customDataOptionSymbol].Symbol.Underlying;
+                    symbol = data.SymbolChangedEvents[_optionSymbol].Symbol;
+
                     if (underlying == null)
                     {
                         throw new Exception("Custom data Symbol has no underlying");
@@ -140,6 +110,10 @@ namespace QuantConnect.Algorithm.CSharp
                     if (underlying.Underlying != symbol.Underlying)
                     {
                         throw new Exception($"Custom data underlying->(2) does match option underlying (equity symbol). Expected {symbol.Underlying.Value} got {underlying.Underlying.Value}");
+                    }
+                    if (underlying.Underlying.Value != expectedUnderlying)
+                    {
+                        throw new Exception($"Custom data symbol value does not match expected value. Expected {expectedUnderlying}, found {underlying.Underlying.Value}");
                     }
 
                     return;
@@ -156,6 +130,10 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new Exception("Custom data Symbol has no underlying");
                     }
                     throw new Exception($"Underlying custom data Symbol does not match equity Symbol after rename event. Expected {symbol.Value} - got {underlying.Value}");
+                }
+                if (underlying.Value != expectedUnderlying)
+                {
+                    throw new Exception($"Underlying equity symbol value from chained custom data does not match expected value. Expected {symbol.Underlying.Value}, found {underlying.Underlying.Value}");
                 }
             }
         }
