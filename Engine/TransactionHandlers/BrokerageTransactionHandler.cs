@@ -999,15 +999,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     try
                     {
-                        // to be called before updating the Portfolio
-                        NewOrderEvent?.Invoke(this, fill);
-
                         _algorithm.Portfolio.ProcessFill(fill);
                         _algorithm.TradeBuilder.ProcessFill(
                             fill,
                             securityConversionRate,
                             feeInAccountCurrency,
                             multiplier);
+
+                        // to be called after updating the Portfolio
+                        NewOrderEvent?.Invoke(this, fill);
                     }
                     catch (Exception err)
                     {

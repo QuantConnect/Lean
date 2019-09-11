@@ -26,7 +26,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Event fired when there is a new <see cref="QuantConnect.Orders.OrderEvent"/>
         /// </summary>
-        /// <remarks>Will be called before the <see cref="SecurityPortfolioManager"/></remarks>
+        /// <remarks>Will be called after the <see cref="SecurityPortfolioManager"/></remarks>
         event EventHandler<OrderEvent> NewOrderEvent;
     }
 }
