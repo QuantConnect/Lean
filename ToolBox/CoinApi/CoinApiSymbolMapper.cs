@@ -110,13 +110,13 @@ namespace QuantConnect.ToolBox.CoinApi
             var parts = brokerageSymbol.Split('_');
             if (parts.Length != 4 || parts[1] != "SPOT")
             {
-                throw new Exception($"CoinApiSymbolMapper.GetLeanSymbol(): Unsupported SymbolId: {brokerageSymbol}");
+                Log.Error($"CoinApiSymbolMapper.GetLeanSymbol(): Unsupported SymbolId: {brokerageSymbol}");
             }
 
             string symbolMarket;
             if (!MapExchangeIdsToMarkets.TryGetValue(parts[0], out symbolMarket))
             {
-                throw new Exception($"CoinApiSymbolMapper.GetLeanSymbol(): Unsupported ExchangeId: {parts[0]}");
+                Log.Error($"CoinApiSymbolMapper.GetLeanSymbol(): Unsupported SymbolId: {brokerageSymbol}");
             }
 
             var baseCurrency = ConvertCoinApiCurrencyToLeanCurrency(parts[2], symbolMarket);
@@ -166,7 +166,7 @@ namespace QuantConnect.ToolBox.CoinApi
             var result = JsonConvert.DeserializeObject<List<CoinApiSymbol>>(json);
 
             _symbolMap = result
-                .Where(x => x.SymbolType == "SPOT")
+                .Where(x => x.SymbolType == "SPOT" && x.SymbolId.Split('_').Length == 4)
                 .ToDictionary(
                     x =>
                     {

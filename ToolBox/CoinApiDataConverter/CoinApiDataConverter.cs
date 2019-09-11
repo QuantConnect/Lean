@@ -83,6 +83,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             var success = true;
 
             var fileToProcess = _rawDataFolder.EnumerateFiles("*.gz")
+                .Where(f => f.Name.Split('_').Length == 4)
                 .DistinctBy(
                     x =>
                     {
