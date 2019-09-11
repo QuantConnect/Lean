@@ -76,6 +76,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
         public void NoExistingHoldings(OrderDirection direction)
         {
             var insightGenerator = new OrderBasedInsightGenerator();
+
+            var holding =
+                new SecurityHolding(_security, new IdentityCurrencyConverter(_security.QuoteCurrency.Symbol));
+            holding.SetHoldings(1, direction == OrderDirection.Buy ? 1 : -1);
+
             var insight = insightGenerator.GenerateInsightFromFill(new OrderEvent(
                     1,
                     Symbols.SPY,
@@ -86,7 +91,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
                     direction == OrderDirection.Buy ? 1 : -1,
                     OrderFee.Zero
                 ),
-                new SecurityHolding(_security, new IdentityCurrencyConverter(_security.QuoteCurrency.Symbol)));
+                holding);
 
             Assert.AreEqual(1, insight.Confidence);
             Assert.AreEqual(direction == OrderDirection.Buy
@@ -101,7 +106,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
             var holding =
                 new SecurityHolding(_security, new IdentityCurrencyConverter(_security.QuoteCurrency.Symbol));
-            holding.SetHoldings(1, direction == OrderDirection.Buy ? -1 : 1);
+            holding.SetHoldings(1, direction == OrderDirection.Buy ? 1 : -1);
 
             var insight = insightGenerator.GenerateInsightFromFill(new OrderEvent(
                     1,
@@ -127,7 +132,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
             var holding =
                 new SecurityHolding(_security, new IdentityCurrencyConverter(_security.QuoteCurrency.Symbol));
-            holding.SetHoldings(1, direction == OrderDirection.Buy ? -1 : 1);
+            holding.SetHoldings(1, 0);
 
             var insight = insightGenerator.GenerateInsightFromFill(new OrderEvent(
                 1,
@@ -152,7 +157,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
             var holding =
                 new SecurityHolding(_security, new IdentityCurrencyConverter(_security.QuoteCurrency.Symbol));
-            holding.SetHoldings(1, direction == OrderDirection.Buy ? 1 : -1);
+            holding.SetHoldings(1, direction == OrderDirection.Buy ? 2 : -2);
 
             var insight = insightGenerator.GenerateInsightFromFill(new OrderEvent(
                 1,
@@ -178,7 +183,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
             var holding =
                 new SecurityHolding(_security, new IdentityCurrencyConverter(_security.QuoteCurrency.Symbol));
-            holding.SetHoldings(1, direction == OrderDirection.Buy ? -2 : 2);
+            holding.SetHoldings(1, direction == OrderDirection.Buy ? -1 : 1);
 
             var insight = insightGenerator.GenerateInsightFromFill(new OrderEvent(
                 1,
@@ -204,6 +209,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
             var holding = new SecurityHolding(_security,
                 new IdentityCurrencyConverter(_security.QuoteCurrency.Symbol));
+            holding.SetHoldings(1, direction == OrderDirection.Buy ? 2 : -2);
 
             var insight = insightGenerator.GenerateInsightFromFill(new OrderEvent(
                 1,
@@ -220,7 +226,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Assert.AreEqual(direction == OrderDirection.Buy
                 ? InsightDirection.Up : InsightDirection.Down, insight.Direction);
 
-            holding.SetHoldings(1, direction == OrderDirection.Buy ? 2 : -2);
+            holding.SetHoldings(1, direction == OrderDirection.Buy ? 1 : -1);
             insight = insightGenerator.GenerateInsightFromFill(new OrderEvent(
                 1,
                 Symbols.SPY,
@@ -236,7 +242,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
             Assert.AreEqual(direction == OrderDirection.Buy
                 ? InsightDirection.Up : InsightDirection.Down, insight.Direction);
 
-            holding.SetHoldings(1, direction == OrderDirection.Buy ? 1 : -1);
+            holding.SetHoldings(1, direction == OrderDirection.Buy ? .5m : -.5m);
             insight = insightGenerator.GenerateInsightFromFill(new OrderEvent(
                 1,
                 Symbols.SPY,
