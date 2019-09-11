@@ -43,18 +43,18 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public Insight GenerateInsightFromFill(OrderEvent orderEvent,
             SecurityHolding securityHolding)
         {
-            var desiredFinalQuantity = orderEvent.FillQuantity + securityHolding.Quantity;
+            var preFillQuantity = securityHolding.Quantity - orderEvent.FillQuantity;
 
             Insight existingInsight;
             _insights.TryGetValue(orderEvent.Symbol, out existingInsight);
 
             double? confidence;
             if (// new position
-                securityHolding.Quantity == 0
+                preFillQuantity == 0
                 // closing the entire position
-                || desiredFinalQuantity == 0
+                || securityHolding.Quantity == 0
                 // changing market sides
-                || Math.Sign(desiredFinalQuantity) != Math.Sign(securityHolding.Quantity)
+                || Math.Sign(preFillQuantity) != Math.Sign(securityHolding.Quantity)
                 // increasing the position
                 || Math.Sign(orderEvent.FillQuantity) == Math.Sign(securityHolding.Quantity))
             {
@@ -63,19 +63,20 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             else
             {
                 // we are reducing the position, so set the confidence based on the original position
-                confidence = (double)(securityHolding.AbsoluteQuantity - orderEvent.AbsoluteFillQuantity)
-                    / (double) securityHolding.AbsoluteQuantity;
+                confidence = 1 - (double) (orderEvent.AbsoluteFillQuantity / Math.Abs(preFillQuantity));
 
                 if (existingInsight != null)
                 {
                     // we have to adjust new confidence based on previous
-                    confidence = confidence * existingInsight.Confidence;
+                    confidence *= existingInsight.Confidence;
                 }
             }
 
-            var insightDirection = desiredFinalQuantity > 0
-                ? InsightDirection.Up : desiredFinalQuantity == 0
-                    ? InsightDirection.Flat : InsightDirection.Down;
+            var insightDirection = securityHolding.IsLong
+                ? InsightDirection.Up
+                : securityHolding.IsShort
+                    ? InsightDirection.Down
+                    : InsightDirection.Flat;
 
             var insight = Insight.Price(orderEvent.Symbol,
                 Time.EndOfTime,
