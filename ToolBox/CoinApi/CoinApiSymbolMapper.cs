@@ -110,13 +110,13 @@ namespace QuantConnect.ToolBox.CoinApi
             var parts = brokerageSymbol.Split('_');
             if (parts.Length != 4 || parts[1] != "SPOT")
             {
-                Log.Error($"CoinApiSymbolMapper.GetLeanSymbol(): Unsupported SymbolId: {brokerageSymbol}");
+                throw new Exception($"CoinApiSymbolMapper.GetLeanSymbol(): Unsupported SymbolId: {brokerageSymbol}");
             }
 
             string symbolMarket;
             if (!MapExchangeIdsToMarkets.TryGetValue(parts[0], out symbolMarket))
             {
-                Log.Error($"CoinApiSymbolMapper.GetLeanSymbol(): Unsupported SymbolId: {brokerageSymbol}");
+                throw new Exception($"CoinApiSymbolMapper.GetLeanSymbol(): Unsupported ExchangeId: {parts[0]}");
             }
 
             var baseCurrency = ConvertCoinApiCurrencyToLeanCurrency(parts[2], symbolMarket);
