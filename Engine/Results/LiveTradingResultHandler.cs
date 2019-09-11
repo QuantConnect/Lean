@@ -434,7 +434,7 @@ namespace QuantConnect.Lean.Engine.Results
                         AlphaRuntimeStatistics = AlphaRuntimeStatistics
                     };
 
-                    SaveResults($"live-{JobId}.json", result);
+                    SaveResults($"L-{JobId}.json", result);
                     Log.Debug("LiveTradingResultHandler.Update(): status update end.");
                 }
                 catch (Exception err)
