@@ -65,7 +65,6 @@
     <None Include="USTreasuryYieldCurveDataAlgorithm.py" />
     <None Include="SmartInsiderDataAlgorithm.py" />
     <None Include="CustomDataUnderlyingSymbolMappingRegressionAlgorithm.py" />
-    <None Include="CustomDataUsesMappedSymbolOnAddDataRegressionAlgorithm.py" />
     <Content Include="KerasNeuralNetworkAlgorithm.py" />
     <None Include="PsychSignalSentimentRegressionAlgorithm.py" />
     <Content Include="CustomDataUsingMapFileRegressionAlgorithm.py" />

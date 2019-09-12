@@ -43,60 +43,36 @@ class CustomDataUnderlyingSymbolMappingRegressionAlgorithm(QCAlgorithm):
 
         self.initialSymbolChangedEvent = False
 
-        self.equityTicker = self.AddEquity("TWX", Resolution.Daily).Symbol
-        self.customDataTicker = self.AddData(SECReport10K, "TWX").Symbol
-
-        self.equitySymbol = self.AddEquity("BAC", Resolution.Daily).Symbol
-        self.customDataSymbol = self.AddData(SECReport10K, self.equitySymbol)
-
-        self.optionTicker = self.AddOption("BAC", Resolution.Daily)
-        # TODO: Maybe this might not work? Maybe we should prefix "BAC" with "?" like option symbol values are stored in the Symbol Cache
-        self.customDataOptionTicker = self.AddData(SECReport10K, "BAC").Symbol
+        self.equitySymbol = self.AddEquity("GOOGL", Resolution.Daily).Symbol
+        self.customDataSymbol = self.AddData(SECReport10K, self.equitySymbol).Symbol
 
         self.optionSymbol = self.AddOption("TWX", Resolution.Daily).Symbol
-        self.customDataOptionSymbol = self.AddData(SECReport10K, self.optionSymbol)
-
+        self.customDataOptionSymbol = self.AddData(SECReport10K, self.optionSymbol).Symbol
 
     def OnData(self, data):
-        if data.SymbolChangedEvents.Any() and not self.initialSymbolChangedEvent:
+        if len(data.SymbolChangedEvents) != 0 and not self.initialSymbolChangedEvent:
             self.initialSymbolChangedEvent = True
             return
 
-        if data.SymbolChangedEvents.Any():
-            if data.SymbolChangedEvents.ContainsKey(self.customDataTicker) and \
-                data.SymbolChangedEvents.ContainsKey(self.equityTicker) and \
-                self.Time.date() == datetime(2003, 10, 16):
-
-                underlying = data.SymbolChangedEvents[self.customDataTicker].Symbol.Underlying
-                symbol = data.SymbolChangedEvents[self.equityTicker].Symbol
-
-            elif data.SymbolChangedEvents.ContainsKey(self.customDataSymbol) and \
-                data.SymbolChangedEvents.ContainsKey(self.equitySymbol) and \
-                self.Time.date() == datetime(1998, 9, 30):
-
+        if len(data.SymbolChangedEvents) != 0:
+            if data.SymbolChangedEvents.ContainsKey(self.customDataSymbol) and data.SymbolChangedEvents.ContainsKey(self.equitySymbol):
+                expectedUnderlying = "GOOGL"
                 underlying = data.SymbolChangedEvents[self.customDataSymbol].Symbol.Underlying
                 symbol = data.SymbolChangedEvents[self.equitySymbol].Symbol
 
-            elif (data.SymbolChangedEvents.ContainsKey(self.customDataOptionTicker) and data.SymbolChangedEvents.ContainsKey(self.optionTicker)) or \
-                (data.SymbolChangedEvents.ContainsKey(self.customDataOptionSymbol) and data.SymbolChangedEvents.ContainsKey(self.optionSymbol)):
-
-                if self.Time.date() == datetime(1998, 9, 30):
-                    underlying = data.SymbolChangedEvents[self.customDataOptionTicker].Symbol.Underlying
-                    symbol = data.SymbolChangedEvents[self.optionTicker].Symbol
-
-                elif self.Time.date() == datetime(2003, 10, 16):
-                    underlying = data.SymbolChangedEvents[self.customDataOptionSymbol].Symbol.Underlying
-                    symbol = data.SymbolChangedEvents[self.optionSymbol].Symbol
-
-                else:
-                    raise PythonError("Received unknown option symbol changed event")
+            elif data.SymbolChangedEvents.ContainsKey(self.customDataOptionSymbol) and data.SymbolChangedEvents.ContainsKey(self.optionSymbol):
+                expectedUnderlying = "?TWX"
+                underlying = data.SymbolChangedEvents[self.customDataOptionSymbol].Symbol.Underlying
+                symbol = data.SymbolChangedEvents[self.optionSymbol].Symbol
 
                 if underlying is None:
                     raise PythonError("Custom data Symbol has no underlying")
                 if underlying.Underlying is None:
                     raise PythonError("Custom data underlying has no underlying equity symbol")
                 if underlying.Underlying != symbol.Underlying:
-                    raise PythonError(f"Custom data underlying->(2) does not match option underlying (equity symbol) Expected {symbol.Underlying.Value} got {underlying.Underlying.Value}")
+                    raise PythonError(f"Custom data underlying->(2) does not match option underlying (equity symbol). Expected {symbol.Underlying.Value} got {underlying.Underlying.Value}")
+                if underlying.Underlying.Value != expectedUnderlying:
+                    raise PythonError(f"Custom data symbol value does not match expected value. Expected {expectedUnderlying}, found {underlying.Underlying.Value}")
 
                 return
 
@@ -108,3 +84,6 @@ class CustomDataUnderlyingSymbolMappingRegressionAlgorithm(QCAlgorithm):
                     raise PythonError("Custom data Symbol has no underlying")
 
                 raise PythonError(f"Underlying custom data Symbol does not match equity Symbol after rename event. Expected {symbol.Value} - got {underlying.Value}")
+
+            if underlying.Value != expectedUnderlying:
+                raise PythonError(f"Underlying equity symbol value from chained custom data does not match expected value. Expected {symbol.Underlying.Value}, found {underlying.Underlying.Value}")

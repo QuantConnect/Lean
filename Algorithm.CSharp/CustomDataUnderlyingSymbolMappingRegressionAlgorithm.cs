@@ -95,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // For options, handle the case a bit differently
                 else if (data.SymbolChangedEvents.ContainsKey(_customDataOptionSymbol) && data.SymbolChangedEvents.ContainsKey(_optionSymbol))
                 {
-                    expectedUnderlying = "TWX";
+                    expectedUnderlying = "?TWX";
                     underlying = data.SymbolChangedEvents[_customDataOptionSymbol].Symbol.Underlying;
                     symbol = data.SymbolChangedEvents[_optionSymbol].Symbol;
 

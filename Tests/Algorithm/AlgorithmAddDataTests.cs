@@ -437,6 +437,7 @@ namespace QuantConnect.Tests.Algorithm
 
             if (assetShouldBeMapped == customShouldBeMapped)
             {
+                // Fails with CL because MappedSymbol returns "/CL" for the Future symbol. Unsure if this is intended?
                 Assert.AreEqual(assetSubscription.MappedSymbol, customDataSubscription.MappedSymbol);
                 Assert.AreEqual(asset.Symbol.Value, customData.Symbol.Value.Split('.').First());
             }
