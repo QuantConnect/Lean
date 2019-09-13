@@ -17,23 +17,20 @@ using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.ToolBox;
 using QuantConnect.ToolBox.YahooDownloader;
 using QuantConnect.Util;
 
-namespace QuantConnect.Tests.Common.Util
+namespace QuantConnect.Tests.ToolBox
 {
-    // For now these tests are excluded from the Travis build because of occasional Yahoo server errors.
-    // In future they should be updated to read the Yahoo data from a local test file.
-    [TestFixture, Category("TravisExclude")]
+    [TestFixture]
     public class FactorFileGeneratorTests
     {
         private const string PermTick = "AAPL";
         private const string Market = "usa";
         readonly Symbol _symbol = new Symbol(SecurityIdentifier.GenerateEquity(PermTick, Market), PermTick);
-        private readonly string _dataPath = LeanData.GenerateZipFilePath(Config.Get("data-folder", "../../../Data"),
+        private readonly string _dataPath = LeanData.GenerateZipFilePath(Globals.DataFolder,
                                                                         new Symbol(SecurityIdentifier.GenerateEquity(PermTick, Market), PermTick),
                                                                         DateTime.MaxValue,
                                                                         Resolution.Daily,

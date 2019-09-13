@@ -18,7 +18,7 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.ToolBox.YahooDownloader;
 
-namespace QuantConnect.Tests.Common.Util
+namespace QuantConnect.Tests.ToolBox
 {
     [TestFixture]
     public class YahooDataDownloaderTests
