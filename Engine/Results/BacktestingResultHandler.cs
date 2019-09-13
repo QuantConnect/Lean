@@ -432,6 +432,12 @@ namespace QuantConnect.Lean.Engine.Results
             Algorithm = algorithm;
             StartingPortfolioValue = startingPortfolioValue;
 
+            AssetsUnderManagementCapacityManager = new AssetsUnderManagementCapacityManager(
+                Algorithm.Portfolio,
+                Algorithm.SubscriptionManager.SubscriptionDataConfigService,
+                TransactionHandler
+            );
+
             //Get the resample period:
             var totalMinutes = (_job.PeriodFinish - _job.PeriodStart).TotalMinutes;
             var resampleMinutes = totalMinutes < MinimumSamplePeriod * Samples ? MinimumSamplePeriod : totalMinutes / Samples; // Space out the sampling every

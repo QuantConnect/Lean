@@ -91,6 +91,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected AlphaRuntimeStatistics AlphaRuntimeStatistics { get; set; }
 
         /// <summary>
+        /// Gets or sets the current AUM Capacity Manager
+        /// </summary>
+        protected AssetsUnderManagementCapacityManager AssetsUnderManagementCapacityManager { get; set; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()
@@ -210,7 +215,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var trades = Algorithm.TradeBuilder.ClosedTrades;
 
                     statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity, performance, benchmark,
-                        StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions);
+                        StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions, AssetsUnderManagementCapacityManager.AumCapacity);
                 }
             }
             catch (Exception err)

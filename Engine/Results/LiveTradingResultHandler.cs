@@ -756,6 +756,12 @@ namespace QuantConnect.Lean.Engine.Results
             Algorithm = algorithm;
             StartingPortfolioValue = startingPortfolioValue;
 
+            AssetsUnderManagementCapacityManager = new AssetsUnderManagementCapacityManager(
+                Algorithm.Portfolio,
+                Algorithm.SubscriptionManager.SubscriptionDataConfigService,
+                TransactionHandler
+            );
+
             var types = new List<SecurityType>();
             foreach (var kvp in Algorithm.Securities)
             {

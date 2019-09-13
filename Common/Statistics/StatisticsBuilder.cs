@@ -38,6 +38,7 @@ namespace QuantConnect.Statistics
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <param name="totalFees">The total fees</param>
         /// <param name="totalTransactions">The total number of transactions</param>
+        /// <param name="aumCapacity">Asset under management capacity</param>
         /// <returns>Returns a <see cref="StatisticsResults"/> object</returns>
         public static StatisticsResults Generate(
             List<Trade> trades,
@@ -47,7 +48,8 @@ namespace QuantConnect.Statistics
             List<ChartPoint> pointsBenchmark,
             decimal startingCapital,
             decimal totalFees,
-            int totalTransactions)
+            int totalTransactions,
+            decimal aumCapacity)
         {
             var equity = ChartPointToDictionary(pointsEquity);
 
@@ -56,7 +58,7 @@ namespace QuantConnect.Statistics
 
             var totalPerformance = GetAlgorithmPerformance(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
             var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, equity, pointsPerformance, pointsBenchmark, startingCapital);
-            var summary = GetSummary(totalPerformance, totalFees, totalTransactions);
+            var summary = GetSummary(totalPerformance, totalFees, totalTransactions, aumCapacity);
 
             return new StatisticsResults(totalPerformance, rollingPerformances, summary);
         }
@@ -160,7 +162,7 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Returns a summary of the algorithm performance as a dictionary
         /// </summary>
-        private static Dictionary<string, string> GetSummary(AlgorithmPerformance totalPerformance, decimal totalFees, int totalTransactions)
+        private static Dictionary<string, string> GetSummary(AlgorithmPerformance totalPerformance, decimal totalFees, int totalTransactions, decimal aumCapacity)
         {
             return new Dictionary<string, string>
             {
@@ -182,6 +184,7 @@ namespace QuantConnect.Statistics
                 { "Information Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.InformationRatio, 3).ToStringInvariant() },
                 { "Tracking Error", Math.Round((double)totalPerformance.PortfolioStatistics.TrackingError, 3).ToStringInvariant() },
                 { "Treynor Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.TreynorRatio, 3).ToStringInvariant() },
+                { "AUM Capacity", Math.Round((double)aumCapacity, 3).ToStringInvariant() },
                 { "Total Fees", "$" + totalFees.ToStringInvariant("0.00") }
             };
         }

@@ -545,7 +545,8 @@ namespace QuantConnect.Lean.Engine
                         var timeKeeper = algorithm.TimeKeeper;
                         foreach (var update in timeSlice.ConsolidatorUpdateData)
                         {
-                            var consolidators = update.Target.Consolidators;
+                            // Creates a list from the hashset to enable item removal in the IDataConsolidator.Update callback
+                            var consolidators = update.Target.Consolidators.ToList();
                             foreach (var consolidator in consolidators)
                             {
                                 foreach (var dataPoint in update.Data)
