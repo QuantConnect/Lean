@@ -28,6 +28,7 @@ namespace QuantConnect.Statistics
     public class PortfolioStatistics
     {
         private const decimal RiskFreeRate = 0;
+        private const decimal MaximumTradeableVolume = 0.025m;
 
         /// <summary>
         /// The average rate of return for winning trades
@@ -233,6 +234,14 @@ namespace QuantConnect.Statistics
         public static decimal GetRiskFreeRate()
         {
             return RiskFreeRate;
+        }
+
+        /// <summary>
+        /// Gets the current defined maximum tradeable volume
+        /// </summary>
+        public static decimal GetMaximumTradeableVolume()
+        {
+            return MaximumTradeableVolume;
         }
 
         /// <summary>
