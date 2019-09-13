@@ -124,6 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "-29.745"},
             {"Tracking Error", "0.277"},
             {"Treynor Ratio", "-6.438"},
+            {"AUM Capacity", "0.001"},
             {"Total Fees", "$15207.00"},
             {"Fitness Score", "0.033"},
             {"Kelly Criterion Estimate", "-36.472"},
