@@ -45,7 +45,7 @@ namespace QuantConnect.Data.Custom.PsychSignal
 
         /// <summary>
         /// Total bullish scored messages.
-        /// This is the total nubmer of messages classified as bullish in a minute
+        /// This is the total number of messages classified as bullish in a minute
         /// </summary>
         public int BullScoredMessages { get; set; }
 
