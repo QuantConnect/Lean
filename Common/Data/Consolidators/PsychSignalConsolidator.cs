@@ -70,14 +70,6 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="data">The new data</param>
         protected override void AggregateBar(ref PsychSignalConsolidated workingBar, PsychSignalSentimentData data)
         {
-            var bullIntensity = data.BullIntensity;
-            var bearIntensity = data.BearIntensity;
-            var bullMinusBear = data.BullMinusBear;
-            var bullScoredMessages = data.BullScoredMessages;
-            var bearScoredMessages = data.BearScoredMessages;
-            var bullBearMessageRatio = data.BullBearMessageRatio;
-            var totalScoredMessages = data.TotalScoredMessages;
-
             if (workingBar == null)
             {
                 workingBar = new PsychSignalConsolidated
@@ -96,12 +88,12 @@ namespace QuantConnect.Data.Consolidators
                 return;
             }
 
-            UpdateBar(workingBar.BullIntensity, bullIntensity);
-            UpdateBar(workingBar.BearIntensity, bearIntensity);
-            UpdateBar(workingBar.BullMinusBear, bullMinusBear);
+            UpdateBar(workingBar.BullIntensity, data.BullIntensity);
+            UpdateBar(workingBar.BearIntensity, data.BearIntensity);
+            UpdateBar(workingBar.BullMinusBear, data.BullMinusBear);
             workingBar.BullScoredMessages += data.BullScoredMessages;
             workingBar.BearScoredMessages += data.BearScoredMessages;
-            UpdateBar(workingBar.BullBearMessageRatio, bullBearMessageRatio);
+            UpdateBar(workingBar.BullBearMessageRatio, data.BullBearMessageRatio);
             workingBar.TotalScoredMessages += data.TotalScoredMessages;
             workingBar.EndTime = GetRoundedBarTime(data.EndTime);
         }

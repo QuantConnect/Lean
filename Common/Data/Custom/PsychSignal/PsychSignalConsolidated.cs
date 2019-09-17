@@ -73,12 +73,12 @@ namespace QuantConnect.Data.Custom.PsychSignal
             {
                 Time = Time,
                 Symbol = Symbol,
-                BullIntensity = BullIntensity,
-                BearIntensity = BearIntensity,
-                BullMinusBear = BullMinusBear,
+                BullIntensity = BullIntensity.Clone(),
+                BearIntensity = BearIntensity.Clone(),
+                BullMinusBear = BullMinusBear.Clone(),
                 BullScoredMessages = BullScoredMessages,
                 BearScoredMessages = BearScoredMessages,
-                BullBearMessageRatio = BullBearMessageRatio,
+                BullBearMessageRatio = BullBearMessageRatio.Clone(),
                 TotalScoredMessages = TotalScoredMessages
             };
         }
