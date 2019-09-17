@@ -508,7 +508,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
         public FilteredIdentity FilteredIdentity(Symbol symbol, TimeSpan resolution, PyObject selector = null, PyObject filter = null, string fieldName = null)
         {
-            var name = string.Format("{0}({1}_{2})", symbol, fieldName ?? "close", resolution);
+            var name = $"{symbol}({fieldName ?? "close"}_{resolution.ToStringInvariant(null)})";
             var pyselector = PythonUtil.ToFunc<IBaseData, IBaseDataBar>(selector);
             var pyfilter = PythonUtil.ToFunc<IBaseData, bool>(filter);
             var filteredIdentity = new FilteredIdentity(name, pyfilter);

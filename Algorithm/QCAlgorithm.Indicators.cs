@@ -20,6 +20,7 @@ using QuantConnect.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Algorithm
 {
@@ -339,7 +340,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The CommodityChannelIndex indicator for the requested symbol over the specified period</returns>
         public CommodityChannelIndex CCI(Symbol symbol, int period, MovingAverageType movingAverageType = MovingAverageType.Simple, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"CCI({period})" + period, resolution);
+            var name = CreateIndicatorName(symbol, $"CCI({period})", resolution);
             var commodityChannelIndex = new CommodityChannelIndex(name, period, movingAverageType);
             RegisterIndicator(symbol, commodityChannelIndex, resolution, selector);
 
@@ -421,7 +422,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The DoubleExponentialMovingAverage indicator for the requested symbol over the specified period</returns>
         public DoubleExponentialMovingAverage DEMA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"DEMA({period})" + period, resolution);
+            var name = CreateIndicatorName(symbol, $"DEMA({period})", resolution);
             var doubleExponentialMovingAverage = new DoubleExponentialMovingAverage(name, period);
             RegisterIndicator(symbol, doubleExponentialMovingAverage, resolution, selector);
 
@@ -523,7 +524,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
         public FilteredIdentity FilteredIdentity(Symbol symbol, TimeSpan resolution, Func<IBaseData, IBaseDataBar> selector = null, Func<IBaseData, bool> filter = null, string fieldName = null)
         {
-            var name = $"{symbol}({fieldName ?? "close"}_{resolution})";
+            var name = Invariant($"{symbol}({fieldName ?? "close"}_{resolution})");
             var filteredIdentity = new FilteredIdentity(name, filter);
             RegisterIndicator<IBaseData>(symbol, filteredIdentity, ResolveConsolidator(symbol, resolution), selector);
             return filteredIdentity;
@@ -688,7 +689,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A new Identity indicator for the specified symbol and selector</returns>
         public Identity Identity(Symbol symbol, TimeSpan resolution, Func<IBaseData, decimal> selector = null, string fieldName = null)
         {
-            var name = $"{symbol}({fieldName ?? "close"},{resolution})";
+            var name = Invariant($"{symbol}({fieldName ?? "close"},{resolution})");
             var identity = new Identity(name);
             RegisterIndicator(symbol, identity, ResolveConsolidator(symbol, resolution), selector);
             return identity;
@@ -1667,6 +1668,10 @@ namespace QuantConnect.Algorithm
         /// <param name="type">The indicator type, for example, 'SMA(5)'</param>
         /// <param name="resolution">The resolution requested</param>
         /// <returns>A unique for the given parameters</returns>
+        public string CreateIndicatorName(Symbol symbol, FormattableString type, Resolution? resolution)
+        {
+            return CreateIndicatorName(symbol, Invariant(type), resolution);
+        }
         public string CreateIndicatorName(Symbol symbol, string type, Resolution? resolution)
         {
             if (!resolution.HasValue)
@@ -1704,7 +1709,7 @@ namespace QuantConnect.Algorithm
                     throw new ArgumentOutOfRangeException(nameof(resolution), resolution, "resolution parameter is out of range.");
             }
 
-            return $"{type}({symbol}{res})".Replace(")(",",");
+            return Invariant($"{type}({symbol}{res})").Replace(")(",",");
         }
 
         /// <summary>
@@ -1744,7 +1749,7 @@ namespace QuantConnect.Algorithm
             catch (InvalidOperationException)
             {
                 // this will happen if we did not find the subscription, let's give the user a decent error message
-                throw new Exception("Please register to receive data for symbol '" + symbol.ToString() + "' using the AddSecurity() function.");
+                throw new Exception($"Please register to receive data for symbol \'{symbol}\' using the AddSecurity() function.");
             }
             return subscription;
         }
@@ -1861,9 +1866,8 @@ namespace QuantConnect.Algorithm
             var type = typeof(T);
             if (!type.IsAssignableFrom(consolidator.OutputType))
             {
-                throw new ArgumentException(string.Format("Type mismatch found between consolidator and indicator for symbol: {0}." +
-                                                          "Consolidator outputs type {1} but indicator expects input type {2}",
-                    symbol, consolidator.OutputType.Name, type.Name)
+                throw new ArgumentException($"Type mismatch found between consolidator and indicator for symbol: {symbol}." +
+                    $"Consolidator outputs type {consolidator.OutputType.Name} but indicator expects input type {type.Name}"
                 );
             }
 
@@ -1963,7 +1967,7 @@ namespace QuantConnect.Algorithm
                 indicator.Update(selector(bar));
             };
 
-            // Push the historical data through a consolidator 
+            // Push the historical data through a consolidator
             var consolidator = GetIndicatorWarmUpConsolidator(symbol, period, onDataConsolidated);
             history.PushThrough(bar => consolidator.Update(bar));
 
@@ -2041,9 +2045,9 @@ namespace QuantConnect.Algorithm
             // data we won't be able to do anything good, we'll call it second, but it would really just be minute!
             if (timeSpan < subscription.Resolution.ToTimeSpan())
             {
-                throw new ArgumentException(string.Format("Unable to create {0} {1} consolidator because {0} is registered for {2} data. " +
-                                                          "Consolidators require higher resolution data to produce lower resolution data.",
-                    symbol, resolution.Value, subscription.Resolution)
+                throw new ArgumentException(Invariant($"Unable to create {symbol} {resolution.Value} consolidator because {symbol} ") +
+                    Invariant($"is registered for {subscription.Resolution} data. Consolidators require higher resolution data to ") +
+                    "produce lower resolution data."
                 );
             }
 
@@ -2070,9 +2074,8 @@ namespace QuantConnect.Algorithm
             // data we won't be able to do anything good, we'll call it second, but it would really just be minute!
             if (timeSpan.Value < subscription.Resolution.ToTimeSpan())
             {
-                throw new ArgumentException(string.Format("Unable to create {0} consolidator because {0} is registered for {1} data. " +
-                                                          "Consolidators require higher resolution data to produce lower resolution data.",
-                    symbol, subscription.Resolution)
+                throw new ArgumentException($"Unable to create {symbol} consolidator because {symbol} is registered for " +
+                    Invariant($"{subscription.Resolution.ToStringInvariant()} data. Consolidators require higher resolution data to produce lower resolution data.")
                 );
             }
 
@@ -2325,7 +2328,7 @@ namespace QuantConnect.Algorithm
 
             // register user-defined handler to receive consolidated data events
             consolidator.DataConsolidated += (sender, consolidated) => handler((T)consolidated);
-            
+
             // register the consolidator for automatic updates via SubscriptionManager
             SubscriptionManager.AddConsolidator(symbol, consolidator);
 

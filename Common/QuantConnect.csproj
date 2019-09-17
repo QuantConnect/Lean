@@ -654,7 +654,7 @@
     <Compile Include="Packets\OrderEventPacket.cs" />
     <Compile Include="Packets\Packet.cs" />
     <Compile Include="Packets\RuntimeErrorPacket.cs" />
-    <Compile Include="Packets\SecurityTypesPacket .cs" />
+    <Compile Include="Packets\SecurityTypesPacket.cs" />
     <Compile Include="Data\BaseData.cs" />
     <Compile Include="Data\IBaseData.cs" />
     <Compile Include="Data\SubscriptionDataConfig.cs" />

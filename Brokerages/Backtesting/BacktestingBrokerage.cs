@@ -140,7 +140,7 @@ namespace QuantConnect.Brokerages.Backtesting
                     SetPendingOrder(order);
                 }
 
-                var orderId = order.Id.ToString();
+                var orderId = order.Id.ToStringInvariant();
                 if (!order.BrokerId.Contains(orderId)) order.BrokerId.Add(orderId);
 
                 // fire off the event that says this order has been submitted
@@ -180,7 +180,7 @@ namespace QuantConnect.Brokerages.Backtesting
                 SetPendingOrder(order);
             }
 
-            var orderId = order.Id.ToString();
+            var orderId = order.Id.ToStringInvariant();
             if (!order.BrokerId.Contains(orderId)) order.BrokerId.Add(orderId);
 
             // fire off the event that says this order has been updated
@@ -215,8 +215,8 @@ namespace QuantConnect.Brokerages.Backtesting
                 }
             }
 
-            var orderId = order.Id.ToString();
-            if (!order.BrokerId.Contains(orderId)) order.BrokerId.Add(order.Id.ToString());
+            var orderId = order.Id.ToStringInvariant();
+            if (!order.BrokerId.Contains(orderId)) order.BrokerId.Add(order.Id.ToStringInvariant());
 
             // fire off the event that says this order has been canceled
             var canceled = new OrderEvent(order,

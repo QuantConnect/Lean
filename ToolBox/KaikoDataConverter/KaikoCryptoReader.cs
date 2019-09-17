@@ -101,7 +101,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
 
                 var lineParts = line.Split(',');
 
-                var tickEpoch = Convert.ToInt64(lineParts[dateColumn]);
+                var tickEpoch = Parse.Long(lineParts[dateColumn]);
 
                 decimal quantity;
                 decimal price;
@@ -223,7 +223,7 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
                 {
                     Symbol = _symbol,
                     TickType = TickType.Trade,
-                    Time = Time.UnixMillisecondTimeStampToDateTime(Convert.ToInt64(lineParts[dateColumn])),
+                    Time = Time.UnixMillisecondTimeStampToDateTime(Parse.Long(lineParts[dateColumn])),
                     Quantity = quantity,
                     Value = price
                 };
@@ -241,10 +241,10 @@ namespace QuantConnect.ToolBox.KaikoDataConverter
             var value = lineParts[column];
             if (value.Contains("e"))
             {
-                return Decimal.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
+                return Parse.Decimal(value, NumberStyles.Float);
             }
 
-            return Convert.ToDecimal(lineParts[column], CultureInfo.InvariantCulture);
+            return lineParts[column].ConvertInvariant<decimal>();
         }
 
         /// <summary>

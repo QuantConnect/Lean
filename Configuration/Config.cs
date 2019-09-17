@@ -15,11 +15,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Logging;
+using static System.FormattableString;
 
 namespace QuantConnect.Configuration
 {
@@ -39,12 +41,12 @@ namespace QuantConnect.Configuration
         {
             if (File.Exists(fileName))
             {
-                Log.Trace($"Using {fileName} as configuration file");
+                Log.Trace(Invariant($"Using {fileName} as configuration file"));
                 ConfigurationFileName = fileName;
             }
             else
             {
-                Log.Error($"Configuration file {fileName} does not exist, using {ConfigurationFileName}");
+                Log.Error(Invariant($"Configuration file {fileName} does not exist, using {ConfigurationFileName}"));
             }
         }
 
@@ -144,7 +146,7 @@ namespace QuantConnect.Configuration
             var token = GetToken(Settings.Value, key);
             if (token == null)
             {
-                Log.Trace(string.Format("Config.Get(): Configuration key not found. Key: {0} - Using default value: {1}", key, defaultValue));
+                Log.Trace(Invariant($"Config.Get(): Configuration key not found. Key: {key} - Using default value: {defaultValue}"));
                 return defaultValue;
             }
             return token.ToString();
@@ -169,8 +171,8 @@ namespace QuantConnect.Configuration
             JToken environment = Settings.Value;
             while (key.Contains("."))
             {
-                var envName = key.Substring(0, key.IndexOf("."));
-                key = key.Substring(key.IndexOf(".") + 1);
+                var envName = key.Substring(0, key.IndexOf(".", StringComparison.InvariantCulture));
+                key = key.Substring(key.IndexOf(".", StringComparison.InvariantCulture) + 1);
                 var environments = environment["environments"];
                 if (environments == null)
                 {
@@ -230,7 +232,13 @@ namespace QuantConnect.Configuration
             var token = GetToken(Settings.Value, key);
             if (token == null)
             {
-                Log.Trace(string.Format("Config.GetValue(): {0} - Using default value: {1}", key, defaultValue));
+                var defaultValueString = defaultValue is IConvertible
+                    ? ((IConvertible) defaultValue).ToString(CultureInfo.InvariantCulture)
+                    : defaultValue is IFormattable
+                        ? ((IFormattable) defaultValue).ToString(null, CultureInfo.InvariantCulture)
+                        : Invariant($"{defaultValue}");
+
+                Log.Trace(Invariant($"Config.GetValue(): {key} - Using default value: {defaultValueString}"));
                 return defaultValue;
             }
 
@@ -252,7 +260,7 @@ namespace QuantConnect.Configuration
 
             if (typeof(IConvertible).IsAssignableFrom(type))
             {
-                return (T) Convert.ChangeType(value, type);
+                return (T) Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
             }
 
             // try and find a static parse method
@@ -267,7 +275,7 @@ namespace QuantConnect.Configuration
             }
             catch (Exception err)
             {
-                Log.Trace("Config.GetValue<{0}>({1},{2}): Failed to parse: {3}. Using default value.", typeof (T).Name, key, defaultValue, value);
+                Log.Trace(Invariant($"Config.GetValue<{typeof(T).Name}>({key},{defaultValue}): Failed to parse: {value}. Using default value."));
                 Log.Error(err);
                 return defaultValue;
             }
@@ -278,7 +286,7 @@ namespace QuantConnect.Configuration
             }
             catch (Exception err)
             {
-                Log.Trace("Config.GetValue<{0}>({1},{2}): Failed to JSON deserialize: {3}. Using default value.", typeof(T).Name, key, defaultValue, value);
+                Log.Trace(Invariant($"Config.GetValue<{typeof(T).Name}>({key},{defaultValue}): Failed to JSON deserialize: {value}. Using default value."));
                 Log.Error(err);
                 return defaultValue;
             }
@@ -389,7 +397,7 @@ namespace QuantConnect.Configuration
 
             // remove all environments
             var environmentsProperty = clone.Property("environments");
-            if (environmentsProperty != null) environmentsProperty.Remove();
+            environmentsProperty?.Remove();
 
             return clone;
         }

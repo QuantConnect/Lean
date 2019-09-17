@@ -21,6 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -254,13 +255,15 @@ namespace QuantConnect.Securities
 
                     ConversionRateSecurity = security;
                     securities.Add(config.Symbol, security);
-                    Log.Trace("Cash.EnsureCurrencyDataFeed(): Adding " + symbol.Value + " for cash " + Symbol + " currency feed");
+                    Log.Trace($"Cash.EnsureCurrencyDataFeed(): Adding {symbol.Value} for cash {Symbol} currency feed");
                     return config;
                 }
             }
 
             // if this still hasn't been set then it's an error condition
-            throw new ArgumentException(string.Format("In order to maintain cash in {0} you are required to add a subscription for Forex pair {0}{1} or {1}{0}", Symbol, accountCurrency));
+            throw new ArgumentException($"In order to maintain cash in {Symbol} you are required to add a " +
+                $"subscription for Forex pair {Symbol}{accountCurrency} or {accountCurrency}{Symbol}"
+            );
         }
 
         /// <summary>
@@ -272,7 +275,7 @@ namespace QuantConnect.Securities
             // round the conversion rate for output
             var rate = ConversionRate;
             rate = rate < 1000 ? rate.RoundToSignificantDigits(5) : Math.Round(rate, 2);
-            return $"{Symbol}: {CurrencySymbol}{Amount,15:0.00} @ {rate,10:0.00####} = ${Math.Round(ValueInAccountCurrency, 2)}";
+            return Invariant($"{Symbol}: {CurrencySymbol}{Amount,15:0.00} @ {rate,10:0.00####} = ${Math.Round(ValueInAccountCurrency, 2)}");
         }
 
         private static Symbol CreateSymbol(IReadOnlyDictionary<SecurityType, string> marketMap, string crypto, Dictionary<SecurityType, string> markets, SecurityType securityType)

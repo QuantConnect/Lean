@@ -14,12 +14,9 @@
 */
 
 using Newtonsoft.Json;
-using QuantConnect.Data.UniverseSelection;
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Custom.Estimize
 {
@@ -121,18 +118,18 @@ namespace QuantConnect.Data.Custom.Estimize
             // UpdatedAt[0], Id[1], Source[2], Type[3], Mean[4], High[5], Low[6], StandardDeviation[7], FiscalYear[8], FiscalQuarter[9], Count[10]
             var csv = csvLine.Split(',');
 
-            UpdatedAt = DateTime.ParseExact(csv[0], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+            UpdatedAt = Parse.DateTimeExact(csv[0], "yyyyMMdd HH:mm:ss");
             Time = UpdatedAt;
             Id = csv[1];
-            Source = (Source)Enum.Parse(typeof(Source), csv[2]);
-            Type = string.IsNullOrWhiteSpace(csv[3]) ? (Type?)null : (Type)Enum.Parse(typeof(Type), csv[3]);
-            Mean = string.IsNullOrWhiteSpace(csv[4]) ? (decimal?) null : Convert.ToDecimal(csv[4], CultureInfo.InvariantCulture);
-            High = string.IsNullOrWhiteSpace(csv[5]) ? (decimal?) null : Convert.ToDecimal(csv[5], CultureInfo.InvariantCulture);
-            Low = string.IsNullOrWhiteSpace(csv[6]) ? (decimal?) null : Convert.ToDecimal(csv[6], CultureInfo.InvariantCulture);
-            StandardDeviation = string.IsNullOrWhiteSpace(csv[7]) ? (decimal?) null : Convert.ToDecimal(csv[7], CultureInfo.InvariantCulture);
-            FiscalYear =  string.IsNullOrWhiteSpace(csv[8]) ? (int?) null : Convert.ToInt32(csv[8], CultureInfo.InvariantCulture);
-            FiscalQuarter = string.IsNullOrWhiteSpace(csv[9]) ? (int?) null : Convert.ToInt32(csv[9], CultureInfo.InvariantCulture);
-            Count = string.IsNullOrWhiteSpace(csv[10]) ? (int?) null : Convert.ToInt32(csv[10], CultureInfo.InvariantCulture);
+            Source = csv[2].ConvertInvariant<Source>();
+            Type = csv[3].IfNotNullOrEmpty(s => s.ConvertInvariant<Type>());
+            Mean = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            High = csv[5].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            Low = csv[6].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            StandardDeviation = csv[7].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            FiscalYear = csv[8].IfNotNullOrEmpty<int?>(s => Parse.Int(s));
+            FiscalQuarter = csv[9].IfNotNullOrEmpty<int?>(s => Parse.Int(s));
+            Count = csv[10].IfNotNullOrEmpty<int?>(s => Parse.Int(s));
         }
 
         /// <summary>
@@ -157,7 +154,7 @@ namespace QuantConnect.Data.Custom.Estimize
                 "alternative",
                 "estimize",
                 "consensus",
-                $"{symbol.ToLower()}.csv"
+                $"{symbol.ToLowerInvariant()}.csv"
             );
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
@@ -185,7 +182,14 @@ namespace QuantConnect.Data.Custom.Estimize
         /// </summary>
         public override string ToString()
         {
-            return $"{Symbol}(Q{FiscalQuarter} {FiscalYear}) :: {Type} - Mean: {Mean} High: {High} Low: {Low} STD: {StandardDeviation} Count: {Count} on {EndTime:yyyyMMdd} by {Source}";
+            return Invariant($"{Symbol}(Q{FiscalQuarter} {FiscalYear}) :: {Type} - ") +
+                   Invariant($"Mean: {Mean} ") +
+                   Invariant($"High: {High} ") +
+                   Invariant($"Low: {Low} ") +
+                   Invariant($"STD: {StandardDeviation} ") +
+                   Invariant($"Count: {Count} on ") +
+                   Invariant($"{EndTime:yyyyMMdd} ") +
+                   Invariant($"by {Source}");
         }
     }
 

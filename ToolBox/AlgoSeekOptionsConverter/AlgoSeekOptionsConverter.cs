@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -80,7 +80,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             var totalFiles = compressedRawDatafiles.Count;
             var totalFilesProcessed = 0;
             var start = DateTime.MinValue;
-            
+
             foreach (var compressedRawDatafile in compressedRawDatafiles)
             {
                 var counter = 1;
@@ -114,7 +114,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 var processors = new Processors();
                 var waitForFlush = new ManualResetEvent(true);
 
-                // symbol filters 
+                // symbol filters
                 // var symbolFilterNames = new string[] { "AAPL", "TWX", "NWSA", "FOXA", "AIG", "EGLE", "EGEC" };
                 // var symbolFilter = symbolFilterNames.SelectMany(name => new[] { name, name + "1", name + ".1" }).ToHashSet();
                 // var reader = new AlgoSeekOptionsReader(csvFile, _referenceDate, symbolFilter);
@@ -266,7 +266,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             Log.Trace("AlgoSeekOptionsConverter.Package(): Zipping all files ...");
 
             var destination = Path.Combine(_destination, "option");
-            var dateMask = date.ToString(DateFormat.EightCharacter);
+            var dateMask = date.ToStringInvariant(DateFormat.EightCharacter);
 
             var files =
                 Directory.EnumerateFiles(destination, dateMask + "*.csv", SearchOption.AllDirectories)
@@ -317,7 +317,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             var extensions = new HashSet<string> { ".zip", ".csv" };
             var destination = Path.Combine(_destination, "option");
             Directory.CreateDirectory(destination);
-            var dateMask = date.ToString(DateFormat.EightCharacter);
+            var dateMask = date.ToStringInvariant(DateFormat.EightCharacter);
 
             var files =
                 Directory.EnumerateFiles(destination, dateMask + "_" + "*.*", SearchOption.AllDirectories)

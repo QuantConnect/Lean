@@ -112,7 +112,7 @@ namespace QuantConnect.Brokerages.Tradier
                 string accessToken, refreshToken, issuedAt, lifeSpan;
 
                 // always need to grab account ID from configuration
-                var accountID = Configuration.AccountID.ToString();
+                var accountID = Configuration.AccountID.ToStringInvariant();
                 var data = new Dictionary<string, string>();
                 if (File.Exists(TokensFile))
                 {

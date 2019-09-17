@@ -920,7 +920,7 @@ namespace QuantConnect.Algorithm
             }
             catch (DateTimeZoneNotFoundException)
             {
-                throw new ArgumentException(string.Format("TimeZone with id '{0}' was not found. For a complete list of time zones please visit: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones", timeZone));
+                throw new ArgumentException($"TimeZone with id '{timeZone}' was not found. For a complete list of time zones please visit: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones");
             }
 
             SetTimeZone(tz);
@@ -1846,7 +1846,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Error(int)"/>
         public void Debug(int message)
         {
-            Debug(message.ToString());
+            Debug(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1857,7 +1857,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Error(double)"/>
         public void Debug(double message)
         {
-            Debug(message.ToString());
+            Debug(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1868,7 +1868,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Error(decimal)"/>
         public void Debug(decimal message)
         {
-            Debug(message.ToString());
+            Debug(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1891,7 +1891,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Error(int)"/>
         public void Log(int message)
         {
-            Log(message.ToString());
+            Log(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1902,7 +1902,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Error(double)"/>
         public void Log(double message)
         {
-            Log(message.ToString());
+            Log(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1913,7 +1913,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Error(decimal)"/>
         public void Log(decimal message)
         {
-            Log(message.ToString());
+            Log(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1937,7 +1937,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Log(int)"/>
         public void Error(int message)
         {
-            Error(message.ToString());
+            Error(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1948,7 +1948,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Log(double)"/>
         public void Error(double message)
         {
-            Error(message.ToString());
+            Error(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1959,7 +1959,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Log(decimal)"/>
         public void Error(decimal message)
         {
-            Error(message.ToString());
+            Error(message.ToStringInvariant());
         }
 
         /// <summary>

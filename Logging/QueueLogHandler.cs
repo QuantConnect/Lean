@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.IO;
 
 namespace QuantConnect.Logging
@@ -46,7 +47,7 @@ namespace QuantConnect.Logging
         /// Logging Event Handler
         /// </summary>
         public event LogEventRaised LogEvent;
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="QueueLogHandler"/> class.
         /// </summary>
@@ -68,7 +69,7 @@ namespace QuantConnect.Logging
             OnLogEvent(log);
 
             Console.ForegroundColor = ConsoleColor.Red;
-            _error.WriteLine(DateTime.Now.ToString(DateFormat) + " Error:: " + text);
+            _error.WriteLine(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " Error:: " + text);
             Console.ResetColor();
         }
 
@@ -82,7 +83,7 @@ namespace QuantConnect.Logging
             _logs.Enqueue(log);
             OnLogEvent(log);
 
-            _trace.WriteLine(DateTime.Now.ToString(DateFormat) + " Debug:: " + text);
+            _trace.WriteLine(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " Debug:: " + text);
         }
 
         /// <summary>
@@ -95,7 +96,7 @@ namespace QuantConnect.Logging
             _logs.Enqueue(log);
             OnLogEvent(log);
 
-            _trace.WriteLine(DateTime.Now.ToString(DateFormat) + " Trace:: " + text);
+            _trace.WriteLine(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " Trace:: " + text);
         }
 
         /// <summary>

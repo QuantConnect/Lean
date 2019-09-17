@@ -16,6 +16,7 @@
 using System;
 using System.IO;
 using Newtonsoft.Json;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Fundamental
 {
@@ -42,7 +43,7 @@ namespace QuantConnect.Data.Fundamental
         /// <returns>A fine universe symbol for the specified market</returns>
         public static Symbol CreateUniverseSymbol(string market, bool addGuid = true)
         {
-            market = market.ToLower();
+            market = market.ToLowerInvariant();
             var ticker = $"qc-universe-fine-{market}";
             if (addGuid)
             {
@@ -58,8 +59,9 @@ namespace QuantConnect.Data.Fundamental
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             var source =
-                Path.Combine(Globals.DataFolder,
-                    $"equity/{config.Market}/fundamental/fine/{config.Symbol.Value.ToLower()}/{date:yyyyMMdd}.zip");
+                Path.Combine(Globals.DataFolder, Invariant(
+                    $"equity/{config.Market}/fundamental/fine/{config.Symbol.Value.ToLowerInvariant()}/{date:yyyyMMdd}.zip"
+                ));
 
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }

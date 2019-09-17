@@ -52,18 +52,18 @@ namespace QuantConnect.Securities
                     if (seedData != null)
                     {
                         security.SetMarketPrice(seedData);
-                        Log.Debug("FuncSecuritySeeder.SeedSecurity(): Seeded security: " + seedData.Symbol.Value + ": " + seedData.Value);
+                        Log.Debug($"FuncSecuritySeeder.SeedSecurity(): Seeded security: {seedData.Symbol.Value}: {seedData.Value}");
                     }
                     else
                     {
-                        Log.Trace("FuncSecuritySeeder.SeedSecurity(): Unable to seed security: " + security.Symbol.Value);
+                        Log.Trace($"FuncSecuritySeeder.SeedSecurity(): Unable to seed security: {security.Symbol.Value}");
                         return false;
                     }
                 }
             }
             catch (Exception exception)
             {
-                Log.Trace("FuncSecuritySeeder.SeedSecurity(): Could not seed price for security {0}: {1}", security.Symbol, exception);
+                Log.Trace($"FuncSecuritySeeder.SeedSecurity(): Could not seed price for security {security.Symbol}: {exception}");
                 return false;
             }
 

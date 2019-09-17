@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -499,7 +498,7 @@ namespace QuantConnect.Tests.Common.Util
         public void NormalizeDecimalReturnsNoTrailingZeros(decimal input, string expectedOutput)
         {
             var output = input.Normalize();
-            Assert.AreEqual(expectedOutput, output.ToString(CultureInfo.InvariantCulture));
+            Assert.AreEqual(expectedOutput, output.ToStringInvariant());
         }
 
         [Test]
@@ -660,14 +659,14 @@ namespace QuantConnect.Tests.Common.Util
 
             var coarse = Enumerable
                 .Range(0, 9)
-                .Select(x => new CoarseFundamental { Symbol = Symbol.Create(x.ToString(), SecurityType.Equity, Market.USA), Value = x });
+                .Select(x => new CoarseFundamental { Symbol = Symbol.Create(x.ToStringInvariant(), SecurityType.Equity, Market.USA), Value = x });
 
             var symbols = coarseSelector(coarse);
 
             Assert.AreEqual(5, symbols.Length);
             foreach (var symbol in symbols)
             {
-                var price = Convert.ToInt32(symbol.Value);
+                var price = symbol.Value.ConvertInvariant<int>();
                 Assert.AreEqual(0, price % 2);
             }
         }

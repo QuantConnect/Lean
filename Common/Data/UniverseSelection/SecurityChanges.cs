@@ -121,18 +121,19 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 return "SecurityChanges: None";
             }
+
             var added = string.Empty;
             if (AddedSecurities.Count != 0)
             {
-                added = " Added: " + string.Join(",", AddedSecurities.Select(x => x.Symbol.ID));
+                added = $" Added: {string.Join(",", AddedSecurities.Select(x => x.Symbol.ID))}";
             }
             var removed = string.Empty;
             if (RemovedSecurities.Count != 0)
             {
-                removed = " Removed: " + string.Join(",", RemovedSecurities.Select(x => x.Symbol.ID));
+                removed = $" Removed: {string.Join(",", RemovedSecurities.Select(x => x.Symbol.ID))}";
             }
 
-            return "SecurityChanges: " + added + removed;
+            return $"SecurityChanges: {added}{removed}";
         }
 
         #endregion

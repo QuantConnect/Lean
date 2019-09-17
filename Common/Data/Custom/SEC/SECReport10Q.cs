@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Data.UniverseSelection;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Custom.SEC
 {
@@ -41,7 +42,7 @@ namespace QuantConnect.Data.Custom.SEC
         public SECReport10Q()
         {
         }
-        
+
         /// <summary>
         /// Constructor used to initialize instance with the given report
         /// </summary>
@@ -61,7 +62,7 @@ namespace QuantConnect.Data.Custom.SEC
         /// <returns></returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            // Although our data is stored as a JSON file, we can trick the 
+            // Although our data is stored as a JSON file, we can trick the
             // SubscriptionDataReader to load our file all at once so long as we store
             // the file in a single line. Then, we can deserialize the whole file in Reader.
             // FineFundamental uses the same technique to read a JSON file.
@@ -70,8 +71,8 @@ namespace QuantConnect.Data.Custom.SEC
                     Globals.DataFolder,
                     "alternative",
                     "sec",
-                    config.Symbol.Value.ToLower(),
-                    $"{date:yyyyMMdd}_10Q.zip#10Q.json"
+                    config.Symbol.Value.ToLowerInvariant(),
+                    Invariant($"{date:yyyyMMdd}_10Q.zip#10Q.json")
                 ),
                 SubscriptionTransportMedium.LocalFile,
                 FileFormat.Collection

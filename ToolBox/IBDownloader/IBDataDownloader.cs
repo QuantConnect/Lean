@@ -152,7 +152,7 @@ namespace QuantConnect.ToolBox.IBDownloader
             bar = bar.PadLeft(chars, progressCharacter);
             bar = bar.PadRight(Convert.ToInt32(barSize) - 1);
 
-            Console.Write(string.Format("\r[{0}] {1}%", bar, (p * 100).ToString("N2")));
+            Console.Write($"\r[{bar}] {(p * 100).ToStringInvariant("N2")}%");
         }
 
         public void Dispose()

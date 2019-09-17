@@ -52,7 +52,7 @@ namespace QuantConnect.ToolBox
             _dataDirectory = dataDirectory;
             _resolution = resolution;
             _symbol = symbol;
-            _market = symbol.ID.Market.ToLower();
+            _market = symbol.ID.Market.ToLowerInvariant();
             _dataType = dataType;
             // All fx data is quote data.
             if (_securityType == SecurityType.Forex || _securityType == SecurityType.Cfd)
@@ -192,7 +192,7 @@ namespace QuantConnect.ToolBox
                         string line;
                         while ((line = reader.ReadLine()) != null)
                         {
-                            var time = DateTime.ParseExact(line.Substring(0, DateFormat.TwelveCharacter.Length), DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
+                            var time = Parse.DateTimeExact(line.Substring(0, DateFormat.TwelveCharacter.Length), DateFormat.TwelveCharacter);
                             rows[time] = line;
                         }
                     }

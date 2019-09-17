@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -101,7 +101,7 @@ namespace QuantConnect.Tests.Indicators
                     continue;
                 }
 
-                decimal close = decimal.Parse(parts[closeIndex], CultureInfo.InvariantCulture);
+                decimal close = Parse.Decimal(parts[closeIndex]);
                 DateTime date = Time.ParseDate(parts[0]);
 
                 var data = new IndicatorDataPoint(date, close);
@@ -112,7 +112,7 @@ namespace QuantConnect.Tests.Indicators
                     continue;
                 }
 
-                double expected = double.Parse(parts[targetIndex], CultureInfo.InvariantCulture);
+                double expected = Parse.Double(parts[targetIndex]);
                 customAssertion.Invoke(indicator, expected);
             }
         }
@@ -128,7 +128,10 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="epsilon">The maximum delta between expected and actual</param>
         public static void TestIndicator(IndicatorBase<IBaseDataBar> indicator, string externalDataFilename, string targetColumn, double epsilon = 1e-3)
         {
-            TestIndicator(indicator, externalDataFilename, targetColumn, (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon, "Failed at " + i.Current.Time.ToString("o")));
+            TestIndicator(indicator, externalDataFilename, targetColumn,
+                (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon,
+                    "Failed at " + i.Current.Time.ToStringInvariant("o")
+                ));
         }
 
 
@@ -142,7 +145,10 @@ namespace QuantConnect.Tests.Indicators
         /// <param name="epsilon">The maximum delta between expected and actual</param>
         public static void TestIndicator(IndicatorBase<TradeBar> indicator, string externalDataFilename, string targetColumn, double epsilon = 1e-3)
         {
-            TestIndicator(indicator, externalDataFilename, targetColumn, (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon, "Failed at " + i.Current.Time.ToString("o")));
+            TestIndicator(indicator, externalDataFilename, targetColumn,
+                (i, expected) => Assert.AreEqual(expected, (double)i.Current.Value, epsilon,
+                    "Failed at " + i.Current.Time.ToStringInvariant("o")
+                ));
         }
 
         /// <summary>
@@ -157,7 +163,10 @@ namespace QuantConnect.Tests.Indicators
         public static void TestIndicator<T>(T indicator, string externalDataFilename, string targetColumn, Func<T, double> selector, double epsilon = 1e-3)
             where T : Indicator
         {
-            TestIndicator(indicator, externalDataFilename, targetColumn, (i, expected) => Assert.AreEqual(expected, selector(indicator), epsilon, "Failed at " + i.Current.Time.ToString("o")));
+            TestIndicator(indicator, externalDataFilename, targetColumn,
+                (i, expected) => Assert.AreEqual(expected, selector(indicator), epsilon,
+                    "Failed at " + i.Current.Time.ToStringInvariant("o")
+                ));
         }
 
         /// <summary>
@@ -200,7 +209,7 @@ namespace QuantConnect.Tests.Indicators
                     High = parts[2].ToDecimal(),
                     Low = parts[3].ToDecimal(),
                     Close = parts[4].ToDecimal(),
-                    Volume = fileHasVolume ? long.Parse(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : 0
+                    Volume = fileHasVolume ? Parse.Long(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
                 };
 
                 indicator.Update(tradebar);
@@ -210,7 +219,7 @@ namespace QuantConnect.Tests.Indicators
                     continue;
                 }
 
-                double expected = double.Parse(parts[targetIndex], CultureInfo.InvariantCulture);
+                double expected = Parse.Double(parts[targetIndex]);
                 customAssertion.Invoke(indicator, expected);
             }
         }
@@ -253,7 +262,7 @@ namespace QuantConnect.Tests.Indicators
                     High = parts[2].ToDecimal(),
                     Low = parts[3].ToDecimal(),
                     Close = parts[4].ToDecimal(),
-                    Volume = fileHasVolume ? long.Parse(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : 0
+                    Volume = fileHasVolume ? Parse.Long(parts[5], NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
                 };
 
                 indicator.Update(tradebar);
@@ -263,7 +272,7 @@ namespace QuantConnect.Tests.Indicators
                     continue;
                 }
 
-                double expected = double.Parse(parts[targetIndex], CultureInfo.InvariantCulture);
+                double expected = Parse.Double(parts[targetIndex]);
                 customAssertion.Invoke(indicator, expected);
             }
         }
@@ -360,7 +369,7 @@ namespace QuantConnect.Tests.Indicators
                 High = values.GetCsvValue("high").ToDecimal(),
                 Low = values.GetCsvValue("low").ToDecimal(),
                 Close = values.GetCsvValue("close").ToDecimal(),
-                Volume = fileHasVolume ? long.Parse(values.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) : 0
+                Volume = fileHasVolume ? Parse.Long(values.GetCsvValue("volume"), NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint) : 0
             });
         }
 
@@ -384,10 +393,10 @@ namespace QuantConnect.Tests.Indicators
             {
                 var subIndicator = field.GetValue(indicator);
 
-                if (subIndicator == null || 
-                    subIndicator is ConstantIndicator<T> || 
+                if (subIndicator == null ||
+                    subIndicator is ConstantIndicator<T> ||
                     subIndicator is ConstantIndicator<TradeBar> ||
-                    subIndicator is ConstantIndicator<IndicatorDataPoint>) 
+                    subIndicator is ConstantIndicator<IndicatorDataPoint>)
                     continue;
 
                 if (field.PropertyType.IsSubclassOfGeneric(typeof (IndicatorBase<T>)))

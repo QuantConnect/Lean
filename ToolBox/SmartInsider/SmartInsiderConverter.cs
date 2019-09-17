@@ -237,7 +237,7 @@ namespace QuantConnect.ToolBox.SmartInsider
         {
             foreach (var kvp in contents)
             {
-                var ticker = kvp.Key.ToLower();
+                var ticker = kvp.Key.ToLowerInvariant();
 
                 var finalFile = new FileInfo(Path.Combine(destinationDirectory.FullName, $"{ticker}.tsv"));
                 var fileContents = new List<T>();

@@ -31,7 +31,7 @@ namespace QuantConnect.Python
     public class PandasData
     {
         private static dynamic _pandas;
-        private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLower());
+        private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
 
         private readonly int _levels;
         private readonly bool _isCustomData;
@@ -97,14 +97,14 @@ namespace QuantConnect.Python
                 {
                     var members = type.GetMembers().Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property);
 
-                    var duplicateKeys = members.GroupBy(x => x.Name.ToLower()).Where(x => x.Count() > 1).Select(x => x.Key);
+                    var duplicateKeys = members.GroupBy(x => x.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
                     foreach (var duplicateKey in duplicateKeys)
                     {
                         throw new ArgumentException($"PandasData.ctor(): More than one \'{duplicateKey}\' member was found in \'{type.FullName}\' class.");
                     }
 
-                    keys = members.Select(x => x.Name.ToLower()).Except(_baseDataProperties).Concat(new[] { "value" });
-                    _members = members.Where(x => keys.Contains(x.Name.ToLower()));
+                    keys = members.Select(x => x.Name.ToLowerInvariant()).Except(_baseDataProperties).Concat(new[] { "value" });
+                    _members = members.Where(x => keys.Contains(x.Name.ToLowerInvariant()));
                 }
 
                 columns.Add("value");
@@ -122,7 +122,7 @@ namespace QuantConnect.Python
         {
             foreach (var member in _members)
             {
-                var key = member.Name.ToLower();
+                var key = member.Name.ToLowerInvariant();
                 var endTime = (baseData as IBaseData).EndTime;
                 AddToSeries(key, endTime, (member as FieldInfo)?.GetValue(baseData));
                 AddToSeries(key, endTime, (member as PropertyInfo)?.GetValue(baseData));
@@ -309,7 +309,7 @@ namespace QuantConnect.Python
             if (_series.TryGetValue(key, out value))
             {
                 value.Item1.Add(time);
-                value.Item2.Add(input is decimal ? Convert.ToDouble(input) : input);
+                value.Item2.Add(input is decimal ? input.ConvertInvariant<double>() : input);
             }
             else
             {

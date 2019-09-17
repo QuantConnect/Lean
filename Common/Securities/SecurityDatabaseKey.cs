@@ -14,6 +14,7 @@
 */
 
 using System;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -65,12 +66,12 @@ namespace QuantConnect.Securities
             var parts = key.Split('-');
             if (parts.Length != 3)
             {
-                throw new FormatException("The specified key was not in the expected format: " + key);
+                throw new FormatException($"The specified key was not in the expected format: {key}");
             }
             SecurityType type;
             if (!Enum.TryParse(parts[0], out type))
             {
-                throw new ArgumentException("Unable to parse '" + parts[2] + "' as a SecurityType.");
+                throw new ArgumentException($"Unable to parse \'{parts[2]}\' as a SecurityType.");
             }
 
             return new SecurityDatabaseKey(parts[1], parts[2], type);
@@ -146,7 +147,7 @@ namespace QuantConnect.Securities
         /// </returns>
         public override string ToString()
         {
-            return string.Format("{0}-{1}-{2}", SecurityType, Market, Symbol);
+            return Invariant($"{SecurityType}-{Market}-{Symbol}");
         }
     }
 }

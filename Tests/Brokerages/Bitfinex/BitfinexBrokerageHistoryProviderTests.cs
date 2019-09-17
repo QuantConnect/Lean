@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                     {
                         foreach (var tick in slice.Ticks[symbol])
                         {
-                            Log.Trace("{0}: {1} - {2} / {3}", tick.Time.ToString("yyyy-MM-dd HH:mm:ss.fff"), tick.Symbol, tick.BidPrice, tick.AskPrice);
+                            Log.Trace("{0}: {1} - {2} / {3}", tick.Time.ToStringInvariant("yyyy-MM-dd HH:mm:ss.fff"), tick.Symbol, tick.BidPrice, tick.AskPrice);
                         }
                     }
                     else

@@ -71,7 +71,7 @@ namespace QuantConnect.Queues
         {
             location = GetAlgorithmLocation();
 
-            Log.Trace("JobQueue.NextJob(): Selected " + location);
+            Log.Trace($"JobQueue.NextJob(): Selected {location}");
 
             // check for parameters in the config
             var parameters = new Dictionary<string, string>();
@@ -139,7 +139,7 @@ namespace QuantConnect.Queues
                 }
                 catch (Exception err)
                 {
-                    Log.Error(err, string.Format("Error resolving BrokerageData for live job for brokerage {0}:", liveJob.Brokerage));
+                    Log.Error(err, $"Error resolving BrokerageData for live job for brokerage {liveJob.Brokerage}");
                 }
 
                 return liveJob;
@@ -184,7 +184,7 @@ namespace QuantConnect.Queues
 
                     if (!File.Exists(pythonSource))
                     {
-                        throw new Exception("JobQueue.TryCreatePythonAlgorithm(): Unable to find py file: " + pythonSource);
+                        throw new FileNotFoundException($"JobQueue.TryCreatePythonAlgorithm(): Unable to find py file: {pythonSource}");
                     }
                 }
             }

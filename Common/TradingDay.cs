@@ -32,7 +32,7 @@ namespace QuantConnect
         /// Public Holiday
         /// </summary>
         PublicHoliday,
-        
+
         /// <summary>
         /// Weekend
         /// </summary>
@@ -82,7 +82,7 @@ namespace QuantConnect
         /// The date that this instance is associated with
         /// </summary>
         public DateTime Date { get; internal set; }
-        
+
         /// <summary>
         /// Property returns true, if the day is a business day
         /// </summary>

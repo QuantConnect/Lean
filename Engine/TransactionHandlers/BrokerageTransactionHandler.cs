@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using QuantConnect.Brokerages;
@@ -705,7 +706,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             catch (Exception err)
             {
                 Log.Error(err);
-                _algorithm.Error(string.Format("Order Error: id: {0}, Error executing margin models: {1}", order.Id, err.Message));
+                _algorithm.Error($"Order Error: id: {order.Id.ToStringInvariant()}, Error executing margin models: {err.Message}");
                 HandleOrderEvent(new OrderEvent(order,
                     _algorithm.UtcTime,
                     OrderFee.Zero,
@@ -1011,7 +1012,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     catch (Exception err)
                     {
                         Log.Error(err);
-                        _algorithm.Error(string.Format("Order Error: id: {0}, Error in Portfolio.ProcessFill: {1}", order.Id, err.Message));
+                        _algorithm.Error($"Order Error: id: {order.Id.ToStringInvariant()}, Error in Portfolio.ProcessFill: {err.Message}");
                     }
                 }
 
@@ -1049,7 +1050,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             var delta = _algorithm.Portfolio.CashBook[account.CurrencySymbol].Amount - account.CashBalance;
             if (delta != 0)
             {
-                Log.Trace(string.Format("BrokerageTransactionHandler.HandleAccountChanged(): {0} Cash Delta: {1}", account.CurrencySymbol, delta));
+                Log.Trace($"BrokerageTransactionHandler.HandleAccountChanged(): {account.CurrencySymbol} Cash Delta: {delta}");
             }
 
             // maybe we don't actually want to do this, this data can be delayed. Must be explicitly supported by brokerage
@@ -1096,10 +1097,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 if (!_firstRoundOffMessage)
                 {
-                    _algorithm.Error(
-                        string.Format(
-                            "Warning: Due to brokerage limitations, orders will be rounded to the nearest lot size of {0}",
-                            security.SymbolProperties.LotSize));
+                    _algorithm.Error("Warning: Due to brokerage limitations, orders will be rounded to " +
+                        $"the nearest lot size of {security.SymbolProperties.LotSize.ToStringInvariant()}"
+                    );
                     _firstRoundOffMessage = true;
                 }
                 return order.Quantity;
@@ -1187,7 +1187,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!priceOriginal.Equals(priceRound))
             {
                 _algorithm.Error(
-                    $"Warning: To meet brokerage precision requirements, order {priceType}Price was rounded to {priceRound} from {priceOriginal}"
+                    $"Warning: To meet brokerage precision requirements, order {priceType.ToStringInvariant()}Price was rounded to {priceRound.ToStringInvariant()} from {priceOriginal.ToStringInvariant()}"
                 );
             }
         }

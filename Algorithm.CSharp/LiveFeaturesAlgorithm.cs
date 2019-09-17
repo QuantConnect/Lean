@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (LiveMode) //Live Mode Property
             {
                 //Configurable title header statistics numbers
-                SetRuntimeStatistic("BTC", data.Close.ToString("C"));
+                SetRuntimeStatistic("BTC", data.Close.ToStringInvariant("C"));
             }
 
             if (!Portfolio.HoldStock)
@@ -69,8 +69,8 @@ namespace QuantConnect.Algorithm.CSharp
 
                 //Send a notification email/SMS/web request on events:
                 Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment");
-                Notify.Sms("+11233456789", Time.ToString("u") + ">> Test message from live BTC server.");
-                Notify.Web("http://api.quantconnect.com", Time.ToString("u") + ">> Test data packet posted from live BTC server.");
+                Notify.Sms("+11233456789", Time.ToStringInvariant("u") + ">> Test message from live BTC server.");
+                Notify.Web("http://api.quantconnect.com", Time.ToStringInvariant("u") + ">> Test data packet posted from live BTC server.");
             }
         }
 

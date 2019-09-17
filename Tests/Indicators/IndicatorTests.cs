@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -90,13 +91,20 @@ namespace QuantConnect.Tests.Indicators
         public void SortsTheSameAsDecimalDescending()
         {
             int count = 100;
-            var targets = Enumerable.Range(0, count).Select(x => new TestIndicator(x.ToString())).ToList();
+            var targets = Enumerable.Range(0, count)
+                .Select(x => new TestIndicator(x.ToString(CultureInfo.InvariantCulture)))
+                .ToList();
+
             for (int i = 0; i < targets.Count; i++)
             {
                 targets[i].Update(DateTime.Today, i);
             }
 
-            var expected = Enumerable.Range(0, count).Select(x => (decimal)x).OrderByDescending(x => x).ToList();
+            var expected = Enumerable.Range(0, count)
+                .Select(x => (decimal)x)
+                .OrderByDescending(x => x)
+                .ToList();
+
             var actual = targets.OrderByDescending(x => x).ToList();
             foreach (var pair in expected.Zip<decimal, TestIndicator, Tuple<decimal, TestIndicator>>(actual, Tuple.Create))
             {
@@ -108,7 +116,7 @@ namespace QuantConnect.Tests.Indicators
         public void SortsTheSameAsDecimalAsecending()
         {
             int count = 100;
-            var targets = Enumerable.Range(0, count).Select(x => new TestIndicator(x.ToString())).ToList();
+            var targets = Enumerable.Range(0, count).Select(x => new TestIndicator(x.ToString(CultureInfo.InvariantCulture))).ToList();
             for (int i = 0; i < targets.Count; i++)
             {
                 targets[i].Update(DateTime.Today, i);

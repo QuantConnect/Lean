@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Util;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 {
@@ -159,7 +160,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
 
                         if (context.InitialValues.Price == 0)
                         {
-                            Log.Error($"InsightManager.Step(): Warning {frontierTimeUtc} UTC: insight {insight} initial price value is 0");
+                            Log.Error(Invariant($"InsightManager.Step(): Warning {frontierTimeUtc} UTC: insight {insight} initial price value is 0"));
                         }
 
                         // let everyone know we've received an insight

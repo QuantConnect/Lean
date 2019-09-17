@@ -151,7 +151,7 @@ namespace QuantConnect.Scheduling
         /// <param name="callback">The callback to be invoked</param>
         public ScheduledEvent On(IDateRule dateRule, ITimeRule timeRule, Action<string, DateTime> callback)
         {
-            var name = dateRule.Name + ": " + timeRule.Name;
+            var name = $"{dateRule.Name}: {timeRule.Name}";
             return On(name, dateRule, timeRule, callback);
         }
 
@@ -195,7 +195,7 @@ namespace QuantConnect.Scheduling
             Add(scheduledEvent);
 
             var exampleTimes = eventTimes.Take(3)
-                    .Select(x => x.ToString())
+                    .Select(x => x.ToStringInvariant())
                     .ToArray();
 
             if (exampleTimes.Length > 0)

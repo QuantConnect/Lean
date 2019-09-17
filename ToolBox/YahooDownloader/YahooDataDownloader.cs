@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,17 +14,14 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Net;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.ToolBox.YahooDownloader
 {
     /// <summary>
-    /// Yahoo Data Downloader class 
+    /// Yahoo Data Downloader class
     /// </summary>
     public class YahooDataDownloader : IDataDownloader
     {
@@ -107,7 +104,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                     {
                         parsed.Add(new Split
                         {
-                            Time = DateTime.ParseExact(values[0].Replace("-", String.Empty), DateFormat.EightCharacter, CultureInfo.InvariantCulture),
+                            Time = Parse.DateTimeExact(values[0].Replace("-", string.Empty), DateFormat.EightCharacter),
                             Value = ParseAmount(values[1])
                         });
                     }
@@ -115,8 +112,8 @@ namespace QuantConnect.ToolBox.YahooDownloader
                     {
                         parsed.Add(new Dividend
                         {
-                            Time = DateTime.ParseExact(values[0].Replace("-", String.Empty), DateFormat.EightCharacter, CultureInfo.InvariantCulture),
-                            Value = Decimal.Parse(values[1])
+                            Time = Parse.DateTimeExact(values[0].Replace("-", string.Empty), DateFormat.EightCharacter),
+                            Value = Parse.Decimal(values[1])
                         });
                     }
                 }
@@ -133,7 +130,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
         private decimal ParseAmount(string splitFactor)
         {
             var factors = splitFactor.Split('/');
-            return Decimal.Parse(factors[1]) / Decimal.Parse(factors[0]);
+            return Parse.Decimal(factors[1]) / Parse.Decimal(factors[0]);
         }
 
     }

@@ -325,7 +325,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 else if (token is JObject)
                 {
                     var raw = token.ToObject<Messages.BaseMessage>();
-                    switch (raw.Event.ToLower())
+                    switch (raw.Event.ToLowerInvariant())
                     {
                         case "subscribed":
                             OnSubscribe(webSocket, token.ToObject<Messages.ChannelSubscription>());
@@ -427,7 +427,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     }
                 }
 
-                switch (channel.Name.ToLower())
+                switch (channel.Name.ToLowerInvariant())
                 {
                     case "book":
                         ProcessOrderBookSnapshot(channel, entries);
@@ -525,7 +525,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     }
                 }
 
-                switch (channel.Name.ToLower())
+                switch (channel.Name.ToLowerInvariant())
                 {
                     case "book":
                         ProcessOrderBookUpdate(channel, entries);
@@ -550,7 +550,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 var orderBook = _orderBooks[symbol];
 
                 var price = decimal.Parse(entries[0], NumberStyles.Float, CultureInfo.InvariantCulture);
-                var count = int.Parse(entries[1]);
+                var count = Parse.Int(entries[1]);
                 var amount = decimal.Parse(entries[2], NumberStyles.Float, CultureInfo.InvariantCulture);
 
                 if (count == 0)

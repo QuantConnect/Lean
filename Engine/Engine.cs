@@ -33,6 +33,7 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -191,7 +192,7 @@ namespace QuantConnect.Lean.Engine
                                 if (!algorithm.GetLocked() || algorithm.IsWarmingUp)
                                 {
                                     AlgorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History,
-                                        $"Processing history {progress}%...");
+                                        Invariant($"Processing history {progress}%..."));
                                 }
                             }
                         )
@@ -340,8 +341,8 @@ namespace QuantConnect.Lean.Engine
 
                         if (!complete)
                         {
-                            Log.Error("Engine.Main(): Failed to complete in time: " + AlgorithmHandlers.Setup.MaximumRuntime.ToString("F"));
-                            throw new Exception("Failed to complete algorithm within " + AlgorithmHandlers.Setup.MaximumRuntime.ToString("F")
+                            Log.Error("Engine.Main(): Failed to complete in time: " + AlgorithmHandlers.Setup.MaximumRuntime.ToStringInvariant("F"));
+                            throw new Exception("Failed to complete algorithm within " + AlgorithmHandlers.Setup.MaximumRuntime.ToStringInvariant("F")
                                 + " seconds. Please make it run faster.");
                         }
 
@@ -499,12 +500,8 @@ namespace QuantConnect.Lean.Engine
             {
                 foreach (var order in orders)
                 {
-                    var line = string.Format("{0},{1},{2},{3},{4}",
-                        order.Time.ToString("yyyy-MM-dd HH:mm:ss"),
-                        order.Symbol.Value,
-                        order.Direction,
-                        order.Quantity,
-                        order.Price);
+                    var line = Invariant($"{order.Time.ToStringInvariant("yyyy-MM-dd HH:mm:ss")},") +
+                               Invariant($"{order.Symbol.Value},{order.Direction},{order.Quantity},{order.Price}");
                     writer.WriteLine(line);
                 }
             }

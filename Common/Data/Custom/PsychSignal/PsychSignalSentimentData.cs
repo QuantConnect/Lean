@@ -17,12 +17,13 @@
 using System;
 using System.Globalization;
 using System.IO;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Custom.PsychSignal
 {
     /// <summary>
     /// PsychSignal sentiment data implementation.
-    /// Created as part of a subscription request from AddData{T} 
+    /// Created as part of a subscription request from AddData{T}
     /// and consumed by algorithms running on LEAN.
     /// </summary>
     public class PsychSignalSentimentData : BaseData
@@ -43,13 +44,13 @@ namespace QuantConnect.Data.Custom.PsychSignal
         public decimal BullMinusBear { get; set; }
 
         /// <summary>
-        /// Total bullish scored messages. 
+        /// Total bullish scored messages.
         /// This is the total nubmer of messages classified as bullish in a minute
         /// </summary>
         public int BullScoredMessages { get; set; }
 
         /// <summary>
-        /// Total bearish scored messages. 
+        /// Total bearish scored messages.
         /// This is the total number of messages classified as bearish in a minute
         /// </summary>
         public int BearScoredMessages { get; set; }
@@ -85,8 +86,8 @@ namespace QuantConnect.Data.Custom.PsychSignal
                     Globals.DataFolder,
                     "alternative",
                     "psychsignal",
-                    $"{config.Symbol.Value.ToLower()}",
-                    $"{date:yyyyMMdd}.zip"
+                    $"{config.Symbol.Value.ToLowerInvariant()}",
+                    Invariant($"{date:yyyyMMdd}.zip")
                 ),
                 SubscriptionTransportMedium.LocalFile,
                 FileFormat.Csv
@@ -102,7 +103,7 @@ namespace QuantConnect.Data.Custom.PsychSignal
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>
         ///     Instance of the T:BaseData object containing psychsignal specific data
-        /// </returns> 
+        /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             try
@@ -117,7 +118,7 @@ namespace QuantConnect.Data.Custom.PsychSignal
                 var bearScoredMessages = Convert.ToInt32(csv[5], CultureInfo.InvariantCulture);
                 var bullBearMessageRatio = Convert.ToDecimal(csv[6], CultureInfo.InvariantCulture);
                 var totalScannedMessages = Convert.ToInt32(csv[7], CultureInfo.InvariantCulture);
-                
+
                 return new PsychSignalSentimentData
                 {
                     Time = timestamp,
@@ -136,7 +137,7 @@ namespace QuantConnect.Data.Custom.PsychSignal
                 return null;
             }
         }
-        
+
         /// <summary>
         /// Clones the data into a new object. We override this method to ensure
         /// that class properties are cloned and not set to null during a cloning event

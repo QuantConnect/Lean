@@ -19,6 +19,7 @@ using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using QuantConnect.Securities;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
@@ -144,11 +145,13 @@ namespace QuantConnect
         /// </summary>
         public override string ToString()
         {
-            var value = string.Format("{0}: {1} @ {2}{3} - Market: {2}{4}", Symbol.Value, Quantity, CurrencySymbol, AveragePrice, MarketPrice);
+            var value = Invariant($"{Symbol.Value}: {Quantity} @ ") +
+                        Invariant($"{CurrencySymbol}{AveragePrice} - ") +
+                        Invariant($"Market: {CurrencySymbol}{MarketPrice}");
 
             if (ConversionRate != 1m)
             {
-                value += string.Format(" - Conversion: {0}", ConversionRate);
+                value += Invariant($" - Conversion: {ConversionRate}");
             }
 
             return value;

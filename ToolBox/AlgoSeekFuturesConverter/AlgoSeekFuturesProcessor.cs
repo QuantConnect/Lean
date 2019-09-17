@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ using QuantConnect.Util;
 namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 {
     /// <summary>
-    /// Processor for caching and consolidating ticks; 
+    /// Processor for caching and consolidating ticks;
     /// then flushing the ticks in memory to disk when triggered.
     /// </summary>
     public class AlgoSeekFuturesProcessor
@@ -94,7 +94,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         }
 
         /// <summary>
-        /// Type of this futures processor. 
+        /// Type of this futures processor.
         /// ASOP's are grouped trade type for file writing.
         /// </summary>
         public TickType TickType
@@ -161,7 +161,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             {
                 // we are unable to open new file - it is already opened due to bug in algoseek data
                 Log.Error("File: {0} Err: {1} Source: {2} Stack: {3}", file, err.Message, err.Source, err.StackTrace);
-                var newRandomizedName = (file + "-" + Math.Abs(file.GetHashCode()).ToString()).Replace(".csv", string.Empty) + ".csv";
+                var newRandomizedName = (file + "-" + Math.Abs(file.GetHashCode()).ToStringInvariant()).Replace(".csv", string.Empty) + ".csv";
 
                 // we store the information under different (randomized) name
                 Log.Trace("Changing name from {0} to {1}", file, newRandomizedName);
@@ -234,7 +234,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         {
             if (OS.IsWindows)
             {
-                if (_windowsRestrictedNames.Contains(symbol.Value.ToLower()))
+                if (_windowsRestrictedNames.Contains(symbol.Value.ToLowerInvariant()))
                 {
                     symbol = Symbol.CreateFuture(SafeName(symbol.Underlying.Value), Market.USA, symbol.ID.Date);
                 }

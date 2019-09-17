@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Data.UniverseSelection;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Custom.TradingEconomics
 {
@@ -78,14 +79,14 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// <returns>Subscription Data Source.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            if (!config.Symbol.Value.EndsWith(".I"))
+            if (!config.Symbol.Value.EndsWithInvariant(".I"))
             {
                 throw new ArgumentException($"TradingEconomicsIndicator.GetSource(): Invalid symbol {config.Symbol}");
             }
 
-            var symbol = config.Symbol.Value.ToLower();
+            var symbol = config.Symbol.Value.ToLowerInvariant();
             symbol = symbol.Substring(0, symbol.Length - 2);
-            var source = Path.Combine(Globals.DataFolder, "alternative", "trading-economics", "indicator", symbol, $"{date:yyyyMMdd}.zip");
+            var source = Path.Combine(Globals.DataFolder, "alternative", "trading-economics", "indicator", symbol, Invariant($"{date:yyyyMMdd}.zip"));
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Collection);
         }
 
@@ -137,6 +138,6 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// <summary>
         /// Formats a string with the Trading Economics Indicator information.
         /// </summary>
-        public override string ToString() => $"{HistoricalDataSymbol} ({Country} - {Category}): {Value}";
+        public override string ToString() => Invariant($"{HistoricalDataSymbol} ({Country} - {Category}): {Value}");
     }
 }

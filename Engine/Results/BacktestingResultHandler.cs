@@ -436,7 +436,7 @@ namespace QuantConnect.Lean.Engine.Results
             var totalMinutes = (_job.PeriodFinish - _job.PeriodStart).TotalMinutes;
             var resampleMinutes = totalMinutes < MinimumSamplePeriod * Samples ? MinimumSamplePeriod : totalMinutes / Samples; // Space out the sampling every
             ResamplePeriod = TimeSpan.FromMinutes(resampleMinutes);
-            Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToString("00.00"));
+            Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToStringInvariant("00.00"));
 
             //Setup the sampling periods:
             _jobDays = Algorithm.Securities.Count > 0
@@ -478,7 +478,7 @@ namespace QuantConnect.Lean.Engine.Results
             //Save last message sent:
             if (Algorithm != null)
             {
-                _log.Add(Algorithm.Time.ToString(DateFormat.UI) + " " + message);
+                _log.Add(Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message);
             }
         }
 
@@ -493,7 +493,7 @@ namespace QuantConnect.Lean.Engine.Results
             //Save last message sent:
             if (Algorithm != null)
             {
-                _log.Add(Algorithm.Time.ToString(DateFormat.UI) + " " + message);
+                _log.Add(Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message);
             }
         }
 
@@ -507,7 +507,7 @@ namespace QuantConnect.Lean.Engine.Results
 
             if (Algorithm != null)
             {
-                _log.Add(Algorithm.Time.ToString(DateFormat.UI) + " " + message);
+                _log.Add(Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message);
             }
         }
 
