@@ -291,6 +291,17 @@ namespace QuantConnect.Brokerages.Bitfinex
                 yield break;
             }
 
+            // if the end time cannot be rounded to resolution without a remainder
+            if (request.EndTimeUtc.Ticks % request.Resolution.ToTimeSpan().Ticks > 0)
+            {
+                // give a warning and return
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidEndTime",
+                    "The history request's end date is not a full multiple of a resolution. " +
+                    "Bitfinex API only allows to support trade bar history requests. The start and end dates " +
+                    "of a such request are expected to match exactly with the beginning of the first bar and ending of the last"));
+                yield break;
+            }
+
             string resolution = ConvertResolution(request.Resolution);
             long resolutionInMsec = (long)request.Resolution.ToTimeSpan().TotalMilliseconds;
             string symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
@@ -313,12 +324,14 @@ namespace QuantConnect.Brokerages.Bitfinex
                         $"Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
                 }
 
+                // we need to drop the last bar provided by the exchange as its open time is a history request's end time
                 var candles = JsonConvert.DeserializeObject<object[][]>(response.Content)
                     .Select(entries => new Messages.Candle(entries))
+                    .Where(candle => candle.Timestamp != endMsec)
                     .ToList();
 
                 // bitfinex exchange may return us an empty result - if we request data for a small time interval
-                // during which no trades occurred - so it's retional to ensure 'candles' list is not empty before
+                // during which no trades occurred - so it's rational to ensure 'candles' list is not empty before
                 // we proceed to avoid an exception to be thrown
                 if (candles.Any())
                 {

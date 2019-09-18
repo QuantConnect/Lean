@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         public TestCaseData[] History => new[]
         {
             // valid
-            new TestCaseData(Symbol, Resolution.Minute, Time.OneHour, false, false),
+            new TestCaseData(Symbol, Resolution.Minute, Time.OneMinute, false, false),
             new TestCaseData(Symbol, Resolution.Hour, Time.OneDay, false, false),
             new TestCaseData(Symbol, Resolution.Daily, TimeSpan.FromDays(15), false, false),
 
@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                 historyProvider.SetBrokerage(brokerage);
                 historyProvider.Initialize(new HistoryProviderInitializeParameters(null, null, null, null, null, null, null));
 
-                var now = DateTime.UtcNow;
+                var now = DateTime.UtcNow.RoundDown(resolution.ToTimeSpan());
 
                 var requests = new[]
                 {
