@@ -34,7 +34,7 @@ from datetime import datetime
 ### <meta name="tag" content="map files" />
 class CustomDataUnderlyingOptionSymbolMappingRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2003, 10, 14)
+        self.SetStartDate(2014, 3, 1)
         self.SetEndDate(2014, 4, 9)
         self.SetCash(100000)
 

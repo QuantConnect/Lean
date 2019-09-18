@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2003, 10, 14);
+            SetStartDate(2014, 3, 1);
             SetEndDate(2014, 4, 9);
             SetCash(100000);
 
