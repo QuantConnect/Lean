@@ -190,13 +190,13 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             symbolData = self.BlackLittermanSymbolData(symbol, self.lookback, self.period)
 
             if not history.empty:
-                # explicitly call 'str' to get the expected index value
-                symbolID = str(symbol.ID)
-                if symbolID not in history.index.levels[0]:
-                    Log.Trace(f'BlackLittermanOptimizationPortfolioConstructionModel.OnSecuritiesChanged: {symbol} not found in history data frame.')
+                ticker = SymbolCache.GetTicker(symbol)
+
+                if ticker  not in history.index.levels[0]:
+                    Log.Trace(f'BlackLittermanOptimizationPortfolioConstructionModel.OnSecuritiesChanged: {ticker} not found in history data frame.')
                     continue
 
-                symbolData.WarmUpIndicators(history.loc[symbolID])
+                symbolData.WarmUpIndicators(history.loc[ticker])
 
             self.symbolDataBySymbol[symbol] = symbolData
 
