@@ -305,10 +305,10 @@ namespace QuantConnect.Data.Auxiliary
         public string ToCsv(string source = null)
         {
             source = source == null ? "" : $",{source}";
-            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)}," +
-                   Invariant($"{Math.Round(PriceFactor, 6).Normalize()},") +
-                   Invariant($"{Math.Round(SplitFactor, 7).Normalize()},") +
-                   Invariant($"{Math.Round(ReferencePrice, 2).Normalize()}") +
+            return $"{Date.ToString(DateFormat.EightCharacter)}," +
+                   $"{PriceFactor.Normalize()}," +
+                   $"{SplitFactor.Normalize()}," +
+                   $"{ReferencePrice.Normalize()}{source}";
                    $"{source}";
         }
 

@@ -226,16 +226,15 @@ namespace QuantConnect.ToolBox
 
             TradeBar previousClosingPrice = FindPreviousTradableDayClosingPrice(eventDayData.Time);
 
-            // round split factor back to natural number
-            var splitFactorMultiplier = Math.Round(1 / previousFactorFileRow.SplitFactor);
-
             // adjust the dividend for both price and split factors (!)
-            var priceFactor = previousFactorFileRow.PriceFactor - splitFactorMultiplier * dividend.Value *
-                              previousFactorFileRow.PriceFactor / previousClosingPrice.Close;
+            var priceFactor = previousFactorFileRow.PriceFactor - dividend.Value *
+                              previousFactorFileRow.PriceFactor /
+                              previousClosingPrice.Close /
+                              previousFactorFileRow.SplitFactor;
 
             return new FactorFileRow(
                 previousClosingPrice.Time,
-                Math.Round(priceFactor, 7),
+                priceFactor.RoundToSignificantDigits(7),
                 previousFactorFileRow.SplitFactor,
                 previousClosingPrice.Close
             );
@@ -262,7 +261,7 @@ namespace QuantConnect.ToolBox
             return new FactorFileRow(
                     previousClosingPrice.Time,
                     previousFactorFileRow.PriceFactor,
-                    Math.Round(previousFactorFileRow.SplitFactor / split.Value, 6),
+                    (previousFactorFileRow.SplitFactor / split.Value).RoundToSignificantDigits(6),
                     previousClosingPrice.Close
                 );
         }

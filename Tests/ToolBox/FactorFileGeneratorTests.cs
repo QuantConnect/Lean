@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.ToolBox
         private FactorFileGenerator _factorFileGenerator;
         private YahooDataDownloader _yahooDataDownloader;
 
-        [TestFixtureSetUp]
+        [SetUp]
         public void Setup()
         {
             _factorFileGenerator = new FactorFileGenerator(_symbol, _dataPath);
