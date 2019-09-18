@@ -46,20 +46,20 @@ namespace QuantConnect.Algorithm.CSharp
 
 
         /// <summary>
-        /// Adds stocks and options TWX + BAC so that we can test if mapping occurs to the underlying symbol in the custom data subscription
+        /// Adds option NWSA -&gt; FOXA so that we can test if mapping occurs to the underlying symbols in the custom data subscription
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2014, 3, 1);
-            SetEndDate(2014, 4, 9);
+            SetStartDate(2013, 6, 28);
+            SetEndDate(2013, 7, 02);
             SetCash(100000);
 
-            _optionSymbol = AddOption("TWX", Resolution.Daily).Symbol;
+            _optionSymbol = AddOption("FOXA", Resolution.Daily).Symbol;
             _customDataOptionSymbol = AddData<SECReport10K>(_optionSymbol).Symbol;
         }
 
         /// <summary>
-        /// Checks that custom data underlying symbol matches the equity symbol at the same time step
+        /// Checks that custom data underlying symbols match the expected symbols and contains chain of custom -&gt; option -&gt equity
         /// </summary>
         /// <param name="data"></param>
         public override void OnData(Slice data)
@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (data.SymbolChangedEvents.ContainsKey(_customDataOptionSymbol) && data.SymbolChangedEvents.ContainsKey(_optionSymbol))
                 {
-                    var expectedUnderlying = "?TWX";
+                    var expectedUnderlying = "?FOXA";
                     var underlying = data.SymbolChangedEvents.Keys.Where(x => x.SecurityType == SecurityType.Base && x == _customDataOptionSymbol).Single().Underlying;
                     var symbol = data.SymbolChangedEvents.Keys.Where(x => x.SecurityType == SecurityType.Equity && x == _optionSymbol).Single();
 

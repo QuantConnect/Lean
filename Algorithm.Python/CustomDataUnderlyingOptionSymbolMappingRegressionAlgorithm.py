@@ -34,13 +34,13 @@ from datetime import datetime
 ### <meta name="tag" content="map files" />
 class CustomDataUnderlyingOptionSymbolMappingRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2014, 3, 1)
-        self.SetEndDate(2014, 4, 9)
+        self.SetStartDate(2013, 6, 28)
+        self.SetEndDate(2013, 7, 02)
         self.SetCash(100000)
 
         self.initialSymbolChangedEvent = False
 
-        self.optionSymbol = self.AddOption("TWX", Resolution.Daily).Symbol
+        self.optionSymbol = self.AddOption("FOXA", Resolution.Daily).Symbol
         self.customDataOptionSymbol = self.AddData(SECReport10K, self.optionSymbol).Symbol
 
     def OnData(self, data):
@@ -50,7 +50,7 @@ class CustomDataUnderlyingOptionSymbolMappingRegressionAlgorithm(QCAlgorithm):
 
         if len(data.SymbolChangedEvents) != 0:
             if data.SymbolChangedEvents.ContainsKey(self.customDataOptionSymbol) and data.SymbolChangedEvents.ContainsKey(self.optionSymbol):
-                expectedUnderlying = "?TWX"
+                expectedUnderlying = "?FOXA"
                 underlying = [i for i in data.SymbolChangedEvents.Keys if i.SecurityType == SecurityType.Base and i == self.customDataOptionSymbol][0].Underlying
                 symbol = [i for i in data.SymbolChangedEvents.Keys if i.SecurityType == SecurityType.Equity and i == self.optionSymbol][0]
 
