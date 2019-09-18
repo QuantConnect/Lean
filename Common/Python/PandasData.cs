@@ -66,6 +66,7 @@ namespace QuantConnect.Python
                     // input to its methods using the provided 'mapper' callable object
                     _remapperFactory = PythonEngine.ModuleFromString("remapper",
                         @"import wrapt
+import pandas
 from clr import AddReference
 AddReference(""QuantConnect.Common"")
 from QuantConnect import *
@@ -77,7 +78,6 @@ class Remapper(wrapt.ObjectProxy):
     # Our remapping method. Originally implemented in C# but some cases were not working
     # correctly and using Py did the trick
     def _self_mapper(self, key):
-
         # this is the most normal use case
         if isinstance(key, str):
             tupleResult = SymbolCache.TryGetSymbol(key, None)
@@ -106,11 +106,20 @@ class Remapper(wrapt.ObjectProxy):
                             return (firstTuple, key[1])
         return key
 
+    def __contains__(self, key):
+        key = self._self_mapper(key)
+        return self.__wrapped__.__contains__(key)
+
     def __getitem__(self, name):
         name = self._self_mapper(name)
         result = self.__wrapped__.__getitem__(name)
-        # we remap the result too!
-        return Remapper(result)
+
+        if isinstance(result, (pandas.Series, pandas.Index)):
+            # For these cases we wrap the result too. Can't apply the wrap around all
+            # results because it causes issues in pandas for some of our use cases
+            # specifically pandas timestamp type
+            return Remapper(result)
+        return result
 
     def __setitem__(self, name, value):
         name = self._self_mapper(name)
@@ -143,6 +152,14 @@ class Remapper(wrapt.ObjectProxy):
     @property
     def at(self):
         return Remapper(self.__wrapped__.at)
+
+    @property
+    def index(self):
+        return Remapper(self.__wrapped__.index)
+
+    @property
+    def levels(self):
+        return Remapper(self.__wrapped__.levels)
 
     # we wrap the following properties so that when 'unstack', 'loc' are called we wrap them
     @property

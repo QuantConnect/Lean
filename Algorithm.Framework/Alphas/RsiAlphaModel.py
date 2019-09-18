@@ -96,13 +96,13 @@ class RsiAlphaModel(AlphaModel):
             rsi = algorithm.RSI(symbol, self.period, MovingAverageType.Wilders, self.resolution)
 
             if not history.empty:
-                # explicitly call 'str' to get the expected index value
-                symbolID = str(symbol.ID)
-                if symbolID not in history.index.levels[0]:
-                    Log.Trace(f'RsiAlphaModel.OnSecuritiesChanged: {symbol} not found in history data frame.')
+                ticker = SymbolCache.GetTicker(symbol)
+
+                if ticker not in history.index.levels[0]:
+                    Log.Trace(f'RsiAlphaModel.OnSecuritiesChanged: {ticker} not found in history data frame.')
                     continue
 
-                for tuple in history.loc[symbolID].itertuples():
+                for tuple in history.loc[ticker].itertuples():
                     rsi.Update(tuple.Index, tuple.close)
 
             self.symbolDataBySymbol[symbol] = SymbolData(symbol, rsi)

@@ -603,6 +603,64 @@ def Test(dataFrame, symbol):
         }
 
         [Test]
+        public void BackwardsCompatibilityDataFrame_index_levels_contains_ticker_inCache()
+        {
+            using (Py.GIL())
+            {
+                SymbolCache.Set("SPY", Symbols.SPY);
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+def Test(dataFrame, symbol):
+    if 'SPY' not in dataFrame.index.levels[0]:
+        raise ValueError('SPY was not found')").GetAttr("Test");
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [Test]
+        public void BackwardsCompatibilityDataFrame_index_levels_contains_symbol_inCache()
+        {
+            using (Py.GIL())
+            {
+                SymbolCache.Set("SPY", Symbols.SPY);
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+def Test(dataFrame, symbol):
+    if str(symbol) not in dataFrame.index.levels[0]:
+        raise ValueError('SPY was not found')").GetAttr("Test");
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [Test]
+        public void BackwardsCompatibilityDataFrame_index_levels_contains_symbol_notInCache()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+def Test(dataFrame, symbol):
+    if str(symbol) not in dataFrame.index.levels[0]:
+        raise ValueError('SPY was not found')").GetAttr("Test");
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [Test]
+        public void NotBackwardsCompatibilityDataFrame_index_levels_contains_ticker_notInCache()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+def Test(dataFrame, symbol):
+    if 'SPY' not in dataFrame.index.levels[0]:
+        raise ValueError('SPY was not found')").GetAttr("Test");
+                Assert.Throws<PythonException>(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [Test]
         public void HandlesTradeTicks()
         {
             var converter = new PandasConverter();
