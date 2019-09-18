@@ -17,9 +17,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect;
+using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.SEC;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -40,36 +42,40 @@ namespace QuantConnect.Algorithm.CSharp
 
         // Equity to add custom data with as Symbol
         private Symbol _equitySymbol;
+        private Symbol _badEquitySymbol;
 
         // Custom data that was added with Symbol
         private Symbol _customDataSymbol;
-
-        // Option to add custom data with as Symbol
-        private Symbol _optionSymbol;
-
-        // Custom data that was added with option ticker
-        private Symbol _customDataOptionSymbol;
-
+        private Symbol _badCustomDataSymbol;
 
         /// <summary>
-        /// Adds stocks and options TWX + BAC so that we can test if mapping occurs to the underlying symbol in the custom data subscription
+        /// Adds stocks GOOGL -&gt; GOOG and GOOG -&gt; GOOCV so that we can test if mapping occurs to the underlying symbol in the custom data subscription
+        /// as well as testing the behavior of adding custom data that can be mapped with a ticker
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2003, 10, 14);
+            SetStartDate(2014, 3, 1);
             SetEndDate(2014, 4, 9);
             SetCash(100000);
 
-            // Renames on 2003-10-16 from AOL to TWX
-            _equitySymbol = AddEquity("GOOGL", Resolution.Daily).Symbol;
-            _customDataSymbol = AddData<SECReport10K>(_equitySymbol).Symbol;
+            UniverseSettings.Resolution = Resolution.Daily;
 
-            _optionSymbol = AddOption("TWX", Resolution.Daily).Symbol;
-            _customDataOptionSymbol = AddData<SECReport10K>(_optionSymbol).Symbol;
+            // Reset the symbol cache to test for ticker adding of custom data
+            SymbolCache.Clear();
+            AddUniverseSelection(new CoarseFundamentalUniverseSelectionModel(CoarseSelector));
+        }
+
+        public IEnumerable<Symbol> CoarseSelector(IEnumerable<CoarseFundamental> coarse)
+        {
+            return new[]
+            {
+                QuantConnect.Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
+                QuantConnect.Symbol.Create("GOOGL", SecurityType.Equity, Market.USA),
+            };
         }
 
         /// <summary>
-        /// Checks that custom data underlying symbol matches the equity symbol at the same time step
+        /// Checks that custom data underlying symbol matches the equity symbol
         /// </summary>
         /// <param name="data"></param>
         public override void OnData(Slice data)
@@ -82,58 +88,65 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (data.SymbolChangedEvents.Any())
             {
-                Symbol underlying;
-                Symbol symbol;
-                string expectedUnderlying;
-
                 if (data.SymbolChangedEvents.ContainsKey(_customDataSymbol) && data.SymbolChangedEvents.ContainsKey(_equitySymbol))
                 {
-                    expectedUnderlying = "GOOGL";
-                    underlying = data.SymbolChangedEvents[_customDataSymbol].Symbol.Underlying;
-                    symbol = data.SymbolChangedEvents[_equitySymbol].Symbol;
+                    var expectedUnderlying = "GOOGL";
+                    var underlying = data.SymbolChangedEvents.Keys.Where(x => x.SecurityType == SecurityType.Base && x == _customDataSymbol).Single().Underlying;
+                    var symbol = data.SymbolChangedEvents.Keys.Where(x => x.SecurityType == SecurityType.Equity && x == _equitySymbol).Single();
+
+                    if (SubscriptionManager.Subscriptions.Where(x => (x.SecurityType == SecurityType.Base || x.SecurityType == SecurityType.Equity) && x.MappedSymbol == expectedUnderlying).Count() != 2)
+                    {
+                        throw new Exception($"Subscription mapped symbols were not updated to {expectedUnderlying}");
+                    }
+                    if (underlying == null)
+                    {
+                        throw new Exception("Custom data Symbol for GOOGL has no underlying");
+                    }
+                    if (underlying != symbol)
+                    {
+                        throw new Exception($"Underlying custom data Symbol does not match equity Symbol after rename event. Expected {symbol.Value} - got {underlying.Value}");
+                    }
+                    if (underlying.Value != expectedUnderlying)
+                    {
+                        throw new Exception($"Underlying equity symbol value from chained custom data does not match expected value. Expected {symbol.Underlying.Value}, found {underlying.Underlying.Value}");
+                    }
+
+                    SetHoldings(symbol, 0.5);
                 }
-                // For options, handle the case a bit differently
-                else if (data.SymbolChangedEvents.ContainsKey(_customDataOptionSymbol) && data.SymbolChangedEvents.ContainsKey(_optionSymbol))
+                else if (data.SymbolChangedEvents.ContainsKey(_badCustomDataSymbol) && data.SymbolChangedEvents.ContainsKey(_badEquitySymbol))
                 {
-                    expectedUnderlying = "?TWX";
-                    underlying = data.SymbolChangedEvents[_customDataOptionSymbol].Symbol.Underlying;
-                    symbol = data.SymbolChangedEvents[_optionSymbol].Symbol;
+                    var underlying = data.SymbolChangedEvents.Keys.Where(x => x.SecurityType == SecurityType.Base && x == _badCustomDataSymbol).Single().Underlying;
+                    var symbol = data.SymbolChangedEvents.Keys.Where(x => x.SecurityType == SecurityType.Equity && x == _badEquitySymbol).Single();
 
                     if (underlying == null)
                     {
-                        throw new Exception("Custom data Symbol has no underlying");
+                        throw new Exception($"Bad custom data symbol does not have underlying");
                     }
-                    if (underlying.Underlying == null)
+                    if (underlying == symbol)
                     {
-                        throw new Exception("Custom data underlying has no underlying equity symbol");
+                        throw new Exception($"Underlying custom data Symbol is equal to bad Symbol");
                     }
-                    if (underlying.Underlying != symbol.Underlying)
-                    {
-                        throw new Exception($"Custom data underlying->(2) does match option underlying (equity symbol). Expected {symbol.Underlying.Value} got {underlying.Underlying.Value}");
-                    }
-                    if (underlying.Underlying.Value != expectedUnderlying)
-                    {
-                        throw new Exception($"Custom data symbol value does not match expected value. Expected {expectedUnderlying}, found {underlying.Underlying.Value}");
-                    }
-
-                    return;
                 }
                 else
                 {
                     throw new Exception("Received unknown symbol changed event");
                 }
+            }
+        }
 
-                if (underlying != symbol)
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            foreach (var added in changes.AddedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Equity))
+            {
+                // It is in fact "GOOGL" we're catching here, and we're adding it as "GOOG" with the ticker,
+                // which will resolve to GOOCV in the past if we use the ticker and not the symbol
+                if (added.Symbol.Value == "GOOG")
                 {
-                    if (underlying == null)
-                    {
-                        throw new Exception("Custom data Symbol has no underlying");
-                    }
-                    throw new Exception($"Underlying custom data Symbol does not match equity Symbol after rename event. Expected {symbol.Value} - got {underlying.Value}");
-                }
-                if (underlying.Value != expectedUnderlying)
-                {
-                    throw new Exception($"Underlying equity symbol value from chained custom data does not match expected value. Expected {symbol.Underlying.Value}, found {underlying.Underlying.Value}");
+                    _badEquitySymbol = added.Symbol;
+                    _badCustomDataSymbol = AddData<SECReport10K>("GOOG").Symbol;
+
+                    _equitySymbol = added.Symbol;
+                    _customDataSymbol = AddData<SECReport10K>(added.Symbol).Symbol;
                 }
             }
         }
