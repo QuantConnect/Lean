@@ -885,6 +885,7 @@ namespace QuantConnect.Data.Market
             {
                 source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
             }
+            source = source.Replace("usa", "usa-taq");
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
