@@ -27,6 +27,7 @@ namespace QuantConnect.Tests.Common
         [TestCase(typeof(string), "123", typeof(int), 123)]
         [TestCase(typeof(string), "123", typeof(decimal), 123)]
         [TestCase(typeof(long), "123", typeof(decimal), 123)]
+        [TestCase(typeof(string), null, typeof(decimal), 0)]
         public void ConvertInvariant(Type sourceType, string sourceString, Type conversionType, object expected)
         {
             // we can't put a decimal in the attribute, so this ensure the runtime types are correct
@@ -34,10 +35,27 @@ namespace QuantConnect.Tests.Common
             Assert.IsInstanceOf(conversionType, expected);
 
             var source = Convert.ChangeType(sourceString, sourceType, CultureInfo.InvariantCulture);
-            Assert.IsInstanceOf(sourceType, source);
+            if (sourceString == null)
+            {
+                Assert.IsNull(source);
+            }
+            else
+            {
+                Assert.IsInstanceOf(sourceType, source);
+            }
 
-            var converted = source.ConvertInvariant(conversionType);
+            var converted = ((IConvertible)source).ConvertInvariant(conversionType);
             Assert.AreEqual(expected, converted);
+            Assert.IsInstanceOf(conversionType, converted);
+        }
+
+        [Test]
+        public void ConvertInvariant_ThrowsFormatException_WhenConvertingEmptyString()
+        {
+            const string input = "";
+            Assert.Throws<FormatException>(
+                () => input.ConvertInvariant<decimal>()
+            );
         }
 
         [Test]
