@@ -59,7 +59,7 @@ namespace QuantConnect.ToolBox
             // if no console args supplied check configuration file for working info
             if (optionsObject.Count == 0)
             {
-                optionsObject = ApplicationParser.ParseConfigurationFile("config.json");
+                optionsObject = ApplicationParser.ParseConfigurationFile("toolboxoptions.json");
             }
 
             var targetApp = GetParameterOrExit(optionsObject, "app").ToLower();
