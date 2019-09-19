@@ -82,7 +82,11 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             var symbolMapper = new CoinApiSymbolMapper();
             var success = true;
 
+            // There were cases of files with with an extra suffix, following pattern:
+            // <TickType>-<ID>-<Exchange>_SPOT_<BaseCurrency>_<QuoteCurrency>_<ExtraSuffix>.csv.gz
+            // Those cases should be ignored for SPOT prices.
             var fileToProcess = _rawDataFolder.EnumerateFiles("*.gz")
+                .Where(f => f.Name.Split('_').Length == 4)
                 .DistinctBy(
                     x =>
                     {

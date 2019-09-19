@@ -151,7 +151,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the margin currently alloted to the specified holding
+        /// Gets the margin currently allocated to the specified holding
         /// </summary>
         /// <param name="security">The security to compute maintenance margin for</param>
         /// <returns>The maintenance margin required for the </returns>
@@ -378,7 +378,7 @@ namespace QuantConnect.Securities
                     var amountOfOrdersToRemove = (orderValue - targetOrderValue) / currentOrderValuePerUnit;
                     if (amountOfOrdersToRemove < parameters.Security.SymbolProperties.LotSize)
                     {
-                        // we will always substract at leat 1 LotSize
+                        // we will always subtract at least 1 LotSize
                         amountOfOrdersToRemove = parameters.Security.SymbolProperties.LotSize;
                     }
 
@@ -388,10 +388,12 @@ namespace QuantConnect.Securities
 
                 if (orderQuantity <= 0)
                 {
-                    var reason = $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} " +
+                    return new GetMaximumOrderQuantityForTargetValueResult(0, 
+                        $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} " +
                         $"and has been rounded to zero.Target order value {targetOrderValue}. Order fees " +
-                        $"{orderFees}. Order quantity {orderQuantity}.";
-                    return new GetMaximumOrderQuantityForTargetValueResult(0, reason);
+                        $"{orderFees}. Order quantity {orderQuantity}.",
+                        false);
+                    );
                 }
 
                 // generate the order
@@ -455,7 +457,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the buying power available for a trade
         /// </summary>
-        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
+        /// <param name="parameters">A parameters object containing the algorithm's portfolio, security, and order direction</param>
         /// <returns>The buying power available for the trade</returns>
         public virtual BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
         {
