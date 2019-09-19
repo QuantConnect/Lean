@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using QuantConnect.Indicators;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -91,8 +90,8 @@ namespace QuantConnect.Algorithm.CSharp
             ComputeWeights();
             ComputePortfolioRisk();
 
-            Log($"Lagrange Multiplier: {_lagrangeMultiplier.ToStringInvariant("7:F4")}");
-            Log($"Portfolio Risk:      {_portfolioRisk.ToStringInvariant("7:P2")} ");
+            Log(string.Format("Lagrange Multiplier: {0,7:F4}", _lagrangeMultiplier));
+            Log(string.Format("Portfolio Risk:      {0,7:P2} ", _portfolioRisk));
         }
 
         /// <summary>
@@ -181,7 +180,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             public override string ToString()
             {
-                return Invariant($"{Symbol.Value}: {Weight,10:P2}\t{Return,10:P2}\t{Risk,10:P2}");
+                return string.Format("{0}: {1,10:P2}\t{2,10:P2}\t{3,10:P2}", Symbol.Value, Weight, Return, Risk);
             }
         }
     }

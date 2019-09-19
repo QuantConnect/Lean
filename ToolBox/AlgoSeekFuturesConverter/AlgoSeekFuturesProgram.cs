@@ -51,7 +51,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             // Date for the option bz files.
             var referenceDate = DateTime.ParseExact(date, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
 
-            Log.Trace("DateTime: " + referenceDate.Date.ToStringInvariant());
+            Log.Trace("DateTime: " + referenceDate.Date.ToString());
 
             // checking if remote folder exists
             if(!Directory.Exists(remoteDirectory))
@@ -78,16 +78,16 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             var timer = Stopwatch.StartNew();
             var converter = new AlgoSeekFuturesConverter(resolutionList.ToList() , referenceDate, remoteDirectory, sourceDirectory, dataDirectory);
             converter.Convert();
-            Log.Trace($"AlgoSeekFuturesConverter.Main(): {referenceDate.ToStringInvariant()} Conversion finished in time: {timer.Elapsed.ToStringInvariant(null)}");
+            Log.Trace(string.Format("AlgoSeekFuturesConverter.Main(): {0} Conversion finished in time: {1}", referenceDate, timer.Elapsed));
 
             // Compress the memory cache to zips.
             timer.Restart();
             converter.Package(referenceDate);
-            Log.Trace($"AlgoSeekFuturesConverter.Main(): {referenceDate.ToStringInvariant()} Compression finished in time: {timer.Elapsed.ToStringInvariant(null)}");
+            Log.Trace(string.Format("AlgoSeekFuturesConverter.Main(): {0} Compression finished in time: {1}", referenceDate, timer.Elapsed));
 
             if (cleanSourceDirectory)
             {
-                Log.Trace($"AlgoSeekFuturesConverter.Main(): Cleaning source directory: {sourceDirectory}");
+                Log.Trace(string.Format("AlgoSeekFuturesConverter.Main(): Cleaning source directory: {0}", sourceDirectory));
 
                 try
                 {
@@ -95,7 +95,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 }
                 catch(Exception err)
                 {
-                    Log.Trace($"AlgoSeekFuturesConverter.Main(): Error while cleaning source directory {err.Message}");
+                    Log.Trace(string.Format("AlgoSeekFuturesConverter.Main(): Error while cleaning source directory {0}", err.Message));
                 }
             }
         }

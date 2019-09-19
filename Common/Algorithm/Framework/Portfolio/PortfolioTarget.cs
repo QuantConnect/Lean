@@ -16,7 +16,6 @@
 using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -74,21 +73,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             if (absolutePercentage > algorithm.Settings.MaxAbsolutePortfolioTargetPercentage
                 || absolutePercentage != 0 && absolutePercentage < algorithm.Settings.MinAbsolutePortfolioTargetPercentage)
             {
-                algorithm.Error(
-                    Invariant($"The portfolio target percent: {percent}, does not comply with the current ") +
-                    Invariant($"'Algorithm.Settings' 'MaxAbsolutePortfolioTargetPercentage': {algorithm.Settings.MaxAbsolutePortfolioTargetPercentage}") +
-                    Invariant($" or 'MinAbsolutePortfolioTargetPercentage': {algorithm.Settings.MinAbsolutePortfolioTargetPercentage}. Skipping")
-                );
+                algorithm.Error($"The portfolio target percent: {percent}, does not comply with the current " +
+                    $"'Algorithm.Settings' 'MaxAbsolutePortfolioTargetPercentage': {algorithm.Settings.MaxAbsolutePortfolioTargetPercentage}" +
+                    $" or 'MinAbsolutePortfolioTargetPercentage': {algorithm.Settings.MinAbsolutePortfolioTargetPercentage}. Skipping");
                 return null;
             }
 
             var security = algorithm.Securities[symbol];
             if (security.Price == 0)
             {
-                algorithm.Error(Invariant(
-                    $"The order quantity for {symbol.Value} cannot be calculated: the price of the security is zero."
-                ));
-
+                algorithm.Error($"The order quantity for {symbol.Value} cannot be calculated: the price of the security is zero.");
                 return null;
             }
 
@@ -101,10 +95,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             if (result.IsError)
             {
-                algorithm.Error(Invariant(
-                    $"Unable to compute order quantity of {symbol}. Reason: {result.Reason} Returning null."
-                ));
-
+                algorithm.Error($"Unable to compute order quantity of {symbol}. Reason: {result.Reason} Returning null.");
                 return null;
             }
 

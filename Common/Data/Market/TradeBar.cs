@@ -18,7 +18,6 @@ using System.Globalization;
 using System.Threading;
 using QuantConnect.Logging;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Market
 {
@@ -221,9 +220,8 @@ namespace QuantConnect.Data.Market
             }
             catch (Exception err)
             {
-                Log.Error(Invariant($"TradeBar.Reader(): Error parsing line: '{line}', Symbol: {config.Symbol.Value}, SecurityType: ") +
-                    Invariant($"{config.SecurityType}, Resolution: {config.Resolution}, Date: {date:yyyy-MM-dd}, Message: {err}")
-                );
+                Log.Error("TradeBar.Reader(): Error parsing line: '{0}', Symbol: {1}, SecurityType: {2}, Resolution: {3}, Date: {4}, Message: {5}",
+                    line, config.Symbol.Value, config.SecurityType, config.Resolution, date.ToString("yyyy-MM-dd"), err);
             }
 
             // if we couldn't parse it above return a default instance

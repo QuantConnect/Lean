@@ -17,7 +17,6 @@ using System;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -296,9 +295,9 @@ namespace QuantConnect.Securities
 
             if (Math.Abs(initialMarginRequiredForRemainderOfOrder) > freeMargin)
             {
-                var reason = Invariant($"Id: {parameters.Order.Id}, ") +
-                    Invariant($"Initial Margin: {initialMarginRequiredForRemainderOfOrder.Normalize()}, ") +
-                    Invariant($"Free Margin: {freeMargin.Normalize()}");
+                var reason =$"Id: {parameters.Order.Id}, " +
+                    $"Initial Margin: {initialMarginRequiredForRemainderOfOrder.Normalize()}, " +
+                    $"Free Margin: {freeMargin.Normalize()}";
 
                 Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): {reason}");
                 return new HasSufficientBuyingPowerForOrderResult(false, reason);
@@ -389,11 +388,10 @@ namespace QuantConnect.Securities
 
                 if (orderQuantity <= 0)
                 {
-                    return new GetMaximumOrderQuantityForTargetValueResult(0,
-                        Invariant($"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} ") +
-                        Invariant($"and has been rounded to zero.Target order value {targetOrderValue}. Order fees ") +
-                        Invariant($"{orderFees}. Order quantity {orderQuantity}.")
-                    );
+                    var reason = $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} " +
+                        $"and has been rounded to zero.Target order value {targetOrderValue}. Order fees " +
+                        $"{orderFees}. Order quantity {orderQuantity}.";
+                    return new GetMaximumOrderQuantityForTargetValueResult(0, reason);
                 }
 
                 // generate the order
@@ -424,8 +422,8 @@ namespace QuantConnect.Securities
                     if (lastOrderQuantity == orderQuantity)
                     {
                         var message = "GetMaximumOrderQuantityForTargetValue failed to converge to target order value " +
-                            Invariant($"{targetOrderValue}. Current order value is {orderValue}. Order quantity {orderQuantity}. ") +
-                            Invariant($"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol ") +
+                            $"{targetOrderValue}. Current order value is {orderValue}. Order quantity {orderQuantity}. " +
+                            $"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol " +
                             $"{parameters.Security.Symbol}";
                         throw new ArgumentException(message);
                     }

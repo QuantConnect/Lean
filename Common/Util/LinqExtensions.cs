@@ -167,11 +167,11 @@ namespace QuantConnect.Util
         {
             if (list == null)
             {
-                throw new ArgumentNullException(nameof(list));
+                throw new ArgumentNullException("list");
             }
             if (comparer == null)
             {
-                throw new ArgumentNullException(nameof(comparer));
+                throw new ArgumentNullException("comparer");
             }
 
             var lower = 0;

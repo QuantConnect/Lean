@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Globalization;
 
 namespace QuantConnect.Logging
 {
@@ -36,7 +35,7 @@ namespace QuantConnect.Logging
                 throw new ArgumentNullException("logHandler", "Log Handler cannot be null");
             }
 
-            logHandler.Error(string.Format(CultureInfo.InvariantCulture, text, args));
+            logHandler.Error(string.Format(text, args));
         }
 
         /// <summary>
@@ -52,7 +51,7 @@ namespace QuantConnect.Logging
                 throw new ArgumentNullException("logHandler", "Log Handler cannot be null");
             }
 
-            logHandler.Debug(string.Format(CultureInfo.InvariantCulture, text, args));
+            logHandler.Debug(string.Format(text, args));
         }
 
         /// <summary>
@@ -68,7 +67,7 @@ namespace QuantConnect.Logging
                 throw new ArgumentNullException("logHandler", "Log Handler cannot be null");
             }
 
-            logHandler.Trace(string.Format(CultureInfo.InvariantCulture, text, args));
+            logHandler.Trace(string.Format(text, args));
         }
     }
 }

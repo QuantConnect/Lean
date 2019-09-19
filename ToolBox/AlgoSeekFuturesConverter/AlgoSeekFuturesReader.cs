@@ -201,7 +201,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                 TickType tickType;
                 bool isAsk = false;
 
-                var type = csv[_columnType].ConvertInvariant<int>();
+                var type = Convert.ToInt32(csv[_columnType]);
                 if ((type & MessageTypeMask) == TradeMask)
                 {
                     tickType = TickType.Trade;

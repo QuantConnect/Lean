@@ -103,7 +103,7 @@ namespace QuantConnect.Data.Custom
             try
             {
                 // Fix invalid json before we parse it
-                var index = content.IndexOfInvariant("\"series\":");
+                var index = content.IndexOf("\"series\":");
                 content = "{" + content.Substring(index);
                 var series = JObject.Parse(content)["series"][0];
 
@@ -199,7 +199,7 @@ namespace QuantConnect.Data.Custom
             }
 
             string[] range;
-            var year = Parse.Int(dateData.Substring(0, 4));
+            var year = int.Parse(dateData.Substring(0, 4));
 
             switch (dateData.Last())
             {

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -87,7 +88,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     if (currentTime.Date > endDate.Date)
                     {
-                        Log.Trace($"Total data points emitted: {dataPointsEmitted.ToStringInvariant()}");
+                        Log.Trace($"Total data points emitted: {dataPointsEmitted}");
 
                         _feed.Exit();
                         cancellationTokenSource.Cancel();
@@ -119,7 +120,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                         }
 
                                         var csv = line.Split(',');
-                                        var time = Parse.DateTimeExact(csv[0], "yyyy-MM-dd");
+                                        var time = DateTime.ParseExact(csv[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
                                         if (time.Date >= currentTime.Date)
                                             break;
 
@@ -174,11 +175,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     foreach (var dataPoint in timeSlice.Slice.Values)
                     {
-                        Log.Trace($"Data point emitted at {timeSlice.Slice.Time.ToStringInvariant()}: " +
-                            $"{dataPoint.Symbol.Value} {dataPoint.Value.ToStringInvariant()} " +
-                            $"{dataPoint.EndTime.ToStringInvariant()}"
-                        );
-
+                        Log.Trace($"Data point emitted at {timeSlice.Slice.Time}: {dataPoint.Symbol.Value} {dataPoint.Value} {dataPoint.EndTime}");
                         dataPointsEmitted++;
                     }
                 }
@@ -336,7 +333,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             public static string GetLocalFileName(string ticker, string fileExtension)
             {
-                return $"./TestData/quandl_future_{ticker.Replace("/", "_").ToLowerInvariant()}.{fileExtension}";
+                return $"./TestData/quandl_future_{ticker.Replace("/", "_").ToLower()}.{fileExtension}";
             }
         }
     }

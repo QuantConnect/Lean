@@ -21,7 +21,6 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -77,7 +76,7 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Equity)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(AlpacaBrokerageModel)} does not support {security.Type} security type.")
+                    $"The {nameof(AlpacaBrokerageModel)} does not support {security.Type} security type."
                 );
 
                 return false;
@@ -87,7 +86,7 @@ namespace QuantConnect.Brokerages
             if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket && order.Type != OrderType.StopLimit && order.Type != OrderType.MarketOnOpen)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(AlpacaBrokerageModel)} does not support {order.Type} order type.")
+                    $"The {nameof(AlpacaBrokerageModel)} does not support {order.Type} order type."
                 );
 
                 return false;

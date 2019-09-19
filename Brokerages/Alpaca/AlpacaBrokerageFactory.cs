@@ -82,7 +82,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 throw new Exception(string.Join(Environment.NewLine, errors));
             }
 
-            tradingMode = tradingMode.ToLowerInvariant();
+            tradingMode = tradingMode.ToLower();
             if (!tradingMode.Equals("live") && !tradingMode.Equals("paper"))
             {
                 // if the trading mode is invalid, do not proceed further

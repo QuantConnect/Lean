@@ -20,6 +20,7 @@ using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -64,7 +65,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                     {
                         try
                         {
-                            return Parse.DateTimeExact(Path.GetFileName(x).Substring(0, 8), "yyyyMMdd");
+                            return DateTime.ParseExact(Path.GetFileName(x).Substring(0, 8), "yyyyMMdd", CultureInfo.InvariantCulture);
                         }
                         catch
                         {
@@ -116,7 +117,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, $"TradingEconomicsCalendarDownloader.Run(): Error parsing data for date {startUtc.ToStringInvariant("yyyyMMdd")}");
+                    Log.Error(e, $"TradingEconomicsCalendarDownloader.Run(): Error parsing data for date {startUtc:yyyyMMdd}");
                     return false;
                 }
             }
@@ -135,8 +136,8 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 
                     foreach (var calendarDataByDate in kvp.GroupBy(x => x.LastUpdate.Date))
                     {
-                        var date = calendarDataByDate.Key.ToStringInvariant("yyyyMMdd");
-                        var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToStringInvariant(null)}.json");
+                        var date = calendarDataByDate.Key.ToString("yyyyMMdd");
+                        var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
                         var tempZipPath = tempPath.Replace(".json", ".zip");
                         var finalZipPath = Path.Combine(_destinationFolder, kvp.Key, $"{date}.zip");
                         var dataFolderZipPath = Path.Combine(Globals.DataFolder, "alternative", "trading-economics", "calendar", kvp.Key, $"{date}.zip");
@@ -187,7 +188,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         /// <returns>String representing data for this date range</returns>
         public override Task<string> Get(DateTime startUtc, DateTime endUtc)
         {
-            var url = $"/calendar/country/all/{startUtc.ToStringInvariant("yyyy-MM-dd")}/{endUtc.ToStringInvariant("yyyy-MM-dd")}";
+            var url = $"/calendar/country/all/{startUtc:yyyy-MM-dd}/{endUtc:yyyy-MM-dd}";
             return HttpRequester(url);
         }
     }

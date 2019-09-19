@@ -152,14 +152,14 @@ namespace QuantConnect.Scheduling
                     {
                         if (IsLoggingEnabled)
                         {
-                            Log.Trace($"ScheduledEvent.{Name}: Completed scheduled events.");
+                            Log.Trace(string.Format("ScheduledEvent.{0}: Completed scheduled events.", Name));
                         }
                         _endOfScheduledEvents = true;
                         return;
                     }
                     if (IsLoggingEnabled)
                     {
-                        Log.Trace($"ScheduledEvent.{Name}: Next event: {_orderedEventUtcTimes.Current.ToStringInvariant(DateFormat.UI)} UTC");
+                        Log.Trace(string.Format("ScheduledEvent.{0}: Next event: {1} UTC", Name, _orderedEventUtcTimes.Current.ToString(DateFormat.UI)));
                     }
                 }
 
@@ -168,9 +168,10 @@ namespace QuantConnect.Scheduling
                 {
                     if (IsLoggingEnabled)
                     {
-                        Log.Trace($"ScheduledEvent.{Name}: Firing at {utcTime.ToStringInvariant(DateFormat.UI)} UTC " +
-                            $"Scheduled at {_orderedEventUtcTimes.Current.ToStringInvariant(DateFormat.UI)} UTC"
-                        );
+                        Log.Trace(string.Format("ScheduledEvent.{0}: Firing at {1} UTC Scheduled at {2} UTC", Name,
+                            utcTime.ToString(DateFormat.UI),
+                            _orderedEventUtcTimes.Current.ToString(DateFormat.UI))
+                            );
                     }
                     // fire the event
                     OnEventFired(_orderedEventUtcTimes.Current);
@@ -207,16 +208,19 @@ namespace QuantConnect.Scheduling
 
                     if (IsLoggingEnabled)
                     {
-                        Log.Trace($"ScheduledEvent.{Name}: Skipped events before {utcTime.ToStringInvariant(DateFormat.UI)}. " +
-                            $"Next event: {_orderedEventUtcTimes.Current.ToStringInvariant(DateFormat.UI)}"
-                        );
+                        Log.Trace(string.Format("ScheduledEvent.{0}: Skipped events before {1}. Next event: {2}", Name,
+                            utcTime.ToString(DateFormat.UI),
+                            _orderedEventUtcTimes.Current.ToString(DateFormat.UI)
+                            ));
                     }
                     return;
                 }
             }
             if (IsLoggingEnabled)
             {
-                Log.Trace($"ScheduledEvent.{Name}: Exhausted event stream during skip until {utcTime.ToStringInvariant(DateFormat.UI)}");
+                Log.Trace(string.Format("ScheduledEvent.{0}: Exhausted event stream during skip until {1}", Name,
+                    utcTime.ToString(DateFormat.UI)
+                    ));
             }
             _endOfScheduledEvents = true;
         }

@@ -21,7 +21,6 @@ using System.IO;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -99,7 +98,7 @@ namespace QuantConnect.Data.Auxiliary
         {
             factorFileMinimumDate = null;
 
-            var path = Path.Combine(Globals.CacheDataFolder, "equity", market, "factor_files", permtick.ToLowerInvariant() + ".csv");
+            var path = Path.Combine(Globals.CacheDataFolder, "equity", market, "factor_files", permtick.ToLower() + ".csv");
             var lines = File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l));
 
             return Parse(lines, out factorFileMinimumDate);
@@ -172,9 +171,7 @@ namespace QuantConnect.Data.Auxiliary
             // this is because the factors are defined working from current to past
             if (Date < previousTradingDay)
             {
-                throw new ArgumentException(Invariant(
-                    $"Factor file row date '{Date:yyy-MM-dd}' is before dividend previous trading date '{previousTradingDay.Date:yyyy-MM-dd}'."
-                ));
+                throw new ArgumentException($"Factor file row date '{Date:yyy-MM-dd}' is before dividend previous trading date '{previousTradingDay.Date:yyyy-MM-dd}'.");
             }
 
             // pfi - new price factor pf(i+1) - this price factor D - distribution C - previous close
@@ -215,9 +212,7 @@ namespace QuantConnect.Data.Auxiliary
             // this is because the factors are defined working from current to past
             if (Date < previousTradingDay)
             {
-                throw new ArgumentException(Invariant(
-                    $"Factor file row date '{Date:yyy-MM-dd}' is before split date '{split.Time.Date:yyyy-MM-dd}'."
-                ));
+                throw new ArgumentException($"Factor file row date '{Date:yyy-MM-dd}' is before split date '{split.Time.Date:yyyy-MM-dd}'.");
             }
 
             return new FactorFileRow(
@@ -240,9 +235,7 @@ namespace QuantConnect.Data.Auxiliary
         {
             if (futureFactorFileRow.PriceFactor == 0m)
             {
-                throw new InvalidOperationException(Invariant(
-                    $"Unable to resolve dividend for '{symbol.ID}' at {Date:yyyy-MM-dd}. Price factor is zero."
-                ));
+                throw new InvalidOperationException($"Unable to resolve dividend for '{symbol.ID}' at {Date:yyyy-MM-dd}. Price factor is zero.");
             }
 
             // find previous trading day
@@ -268,9 +261,7 @@ namespace QuantConnect.Data.Auxiliary
         {
             if (futureFactorFileRow.SplitFactor == 0m)
             {
-                throw new InvalidOperationException(Invariant(
-                    $"Unable to resolve split for '{symbol.ID}' at {Date:yyyy-MM-dd}. Split factor is zero."
-                ));
+                throw new InvalidOperationException($"Unable to resolve split for '{symbol.ID}' at {Date:yyyy-MM-dd}. Split factor is zero.");
             }
 
             // find previous trading day
@@ -292,11 +283,11 @@ namespace QuantConnect.Data.Auxiliary
         {
             var csv = line.Split(',');
             return new FactorFileRow(
-                QuantConnect.Parse.DateTimeExact(csv[0], DateFormat.EightCharacter, DateTimeStyles.None),
-                QuantConnect.Parse.Decimal(csv[1]),
-                QuantConnect.Parse.Decimal(csv[2]),
-                csv.Length > 3 ? QuantConnect.Parse.Decimal(csv[3]) : 0m
-            );
+                DateTime.ParseExact(csv[0], DateFormat.EightCharacter, CultureInfo.InvariantCulture, DateTimeStyles.None),
+                decimal.Parse(csv[1], CultureInfo.InvariantCulture),
+                decimal.Parse(csv[2], CultureInfo.InvariantCulture),
+                csv.Length > 3 ? decimal.Parse(csv[3], CultureInfo.InvariantCulture) : 0m
+                );
         }
 
         /// <summary>
@@ -305,11 +296,7 @@ namespace QuantConnect.Data.Auxiliary
         public string ToCsv(string source = null)
         {
             source = source == null ? "" : $",{source}";
-            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)}," +
-                   Invariant($"{Math.Round(PriceFactor, 6).Normalize()},") +
-                   Invariant($"{Math.Round(SplitFactor, 7).Normalize()},") +
-                   Invariant($"{Math.Round(ReferencePrice, 2).Normalize()}") +
-                   $"{source}";
+            return $"{Date.ToString(DateFormat.EightCharacter)},{Math.Round(PriceFactor, 6).Normalize()},{Math.Round(SplitFactor, 7).Normalize()},{Math.Round(ReferencePrice, 2).Normalize()}{source}";
         }
 
         /// <summary>
@@ -321,7 +308,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"{Date:yyyy-MM-dd}: {PriceScaleFactor:0.0000} {SplitFactor:0.0000}");
+            return $"{Date:yyyy-MM-dd}: {PriceScaleFactor:0.0000} {SplitFactor:0.0000}";
         }
 
         /// <summary>

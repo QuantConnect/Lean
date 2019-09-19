@@ -20,7 +20,6 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -75,7 +74,7 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Forex && security.Type != SecurityType.Cfd)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(OandaBrokerageModel)} does not support {security.Type} security type.")
+                    $"The {nameof(OandaBrokerageModel)} does not support {security.Type} security type."
                 );
 
                 return false;
@@ -85,7 +84,7 @@ namespace QuantConnect.Brokerages
             if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(OandaBrokerageModel)} does not support {order.Type} order type.")
+                    $"The {nameof(OandaBrokerageModel)} does not support {order.Type} order type."
                 );
 
                 return false;
@@ -95,7 +94,7 @@ namespace QuantConnect.Brokerages
             if (order.TimeInForce != TimeInForce.GoodTilCanceled)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(OandaBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
+                    $"The {nameof(OandaBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force."
                 );
 
                 return false;

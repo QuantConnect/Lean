@@ -30,7 +30,7 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
             {
                 if (!tickers.IsNullOrEmpty())
                 {
-                    var _tickers = tickers.First().ToLowerInvariant();
+                    var _tickers = tickers.First().ToLower();
                     if (_tickers == "all" || _tickers == "update")
                     {
                         if (_tickers == "update")
@@ -64,7 +64,7 @@ namespace QuantConnect.ToolBox.FxcmVolumeDownload
                 Log.LogHandler = new CompositeLogHandler(new ConsoleLogHandler(), new FileLogHandler("FxcmFxVolumeDownloader.log", useTimestampPrefix: false));
 
                 var resolutions = new[] { Resolution.Daily };
-                if (resolution.ToLowerInvariant() == "all")
+                if (resolution.ToLower() == "all")
                 {
                     resolutions = new[] { Resolution.Daily, Resolution.Hour, Resolution.Minute };
                 }

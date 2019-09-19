@@ -21,7 +21,6 @@ using NodaTime;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Securities;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data
 {
@@ -169,10 +168,10 @@ namespace QuantConnect.Data
             bool isFilteredSubscription = true,
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted)
         {
-            if (objectType == null) throw new ArgumentNullException(nameof(objectType));
-            if (symbol == null) throw new ArgumentNullException(nameof(symbol));
-            if (dataTimeZone == null) throw new ArgumentNullException(nameof(dataTimeZone));
-            if (exchangeTimeZone == null) throw new ArgumentNullException(nameof(exchangeTimeZone));
+            if (objectType == null) throw new ArgumentNullException("objectType");
+            if (symbol == null) throw new ArgumentNullException("symbol");
+            if (dataTimeZone == null) throw new ArgumentNullException("dataTimeZone");
+            if (exchangeTimeZone == null) throw new ArgumentNullException("exchangeTimeZone");
 
             Type = objectType;
             SecurityType = symbol.ID.SecurityType;
@@ -213,7 +212,7 @@ namespace QuantConnect.Data
                     Increment = TimeSpan.FromDays(1);
                     break;
                 default:
-                    throw new InvalidEnumArgumentException(Invariant($"Unexpected Resolution: {resolution}"));
+                    throw new InvalidEnumArgumentException("Unexpected Resolution: " + resolution);
             }
         }
 
@@ -380,7 +379,7 @@ namespace QuantConnect.Data
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"{Symbol.Value},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode}");
+            return Symbol.Value + "," + MappedSymbol + "," + Resolution + "," + Type.Name + "," + TickType + "," + DataNormalizationMode;
         }
     }
 }

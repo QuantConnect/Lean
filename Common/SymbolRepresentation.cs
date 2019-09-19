@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities.Future;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
@@ -171,7 +170,7 @@ namespace QuantConnect
         {
             if (symbol.SecurityType != SecurityType.Option)
             {
-                throw new ArgumentException(Invariant($"{nameof(GenerateOptionTickerOSI)} returns symbol to be an option, received {symbol.SecurityType}."));
+                throw new ArgumentException($"{nameof(GenerateOptionTickerOSI)} returns symbol to be an option, received {symbol.SecurityType}.");
             }
 
             return GenerateOptionTickerOSI(symbol.Underlying.Value, symbol.ID.OptionRight, symbol.ID.StrikePrice, symbol.ID.Date);
@@ -189,7 +188,7 @@ namespace QuantConnect
         public static string GenerateOptionTickerOSI(string underlying, OptionRight right, decimal strikePrice, DateTime expiration)
         {
             if (underlying.Length > 5) underlying += " ";
-            return Invariant($"{underlying,-6}{expiration.ToStringInvariant(DateFormat.SixCharacter)}{right.ToString()[0]}{(strikePrice * 1000m):00000000}");
+            return string.Format("{0,-6}{1}{2}{3:00000000}", underlying, expiration.ToString(DateFormat.SixCharacter), right.ToString()[0], strikePrice * 1000m);
         }
 
         /// <summary>
@@ -205,7 +204,7 @@ namespace QuantConnect
             if (ticker[12] == 'C') right = OptionRight.Call;
             else if (ticker[12] == 'P') right = OptionRight.Put;
             else throw new FormatException($"Expected 12th character to be 'C' or 'P' for OptionRight: {ticker}");
-            var strike = Parse.Decimal(ticker.Substring(13, 8)) / 1000m;
+            var strike = decimal.Parse(ticker.Substring(13, 8)) / 1000m;
             var underlyingSid = SecurityIdentifier.GenerateEquity(underlying, Market.USA);
             var sid = SecurityIdentifier.GenerateOption(expiration, underlyingSid, Market.USA, strike, right, OptionStyle.American);
             return new Symbol(sid, ticker, new Symbol(underlyingSid, underlying));
@@ -243,7 +242,7 @@ namespace QuantConnect
             var optionTypeDelimiter = ticker.LastIndexOfAny(letterRange);
             var strikePriceString = ticker.Substring(optionTypeDelimiter + 1, ticker.Length - optionTypeDelimiter - 1);
 
-            var lookupResult = symbology[ticker[optionTypeDelimiter].ToStringInvariant()];
+            var lookupResult = symbology[ticker[optionTypeDelimiter].ToString()];
             var month = lookupResult.Item1;
             var optionRight = lookupResult.Item2;
 

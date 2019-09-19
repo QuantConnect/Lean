@@ -20,7 +20,6 @@ using QuantConnect.Securities;
 using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Fees;
 using System.Linq;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Brokerages
 {
@@ -145,7 +144,7 @@ namespace QuantConnect.Brokerages
                 Math.Abs(order.Quantity) < minimumOrderSize)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The minimum order quantity for {security.Symbol.Value} is {minimumOrderSize}")
+                    $"The minimum order quantity for {security.Symbol.Value} is {minimumOrderSize}"
                 );
 
                 return false;
@@ -154,7 +153,7 @@ namespace QuantConnect.Brokerages
             if (security.Type != SecurityType.Crypto)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(GDAXBrokerageModel)} does not support {security.Type} security type.")
+                    $"The {nameof(GDAXBrokerageModel)} does not support {security.Type} security type."
                 );
 
                 return false;
@@ -163,7 +162,7 @@ namespace QuantConnect.Brokerages
             if (order.Type != OrderType.Limit && order.Type != OrderType.Market && order.Type != OrderType.StopMarket && order.Type != OrderType.StopLimit)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(GDAXBrokerageModel)} does not support {order.Type} order type.")
+                    $"The {nameof(GDAXBrokerageModel)} does not support {order.Type} order type."
                 );
 
                 return false;
@@ -172,7 +171,7 @@ namespace QuantConnect.Brokerages
             if (order.Type == OrderType.StopMarket && order.Time >= _stopMarketOrderSupportEndDate)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"Stop Market orders are no longer supported since {_stopMarketOrderSupportEndDate}.")
+                    $"Stop Market orders are no longer supported since {_stopMarketOrderSupportEndDate}."
                 );
 
                 return false;
@@ -181,7 +180,7 @@ namespace QuantConnect.Brokerages
             if (order.TimeInForce != TimeInForce.GoodTilCanceled)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(GDAXBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force.")
+                    $"The {nameof(GDAXBrokerageModel)} does not support {order.TimeInForce.GetType().Name} time in force."
                 );
 
                 return false;

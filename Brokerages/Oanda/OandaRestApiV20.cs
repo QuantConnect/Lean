@@ -171,21 +171,21 @@ namespace QuantConnect.Brokerages.Oanda
                 if (order.Type == OrderType.Market)
                 {
                     var fill = response.Data.OrderFillTransaction;
-                    marketOrderFillPrice = fill.Price.ConvertInvariant<decimal>();
+                    marketOrderFillPrice = Convert.ToDecimal(fill.Price);
 
                     if (fill.TradeOpened != null && fill.TradeOpened.TradeID.Length > 0)
                     {
-                        marketOrderFillQuantity = fill.TradeOpened.Units.ConvertInvariant<int>();
+                        marketOrderFillQuantity = Convert.ToInt32(fill.TradeOpened.Units);
                     }
 
                     if (fill.TradeReduced != null && fill.TradeReduced.TradeID.Length > 0)
                     {
-                        marketOrderFillQuantity = fill.TradeReduced.Units.ConvertInvariant<int>();
+                        marketOrderFillQuantity = Convert.ToInt32(fill.TradeReduced.Units);
                     }
 
                     if (fill.TradesClosed != null && fill.TradesClosed.Count > 0)
                     {
-                        marketOrderFillQuantity += fill.TradesClosed.Sum(trade => trade.Units.ConvertInvariant<int>());
+                        marketOrderFillQuantity += fill.TradesClosed.Sum(trade => Convert.ToInt32(trade.Units));
                     }
 
                     marketOrderRemainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - Math.Abs(marketOrderFillQuantity));
@@ -244,7 +244,7 @@ namespace QuantConnect.Brokerages.Oanda
                 {
                     Status = OrderStatus.Filled,
                     FillPrice = response.Data.OrderFillTransaction.Price.ToDecimal(),
-                    FillQuantity = response.Data.OrderFillTransaction.Units.ConvertInvariant<int>()
+                    FillQuantity = Convert.ToInt32(response.Data.OrderFillTransaction.Units)
                 });
             }
 
@@ -372,7 +372,7 @@ namespace QuantConnect.Brokerages.Oanda
                             {
                                 Status = OrderStatus.Filled,
                                 FillPrice = transaction.Price.ToDecimal(),
-                                FillQuantity = transaction.Units.ConvertInvariant<int>()
+                                FillQuantity = Convert.ToInt32(transaction.Units)
                             });
                         }
                     }
@@ -418,8 +418,8 @@ namespace QuantConnect.Brokerages.Oanda
                     }
                     time = time.ConvertFromUtc(exchangeTimeZone);
 
-                    var bidPrice = data.Bids.Last().Price.ConvertInvariant<decimal>();
-                    var askPrice = data.Asks.Last().Price.ConvertInvariant<decimal>();
+                    var bidPrice = Convert.ToDecimal(data.Bids.Last().Price);
+                    var askPrice = Convert.ToDecimal(data.Asks.Last().Price);
                     var tick = new Tick(time, symbol, bidPrice, askPrice);
 
                     lock (Ticks)
@@ -521,8 +521,8 @@ namespace QuantConnect.Brokerages.Oanda
         public override IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
             var oandaSymbol = SymbolMapper.GetBrokerageSymbol(symbol);
-            var startUtc = startTimeUtc.ToStringInvariant("yyyy-MM-ddTHH:mm:ssZ");
-            var endUtc = endTimeUtc.ToStringInvariant("yyyy-MM-ddTHH:mm:ssZ");
+            var startUtc = startTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var endUtc = endTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
 
             // Oanda only has 5-second bars, we return these for Resolution.Second
             var period = resolution == Resolution.Second ? TimeSpan.FromSeconds(5) : resolution.ToTimeSpan();
@@ -558,7 +558,7 @@ namespace QuantConnect.Brokerages.Oanda
         public override IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
             var oandaSymbol = SymbolMapper.GetBrokerageSymbol(symbol);
-            var startUtc = startTimeUtc.ToStringInvariant("yyyy-MM-ddTHH:mm:ssZ");
+            var startUtc = startTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
 
             // Oanda only has 5-second bars, we return these for Resolution.Second
             var period = resolution == Resolution.Second ? TimeSpan.FromSeconds(5) : resolution.ToTimeSpan();
@@ -626,8 +626,8 @@ namespace QuantConnect.Brokerages.Oanda
                     var stopLimitOrder = order.ToObject<StopOrder>();
                     qcOrder = new StopLimitOrder
                     {
-                        Price = stopLimitOrder.Price.ConvertInvariant<decimal>(),
-                        LimitPrice = stopLimitOrder.PriceBound.ConvertInvariant<decimal>()
+                        Price = Convert.ToDecimal(stopLimitOrder.Price),
+                        LimitPrice = Convert.ToDecimal(stopLimitOrder.PriceBound)
                     };
                     break;
 
@@ -642,7 +642,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             var instrument = order["instrument"].ToString();
             var id = order["id"].ToString();
-            var units = order["units"].ConvertInvariant<int>();
+            var units = Convert.ToInt32(order["units"]);
             var createTime = order["createTime"].ToString();
 
             var securityType = SymbolMapper.GetBrokerageSecurityType(instrument);
@@ -676,8 +676,8 @@ namespace QuantConnect.Brokerages.Oanda
             var securityType = SymbolMapper.GetBrokerageSecurityType(position.Instrument);
             var symbol = SymbolMapper.GetLeanSymbol(position.Instrument, securityType, Market.Oanda);
 
-            var longUnits = position._Long.Units.ConvertInvariant<int>();
-            var shortUnits = position._Short.Units.ConvertInvariant<int>();
+            var longUnits = Convert.ToInt32(position._Long.Units);
+            var shortUnits = Convert.ToInt32(position._Short.Units);
 
             decimal averagePrice = 0;
             var quantity = 0;
@@ -753,7 +753,7 @@ namespace QuantConnect.Brokerages.Oanda
                     {
                         Type = MarketOrderRequest.TypeEnum.MARKET,
                         Instrument = instrument,
-                        Units = order.Quantity.ToStringInvariant()
+                        Units = order.Quantity.ToString()
                     };
                     request = JsonConvert.SerializeObject(new { order = marketOrderRequest });
                     break;
@@ -763,7 +763,7 @@ namespace QuantConnect.Brokerages.Oanda
                     {
                         Type = LimitOrderRequest.TypeEnum.LIMIT,
                         Instrument = instrument,
-                        Units = order.Quantity.ToStringInvariant(),
+                        Units = order.Quantity.ToString(),
                         Price = ((LimitOrder)order).LimitPrice.ToString(CultureInfo.InvariantCulture)
                     };
                     request = JsonConvert.SerializeObject(new { order = limitOrderRequest });
@@ -774,7 +774,7 @@ namespace QuantConnect.Brokerages.Oanda
                     {
                         Type = MarketIfTouchedOrderRequest.TypeEnum.MARKETIFTOUCHED,
                         Instrument = instrument,
-                        Units = order.Quantity.ToStringInvariant(),
+                        Units = order.Quantity.ToString(),
                         Price = ((StopMarketOrder)order).StopPrice.ToString(CultureInfo.InvariantCulture)
                     };
                     request = JsonConvert.SerializeObject(new { order = marketIfTouchedOrderRequest });
@@ -785,7 +785,7 @@ namespace QuantConnect.Brokerages.Oanda
                     {
                         Type = StopOrderRequest.TypeEnum.STOP,
                         Instrument = instrument,
-                        Units = order.Quantity.ToStringInvariant(),
+                        Units = order.Quantity.ToString(),
                         Price = ((StopLimitOrder)order).StopPrice.ToString(CultureInfo.InvariantCulture),
                         PriceBound = ((StopLimitOrder)order).LimitPrice.ToString(CultureInfo.InvariantCulture)
                     };

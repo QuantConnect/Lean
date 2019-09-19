@@ -180,7 +180,7 @@ namespace QuantConnect.API
                                                 string account)
             : base(user, password, environment, account)
         {
-            Id = BrokerageName.QuantConnectBrokerage.ToStringInvariant();
+            Id = BrokerageName.QuantConnectBrokerage.ToString();
         }
     }
 
@@ -203,7 +203,7 @@ namespace QuantConnect.API
                                          string account)
             : base(user, password, environment, account)
         {
-            Id = BrokerageName.FxcmBrokerage.ToStringInvariant();
+            Id = BrokerageName.FxcmBrokerage.ToString();
         }
 
     }
@@ -226,7 +226,7 @@ namespace QuantConnect.API
         {
             Account = account;
             Environment = Account.Substring(0, 2) == "DU" ? BrokerageEnvironment.Paper : BrokerageEnvironment.Live;
-            Id = BrokerageName.InteractiveBrokersBrokerage.ToStringInvariant();
+            Id = BrokerageName.InteractiveBrokersBrokerage.ToString();
         }
     }
 
@@ -250,7 +250,7 @@ namespace QuantConnect.API
             // The DateIssued parameter is required by the Api, but not required to trade.
             // This should be fixed on the Api side.
             DateIssued = "1";
-            Id = BrokerageName.OandaBrokerage.ToStringInvariant();
+            Id = BrokerageName.OandaBrokerage.ToString();
         }
 
         /// <summary>

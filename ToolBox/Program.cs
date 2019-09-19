@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.IO;
 using QuantConnect.Configuration;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
@@ -61,16 +60,16 @@ namespace QuantConnect.ToolBox
                 PrintMessageAndExit();
             }
 
-            var targetApp = GetParameterOrExit(optionsObject, "app").ToLowerInvariant();
+            var targetApp = GetParameterOrExit(optionsObject, "app").ToLower();
             if (targetApp.Contains("download") || targetApp.EndsWith("dl"))
             {
-                var fromDate = Parse.DateTimeExact(GetParameterOrExit(optionsObject, "from-date"), "yyyyMMdd-HH:mm:ss");
+                var fromDate = DateTime.ParseExact(GetParameterOrExit(optionsObject, "from-date"), "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture);
                 var resolution = optionsObject.ContainsKey("resolution") ? optionsObject["resolution"].ToString() : "";
                 var tickers = optionsObject.ContainsKey("tickers")
                     ? (optionsObject["tickers"] as Dictionary<string, object>)?.Keys.ToList()
                     : new List<string>();
                 var toDate = optionsObject.ContainsKey("to-date")
-                    ? Parse.DateTimeExact(optionsObject["to-date"].ToString(), "yyyyMMdd-HH:mm:ss")
+                    ? DateTime.ParseExact(optionsObject["to-date"].ToString(), "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture)
                     : DateTime.UtcNow;
                 switch (targetApp)
                 {
@@ -237,7 +236,7 @@ namespace QuantConnect.ToolBox
                         break;
                     case "seccv":
                     case "secconverter":
-                        var start = Parse.DateTimeExact(GetParameterOrExit(optionsObject, "date"), "yyyyMMdd");
+                        var start = DateTime.ParseExact(GetParameterOrExit(optionsObject, "date"), "yyyyMMdd", CultureInfo.InvariantCulture);
                         SECDataDownloaderProgram.SECDataConverter(
                             GetParameterOrExit(optionsObject, "source-dir"),
                             GetParameterOrDefault(optionsObject, "destination-dir", Globals.DataFolder),

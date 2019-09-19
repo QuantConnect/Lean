@@ -244,7 +244,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 throw new ArgumentException($"Invalid Bitfinex symbol: {bitfinexSymbol}");
 
             // return as it is due to Bitfinex has similar Symbol format
-            return bitfinexSymbol.ToUpperInvariant();
+            return bitfinexSymbol.ToUpper();
         }
 
         /// <summary>
@@ -256,7 +256,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 throw new ArgumentException($"Invalid Lean symbol: {leanSymbol}");
 
             // return as it is due to Bitfinex has similar Symbol format
-            return leanSymbol.ToUpperInvariant();
+            return leanSymbol.ToUpper();
         }
     }
 }

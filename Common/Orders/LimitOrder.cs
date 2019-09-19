@@ -16,7 +16,6 @@
 using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {
@@ -62,7 +61,7 @@ namespace QuantConnect.Orders
             if (tag == "")
             {
                 //Default tag values to display limit price in GUI.
-                Tag = Invariant($"Limit Price: {limitPrice:C}");
+                Tag = "Limit Price: " + limitPrice.ToString("C");
             }
         }
 
@@ -109,7 +108,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"{base.ToString()} at limit {LimitPrice.SmartRounding()}");
+            return string.Format("{0} at limit {1}", base.ToString(), LimitPrice.SmartRounding());
         }
 
         /// <summary>

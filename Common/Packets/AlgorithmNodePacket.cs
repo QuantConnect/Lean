@@ -16,7 +16,6 @@
 
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Packets
 {
@@ -151,7 +150,7 @@ namespace QuantConnect.Packets
         /// </summary>
         public string GetAlgorithmName()
         {
-            return Invariant($"{UserId}-{ProjectId}-{AlgorithmId}");
+            return $"{UserId}-{ProjectId}-{AlgorithmId}";
         }
     }
 }

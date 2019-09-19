@@ -136,9 +136,7 @@ namespace QuantConnect.Lean.Engine.Setup
                 throw new ArgumentException("Expected BacktestNodePacket but received " + parameters.AlgorithmNodePacket.GetType().Name);
             }
 
-            Log.Trace($"BacktestingSetupHandler.Setup(): Setting up job: Plan: {job.UserPlan}, UID: {job.UserId.ToStringInvariant()}, " +
-                $"PID: {job.ProjectId.ToStringInvariant()}, Version: {job.Version}, Source: {job.RequestSource}"
-            );
+            Log.Trace(string.Format("BacktestingSetupHandler.Setup(): Setting up job: Plan: {0}, UID: {1}, PID: {2}, Version: {3}, Source: {4}", job.UserPlan, job.UserId, job.ProjectId, job.Version, job.RequestSource));
 
             if (algorithm == null)
             {
@@ -233,10 +231,7 @@ namespace QuantConnect.Lean.Engine.Setup
 
             //Put into log for debugging:
             Log.Trace("SetUp Backtesting: User: " + job.UserId + " ProjectId: " + job.ProjectId + " AlgoId: " + job.AlgorithmId);
-            Log.Trace($"Dates: Start: {job.PeriodStart.ToStringInvariant("d")} " +
-                $"End: {job.PeriodFinish.ToStringInvariant("d")} " +
-                $"Cash: {StartingPortfolioValue.ToStringInvariant("C")}"
-            );
+            Log.Trace("Dates: Start: " + job.PeriodStart.ToShortDateString() + " End: " + job.PeriodFinish.ToShortDateString() + " Cash: " + StartingPortfolioValue.ToString("C"));
 
             if (Errors.Count > 0)
             {

@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json;
 using NodaTime;
@@ -58,7 +57,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void ConstructorOnCustomSymbolLength(string currency)
         {
             var cash = new Cash(currency, 0, 0);
-            Assert.AreEqual(currency.ToUpper(CultureInfo.InvariantCulture), cash.Symbol);
+            Assert.AreEqual(currency.ToUpper(), cash.Symbol);
         }
 
         [Test]

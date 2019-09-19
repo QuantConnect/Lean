@@ -69,10 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
         public void OnData(Dividends data) // update this to Dividends dictionary
         {
             var dividend = data["MSFT"];
-            Debug($"{dividend.Time.ToStringInvariant("o")} >> DIVIDEND >> {dividend.Symbol} - " +
-                $"{dividend.Distribution.ToStringInvariant("C")} - {Portfolio.Cash} - " +
-                $"{Portfolio["MSFT"].Price.ToStringInvariant("C")}"
-            );
+            Debug(string.Format("{0} >> DIVIDEND >> {1} - {2} - {3} - {4}", dividend.Time.ToString("o"), dividend.Symbol, dividend.Distribution.ToString("C"), Portfolio.Cash, Portfolio["MSFT"].Price.ToString("C")));
         }
 
         /// <summary>
@@ -83,18 +80,14 @@ namespace QuantConnect.Algorithm.CSharp
         {
             Debug("MSFT: " + Securities["MSFT"].Price);
             var split = data["MSFT"];
-            Debug($"{split.Time.ToIso8601Invariant()} >> SPLIT >> {split.Symbol} - " +
-                $"{split.SplitFactor.ToStringInvariant()} - " +
-                $"{Portfolio.Cash.ToStringInvariant()} - " +
-                $"{Portfolio["MSFT"].Quantity.ToStringInvariant()}"
-            );
+            Debug(string.Format("{0} >> SPLIT >> {1} - {2} - {3} - {4}", split.Time.ToString("o"), split.Symbol, split.SplitFactor, Portfolio.Cash, Portfolio["MSFT"].Quantity));
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             // orders get adjusted based on split events to maintain order value
             var order = Transactions.GetOrderById(orderEvent.OrderId);
-            Debug($"{Time.ToStringInvariant()} >> ORDER >> {order}");
+            Debug(string.Format("{0} >> ORDER >> " + order, Time));
         }
     }
 }

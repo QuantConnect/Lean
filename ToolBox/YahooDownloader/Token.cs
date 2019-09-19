@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,9 @@ namespace QuantConnect.ToolBox.YahooDownloader
                 Cookie = "";
                 Crumb = "";
 
-                var url = $"https://finance.yahoo.com/quote/{symbol}?p={symbol}";
+                var urlScrape = "https://finance.yahoo.com/quote/{0}?p={0}";
+
+                var url = string.Format(urlScrape, symbol);
 
                 var request = (HttpWebRequest)WebRequest.Create(url);
 
@@ -76,7 +78,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                     {
                         Cookie = cookie;
                         Crumb = crumb;
-                        Log.Debug($"Crumb: '{crumb}', Cookie: '{cookie}'");
+                        Log.Debug(string.Format("Crumb: '{0}', Cookie: '{1}'", crumb, cookie));
                         return true;
                     }
 

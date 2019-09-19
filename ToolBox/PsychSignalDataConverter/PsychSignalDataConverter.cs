@@ -80,7 +80,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                     currentLineCount++;
 
                     var csv = line.Split(',');
-                    var ticker = csv[1].ToLowerInvariant();
+                    var ticker = csv[1].ToLower();
                     DateTime timestamp;
 
                     if (csv[0] == "SOURCE")
@@ -145,7 +145,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                         return fileDate >= startDateUtc && fileDate < endDateUtc;
                     }
                 )
-                .OrderBy(x => Parse.DateTimeExact(x.Name.Substring(0, 11), "yyyyMMdd_HH", DateTimeStyles.AdjustToUniversal))
+                .OrderBy(x => DateTime.ParseExact(x.Name.Substring(0, 11), "yyyyMMdd_HH", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
                 .ToList();
 
             var fileCount = files.Count();
@@ -217,7 +217,7 @@ namespace QuantConnect.ToolBox.PsychSignalDataConverter
                         return DateTime.TryParseExact(x.Name.Substring(0, 11), "yyyyMMdd_HH", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out fileDate);
                     }
                 )
-                .OrderBy(x => Parse.DateTimeExact(x.Name.Substring(0, 11), "yyyyMMdd_HH", DateTimeStyles.AdjustToUniversal))
+                .OrderBy(x => DateTime.ParseExact(x.Name.Substring(0, 11), "yyyyMMdd_HH", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal))
                 .ToList();
 
             var i = 0;

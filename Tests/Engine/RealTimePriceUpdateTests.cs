@@ -152,10 +152,7 @@ namespace QuantConnect.Tests.Engine
         class TimeZoneOffsetProviderNeverOpen : TimeZoneOffsetProvider
         {
             public TimeZoneOffsetProviderNeverOpen()
-                : base(TimeZones.NewYork,
-                    Parse.DateTime("1/1/2016"),
-                    Parse.DateTime("1/1/2018")
-                )
+                : base(TimeZones.NewYork, DateTime.Parse("1/1/2016"), DateTime.Parse("1/1/2018"))
             {
             }
 
@@ -169,10 +166,7 @@ namespace QuantConnect.Tests.Engine
         class TimeZoneOffsetProviderAlwaysOpen : TimeZoneOffsetProvider
         {
             public TimeZoneOffsetProviderAlwaysOpen()
-                : base(TimeZones.NewYork,
-                    Parse.DateTime("1/1/2016"),
-                    Parse.DateTime("1/1/2018")
-                )
+                : base(TimeZones.NewYork, DateTime.Parse("1/1/2016"), DateTime.Parse("1/1/2018"))
             {
             }
 

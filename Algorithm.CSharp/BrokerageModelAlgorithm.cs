@@ -108,9 +108,8 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     // return a message describing why we're not allowing this order
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "InsufficientRemainingCapital",
-                        $"Account must maintain a minimum of ${_minimumAccountBalance.ToStringInvariant()} USD at all times. " +
-                        $"Order ID: {order.Id.ToStringInvariant()}"
-                    );
+                        string.Format("Account must maintain a minimum of ${0} USD at all times. Order ID: {1}", _minimumAccountBalance, order.Id)
+                        );
                     return false;
                 }
                 return true;

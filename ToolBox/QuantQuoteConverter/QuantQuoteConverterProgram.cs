@@ -15,10 +15,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using QuantConnect.Util;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.ToolBox.QuantQuoteConverter
 {
@@ -47,7 +47,7 @@ namespace QuantConnect.ToolBox.QuantQuoteConverter
                 destinationDirectory = (Console.ReadLine() ?? "");
                 Console.WriteLine("3. Enter Resolution (minute/second/tick): ");
                 resolution = (Console.ReadLine() ?? "");
-                resolution = resolution.ToLowerInvariant();
+                resolution = resolution.ToLower();
             }
 
             //Validate the user input:
@@ -61,7 +61,7 @@ namespace QuantConnect.ToolBox.QuantQuoteConverter
             Console.WriteLine("Counting Files...");
             var count = 0;
             var totalCount = GetCount(sourceDirectory);
-            Console.WriteLine(Invariant($"Processing {totalCount} Files ..."));
+            Console.WriteLine("Processing {0} Files ...", totalCount);
 
             //Enumerate files
             foreach (var directory in Directory.EnumerateDirectories(sourceDirectory))
@@ -71,9 +71,9 @@ namespace QuantConnect.ToolBox.QuantQuoteConverter
                 {
                     var symbol = GetSymbol(file);
                     var fileContents = File.ReadAllText(file);
-                    var data = new Dictionary<string, string> { { Invariant($"{date:yyyyMMdd}_{symbol}_Trade_Second.csv"), fileContents } };
+                    var data = new Dictionary<string, string> { { string.Format("{0}_{1}_Trade_Second.csv", date.ToString("yyyyMMdd"), symbol), fileContents } };
 
-                    var fileDestination = Invariant($"{destinationDirectory}/equity/{resolution}/{symbol}/{date:yyyyMMdd}_trade.zip");
+                    var fileDestination = string.Format("{0}/equity/{1}/{2}/{3}_trade.zip",  destinationDirectory, resolution, symbol, date.ToString("yyyyMMdd"));
 
                     if (!Compression.ZipData(fileDestination, data))
                     {
@@ -81,7 +81,7 @@ namespace QuantConnect.ToolBox.QuantQuoteConverter
                     }
                     else
                     {
-                        Console.WriteLine(Invariant($"Successfully processed {count} of {totalCount} files: {fileDestination}"));
+                        Console.WriteLine("Successfully processed {0} of {1} files: {2}", count, totalCount, fileDestination);
                     }
                     count++;
                 }
@@ -133,7 +133,7 @@ namespace QuantConnect.ToolBox.QuantQuoteConverter
         {
             var splits = date.Split('/', '\\');
             var dateString = splits[splits.Length - 1].Replace("allstocks_", "");
-            return Parse.DateTimeExact(dateString, "yyyyMMdd");
+            return DateTime.ParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture);
         }
 
 

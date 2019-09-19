@@ -352,7 +352,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <returns>The open orders returned from FXCM</returns>
         public override List<Order> GetOpenOrders()
         {
-            Log.Trace($"FxcmBrokerage.GetOpenOrders(): Located {_openOrders.Count.ToStringInvariant()} orders");
+            Log.Trace(string.Format("FxcmBrokerage.GetOpenOrders(): Located {0} orders", _openOrders.Count));
             var orders = _openOrders.Values.ToList()
                 .Where(x => OrderIsOpen(x.getFXCMOrdStatus().getCode()))
                 .Select(ConvertOrder)
@@ -527,9 +527,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
-                throw new TimeoutException("FxcmBrokerage.PlaceOrder(): Operation took longer than " +
-                    $"{((decimal) ResponseTimeout / 1000).ToStringInvariant()} seconds."
-                );
+                throw new TimeoutException(string.Format("FxcmBrokerage.PlaceOrder(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
 
             return !_isOrderSubmitRejected;
         }
@@ -553,7 +551,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 return false;
             }
 
-            var fxcmOrderId = order.BrokerId[0].ToStringInvariant();
+            var fxcmOrderId = order.BrokerId[0].ToString();
 
             ExecutionReport fxcmOrder;
             if (!_openOrders.TryGetValue(fxcmOrderId, out fxcmOrder))
@@ -587,9 +585,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
-                throw new TimeoutException("FxcmBrokerage.UpdateOrder(): Operation took longer than " +
-                    $"{((decimal) ResponseTimeout / 1000).ToStringInvariant()} seconds."
-                );
+                throw new TimeoutException(string.Format("FxcmBrokerage.UpdateOrder(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
 
             return !_isOrderUpdateOrCancelRejected;
         }
@@ -613,7 +609,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 return false;
             }
 
-            var fxcmOrderId = order.BrokerId[0].ToStringInvariant();
+            var fxcmOrderId = order.BrokerId[0].ToString();
 
             ExecutionReport fxcmOrder;
             if (!_openOrders.TryGetValue(fxcmOrderId, out fxcmOrder))
@@ -629,9 +625,7 @@ namespace QuantConnect.Brokerages.Fxcm
                 _mapRequestsToAutoResetEvents[_currentRequest] = autoResetEvent;
             }
             if (!autoResetEvent.WaitOne(ResponseTimeout))
-                throw new TimeoutException("FxcmBrokerage.CancelOrder(): Operation took longer than " +
-                    $"{((decimal) ResponseTimeout / 1000).ToStringInvariant()} seconds."
-                );
+                throw new TimeoutException(string.Format("FxcmBrokerage.CancelOrder(): Operation took longer than {0} seconds.", (decimal)ResponseTimeout / 1000));
 
             return !_isOrderUpdateOrCancelRejected;
         }
@@ -668,7 +662,7 @@ namespace QuantConnect.Brokerages.Fxcm
             var attempt = 1;
             while (end > request.StartTimeUtc)
             {
-                Log.Debug($"FxcmBrokerage.GetHistory(): Requesting {end.ToIso8601Invariant()} to {request.StartTimeUtc.ToIso8601Invariant()}");
+                Log.Debug(string.Format("FxcmBrokerage.GetHistory(): Requesting {0:O} to {1:O}", end, request.StartTimeUtc));
                 _lastHistoryChunk.Clear();
 
                 var mdr = new MarketDataRequest();
@@ -712,9 +706,7 @@ namespace QuantConnect.Brokerages.Fxcm
                     // 5% of the time its because of an internet / time of day / api settings / timeout: throw if this is the *second* attempt.
                     if (EnableOnlyHistoryRequests && lastEndTime != DateTime.MinValue)
                     {
-                        throw new TimeoutException("FxcmBrokerage.GetHistory(): History operation ending in {end:O} took longer than " +
-                            $"{((decimal) HistoryResponseTimeout / 1000).ToStringInvariant()} seconds. This may be because there is no data, retrying..."
-                        );
+                        throw new TimeoutException(string.Format("FxcmBrokerage.GetHistory(): History operation ending in {0:O} took longer than {1} seconds. This may be because there is no data, retrying...", end, (decimal)HistoryResponseTimeout / 1000));
                     }
 
                     // Assuming Timeout: If we've already retried quite a few times, lets bail.
@@ -726,9 +718,7 @@ namespace QuantConnect.Brokerages.Fxcm
 
                     // Assuming Timeout: Save end time and if have the same endtime next time, break since its likely there's no data after that time.
                     lastEndTime = end;
-                    Log.Trace($"FxcmBrokerage.GetHistory(): Attempt {attempt.ToStringInvariant()} for: " +
-                        $"{request.Symbol.Value} ended at {lastEndTime.ToIso8601Invariant()}"
-                    );
+                    Log.Trace("FxcmBrokerage.GetHistory(): Attempt " + attempt + " for: " + request.Symbol.Value + " ended at " + lastEndTime.ToString("O"));
                     continue;
                 }
 

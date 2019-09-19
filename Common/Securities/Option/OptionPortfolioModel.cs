@@ -15,7 +15,6 @@
 
 using QuantConnect.Logging;
 using QuantConnect.Orders;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities.Option
 {
@@ -36,7 +35,7 @@ namespace QuantConnect.Securities.Option
             var order = portfolio.Transactions.GetOrderById(fill.OrderId);
             if (order == null)
             {
-                Log.Error(Invariant($"OptionPortfolioModel.ProcessFill(): Unable to locate Order with id {fill.OrderId}"));
+                Log.Error("OptionPortfolioModel.ProcessFill(): Unable to locate Order with id " + fill.OrderId);
                 return;
             }
 

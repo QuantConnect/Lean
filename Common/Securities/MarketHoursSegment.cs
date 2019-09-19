@@ -150,7 +150,7 @@ namespace QuantConnect.Securities
         /// </returns>
         public override string ToString()
         {
-            return $"{State}: {Start.ToStringInvariant(null)}-{End.ToStringInvariant(null)}";
+            return string.Format("{0}: {1}-{2}", State, Start, End);
         }
     }
 }

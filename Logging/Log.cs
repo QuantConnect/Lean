@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -126,7 +125,7 @@ namespace QuantConnect.Logging
         /// </summary>
         public static void Trace(string format, params object[] args)
         {
-            Trace(string.Format(CultureInfo.InvariantCulture, format, args));
+            Trace(string.Format(format, args));
         }
 
         /// <summary>
@@ -134,7 +133,7 @@ namespace QuantConnect.Logging
         /// </summary>
         public static void Error(string format, params object[] args)
         {
-            Error(string.Format(CultureInfo.InvariantCulture, format, args));
+            Error(string.Format(format, args));
         }
 
         /// <summary>
@@ -220,7 +219,7 @@ namespace QuantConnect.Logging
                                     var elementCount = 0;
                                     foreach (var element in ((ICollection)value))
                                     {
-                                        var elementName = $"{property.Name}[{elementCount}]";
+                                        var elementName = String.Format("{0}[{1}]", property.Name, elementCount);
                                         indent = new StringBuilder(trail).Insert(0, spaces, recursion).ToString();
 
                                         // Display the collection element name and type

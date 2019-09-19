@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data
 {
@@ -159,7 +158,7 @@ namespace QuantConnect.Data
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"{TransportMedium}: {Format} {Source}");
+            return string.Format("{0}: {1} {2}", TransportMedium, Format, Source);
         }
     }
 }

@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using QuantConnect.Data.Market;
@@ -83,12 +84,12 @@ namespace QuantConnect.ToolBox.NseMarketDataConverter
                             String newline = linearray[0] + " ";
                             newline += linearray[1];
                             newline += ":00.0000";
-                            var Time = Parse.DateTimeExact(newline, DateFormat.Forex);
-                            var open = Parse.Decimal(linearray[2]);
-                            var high = Parse.Decimal(linearray[3]);
-                            var low = Parse.Decimal(linearray[4]);
-                            var close = Parse.Decimal(linearray[5]);
-                            var volume = linearray[6].LongCount();
+                            var Time = DateTime.ParseExact(newline, DateFormat.Forex, CultureInfo.InvariantCulture);
+                            var open = Decimal.Parse(linearray[2]);
+                            var high = Decimal.Parse(linearray[3]);
+                            var low = Decimal.Parse(linearray[4]);
+                            var close = Decimal.Parse(linearray[5]);
+                            var volume = Convert.ToInt64(linearray[6]);
                             var linedata = new TradeBar(Time, symbol, open, high, low, close, volume);
                             fileEnum.Add(linedata);
                         }
@@ -145,7 +146,7 @@ namespace QuantConnect.ToolBox.NseMarketDataConverter
         {
             var splits = date.Split('/', '\\');
             var dateString = splits[splits.Length - 1].Replace("allstocks_", "");
-            return Parse.DateTimeExact(dateString, "yyyyMMdd");
+            return DateTime.ParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture);
         }
 
 

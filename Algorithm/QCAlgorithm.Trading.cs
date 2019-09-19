@@ -21,7 +21,6 @@ using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Algorithm
 {
@@ -557,7 +556,7 @@ namespace QuantConnect.Algorithm
             var orders = new List<OrderTicket>();
 
             // setting up the tag text for all orders of one strategy
-            var strategyTag = $"{strategy.Name} ({strategyQuantity.ToStringInvariant()})";
+            var strategyTag = strategy.Name + " (" + strategyQuantity.ToString() + ")";
 
             // walking through all option legs and issuing orders
             if (strategy.OptionLegs != null)
@@ -571,9 +570,9 @@ namespace QuantConnect.Algorithm
 
                     if (optionSeq.Count() != 1)
                     {
-                        throw new InvalidOperationException("Couldn't find the option contract in algorithm securities list. " +
-                            Invariant($"Underlying: {strategy.Underlying}, option {optionLeg.Right}, strike {optionLeg.Strike}, ") +
-                            Invariant($"expiration: {optionLeg.Expiration}"));
+                        var error = string.Format("Couldn't find the option contract in algorithm securities list. Underlying: {0}, option {1}, strike {2}, expiration: {3}",
+                                strategy.Underlying.ToString(), optionLeg.Right.ToString(), optionLeg.Strike.ToString(), optionLeg.Expiration.ToString());
+                        throw new InvalidOperationException(error);
                     }
 
                     var option = optionSeq.First().Key;
@@ -601,7 +600,7 @@ namespace QuantConnect.Algorithm
                 {
                     if (!Securities.ContainsKey(strategy.Underlying))
                     {
-                        var error = $"Couldn't find the option contract underlying in algorithm securities list. Underlying: {strategy.Underlying}";
+                        var error = string.Format("Couldn't find the option contract underlying in algorithm securities list. Underlying: {0}", strategy.Underlying.ToString());
                         throw new InvalidOperationException(error);
                     }
 
@@ -668,11 +667,7 @@ namespace QuantConnect.Algorithm
 
             if (Math.Abs(request.Quantity) < security.SymbolProperties.LotSize)
             {
-                return OrderResponse.Error(request, OrderResponseErrorCode.OrderQuantityLessThanLoteSize,
-                    Invariant($"Unable to {request.OrderRequestType.ToLower()} order with id {request.OrderId} which ") +
-                    Invariant($"quantity ({Math.Abs(request.Quantity)}) is less than lot ") +
-                    Invariant($"size ({security.SymbolProperties.LotSize}).")
-                );
+                return OrderResponse.Error(request, OrderResponseErrorCode.OrderQuantityLessThanLoteSize, $"Unable to {request.OrderRequestType.ToString().ToLower()} order with id {request.OrderId} which quantity ({Math.Abs(request.Quantity)}) is less than lot size ({security.SymbolProperties.LotSize}).");
             }
 
             if (!security.IsTradable)
@@ -736,9 +731,7 @@ namespace QuantConnect.Algorithm
             if (!LiveMode && Transactions.OrdersCount > _maxOrders)
             {
                 Status = AlgorithmStatus.Stopped;
-                return OrderResponse.Error(request, OrderResponseErrorCode.ExceededMaximumOrders,
-                    $"You have exceeded maximum number of orders ({_maxOrders.ToStringInvariant()}), for unlimited orders upgrade your account."
-                );
+                return OrderResponse.Error(request, OrderResponseErrorCode.ExceededMaximumOrders, string.Format("You have exceeded maximum number of orders ({0}), for unlimited orders upgrade your account.", _maxOrders));
             }
 
             if (request.OrderType == OrderType.OptionExercise)

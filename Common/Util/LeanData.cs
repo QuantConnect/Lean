@@ -24,7 +24,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Util
 {
@@ -52,7 +51,7 @@ namespace QuantConnect.Util
         public static string GenerateLine(IBaseData data, SecurityType securityType, Resolution resolution)
         {
             var milliseconds = data.Time.TimeOfDay.TotalMilliseconds.ToString(CultureInfo.InvariantCulture);
-            var longTime = data.Time.ToStringInvariant(DateFormat.TwelveCharacter);
+            var longTime = data.Time.ToString(DateFormat.TwelveCharacter);
 
             switch (securityType)
             {
@@ -263,7 +262,7 @@ namespace QuantConnect.Util
                             break;
 
                         default:
-                            throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
+                            throw new ArgumentOutOfRangeException("resolution", resolution, null);
                     }
                     break;
                 case SecurityType.Future:
@@ -333,17 +332,15 @@ namespace QuantConnect.Util
                             break;
 
                         default:
-                            throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
+                            throw new ArgumentOutOfRangeException("resolution", resolution, null);
                     }
                     break;
 
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(securityType), securityType, null);
+                    throw new ArgumentOutOfRangeException("securityType", securityType, null);
             }
 
-            throw new NotImplementedException(Invariant(
-                $"LeanData.GenerateLine has not yet been implemented for security type: {securityType} at resolution: {resolution}"
-            ));
+            throw new NotImplementedException("LeanData.GenerateLine has not yet been implemented for security type: " + securityType + " at resolution: " + resolution);
         }
 
         /// <summary>
@@ -404,7 +401,7 @@ namespace QuantConnect.Util
         {
             var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
             var securityType = symbol.ID.SecurityType.SecurityTypeToLower();
-            var market = symbol.ID.Market.ToLowerInvariant();
+            var market = symbol.ID.Market.ToLower();
             var res = resolution.ResolutionToLower();
             var directory = Path.Combine(securityType, market, res);
             switch (symbol.ID.SecurityType)
@@ -414,14 +411,14 @@ namespace QuantConnect.Util
                 case SecurityType.Forex:
                 case SecurityType.Cfd:
                 case SecurityType.Crypto:
-                    return !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLowerInvariant()) : directory;
+                    return !isHourOrDaily ? Path.Combine(directory, symbol.Value.ToLower()) : directory;
 
                 case SecurityType.Option:
                     // options uses the underlying symbol for pathing
-                    return !isHourOrDaily ? Path.Combine(directory, symbol.Underlying.Value.ToLowerInvariant()) : directory;
+                    return !isHourOrDaily ? Path.Combine(directory, symbol.Underlying.Value.ToLower()) : directory;
 
                 case SecurityType.Future:
-                    return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLowerInvariant()) : directory;
+                    return !isHourOrDaily ? Path.Combine(directory, symbol.ID.Symbol.ToLower()) : directory;
 
                 case SecurityType.Commodity:
                 default:
@@ -438,7 +435,7 @@ namespace QuantConnect.Util
                                         "equity",
                                         symbol.ID.Market,
                                         "factor_files",
-                                        symbol.Value.ToLowerInvariant() + ".csv");
+                                        symbol.Value.ToLower() + ".csv");
         }
 
         /// <summary>
@@ -454,10 +451,10 @@ namespace QuantConnect.Util
         /// </summary>
         public static string GenerateRelativeZipFilePath(string symbol, SecurityType securityType, string market, DateTime date, Resolution resolution)
         {
-            var directory = Path.Combine(securityType.SecurityTypeToLower(), market.ToLowerInvariant(), resolution.ResolutionToLower());
+            var directory = Path.Combine(securityType.SecurityTypeToLower(), market.ToLower(), resolution.ResolutionToLower());
             if (resolution != Resolution.Daily && resolution != Resolution.Hour)
             {
-                directory = Path.Combine(directory, symbol.ToLowerInvariant());
+                directory = Path.Combine(directory, symbol.ToLower());
             }
 
             return Path.Combine(directory, GenerateZipFileName(symbol, securityType, date, resolution));
@@ -468,7 +465,7 @@ namespace QuantConnect.Util
         /// </summary>
         public static string GenerateZipEntryName(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
         {
-            var formattedDate = date.ToStringInvariant(DateFormat.EightCharacter);
+            var formattedDate = date.ToString(DateFormat.EightCharacter);
             var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
 
             switch (symbol.ID.SecurityType)
@@ -480,63 +477,75 @@ namespace QuantConnect.Util
                 case SecurityType.Crypto:
                     if (resolution == Resolution.Tick && symbol.SecurityType == SecurityType.Equity)
                     {
-                        return Invariant($"{formattedDate}_{symbol.Value.ToLowerInvariant()}_{tickType}_{resolution}.csv");
+                        return string.Format("{0}_{1}_{2}_{3}.csv",
+                            formattedDate,
+                            symbol.Value.ToLower(),
+                            tickType,
+                            resolution
+                        );
                     }
 
                     if (isHourOrDaily)
                     {
-                        return $"{symbol.Value.ToLowerInvariant()}.csv";
+                        return string.Format("{0}.csv",
+                            symbol.Value.ToLower()
+                            );
                     }
 
-                    return Invariant($"{formattedDate}_{symbol.Value.ToLowerInvariant()}_{resolution.ResolutionToLower()}_{tickType.TickTypeToLower()}.csv");
+                    return string.Format("{0}_{1}_{2}_{3}.csv",
+                        formattedDate,
+                        symbol.Value.ToLower(),
+                        resolution.ResolutionToLower(),
+                        tickType.TickTypeToLower()
+                        );
 
                 case SecurityType.Option:
                     if (isHourOrDaily)
                     {
                         return string.Join("_",
-                            symbol.Underlying.Value.ToLowerInvariant(), // underlying
+                            symbol.Underlying.Value.ToLower(), // underlying
                             tickType.TickTypeToLower(),
                             symbol.ID.OptionStyle.ToLower(),
                             symbol.ID.OptionRight.ToLower(),
                             Scale(symbol.ID.StrikePrice),
-                            symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter)
+                            symbol.ID.Date.ToString(DateFormat.EightCharacter)
                             ) + ".csv";
                     }
 
                     return string.Join("_",
                         formattedDate,
-                        symbol.Underlying.Value.ToLowerInvariant(), // underlying
+                        symbol.Underlying.Value.ToLower(), // underlying
                         resolution.ResolutionToLower(),
                         tickType.TickTypeToLower(),
                         symbol.ID.OptionStyle.ToLower(),
                         symbol.ID.OptionRight.ToLower(),
                         Scale(symbol.ID.StrikePrice),
-                        symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter)
+                        symbol.ID.Date.ToString(DateFormat.EightCharacter)
                         ) + ".csv";
 
                 case SecurityType.Future:
                     var expiryDate = symbol.ID.Date;
                     var contractYearMonth = FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(symbol.ID.Symbol)
-                        ? expiryDate.AddMonths(1).ToStringInvariant(DateFormat.YearMonth)
-                        : expiryDate.ToStringInvariant(DateFormat.YearMonth);
+                        ? expiryDate.AddMonths(1).ToString(DateFormat.YearMonth)
+                        : expiryDate.ToString(DateFormat.YearMonth);
 
                     if (isHourOrDaily)
                     {
                         return string.Join("_",
-                            symbol.ID.Symbol.ToLowerInvariant(),
+                            symbol.ID.Symbol.ToLower(),
                             tickType.TickTypeToLower(),
                             contractYearMonth,
-                            expiryDate.ToStringInvariant(DateFormat.EightCharacter)
+                            expiryDate.ToString(DateFormat.EightCharacter)
                             ) + ".csv";
                     }
 
                     return string.Join("_",
                         formattedDate,
-                        symbol.ID.Symbol.ToLowerInvariant(),
+                        symbol.ID.Symbol.ToLower(),
                         resolution.ResolutionToLower(),
                         tickType.TickTypeToLower(),
                         contractYearMonth,
-                        expiryDate.ToStringInvariant(DateFormat.EightCharacter)
+                        expiryDate.ToString(DateFormat.EightCharacter)
                         ) + ".csv";
 
                 case SecurityType.Commodity:
@@ -551,7 +560,7 @@ namespace QuantConnect.Util
         public static string GenerateZipFileName(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
         {
             var tickTypeString = tickType.TickTypeToLower();
-            var formattedDate = date.ToStringInvariant(DateFormat.EightCharacter);
+            var formattedDate = date.ToString(DateFormat.EightCharacter);
             var isHourOrDaily = resolution == Resolution.Hour || resolution == Resolution.Daily;
 
             switch (symbol.ID.SecurityType)
@@ -562,33 +571,55 @@ namespace QuantConnect.Util
                 case SecurityType.Cfd:
                     if (isHourOrDaily)
                     {
-                        return $"{symbol.Value.ToLowerInvariant()}.zip";
+                        return string.Format("{0}.zip",
+                            symbol.Value.ToLower()
+                            );
                     }
 
-                    return $"{formattedDate}_{tickTypeString}.zip";
+                    return string.Format("{0}_{1}.zip",
+                        formattedDate,
+                        tickTypeString
+                        );
                 case SecurityType.Crypto:
                     if (isHourOrDaily)
                     {
-                        return $"{symbol.Value.ToLowerInvariant()}_{tickTypeString}.zip";
+                        return string.Format("{0}_{1}.zip",
+                            symbol.Value.ToLower(),
+                            tickTypeString
+                        );
                     }
 
-                    return $"{formattedDate}_{tickTypeString}.zip";
+                    return string.Format("{0}_{1}.zip",
+                        formattedDate,
+                        tickTypeString
+                    );
                 case SecurityType.Option:
                     if (isHourOrDaily)
                     {
-                        //               underlying
-                        return $"{symbol.Underlying.Value.ToLowerInvariant()}_{tickTypeString}_{symbol.ID.OptionStyle.ToLower()}.zip";
+                        return string.Format("{0}_{1}_{2}.zip",
+                            symbol.Underlying.Value.ToLower(), // underlying
+                            tickTypeString,
+                            symbol.ID.OptionStyle.ToLower()
+                            );
                     }
 
-                    return $"{formattedDate}_{tickTypeString}_{symbol.ID.OptionStyle.ToLower()}.zip";
+                    return string.Format("{0}_{1}_{2}.zip",
+                        formattedDate,
+                        tickTypeString,
+                        symbol.ID.OptionStyle.ToLower()
+                        );
 
                 case SecurityType.Future:
                     if (isHourOrDaily)
                     {
-                        return $"{symbol.ID.Symbol.ToLowerInvariant()}_{tickTypeString}.zip";
+                        return string.Format("{0}_{1}.zip",
+                            symbol.ID.Symbol.ToLower(),
+                            tickTypeString);
                     }
 
-                    return $"{formattedDate}_{tickTypeString}.zip";
+                    return string.Format("{0}_{1}.zip",
+                        formattedDate,
+                        tickTypeString);
 
                 case SecurityType.Commodity:
                 default:
@@ -603,12 +634,12 @@ namespace QuantConnect.Util
         {
             if (resolution == Resolution.Hour || resolution == Resolution.Daily)
             {
-                return $"{symbol.ToLowerInvariant()}.zip";
+                return symbol.ToLower() + ".zip";
             }
 
-            var zipFileName = date.ToStringInvariant(DateFormat.EightCharacter);
+            var zipFileName = date.ToString(DateFormat.EightCharacter);
             tickType = tickType ?? (securityType == SecurityType.Forex || securityType == SecurityType.Cfd ? TickType.Quote : TickType.Trade);
-            var suffix = Invariant($"_{tickType.Value.TickTypeToLower()}.zip");
+            var suffix = string.Format("_{0}.zip", tickType.Value.TickTypeToLower());
             return zipFileName + suffix;
         }
 
@@ -644,39 +675,37 @@ namespace QuantConnect.Util
                     {
                         var style = (OptionStyle)Enum.Parse(typeof(OptionStyle), parts[2], true);
                         var right = (OptionRight)Enum.Parse(typeof(OptionRight), parts[3], true);
-                        var strike = Parse.Decimal(parts[4]) / 10000m;
-                        var expiry = Parse.DateTimeExact(parts[5], DateFormat.EightCharacter);
+                        var strike = decimal.Parse(parts[4]) / 10000m;
+                        var expiry = DateTime.ParseExact(parts[5], DateFormat.EightCharacter, null);
                         return Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, style, right, strike, expiry);
                     }
                     else
                     {
                         var style = (OptionStyle)Enum.Parse(typeof(OptionStyle), parts[4], true);
                         var right = (OptionRight)Enum.Parse(typeof(OptionRight), parts[5], true);
-                        var strike = Parse.Decimal(parts[6]) / 10000m;
-                        var expiry = DateTime.ParseExact(parts[7], DateFormat.EightCharacter, CultureInfo.InvariantCulture);
+                        var strike = decimal.Parse(parts[6]) / 10000m;
+                        var expiry = DateTime.ParseExact(parts[7], DateFormat.EightCharacter, null);
                         return Symbol.CreateOption(symbol.Underlying, symbol.ID.Market, style, right, strike, expiry);
                     }
 
                 case SecurityType.Future:
                     if (isHourlyOrDaily)
                     {
-                        var expiryYearMonth = Parse.DateTimeExact(parts[2], DateFormat.YearMonth);
+                        var expiryYearMonth = DateTime.ParseExact(parts[2], DateFormat.YearMonth, null);
                         var futureExpiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(parts[1]);
                         var futureExpiry = futureExpiryFunc(expiryYearMonth);
                         return Symbol.CreateFuture(parts[0], symbol.ID.Market, futureExpiry);
                     }
                     else
                     {
-                        var expiryYearMonth = Parse.DateTimeExact(parts[4], DateFormat.YearMonth);
+                        var expiryYearMonth = DateTime.ParseExact(parts[4], DateFormat.YearMonth, null);
                         var futureExpiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(parts[1]);
                         var futureExpiry = futureExpiryFunc(expiryYearMonth);
                         return Symbol.CreateFuture(parts[1], symbol.ID.Market, futureExpiry);
                     }
 
                 default:
-                    throw new NotImplementedException(Invariant(
-                        $"ReadSymbolFromZipEntry is not implemented for {symbol.ID.SecurityType} {symbol.ID.Market} {resolution}"
-                    ));
+                    throw new NotImplementedException($"ReadSymbolFromZipEntry is not implemented for {symbol.ID.SecurityType} {symbol.ID.Market} {resolution}");
             }
         }
 
@@ -699,7 +728,7 @@ namespace QuantConnect.Util
                 var value = args[i];
                 if (value is decimal)
                 {
-                    args[i] = ((decimal) value).Normalize();
+                    args[i] = ((decimal) value).Normalize().ToString(CultureInfo.InvariantCulture);
                 }
             }
 
@@ -783,7 +812,7 @@ namespace QuantConnect.Util
             date = default(DateTime);
 
             var pathSeparators = new[] { '/', '\\'};
-            var securityTypes = Enum.GetNames(typeof(SecurityType)).Select(x => x.ToLowerInvariant()).ToList();
+            var securityTypes = Enum.GetNames(typeof(SecurityType)).Select(x => x.ToLower()).ToList();
 
             try
             {
@@ -800,7 +829,7 @@ namespace QuantConnect.Util
                 var info = fileName.Split(pathSeparators, StringSplitOptions.RemoveEmptyEntries).ToList();
 
                 // find where the useful part of the path starts - i.e. the securityType
-                var startIndex = info.FindIndex(x => securityTypes.Contains(x.ToLowerInvariant()));
+                var startIndex = info.FindIndex(x => securityTypes.Contains(x.ToLower()));
 
                 // Gather components useed to create the security
                 var market = info[startIndex + 1];
@@ -811,7 +840,7 @@ namespace QuantConnect.Util
                 // If resolution is Daily or Hour, we do not need to set the date and tick type
                 if (resolution < Resolution.Hour)
                 {
-                    date = Parse.DateTimeExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter);
+                    date = DateTime.ParseExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter, null);
                 }
 
                 if (securityType == SecurityType.Crypto)
@@ -823,7 +852,7 @@ namespace QuantConnect.Util
             }
             catch (Exception ex)
             {
-                Log.Error($"LeanData.TryParsePath(): Error encountered while parsing the path {fileName}. Error: {ex.GetBaseException()}");
+                Log.Error("LeanData.TryParsePath(): Error encountered while parsing the path {0}. Error: {1}", fileName, ex.GetBaseException());
                 return false;
             }
 

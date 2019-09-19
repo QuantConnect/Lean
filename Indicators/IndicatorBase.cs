@@ -117,8 +117,10 @@ namespace QuantConnect.Indicators
             {
                 return Update((T)(object)new IndicatorDataPoint(time, value));
             }
-
-            throw new NotSupportedException($"{GetType().Name} does not support Update(DateTime, decimal) method overload. Use Update({typeof(T).Name}) instead.");
+            else
+            {
+                throw new NotSupportedException(string.Format("{0} does not support Update(DateTime, decimal) method overload. Use Update({1}) instead.", GetType().Name, typeof(T).Name));
+            }
         }
 
         /// <summary>
@@ -189,7 +191,7 @@ namespace QuantConnect.Indicators
             try
             {
                 // the obj is not an indicator, so let's check for value types, try converting to decimal
-                var converted = obj.ConvertInvariant<decimal>();
+                var converted = Convert.ToDecimal(obj);
                 return Current.Value == converted;
             }
             catch (InvalidCastException)
@@ -205,7 +207,7 @@ namespace QuantConnect.Indicators
         /// <returns>String representation of the indicator</returns>
         public override string ToString()
         {
-            return Current.Value.ToStringInvariant("#######0.0####");
+            return Current.Value.ToString("#######0.0####");
         }
 
         /// <summary>
@@ -214,7 +216,7 @@ namespace QuantConnect.Indicators
         /// <returns>A detailed string of this indicator's current state</returns>
         public string ToDetailedString()
         {
-            return $"{Name} - {this}";
+            return string.Format("{0} - {1}", Name, this);
         }
 
         /// <summary>

@@ -159,9 +159,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         /// <param name="insight">The insight to copy</param>
         public SerializedInsight(Insight insight)
         {
-            Id = insight.Id.ToStringInvariant("N");
+            Id = insight.Id.ToString("N");
             SourceModel = insight.SourceModel;
-            GroupId = insight.GroupId?.ToStringInvariant("N");
+            GroupId = insight.GroupId?.ToString("N");
             GeneratedTime = Time.DateTimeToUnixTimeStamp(insight.GeneratedTimeUtc);
             CloseTime = Time.DateTimeToUnixTimeStamp(insight.CloseTimeUtc);
             Symbol = insight.Symbol.ID.ToString();
