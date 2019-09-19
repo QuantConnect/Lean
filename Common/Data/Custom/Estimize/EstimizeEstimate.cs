@@ -132,20 +132,12 @@ namespace QuantConnect.Data.Custom.Estimize
         /// <returns>Subscription Data Source.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            if (!config.Symbol.Value.EndsWith(".E"))
-            {
-                throw new ArgumentException($"EstimizeEstimate.GetSource(): Invalid symbol {config.Symbol}");
-            }
-
-            var symbol = config.Symbol.Value;
-            symbol = symbol.Substring(0, symbol.Length - 2);
-
             var source = Path.Combine(
                 Globals.DataFolder,
                 "alternative",
                 "estimize",
                 "estimate",
-                $"{symbol.ToLowerInvariant()}.csv"
+                $"{config.Symbol.Value.ToLowerInvariant()}.csv"
             );
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
@@ -178,6 +170,15 @@ namespace QuantConnect.Data.Custom.Estimize
                    Invariant($"Revenue: {Revenue} on ") +
                    Invariant($"{EndTime:yyyyMMdd} by ") +
                    Invariant($"{UserName}({AnalystId})");
+        }
+
+        /// <summary>
+        /// Indicates if there is support for mapping
+        /// </summary>
+        /// <returns>True indicates mapping should be used</returns>
+        public override bool RequiresMapping()
+        {
+            return true;
         }
     }
 }

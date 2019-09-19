@@ -162,13 +162,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// <returns>Subscription Data Source.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            if (!config.Symbol.Value.EndsWithInvariant(".C"))
-            {
-                throw new ArgumentException($"TradingEconomicsCalendar.GetSource(): Invalid symbol {config.Symbol}");
-            }
-
             var symbol = config.Symbol.Value.ToLowerInvariant();
-            symbol = symbol.Substring(0, symbol.Length - 2);
             var source = Path.Combine(Globals.DataFolder, "alternative", "trading-economics", "calendar", symbol, Invariant($"{date:yyyyMMdd}.zip"));
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Collection);
         }
