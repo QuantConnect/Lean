@@ -17,8 +17,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
@@ -58,10 +56,10 @@ namespace QuantConnect.ToolBox
         {
             var optionsObject = ToolboxArgumentParser.ParseArguments(args);
 
-            // if no console args supplied check if config.json has working info
+            // if no console args supplied check configuration file for working info
             if (optionsObject.Count == 0)
             {
-                optionsObject = LoadOptionsObjectFromConfigurationFile("config.json");
+                optionsObject = ApplicationParser.ParseConfigurationFile("config.json");
             }
 
             var targetApp = GetParameterOrExit(optionsObject, "app").ToLower();
@@ -306,72 +304,6 @@ namespace QuantConnect.ToolBox
             }
 
             return value.ToString();
-        }
-
-        /// <summary>
-        /// Loads values from JSON text file
-        /// </summary>
-        private static Dictionary<string, object> LoadOptionsObjectFromConfigurationFile(string path)
-        {
-            var optionsObject = new Dictionary<string, object>();
-            try
-            {
-                // Read the text from json and fill that in a specifal object that
-                // will hold the values corresponding to json file contents
-                var toolBoxOptionsConfig = JsonConvert.DeserializeObject<ToolBoxOptionsConfiguration>(File.ReadAllText(path));
-
-                // iterate over the properties using reflection and check for non empty values to pupulate optionsObject.
-                foreach (var prop in toolBoxOptionsConfig.GetType().GetProperties())
-                {
-                    if (prop.PropertyType == typeof(string))
-                    {
-                        // most of our values are strings, get value, if null or empty then continue; populate otherwise..
-                        var valueAsString = (string) prop.GetValue(toolBoxOptionsConfig);
-                        if (valueAsString.IsNullOrEmpty())
-                            continue;
-
-                        // be cautios of System.InvalidOperationException can happen here if there is no such attribute
-                        var key = GetThePropertyNameFromJsonAttribute(prop);
-                        optionsObject[key] = valueAsString;
-                    }
-                    else if(prop.PropertyType == typeof(string[]))
-                    {
-                        // if we reached here we are most probably working with 'tickers' array
-                        var valueAsStringArray = (string[])prop.GetValue(toolBoxOptionsConfig);
-                        if (valueAsStringArray.IsNullOrEmpty())
-                            continue;
-
-                        var key = GetThePropertyNameFromJsonAttribute(prop);
-
-                        // I fully copy here a piece of code from ApplicationParser.cs that has to do with
-                        // case CommandOptionType.MultipleValue - for the full compatibility!
-                        var keyValuePairs = valueAsStringArray;
-                        var subDictionary = new Dictionary<string, object>();
-                        foreach (var keyValuePair in keyValuePairs)
-                        {
-                            var subKeys = keyValuePair.Split(':');
-                            subDictionary[subKeys[0]] = ApplicationParser.ParseTypedArgument(subKeys.Length > 1 ? subKeys[1] : "");
-                        }
-
-                        optionsObject[key] = subDictionary;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-
-            return optionsObject;
-        }
-
-        private static string GetThePropertyNameFromJsonAttribute(PropertyInfo prop)
-        {
-            return prop.GetCustomAttributes(true)
-                .Select(x => x as JsonPropertyAttribute)
-                .Where(x => x != null)
-                .Select(x => x.PropertyName).First();
         }
     }
 }

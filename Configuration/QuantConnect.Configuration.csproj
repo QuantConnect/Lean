@@ -79,6 +79,7 @@
     <Compile Include="LeanArgumentParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ToolboxArgumentParser.cs" />
+    <Compile Include="ToolBoxOptionsConfiguration.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">

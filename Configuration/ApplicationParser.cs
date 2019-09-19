@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.CommandLineUtils;
+using Newtonsoft.Json;
 
 namespace QuantConnect.Configuration
 {
@@ -90,7 +92,7 @@ namespace QuantConnect.Configuration
             return optionsObject;
         }
 
-        public static object ParseTypedArgument(string value)
+        private static object ParseTypedArgument(string value)
         {
             if (value == "true" || value == "false")
             {
@@ -104,6 +106,79 @@ namespace QuantConnect.Configuration
             }
 
             return value;
+        }
+
+
+        /// <summary>
+        /// Parses toolbox configuration file and composes a dictionary from it
+        /// taking as keys only those properties that have neither empty nor null values.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static Dictionary<string, object> ParseConfigurationFile(string path)
+        {
+            var optionsObject = new Dictionary<string, object>();
+            try
+            {
+                // Read the text from json and fill that in a specifal object that
+                // will hold the values corresponding to json file contents
+                var toolBoxOptionsConfig = JsonConvert.DeserializeObject<ToolBoxOptionsConfiguration>(File.ReadAllText(path));
+
+                // iterate over the properties using reflection and check for non empty values to pupulate optionsObject.
+                foreach (var prop in toolBoxOptionsConfig.GetType().GetProperties())
+                {
+                    if (prop.PropertyType == typeof(string))
+                    {
+                        // most of our values are strings, get value, if null or empty then continue; populate otherwise..
+                        var valueAsString = (string) prop.GetValue(toolBoxOptionsConfig);
+                        if (string.IsNullOrEmpty(valueAsString))
+                            continue;
+
+                        // be cautios of System.InvalidOperationException can happen here if there is no such attribute
+                        var key = GetThePropertyNameFromJsonAttribute(prop);
+                        optionsObject[key] = valueAsString;
+                    }
+                    else if(prop.PropertyType == typeof(string[]))
+                    {
+                        // if we have reached here we are most probably working with 'tickers' array
+                        var valueAsStringArray = (string[])prop.GetValue(toolBoxOptionsConfig);
+
+                        // if null or empty then continue
+                        if (valueAsStringArray == null || valueAsStringArray.Length == 0)
+                            continue;
+
+                        var key = GetThePropertyNameFromJsonAttribute(prop);
+
+                        // I fully copy here a piece of code from above Parse() method - a part that handles the
+                        // case CommandOptionType.MultipleValue - for the full compatibility
+                        var keyValuePairs = valueAsStringArray;
+                        var subDictionary = new Dictionary<string, object>();
+                        foreach (var keyValuePair in keyValuePairs)
+                        {
+                            var subKeys = keyValuePair.Split(':');
+                            subDictionary[subKeys[0]] = ParseTypedArgument(subKeys.Length > 1 ? subKeys[1] : "");
+                        }
+
+                        optionsObject[key] = subDictionary;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
+            return optionsObject;
+        }
+
+        // Reads the property name in JsonProperty attribute
+        private static string GetThePropertyNameFromJsonAttribute(PropertyInfo prop)
+        {
+            return prop.GetCustomAttributes(true)
+                .Select(x => x as JsonPropertyAttribute)
+                .Where(x => x != null)
+                .Select(x => x.PropertyName).First();
         }
     }
 }

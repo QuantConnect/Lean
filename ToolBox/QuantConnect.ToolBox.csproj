@@ -340,7 +340,6 @@
     <Compile Include="IDataDownloader.cs" />
     <Compile Include="RawFileProcessor.cs" />
     <Compile Include="CsvDataProcessor.cs" />
-    <Compile Include="ToolBoxOptionsConfiguration.cs" />
     <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsEarningsDownloader.cs" />
     <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsEarningsDownloaderProgram.cs" />
     <Compile Include="TradingEconomicsDataDownloader\TradingEconomicsIndicatorDownloaderProgram.cs" />

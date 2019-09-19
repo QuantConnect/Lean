@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace QuantConnect.ToolBox
+namespace QuantConnect.Configuration
 {
     /// <summary>
     /// This object is a container for toolbox options configuration
