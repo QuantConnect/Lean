@@ -158,5 +158,14 @@ namespace QuantConnect.Data.Custom.PsychSignal
                 TotalScoredMessages = TotalScoredMessages
             };
         }
+
+        /// <summary>
+        /// Indicates if there is support for mapping
+        /// </summary>
+        /// <returns>True indicates mapping should be used</returns>
+        public override bool RequiresMapping()
+        {
+            return true;
+        }
     }
 }
