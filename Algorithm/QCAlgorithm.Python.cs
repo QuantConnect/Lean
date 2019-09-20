@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(PyObject type, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(PyObject type, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m, object _ = null, object __ = null, object ___ = null)
         {
             return AddData(CreateType(type), underlying, resolution, timeZone, fillDataForward, leverage);
         }
@@ -115,20 +115,21 @@ namespace QuantConnect.Algorithm
         /// <returns>The new <see cref="Security"/></returns>
         public Security AddData(Type dataType, string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            Symbol underlying;
-            if (!SymbolCache.TryGetSymbol(ticker, out underlying))
+            var baseInstance = dataType.GetBaseDataInstance();
+            if (!baseInstance.RequiresMapping())
             {
-                var baseInstance = (BaseData)ObjectActivator.GetActivator(dataType).Invoke(new object[] { dataType });
-
-                if (baseInstance.RequiresMapping())
-                {
-                    throw new InvalidOperationException("Requires mapping but passed ticker which is not in the cache");
-                }
                 var symbol = new Symbol(
                     SecurityIdentifier.GenerateBase(dataType, ticker, Market.USA, dataType.GetBaseDataInstance().RequiresMapping()),
                     ticker);
                 return AddDataImpl(dataType, symbol, resolution, timeZone, fillDataForward, leverage);
             }
+            // If we need a mappable ticker and we can't find one in the SymbolCache, throw
+            Symbol underlying;
+            if (!SymbolCache.TryGetSymbol(ticker, out underlying))
+            {
+                throw new InvalidOperationException("Requires mapping but passed ticker which is not in the cache");
+            }
+
             return AddData(dataType, underlying, resolution, timeZone, fillDataForward, leverage);
         }
 
@@ -142,12 +143,22 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(Type dataType, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(Type dataType, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m, object _ = null, object __ = null, object ___ = null)
         {
             var symbol = QuantConnect.Symbol.CreateBase(dataType, underlying, Market.USA);
             return AddDataImpl(dataType, symbol, resolution, timeZone, fillDataForward, leverage);
         }
 
+        /// <summary>
+        /// Adds the provided final Symbol with/without underlying set to the algorithm
+        /// </summary>
+        /// <param name="dataType">Data source type</param>
+        /// <param name="symbol">Final symbol that includes underlying (if any)</param>
+        /// <param name="resolution">Resolution of the Data required</param>
+        /// <param name="timeZone">Specifies the time zone of the raw data</param>
+        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="leverage">Custom leverage per security</param>
+        /// <returns>The new <see cref="Security"/></returns>
         private Security AddDataImpl(Type dataType, Symbol symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward, decimal leverage)
         {
             var alias = symbol.ID.Symbol;

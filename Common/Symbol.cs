@@ -101,7 +101,16 @@ namespace QuantConnect
         /// <returns>New non-mapped Base Symbol that contains an Underlying Symbol</returns>
         public static Symbol CreateBase(Type baseType, Symbol underlying, string market)
         {
-            var sid = SecurityIdentifier.GenerateBase(baseType, underlying.ID.Symbol, market, mapSymbol: false, date: underlying.ID.Date);
+            // The SID Date is only defined for the following security types: base, equity, future, option.
+            // Default to SecurityIdentifier.DefaultDate if there's no matching SecurityType
+            var firstDate = underlying.SecurityType == SecurityType.Equity ||
+                underlying.SecurityType == SecurityType.Option ||
+                underlying.SecurityType == SecurityType.Future ||
+                underlying.SecurityType == SecurityType.Base
+                    ? underlying.ID.Date
+                    : (DateTime?)null;
+
+            var sid = SecurityIdentifier.GenerateBase(baseType, underlying.ID.Symbol, market, mapSymbol: false, date: firstDate);
             return new Symbol(sid, underlying.Value, underlying);
         }
 
