@@ -213,9 +213,10 @@ namespace QuantConnect.Lean.Engine.Results
                     var benchmark = charts[benchmarkKey].Series[benchmarkKey].Values;
 
                     var trades = Algorithm.TradeBuilder.ClosedTrades;
+                    var aumCapacity = AssetsUnderManagementCapacityManager?.AumCapacity ?? 0m;
 
                     statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity, performance, benchmark,
-                        StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions, AssetsUnderManagementCapacityManager.AumCapacity);
+                        StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions, aumCapacity);
                 }
             }
             catch (Exception err)

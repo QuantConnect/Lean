@@ -65,8 +65,8 @@ namespace QuantConnect.Tests.Common.Statistics
             data.Time = data.Time.AddMinutes(5);
             config.Consolidators.First().Update(data);
 
-            const double expected = 50000000 * .025 / .5;
-            Assert.AreEqual(expected * GetFactor(resolution), manager.AumCapacity);
+            var expected = 50000000 * GetFactor(resolution) / .5;
+            Assert.AreEqual(expected, manager.AumCapacity);
             Assert.AreEqual(0, config.Consolidators.Count);
         }
 
@@ -87,8 +87,8 @@ namespace QuantConnect.Tests.Common.Statistics
             var orderEvent = CreateOrderEvent(algorithm, Symbols.SPY, .5m, 50);
             orderEventProvider.OnNewOrderEvent(orderEvent);
 
-            const double expected = 50000000 * .025 / .5;
-            Assert.AreEqual(expected * GetFactor(resolution), manager.AumCapacity);
+            var expected = 50000000 * GetFactor(resolution) / .5;
+            Assert.AreEqual(expected, manager.AumCapacity);
         }
 
         [TestCase(Resolution.Hour)]
@@ -112,8 +112,8 @@ namespace QuantConnect.Tests.Common.Statistics
             var orderEvent2 = CreateOrderEvent(algorithm, Symbols.AAPL, .5m, 40);
             orderEventProvider.OnNewOrderEvent(orderEvent2);
 
-            const double expected = 50000000 * .025 / .5 + 40000000 * .025 / .5;
-            Assert.AreEqual(expected * GetFactor(resolution), manager.AumCapacity);
+            var expected = (50000000 / .5 + 40000000 / .5) * GetFactor(resolution);
+            Assert.AreEqual(expected, manager.AumCapacity);
         }
 
         [TestCase(Resolution.Hour)]
@@ -139,8 +139,38 @@ namespace QuantConnect.Tests.Common.Statistics
             var orderEvent2 = CreateOrderEvent(algorithm, Symbols.SPY, .5m, 40);
             orderEventProvider.OnNewOrderEvent(orderEvent2);
 
-            const double expected = (50000000 * .025 / .5 + 40000000 * .025 / .5) / 2;
-            Assert.AreEqual(expected * GetFactor(resolution), manager.AumCapacity);
+            var expected = GetFactor(resolution) * (50000000 / .5 + 40000000 / .5) / 2;
+            Assert.AreEqual(expected, manager.AumCapacity);
+        }
+
+        [TestCase(Resolution.Hour, 50, 40)]
+        [TestCase(Resolution.Daily, 50, 40)]
+        [TestCase(Resolution.Hour, 40, 50)]
+        [TestCase(Resolution.Daily, 40, 50)]
+        public void ComputeCapacityForTwoTradesOneSymbolInOneDay(Resolution resolution, int first, int second)
+        {
+            var algorithm = GetAlgorithm(resolution);
+            var orderEventProvider = new MockOrderEventProvider();
+
+            var manager = new AssetsUnderManagementCapacityManager(
+                algorithm.Portfolio,
+                algorithm.SubscriptionManager.SubscriptionDataConfigService,
+                orderEventProvider
+            );
+
+            // 50% of SPY. First volume value.
+            algorithm.SetDateTime(new DateTime(2018, 1, 9, 12, 05, 0));
+            var OrderEvent1 = CreateOrderEvent(algorithm, Symbols.SPY, .5m, first);
+            orderEventProvider.OnNewOrderEvent(OrderEvent1);
+
+            // 50% of SPY. Second volume value.
+            algorithm.SetDateTime(new DateTime(2018, 1, 9, 13, 05, 0));
+            var orderEvent2 = CreateOrderEvent(algorithm, Symbols.SPY, .5m, second);
+            orderEventProvider.OnNewOrderEvent(orderEvent2);
+
+            // Expect the minimum whether the first or the second order has the smallest value
+            var expected = GetFactor(resolution) * Math.Min(first, second) * 1000000 / .5;
+            Assert.AreEqual(expected, manager.AumCapacity);
         }
 
         [Test]
@@ -148,7 +178,6 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             var algorithm = GetAlgorithm(Resolution.Hour);
             var orderEventProvider = new MockOrderEventProvider();
-            var factor = GetFactor(Resolution.Hour);
 
             var manager = new AssetsUnderManagementCapacityManager(
                 algorithm.Portfolio,
@@ -163,14 +192,14 @@ namespace QuantConnect.Tests.Common.Statistics
             orderEventProvider
                 .OnNewOrderEvent(CreateOrderEvent(algorithm, Symbols.SPY, .5m, 50));
 
-            var expected = factor * 2500000; // Capacity = 2500000 = 50000000 * .025 / .5
+            var expected = 5000000.0; // Capacity = 5000000 = 50000000 * .05 / .5
             Assert.AreEqual(expected, manager.AumCapacity);
 
             // 25% of AAPL. Volume of 45mi.
             orderEventProvider
                 .OnNewOrderEvent(CreateOrderEvent(algorithm, Symbols.AAPL, .25m, 45));
 
-            expected += factor * 45000000 * .025 / .25; // Capacity = 45000000 * .025 / .25 + previous value from SPY
+            expected += 45000000 * .05 / .25; // Capacity = 45000000 * .05 / .25 + previous value from SPY
             Assert.AreEqual(expected, manager.AumCapacity);
 
             //// 2018-01-09 13:05
@@ -180,16 +209,16 @@ namespace QuantConnect.Tests.Common.Statistics
             orderEventProvider
                 .OnNewOrderEvent(CreateOrderEvent(algorithm, Symbols.SPY, .75m, 55));
 
-            // Capacity = 55000000 * .025 / .75  + 45000000 * .025 / .25 from AAPL
-            expected = factor * (55000000 * .025 / .75 + 45000000 * .025 / .25);
+            // Capacity = 55000000 * .05 / .75  + 45000000 * .05 / .25 from AAPL
+            expected = 55000000 * .05 / .75 + 45000000 * .05 / .25;
             Assert.AreEqual(Math.Round(expected, 2), Math.Round(manager.AumCapacity, 2));
 
             // 65% of AAPL. Volume of 47mi.
             orderEventProvider
                 .OnNewOrderEvent(CreateOrderEvent(algorithm, Symbols.AAPL, .65m, 47));
 
-            // Capacity = 55000000 * .025 / .75  + 47000000 * .025 / .65 from AAPL
-            expected = factor * (55000000 * .025 / .75 + 47000000 * .025 / .65);
+            // Capacity = 55000000 * .05 / .75  + 47000000 * .05 / .65 from AAPL
+            expected = 55000000 * .05 / .75 + 47000000 * .05 / .65;
             Assert.AreEqual(Math.Round(expected, 2), Math.Round(manager.AumCapacity, 2));
 
             //// 2018-01-09 13:05
@@ -199,17 +228,17 @@ namespace QuantConnect.Tests.Common.Statistics
             orderEventProvider
                 .OnNewOrderEvent(CreateOrderEvent(algorithm, Symbols.SPY, .30m, 58));
 
-            // Capacity = (58000000 * .025 / .30 + value from day before) / 2
+            // Capacity = (58000000 * .05 / .30 + value from day before) / 2
             var previousDay = expected;
-            expected = (previousDay + factor * 58000000 * .025 / .30) / 2;
+            expected = (previousDay + 58000000 * .05 / .30) / 2;
             Assert.AreEqual(Math.Round(expected, 2), Math.Round(manager.AumCapacity, 2));
 
             // 30% of AAPL. Volume of 31mi.
             orderEventProvider
                 .OnNewOrderEvent(CreateOrderEvent(algorithm, Symbols.AAPL, .30m, 31));
 
-            // Capacity = (31000000 * .025 / .30 + 483333.33 from SPY + value from day before) / 2
-            expected = (previousDay + factor * (31000000 * .025 / .30 + 58000000 * .025 / .30)) / 2;
+            // Capacity = (31000000 * .05 / .30 + 483333.33 from SPY + value from day before) / 2
+            expected = (previousDay + (31000000 * .05 / .30 + 58000000 * .05 / .30)) / 2;
             Assert.AreEqual(Math.Round(expected, 2), Math.Round(manager.AumCapacity, 2));
         }
 
@@ -237,7 +266,7 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             const decimal price = 100;
             const decimal quantity = 100;
-            var size = volume * 1000000;
+            var size = volume / price * 1000000;
 
             var reference = algorithm.Time;
             var resolution = algorithm.SubscriptionManager.SubscriptionDataConfigService

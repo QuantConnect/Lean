@@ -19,11 +19,13 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
 using QuantConnect.Util;
 
 namespace QuantConnect.Statistics
@@ -37,7 +39,6 @@ namespace QuantConnect.Statistics
     {
         private readonly object _lock = new object();
 
-        private readonly decimal _maximumTradeableVolume;
         private readonly SecurityPortfolioManager _portfolio;
         private readonly ISubscriptionDataConfigProvider _subscriptionDataConfigProvider;
 
@@ -62,7 +63,6 @@ namespace QuantConnect.Statistics
             ISubscriptionDataConfigProvider subscriptionDataConfigProvider,
             IOrderEventProvider orderEventProvider)
         {
-            _maximumTradeableVolume = PortfolioStatistics.GetMaximumTradeableVolume();
             _portfolio = portfolio;
             _subscriptionDataConfigProvider = subscriptionDataConfigProvider;
 
@@ -70,128 +70,135 @@ namespace QuantConnect.Statistics
             _historicalPortfolioCapacity = new RollingWindow<decimal>(30);
             _previousInputTime = DateTime.MinValue;
 
-            orderEventProvider.NewOrderEvent += (sender, orderEvent) =>
+            orderEventProvider.NewOrderEvent += HandleNewOrderEvent;
+        }
+
+        /// <summary>
+        /// Handles new order event:
+        /// When dealing with a security with high resolution data, create a consolidator to compute the
+        /// total trade volume capacity using a volume of the past 5 minutes. For low resolution, use the last bar.
+        /// </summary>
+        private void HandleNewOrderEvent(object sender, OrderEvent orderEvent)
+        {
+            var symbol = orderEvent.Symbol;
+
+            var configs = _subscriptionDataConfigProvider.GetSubscriptionDataConfigs(symbol);
+            if (configs.IsNullOrEmpty())
             {
-                var symbol = orderEvent.Symbol;
+                Log.Error($"AssetsUnderManagementCapacityManager: Could not find any SubscriptionDataConfig for {symbol}.");
+                return;
+            }
 
-                var configs = _subscriptionDataConfigProvider.GetSubscriptionDataConfigs(symbol);
-                if (configs.IsNullOrEmpty())
+            var consolidator = default(IDataConsolidator);
+            var hasHighResolution = false;
+            var security = _portfolio.Securities[symbol];
+            BaseData lastData = security.Cache.GetData<TradeBar>();
+
+            // For high resolution data, create a consolidator that will compute
+            // the AUM Capacity after a 5-minute period bar is closed
+            foreach (var config in configs.Where(x => x.Resolution < Resolution.Hour))
+            {
+                hasHighResolution = true;
+
+                if (config.Type.IsAssignableFrom(typeof(TradeBar)))
                 {
-                    Log.Error($"AssetsUnderManagementCapacityManager: Could not find {symbol} in Portfolio");
+                    consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(5));
                 }
 
-                try
+                if (config.Type.IsAssignableFrom(typeof(Tick)) &&
+                    config.TickType == TickType.Trade)
                 {
-                    var consolidator = default(IDataConsolidator);
-                    var security = _portfolio.Securities[symbol];
-                    BaseData lastData = security.Cache.GetData<TradeBar>();
-
-                    // For high resolution data, create a consolidator that will compute
-                    // the AUM Capacity after a 5-minute period bar is closed
-                    foreach (var config in configs.Where(x => x.Resolution < Resolution.Hour))
-                    {
-                        if (config.Type.IsAssignableFrom(typeof(TradeBar)))
-                        {
-                            consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(5));
-                        }
-
-                        if (config.Type.IsAssignableFrom(typeof(Tick)) &&
-                            config.TickType == TickType.Trade)
-                        {
-                            consolidator = new TickConsolidator(TimeSpan.FromMinutes(5));
-                            lastData = security.Cache.GetData<Tick>();
-                        }
-
-                        if (consolidator == null)
-                        {
-                            continue;
-                        }
-
-                        // Warm up the consolidator to mark the begging of the period
-                        if (lastData != null)
-                        {
-                            consolidator.Update(lastData);
-                        }
-
-                        config.Consolidators.Add(consolidator);
-                        consolidator.DataConsolidated += (s, data) =>  Update(s, data, orderEvent.OrderId);
-                        return;
-                    }
-
-                    // For low resolution, use the last data available
-                    if (lastData != null)
-                    {
-                        Update(sender, lastData, orderEvent.OrderId);
-                    }
+                    consolidator = new TickConsolidator(TimeSpan.FromMinutes(5));
+                    lastData = security.Cache.GetData<Tick>();
                 }
-                catch (Exception e)
+
+                if (consolidator == null)
                 {
-                    Log.Error($"AssetsUnderManagementCapacityManager: {e}");
+                    continue;
                 }
-            };
+
+                // Warm up the consolidator to mark the begging of the period
+                if (lastData != null)
+                {
+                    consolidator.Update(lastData);
+                }
+
+                config.Consolidators.Add(consolidator);
+                consolidator.DataConsolidated += (s, data) => Update(consolidator, data, orderEvent.OrderId, security);
+                return;
+            }
+
+            if (hasHighResolution)
+            {
+                Log.Error(
+                    "AssetsUnderManagementCapacityManager.HandleNewOrderEvent: " +
+                    $"Could not create consolidator for high resolution data because no trade data for {symbol} was found."
+                );
+                return;
+            }
+
+            // For low resolution, use the last data available
+            if (lastData != null)
+            {
+                Update(null, lastData, orderEvent.OrderId, security);
+            }
         }
 
         /// <summary>
         /// Updates the AUM Capacity with the latest data available after a order fill
         /// </summary>
-        /// <param name="sender">For high resolution, sender object represents the data consolidator</param>
+        /// <param name="consolidator">Consolidator (if using high resolution data) to be removed after the update</param>
         /// <param name="data">Last price trade bar available or consolidated</param>
         /// <param name="orderId">Order fill ID</param>
+        /// <param name="security">The security of the data</param>
         /// <remarks>
         /// The whole method body is locked, since order events can be triggered at any time in live mode
         /// </remarks>
-        private void Update(object sender, IBaseData data, int orderId)
+        private void Update(IDataConsolidator consolidator, IBaseData data, int orderId, Security security)
         {
             lock (_lock)
             {
-                try
+                var symbol = data.Symbol;
+
+                var holdingsTurnover = 1m;
+                var holdingsValue = security.Holdings.AbsoluteHoldingsValue;
+
+                if (holdingsValue != 0)
                 {
-                    var symbol = data.Symbol;
-                    var security = _portfolio.Securities[symbol];
+                    // Gets the order of the event to get its value in account currency
+                    var order = _portfolio.Transactions.GetOrderById(orderId);
+                    var orderValue = Math.Abs(order.GetValue(security));
+                    holdingsTurnover = orderValue / holdingsValue;
 
-                    var holdingsTurnover = 1m;
-                    var holdingsValue = security.Holdings.AbsoluteHoldingsValue;
-
-                    if (holdingsValue != 0)
+                    if (holdingsTurnover == 0)
                     {
-                        var order = _portfolio.Transactions.GetOrderById(orderId);
-                        var orderValue = Math.Abs(order.GetValue(security));
-                        holdingsTurnover = orderValue / holdingsValue;
-
-                        if (holdingsTurnover == 0)
-                        {
-                            RemoveConsolidator(sender, symbol);
-                            return;
-                        }
+                        RemoveConsolidator(consolidator, symbol);
+                        return;
                     }
-
-                    var totalMarketVolume = GetTotalMarketVolume(data);
-                    var totalTradeVolumeCapacity = _maximumTradeableVolume * totalMarketVolume / holdingsTurnover;
-
-                    // If it is a new day, we discard the previous day data
-                    var utcDate = data.EndTime.ConvertToUtc(security.Exchange.TimeZone).Date;
-                    if (_previousInputTime != utcDate)
-                    {
-                        _previousInputTime = utcDate;
-                        _maximumSymbolCapacity.Clear();
-                        _historicalPortfolioCapacity.Add(0m);
-                    }
-
-                    // Updates AUM Capacity if there is new information or lower total trade volume capacity for the security
-                    decimal capacity;
-                    if (!_maximumSymbolCapacity.TryGetValue(symbol, out capacity) ||
-                        totalTradeVolumeCapacity < capacity)
-                    {
-                        _maximumSymbolCapacity[symbol] = totalTradeVolumeCapacity;
-                        _historicalPortfolioCapacity[0] = _maximumSymbolCapacity.Sum(x => x.Value);
-                    }
-
-                    RemoveConsolidator(sender, symbol);
                 }
-                catch (Exception e)
+
+                var totalMarketDollarVolume = GetTotalMarketDollarVolume(data) * security.SymbolProperties.ContractMultiplier;
+                var totalTradeVolumeCapacity = totalMarketDollarVolume / holdingsTurnover;
+
+                // If it is a new day, we discard the previous day data
+                var utcDate = data.EndTime.ConvertToUtc(security.Exchange.TimeZone).Date;
+                if (_previousInputTime != utcDate)
                 {
-                    Log.Error($"AssetsUnderManagementCapacityManager.Update: {e}");
+                    _previousInputTime = utcDate;
+                    _maximumSymbolCapacity.Clear();
+                    _historicalPortfolioCapacity.Add(0m);
                 }
+
+                // Updates AUM Capacity if there is new information or lower total trade volume capacity for the security
+                decimal capacity;
+                if (!_maximumSymbolCapacity.TryGetValue(symbol, out capacity) ||
+                    totalTradeVolumeCapacity < capacity)
+                {
+                    _maximumSymbolCapacity[symbol] = totalTradeVolumeCapacity;
+                    _historicalPortfolioCapacity[0] = _maximumSymbolCapacity.Sum(x => x.Value);
+                }
+
+                RemoveConsolidator(consolidator, symbol);
             }
         }
 
@@ -199,25 +206,25 @@ namespace QuantConnect.Statistics
         /// Gets the total market volume which is a fraction of the current trade bar volume
         /// </summary>
         /// <param name="data">Last price trade bar available or consolidated</param>
-        private static decimal GetTotalMarketVolume(IBaseData data)
+        private static decimal GetTotalMarketDollarVolume(IBaseData data)
         {
             var tradeBar = (TradeBar) data;
 
+            // Maximum percentage of market volume that is tradeable
             var factor = tradeBar.Period == Time.OneDay
                 ? .025m
                 : .050m;
 
-            return factor * tradeBar.Volume;
+            return factor * tradeBar.Volume * tradeBar.Price;
         }
 
         /// <summary>
         /// Remove consolidator for a given symbol
         /// </summary>
-        /// <param name="sender">Consolidator to be removed</param>
+        /// <param name="consolidator">Consolidator to be removed</param>
         /// <param name="symbol">Symbol associated with the consolidator</param>
-        private void RemoveConsolidator(object sender, Symbol symbol)
+        private void RemoveConsolidator(IDataConsolidator consolidator, Symbol symbol)
         {
-            var consolidator = sender as IDataConsolidator;
             if (consolidator == null)
             {
                 return;

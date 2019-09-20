@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -184,7 +183,7 @@ namespace QuantConnect.Statistics
                 { "Information Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.InformationRatio, 3).ToStringInvariant() },
                 { "Tracking Error", Math.Round((double)totalPerformance.PortfolioStatistics.TrackingError, 3).ToStringInvariant() },
                 { "Treynor Ratio", Math.Round((double)totalPerformance.PortfolioStatistics.TreynorRatio, 3).ToStringInvariant() },
-                { "AUM Capacity", Math.Round((double)aumCapacity, 3).ToStringInvariant() },
+                { "AUM Capacity", $"${Math.Round(aumCapacity/100).ToStringInvariant()}00" },
                 { "Total Fees", "$" + totalFees.ToStringInvariant("0.00") }
             };
         }
