@@ -462,7 +462,7 @@ namespace QuantConnect.Orders.Fills
         /// This is required due to a limitation in PythonNet to resolved
         /// overriden methods. <see cref="GetPrices"/>
         /// </summary>
-        protected Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
+        private Prices GetPricesCheckingPythonWrapper(Security asset, OrderDirection direction)
         {
             if (PythonWrapper != null)
             {

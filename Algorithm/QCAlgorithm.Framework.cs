@@ -158,7 +158,7 @@ namespace QuantConnect.Algorithm
         /// and the <see cref="IExecutionModel"/> will execute the <see cref="IPortfolioTarget"/>
         /// </summary>
         /// <param name="insights">The insight to process</param>
-        protected void ProcessInsights(Insight[] insights)
+        private void ProcessInsights(Insight[] insights)
         {
             // construct portfolio targets from insights
             var targetsEnumerable = PortfolioConstruction.CreateTargets(this, insights);
@@ -419,7 +419,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="insight">The <see cref="Insight"/> to set the values for</param>
         /// <returns>The same <see cref="Insight"/> instance with the values set</returns>
-        protected Insight InitializeInsightFields(Insight insight)
+        private Insight InitializeInsightFields(Insight insight)
         {
             insight.GeneratedTimeUtc = UtcTime;
             insight.ReferenceValue = _securityValuesProvider.GetValues(insight.Symbol).Get(insight.Type);
