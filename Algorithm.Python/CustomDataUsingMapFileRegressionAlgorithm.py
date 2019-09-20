@@ -43,7 +43,8 @@ class CustomDataUsingMapFileRegressionAlgorithm(QCAlgorithm):
 
         self.initialMapping = False
         self.executionMapping = False
-        self.symbol = self.AddData(CustomDataUsingMapping, "FOXA").Symbol
+        self.foxa = Symbol.Create("FOXA", SecurityType.Equity, Market.USA)
+        self.symbol = self.AddData(CustomDataUsingMapping, self.foxa).Symbol
 
     def OnData(self, slice):
         date = self.Time.date()

@@ -30,8 +30,10 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="universes" />
     /// <meta name="tag" content="custom universes" />
-    public class DropboxBaseDataUniverseSelectionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DropboxBaseDataUniverseSelectionAlgorithm : QCAlgorithm//, IRegressionAlgorithmDefinition
     {
+        // Regression algorithm disabled due to dropbox file missing
+
         // the changes from the previous universe selection
         private SecurityChanges _changes = SecurityChanges.None;
 
