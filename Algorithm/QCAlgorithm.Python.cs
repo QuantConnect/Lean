@@ -49,7 +49,9 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
-        /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time)
+        /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time).
+        /// This method is meant for custom data types that require a ticker, but have no underlying Symbol.
+        /// Examples of data sources that meet this criteria are U.S. Treasury Yield Curve Rates and Trading Economics data
         /// </summary>
         /// <param name="type">Data source type</param>
         /// <param name="ticker">Key/Ticker for data</param>
@@ -62,12 +64,22 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
-        /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time)
+        /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time).
+        /// This adds a Symbol to the `Underlying` property in the custom data Symbol object.
+        /// Use this method when adding custom data with a ticker from the past, such as "AOL"
+        /// before it became "TWX", or if you need to filter using custom data and place trades on the
+        /// Symbol associated with the custom data.
         /// </summary>
         /// <param name="type">Data source type</param>
         /// <param name="underlying">The underlying symbol for the custom data</param>
         /// <param name="resolution">Resolution of the data</param>
         /// <returns>The new <see cref="Security"/></returns>
+        /// <remarks>
+        /// We include three optional unused object parameters so that pythonnet chooses the intended method
+        /// correctly. Previously, calling the overloaded method that accepts a string would instead call this method.
+        /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
+        /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
+        /// </remarks>
         public Security AddData(PyObject type, Symbol underlying, Resolution resolution = Resolution.Minute, object _ = null, object __ = null, object ___ = null)
         {
             return AddData(type, underlying, resolution, TimeZones.NewYork, false, 1m);
@@ -75,6 +87,8 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
+        /// This method is meant for custom data types that require a ticker, but have no underlying Symbol.
+        /// Examples of data sources that meet this criteria are U.S. Treasury Yield Curve Rates and Trading Economics data
         /// </summary>
         /// <param name="type">Data source type</param>
         /// <param name="ticker">Key/Ticker for data</param>
@@ -90,6 +104,10 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
+        /// This adds a Symbol to the `Underlying` property in the custom data Symbol object.
+        /// Use this method when adding custom data with a ticker from the past, such as "AOL"
+        /// before it became "TWX", or if you need to filter using custom data and place trades on the
+        /// Symbol associated with the custom data.
         /// </summary>
         /// <param name="type">Data source type</param>
         /// <param name="underlying">The underlying symbol for the custom data</param>
@@ -98,6 +116,12 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
+        /// <remarks>
+        /// We include three optional unused object parameters so that pythonnet chooses the intended method
+        /// correctly. Previously, calling the overloaded method that accepts a string would instead call this method.
+        /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
+        /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
+        /// </remarks>
         public Security AddData(PyObject type, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m, object _ = null, object __ = null, object ___ = null)
         {
             return AddData(CreateType(type), underlying, resolution, timeZone, fillDataForward, leverage);
@@ -105,6 +129,8 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
+        /// This method is meant for custom data types that require a ticker, but have no underlying Symbol.
+        /// Examples of data sources that meet this criteria are U.S. Treasury Yield Curve Rates and Trading Economics data
         /// </summary>
         /// <param name="dataType">Data source type</param>
         /// <param name="ticker">Key/Ticker for data</param>
@@ -127,7 +153,10 @@ namespace QuantConnect.Algorithm
             Symbol underlying;
             if (!SymbolCache.TryGetSymbol(ticker, out underlying))
             {
-                throw new InvalidOperationException("Requires mapping but passed ticker which is not in the cache");
+                throw new InvalidOperationException($"The custom data type {dataType.Name} requires mapping, but the provided ticker is not in the cache. " +
+                                                    $"Please add this custom data type using a Symbol or perform this call after " +
+                                                    $"a Security has been added using AddEquity, AddForex, AddCfd, AddCrypto, AddFuture, AddOption or AddSecurity. " +
+                                                    $"An example use case can be found in CustomDataAddDataRegressionAlgorithm");
             }
 
             return AddData(dataType, underlying, resolution, timeZone, fillDataForward, leverage);
@@ -135,6 +164,10 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
+        /// This adds a Symbol to the `Underlying` property in the custom data Symbol object.
+        /// Use this method when adding custom data with a ticker from the past, such as "AOL"
+        /// before it became "TWX", or if you need to filter using custom data and place trades on the
+        /// Symbol associated with the custom data.
         /// </summary>
         /// <param name="dataType">Data source type</param>
         /// <param name="underlying"></param>
@@ -143,6 +176,12 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
+        /// <remarks>
+        /// We include three optional unused object parameters so that pythonnet chooses the intended method
+        /// correctly. Previously, calling the overloaded method that accepts a string would instead call this method.
+        /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
+        /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
+        /// </remarks>
         public Security AddData(Type dataType, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m, object _ = null, object __ = null, object ___ = null)
         {
             var symbol = QuantConnect.Symbol.CreateBase(dataType, underlying, Market.USA);
@@ -150,7 +189,9 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Adds the provided final Symbol with/without underlying set to the algorithm
+        /// Adds the provided final Symbol with/without underlying set to the algorithm.
+        /// This method is meant for custom data types that require a ticker, but have no underlying Symbol.
+        /// Examples of data sources that meet this criteria are U.S. Treasury Yield Curve Rates and Trading Economics data
         /// </summary>
         /// <param name="dataType">Data source type</param>
         /// <param name="symbol">Final symbol that includes underlying (if any)</param>

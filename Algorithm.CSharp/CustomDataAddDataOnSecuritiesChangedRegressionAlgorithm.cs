@@ -25,12 +25,12 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm ensures that data added via coarse selection (underlying) is present in ActiveSecurities
+    /// Regression algorithm ensures that data added via OnSecuritiesChanged (underlying) is present in ActiveSecurities
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="custom data" />
-    /// <meta name="tag" content="regression test" />d
-    public class CustomDataAddDataCoarseSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    /// <meta name="tag" content="regression test" />
+    public class CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private List<Symbol> _customSymbols = new List<Symbol>();
 
@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public IEnumerable<Symbol> CoarseSelector(IEnumerable<CoarseFundamental> coarse)
         {
-            var symbols = new[]
+            return new[]
             {
                 QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
                 QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA),
@@ -56,15 +56,6 @@ namespace QuantConnect.Algorithm.CSharp
                 QuantConnect.Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
                 QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA),
             };
-
-            _customSymbols.Clear();
-
-            foreach (var symbol in symbols)
-            {
-                _customSymbols.Add(AddData<SECReport8K>(symbol, Resolution.Daily).Symbol);
-            }
-
-            return symbols;
         }
 
         public override void OnData(Slice data)
@@ -75,6 +66,16 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     throw new Exception($"Custom data underlying ({customSymbol.Underlying}) Symbol was not found in active securities");
                 }
+            }
+        }
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            _customSymbols.Clear();
+
+            foreach (var added in changes.AddedSecurities)
+            {
+                _customSymbols.Add(AddData<SECReport8K>(added.Symbol, Resolution.Daily).Symbol);
             }
         }
 

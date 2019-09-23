@@ -192,7 +192,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             if not history.empty:
                 ticker = SymbolCache.GetTicker(symbol)
 
-                if ticker  not in history.index.levels[0]:
+                if ticker not in history.index.levels[0]:
                     Log.Trace(f'BlackLittermanOptimizationPortfolioConstructionModel.OnSecuritiesChanged: {ticker} not found in history data frame.')
                     continue
 

@@ -24,7 +24,7 @@ from QuantConnect.Data import *
 from QuantConnect.Data.Custom.SEC import *
 from QuantConnect.Data.UniverseSelection import *
 
-class CustomDataAddDataCoarseSelectionRegressionAlgorithm(QCAlgorithm):
+class CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2014, 3, 24)
@@ -36,7 +36,7 @@ class CustomDataAddDataCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         self.AddUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseSelector))
 
     def CoarseSelector(self, coarse):
-        symbols = [
+        return [
             Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
             Symbol.Create("BAC", SecurityType.Equity, Market.USA),
             Symbol.Create("FB", SecurityType.Equity, Market.USA),
@@ -45,14 +45,13 @@ class CustomDataAddDataCoarseSelectionRegressionAlgorithm(QCAlgorithm):
             Symbol.Create("IBM", SecurityType.Equity, Market.USA),
         ]
 
-        self.customSymbols = []
-
-        for symbol in symbols:
-            self.customSymbols.append(self.AddData(SECReport8K, symbol, Resolution.Daily).Symbol)
-
-        return symbols
-
     def OnData(self, data):
         for customSymbol in self.customSymbols:
             if not self.ActiveSecurities.ContainsKey(customSymbol.Underlying):
                 raise Exception(f"Custom data undelrying ({customSymbol.Underlying}) Symbol was not found in active securities")
+
+    def OnSecuritiesChanged(self, changes):
+        self.customSymbols = []
+
+        for added in changes.AddedSecurities:
+            self.customSymbols.append(self.AddData(SECReport8K, added.Symbol, Resolution.Daily).Symbol)
