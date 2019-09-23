@@ -219,9 +219,6 @@ namespace QuantConnect.Tests.Algorithm
             var dummy = qcAlgorithm.AddData(customDataType, asset.Symbol, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == securityType).First().DataTimeZone);
             var customData = qcAlgorithm.AddData(customDataType, asset.Symbol, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == securityType).First().DataTimeZone);
 
-            //Assert.IsTrue(asset.IsTradable);
-            //Assert.IsFalse(customData.IsTradable);
-
             Assert.IsTrue(customData.Symbol.HasUnderlying, $"{customDataType.Name} added as {ticker} Symbol with SecurityType {securityType} does not have underlying");
             Assert.AreEqual(customData.Symbol.Underlying, asset.Symbol, $"Custom data underlying does not match {securityType} Symbol for {ticker}");
 
@@ -243,10 +240,10 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        //[TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Cfd, false, false)]
-        //[TestCase("BTCUSD", typeof(PsychSignalSentimentData), SecurityType.Crypto, false, false)]
-        //[TestCase("CL", typeof(PsychSignalSentimentData), SecurityType.Future, false, false)]
-        //[TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Forex, false, false)]
+        [TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Cfd, false, false)]
+        [TestCase("BTCUSD", typeof(PsychSignalSentimentData), SecurityType.Crypto, false, false)]
+        [TestCase("CL", typeof(PsychSignalSentimentData), SecurityType.Future, false, false)]
+        [TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Forex, false, false)]
         [TestCase("AAPL", typeof(PsychSignalSentimentData), SecurityType.Equity, true, true)]
         public void AddDataSecurityTickerWithUnderlying(string ticker, Type customDataType, SecurityType securityType, bool securityShouldBeMapped, bool customDataShouldBeMapped)
         {
@@ -277,33 +274,40 @@ namespace QuantConnect.Tests.Algorithm
                     throw new Exception($"SecurityType {securityType} is not valid for this test");
             }
 
+            // Aliased value for Futures contains a forward-slash, which causes the
+            // lookup in the SymbolCache to fail
+            if (securityType == SecurityType.Future)
+            {
+                ticker = asset.Symbol.Value;
+            }
+
             // Dummy here is meant to try to corrupt the SymbolCache. Ideally, SymbolCache should return non-custom data types with higher priority
             // in case we want to add two custom data types, but still have them associated with the equity from the cache if we're using it.
             // This covers the case where two idential data subscriptions are created.
-            var dummy = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == securityType).Single().DataTimeZone);
-            var customData = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == securityType).Single().DataTimeZone);
-
-            //Assert.IsTrue(asset.IsTradable);
-            //Assert.IsFalse(customData.IsTradable);
+            var dummy = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == securityType).First().DataTimeZone);
+            var customData = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == securityType).First().DataTimeZone);
 
             Assert.IsTrue(customData.Symbol.HasUnderlying, $"Custom data added as {ticker} Symbol with SecurityType {securityType} does not have underlying");
             Assert.AreEqual(customData.Symbol.Underlying, asset.Symbol, $"Custom data underlying does not match {securityType} Symbol for {ticker}");
 
-            var assetSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == securityType).Single();
+            var assetSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == securityType).First();
             var customDataSubscription = qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == SecurityType.Base).Single();
 
             var assetShouldBeMapped = assetSubscription.TickerShouldBeMapped();
             var customShouldBeMapped = customDataSubscription.TickerShouldBeMapped();
 
-            Assert.AreEqual(securityShouldBeMapped, assetShouldBeMapped);
-            Assert.AreEqual(customDataShouldBeMapped, customShouldBeMapped);
-
-            Assert.AreNotEqual(assetSubscription, customDataSubscription);
-
-            if (assetShouldBeMapped == customShouldBeMapped)
+            if (securityType == SecurityType.Equity)
             {
-                Assert.AreEqual(assetSubscription.MappedSymbol, customDataSubscription.MappedSymbol);
-                Assert.AreEqual(asset.Symbol.Value, customData.Symbol.Value.Split('.').First());
+                Assert.AreEqual(securityShouldBeMapped, assetShouldBeMapped);
+                Assert.AreEqual(customDataShouldBeMapped, customShouldBeMapped);
+
+                Assert.AreNotEqual(assetSubscription, customDataSubscription);
+
+                if (assetShouldBeMapped == customShouldBeMapped)
+                {
+                    Assert.AreEqual(assetSubscription.MappedSymbol, customDataSubscription.MappedSymbol);
+                    Assert.AreEqual(asset.Symbol.Value, customData.Symbol.Value.Split('.').First());
+                }
             }
         }
 
@@ -346,10 +350,6 @@ namespace QuantConnect.Tests.Algorithm
             // This covers the case where two idential data subscriptions are created.
             var dummy = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == securityType).First().DataTimeZone);
             var customData = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == securityType).First().DataTimeZone);
-
-            //Assert.IsTrue(asset.IsTradable);
-            // TODO: Should fail in master
-            //Assert.IsFalse(customData.IsTradable);
 
             // Check to see if we have an underlying symbol when we shouldn't
             Assert.IsFalse(customData.Symbol.HasUnderlying, $"{customDataType.Name} has underlying symbol for SecurityType {securityType} with ticker {ticker}");
@@ -402,10 +402,6 @@ namespace QuantConnect.Tests.Algorithm
             var dummy = qcAlgorithm.AddData(customDataType, asset.Symbol, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == SecurityType.Option).Single().DataTimeZone);
             var customData = qcAlgorithm.AddData(customDataType, asset.Symbol, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == SecurityType.Option).Single().DataTimeZone);
 
-            //Assert.IsTrue(asset.IsTradable);
-            // TODO: Should fail in master
-            //Assert.IsFalse(customData.IsTradable);
-
             // Check to see if we have an underlying symbol when we shouldn't
             Assert.IsTrue(customData.Symbol.HasUnderlying, $"{customDataType.Name} - {ticker} has no underlying Symbol");
             Assert.AreEqual(customData.Symbol.Underlying, asset.Symbol);
@@ -439,10 +435,6 @@ namespace QuantConnect.Tests.Algorithm
             var dummy = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == SecurityType.Option).Single().DataTimeZone);
             var customData = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == SecurityType.Option).Single().DataTimeZone);
 
-            //Assert.IsTrue(asset.IsTradable);
-            // TODO: Should fail in master
-            //Assert.IsFalse(customData.IsTradable);
-
             // Check to see if we have an underlying symbol when we shouldn't
             Assert.IsTrue(customData.Symbol.HasUnderlying, $"{customDataType.Name} - {ticker} has no underlying Symbol");
             Assert.AreNotEqual(customData.Symbol.Underlying, asset.Symbol);
@@ -473,9 +465,6 @@ namespace QuantConnect.Tests.Algorithm
             // This covers the case where two idential data subscriptions are created.
             var dummy = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == SecurityType.Option).Single().DataTimeZone);
             var customData = qcAlgorithm.AddData(customDataType, ticker, Resolution.Daily, qcAlgorithm.SubscriptionManager.Subscriptions.Where(x => x.SecurityType == SecurityType.Option).Single().DataTimeZone);
-
-            // TODO: Should fail in master
-            //Assert.IsFalse(customData.IsTradable);
 
             // Check to see if we have an underlying symbol when we shouldn't
             Assert.IsFalse(customData.Symbol.HasUnderlying, $"{customDataType.Name} has an underlying Symbol");
