@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
@@ -71,10 +72,14 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            _customSymbols.Clear();
-
-            foreach (var added in changes.AddedSecurities)
+            bool iterated = false;
+            foreach (var added in changes.AddedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Equity))
             {
+                if (!iterated)
+                {
+                    _customSymbols.Clear();
+                    iterated = true;
+                }
                 _customSymbols.Add(AddData<SECReport8K>(added.Symbol, Resolution.Daily).Symbol);
             }
         }

@@ -51,7 +51,11 @@ class CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm(QCAlgorithm):
                 raise Exception(f"Custom data undelrying ({customSymbol.Underlying}) Symbol was not found in active securities")
 
     def OnSecuritiesChanged(self, changes):
-        self.customSymbols = []
+        iterated = False
 
-        for added in changes.AddedSecurities:
+        for added in [i for i in changes.AddedSecurities if i.Symbol.SecurityType == SecurityType.Equity]:
+            if not iterated:
+                self.customSymbols = []
+                iterated = True
+
             self.customSymbols.append(self.AddData(SECReport8K, added.Symbol, Resolution.Daily).Symbol)
