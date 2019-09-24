@@ -51,6 +51,61 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        public void SymbolCreateBaseWithUnderlyingEquity()
+        {
+            var type = typeof(BaseData);
+            var equitySymbol = Symbol.Create("TWX", SecurityType.Equity, Market.USA);
+            var symbol = Symbol.CreateBase(type, equitySymbol, Market.USA);
+            var symbolIDSymbol = symbol.ID.Symbol.Split(new[] { ".BaseData" }, StringSplitOptions.None).First();
+
+            Assert.IsTrue(symbol.SecurityType == SecurityType.Base);
+            Assert.IsTrue(symbol.HasUnderlying);
+
+            Assert.AreEqual(symbol.Underlying, equitySymbol);
+
+            Assert.AreEqual(symbol.ID.Date, new DateTime(1998, 1, 2));
+            Assert.AreEqual("AOL", symbolIDSymbol);
+
+            Assert.AreEqual(symbol.Underlying.ID.Symbol, symbolIDSymbol);
+            Assert.AreEqual(symbol.Underlying.ID.Date, symbol.ID.Date);
+
+            Assert.AreEqual(symbol.Underlying.Value, equitySymbol.Value);
+            Assert.AreEqual(symbol.Underlying.Value, symbol.Value);
+        }
+
+        [Test]
+        public void SymbolCreateBaseWithUnderlyingOption()
+        {
+            var type = typeof(BaseData);
+            var optionSymbol = Symbol.CreateOption("TWX", Market.USA, OptionStyle.American, OptionRight.Call, 100, new DateTime(2050, 12, 31));
+            var symbol = Symbol.CreateBase(type, optionSymbol, Market.USA);
+            var symbolIDSymbol = symbol.ID.Symbol.Split(new[] { ".BaseData" }, StringSplitOptions.None).First();
+
+            Assert.IsTrue(symbol.SecurityType == SecurityType.Base);
+            Assert.IsTrue(symbol.HasUnderlying);
+
+            Assert.AreEqual(symbol.Underlying, optionSymbol);
+
+            Assert.IsTrue(symbol.Underlying.HasUnderlying);
+            Assert.AreEqual(symbol.Underlying.Underlying.SecurityType, SecurityType.Equity);
+
+            Assert.AreEqual(new DateTime(2050, 12, 31), symbol.ID.Date);
+            Assert.AreEqual("AOL", symbolIDSymbol);
+
+            Assert.AreEqual(symbol.Underlying.ID.Symbol, symbolIDSymbol);
+            Assert.AreEqual(symbol.Underlying.ID.Date, symbol.ID.Date);
+            Assert.AreEqual(symbol.Underlying.Value, symbol.Value);
+
+            Assert.AreEqual(symbol.Underlying.Underlying.ID.Symbol, symbolIDSymbol);
+            Assert.AreNotEqual(symbol.Underlying.Underlying.ID.Date, symbol.ID.Date);
+            Assert.IsTrue(symbol.Value.StartsWith(symbol.Underlying.Underlying.Value));
+
+            Assert.AreEqual(symbol.Underlying.Underlying.ID.Symbol, symbol.Underlying.ID.Symbol);
+            Assert.AreNotEqual(symbol.Underlying.Underlying.ID.Date, symbol.Underlying.ID.Date);
+            Assert.IsTrue(symbol.Underlying.Value.StartsWith(symbol.Underlying.Underlying.Value));
+        }
+
+        [Test]
         public void SymbolCreateWithOptionSecurityTypeCreatesCanonicalOptionSymbol()
         {
             var symbol = Symbol.Create("SPY", SecurityType.Option, Market.USA);

@@ -46,7 +46,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 06, 27);
             SetEndDate(2013, 07, 02);
 
-            _symbol = AddData<CustomDataUsingMapping>("FOXA").Symbol;
+            var foxa = QuantConnect.Symbol.Create("FOXA", SecurityType.Equity, Market.USA);
+            _symbol = AddData<CustomDataUsingMapping>(foxa).Symbol;
         }
 
         /// <summary>
@@ -56,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (slice.SymbolChangedEvents.ContainsKey(_symbol))
             {
-                var mappingEvent = slice.SymbolChangedEvents.Single().Value;
+                var mappingEvent = slice.SymbolChangedEvents.Single(x => x.Key.SecurityType == SecurityType.Base).Value;
                 Log($"{Time} - Ticker changed from: {mappingEvent.OldSymbol} to {mappingEvent.NewSymbol}");
                 if (Time.Date == new DateTime(2013, 06, 27))
                 {

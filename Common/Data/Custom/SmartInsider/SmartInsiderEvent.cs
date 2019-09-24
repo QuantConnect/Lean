@@ -13,13 +13,8 @@
  * limitations under the License.
 */
 
-using QuantConnect.Util;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Data.Custom.SmartInsider
 {
@@ -221,7 +216,6 @@ namespace QuantConnect.Data.Custom.SmartInsider
         public SmartInsiderEvent(string csvLine)
         {
             var csv = csvLine.Split('\t');
-            var count = csv.Length;
 
             TransactionID = csv[0];
             BuybackType = string.IsNullOrWhiteSpace(csv[1]) ? null : csv[1];

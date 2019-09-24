@@ -238,8 +238,13 @@ namespace QuantConnect.Securities
                         stringSymbol = symbol.HasUnderlying ? symbol.Underlying.Value : string.Empty;
                         break;
 
+                    case SecurityType.Base:
+                    case SecurityType.Future:
+                        stringSymbol = symbol.ID.Symbol;
+                        break;
+
                     default:
-                        stringSymbol = symbol.ID.SecurityType == SecurityType.Future ? symbol.ID.Symbol : symbol.Value;
+                        stringSymbol = symbol.Value;
                         break;
                 }
             }

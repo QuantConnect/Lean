@@ -104,7 +104,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void CanCreate_CustomSecurities_WithCorrectSubscriptions()
         {
-            var symbol = new Symbol(SecurityIdentifier.GenerateBase("BTC", Market.USA), "BTC");
+            var symbol = new Symbol(SecurityIdentifier.GenerateBase(null, "BTC", Market.USA), "BTC");
             _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, "BTC", SecurityType.Base, TimeZones.NewYork);
 
             var configs = _subscriptionManager.SubscriptionDataConfigService.Add(typeof(LiveTradingFeaturesAlgorithm.Bitcoin), symbol, Resolution.Second, false, false, false);

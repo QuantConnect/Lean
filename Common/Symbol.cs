@@ -35,7 +35,7 @@ namespace QuantConnect
         public static readonly Symbol Empty = new Symbol(SecurityIdentifier.Empty, string.Empty);
 
         /// <summary>
-        /// Provides a convience method for creating a Symbol for most security types.
+        /// Provides a convenience method for creating a Symbol for most security types.
         /// This method currently does not support Commodities
         /// </summary>
         /// <param name="ticker">The string ticker symbol</param>
@@ -43,15 +43,16 @@ namespace QuantConnect
         /// <param name="market">The market the ticker resides in</param>
         /// <param name="alias">An alias to be used for the symbol cache. Required when
         /// adding the same security from different markets</param>
+        /// <param name="baseDataType">Optional for <see cref="SecurityType.Base"/> and used for generating the base data SID</param>
         /// <returns>A new Symbol object for the specified ticker</returns>
-        public static Symbol Create(string ticker, SecurityType securityType, string market, string alias = null)
+        public static Symbol Create(string ticker, SecurityType securityType, string market, string alias = null, Type baseDataType = null)
         {
             SecurityIdentifier sid;
 
             switch (securityType)
             {
                 case SecurityType.Base:
-                    sid = SecurityIdentifier.GenerateBase(ticker, market);
+                    sid = SecurityIdentifier.GenerateBase(baseDataType, ticker, market);
                     break;
 
                 case SecurityType.Equity:
@@ -86,6 +87,34 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Creates a new Symbol for custom data. This method allows for the creation of a new Base Symbol
+        /// using the first ticker and the first traded date from the provided underlying Symbol. This avoids
+        /// the issue for mappable types, where the ticker is remapped supposing the provided ticker value is from today.
+        /// See method <see cref="SecurityIdentifier.GetFirstTickerAndDate(Interfaces.IMapFileProvider, string, string)"/>
+        /// The provided symbol is also set to <see cref="Symbol.Underlying"/> so that it can be accessed using the custom data Symbol.
+        /// This is useful for associating custom data Symbols to other asset classes so that it is possible to filter using custom data
+        /// and place trades on the underlying asset based on the filtered custom data.
+        /// </summary>
+        /// <param name="baseType">Type of BaseData instance</param>
+        /// <param name="underlying">Underlying symbol to set for the Base Symbol</param>
+        /// <param name="market">Market</param>
+        /// <returns>New non-mapped Base Symbol that contains an Underlying Symbol</returns>
+        public static Symbol CreateBase(Type baseType, Symbol underlying, string market)
+        {
+            // The SID Date is only defined for the following security types: base, equity, future, option.
+            // Default to SecurityIdentifier.DefaultDate if there's no matching SecurityType
+            var firstDate = underlying.SecurityType == SecurityType.Equity ||
+                underlying.SecurityType == SecurityType.Option ||
+                underlying.SecurityType == SecurityType.Future ||
+                underlying.SecurityType == SecurityType.Base
+                    ? underlying.ID.Date
+                    : (DateTime?)null;
+
+            var sid = SecurityIdentifier.GenerateBase(baseType, underlying.ID.Symbol, market, mapSymbol: false, date: firstDate);
+            return new Symbol(sid, underlying.Value, underlying);
+        }
+
+        /// <summary>
         /// Provides a convenience method for creating an option Symbol.
         /// </summary>
         /// <param name="underlying">The underlying ticker</param>
@@ -95,7 +124,7 @@ namespace QuantConnect
         /// <param name="strike">The option strike price</param>
         /// <param name="expiry">The option expiry date</param>
         /// <param name="alias">An alias to be used for the symbol cache. Required when
-        /// adding the same security from diferent markets</param>
+        /// adding the same security from different markets</param>
         /// <param name="mapSymbol">Specifies if symbol should be mapped using map file provider</param>
         /// <returns>A new Symbol object for the specified option contract</returns>
         public static Symbol CreateOption(string underlying, string market, OptionStyle style, OptionRight right, decimal strike, DateTime expiry, string alias = null, bool mapSymbol = true)

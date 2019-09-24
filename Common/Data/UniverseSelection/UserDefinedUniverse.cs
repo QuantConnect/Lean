@@ -155,7 +155,7 @@ namespace QuantConnect.Data.UniverseSelection
             switch (securityType)
             {
                 case SecurityType.Base:
-                    sid = SecurityIdentifier.GenerateBase(ticker, market);
+                    sid = SecurityIdentifier.GenerateBase(null, ticker, market);
                     break;
 
                 case SecurityType.Equity:

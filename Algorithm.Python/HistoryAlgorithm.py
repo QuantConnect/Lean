@@ -34,9 +34,9 @@ from datetime import datetime, timedelta
 ### <meta name="tag" content="history" />
 ### <meta name="tag" content="warm up" />
 class HistoryAlgorithm(QCAlgorithm):
-    
+
     def Initialize(self):
-    
+
         self.SetStartDate(2013,10, 8)  #Set Start Date
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
@@ -69,7 +69,7 @@ class HistoryAlgorithm(QCAlgorithm):
         # we can use these TradeBars to initialize indicators or perform other math
         for index, tradeBar in tradeBarHistory.loc["SPY"].iterrows():
             self.spyDailySma.Update(index, tradeBar["close"])
-        
+
         # get the last calendar year's worth of quandl data at the configured resolution (daily)
         quandlHistory = self.History(QuandlFuture, "CHRIS/CME_SP1", timedelta(365))
         self.AssertHistoryCount("History(QuandlFuture, \"CHRIS/CME_SP1\", timedelta(365))", quandlHistory, 250)
@@ -83,7 +83,7 @@ class HistoryAlgorithm(QCAlgorithm):
         self.spyDailySma.Reset()
         for index, quandl in quandlHistory.loc["CHRIS/CME_SP1"].iterrows():
             self.spyDailySma.Update(index, quandl["settle"])
-        
+
         # get the last year's worth of all configured Quandl data at the configured resolution (daily)
         #allQuandlData = self.History(QuandlFuture, timedelta(365))
         #self.AssertHistoryCount("History(QuandlFuture, timedelta(365))", allQuandlData, 250)
@@ -111,13 +111,13 @@ class HistoryAlgorithm(QCAlgorithm):
         singleSymbolQuandl = allQuandlData.loc["CHRIS/CME_SP1"]
         self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1\"]", singleSymbolQuandl, 250)
         for  quandl in singleSymbolQuandl:
-            # do something with 'CHRIS/CME_SP1' quandl data
+            # do something with 'CHRIS/CME_SP1.QuandlFuture' quandl data
             pass
 
         quandlSpyLows = allQuandlData.loc["CHRIS/CME_SP1"]["low"]
         self.AssertHistoryCount("allQuandlData.loc[\"CHRIS/CME_SP1\"][\"low\"]", quandlSpyLows, 250)
         for  low in quandlSpyLows:
-            # do something with 'CHRIS/CME_SP1' quandl data
+            # do something with 'CHRIS/CME_SP1.QuandlFuture' quandl data
             pass
 
 
@@ -134,7 +134,7 @@ class HistoryAlgorithm(QCAlgorithm):
         count = len(tradeBarHistory.index)
         if count != expected:
             raise Exception("{} expected {}, but received {}".format(methodCall, expected, count))
-         
+
 
 class QuandlFuture(PythonQuandl):
     '''Custom quandl data type for setting customized value column name. Value column is used for the primary trading calculations and charting.'''

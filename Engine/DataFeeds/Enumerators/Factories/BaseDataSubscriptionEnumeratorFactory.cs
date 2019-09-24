@@ -92,11 +92,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
         private string GetMappedSymbol(SubscriptionDataConfig config, DateTime date)
         {
-            var mapFile = config.Symbol.HasUnderlying ?
-                    _mapFileResolver.ResolveMapFile(config.Symbol.Underlying.ID.Symbol, config.Symbol.Underlying.ID.Date) :
-                    _mapFileResolver.ResolveMapFile(config.Symbol.ID.Symbol, config.Symbol.ID.Date);
-
-            return mapFile.GetMappedSymbol(date, config.MappedSymbol);
+            return _mapFileResolver.ResolveMapFile(config.Symbol, config.Type)
+                .GetMappedSymbol(date, config.MappedSymbol);
         }
     }
 }
