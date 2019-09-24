@@ -15,7 +15,7 @@ before_install:
   - conda install -y pandas=0.23.4
   - conda install -y cython=0.29.11
   - conda install -y scipy=1.2.1
-  - conda install -y wrapt=1.11.2
+  - conda install -y wrapt=1.10.11
 install:
   - nuget restore QuantConnect.Lean.sln
   - nuget install NUnit.Runners -Version 2.6.4 -OutputDirectory testrunner

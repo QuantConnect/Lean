@@ -512,7 +512,7 @@ def RunTest():
 import wrapt
 
 def RunTest():
-    assert(wrapt.__version__ == '1.11.2')
+    assert(wrapt.__version__ == '1.10.11')
     return 'Test passed, module exists'"
             );
         }

@@ -14,14 +14,14 @@ Before we enable python support, follow the [installation instructions](https://
         - Name of the variable: `PYTHONHOME`. 
         - Value of the variable: python installation path.
 4. Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
-5. Install [wrapt=1.11.2](https://pypi.org/project/wrapt/) module.
+5. Install [wrapt=1.10.11](https://pypi.org/project/wrapt/) module.
 6. Reboot computer to ensure changes are propogated.
 
 #### [macOS](https://github.com/QuantConnect/Lean#macos)
 
 1. Use the macOS x86-64 package installer from [Anaconda](https://repo.anaconda.com/archive/Anaconda3-5.2.0-MacOSX-x86_64.pkg) and follow "[Installing on macOS](https://docs.anaconda.com/anaconda/install/mac-os)" instructions from Anaconda documentation page.
 2. Install [pandas](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
-3. Install [wrapt=1.11.2](https://pypi.org/project/wrapt/) module.
+3. Install [wrapt=1.10.11](https://pypi.org/project/wrapt/) module.
 
 *Note:* If you encounter the "System.DllNotFoundException: python3.6m" runtime error when running Python algorithms on macOS:
 1. Find `libpython3.6m.dylib` in your Python installation folder. If you installed Python with Anaconda, it may be find at
@@ -46,7 +46,7 @@ rm -rf Miniconda3-4.3.31-Linux-x86_64.sh
 sudo ln -s $HOME/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
 conda update -y python conda pip
 conda install -y cython pandas
-conda install -y wrapt=1.11.2
+conda install -y wrapt=1.10.11
 ```
 
 *Note:* There is a [known issue](https://github.com/pythonnet/pythonnet/issues/609) with python 3.6.5 that prevents pythonnet installation, please upgrade python to version 3.6.6:
