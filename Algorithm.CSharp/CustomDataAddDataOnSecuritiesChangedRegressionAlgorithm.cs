@@ -61,6 +61,12 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice data)
         {
+            if (!Portfolio.Invested && Transactions.GetOpenOrders().Count == 0)
+            {
+                var aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+                SetHoldings(aapl, 0.5);
+            }
+
             foreach (var customSymbol in _customSymbols)
             {
                 if (!ActiveSecurities.ContainsKey(customSymbol.Underlying))
@@ -99,25 +105,25 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "0"},
+            {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
+            {"Compounding Annual Return", "-33.688%"},
+            {"Drawdown", "2.000%"},
             {"Expectancy", "0"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
+            {"Net Profit", "-1.674%"},
+            {"Sharpe Ratio", "-5.986"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
+            {"Alpha", "-0.363"},
+            {"Beta", "0.432"},
+            {"Annual Standard Deviation", "0.059"},
+            {"Annual Variance", "0.003"},
+            {"Information Ratio", "-5.507"},
+            {"Tracking Error", "0.068"},
+            {"Treynor Ratio", "-0.817"},
+            {"Total Fees", "$3.50"},
         };
     }
 }

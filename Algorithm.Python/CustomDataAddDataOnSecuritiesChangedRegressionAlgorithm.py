@@ -46,6 +46,10 @@ class CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm(QCAlgorithm):
         ]
 
     def OnData(self, data):
+        if not self.Portfolio.Invested and len(self.Transactions.GetOpenOrders()) == 0:
+            aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
+            self.SetHoldings(aapl, 0.5)
+
         for customSymbol in self.customSymbols:
             if not self.ActiveSecurities.ContainsKey(customSymbol.Underlying):
                 raise Exception(f"Custom data undelrying ({customSymbol.Underlying}) Symbol was not found in active securities")
