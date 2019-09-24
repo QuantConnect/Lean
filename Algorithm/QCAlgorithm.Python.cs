@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm
         /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
         /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
         /// </remarks>
-        public Security AddData(PyObject type, Symbol underlying, Resolution resolution = Resolution.Minute, object _ = null, object __ = null, object ___ = null)
+        public Security AddData(PyObject type, Symbol underlying, Resolution resolution = Resolution.Minute)
         {
             return AddData(type, underlying, resolution, TimeZones.NewYork, false, 1m);
         }
@@ -122,7 +122,7 @@ namespace QuantConnect.Algorithm
         /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
         /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
         /// </remarks>
-        public Security AddData(PyObject type, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m, object _ = null, object __ = null, object ___ = null)
+        public Security AddData(PyObject type, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             return AddData(CreateType(type), underlying, resolution, timeZone, fillDataForward, leverage);
         }
@@ -182,7 +182,7 @@ namespace QuantConnect.Algorithm
         /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
         /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
         /// </remarks>
-        public Security AddData(Type dataType, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m, object _ = null, object __ = null, object ___ = null)
+        public Security AddData(Type dataType, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             var symbol = QuantConnect.Symbol.CreateBase(dataType, underlying, Market.USA);
             return AddDataImpl(dataType, symbol, resolution, timeZone, fillDataForward, leverage);
