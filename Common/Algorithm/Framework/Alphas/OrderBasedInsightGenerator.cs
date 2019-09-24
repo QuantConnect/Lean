@@ -72,11 +72,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 }
             }
 
-            var insightDirection = securityHolding.IsLong
-                ? InsightDirection.Up
-                : securityHolding.IsShort
-                    ? InsightDirection.Down
-                    : InsightDirection.Flat;
+            var insightDirection = (InsightDirection) Math.Sign(securityHolding.Quantity);
 
             var insight = Insight.Price(orderEvent.Symbol,
                 Time.EndOfTime,
