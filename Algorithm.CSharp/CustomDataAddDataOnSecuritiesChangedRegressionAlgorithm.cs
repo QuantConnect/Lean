@@ -91,19 +91,15 @@ namespace QuantConnect.Algorithm.CSharp
             foreach (var added in changes.AddedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Equity))
             {
                 _customSymbols.Add(AddData<SECReport8K>(added.Symbol, Resolution.Daily).Symbol);
+                _customSymbols.Add(AddData<SECReport10K>(added.Symbol, Resolution.Daily).Symbol);
             }
 
             foreach (var removed in changes.RemovedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Equity))
             {
-                // we search for the custom data which uses the removed security as underlying
-                var customDataSymbol = Securities.Keys.FirstOrDefault(symbol => symbol.ID.SecurityType == SecurityType.Base
-                                                                                && symbol.HasUnderlying
-                                                                                && symbol.Underlying == removed.Symbol);
-                // remove the custom data from our algorithm and collection
-                if (customDataSymbol != default(Symbol)
-                    && RemoveSecurity(customDataSymbol))
+                foreach (var removedCustomDataSymbol in RemoveCustomSecurities(removed.Symbol, typeof(SECReport8K), typeof(SECReport10K)))
                 {
-                    _customSymbols.Remove(customDataSymbol);
+                    // remove the custom data from our test collection
+                    _customSymbols.Remove(removedCustomDataSymbol);
                 }
             }
         }

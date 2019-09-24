@@ -29,10 +29,10 @@ using QuantConnect.Data.Custom;
 using QuantConnect.Data.Custom.PsychSignal;
 using QuantConnect.Data.Custom.SEC;
 using QuantConnect.Data.Custom.TradingEconomics;
-using QuantConnect.Data.Custom.USTreasury;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 using Bitcoin = QuantConnect.Algorithm.CSharp.LiveTradingFeaturesAlgorithm.Bitcoin;
@@ -172,6 +172,59 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(testHistoryProvider.LastResolutionRequest, Resolution.Minute);
             Assert.IsNotNull(data);
             Assert.AreEqual(data.Price, 2);
+        }
+
+        [TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Cfd, false, true)]
+        [TestCase("BTCUSD", typeof(PsychSignalSentimentData), SecurityType.Crypto, false, true)]
+        [TestCase("CL", typeof(PsychSignalSentimentData), SecurityType.Future, false, true)]
+        [TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Forex, false, true)]
+        [TestCase("AAPL", typeof(PsychSignalSentimentData), SecurityType.Equity, true, true)]
+        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Cfd, false, false)]
+        [TestCase("BTCUSD", typeof(TradingEconomicsCalendar), SecurityType.Crypto, false, false)]
+        [TestCase("CL", typeof(TradingEconomicsCalendar), SecurityType.Future, false, false)]
+        [TestCase("AAPL", typeof(TradingEconomicsCalendar), SecurityType.Equity, true, false)]
+        [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Forex, false, false)]
+        public void RemoveSecuritySymbolWithUnderlying(string ticker, Type customDataType, SecurityType securityType, bool securityShouldBeMapped, bool customDataShouldBeMapped)
+        {
+            SymbolCache.Clear();
+            var qcAlgorithm = new QCAlgorithm();
+            qcAlgorithm.SubscriptionManager.SetDataManager(new DataManagerStub(qcAlgorithm));
+            qcAlgorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
+            qcAlgorithm.SetFinishedWarmingUp();
+            Security asset;
+
+            switch (securityType)
+            {
+                case SecurityType.Cfd:
+                    asset = qcAlgorithm.AddCfd(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Crypto:
+                    asset = qcAlgorithm.AddCrypto(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Equity:
+                    asset = qcAlgorithm.AddEquity(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Forex:
+                    asset = qcAlgorithm.AddForex(ticker, Resolution.Daily);
+                    break;
+                case SecurityType.Future:
+                    asset = qcAlgorithm.AddFuture(ticker, Resolution.Daily);
+                    break;
+                default:
+                    throw new Exception($"SecurityType {securityType} is not valid for this test");
+            }
+
+            var customData = qcAlgorithm.AddData(customDataType,
+                asset.Symbol,
+                Resolution.Daily,
+                qcAlgorithm.SubscriptionManager.Subscriptions.First(x => x.SecurityType == securityType).DataTimeZone).Symbol;
+            // lets add another custom data which should not be removed
+            var anotherCustomData = qcAlgorithm.AddData(typeof(SECReport10K),
+                asset.Symbol,
+                Resolution.Daily,
+                qcAlgorithm.SubscriptionManager.Subscriptions.First(x => x.SecurityType == securityType).DataTimeZone).Symbol;
+
+            Assert.AreEqual(customData, qcAlgorithm.RemoveCustomSecurities(asset.Symbol, customDataType).Single());
         }
 
         [TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Cfd, false, true)]

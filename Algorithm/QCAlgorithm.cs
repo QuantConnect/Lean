@@ -1694,6 +1694,35 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Will remove the custom <see cref="SecurityType.Base"/> securities which use the provided <see cref="Symbol"/>
+        /// as underlying for the given data types
+        /// </summary>
+        /// <param name="underlyingSymbol">The underlying <see cref="Symbol"/></param>
+        /// <param name="dataTypes">The data types we want to remove</param>
+        /// <returns>The <see cref="Symbol"/> of the removed <see cref="Security"/> if any</returns>
+        public List<Symbol> RemoveCustomSecurities(Symbol underlyingSymbol, params Type[] dataTypes)
+        {
+            var result = new List<Symbol>();
+            // we search for the custom data securities that use the provided symbol as underlying
+            // and verify the type matches with one of the requested 'dataTypes'
+            foreach (var symbol in Securities.Keys
+                .Where(symbol => symbol.ID.SecurityType == SecurityType.Base
+                                 && symbol.HasUnderlying
+                                 && symbol.Underlying == underlyingSymbol
+                                 // this will check the data type is the right one
+                                 && dataTypes.Any(type => SecurityIdentifier.GenerateBaseSymbol(type, underlyingSymbol.ID.Symbol) == symbol.ID.Symbol)))
+            {
+                // remove the custom data from our algorithm and collection
+                if (RemoveSecurity(symbol))
+                {
+                    result.Add(symbol);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Removes the security with the specified symbol. This will cancel all
         /// open orders and then liquidate any existing holdings
         /// </summary>

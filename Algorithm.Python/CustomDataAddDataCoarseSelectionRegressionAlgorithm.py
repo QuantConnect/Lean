@@ -54,6 +54,7 @@ class CustomDataAddDataCoarseSelectionRegressionAlgorithm(QCAlgorithm):
 
         for symbol in symbols:
             self.customSymbols.append(self.AddData(SECReport8K, symbol, Resolution.Daily).Symbol)
+            self.customSymbols.append(self.AddData(SECReport10K, symbol, Resolution.Daily).Symbol)
 
         return symbols
 
@@ -68,11 +69,6 @@ class CustomDataAddDataCoarseSelectionRegressionAlgorithm(QCAlgorithm):
 
     def OnSecuritiesChanged(self, changes):
         for removed in [i for i in changes.RemovedSecurities if i.Symbol.SecurityType == SecurityType.Equity]:
-            # we search for the custom data which uses the removed security as underlying
-            customDataSymbol = next((symbol for symbol in self.Securities.Keys if
-                                     symbol.ID.SecurityType == SecurityType.Base
-                                     and symbol.HasUnderlying
-                                     and symbol.Underlying == removed.Symbol), None)
-            # remove the custom data from our algorithm and collection
-            if customDataSymbol and self.RemoveSecurity(customDataSymbol):
-                self.customSymbols.remove(customDataSymbol)
+            for removedCustomDataSymbol in self.RemoveCustomSecurities(removed.Symbol, SECReport8K, SECReport10K):
+                # remove the custom data from our test collection
+                self.customSymbols.remove(removedCustomDataSymbol)
