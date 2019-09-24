@@ -296,8 +296,8 @@
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
     <Compile Include="Common\Data\CalendarConsolidatorsTests.cs" />
+    <Compile Include="Common\Data\Custom\PsychSignalConsolidatorTests.cs" />
     <Compile Include="Common\Data\Custom\EstimizeTests.cs" />
-    <Compile Include="Common\Data\PsychSignalConsolidatorTests.cs" />
     <Compile Include="Common\Data\Fundamental\MultiPeriodFieldTests.cs" />
     <Compile Include="Common\Data\MockSubscriptionDataConfigProvider.cs" />
     <Compile Include="Common\Data\UniverseSelection\UniverseTests.cs" />

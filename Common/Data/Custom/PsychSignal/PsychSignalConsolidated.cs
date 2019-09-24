@@ -59,7 +59,7 @@ namespace QuantConnect.Data.Custom.PsychSignal
 
         /// <summary>
         /// Aggregate total of messages scanned.
-        /// </remarks>
+        /// </summary>
         public int TotalScoredMessages { get; set; }
 
         /// <summary>

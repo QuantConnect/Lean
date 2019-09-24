@@ -28,6 +28,8 @@ namespace QuantConnect.Tests.Common.Data
         {
             // Note: This data is not real, and was created for testing purposes only
             var consolidator = new PsychSignalConsolidator(TimeSpan.FromDays(1));
+            var consolidated = false;
+
             consolidator.DataConsolidated += (_, data) =>
             {
                 Assert.AreEqual(new DateTime(2019, 1, 1), data.Time);
@@ -56,6 +58,8 @@ namespace QuantConnect.Tests.Common.Data
                 Assert.AreEqual(0, data.BullMinusBear.Close);
 
                 Assert.AreEqual(8005, data.TotalScoredMessages);
+
+                consolidated = true;
             };
 
             var tick1 = new PsychSignalSentimentData()
@@ -189,6 +193,8 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(((PsychSignalConsolidated)consolidator.WorkingData).BullIntensity.High, tick7.BullIntensity);
             Assert.AreEqual(((PsychSignalConsolidated)consolidator.WorkingData).BullIntensity.Low, tick7.BullIntensity);
             Assert.AreEqual(((PsychSignalConsolidated)consolidator.WorkingData).BullIntensity.Close, tick7.BullIntensity);
+
+            Assert.IsTrue(consolidated);
         }
 
         [Test]
@@ -196,6 +202,8 @@ namespace QuantConnect.Tests.Common.Data
         {
             // Note: This data is not real, and was created for testing purposes only
             var consolidator = new PsychSignalConsolidator(TimeSpan.FromHours(1));
+            var consolidated = false;
+
             consolidator.DataConsolidated += (_, data) =>
             {
                 Assert.AreEqual(new DateTime(2019, 1, 1), data.Time);
@@ -224,6 +232,8 @@ namespace QuantConnect.Tests.Common.Data
                 Assert.AreEqual(0, data.BullMinusBear.Close);
 
                 Assert.AreEqual(8005, data.TotalScoredMessages);
+
+                consolidated = true;
             };
 
             var tick1 = new PsychSignalSentimentData()
@@ -357,6 +367,8 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(((PsychSignalConsolidated)consolidator.WorkingData).BullIntensity.High, tick7.BullIntensity);
             Assert.AreEqual(((PsychSignalConsolidated)consolidator.WorkingData).BullIntensity.Low, tick7.BullIntensity);
             Assert.AreEqual(((PsychSignalConsolidated)consolidator.WorkingData).BullIntensity.Close, tick7.BullIntensity);
+
+            Assert.IsTrue(consolidated);
         }
 
         [Test]
@@ -364,6 +376,8 @@ namespace QuantConnect.Tests.Common.Data
         {
             // Note: This data is not real, and was created for testing purposes only
             var consolidator = new PsychSignalConsolidator(TimeSpan.FromMinutes(1));
+            var consolidated = false;
+
             consolidator.DataConsolidated += (_, data) =>
             {
                 Assert.AreEqual(new DateTime(2019, 1, 1, 0, 5, 0), data.Time);
@@ -392,6 +406,8 @@ namespace QuantConnect.Tests.Common.Data
                 Assert.AreEqual(0, data.BullMinusBear.Close);
 
                 Assert.AreEqual(8005, data.TotalScoredMessages);
+
+                consolidated = true;
             };
 
             var tick1 = new PsychSignalSentimentData()
@@ -525,6 +541,8 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(((PsychSignalConsolidated)consolidator.WorkingData).BullIntensity.High, tick7.BullIntensity);
             Assert.AreEqual(((PsychSignalConsolidated)consolidator.WorkingData).BullIntensity.Low, tick7.BullIntensity);
             Assert.AreEqual(((PsychSignalConsolidated)consolidator.WorkingData).BullIntensity.Close, tick7.BullIntensity);
+
+            Assert.IsTrue(consolidated);
         }
     }
 }
