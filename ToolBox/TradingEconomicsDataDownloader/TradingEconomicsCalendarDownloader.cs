@@ -14,6 +14,7 @@
 */
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Custom.TradingEconomics;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -40,7 +41,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 
         public TradingEconomicsCalendarDownloader(string destinationFolder)
         {
-            _fromDate = new DateTime(2000, 10, 1);
+            _fromDate = new DateTime(2019, 5, 1);
             _toDate = DateTime.Now;
             _destinationFolder = Path.Combine(destinationFolder, "calendar");
             // Rate limits on Trading Economics is one request per second
@@ -96,13 +97,25 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                     _requestGate.WaitToProceed(TimeSpan.FromSeconds(1));
 
                     var content = Get(startUtc, endUtc).Result;
-                    var collection = JsonConvert.DeserializeObject<List<TradingEconomicsCalendarRaw>>(content);
+                    var rawCollection = JsonConvert.DeserializeObject<JArray>(content);
+
+                    foreach (var rawData in rawCollection)
+                    {
+                        rawData["IsPercentage"] = rawData["Actual"].Value<string>().Contains("%");
+                        rawData["Actual"] = ParseDecimal(rawData["Actual"].Value<string>());
+                        rawData["Previous"] = ParseDecimal(rawData["Previous"].Value<string>());
+                        rawData["Forecast"] = ParseDecimal(rawData["Forecast"].Value<string>());
+                        rawData["TEForecast"] = ParseDecimal(rawData["TEForecast"].Value<string>());
+                        rawData["Revised"] = ParseDecimal(rawData["Revised"].Value<string>());
+                    }
+
+                    var collection = rawCollection.ToObject<List<TradingEconomicsCalendar>>();
 
                     // Only write data that contains the "actual" field so that we get the final
                     // piece of unchanging data in order to maintain backwards consistency with
                     // the given data since we can't get historical snapshots of the data
                     var onlyActual = collection
-                        .Where(x => !string.IsNullOrEmpty(x.Actual))
+                        .Where(x => x.Actual.HasValue)
                         .ToList();
 
                     var totalFiltered = collection.Count - onlyActual.Count;
@@ -112,7 +125,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                         Log.Trace($"TradingEconomicsCalendarDownloader.Run(): Filtering {totalFiltered}/{collection.Count} entries because they contain no 'actual' field");
                     }
 
-                    data.AddRange(onlyActual.Select(x => x.Parse()));
+                    data.AddRange(onlyActual);
 
                     startUtc = startUtc.AddMonths(1);
                 }
@@ -194,245 +207,76 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         }
 
         /// <summary>
-        /// Represents the Trading Economics Calendar information:
-        /// The economic calendar covers around 1600 events for more than 150 countries a month.
-        /// https://docs.tradingeconomics.com/#events
+        /// Parse decimal from calendar data
         /// </summary>
-        private class TradingEconomicsCalendarRaw
+        /// <param name="value">Value to parse</param>
+        /// <returns>Nullable decimal</returns>
+        /// <remarks>Will be null when we can't parse the data reliably</remarks>
+        public static decimal? ParseDecimal(string value)
         {
-            /// <summary>
-            /// Unique calendar ID used by Trading Economics
-            /// </summary>
-            [JsonProperty(PropertyName = "CalendarId")]
-            public string CalendarId { get; set; }
-
-            /// <summary>
-            /// Release time and date in UTC
-            /// </summary>
-            [JsonProperty(PropertyName = "Date"), JsonConverter(typeof(TradingEconomicsDateTimeConverter))]
-            public DateTime EndTime { get; set; }
-
-            /// <summary>
-            /// Country name
-            /// </summary>
-            [JsonProperty(PropertyName = "Country")]
-            public string Country { get; set; }
-
-            /// <summary>
-            /// Indicator category name
-            /// </summary>
-            [JsonProperty(PropertyName = "Category")]
-            public string Category { get; set; }
-
-            /// <summary>
-            /// Specific event name in the calendar
-            /// </summary>
-            [JsonProperty(PropertyName = "Event")]
-            public string Event { get; set; }
-
-            /// <summary>
-            /// The period for which released data refers to
-            /// </summary>
-            [JsonProperty(PropertyName = "Reference")]
-            public string Reference { get; set; }
-
-            /// <summary>
-            /// Source of data
-            /// </summary>
-            [JsonProperty(PropertyName = "Source")]
-            public string Source { get; set; }
-
-            /// <summary>
-            /// Latest released value
-            /// </summary>
-            [JsonProperty(PropertyName = "Actual")]
-            public string Actual { get; set; }
-
-            /// <summary>
-            /// Value for the previous period after the revision (if revision is applicable)
-            /// </summary>
-            [JsonProperty(PropertyName = "Previous")]
-            public string Previous { get; set; }
-
-            /// <summary>
-            /// Average forecast among a representative group of economists
-            /// </summary>
-            [JsonProperty(PropertyName = "Forecast")]
-            public string Forecast { get; set; }
-
-            /// <summary>
-            /// TradingEconomics own projections
-            /// </summary>
-            [JsonProperty(PropertyName = "TEForecast")]
-            public string TradingEconomicsForecast { get; set; }
-
-            /// <summary>
-            /// Hyperlink at Trading Economics
-            /// </summary>
-            [JsonProperty(PropertyName = "URL")]
-            public string Url { get; set; }
-
-            /// <summary>
-            /// 0 indicates that the time of the event is known,
-            /// 1 indicates that we only know the date of event, the exact time of event is unknown
-            /// </summary>
-            [JsonProperty(PropertyName = "DateSpan")]
-            public string DateSpan { get; set; }
-
-            /// <summary>
-            /// Importance of a TradingEconomics information
-            /// </summary>
-            [JsonProperty(PropertyName = "Importance")]
-            public TradingEconomicsImportance Importance { get; set; }
-
-            /// <summary>
-            /// Time when new data was inserted or changed
-            /// </summary>
-            [JsonProperty(PropertyName = "LastUpdate"), JsonConverter(typeof(TradingEconomicsDateTimeConverter))]
-            public DateTime LastUpdate { get; set; }
-
-            /// <summary>
-            /// Value reported in the previous period after revision
-            /// </summary>
-            /// <remarks>
-            /// If there is no revision field remains empty
-            /// </remarks>
-            [JsonProperty(PropertyName = "Revised")]
-            public string Revised { get; set; }
-
-            /// <summary>
-            /// Country's original name
-            /// </summary>
-            [JsonProperty(PropertyName = "OCountry")]
-            public string OCountry { get; set; }
-
-            /// <summary>
-            /// Category's original name
-            /// </summary>
-            [JsonProperty(PropertyName = "OCategory")]
-            public string OCategory { get; set; }
-
-            /// <summary>
-            /// Unique ticker used by Trading Economics
-            /// </summary>
-            [JsonProperty(PropertyName = "Ticker")]
-            public string Ticker { get; set; }
-
-            /// <summary>
-            /// Unique symbol used by Trading Economics
-            /// </summary>
-            [JsonProperty(PropertyName = "Symbol")]
-            public string TESymbol { get; set; }
-
-
-            public TradingEconomicsCalendar Parse()
+            if (string.IsNullOrWhiteSpace(value))
             {
-                return new TradingEconomicsCalendar
-                {
-                    CalendarId = CalendarId,
-                    EndTime = EndTime,
-                    Country = Country,
-                    Category = Category,
-                    Event = Event,
-                    Reference = Reference,
-                    Source = Source,
-                    Actual = ParseDecimal(Actual),
-                    Previous = ParseDecimal(Previous),
-                    Forecast = ParseDecimal(Forecast),
-                    TradingEconomicsForecast = ParseDecimal(TradingEconomicsForecast),
-                    DateSpan = DateSpan,
-                    Importance = Importance,
-                    LastUpdate = LastUpdate,
-                    Revised = ParseDecimal(Revised),
-                    OCountry = OCountry,
-                    OCategory = OCategory,
-                    Ticker = Ticker,
-                    TESymbol = TESymbol,
-
-                    IsPercentage = Actual.EndsWith("%") || Previous.EndsWith("%") || Forecast.EndsWith("%") || TradingEconomicsForecast.EndsWith("%")
-                };
+                return null;
             }
 
-            private decimal? ParseDecimal(string figure)
+            // Remove dollar signs from values
+            // Remove (P) and (R) from values
+            // Edge cases: values are reported as XYZ.5.1B, -4-XYZ
+            var newFigure = value.Replace("$", "")
+                .Replace("(P)", "")
+                .Replace("(R)", "")
+                .Replace("--", "-")
+                .Replace(".5.1", ".5")
+                .Replace("-4-", "-");
+
+            if (newFigure.EndsWith("."))
             {
-                try
-                {
-                    if (string.IsNullOrWhiteSpace(figure))
-                    {
-                        return null;
-                    }
-
-                    // Remove dollar signs from values
-                    // Remove (P) and (R) from values
-                    // Edge cases: values are reported as XYZ.5.1B, -4-XYZ
-                    var newFigure = figure.Replace("$", "")
-                        .Replace("(P)", "")
-                        .Replace("(R)", "")
-                        .Replace("--", "-")
-                        .Replace(".5.1", ".5")
-                        .Replace("-4-", "-");
-
-                    if (newFigure.EndsWith("."))
-                    {
-                        newFigure = newFigure.Substring(0, newFigure.Length - 1);
-                    }
-
-                    var inTrillions = newFigure.EndsWith("T");
-                    var inBillions = newFigure.EndsWith("B");
-                    var inMillions = newFigure.EndsWith("M");
-                    var inThousands = newFigure.EndsWith("K");
-                    var inPercent = newFigure.EndsWith("%");
-
-                    // Finally, remove any alphabetical characters from the string before we parse
-                    newFigure = Regex.Replace(newFigure, "[^0-9.+-]", "");
-
-                    while (Regex.IsMatch(newFigure, @"(\.[0-9]+\.)"))
-                    {
-                        Log.Trace($"Figure value '{newFigure}' has two decimal points. Filtering");
-                        newFigure = newFigure.Substring(0, newFigure.Length - 1);
-                    }
-
-                    if (string.IsNullOrWhiteSpace(newFigure))
-                    {
-                        // U.S. Presidential election is unparsable as decimal.
-                        // Other events similar to it might exist as well.
-                        if (!string.IsNullOrWhiteSpace(figure))
-                        {
-                            Log.Trace($"Value '{figure}' was filtered");
-                        }
-
-                        return null;
-                    }
-
-                    if (inPercent)
-                    {
-                        return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) / 100m;
-                    }
-                    else if (inTrillions)
-                    {
-                        return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000000000000m;
-                    }
-                    else if (inBillions)
-                    {
-                        return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000000000m;
-                    }
-                    else if (inMillions)
-                    {
-                        return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000000m;
-                    }
-                    else if (inThousands)
-                    {
-                        return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000m;
-                    }
-
-                    return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture);
-                }
-                catch (Exception e)
-                {
-                    Log.Trace($"Error with value: {figure}");
-                    throw e;
-                }
+                newFigure = newFigure.Substring(0, newFigure.Length - 1);
             }
+
+            var inTrillions = newFigure.EndsWith("T");
+            var inBillions = newFigure.EndsWith("B");
+            var inMillions = newFigure.EndsWith("M");
+            var inThousands = newFigure.EndsWith("K");
+            var inPercent = newFigure.EndsWith("%");
+
+            // Finally, remove any alphabetical characters from the string before we parse
+            newFigure = Regex.Replace(newFigure, "[^0-9.+-]", "");
+
+            while (Regex.IsMatch(newFigure, @"(\.[0-9]+\.)"))
+            {
+                newFigure = newFigure.Substring(0, newFigure.Length - 1);
+            }
+
+            if (string.IsNullOrWhiteSpace(newFigure))
+            {
+                // U.S. Presidential election is unparsable as decimal.
+                // Other events similar to it might exist as well.
+                return null;
+            }
+
+            if (inPercent)
+            {
+                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) / 100m;
+            }
+            else if (inTrillions)
+            {
+                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000000000000m;
+            }
+            else if (inBillions)
+            {
+                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000000000m;
+            }
+            else if (inMillions)
+            {
+                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000000m;
+            }
+            else if (inThousands)
+            {
+                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000m;
+            }
+
+            return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture);
         }
     }
 }

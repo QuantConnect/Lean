@@ -598,6 +598,7 @@
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
+    <Compile Include="ToolBox\TradingEconomicsCalendarTests.cs" />
     <Compile Include="ToolBox\PsychSignalDataTests.cs" />
     <Compile Include="ToolBox\CoinApiSymbolMapperTests.cs" />
     <Compile Include="ToolBox\ForexVolume\FxcmVolumeDownloaderTest.cs" />
