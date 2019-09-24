@@ -30,23 +30,31 @@ class CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm(QCAlgorithm):
         self.SetStartDate(2014, 3, 24)
         self.SetEndDate(2014, 4, 7)
         self.SetCash(100000)
-
+        self.ToggleSelection = True
+        self.customSymbols = []
         self.UniverseSettings.Resolution = Resolution.Daily
 
         self.AddUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseSelector))
 
     def CoarseSelector(self, coarse):
-        return [
-            Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-            Symbol.Create("BAC", SecurityType.Equity, Market.USA),
-            Symbol.Create("FB", SecurityType.Equity, Market.USA),
-            Symbol.Create("GOOGL", SecurityType.Equity, Market.USA),
-            Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
-            Symbol.Create("IBM", SecurityType.Equity, Market.USA),
-        ]
+        if self.ToggleSelection:
+            self.ToggleSelection = False
+            return [
+                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+                Symbol.Create("BAC", SecurityType.Equity, Market.USA),
+                Symbol.Create("FB", SecurityType.Equity, Market.USA)
+            ]
+        else:
+            self.ToggleSelection = True
+            return [
+                Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+                Symbol.Create("GOOGL", SecurityType.Equity, Market.USA),
+                Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
+                Symbol.Create("IBM", SecurityType.Equity, Market.USA)
+            ]
 
     def OnData(self, data):
-        if not self.Portfolio.Invested and len(self.Transactions.GetOpenOrders()) == 0:
+        if not self.Portfolio.Invested:
             aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
             self.SetHoldings(aapl, 0.5)
 
@@ -55,11 +63,15 @@ class CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm(QCAlgorithm):
                 raise Exception(f"Custom data undelrying ({customSymbol.Underlying}) Symbol was not found in active securities")
 
     def OnSecuritiesChanged(self, changes):
-        iterated = False
-
         for added in [i for i in changes.AddedSecurities if i.Symbol.SecurityType == SecurityType.Equity]:
-            if not iterated:
-                self.customSymbols = []
-                iterated = True
-
             self.customSymbols.append(self.AddData(SECReport8K, added.Symbol, Resolution.Daily).Symbol)
+
+        for removed in [i for i in changes.RemovedSecurities if i.Symbol.SecurityType == SecurityType.Equity]:
+            # we search for the custom data which uses the removed security as underlying
+            customDataSymbol = next((symbol for symbol in self.Securities.Keys if
+                                     symbol.ID.SecurityType == SecurityType.Base
+                                     and symbol.HasUnderlying
+                                     and symbol.Underlying == removed.Symbol), None)
+            # remove the custom data from our algorithm and collection
+            if customDataSymbol and self.RemoveSecurity(customDataSymbol):
+                self.customSymbols.remove(customDataSymbol)

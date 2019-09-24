@@ -34,6 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private List<Symbol> _customSymbols = new List<Symbol>();
+        private bool _toggleSelection = true;
 
         public override void Initialize()
         {
@@ -48,20 +49,29 @@ namespace QuantConnect.Algorithm.CSharp
 
         public IEnumerable<Symbol> CoarseSelector(IEnumerable<CoarseFundamental> coarse)
         {
+            if (_toggleSelection)
+            {
+                _toggleSelection = false;
+                return new[]
+                {
+                    QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
+                    QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA),
+                    QuantConnect.Symbol.Create("FB", SecurityType.Equity, Market.USA)
+                };
+            }
+            _toggleSelection = true;
             return new[]
             {
                 QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA),
-                QuantConnect.Symbol.Create("BAC", SecurityType.Equity, Market.USA),
-                QuantConnect.Symbol.Create("FB", SecurityType.Equity, Market.USA),
                 QuantConnect.Symbol.Create("GOOGL", SecurityType.Equity, Market.USA),
                 QuantConnect.Symbol.Create("GOOG", SecurityType.Equity, Market.USA),
-                QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA),
+                QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA)
             };
         }
 
         public override void OnData(Slice data)
         {
-            if (!Portfolio.Invested && Transactions.GetOpenOrders().Count == 0)
+            if (!Portfolio.Invested)
             {
                 var aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
                 SetHoldings(aapl, 0.5);
@@ -78,15 +88,23 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            bool iterated = false;
             foreach (var added in changes.AddedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Equity))
             {
-                if (!iterated)
-                {
-                    _customSymbols.Clear();
-                    iterated = true;
-                }
                 _customSymbols.Add(AddData<SECReport8K>(added.Symbol, Resolution.Daily).Symbol);
+            }
+
+            foreach (var removed in changes.RemovedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Equity))
+            {
+                // we search for the custom data which uses the removed security as underlying
+                var customDataSymbol = Securities.Keys.FirstOrDefault(symbol => symbol.ID.SecurityType == SecurityType.Base
+                                                                                && symbol.HasUnderlying
+                                                                                && symbol.Underlying == removed.Symbol);
+                // remove the custom data from our algorithm and collection
+                if (customDataSymbol != default(Symbol)
+                    && RemoveSecurity(customDataSymbol))
+                {
+                    _customSymbols.Remove(customDataSymbol);
+                }
             }
         }
 
@@ -112,18 +130,18 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "2.000%"},
             {"Expectancy", "0"},
             {"Net Profit", "-1.674%"},
-            {"Sharpe Ratio", "-5.986"},
+            {"Sharpe Ratio", "-5.737"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.363"},
+            {"Alpha", "-0.335"},
             {"Beta", "0.432"},
-            {"Annual Standard Deviation", "0.059"},
+            {"Annual Standard Deviation", "0.057"},
             {"Annual Variance", "0.003"},
-            {"Information Ratio", "-5.507"},
-            {"Tracking Error", "0.068"},
-            {"Treynor Ratio", "-0.817"},
-            {"Total Fees", "$3.50"},
+            {"Information Ratio", "-5.283"},
+            {"Tracking Error", "0.066"},
+            {"Treynor Ratio", "-0.754"},
+            {"Total Fees", "$3.50"}
         };
     }
 }
