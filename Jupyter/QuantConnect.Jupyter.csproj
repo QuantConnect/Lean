@@ -111,7 +111,7 @@
           <Link>jupyter\clr.cpython-36m-darwin.so</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="..\packages\QuantConnect.pythonnet.1.0.5.23\lib\osx\jupyter\Python.Runtime.dll">
+        <Content Include="..\packages\QuantConnect.pythonnet.1.0.5.24\lib\osx\jupyter\Python.Runtime.dll">
           <Link>jupyter\Python.Runtime.dll</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
