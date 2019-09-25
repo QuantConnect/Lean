@@ -41,7 +41,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 
         public TradingEconomicsCalendarDownloader(string destinationFolder)
         {
-            _fromDate = new DateTime(2019, 5, 1);
+            _fromDate = new DateTime(2000, 10, 1);
             _toDate = DateTime.Now;
             _destinationFolder = Path.Combine(destinationFolder, "calendar");
             // Rate limits on Trading Economics is one request per second
@@ -101,12 +101,14 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 
                     foreach (var rawData in rawCollection)
                     {
-                        rawData["IsPercentage"] = rawData["Actual"].Value<string>().Contains("%");
-                        rawData["Actual"] = ParseDecimal(rawData["Actual"].Value<string>());
-                        rawData["Previous"] = ParseDecimal(rawData["Previous"].Value<string>());
-                        rawData["Forecast"] = ParseDecimal(rawData["Forecast"].Value<string>());
-                        rawData["TEForecast"] = ParseDecimal(rawData["TEForecast"].Value<string>());
-                        rawData["Revised"] = ParseDecimal(rawData["Revised"].Value<string>());
+                        var inPercentage = rawData["Actual"].Value<string>().Contains("%");
+
+                        rawData["IsPercentage"] = inPercentage;
+                        rawData["Actual"] = ParseDecimal(rawData["Actual"].Value<string>(), inPercentage);
+                        rawData["Previous"] = ParseDecimal(rawData["Previous"].Value<string>(), inPercentage);
+                        rawData["Forecast"] = ParseDecimal(rawData["Forecast"].Value<string>(), inPercentage);
+                        rawData["TEForecast"] = ParseDecimal(rawData["TEForecast"].Value<string>(), inPercentage);
+                        rawData["Revised"] = ParseDecimal(rawData["Revised"].Value<string>(), inPercentage);
                     }
 
                     var collection = rawCollection.ToObject<List<TradingEconomicsCalendar>>();
@@ -212,7 +214,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         /// <param name="value">Value to parse</param>
         /// <returns>Nullable decimal</returns>
         /// <remarks>Will be null when we can't parse the data reliably</remarks>
-        public static decimal? ParseDecimal(string value)
+        public static decimal? ParseDecimal(string value, bool inPercent)
         {
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -238,7 +240,6 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
             var inBillions = newFigure.EndsWith("B");
             var inMillions = newFigure.EndsWith("M");
             var inThousands = newFigure.EndsWith("K");
-            var inPercent = newFigure.EndsWith("%");
 
             // Finally, remove any alphabetical characters from the string before we parse
             newFigure = Regex.Replace(newFigure, "[^0-9.+-]", "");

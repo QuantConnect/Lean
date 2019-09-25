@@ -22,18 +22,20 @@ namespace QuantConnect.Tests.ToolBox
     [TestFixture]
     public class TradingEconomicsCalendarTests
     {
-        [TestCase("2.5.0", 2.5)]
-        [TestCase("Foobar", null)]
-        [TestCase("1.0%", 0.01)]
-        [TestCase("--1.0", -1.0)]
-        [TestCase("1.0T", 1000000000000.0)]
-        [TestCase("1.0B", 1000000000.0)]
-        [TestCase("1.0M", 1000000.0)]
-        [TestCase("1.0K", 1000.0)]
-        public void DecimalIsParsedCorrectly(string value, double? expected)
+        [TestCase("2.5.0", 2.5, false)]
+        [TestCase("Foobar", null, false)]
+        [TestCase("1.0%", 0.01, true)]
+        [TestCase("--1.0", -1.0, false)]
+        [TestCase("1.0T", 1000000000000.0, false)]
+        [TestCase("1.0B", 1000000000.0, false)]
+        [TestCase("1.0M", 1000000.0, false)]
+        [TestCase("1.0K", 1000.0, false)]
+        [TestCase("1.0K%", 0.01, true)]
+        [TestCase("1", 0.01, true)]
+        public void DecimalIsParsedCorrectly(string value, double? expected, bool inPercentage)
         {
             // Cast inside since we can't pass in decimal values through TestCase attributes
-            Assert.AreEqual((decimal?)expected, TradingEconomicsCalendarDownloader.ParseDecimal(value));
+            Assert.AreEqual((decimal?)expected, TradingEconomicsCalendarDownloader.ParseDecimal(value, inPercentage));
         }
     }
 }
