@@ -37,8 +37,9 @@ namespace QuantConnect.ToolBox.SmartInsider
         /// <summary>
         /// Creates an instance of the converter
         /// </summary>
-        /// <param name="sourceFile"></param>
-        /// <param name="destinationFile"></param>
+        /// <param name="sourceDirectory">Directory to read raw data from</param>
+        /// <param name="destinationDirectory">Directory to write processed data to</param>
+        /// <param name="processedFilesDirectory">Directory to read existing processed data from</param>
         public SmartInsiderConverter(DirectoryInfo sourceDirectory, DirectoryInfo destinationDirectory, DirectoryInfo processedFilesDirectory)
         {
             _sourceDirectory = sourceDirectory;
