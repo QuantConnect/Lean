@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -57,6 +56,17 @@ namespace QuantConnect.ToolBox
             Symbol = symbol;
             _dailyDataForEquity = ReadDailyEquityData(pathForDailyEquityData);
             _lastDateFromEquityData = _dailyDataForEquity.Last().Time;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <param name="dailyEquityData"></param>
+        public FactorFileGenerator(Symbol symbol, List<TradeBar> dailyEquityData)
+        {
+            Symbol = symbol;
+            _dailyDataForEquity = dailyEquityData;
         }
 
         /// <summary>

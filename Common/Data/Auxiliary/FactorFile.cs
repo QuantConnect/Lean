@@ -311,44 +311,27 @@ namespace QuantConnect.Data.Auxiliary
                 return this;
             }
 
-            var factorFileRows = new List<FactorFileRow>();
-            var lastEntry = SortedFactorFileData.Last().Value;
-            factorFileRows.Add(lastEntry);
+            var symbol = data[0].Symbol;
+            var combinedData = GetSplitsAndDividends(symbol, exchangeHours).Concat(data).ToList();
 
-            var combinedData = GetSplitsAndDividends(data[0].Symbol, exchangeHours).Concat(data)
-                .OrderByDescending(d => d.Time.Date);
+            // we have all daily data we need to produce a new factor file
+            // no need to upload from the data folder
 
-            foreach (var datum in combinedData)
+            var dailyEquityData = SortedFactorFileData.Values
+                .Select(x => new TradeBar()
             {
-                FactorFileRow nextEntry = null;
-                var split = datum as Split;
-                var dividend = datum as Dividend;
-                if (dividend != null)
-                {
-                    nextEntry = lastEntry.Apply(dividend, exchangeHours);
-                    lastEntry = nextEntry;
-                }
-                else if (split != null)
-                {
-                    nextEntry = lastEntry.Apply(split, exchangeHours);
-                    lastEntry = nextEntry;
-                }
+                Time = x.Date,
+                Value = x.ReferencePrice
+            })
+                // concat with new data
+                .Concat(data.Select(x => new TradeBar() {Time = x.Time.AddDays(-1), Value = x.Value}))
+                .ToList();
+                
 
-                if (nextEntry != null)
-                {
-                    // overwrite the latest entry -- this handles splits/dividends on the same date
-                    if (nextEntry.Date == factorFileRows.Last().Date)
-                    {
-                        factorFileRows[factorFileRows.Count - 1] = nextEntry;
-                    }
-                    else
-                    {
-                        factorFileRows.Add(nextEntry);
-                    }
-                }
-            }
+            // so just call a second constructor and generate a new file
+            var factorFileGenerator = new FactorFileGenerator(symbol, dailyEquityData);
 
-            return new FactorFile(Permtick, factorFileRows, FactorFileMinimumDate);
+            return factorFileGenerator.CreateFactorFile(combinedData);
         }
 
         /// <summary>Returns an enumerator that iterates through the collection.</summary>

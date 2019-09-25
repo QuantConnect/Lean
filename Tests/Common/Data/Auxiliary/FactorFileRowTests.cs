@@ -17,8 +17,6 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Market;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Data.Auxiliary
 {
@@ -32,24 +30,6 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             var actual = row.ToCsv("source");
             var expected = "20000101,1,2,123,source";
             Assert.AreEqual(expected, actual);
-        }
-
-        [Test]
-        public void AppliesDividendWithPreviousTradingDateEqualToRowDate()
-        {
-            var row = new FactorFileRow(new DateTime(2018, 08, 23), 1m, 2m, 123m);
-            var dividend = new Dividend(Symbols.SPY, row.Date.AddDays(1), 1m, 123m);
-            var updated = row.Apply(dividend, SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
-            Assert.AreEqual("20180823,0.99187,2,123", updated.ToCsv());
-        }
-
-        [Test]
-        public void AppliesSplitWithPreviousTradingDateEqualToRowDate()
-        {
-            var row = new FactorFileRow(new DateTime(2018, 08, 23), 1m, 2m, 123m);
-            var dividend = new Split(Symbols.SPY, row.Date.AddDays(1), 123m, 2m, SplitType.SplitOccurred);
-            var updated = row.Apply(dividend, SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
-            Assert.AreEqual("20180823,1,4,123", updated.ToCsv());
         }
     }
 }

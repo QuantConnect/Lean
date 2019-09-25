@@ -152,83 +152,6 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
-        /// Applies the dividend to this factor file row.
-        /// This dividend date must be on or before the factor
-        /// file row date
-        /// </summary>
-        /// <param name="dividend">The dividend to apply with reference price and distribution specified</param>
-        /// <param name="exchangeHours">Exchange hours used for resolving the previous trading day</param>
-        /// <returns>A new factor file row that applies the dividend to this row's factors</returns>
-        public FactorFileRow Apply(Dividend dividend, SecurityExchangeHours exchangeHours)
-        {
-            if (dividend.ReferencePrice == 0m)
-            {
-                throw new ArgumentException("Unable to apply dividend with reference price of zero.");
-            }
-
-            var previousTradingDay = exchangeHours.GetPreviousTradingDay(dividend.Time);
-
-            // this instance must be chronologically at or in front of the dividend
-            // this is because the factors are defined working from current to past
-            if (Date < previousTradingDay)
-            {
-                throw new ArgumentException(Invariant(
-                    $"Factor file row date '{Date:yyy-MM-dd}' is before dividend previous trading date '{previousTradingDay.Date:yyyy-MM-dd}'."
-                ));
-            }
-
-            // pfi - new price factor pf(i+1) - this price factor D - distribution C - previous close
-            // pfi = pf(i+1) * (C-D)/C
-            var priceFactor = PriceFactor * (dividend.ReferencePrice - dividend.Distribution) / dividend.ReferencePrice;
-
-            return new FactorFileRow(
-                previousTradingDay,
-                priceFactor,
-                SplitFactor,
-                dividend.ReferencePrice
-            );
-        }
-
-        /// <summary>
-        /// Applies the split to this factor file row.
-        /// This split date must be on or before the factor
-        /// file row date
-        /// </summary>
-        /// <param name="split">The split to apply with reference price and split factor specified</param>
-        /// <param name="exchangeHours">Exchange hours used for resolving the previous trading day</param>
-        /// <returns>A new factor file row that applies the split to this row's factors</returns>
-        public FactorFileRow Apply(Split split, SecurityExchangeHours exchangeHours)
-        {
-            if (split.Type == SplitType.Warning)
-            {
-                throw new ArgumentException("Unable to apply split with type warning. Only actual splits may be applied");
-            }
-
-            if (split.ReferencePrice == 0m)
-            {
-                throw new ArgumentException("Unable to apply split with reference price of zero.");
-            }
-
-            var previousTradingDay = exchangeHours.GetPreviousTradingDay(split.Time);
-
-            // this instance must be chronologically at or in front of the split
-            // this is because the factors are defined working from current to past
-            if (Date < previousTradingDay)
-            {
-                throw new ArgumentException(Invariant(
-                    $"Factor file row date '{Date:yyy-MM-dd}' is before split date '{split.Time.Date:yyyy-MM-dd}'."
-                ));
-            }
-
-            return new FactorFileRow(
-                previousTradingDay,
-                PriceFactor,
-                SplitFactor * split.SplitFactor,
-                split.ReferencePrice
-            );
-        }
-
-        /// <summary>
         /// Creates a new dividend from this factor file row and the one chronologically in front of it
         /// This dividend may have a distribution of zero if this row doesn't represent a dividend
         /// </summary>
@@ -245,12 +168,12 @@ namespace QuantConnect.Data.Auxiliary
                 ));
             }
 
-            // find previous trading day
-            var previousTradingDay = exchangeHours.GetNextTradingDay(Date);
+            // find next trading day
+            var nextTradingDay = exchangeHours.GetNextTradingDay(Date);
 
             return Dividend.Create(
                 symbol,
-                previousTradingDay,
+                nextTradingDay,
                 ReferencePrice,
                 PriceFactor / futureFactorFileRow.PriceFactor
             );
@@ -273,12 +196,12 @@ namespace QuantConnect.Data.Auxiliary
                 ));
             }
 
-            // find previous trading day
-            var previousTradingDay = exchangeHours.GetNextTradingDay(Date);
+            // find next trading day
+            var nextTradingDay = exchangeHours.GetNextTradingDay(Date);
 
             return new Split(
                 symbol,
-                previousTradingDay,
+                nextTradingDay,
                 ReferencePrice,
                 SplitFactor / futureFactorFileRow.SplitFactor,
                 SplitType.SplitOccurred
@@ -306,9 +229,9 @@ namespace QuantConnect.Data.Auxiliary
         {
             source = source == null ? "" : $",{source}";
             return $"{Date.ToStringInvariant(DateFormat.EightCharacter)}," +
-                   $"{PriceFactor.Normalize()}," +
-                   $"{SplitFactor.Normalize()}," +
-                   $"{ReferencePrice.Normalize()}{source}";
+                   Invariant($"{PriceFactor.Normalize()},") +
+                   Invariant($"{SplitFactor.Normalize()},") +
+                   Invariant($"{ReferencePrice.Normalize()}{source}");
         }
 
         /// <summary>
