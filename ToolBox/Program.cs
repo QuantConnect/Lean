@@ -261,7 +261,8 @@ namespace QuantConnect.ToolBox
                         SmartInsiderProgram.SmartInsiderConverter(
                             DateTime.ParseExact(GetParameterOrExit(optionsObject, "date"), "yyyyMMdd", CultureInfo.InvariantCulture),
                             GetParameterOrExit(optionsObject, "source-dir"),
-                            GetParameterOrExit(optionsObject, "destination-dir"));
+                            GetParameterOrExit(optionsObject, "destination-dir"),
+                            GetParameterOrDefault(optionsObject, "source-meta-dir", Path.Combine(Globals.DataFolder, "alternative", "smartinsider")));
                         break;
 
                     default:

@@ -23,9 +23,19 @@ namespace QuantConnect.ToolBox.SmartInsider
         /// <summary>
         /// Converts Smart Insider data
         /// </summary>
-        public static void SmartInsiderConverter(DateTime date, string sourceDirectory, string destinationDirectory)
+        public static void SmartInsiderConverter(DateTime date, string sourceDirectory, string destinationDirectory, string processedFileDirectory = null)
         {
-            var converter = new SmartInsiderConverter(new DirectoryInfo(sourceDirectory), new DirectoryInfo(destinationDirectory));
+            // Default to the Data Folder Smart Insider data directory if no argument is passed
+            if (string.IsNullOrEmpty(processedFileDirectory))
+            {
+                processedFileDirectory = Path.Combine(Globals.DataFolder, "alternative", "smartinsider");
+            }
+
+            var converter = new SmartInsiderConverter(
+                new DirectoryInfo(sourceDirectory),
+                new DirectoryInfo(destinationDirectory),
+                new DirectoryInfo(processedFileDirectory));
+
             converter.Convert(date);
         }
     }
