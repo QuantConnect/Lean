@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -25,6 +26,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class DefaultDataProvider : IDataProvider, IDisposable
     {
+        /// <summary>
+        /// We keep a cache of the missing directories so we don't check disk every time
+        /// </summary>
+        /// <remarks>Using the directory string hash code as key since we don't want to recuperate the string,
+        /// and this will reduce memory usage.</remarks>
+        private static readonly ConcurrentDictionary<int, bool> MissingDirectoriesCache
+            = new ConcurrentDictionary<int, bool>();
+
         /// <summary>
         /// Retrieves data from disc to be used in an algorithm
         /// </summary>
@@ -41,7 +50,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (exception is DirectoryNotFoundException
                     || exception is FileNotFoundException)
                 {
-                    Log.Error("DefaultDataProvider.Fetch(): The specified file was not found: {0}", key);
+                    try
+                    {
+                        // lets check if the parent directory is not present, if this is the case lets
+                        // log the directory was not found, versus the file, to avoid spamming the log
+                        var directoryName = new FileInfo(key).Directory.FullName;
+                        var cacheKey = directoryName.GetHashCode();
+                        bool directoryIsMissing;
+                        if (!MissingDirectoriesCache.TryGetValue(cacheKey, out directoryIsMissing) || directoryIsMissing)
+                        {
+                            if (!directoryIsMissing)
+                            {
+                                // wasn't in the cache, `TryGetValue` will set the bool to its default value: false
+                                MissingDirectoriesCache[cacheKey] = directoryIsMissing = !Directory.Exists(directoryName);
+                            }
+
+                            if (directoryIsMissing)
+                            {
+                                Log.Error($"DefaultDataProvider.Fetch(): The specified directory was not found: {directoryName}");
+                                return null;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // pass, just in case, we don't want to lose original exception
+                    }
+                    Log.Error($"DefaultDataProvider.Fetch(): The specified file was not found: {key}");
                     return null;
                 }
                 throw;
