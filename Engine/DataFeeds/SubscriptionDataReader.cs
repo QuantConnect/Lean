@@ -448,16 +448,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void AttachEventHandlers(ISubscriptionDataSourceReader dataSourceReader, SubscriptionDataSource source)
         {
+            // NOTE: There seems to be some overlap in InvalidSource and CreateStreamReaderError
+            //       this may be worthy of further investigation and potential consolidation of events.
+
             // handle missing files
             dataSourceReader.InvalidSource += (sender, args) =>
             {
                 switch (args.Source.TransportMedium)
                 {
-                    case SubscriptionTransportMedium.LocalFile:
-                        // the local uri doesn't exist, write an error and return null so we we don't try to get data for today
-                        // Log.Trace(string.Format("SubscriptionDataReader.GetReader(): Could not find QC Data, skipped: {0}", source));
-                        break;
-
                     case SubscriptionTransportMedium.RemoteFile:
                         OnDownloadFailed(
                             new DownloadFailedEventArgs(
@@ -479,7 +477,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var textSubscriptionFactory = (TextSubscriptionDataSourceReader)dataSourceReader;
                 textSubscriptionFactory.CreateStreamReaderError += (sender, args) =>
                 {
-                    //Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
                     if (_config.IsCustomData)
                     {
                         OnDownloadFailed(
