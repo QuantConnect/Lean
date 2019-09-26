@@ -132,7 +132,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Consolidators that are registred with this subscription
         /// </summary>
-        public readonly HashSet<IDataConsolidator> Consolidators;
+        public readonly ISet<IDataConsolidator> Consolidators;
 
         /// <summary>
         /// Gets whether or not this subscription should have filters applied to it (market hours/user filters from security)
@@ -188,7 +188,7 @@ namespace QuantConnect.Data
             DataTimeZone = dataTimeZone;
             ExchangeTimeZone = exchangeTimeZone;
             IsFilteredSubscription = isFilteredSubscription;
-            Consolidators = new HashSet<IDataConsolidator>();
+            Consolidators = new ConcurrentSet<IDataConsolidator>();
             DataNormalizationMode = dataNormalizationMode;
 
             TickType = tickType ?? LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);

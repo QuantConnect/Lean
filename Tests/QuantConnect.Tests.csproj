@@ -326,6 +326,7 @@
     <Compile Include="Common\Statistics\KellyCriterionManagerTests.cs" />
     <Compile Include="Common\ParseTests.cs" />
     <Compile Include="Common\StringExtensionsTests.cs" />
+    <Compile Include="Common\Util\ConcurrentSetTests.cs" />
     <Compile Include="Common\Util\RateGateTests.cs" />
     <Compile Include="Common\Util\ListComparerTests.cs" />
     <Compile Include="Common\Util\SeriesJsonConverterTests.cs" />

@@ -723,6 +723,7 @@
     <Compile Include="Util\BusyCollection.cs" />
     <Compile Include="Util\CircularQueue.cs" />
     <Compile Include="Util\Composer.cs" />
+    <Compile Include="Util\ConcurrentSet.cs" />
     <Compile Include="Util\DateTimeJsonConverter.cs" />
     <Compile Include="Util\DisposableExtensions.cs" />
     <Compile Include="Util\DoubleUnixSecondsDateTimeJsonConverter.cs" />
