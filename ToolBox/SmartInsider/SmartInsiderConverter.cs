@@ -249,7 +249,7 @@ namespace QuantConnect.ToolBox.SmartInsider
 
                 if (processedFile.Exists)
                 {
-                    Log.Trace($"SmartInsiderConverter.WriteToFile(): Writing to existing file: {finalFile.FullName}");
+                    Log.Trace($"SmartInsiderConverter.WriteToFile(): Writing from existing processed contents to file: {finalFile.FullName}");
                     fileContents = File.ReadAllLines(processedFile.FullName)
                         .Select(x => (T)CreateSmartInsiderInstance<T>(x))
                         .ToList();
