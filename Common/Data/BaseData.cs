@@ -150,6 +150,16 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Indicates that the data set is expected to be sparse
+        /// </summary>
+        /// <returns>True if the data set represented by this type is expected to be sparse</returns>
+        public virtual bool IsSparseData()
+        {
+            // by default, we'll assume all custom data is sparse data
+            return Symbol.SecurityType == SecurityType.Base;
+        }
+
+        /// <summary>
         /// Updates this base data with a new trade
         /// </summary>
         /// <param name="lastTrade">The price of the last trade</param>
