@@ -17,7 +17,6 @@ using QuantConnect.Logging;
 using System;
 using System.Linq;
 using System.IO;
-using System.Text;
 using QuantConnect.Data.Custom.SmartInsider;
 using QuantConnect.Util;
 using QuantConnect.Interfaces;
@@ -31,17 +30,22 @@ namespace QuantConnect.ToolBox.SmartInsider
     {
         private readonly DirectoryInfo _sourceDirectory;
         private readonly DirectoryInfo _destinationDirectory;
+        private readonly DirectoryInfo _processedFilesDirectory;
+
         private readonly MapFileResolver _mapFileResolver;
 
         /// <summary>
         /// Creates an instance of the converter
         /// </summary>
-        /// <param name="sourceFile"></param>
-        /// <param name="destinationFile"></param>
-        public SmartInsiderConverter(DirectoryInfo sourceDirectory, DirectoryInfo destinationDirectory)
+        /// <param name="sourceDirectory">Directory to read raw data from</param>
+        /// <param name="destinationDirectory">Directory to write processed data to</param>
+        /// <param name="processedFilesDirectory">Directory to read existing processed data from</param>
+        public SmartInsiderConverter(DirectoryInfo sourceDirectory, DirectoryInfo destinationDirectory, DirectoryInfo processedFilesDirectory)
         {
             _sourceDirectory = sourceDirectory;
             _destinationDirectory = destinationDirectory;
+            _processedFilesDirectory = processedFilesDirectory;
+
             _mapFileResolver = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))
                 .Get(Market.USA);
 
@@ -230,7 +234,7 @@ namespace QuantConnect.ToolBox.SmartInsider
         /// <summary>
         /// Writes to a temp file and moves the content to the final directory
         /// </summary>
-        /// <param name="finalFile">Final file to write to</param>
+        /// <param name="destinationDirectory">Directory to write final file to</param>
         /// <param name="contents">Contents to write to file</param>
         private void WriteToFile<T>(DirectoryInfo destinationDirectory, Dictionary<string, List<T>> contents)
             where T : SmartInsiderEvent
@@ -240,12 +244,13 @@ namespace QuantConnect.ToolBox.SmartInsider
                 var ticker = kvp.Key.ToLowerInvariant();
 
                 var finalFile = new FileInfo(Path.Combine(destinationDirectory.FullName, $"{ticker}.tsv"));
+                var processedFile = new FileInfo(Path.Combine(_processedFilesDirectory.FullName, destinationDirectory.Name, $"{ticker}.tsv"));
                 var fileContents = new List<T>();
 
-                if (finalFile.Exists)
+                if (processedFile.Exists)
                 {
-                    Log.Trace($"SmartInsiderConverter.WriteToFile(): Writing to existing file: {finalFile.FullName}");
-                    fileContents = File.ReadAllLines(finalFile.FullName)
+                    Log.Trace($"SmartInsiderConverter.WriteToFile(): Writing from existing processed contents to file: {finalFile.FullName}");
+                    fileContents = File.ReadAllLines(processedFile.FullName)
                         .Select(x => (T)CreateSmartInsiderInstance<T>(x))
                         .ToList();
                 }
