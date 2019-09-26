@@ -262,7 +262,7 @@ namespace QuantConnect.ToolBox
                             DateTime.ParseExact(GetParameterOrExit(optionsObject, "date"), "yyyyMMdd", CultureInfo.InvariantCulture),
                             GetParameterOrExit(optionsObject, "source-dir"),
                             GetParameterOrExit(optionsObject, "destination-dir"),
-                            GetParameterOrDefault(optionsObject, "source-meta-dir", Path.Combine(Globals.DataFolder, "alternative", "smartinsider")));
+                            GetParameterOrDefault(optionsObject, "source-meta-dir", null));
                         break;
 
                     default:

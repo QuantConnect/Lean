@@ -26,7 +26,7 @@ namespace QuantConnect.ToolBox.SmartInsider
         public static void SmartInsiderConverter(DateTime date, string sourceDirectory, string destinationDirectory, string processedFileDirectory = null)
         {
             // Default to the Data Folder Smart Insider data directory if no argument is passed
-            if (string.IsNullOrEmpty(processedFileDirectory))
+            if (string.IsNullOrWhiteSpace(processedFileDirectory))
             {
                 processedFileDirectory = Path.Combine(Globals.DataFolder, "alternative", "smartinsider");
             }

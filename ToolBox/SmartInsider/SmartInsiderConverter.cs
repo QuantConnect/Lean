@@ -234,7 +234,7 @@ namespace QuantConnect.ToolBox.SmartInsider
         /// <summary>
         /// Writes to a temp file and moves the content to the final directory
         /// </summary>
-        /// <param name="finalFile">Final file to write to</param>
+        /// <param name="destinationDirectory">Directory to write final file to</param>
         /// <param name="contents">Contents to write to file</param>
         private void WriteToFile<T>(DirectoryInfo destinationDirectory, Dictionary<string, List<T>> contents)
             where T : SmartInsiderEvent
