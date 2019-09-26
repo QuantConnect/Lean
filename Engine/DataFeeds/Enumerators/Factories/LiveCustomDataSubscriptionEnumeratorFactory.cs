@@ -54,7 +54,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             // also provides some immediate fast-forward to handle spooling through remote files quickly
             var frontier = Ref.Create(request.StartTimeLocal);
             var lastSourceRefreshTime = DateTime.MinValue;
-            var sourceFactory = config.Type.GetBaseDataInstance();
+            var sourceFactory = config.GetBaseDataInstance();
 
             // this is refreshing the enumerator stack for each new source
             var refresher = new RefreshEnumerator<BaseData>(() =>

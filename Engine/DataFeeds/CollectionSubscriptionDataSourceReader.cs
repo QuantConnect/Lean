@@ -47,7 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _date = date;
             _config = config;
             _isLiveMode = isLiveMode;
-            _factory = _config.Type.GetBaseDataInstance();
+            _factory = _config.GetBaseDataInstance();
         }
 
         /// <summary>

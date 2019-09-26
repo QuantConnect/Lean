@@ -169,7 +169,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Save the type of data we'll be getting from the source.
             try
             {
-                _dataFactory = _config.Type.GetBaseDataInstance();
+                _dataFactory = _config.GetBaseDataInstance();
             }
             catch (ArgumentException exception)
             {
@@ -213,7 +213,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // load up the map files for equities, options, and custom data if it supports it.
             // Only load up factor files for equities
-            if (_config.TickerShouldBeMapped())
+            if (_dataFactory.RequiresMapping())
             {
                 try
                 {
