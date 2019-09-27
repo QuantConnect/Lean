@@ -75,31 +75,25 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// Latest released value
         /// </summary>
         [JsonProperty(PropertyName = "Actual")]
-        public string Actual { get; set; }
+        public decimal? Actual { get; set; }
 
         /// <summary>
         /// Value for the previous period after the revision (if revision is applicable)
         /// </summary>
         [JsonProperty(PropertyName = "Previous")]
-        public string Previous { get; set; }
+        public decimal? Previous { get; set; }
 
         /// <summary>
         /// Average forecast among a representative group of economists
         /// </summary>
         [JsonProperty(PropertyName = "Forecast")]
-        public string Forecast { get; set; }
+        public decimal? Forecast { get; set; }
 
         /// <summary>
         /// TradingEconomics own projections
         /// </summary>
         [JsonProperty(PropertyName = "TEForecast")]
-        public string TradingEconomicsForecast { get; set; }
-
-        /// <summary>
-        /// Hyperlink at Trading Economics
-        /// </summary>
-        [JsonProperty(PropertyName = "URL")]
-        public string Url { get; set; }
+        public decimal? TradingEconomicsForecast { get; set; }
 
         /// <summary>
         /// 0 indicates that the time of the event is known,
@@ -127,7 +121,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// If there is no revision field remains empty
         /// </remarks>
         [JsonProperty(PropertyName = "Revised")]
-        public string Revised { get; set; }
+        public decimal? Revised { get; set; }
 
         /// <summary>
         /// Country�s original name
@@ -152,6 +146,11 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// </summary>
         [JsonProperty(PropertyName = "Symbol")]
         public string TESymbol { get; set; }
+
+        /// <summary>
+        /// Indicates whether the Actual, Previous, Forecast, TradingEconomicsForecast fields are reported as percent values
+        /// </summary>
+        public bool IsPercentage { get; set; }
 
         /// <summary>
         /// Return the Subscription Data Source gained from the URL
@@ -210,7 +209,6 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 Previous = Previous,
                 Forecast = Forecast,
                 TradingEconomicsForecast = TradingEconomicsForecast,
-                Url = Url,
                 DateSpan = DateSpan,
                 Importance = Importance,
                 LastUpdate = LastUpdate,
@@ -219,8 +217,10 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 OCategory = OCategory,
                 Ticker = Ticker,
                 TESymbol = TESymbol,
-                Symbol = Symbol,
+                IsPercentage = IsPercentage,
 
+
+                Symbol = Symbol,
                 Time = Time
             };
         }

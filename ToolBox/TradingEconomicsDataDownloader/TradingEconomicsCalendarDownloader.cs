@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,14 +14,17 @@
 */
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Data.Custom.TradingEconomics;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
@@ -38,7 +41,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 
         public TradingEconomicsCalendarDownloader(string destinationFolder)
         {
-            _fromDate = new DateTime(2000, 10, 01);
+            _fromDate = new DateTime(2000, 10, 1);
             _toDate = DateTime.Now;
             _destinationFolder = Path.Combine(destinationFolder, "calendar");
             // Rate limits on Trading Economics is one request per second
@@ -94,13 +97,27 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                     _requestGate.WaitToProceed(TimeSpan.FromSeconds(1));
 
                     var content = Get(startUtc, endUtc).Result;
-                    var collection = JsonConvert.DeserializeObject<List<TradingEconomicsCalendar>>(content);
+                    var rawCollection = JsonConvert.DeserializeObject<JArray>(content);
+
+                    foreach (var rawData in rawCollection)
+                    {
+                        var inPercentage = rawData["Actual"].Value<string>().Contains("%");
+
+                        rawData["IsPercentage"] = inPercentage;
+                        rawData["Actual"] = ParseDecimal(rawData["Actual"].Value<string>(), inPercentage);
+                        rawData["Previous"] = ParseDecimal(rawData["Previous"].Value<string>(), inPercentage);
+                        rawData["Forecast"] = ParseDecimal(rawData["Forecast"].Value<string>(), inPercentage);
+                        rawData["TEForecast"] = ParseDecimal(rawData["TEForecast"].Value<string>(), inPercentage);
+                        rawData["Revised"] = ParseDecimal(rawData["Revised"].Value<string>(), inPercentage);
+                    }
+
+                    var collection = rawCollection.ToObject<List<TradingEconomicsCalendar>>();
 
                     // Only write data that contains the "actual" field so that we get the final
                     // piece of unchanging data in order to maintain backwards consistency with
                     // the given data since we can't get historical snapshots of the data
                     var onlyActual = collection
-                        .Where(x => !string.IsNullOrEmpty(x.Actual))
+                        .Where(x => x.Actual.HasValue)
                         .ToList();
 
                     var totalFiltered = collection.Count - onlyActual.Count;
@@ -189,6 +206,78 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         {
             var url = $"/calendar/country/all/{startUtc.ToStringInvariant("yyyy-MM-dd")}/{endUtc.ToStringInvariant("yyyy-MM-dd")}";
             return HttpRequester(url);
+        }
+
+        /// <summary>
+        /// Parse decimal from calendar data
+        /// </summary>
+        /// <param name="value">Value to parse</param>
+        /// <returns>Nullable decimal</returns>
+        /// <remarks>Will be null when we can't parse the data reliably</remarks>
+        public static decimal? ParseDecimal(string value, bool inPercent)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            // Remove dollar signs from values
+            // Remove (P) and (R) from values
+            // Edge cases: values are reported as XYZ.5.1B, -4-XYZ
+            var newFigure = value.Replace("$", "")
+                .Replace("(P)", "")
+                .Replace("(R)", "")
+                .Replace("--", "-")
+                .Replace(".5.1", ".5")
+                .Replace("-4-", "-");
+
+            if (newFigure.EndsWith("."))
+            {
+                newFigure = newFigure.Substring(0, newFigure.Length - 1);
+            }
+
+            var inTrillions = newFigure.EndsWith("T");
+            var inBillions = newFigure.EndsWith("B");
+            var inMillions = newFigure.EndsWith("M");
+            var inThousands = newFigure.EndsWith("K");
+
+            // Finally, remove any alphabetical characters from the string before we parse
+            newFigure = Regex.Replace(newFigure, "[^0-9.+-]", "");
+
+            while (Regex.IsMatch(newFigure, @"(\.[0-9]+\.)"))
+            {
+                newFigure = newFigure.Substring(0, newFigure.Length - 1);
+            }
+
+            if (string.IsNullOrWhiteSpace(newFigure))
+            {
+                // U.S. Presidential election is unparsable as decimal.
+                // Other events similar to it might exist as well.
+                return null;
+            }
+
+            if (inPercent)
+            {
+                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) / 100m;
+            }
+            else if (inTrillions)
+            {
+                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000000000000m;
+            }
+            else if (inBillions)
+            {
+                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000000000m;
+            }
+            else if (inMillions)
+            {
+                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000000m;
+            }
+            else if (inThousands)
+            {
+                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000m;
+            }
+
+            return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture);
         }
     }
 }
