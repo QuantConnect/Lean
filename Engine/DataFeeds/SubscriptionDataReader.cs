@@ -462,12 +462,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 $"Error downloading custom data source file, skipped: {source} " +
                                 $"Error: {args.Exception.Message}", args.Exception.StackTrace));
                         break;
-
-                    case SubscriptionTransportMedium.Rest:
-                        break;
-
-                    default:
-                        throw new ArgumentOutOfRangeException();
                 }
             };
 
