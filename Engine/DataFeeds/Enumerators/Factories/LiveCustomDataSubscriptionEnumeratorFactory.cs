@@ -98,7 +98,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     enumerator = enumerator.SelectMany(data =>
                     {
                         var collection = data as BaseDataCollection;
-                        return collection?.Data.GetEnumerator() ?? new List<BaseData> {data}.GetEnumerator();
+                        IEnumerator<BaseData> collectionEnumerator;
+                        if (collection != null)
+                        {
+                            if (source.TransportMedium == SubscriptionTransportMedium.Rest)
+                            {
+                                // we want to make sure the data points we *unroll* are not past
+                                collectionEnumerator = collection.Data
+                                    .Where(baseData => baseData.EndTime > frontier.Value)
+                                    .GetEnumerator();
+                            }
+                            else
+                            {
+                                collectionEnumerator = collection.Data.GetEnumerator();
+                            }
+                        }
+                        else
+                        {
+                            collectionEnumerator = new List<BaseData> { data }.GetEnumerator();
+                        }
+                        return collectionEnumerator;
                     });
                 }
 
@@ -126,14 +145,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     else if (!SourceRequiresFastForward(source))
                     {
                         // if the 'source' is Rest and there is no new value,
-                        // we return null, else we will be caught in a tight loop
+                        // we *break*, else we will be caught in a tight loop
                         // because Rest source never ends!
-                        yield return null;
+                        // edit: we 'break' vs 'return null' so that the source is refreshed
+                        // allowing date changes to impact the source value
+                        // note it will respect 'minimumTimeBetweenCalls'
+                        break;
                     }
 
                     if (datum != null)
                     {
                         newLocalFrontier = Time.Max(datum.EndTime, newLocalFrontier);
+
+                        if (!SourceRequiresFastForward(source))
+                        {
+                            // if the 'source' is Rest we need to update the localFrontier here
+                            // because Rest source never ends!
+                            // Should be advance frontier for all source types here?
+                            localFrontier.Value = newLocalFrontier;
+                        }
                     }
                 }
 

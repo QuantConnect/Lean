@@ -299,6 +299,7 @@
     <Compile Include="Common\Data\CalendarConsolidatorsTests.cs" />
     <Compile Include="Common\Data\Custom\EstimizeTests.cs" />
     <Compile Include="Common\Data\DynamicDataTests.cs" />
+    <Compile Include="Common\Data\Custom\TiingoNewsJsonConverterTests.cs" />
     <Compile Include="Common\Data\Fundamental\MultiPeriodFieldTests.cs" />
     <Compile Include="Common\Data\MockSubscriptionDataConfigProvider.cs" />
     <Compile Include="Common\Data\UniverseSelection\UniverseTests.cs" />
@@ -343,6 +344,7 @@
     <Compile Include="Engine\DataFeeds\Enumerators\Factories\FuturesChainUniverseSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\AuxiliaryDataEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\PriceScaleFactorEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\IndexSubscriptionDataSourceReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\LiveCoarseUniverseTests.cs" />
     <Compile Include="Engine\DataFeeds\MockDataFeed.cs" />
     <Compile Include="Engine\DataFeeds\PendingRemovalsManagerTests.cs" />

@@ -54,6 +54,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     reader = new ZipEntryNameSubscriptionDataSourceReader(config, date, isLiveMode);
                     break;
 
+                case FileFormat.Index:
+                    return new IndexSubscriptionDataSourceReader(dataCacheProvider, config, date, isLiveMode);
+
                 default:
                     throw new NotImplementedException("SubscriptionFactory.ForSource(" + source + ") has not been implemented yet.");
             }

@@ -253,6 +253,9 @@
     <Compile Include="Data\Custom\SEC\SECReport10K.cs" />
     <Compile Include="Data\Custom\SEC\SECReportIndexFile.cs" />
     <Compile Include="Data\Custom\SEC\SECReportSubmission.cs" />
+    <Compile Include="Data\Custom\Tiingo\TiingoNewsData.cs" />
+    <Compile Include="Data\Custom\Tiingo\TiingoNewsJsonConverter.cs" />
+    <Compile Include="Data\Custom\Tiingo\TiingoSymbolMapper.cs" />
     <Compile Include="Data\Custom\TradingEconomics\TradingEconomics.cs" />
     <Compile Include="Data\Custom\TradingEconomics\TradingEconomicsEarnings.cs" />
     <Compile Include="Data\Custom\TradingEconomics\TradingEconomicsIndicator.cs" />
@@ -272,6 +275,7 @@
     <Compile Include="Data\Custom\SmartInsider\SmartInsiderEvent.cs" />
     <Compile Include="Data\Custom\SmartInsider\SmartInsiderIntention.cs" />
     <Compile Include="Data\Custom\SmartInsider\SmartInsiderTransaction.cs" />
+    <Compile Include="Data\IndexedBasedData.cs" />
     <Compile Include="Data\SubscriptionDataConfigExtensions.cs" />
     <Compile Include="Expiry.cs" />
     <Compile Include="HistoryProviderEvents.cs" />
