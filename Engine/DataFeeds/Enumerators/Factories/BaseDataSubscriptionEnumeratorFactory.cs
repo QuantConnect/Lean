@@ -68,14 +68,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <returns>An enumerator reading the subscription request</returns>
         public IEnumerator<BaseData> CreateEnumerator(SubscriptionRequest request, IDataProvider dataProvider)
         {
-            var sourceFactory = request.Configuration.Type.GetBaseDataInstance();
-            var useMapFiles = request.Configuration.TickerShouldBeMapped();
+            var sourceFactory = request.Configuration.GetBaseDataInstance();
 
             using (var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider))
             {
                 foreach (var date in _tradableDaysProvider(request))
                 {
-                    if (useMapFiles)
+                    if (sourceFactory.RequiresMapping())
                     {
                         request.Configuration.MappedSymbol = GetMappedSymbol(request.Configuration, date);
                     }

@@ -141,11 +141,12 @@ namespace QuantConnect.Algorithm
         /// <returns>The new <see cref="Security"/></returns>
         public Security AddData(Type dataType, string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
+            // NOTE: Invoking methods on BaseData w/out setting the symbol may provide unexpected behavior
             var baseInstance = dataType.GetBaseDataInstance();
             if (!baseInstance.RequiresMapping())
             {
                 var symbol = new Symbol(
-                    SecurityIdentifier.GenerateBase(dataType, ticker, Market.USA, dataType.GetBaseDataInstance().RequiresMapping()),
+                    SecurityIdentifier.GenerateBase(dataType, ticker, Market.USA, baseInstance.RequiresMapping()),
                     ticker);
                 return AddDataImpl(dataType, symbol, resolution, timeZone, fillDataForward, leverage);
             }

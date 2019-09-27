@@ -47,7 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _date = date;
             _config = config;
             _isLiveMode = isLiveMode;
-            _factory = _config.Type.GetBaseDataInstance();
+            _factory = _config.GetBaseDataInstance();
         }
 
         /// <summary>
@@ -93,6 +93,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 catch (Exception e)
                 {
                     OnInvalidSource(source, e);
+                    yield break;
+                }
+
+                if (reader.EndOfStream)
+                {
+                    OnInvalidSource(source, new Exception($"The reader was empty for source: ${source.Source}"));
                     yield break;
                 }
 

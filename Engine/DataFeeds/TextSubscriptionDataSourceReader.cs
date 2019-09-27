@@ -81,7 +81,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _date = date;
             _config = config;
             _isLiveMode = isLiveMode;
-            _factory = config.Type.GetBaseDataInstance();
+            _factory = config.GetBaseDataInstance();
             _shouldCacheDataPoints = !_config.IsCustomData && _config.Resolution >= Resolution.Hour
                 && _config.Type != typeof(FineFundamental) && _config.Type != typeof(CoarseFundamental)
 		&& !_dataCacheProvider.IsDataEphemeral;

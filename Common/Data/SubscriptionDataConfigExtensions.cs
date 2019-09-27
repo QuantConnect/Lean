@@ -116,10 +116,18 @@ namespace QuantConnect.Data
         public static bool TickerShouldBeMapped(this SubscriptionDataConfig config)
         {
             // we create an instance of the data type, if it is a custom type
-            // it can override RequiresMapping else it will use security type
+            // it can override RequiresMapping else it will use security type\
+            return config.GetBaseDataInstance().RequiresMapping();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseData"/> type defined in <paramref name="config"/> with the symbol properly set
+        /// </summary>
+        public static BaseData GetBaseDataInstance(this SubscriptionDataConfig config)
+        {
             var instance = config.Type.GetBaseDataInstance();
             instance.Symbol = config.Symbol;
-            return instance.RequiresMapping();
+            return instance;
         }
     }
 }
