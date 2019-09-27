@@ -125,56 +125,72 @@ namespace QuantConnect.Util
             /// </summary>
             [JsonProperty("dataTimeZone")]
             public string DataTimeZone;
+
             /// <summary>
             /// The exchange's time zone id from the tzdb
             /// </summary>
             [JsonProperty("exchangeTimeZone")]
             public string ExchangeTimeZone;
+
             /// <summary>
             /// Sunday market hours segments
             /// </summary>
             [JsonProperty("sunday")]
             public List<MarketHoursSegment> Sunday;
+
             /// <summary>
             /// Monday market hours segments
             /// </summary>
             [JsonProperty("monday")]
             public List<MarketHoursSegment> Monday;
+
             /// <summary>
             /// Tuesday market hours segments
             /// </summary>
             [JsonProperty("tuesday")]
             public List<MarketHoursSegment> Tuesday;
+
             /// <summary>
             /// Wednesday market hours segments
             /// </summary>
             [JsonProperty("wednesday")]
             public List<MarketHoursSegment> Wednesday;
+
             /// <summary>
             /// Thursday market hours segments
             /// </summary>
             [JsonProperty("thursday")]
             public List<MarketHoursSegment> Thursday;
+
             /// <summary>
             /// Friday market hours segments
             /// </summary>
             [JsonProperty("friday")]
             public List<MarketHoursSegment> Friday;
+
             /// <summary>
             /// Saturday market hours segments
             /// </summary>
             [JsonProperty("saturday")]
             public List<MarketHoursSegment> Saturday;
+
             /// <summary>
             /// Holiday date strings
             /// </summary>
             [JsonProperty("holidays")]
             public List<string> Holidays;
+
             /// <summary>
             /// Early closes by date
             /// </summary>
             [JsonProperty("earlyCloses")]
             public Dictionary<string, TimeSpan> EarlyCloses = new Dictionary<string, TimeSpan>();
+
+            /// <summary>
+            /// Late opens by date
+            /// </summary>
+            [JsonProperty("lateOpens")]
+            public Dictionary<string, TimeSpan> LateOpens = new Dictionary<string, TimeSpan>();
 
             /// <summary>
             /// Initializes a new instance of the <see cref="MarketHoursDatabaseEntryJson"/> class
@@ -214,7 +230,8 @@ namespace QuantConnect.Util
                 };
                 var holidayDates = Holidays.Select(x => DateTime.ParseExact(x, "M/d/yyyy", CultureInfo.InvariantCulture)).ToHashSet();
                 var earlyCloses = EarlyCloses.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
-                var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours, earlyCloses);
+                var lateOpens = LateOpens.ToDictionary(x => DateTime.ParseExact(x.Key, "M/d/yyyy", CultureInfo.InvariantCulture), x => x.Value);
+                var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours, earlyCloses, lateOpens);
                 return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours);
             }
 
