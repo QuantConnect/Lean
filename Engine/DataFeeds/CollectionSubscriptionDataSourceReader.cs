@@ -96,6 +96,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     yield break;
                 }
 
+                if (reader.EndOfStream)
+                {
+                    OnInvalidSource(source, new Exception($"The reader was empty for source: ${source.Source}"));
+                    yield break;
+                }
+
                 var raw = "";
                 while (!reader.EndOfStream)
                 {
