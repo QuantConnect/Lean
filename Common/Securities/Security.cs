@@ -560,6 +560,24 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Updates all of the security properties, such as price/OHLCV/bid/ask based
+        /// on the data provided. Data is also stored into the security's data cache
+        /// </summary>
+        /// <param name="data">The security update data</param>
+        public void Update(IEnumerable<BaseData> data)
+        {
+            foreach (var grp in data.GroupBy(d => d.GetType()))
+            {
+                // use the last of each type to set market price
+                SetMarketPrice(grp.Last());
+
+                // maintaining regression requires us to NOT cache FF data
+                var nonFillForward = grp.Where(d => !d.IsFillForward).ToList();
+                Cache.StoreData(nonFillForward.ToList());
+            }
+        }
+
+        /// <summary>
         /// Update any security properties based on the latest realtime data and time
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>

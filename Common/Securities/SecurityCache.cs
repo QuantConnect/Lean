@@ -15,8 +15,11 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -32,7 +35,7 @@ namespace QuantConnect.Securities
         // this is used to prefer quote bar data over the tradebar data
         private DateTime _lastQuoteBarUpdate;
         private BaseData _lastData;
-        private readonly ConcurrentDictionary<Type, BaseData> _dataByType = new ConcurrentDictionary<Type, BaseData>();
+        private readonly ConcurrentDictionary<Type, IReadOnlyList<BaseData>> _dataByType = new ConcurrentDictionary<Type, IReadOnlyList<BaseData>>();
 
         /// <summary>
         /// Gets the most recent price submitted to this cache
@@ -115,8 +118,19 @@ namespace QuantConnect.Securities
             // Only cache non fill-forward data.
             if (data.IsFillForward) return;
 
-            // Always keep track of the last obesrvation
-            _dataByType[data.GetType()] = data;
+            // Always keep track of the last observation
+            IReadOnlyList<BaseData> list;
+            if (!_dataByType.TryGetValue(data.GetType(), out list))
+            {
+                list = new List<BaseData> {data};
+                _dataByType[data.GetType()] = list;
+            }
+            else
+            {
+                // we KNOW this one is actually a list, so this is safe
+                // we overwrite the zero entry so we're not constantly newing up lists
+                ((List<BaseData>) list)[0] = data;
+            }
 
             // don't set _lastData if receive quotebar then tradebar w/ same end time. this
             // was implemented to grant preference towards using quote data in the fill
@@ -185,16 +199,28 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Stores the specified data instance in the cache WITHOUT updating any of the cache properties, such as Price
+        /// Stores the specified data list in the cache WITHOUT updating any of the cache properties, such as Price
         /// </summary>
-        /// <param name="data"></param>
-        public void StoreData(BaseData data)
+        /// <param name="data">The collection of data to store in this cache</param>
+        public void StoreData(IReadOnlyList<BaseData> data)
         {
-            _dataByType[data.GetType()] = data;
+            if (data.Count == 0)
+            {
+                return;
+            }
+
+#if DEBUG // don't run this in release as we should never fail here, but it's also nice to have here as documentation of intent
+            if (data.DistinctBy(d => d.GetType()).Skip(1).Any())
+            {
+                throw new ArgumentException("SecurityCache.StoreData data list must contain elements of the same type.");
+            }
+#endif
+
+            _dataByType[data[0].GetType()] = data;
         }
 
         /// <summary>
-        /// Get last data packet recieved for this security
+        /// Get last data packet received for this security
         /// </summary>
         /// <returns>BaseData type of the security</returns>
         public BaseData GetData()
@@ -210,9 +236,28 @@ namespace QuantConnect.Securities
         public T GetData<T>()
             where T : BaseData
         {
-            BaseData data;
-            _dataByType.TryGetValue(typeof(T), out data);
-            return data as T;
+            IReadOnlyList<BaseData> list;
+            if (!_dataByType.TryGetValue(typeof(T), out list) || list.Count == 0)
+            {
+                return default(T);
+            }
+
+            return list.LastOrDefault() as T;
+        }
+
+        /// <summary>
+        /// Gets all data points of the specified type from the most recent time step
+        /// that produced data for that type
+        /// </summary>
+        public IEnumerable<T> GetAll<T>()
+        {
+            IReadOnlyList<BaseData> list;
+            if (!_dataByType.TryGetValue(typeof(T), out list))
+            {
+                return new List<T>();
+            }
+
+            return list.Cast<T>();
         }
 
         /// <summary>
