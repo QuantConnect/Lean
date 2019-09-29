@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
 using NUnit.Framework;
@@ -40,7 +41,8 @@ namespace QuantConnect.Tests.Common.Securities
                 config,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             Assert.AreEqual(config, security.Subscriptions.Single());
@@ -172,7 +174,8 @@ namespace QuantConnect.Tests.Common.Securities
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             Assert.AreEqual(option.DataNormalizationMode, DataNormalizationMode.Raw);
@@ -195,7 +198,8 @@ namespace QuantConnect.Tests.Common.Securities
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             Assert.DoesNotThrow(() => { option.SetDataNormalizationMode(DataNormalizationMode.Raw); });
@@ -223,7 +227,8 @@ namespace QuantConnect.Tests.Common.Securities
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             Assert.DoesNotThrow(() => { equity.SetDataNormalizationMode(DataNormalizationMode.Raw); });
@@ -255,6 +260,37 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(20, securityCache.Volume);
         }
 
+        [Test]
+        public void InvokingCacheStoreData_UpdatesSecurityData_ByTypeName()
+        {
+            var security = GetSecurity();
+            var tradeBars = new List<TradeBar>
+            {
+                new TradeBar(DateTime.UtcNow, security.Symbol, 10m, 20m, 5m, 15m, 10000)
+            };
+
+            security.Cache.StoreData(tradeBars);
+
+            TradeBar fromSecurityData = security.Data.GetAll<TradeBar>()[0];
+            Assert.AreEqual(tradeBars[0].Time, fromSecurityData.Time);
+            Assert.AreEqual(tradeBars[0].Symbol, fromSecurityData.Symbol);
+            Assert.AreEqual(tradeBars[0].Open, fromSecurityData.Open);
+            Assert.AreEqual(tradeBars[0].High, fromSecurityData.High);
+            Assert.AreEqual(tradeBars[0].Low, fromSecurityData.Low);
+            Assert.AreEqual(tradeBars[0].Close, fromSecurityData.Close);
+            Assert.AreEqual(tradeBars[0].Volume, fromSecurityData.Volume);
+
+            // using dynamic accessor
+            var fromDynamicSecurityData = security.Data.TradeBar[0];
+            Assert.AreEqual(tradeBars[0].Time, fromDynamicSecurityData.Time);
+            Assert.AreEqual(tradeBars[0].Symbol, fromDynamicSecurityData.Symbol);
+            Assert.AreEqual(tradeBars[0].Open, fromDynamicSecurityData.Open);
+            Assert.AreEqual(tradeBars[0].High, fromDynamicSecurityData.High);
+            Assert.AreEqual(tradeBars[0].Low, fromDynamicSecurityData.Low);
+            Assert.AreEqual(tradeBars[0].Close, fromDynamicSecurityData.Close);
+            Assert.AreEqual(tradeBars[0].Volume, fromDynamicSecurityData.Volume);
+        }
+
         internal static Security GetSecurity()
         {
             return new Security(
@@ -262,7 +298,8 @@ namespace QuantConnect.Tests.Common.Securities
                 CreateTradeBarConfig(),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
         }
 

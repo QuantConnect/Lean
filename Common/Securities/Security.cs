@@ -262,6 +262,14 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Provides dynamic access to data in the cache
+        /// </summary>
+        public DynamicSecurityData Data
+        {
+            get;
+        }
+
+        /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
         public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
@@ -356,6 +364,8 @@ namespace QuantConnect.Securities
             SettlementModel = settlementModel;
             VolatilityModel = volatilityModel;
             Holdings = new SecurityHolding(this, currencyConverter);
+            Data = new DynamicSecurityData();
+            Cache.DataStored += (sender, args) => Data.StoreData(args.DataType, args.Data);
 
             UpdateSubscriptionProperties();
         }

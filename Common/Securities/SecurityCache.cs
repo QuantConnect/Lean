@@ -32,6 +32,11 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class SecurityCache
     {
+        /// <summary>
+        /// Event raised each time this cache stores data
+        /// </summary>
+        public event EventHandler<SecurityCacheDataStoredEventArgs> DataStored;
+
         // this is used to prefer quote bar data over the tradebar data
         private DateTime _lastQuoteBarUpdate;
         private BaseData _lastData;
@@ -216,7 +221,9 @@ namespace QuantConnect.Securities
             }
 #endif
 
-            _dataByType[data[0].GetType()] = data;
+            var dataType = data[0].GetType();
+            _dataByType[dataType] = data;
+            OnDataStored(dataType, data);
         }
 
         /// <summary>
@@ -266,6 +273,14 @@ namespace QuantConnect.Securities
         public void Reset()
         {
             _dataByType.Clear();
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="DataStored"/> event
+        /// </summary>
+        protected virtual void OnDataStored(Type dataType, IReadOnlyList<BaseData> data)
+        {
+            DataStored?.Invoke(this, new SecurityCacheDataStoredEventArgs(dataType, data));
         }
     }
 }
