@@ -104,7 +104,7 @@ namespace QuantConnect.Tests
                             systemHandlers.LeanManager.Initialize(systemHandlers, algorithmHandlers, job, algorithmManager);
 
                             engine.Run(job, algorithmManager, algorithmPath);
-                            ordersLogFile = ((RegressionResultHandler)algorithmHandlers.Results).OrdersLogFilePath;
+                            ordersLogFile = ((RegressionResultHandler)algorithmHandlers.Results).LogFilePath;
                         }
                         catch (Exception e)
                         {
