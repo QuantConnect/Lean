@@ -116,8 +116,8 @@ namespace QuantConnect.Algorithm.CSharp
                 - Portfolio.CashBook.Convert(Portfolio.TotalFees, "EUR", "USD");
             var amount = Portfolio.CashBook["USD"].Amount;
             // there could be a small difference due to conversion rates
-            // leave 0.5% for error
-            if (Math.Abs(expectedAmount - amount) > Math.Abs(expectedAmount) * 0.005m)
+            // leave 1% for error
+            if (Math.Abs(expectedAmount - amount) > Math.Abs(expectedAmount) * 0.01m)
             {
                 throw new Exception($"Unexpected USD ending cash amount: {amount}. Expected {expectedAmount}");
             }
@@ -197,21 +197,21 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "6"},
             {"Average Win", "0.41%"},
             {"Average Loss", "-0.86%"},
-            {"Compounding Annual Return", "-16.861%"},
+            {"Compounding Annual Return", "-16.921%"},
             {"Drawdown", "1.100%"},
             {"Expectancy", "-0.262"},
-            {"Net Profit", "-0.456%"},
-            {"Sharpe Ratio", "-1.529"},
+            {"Net Profit", "-0.458%"},
+            {"Sharpe Ratio", "-1.536"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
             {"Profit-Loss Ratio", "0.48"},
-            {"Alpha", "-0.242"},
-            {"Beta", "0.333"},
+            {"Alpha", "-0.203"},
+            {"Beta", "0.307"},
             {"Annual Standard Deviation", "0.082"},
             {"Annual Variance", "0.007"},
-            {"Information Ratio", "-4.105"},
-            {"Tracking Error", "0.116"},
-            {"Treynor Ratio", "-0.376"},
+            {"Information Ratio", "-3.126"},
+            {"Tracking Error", "0.121"},
+            {"Treynor Ratio", "-0.409"},
             {"Total Fees", "$12.97"}
         };
     }

@@ -84,9 +84,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public IEnumerable<TimeSlice> Sync(IEnumerable<Subscription> subscriptions,
             CancellationToken cancellationToken)
         {
+            var delayedSubscriptionFinished = new Queue<Subscription>();
+
             while (!cancellationToken.IsCancellationRequested)
             {
-                var delayedSubscriptionFinished = false;
                 var changes = SecurityChanges.None;
                 var data = new List<DataFeedPacket>(1);
                 // NOTE: Tight coupling in UniverseSelection.ApplyUniverseSelection
@@ -135,7 +136,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                             if (!subscription.MoveNext())
                             {
-                                delayedSubscriptionFinished = true;
+                                delayedSubscriptionFinished.Enqueue(subscription);
                                 break;
                             }
                         }
@@ -183,10 +184,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         if (subscription.IsUniverseSelectionSubscription
-                            && subscription.Universes.Single().DisposeRequested
-                            || delayedSubscriptionFinished)
+                            && subscription.Universes.Single().DisposeRequested)
                         {
-                            delayedSubscriptionFinished = false;
                             // we need to do this after all usages of subscription.Universes
                             OnSubscriptionFinished(subscription);
                         }
@@ -214,6 +213,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     || _universeSelection.AddPendingInternalDataFeeds(frontierUtc));
 
                 var timeSlice = _timeSliceFactory.Create(frontierUtc, data, changes, universeDataForTimeSliceCreate);
+
+                while (delayedSubscriptionFinished.Count > 0)
+                {
+                    // these subscriptions added valid data to the packet
+                    // we need to trigger OnSubscriptionFinished after we create the TimeSlice
+                    // else it will drop the data
+                    var subscription = delayedSubscriptionFinished.Dequeue();
+                    OnSubscriptionFinished(subscription);
+                }
 
                 yield return timeSlice;
             }
