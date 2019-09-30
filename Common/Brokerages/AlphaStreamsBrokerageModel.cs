@@ -14,110 +14,88 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Slippage;
-using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Equity;
-using static QuantConnect.StringExtensions;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Brokerages
 {
+    /// <summary>
+    /// Provides properties specific to Alpha Streams
+    /// </summary>
     public class AlphaStreamsBrokerageModel : DefaultBrokerageModel
     {
-
-        public AlphaStreamsBrokerageModel(AccountType accountType = AccountType.Cash)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AlphaStreamsBrokerageModel"/> class
+        /// </summary>
+        /// <param name="accountType"></param>
+        public AlphaStreamsBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
-            if (accountType == AccountType.Margin)
+            if (accountType == AccountType.Cash)
             {
-                throw new ArgumentException("The Alpha Streams brokerage does not currently support Margin trading.", nameof(accountType));
+                throw new ArgumentException("The Alpha Streams brokerage does not currently support Cash trading.", nameof(accountType));
             }
         }
-
-        private readonly Type[] _supportedTimeInForces =
-        {
-            typeof(GoodTilCanceledTimeInForce),
-            typeof(DayTimeInForce),
-            typeof(GoodTilDateTimeInForce)
-        };
-
-        public override IFeeModel GetFeeModel(Security security)
-        {
-            return new AlphaStreamsFeeModel();
-        }
-
-        public override ISlippageModel GetSlippageModel(Security security)
-        {
-            return new AlphaStreamsSlippageModel();
-        }
-
+        
         /// <summary>
-        /// Force equities to be restricted to 1x leverage
+        /// Gets a new fee model that represents this brokerage's fee structure
+        /// </summary>
+        /// <param name="security"></param>
+        /// <returns></returns>
+        public override IFeeModel GetFeeModel(Security security) => new AlphaStreamsFeeModel();
+        /// <summary>
+        /// Gets a new slippage model that represents this brokerage's slippage costs
+        /// </summary>
+        /// <param name="security"></param>
+        /// <returns></returns>
+        public override ISlippageModel GetSlippageModel(Security security) => new AlphaStreamsSlippageModel();
+        /// <summary>
+        /// Force all security types to be restricted to 1x leverage
+        ///     - Current restriction to 1x is for the AS competition
+        ///     - Will be update in the future
         /// </summary>
         /// <param name="security"></param>
         /// <returns></returns>
         public override decimal GetLeverage(Security security) => 1m;
-
         /// <summary>
-        /// Force delayed settlement of equities until end of competition (Jan 2020)
+        /// Gets a new settlement model
         /// </summary>
         /// <param name="security"></param>
         /// <returns></returns>
-        public override ISettlementModel GetSettlementModel(Security security)
+        public override ISettlementModel GetSettlementModel(Security security) => new ImmediateSettlementModel();
+        /// <summary>
+        /// Get buying power model for the specific security type
+        /// </summary>
+        /// <param name="security"></param>
+        /// <returns></returns>
+        public override IBuyingPowerModel GetBuyingPowerModel(Security security)
         {
+            var leverage = GetLeverage(security);
+            IBuyingPowerModel model;
+
             switch (security.Type)
             {
-                case SecurityType.Equity:
-                    return new DelayedSettlementModel(Equity.DefaultSettlementDays, Equity.DefaultSettlementTime);
-
+                case SecurityType.Crypto:
+                    model = new CashBuyingPowerModel();
+                    break;
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    model = new SecurityMarginModel(leverage, RequiredFreeBuyingPowerPercent);
+                    break;
+                case SecurityType.Option:
+                    model = new OptionMarginModel(RequiredFreeBuyingPowerPercent);
+                    break;
+                case SecurityType.Future:
+                    model = new FutureMarginModel(RequiredFreeBuyingPowerPercent);
+                    break;
                 default:
-                    return new ImmediateSettlementModel();
+                    model = new SecurityMarginModel(leverage, RequiredFreeBuyingPowerPercent);
+                    break;
             }
-        }
-
-        /// <summary>
-        /// Force the buying power for equities to be cash -- this will be modified after the compeition (Jan 2020) when a full model is built
-        /// </summary>
-        /// <param name="security"></param>
-        /// <returns></returns>
-        public override IBuyingPowerModel GetBuyingPowerModel(Security security) => new CashBuyingPowerModel();
-
-        /// <summary>
-        /// Inherit from Interactive Brokers but with changes to reflect Alpha Stream compatibility (no Futures or Options)
-        /// </summary>
-        /// <param name="security"></param>
-        /// <param name="order"></param>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
-        {
-            message = null;
-
-            // validate security type
-            if (security.Type != SecurityType.Equity)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(AlphaStreamsBrokerageModel)} does not support {security.Type} security type.")
-                );
-
-                return false;
-            }
-
-            // validate order type
-            if (!security.Invested && order.Direction == OrderDirection.Sell)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Invariant($"The {nameof(AlphaStreamsBrokerageModel)} does not support short positions.")
-                );
-
-                return false;
-            }
-
-            return true;
+            return model;
         }
     }
 }

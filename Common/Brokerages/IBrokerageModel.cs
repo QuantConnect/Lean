@@ -194,6 +194,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.Alpaca:
                     return new AlpacaBrokerageModel(accountType);
 
+                case BrokerageName.AlphaStreams:
+                    return new AlphaStreamsBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }
