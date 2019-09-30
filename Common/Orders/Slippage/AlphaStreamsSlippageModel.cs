@@ -42,6 +42,10 @@ namespace QuantConnect.Orders.Slippage
             {
                 return _slippagePercent * ((TradeBar)lastData).Close;
             }
+            else if (lastData.DataType == MarketDataType.Tick && asset.Type == SecurityType.Equity)
+            {
+                return _slippagePercent * ((Tick)lastData).Value;
+            }
             else
             {
                 return 0;
