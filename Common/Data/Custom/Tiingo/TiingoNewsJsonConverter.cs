@@ -28,24 +28,21 @@ namespace QuantConnect.Data.Custom.Tiingo
     /// </summary>
     public class TiingoNewsJsonConverter : JsonConverter
     {
+        private static readonly DateTime Epoch =
+            new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         private readonly bool _liveMode;
         private readonly Symbol _symbol;
-        private readonly DateTimeZone _exchangeTimeZone;
 
         /// <summary>
         /// Creates a new instance of the json converter
         /// </summary>
         /// <param name="symbol">The <see cref="Symbol"/> instance associated with this news</param>
-        /// <param name="exchangeTimeZone">The exchange time zone used to set the <see cref="BaseData.Time"/>
-        /// correctly</param>
         /// <param name="liveMode">True if live mode, false for backtesting</param>
         public TiingoNewsJsonConverter(Symbol symbol = null,
-            DateTimeZone exchangeTimeZone = null,
             bool liveMode = false)
         {
             _symbol = symbol;
             _liveMode = liveMode;
-            _exchangeTimeZone = exchangeTimeZone;
         }
 
         /// <summary>
@@ -165,29 +162,26 @@ namespace QuantConnect.Data.Custom.Tiingo
             else if (jToken.Type == JTokenType.Integer)
             {
                 var value = jToken.Value<int>();
-                var origin = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-                return origin.AddSeconds(value);
+                return Epoch.AddSeconds(value);
             }
             return jToken.ToObject<DateTime>();
         }
 
         private void SetSymbolAndTime(TiingoNewsData dataPoint)
         {
-            if (_symbol != null && _exchangeTimeZone != null)
+            if (_symbol != null)
             {
                 dataPoint.Symbol = _symbol;
-                // Time set by Tiingo is in UTC
-                // Lean expects Time to be in exchange time zone
                 if (_liveMode)
                 {
                     // for live use crawl date
-                    dataPoint.Time = dataPoint.CrawlDate.ConvertFromUtc(_exchangeTimeZone);
+                    dataPoint.Time = dataPoint.CrawlDate;
                 }
                 else
                 {
                     // for backtesting use published time
                     // old data (eg 2014) can have newer crawl date (eg 2019)
-                    dataPoint.Time = dataPoint.PublishedDate.ConvertFromUtc(_exchangeTimeZone);
+                    dataPoint.Time = dataPoint.PublishedDate;
                 }
             }
         }

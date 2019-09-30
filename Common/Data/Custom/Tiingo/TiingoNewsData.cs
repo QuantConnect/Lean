@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
+using NodaTime;
 using QuantConnect.Data.UniverseSelection;
 using static QuantConnect.StringExtensions;
 
@@ -146,7 +147,7 @@ namespace QuantConnect.Data.Custom.Tiingo
         public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
         {
             var data = JsonConvert.DeserializeObject<List<TiingoNewsData>>(content,
-                new TiingoNewsJsonConverter(config.Symbol, config.ExchangeTimeZone, isLiveMode));
+                new TiingoNewsJsonConverter(config.Symbol, isLiveMode));
 
             if (isLiveMode)
             {
@@ -165,6 +166,15 @@ namespace QuantConnect.Data.Custom.Tiingo
         public override bool RequiresMapping()
         {
             return true;
+        }
+
+        /// <summary>
+        /// Specifies the data time zone for this data type. This is useful for custom data types
+        /// </summary>
+        /// <returns>The <see cref="DateTimeZone"/> of this data type</returns>
+        public override DateTimeZone DataTimeZone()
+        {
+            return TimeZones.Utc;
         }
     }
 }

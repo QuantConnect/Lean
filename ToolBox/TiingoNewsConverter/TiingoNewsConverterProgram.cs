@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.IO;
 
 namespace QuantConnect.ToolBox.TiingoNewsConverter
@@ -25,11 +26,15 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
         /// <summary>
         /// Converts Tiingo news data
         /// </summary>
-        public static bool TiingoNewsConverter(string sourceDirectory, string destinationDirectory)
+        /// <param name="sourceDirectory">Directory to read raw data from</param>
+        /// <param name="destinationDirectory">Directory to write processed data to</param>
+        /// <param name="date">The date we want to process, if null will process all data</param>
+        public static bool TiingoNewsConverter(string sourceDirectory, string destinationDirectory, DateTime? date = null)
         {
             var converter = new TiingoNewsConverter(
                 new DirectoryInfo(sourceDirectory),
-                new DirectoryInfo(destinationDirectory));
+                new DirectoryInfo(destinationDirectory),
+                date);
 
             return converter.Convert();
         }

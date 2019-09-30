@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
     ""title"":""title""
 }]";
             var result = JsonConvert.DeserializeObject<List<TiingoNewsData>>(content,
-                new TiingoNewsJsonConverter(Symbols.SPY, TimeZones.NewYork));
+                new TiingoNewsJsonConverter(Symbols.SPY));
 
             Assert.AreEqual("2", result[0].ArticleID);
             Assert.AreEqual(

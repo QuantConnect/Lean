@@ -32,14 +32,18 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
         private readonly DirectoryInfo _sourceDirectory;
         private readonly DirectoryInfo _rootDestinationDirectory;
         private readonly DirectoryInfo _contentDirectory;
+        // date to process, if null will process all data
+        private readonly DateTime? _date;
 
         /// <summary>
         /// Creates an instance of the converter
         /// </summary>
         /// <param name="sourceDirectory">Directory to read raw data from</param>
         /// <param name="destinationDirectory">Directory to write processed data to</param>
-        public TiingoNewsConverter(DirectoryInfo sourceDirectory, DirectoryInfo destinationDirectory)
+        /// <param name="date">The date we want to process, if null will process all data</param>
+        public TiingoNewsConverter(DirectoryInfo sourceDirectory, DirectoryInfo destinationDirectory, DateTime? date = null)
         {
+            _date = date;
             _sourceDirectory = sourceDirectory;
             _rootDestinationDirectory = new DirectoryInfo(Path.Combine(destinationDirectory.FullName, "alternative", "tiingo"));
             _contentDirectory = Directory.CreateDirectory(Path.Combine(_rootDestinationDirectory.FullName, "content"));
@@ -52,6 +56,7 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                 // supposing sourceFiles are the different daily files, eg: bulkfile_2014-01-11_2014-01-12.tar.gz
                 var sourceFiles = _sourceDirectory.EnumerateFiles()
                     .OrderBy(info => info.Name)
+                    .Where(info => !_date.HasValue || info.Name.Contains(_date.ToStringInvariant("yyyy-MM-dd")))
                     .ToList(info => info);
 
                 var ioTasks = new Queue<Task>();
@@ -88,8 +93,16 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                         var singleNewsData = TiingoNewsJsonConverter.DeserializeNews(jNews);
                         var newsPublishDate = singleNewsData.PublishedDate.Date;
 
+                        if (_date.HasValue && newsPublishDate.Date != _date)
+                        {
+                            // skip news that were published another date than the one we want to process
+                            continue;
+                        }
+
                         // we store the data after 1 day difference
                         // raw data is not really ordered and can have jumps +-1 day
+                        // files are generated at 12am EST and PublishDate is UTC
+                        // we store files by UTC
                         if (singleNewsData.PublishedDate.Date > (currentDate + Time.OneDay))
                         {
                             var newsToStore = newsPerDateCollection.Where(kvp => kvp.Key < currentDate).ToList();
