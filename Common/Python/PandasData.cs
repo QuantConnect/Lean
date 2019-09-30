@@ -31,7 +31,8 @@ namespace QuantConnect.Python
     public class PandasData
     {
         private static dynamic _pandas;
-        private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLower());
+        private static dynamic _remapperFactory;
+        private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
 
         private readonly int _levels;
         private readonly bool _isCustomData;
@@ -60,6 +61,174 @@ namespace QuantConnect.Python
                 using (Py.GIL())
                 {
                     _pandas = Py.Import("pandas");
+
+                    // this python Remapper class will work as a proxy and adjust the
+                    // input to its methods using the provided 'mapper' callable object
+                    _remapperFactory = PythonEngine.ModuleFromString("remapper",
+                        @"import wrapt
+import pandas
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+class Remapper(wrapt.ObjectProxy):
+    def __init__(self, wrapped):
+        super(Remapper, self).__init__(wrapped)
+
+    # Our remapping method. Originally implemented in C# but some cases were not working
+    # correctly and using Py did the trick
+    def _self_mapper(self, key):
+        # this is the most normal use case
+        if isinstance(key, str):
+            tupleResult = SymbolCache.TryGetSymbol(key, None)
+            if tupleResult[0]:
+                return str(tupleResult[1].ID)
+
+        # this case is required to cover 'df.at[]'
+        elif isinstance(key, tuple) and 2 >= len(key) >= 1:
+            keyElement = key[0]
+
+            if isinstance(keyElement, tuple) and 2 >= len(keyElement) >= 1:
+                keyElement = keyElement[0]
+
+                if isinstance(keyElement, str):
+                    tupleResult = SymbolCache.TryGetSymbol(keyElement, None)
+                    if tupleResult[0]:
+                        result = str(tupleResult[1].ID)
+                        # tuples can not be modified in Py so we generate new ones
+                        if len(key[0]) == 1:
+                            firstTuple = (result,)
+                        else:
+                            firstTuple = (result, key[0][1])
+                        if len(key[1]) == 1:
+                            return (firstTuple,)
+                        else:
+                            return (firstTuple, key[1])
+        return key
+
+    def __contains__(self, key):
+        key = self._self_mapper(key)
+        return self.__wrapped__.__contains__(key)
+
+    def __getitem__(self, name):
+        name = self._self_mapper(name)
+        result = self.__wrapped__.__getitem__(name)
+
+        if isinstance(result, (pandas.Series, pandas.Index)):
+            # For these cases we wrap the result too. Can't apply the wrap around all
+            # results because it causes issues in pandas for some of our use cases
+            # specifically pandas timestamp type
+            return Remapper(result)
+        return result
+
+    def __setitem__(self, name, value):
+        name = self._self_mapper(name)
+        return self.__wrapped__.__setitem__(name, value)
+
+    def __delitem__(self, name):
+        name = self._self_mapper(name)
+        return self.__wrapped__.__delitem__(name)
+
+    # we wrap the result and input of 'xs'
+    def xs(self, key, axis=0, level=None, drop_level=True):
+        key = self._self_mapper(key)
+        result = self.__wrapped__.xs(key=key, axis=axis, level=level, drop_level=drop_level)
+        return Remapper(result)
+
+    def get(self, key, default=None):
+        key = self._self_mapper(key)
+        return self.__wrapped__.get(key=key, default=default)
+
+    # we wrap the result of 'unstack'
+    def unstack(self, level=-1, fill_value=None):
+        result = self.__wrapped__.unstack(level=level, fill_value=fill_value)
+        return Remapper(result)
+
+    # we wrap 'loc' to cover the: df.loc['SPY'] case
+    @property
+    def loc(self):
+        return Remapper(self.__wrapped__.loc)
+
+    @property
+    def at(self):
+        return Remapper(self.__wrapped__.at)
+
+    @property
+    def index(self):
+        return Remapper(self.__wrapped__.index)
+
+    @property
+    def levels(self):
+        return Remapper(self.__wrapped__.levels)
+
+    # we wrap the following properties so that when 'unstack', 'loc' are called we wrap them
+    @property
+    def open(self):
+        return Remapper(self.__wrapped__.open)
+    @property
+    def high(self):
+        return Remapper(self.__wrapped__.high)
+    @property
+    def close(self):
+        return Remapper(self.__wrapped__.close)
+    @property
+    def low(self):
+        return Remapper(self.__wrapped__.low)
+    @property
+    def lastprice(self):
+        return Remapper(self.__wrapped__.lastprice)
+    @property
+    def volume(self):
+        return Remapper(self.__wrapped__.volume)
+    @property
+    def askopen(self):
+        return Remapper(self.__wrapped__.askopen)
+    @property
+    def askhigh(self):
+        return Remapper(self.__wrapped__.askhigh)
+    @property
+    def asklow(self):
+        return Remapper(self.__wrapped__.asklow)
+    @property
+    def askclose(self):
+        return Remapper(self.__wrapped__.askclose)
+    @property
+    def askprice(self):
+        return Remapper(self.__wrapped__.askprice)
+    @property
+    def asksize(self):
+        return Remapper(self.__wrapped__.asksize)
+    @property
+    def quantity(self):
+        return Remapper(self.__wrapped__.quantity)
+    @property
+    def suspicious(self):
+        return Remapper(self.__wrapped__.suspicious)
+    @property
+    def bidopen(self):
+        return Remapper(self.__wrapped__.bidopen)
+    @property
+    def bidhigh(self):
+        return Remapper(self.__wrapped__.bidhigh)
+    @property
+    def bidlow(self):
+        return Remapper(self.__wrapped__.bidlow)
+    @property
+    def bidclose(self):
+        return Remapper(self.__wrapped__.bidclose)
+    @property
+    def bidprice(self):
+        return Remapper(self.__wrapped__.bidprice)
+    @property
+    def bidsize(self):
+        return Remapper(self.__wrapped__.bidsize)
+    @property
+    def exchange(self):
+        return Remapper(self.__wrapped__.exchange)
+    @property
+    def openinterest(self):
+        return Remapper(self.__wrapped__.openinterest)
+").GetAttr("Remapper");
                 }
             }
 
@@ -97,14 +266,14 @@ namespace QuantConnect.Python
                 {
                     var members = type.GetMembers().Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property);
 
-                    var duplicateKeys = members.GroupBy(x => x.Name.ToLower()).Where(x => x.Count() > 1).Select(x => x.Key);
+                    var duplicateKeys = members.GroupBy(x => x.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
                     foreach (var duplicateKey in duplicateKeys)
                     {
                         throw new ArgumentException($"PandasData.ctor(): More than one \'{duplicateKey}\' member was found in \'{type.FullName}\' class.");
                     }
 
-                    keys = members.Select(x => x.Name.ToLower()).Except(_baseDataProperties).Concat(new[] { "value" });
-                    _members = members.Where(x => keys.Contains(x.Name.ToLower()));
+                    keys = members.Select(x => x.Name.ToLowerInvariant()).Except(_baseDataProperties).Concat(new[] { "value" });
+                    _members = members.Where(x => keys.Contains(x.Name.ToLowerInvariant()));
                 }
 
                 columns.Add("value");
@@ -122,7 +291,7 @@ namespace QuantConnect.Python
         {
             foreach (var member in _members)
             {
-                var key = member.Name.ToLower();
+                var key = member.Name.ToLowerInvariant();
                 var endTime = (baseData as IBaseData).EndTime;
                 AddToSeries(key, endTime, (member as FieldInfo)?.GetValue(baseData));
                 AddToSeries(key, endTime, (member as PropertyInfo)?.GetValue(baseData));
@@ -228,19 +397,19 @@ namespace QuantConnect.Python
         {
             var empty = new PyString(string.Empty);
             var list = Enumerable.Repeat<PyObject>(empty, 5).ToList();
-            list[3] = _symbol.ToString().ToPython();
+            list[3] = _symbol.ID.ToString().ToPython();
 
             if (_symbol.SecurityType == SecurityType.Future)
             {
                 list[0] = _symbol.ID.Date.ToPython();
-                list[3] = _symbol.Value.ToPython();
+                list[3] = _symbol.ID.ToString().ToPython();
             }
             if (_symbol.SecurityType == SecurityType.Option)
             {
                 list[0] = _symbol.ID.Date.ToPython();
                 list[1] = _symbol.ID.StrikePrice.ToPython();
                 list[2] = _symbol.ID.OptionRight.ToString().ToPython();
-                list[3] = _symbol.Value.ToPython();
+                list[3] = _symbol.ID.ToString().ToPython();
             }
 
             // Create the index labels
@@ -291,7 +460,7 @@ namespace QuantConnect.Python
                     pyDict.SetItem(kvp.Key, _pandas.Series(values, index));
                 }
                 _series.Clear();
-                return _pandas.DataFrame(pyDict);
+                return ApplySymbolMapper(_pandas.DataFrame(pyDict));
             }
         }
 
@@ -309,12 +478,20 @@ namespace QuantConnect.Python
             if (_series.TryGetValue(key, out value))
             {
                 value.Item1.Add(time);
-                value.Item2.Add(input is decimal ? Convert.ToDouble(input) : input);
+                value.Item2.Add(input is decimal ? input.ConvertInvariant<double>() : input);
             }
             else
             {
                 throw new ArgumentException($"PandasData.AddToSeries(): {key} key does not exist in series dictionary.");
             }
+        }
+
+        /// <summary>
+        /// Will wrap the provided pandas data frame using the <see cref="_remapperFactory"/>
+        /// </summary>
+        internal static dynamic ApplySymbolMapper(dynamic pandasDataFrame)
+        {
+            return _remapperFactory.Invoke(pandasDataFrame);
         }
     }
 }

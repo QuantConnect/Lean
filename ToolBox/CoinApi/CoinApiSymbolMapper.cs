@@ -165,8 +165,11 @@ namespace QuantConnect.ToolBox.CoinApi
 
             var result = JsonConvert.DeserializeObject<List<CoinApiSymbol>>(json);
 
+            // There were cases of entries in the CoinApiSymbols list with the following pattern:
+            // <Exchange>_SPOT_<BaseCurrency>_<QuoteCurrency>_<ExtraSuffix>
+            // Those cases should be ignored for SPOT prices.
             _symbolMap = result
-                .Where(x => x.SymbolType == "SPOT")
+                .Where(x => x.SymbolType == "SPOT" && x.SymbolId.Split('_').Length == 4)
                 .ToDictionary(
                     x =>
                     {

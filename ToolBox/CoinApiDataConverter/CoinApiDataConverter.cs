@@ -56,7 +56,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
         {
             _market = market;
             _processingDate = date;
-            _rawDataFolder = new DirectoryInfo(Path.Combine(rawDataFolder, SecurityType.Crypto.ToLower(), market.ToLower(), date.ToString(DateFormat.EightCharacter)));
+            _rawDataFolder = new DirectoryInfo(Path.Combine(rawDataFolder, SecurityType.Crypto.ToLower(), market.ToLowerInvariant(), date.ToStringInvariant(DateFormat.EightCharacter)));
             if (!_rawDataFolder.Exists)
             {
                 throw new ArgumentException($"CoinApiDataConverter(): Source folder not found: {_rawDataFolder.FullName}");
@@ -65,7 +65,7 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             _destinationFolder = new DirectoryInfo(destinationFolder);
             _destinationFolder.Create();
 
-            if (!SupportedMarkets.Contains(market.ToLower()))
+            if (!SupportedMarkets.Contains(market.ToLowerInvariant()))
             {
                 throw new ArgumentException($"CoinApiDataConverter(): Market/Exchange {market} not supported, yet. Supported Markets/Exchanges are {string.Join(" ", SupportedMarkets)}", market);
             }
@@ -82,7 +82,11 @@ namespace QuantConnect.ToolBox.CoinApiDataConverter
             var symbolMapper = new CoinApiSymbolMapper();
             var success = true;
 
+            // There were cases of files with with an extra suffix, following pattern:
+            // <TickType>-<ID>-<Exchange>_SPOT_<BaseCurrency>_<QuoteCurrency>_<ExtraSuffix>.csv.gz
+            // Those cases should be ignored for SPOT prices.
             var fileToProcess = _rawDataFolder.EnumerateFiles("*.gz")
+                .Where(f => f.Name.Split('_').Length == 4)
                 .DistinctBy(
                     x =>
                     {

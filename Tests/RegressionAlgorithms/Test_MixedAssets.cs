@@ -12,12 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using QuantConnect.Securities;
 
 using System.Globalization;
+using QuantConnect;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -101,11 +103,11 @@ namespace QuantConnect
             //Date          Open     High     Low   Close    Volume    Adjusted Close
             //10/27/2014    17.24    17.87    16    16.04    0         16.04
             string[] data = line.Split(',');
-            fear.Time = DateTime.ParseExact(data[0], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            fear.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
-            fear.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
-            fear.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
-            fear.Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
+            fear.Time = data[0].ParseDateTimeExactInvariant("yyyy-MM-dd");
+            fear.Open = data[1].ConvertInvariant<decimal>();
+            fear.High = data[2].ConvertInvariant<decimal>();
+            fear.Low = data[3].ConvertInvariant<decimal>();
+            fear.Close = data[4].ConvertInvariant<decimal>();
             fear.Symbol = "VIX"; fear.Value = fear.Close;
             //}
             //catch

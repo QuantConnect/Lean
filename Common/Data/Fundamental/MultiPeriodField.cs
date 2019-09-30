@@ -231,7 +231,7 @@ namespace QuantConnect.Data.Fundamental
         public override string ToString()
         {
             return StoreIsEmpty
-                ? "" : string.Join(";", Store.Select(x => PeriodAsByte.Convert(x.Period) + ":" + x.Value));
+                ? "" : string.Join(";", Store.Select(x => $"{PeriodAsByte.Convert(x.Period)}:{x.Value}"));
         }
     }
 }

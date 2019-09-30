@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void FactorFile_CanBeCreatedFromYahooData_Successfully()
         {
-            var yahooEvents = _yahooDataDownloader.DownloadSplitAndDividendData(_symbol, DateTime.Parse("01/01/1980"), DateTime.MaxValue);
+            var yahooEvents = _yahooDataDownloader.DownloadSplitAndDividendData(_symbol, Parse.DateTime("01/01/1980"), DateTime.MaxValue);
             var factorFile = _factorFileGenerator.CreateFactorFile(yahooEvents.ToList());
 
             Assert.IsTrue(factorFile.Permtick == _symbol.Value);
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Common.Util
         public void FactorFiles_CanBeGenerated_Accurately()
         {
             // Arrange
-            var yahooEvents = _yahooDataDownloader.DownloadSplitAndDividendData(_symbol, DateTime.Parse("01/01/1970"), DateTime.MaxValue);
+            var yahooEvents = _yahooDataDownloader.DownloadSplitAndDividendData(_symbol, Parse.DateTime("01/01/1970"), DateTime.MaxValue);
             var filePath = LeanData.GenerateRelativeFactorFilePath(_symbol);
             var tolerance = 0.00001m;
 

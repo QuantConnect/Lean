@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ namespace QuantConnect.Util
         /// <returns>Hexadecimal number as a string. If .NET Color is null, returns default #000000</returns>
         protected override string Convert(Color value)
         {
-            return value.IsEmpty ? string.Empty : string.Format("#{0:X2}{1:X2}{2:X2}", value.R, value.G, value.B);
+            return value.IsEmpty ? string.Empty : $"#{value.R.ToStringInvariant("X2")}{value.G.ToStringInvariant("X2")}{value.B.ToStringInvariant("X2")}";
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace QuantConnect.Util
             }
             if (value.Length != 7)
             {
-                var message = string.Format("Unable to convert '{0}' to a Color. Requires string length of 7 including the leading hashtag.", value);
+                var message = $"Unable to convert '{value}' to a Color. Requires string length of 7 including the leading hashtag.";
                 throw new FormatException(message);
             }
 
@@ -69,14 +69,14 @@ namespace QuantConnect.Util
         {
             if (hexValue.Length != 2)
             {
-                var message = string.Format("Unable to convert '{0}' to an Integer. Requires string length of 2.", hexValue);
+                var message = $"Unable to convert '{hexValue}' to an Integer. Requires string length of 2.";
                 throw new FormatException(message);
             }
 
             int result;
             if (!int.TryParse(hexValue, NumberStyles.HexNumber, null, out result))
             {
-                throw new FormatException("Invalid hex number: " + hexValue);
+                throw new FormatException($"Invalid hex number: {hexValue}");
             }
 
             return result;

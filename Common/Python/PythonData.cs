@@ -108,7 +108,7 @@ namespace QuantConnect.Python
 
             set
             {
-                SetProperty(index, value is double ? Convert.ToDecimal(value) : value);
+                SetProperty(index, value is double ? value.ConvertInvariant<decimal>() : value);
             }
         }
     }

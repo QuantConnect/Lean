@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {
@@ -61,7 +62,7 @@ namespace QuantConnect.Orders
             if (tag == "")
             {
                 //Default tag values to display stop price in GUI.
-                Tag = "Stop Price: " + stopPrice.ToString("C");
+                Tag = Invariant($"Stop Price: {stopPrice:C}");
             }
         }
 
@@ -108,7 +109,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("{0} at stop {1}", base.ToString(), StopPrice.SmartRounding());
+            return Invariant($"{base.ToString()} at stop {StopPrice.SmartRounding()}");
         }
 
         /// <summary>

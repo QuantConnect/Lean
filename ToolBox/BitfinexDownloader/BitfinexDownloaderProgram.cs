@@ -40,8 +40,8 @@ namespace QuantConnect.ToolBox.BitfinexDownloader
             }
             try
             {
-                var allResolutions = resolution.ToLower() == "all";
-                var resolutions = allResolutions ? 
+                var allResolutions = resolution.ToLowerInvariant() == "all";
+                var resolutions = allResolutions ?
                     new[] { Resolution.Minute, Resolution.Hour, Resolution.Daily } :
                     new[] { (Resolution)Enum.Parse(typeof(Resolution), resolution) };
 

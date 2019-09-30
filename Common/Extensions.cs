@@ -34,6 +34,7 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using Timer = System.Timers.Timer;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
@@ -159,7 +160,7 @@ namespace QuantConnect
             using (var md5Hash = MD5.Create())
             {
                 var data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(str));
-                foreach (var t in data) builder.Append(t.ToString("x2"));
+                foreach (var t in data) builder.Append(t.ToStringInvariant("x2"));
             }
             return builder.ToString();
         }
@@ -176,7 +177,7 @@ namespace QuantConnect
             var crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(data), 0, Encoding.UTF8.GetByteCount(data));
             foreach (var theByte in crypto)
             {
-                hash.Append(theByte.ToString("x2"));
+                hash.Append(theByte.ToStringInvariant("x2"));
             }
             return hash.ToString();
         }
@@ -196,7 +197,7 @@ namespace QuantConnect
             {
                 alreadyUpper = char.IsUpper(data[i]);
             }
-            return alreadyUpper ? data : data.ToUpper();
+            return alreadyUpper ? data : data.ToUpperInvariant();
         }
 
         /// <summary>
@@ -842,7 +843,7 @@ namespace QuantConnect
             {
                 var genericArguments = type.GetGenericArguments();
                 var toBeReplaced = "`" + (genericArguments.Length);
-                name = name.Replace(toBeReplaced, "<" + string.Join(", ", genericArguments.Select(x => x.GetBetterTypeName())) + ">");
+                name = name.Replace(toBeReplaced, $"<{string.Join(", ", genericArguments.Select(x => x.GetBetterTypeName()))}>");
             }
             return name;
         }
@@ -889,7 +890,7 @@ namespace QuantConnect
                 if (Time.OneMinute == timeSpan) return Resolution.Minute;
                 if (Time.OneHour   == timeSpan) return Resolution.Hour;
                 if (Time.OneDay    == timeSpan) return Resolution.Daily;
-                throw new InvalidOperationException($"Unable to exactly convert time span ('{timeSpan}') to resolution.");
+                throw new InvalidOperationException(Invariant($"Unable to exactly convert time span ('{timeSpan}') to resolution."));
             }
 
             // for non-perfect matches
@@ -1015,7 +1016,7 @@ namespace QuantConnect
             var matches = regx.Matches(source);
             foreach (Match match in matches)
             {
-                source = source.Replace(match.Value, "<a href='" + match.Value + "' target='blank'>" + match.Value + "</a>");
+                source = source.Replace(match.Value, $"<a href=\'{match.Value}\' target=\'blank\'>{match.Value}</a>");
             }
             return source;
         }
@@ -1060,7 +1061,7 @@ namespace QuantConnect
         /// <returns>A lower-case string representation of the specified enumeration value</returns>
         public static string ToLower(this Enum @enum)
         {
-            return @enum.ToString().ToLower();
+            return @enum.ToString().ToLowerInvariant();
         }
 
         /// <summary>
@@ -1341,8 +1342,9 @@ namespace QuantConnect
                 {
                     for (var i = 0; i < types.Length; i++)
                     {
-                        code += $",t{i}";
-                        locals.SetItem($"t{i}", types[i].ToPython());
+                        var iString = i.ToStringInvariant();
+                        code += $",t{iString}";
+                        locals.SetItem($"t{iString}", types[i].ToPython());
                     }
 
                     locals.SetItem("pyObject", pyObject);
@@ -1419,6 +1421,48 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets Enumerable of <see cref="Symbol"/> from a PyObject
+        /// </summary>
+        /// <param name="pyObject">PyObject containing Symbol or Array of Symbol</param>
+        /// <returns>Enumerable of Symbol</returns>
+        public static IEnumerable<Symbol> ConvertToSymbolEnumerable(this PyObject pyObject)
+        {
+            using (Py.GIL())
+            {
+                if (!PyList.IsListType(pyObject))
+                {
+                    pyObject = new PyList(new[] {pyObject});
+                }
+
+                foreach (PyObject item in pyObject)
+                {
+                    if (PyString.IsStringType(item))
+                    {
+                        yield return SymbolCache.GetSymbol(item.GetAndDispose<string>());
+                    }
+                    else
+                    {
+                        Symbol symbol;
+                        try
+                        {
+                            symbol = item.GetAndDispose<Symbol>();
+                        }
+                        catch (Exception e)
+                        {
+                            throw new ArgumentException(
+                                "Argument type should be Symbol or a list of Symbol. " +
+                                $"Object: {item}. Type: {item.GetPythonType()}",
+                                e
+                            );
+                        }
+
+                        yield return symbol;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Converts the numeric value of one or more enumerated constants to an equivalent enumerated string.
         /// </summary>
         /// <param name="value">Numeric value</param>
@@ -1429,7 +1473,7 @@ namespace QuantConnect
             Type type;
             if (pyObject.TryConvert(out type))
             {
-                return value.ToString().ConvertTo(type).ToString();
+                return value.ToStringInvariant().ConvertTo(type).ToString();
             }
             else
             {

@@ -34,9 +34,12 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2017, 1, 1);
             SetEndDate(2017, 12, 31);
 
-            AddData<EstimizeRelease>("AAPL.R");
-            AddData<EstimizeEstimate>("AAPL.E");
-            AddData<EstimizeConsensus>("AAPL.C");
+            // be sure to add the underlying data source for our estimize data as it requires the mappings
+            AddEquity("AAPL");
+
+            AddData<EstimizeRelease>("AAPL");
+            AddData<EstimizeEstimate>("AAPL");
+            AddData<EstimizeConsensus>("AAPL");
         }
 
         /// <summary>

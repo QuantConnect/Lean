@@ -102,7 +102,7 @@ namespace QuantConnect.Data.UniverseSelection
             var optionsUniverseDataCollection = data as OptionChainUniverseDataCollection;
             if (optionsUniverseDataCollection == null)
             {
-                throw new ArgumentException(string.Format("Expected data of type '{0}'", typeof (OptionChainUniverseDataCollection).Name));
+                throw new ArgumentException($"Expected data of type '{typeof(OptionChainUniverseDataCollection).Name}'");
             }
 
             _underlying = optionsUniverseDataCollection.Underlying ?? _underlying;

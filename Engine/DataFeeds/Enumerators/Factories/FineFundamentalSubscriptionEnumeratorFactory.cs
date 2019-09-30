@@ -105,7 +105,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 return source;
             }
 
-            var cacheKey = config.Symbol.Value.ToLower().GetHashCode();
+            var cacheKey = config.Symbol.Value.ToLowerInvariant().GetHashCode();
             List<DateTime> availableDates;
 
             // only use cache in backtest, since in live mode new fine files are added

@@ -27,51 +27,24 @@ namespace QuantConnect.Data
     /// </summary>
     public abstract class BaseData : IBaseData
     {
-        private MarketDataType _dataType = MarketDataType.Base;
-        private DateTime _time;
-        private Symbol _symbol = Symbol.Empty;
         private decimal _value;
-        private bool _isFillForward;
 
         /// <summary>
         /// Market Data Type of this data - does it come in individual price packets or is it grouped into OHLC.
         /// </summary>
         /// <remarks>Data is classed into two categories - streams of instantaneous prices and groups of OHLC data.</remarks>
-        public MarketDataType DataType
-        {
-            get
-            {
-                return _dataType;
-            }
-            set
-            {
-                _dataType = value;
-            }
-        }
+        public MarketDataType DataType { get; set; } = MarketDataType.Base;
 
         /// <summary>
         /// True if this is a fill forward piece of data
         /// </summary>
-        public bool IsFillForward
-        {
-            get { return _isFillForward; }
-        }
+        public bool IsFillForward { get; private set; }
 
         /// <summary>
         /// Current time marker of this data packet.
         /// </summary>
         /// <remarks>All data is timeseries based.</remarks>
-        public DateTime Time
-        {
-            get
-            {
-                return _time;
-            }
-            set
-            {
-                _time = value;
-            }
-        }
+        public DateTime Time { get; set; }
 
         /// <summary>
         /// The end time of this data. Some data covers spans (trade bars) and as such we want
@@ -79,24 +52,14 @@ namespace QuantConnect.Data
         /// </summary>
         public virtual DateTime EndTime
         {
-            get { return _time; }
-            set { _time = value; }
+            get { return Time; }
+            set { Time = value; }
         }
 
         /// <summary>
         /// Symbol representation for underlying Security
         /// </summary>
-        public Symbol Symbol
-        {
-            get
-            {
-                return _symbol;
-            }
-            set
-            {
-                _symbol = value;
-            }
-        }
+        public Symbol Symbol { get; set; } = Symbol.Empty;
 
         /// <summary>
         /// Value representation of this data packet. All data requires a representative value for this moment in time.
@@ -117,13 +80,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// As this is a backtesting platform we'll provide an alias of value as price.
         /// </summary>
-        public decimal Price
-        {
-            get
-            {
-                return Value;
-            }
-        }
+        public decimal Price => Value;
 
         /// <summary>
         /// Constructor for initialising the dase data class
@@ -193,6 +150,16 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
+        /// Indicates that the data set is expected to be sparse
+        /// </summary>
+        /// <returns>True if the data set represented by this type is expected to be sparse</returns>
+        public virtual bool IsSparseData()
+        {
+            // by default, we'll assume all custom data is sparse data
+            return Symbol.SecurityType == SecurityType.Base;
+        }
+
+        /// <summary>
         /// Updates this base data with a new trade
         /// </summary>
         /// <param name="lastTrade">The price of the last trade</param>
@@ -259,7 +226,7 @@ namespace QuantConnect.Data
         public virtual BaseData Clone(bool fillForward)
         {
             var clone = Clone();
-            clone._isFillForward = fillForward;
+            clone.IsFillForward = fillForward;
             return clone;
         }
 
@@ -281,7 +248,7 @@ namespace QuantConnect.Data
         /// <returns>string - a string formatted as SPY: 167.753</returns>
         public override string ToString()
         {
-            return string.Format("{0}: {1}", Symbol, Value.ToString("C"));
+            return $"{Symbol}: {Value.ToStringInvariant("C")}";
         }
 
         /// <summary>
@@ -297,7 +264,9 @@ namespace QuantConnect.Data
         [Obsolete("Reader(SubscriptionDataConfig, string, DateTime, DataFeedEndpoint) method has been made obsolete, use Reader(SubscriptionDataConfig, string, DateTime, bool) instead.")]
         public virtual BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, DataFeedEndpoint datafeed)
         {
-            throw new InvalidOperationException("Please implement Reader(SubscriptionDataConfig, string, DateTime, bool) on your custom data type: " + GetType().Name);
+            throw new InvalidOperationException(
+                $"Please implement Reader(SubscriptionDataConfig, string, DateTime, bool) on your custom data type: {GetType().Name}"
+            );
         }
 
         /// <summary>
@@ -311,7 +280,9 @@ namespace QuantConnect.Data
         [Obsolete("GetSource(SubscriptionDataConfig, DateTime, DataFeedEndpoint) method has been made obsolete, use GetSource(SubscriptionDataConfig, DateTime, bool) instead.")]
         public virtual string GetSource(SubscriptionDataConfig config, DateTime date, DataFeedEndpoint datafeed)
         {
-            throw new InvalidOperationException("Please implement GetSource(SubscriptionDataConfig, DateTime, bool) on your custom data type: " + GetType().Name);
+            throw new InvalidOperationException(
+                $"Please implement GetSource(SubscriptionDataConfig, DateTime, bool) on your custom data type: {GetType().Name}"
+            );
         }
 
         /// <summary>

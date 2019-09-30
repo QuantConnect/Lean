@@ -104,6 +104,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork), fillForward.Current.EndTime);
             Assert.IsTrue(fillForward.Current.IsFillForward);
             Assert.AreEqual(0, ((TradeBar)fillForward.Current).Volume);
+
+            fillForward.Dispose();
         }
 
         [Test]
@@ -153,6 +155,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(underlying[1].EndTime, fillForward.Current.Time);
             Assert.AreEqual(underlying[1].Value, fillForward.Current.Value);
             Assert.AreEqual(0, ((TradeBar)fillForward.Current).Volume);
+
+            fillForward.Dispose();
         }
     }
 }

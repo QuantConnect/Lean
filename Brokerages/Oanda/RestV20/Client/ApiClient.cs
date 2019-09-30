@@ -19,6 +19,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using Newtonsoft.Json;
+using QuantConnect;
 using RestSharp;
 
 namespace Oanda.RestV20.Client
@@ -250,13 +251,13 @@ namespace Oanda.RestV20.Client
                 // Defaults to an ISO 8601, using the known as a Round-trip date/time pattern ("o")
                 // https://msdn.microsoft.com/en-us/library/az4se3k1(v=vs.110).aspx#Anchor_8
                 // For example: 2009-06-15T13:45:30.0000000
-                return ((DateTime)obj).ToString (Configuration.DateTimeFormat);
+                return ((DateTime)obj).ToStringInvariant(Configuration.DateTimeFormat);
             else if (obj is DateTimeOffset)
                 // Return a formatted date string - Can be customized with Configuration.DateTimeFormat
                 // Defaults to an ISO 8601, using the known as a Round-trip date/time pattern ("o")
                 // https://msdn.microsoft.com/en-us/library/az4se3k1(v=vs.110).aspx#Anchor_8
                 // For example: 2009-06-15T13:45:30.0000000
-                return ((DateTimeOffset)obj).ToString (Configuration.DateTimeFormat);
+                return ((DateTimeOffset)obj).ToStringInvariant(Configuration.DateTimeFormat);
             else if (obj is IList)
             {
                 var flattenedString = new StringBuilder();
@@ -269,7 +270,7 @@ namespace Oanda.RestV20.Client
                 return flattenedString.ToString();
             }
             else
-                return Convert.ToString (obj);
+                return obj.ConvertInvariant<string>();
         }
 
         /// <summary>

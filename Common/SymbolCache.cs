@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect
 {
@@ -48,9 +49,13 @@ namespace QuantConnect
         /// <returns>The symbol object that maps to the specified string ticker symbol</returns>
         public static Symbol GetSymbol(string ticker)
         {
-            Symbol symbol;
-            if (TryGetSymbol(ticker, out symbol)) return symbol;
-            throw new KeyNotFoundException(string.Format("We were unable to locate the ticker '{0}'.", ticker));
+            var result = TryGetSymbol(ticker);
+            if (result.Item3 != null)
+            {
+                throw result.Item3;
+            }
+
+            return result.Item2;
         }
 
         /// <summary>
@@ -61,7 +66,16 @@ namespace QuantConnect
         /// <returns>The symbol object that maps to the specified string ticker symbol</returns>
         public static bool TryGetSymbol(string ticker, out Symbol symbol)
         {
-            return _cache.TryGetSymbol(ticker, out symbol);
+            var result = TryGetSymbol(ticker);
+            // ignore errors
+            if (result.Item1)
+            {
+                symbol = result.Item2;
+                return true;
+            }
+
+            symbol = null;
+            return result.Item1;
         }
 
         /// <summary>
@@ -114,6 +128,41 @@ namespace QuantConnect
         public static void Clear()
         {
             _cache = new Cache();
+        }
+
+        private static Tuple<bool, Symbol, InvalidOperationException> TryGetSymbol(string ticker)
+        {
+            Symbol symbol;
+            InvalidOperationException error = null;
+            if (!_cache.TryGetSymbol(ticker, out symbol))
+            {
+                // fall-back full-text search as a back-shim for custom data symbols.
+                // permitting a user to use BTC to resolve to BTC.Bitcoin
+                var search = $"{ticker.ToUpperInvariant()}.";
+                var match = _cache.Symbols.Where(kvp => kvp.Key.StartsWith(search)).ToList();
+
+                if (match.Count == 0)
+                {
+                    // no matches
+                    error = new InvalidOperationException($"We were unable to locate the ticker '{ticker}'.");
+                }
+                else if (match.Count == 1)
+                {
+                    // exactly one match
+                    symbol = match.Single().Value;
+                }
+                else if (match.Count > 1)
+                {
+                    // too many matches
+                    error = new InvalidOperationException(
+                        "We located multiple potentially matching tickers. For custom data, be sure to " +
+                        "append a dot followed by the custom data type name. For example: 'BTC.Bitcoin'. " +
+                        $"Potential Matches: {string.Join(", ", match.Select(kvp => kvp.Key))}"
+                    );
+                }
+            }
+
+            return Tuple.Create(symbol != null, symbol, error);
         }
 
         class Cache

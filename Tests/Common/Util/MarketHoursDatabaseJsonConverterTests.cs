@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
@@ -70,7 +69,11 @@ namespace QuantConnect.Tests.Common.Util
                 foreach (var line in File.ReadAllLines(x).Skip(1).Where(l => !l.StartsWith("#")))
                 {
                     var csv = line.ToCsv();
-                    dates.Add(new DateTime(int.Parse(csv[0]), int.Parse(csv[1]), int.Parse(csv[2])));
+                    dates.Add(new DateTime(
+                        Parse.Int(csv[0]),
+                        Parse.Int(csv[1]),
+                        Parse.Int(csv[2])
+                    ));
                 }
                 return new KeyValuePair<string, IEnumerable<DateTime>>(market, dates);
             }).ToDictionary();
@@ -102,7 +105,7 @@ namespace QuantConnect.Tests.Common.Util
                 var hours = FromCsvLine(line, holidaysByMarket, out key);
                 if (exchangeHours.ContainsKey(key))
                 {
-                    throw new Exception("Encountered duplicate key while processing file: " + file + ". Key: " + key);
+                    throw new Exception($"Encountered duplicate key while processing file: {file}. Key: {key}");
                 }
 
                 exchangeHours[key] = hours;
@@ -170,7 +173,10 @@ namespace QuantConnect.Tests.Common.Util
             // it must be a UTC offset, parse the offset as hours
 
             // define the time zone as a constant offset time zone in the form: 'UTC-3.5' or 'UTC+10'
-            var millisecondsOffset = (int) TimeSpan.FromHours(double.Parse(tz.Replace("UTC", string.Empty))).TotalMilliseconds;
+            var millisecondsOffset = (int) TimeSpan.FromHours(
+                Parse.Double(tz.Replace("UTC", string.Empty))
+            ).TotalMilliseconds;
+
             return DateTimeZone.ForOffset(Offset.FromMilliseconds(millisecondsOffset));
         }
 
@@ -208,7 +214,7 @@ namespace QuantConnect.Tests.Common.Util
 
         private static TimeSpan ParseHoursToTimeSpan(string ex_open)
         {
-            return TimeSpan.FromHours(double.Parse(ex_open, CultureInfo.InvariantCulture));
+            return TimeSpan.FromHours(Parse.Double(ex_open));
         }
 
         #endregion

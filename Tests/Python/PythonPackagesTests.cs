@@ -504,6 +504,19 @@ def RunTest():
             );
         }
 
+        [Test]
+        public void WraptTest()
+        {
+            AssetCode(
+                @"
+import wrapt
+
+def RunTest():
+    assert(wrapt.__version__ == '1.10.11')
+    return 'Test passed, module exists'"
+            );
+        }
+
         private static void AssetCode(string code)
         {
             using (Py.GIL())

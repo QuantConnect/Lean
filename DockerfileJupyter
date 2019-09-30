@@ -13,23 +13,13 @@ RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.10.0/tini 
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
-RUN git clone https://github.com/QuantConnect/pythonnet && \
-    cd pythonnet && cp src/runtime/interop36.cs src/runtime/interop36m.cs && \
-    python setup.py install && cd .. && rm -irf pythonnet
-
 # Install Lean/PythonToolbox
 RUN git clone https://github.com/QuantConnect/Lean.git && cd Lean/PythonToolbox && \
     python setup.py install && cd ../.. && rm -irf Lean
 
 #Install Jupyter and other packages
-RUN conda update -y conda && \
-    conda install -c conda-forge jupyterlab
-
-# Be sure packages are the same of Foundation
-RUN conda install -y python=3.6.7 && \
-    conda install -y numpy=1.14.5 && \
-    conda install -y pandas=0.23.4 && \
-    conda clean -y --all
+RUN conda install -c plotly plotly=4.1.0
+RUN conda install -c conda-forge jupyterlab
 
 #Install ICSharp (Jupyter C# Kernel)
 RUN wget https://cdn.quantconnect.com/icsharp/ICSharp.Kernel.20180820.zip && \
@@ -41,13 +31,15 @@ ENV WORK /root/Lean/Launcher/bin/Debug/
 ENV PYTHONPATH=${WORK}:${PYTHONPATH}
 
 # Copy Lean files to convenient locations
-COPY ./Launcher/bin/Debug/ ${WORK}
-RUN mkdir ${WORK}/pythonnet && \
-    mv ${WORK}/decimal.py ${WORK}/pythonnet/decimal.py && \
-    mv ${WORK}/nPython.exe ${WORK}/pythonnet/nPython.exe && \
-    mv ${WORK}/Python.Runtime.dll ${WORK}/pythonnet/Python.Runtime.dll && \
-    find ${WORK} -type f -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -delete && \
-    echo "{ \"data-folder\": \"/home/Data/\", \"composer-dll-directory\": \"$WORK\" }" > ${WORK}/config.json
+COPY ./Launcher/bin/Debug/* ${WORK}
+
+RUN find ${WORK} -type f -not -name '*.dll' -not -name '*.ipynb' -not -name '*.csx' -not -name 'decimal.py' -delete
+
+# Copy pythonnet binaries for jupyter
+COPY ./Launcher/bin/Debug/jupyter/* ${WORK}
+
+# Setup config file
+RUN echo "{ \"data-folder\": \"/home/Data/\", \"composer-dll-directory\": \"$WORK\", \"algorithm-language\": \"Python\", \"messaging-handler\": \"QuantConnect.Messaging.Messaging\", \"job-queue-handler\": \"QuantConnect.Queues.JobQueue\", \"api-handler\": \"QuantConnect.Api.Api\" }" > ${WORK}config.json
 
 EXPOSE 8888
 WORKDIR $WORK

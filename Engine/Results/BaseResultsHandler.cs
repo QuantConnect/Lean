@@ -17,10 +17,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Logging;
+using QuantConnect.Orders;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -136,6 +140,85 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void SetDataManager(IDataFeedSubscriptionManager dataManager)
         {
             DataManager = dataManager;
+        }
+
+        /// <summary>
+        /// Gets the algorithm net return
+        /// </summary>
+        protected decimal GetNetReturn()
+        {
+            //Some users have $0 in their brokerage account / starting cash of $0. Prevent divide by zero errors
+            return StartingPortfolioValue > 0 ?
+                (Algorithm.Portfolio.TotalPortfolioValue - StartingPortfolioValue) / StartingPortfolioValue
+                : 0;
+        }
+
+        /// <summary>
+        /// Gets the algorithm runtime statistics
+        /// </summary>
+        /// <remarks>
+        /// TODO: we should not be adding ':' in the collection key
+        /// </remarks>
+        protected Dictionary<string, string> GetAlgorithmRuntimeStatistics(
+            Dictionary<string, string> runtimeStatistics = null,
+            bool addColon = false)
+        {
+
+            if (runtimeStatistics == null)
+            {
+                runtimeStatistics = new Dictionary<string, string>();
+            }
+
+            runtimeStatistics["Unrealized" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalUnrealizedProfit.ToStringInvariant("N2");
+            runtimeStatistics["Fees" + (addColon ? ":" : string.Empty)] = "-$" + Algorithm.Portfolio.TotalFees.ToStringInvariant("N2");
+            runtimeStatistics["Net Profit" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalProfit.ToStringInvariant("N2");
+            runtimeStatistics["Return" + (addColon ? ":" : string.Empty)] = GetNetReturn().ToStringInvariant("P");
+            runtimeStatistics["Equity" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalPortfolioValue.ToStringInvariant("N2");
+            runtimeStatistics["Holdings" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalHoldingsValue.ToStringInvariant("N2");
+            runtimeStatistics["Volume" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
+
+            return runtimeStatistics;
+        }
+
+        /// <summary>
+        /// Will generate the statistics results and update the provided runtime statistics
+        /// </summary>
+        protected StatisticsResults GenerateStatisticsResults(Dictionary<string, Chart> charts,
+            SortedDictionary<DateTime, decimal> profitLoss)
+        {
+            var statisticsResults = new StatisticsResults();
+            try
+            {
+                //Generates error when things don't exist (no charting logged, runtime errors in main algo execution)
+                const string strategyEquityKey = "Strategy Equity";
+                const string equityKey = "Equity";
+                const string dailyPerformanceKey = "Daily Performance";
+                const string benchmarkKey = "Benchmark";
+
+                // make sure we've taken samples for these series before just blindly requesting them
+                if (charts.ContainsKey(strategyEquityKey) &&
+                    charts[strategyEquityKey].Series.ContainsKey(equityKey) &&
+                    charts[strategyEquityKey].Series.ContainsKey(dailyPerformanceKey) &&
+                    charts.ContainsKey(benchmarkKey) &&
+                    charts[benchmarkKey].Series.ContainsKey(benchmarkKey))
+                {
+                    var equity = charts[strategyEquityKey].Series[equityKey].Values;
+                    var performance = charts[strategyEquityKey].Series[dailyPerformanceKey].Values;
+                    var totalTransactions = Algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
+                    var benchmark = charts[benchmarkKey].Series[benchmarkKey].Values;
+
+                    var trades = Algorithm.TradeBuilder.ClosedTrades;
+
+                    statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity, performance, benchmark,
+                        StartingPortfolioValue, Algorithm.Portfolio.TotalFees, totalTransactions);
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, "BaseResultsHandler.GenerateStatisticsResults(): Error generating statistics packet");
+            }
+
+            return statisticsResults;
         }
     }
 }

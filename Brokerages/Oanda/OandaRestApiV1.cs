@@ -132,7 +132,7 @@ namespace QuantConnect.Brokerages.Oanda
             var requestParams = new Dictionary<string, string>
             {
                 { "instrument", SymbolMapper.GetBrokerageSymbol(order.Symbol) },
-                { "units", Convert.ToInt32(order.AbsoluteQuantity).ToString() }
+                { "units", order.AbsoluteQuantity.ConvertInvariant<int>().ToStringInvariant() }
             };
 
             var orderFee = OrderFee.Zero;
@@ -158,7 +158,7 @@ namespace QuantConnect.Brokerages.Oanda
                     }
                     else
                     {
-                        order.BrokerId.Add(postOrderResponse.tradeOpened.id.ToString());
+                        order.BrokerId.Add(postOrderResponse.tradeOpened.id.ToStringInvariant());
                     }
                 }
 
@@ -170,7 +170,7 @@ namespace QuantConnect.Brokerages.Oanda
                     }
                     else
                     {
-                        order.BrokerId.Add(postOrderResponse.tradeReduced.id.ToString());
+                        order.BrokerId.Add(postOrderResponse.tradeReduced.id.ToStringInvariant());
                     }
                 }
 
@@ -178,7 +178,7 @@ namespace QuantConnect.Brokerages.Oanda
                 {
                     if (order.Type != OrderType.Market)
                     {
-                        order.BrokerId.Add(postOrderResponse.orderOpened.id.ToString());
+                        order.BrokerId.Add(postOrderResponse.orderOpened.id.ToStringInvariant());
                     }
                 }
 
@@ -189,7 +189,7 @@ namespace QuantConnect.Brokerages.Oanda
                         .Sum(trade => trade.units);
                 }
 
-                marketOrderFillPrice = Convert.ToDecimal(postOrderResponse.price);
+                marketOrderFillPrice = postOrderResponse.price.ConvertInvariant<decimal>();
                 marketOrderRemainingQuantity = Convert.ToInt32(order.AbsoluteQuantity - Math.Abs(marketOrderFillQuantity));
                 if (marketOrderRemainingQuantity > 0)
                 {
@@ -233,13 +233,13 @@ namespace QuantConnect.Brokerages.Oanda
             var requestParams = new Dictionary<string, string>
             {
                 { "instrument", SymbolMapper.GetBrokerageSymbol(order.Symbol) },
-                { "units", Convert.ToInt32(order.AbsoluteQuantity).ToString() },
+                { "units", order.AbsoluteQuantity.ConvertInvariant<int>().ToStringInvariant() },
             };
 
             // we need the brokerage order id in order to perform an update
             PopulateOrderRequestParameters(order, requestParams);
 
-            UpdateOrder(long.Parse(order.BrokerId.First()), requestParams);
+            UpdateOrder(Parse.Long(order.BrokerId.First()), requestParams);
 
             return true;
         }
@@ -261,7 +261,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             foreach (var orderId in order.BrokerId)
             {
-                CancelOrder(long.Parse(orderId));
+                CancelOrder(Parse.Long(orderId));
                 OnOrderEvent(new OrderEvent(order,
                     DateTime.UtcNow,
                     OrderFee.Zero,
@@ -327,7 +327,7 @@ namespace QuantConnect.Brokerages.Oanda
         public override IEnumerable<TradeBar> DownloadTradeBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
             var oandaSymbol = SymbolMapper.GetBrokerageSymbol(symbol);
-            var startUtc = startTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var startUtc = startTimeUtc.ToStringInvariant("yyyy-MM-ddTHH:mm:ssZ");
 
             var candles = GetCandles(oandaSymbol, startUtc, OandaBrokerage.MaxBarsPerRequest, resolution, ECandleFormat.midpoint);
 
@@ -361,7 +361,7 @@ namespace QuantConnect.Brokerages.Oanda
         public override IEnumerable<QuoteBar> DownloadQuoteBars(Symbol symbol, DateTime startTimeUtc, DateTime endTimeUtc, Resolution resolution, DateTimeZone requestedTimeZone)
         {
             var oandaSymbol = SymbolMapper.GetBrokerageSymbol(symbol);
-            var startUtc = startTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var startUtc = startTimeUtc.ToStringInvariant("yyyy-MM-ddTHH:mm:ssZ");
 
             // Oanda only has 5-second bars, we return these for Resolution.Second
             var period = resolution == Resolution.Second ? TimeSpan.FromSeconds(5) : resolution.ToTimeSpan();
@@ -789,7 +789,7 @@ namespace QuantConnect.Brokerages.Oanda
             qcOrder.Symbol = SymbolMapper.GetLeanSymbol(order.instrument, securityType, Market.Oanda);
             qcOrder.Quantity = ConvertQuantity(order);
             qcOrder.Status = OrderStatus.None;
-            qcOrder.BrokerId.Add(order.id.ToString());
+            qcOrder.BrokerId.Add(order.id.ToStringInvariant());
 
             var orderByBrokerageId = OrderProvider.GetOrderByBrokerageId(order.id);
             if (orderByBrokerageId != null)
@@ -946,7 +946,7 @@ namespace QuantConnect.Brokerages.Oanda
                 OnOrderEvent(new OrderEvent(ConvertOrder(order), DateTime.UtcNow, OrderFee.Zero)
                 {
                     Status = OrderStatus.Invalid,
-                    Message = string.Format("Order currently does not exist with order id: {0}.", orderId)
+                    Message = $"Order currently does not exist with order id: {orderId.ToStringInvariant()}."
                 });
             }
         }

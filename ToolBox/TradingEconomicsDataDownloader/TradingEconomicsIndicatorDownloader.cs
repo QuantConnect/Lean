@@ -68,7 +68,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
             Log.Trace("TradingEconomicsIndicatorDownloader.Run(): Getting list of indicators");
 
             var json = HttpRequester("/indicators").Result;
-            var indicators = JArray.Parse(json).Select(x => x["Category"].Value<string>().ToLower());
+            var indicators = JArray.Parse(json).Select(x => x["Category"].Value<string>().ToLowerInvariant());
             var availableFiles = Directory.GetFiles(_destinationFolder, "*.zip", SearchOption.AllDirectories)
                 .Select(
                     x =>
@@ -137,8 +137,8 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 
                         foreach (var indicatorByDate in kvp.GroupBy(x => x.LastUpdate))
                         {
-                            var date = indicatorByDate.Key.ToString("yyyyMMdd");
-                            var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
+                            var date = indicatorByDate.Key.ToStringInvariant("yyyyMMdd");
+                            var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToStringInvariant(null)}.json");
                             var tempZipPath = tempPath.Replace(".json", ".zip");
                             var finalZipPath = Path.Combine(_destinationFolder, kvp.Key, $"{date}.zip");
                             var dataFolderZipPath = Path.Combine(Globals.DataFolder, "alternative", "trading-economics", "indicator", kvp.Key, $"{date}.zip");
@@ -197,7 +197,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         /// <returns>String representing data for this date range</returns>
         public override Task<string> Get(DateTime startUtc, DateTime endUtc)
         {
-            var url = $"/historical/country/all/indicator/{_indicator}/{startUtc:yyyy-MM-dd}/{endUtc:yyyy-MM-dd}";
+            var url = $"/historical/country/all/indicator/{_indicator}/{startUtc.ToStringInvariant("yyyy-MM-dd")}/{endUtc.ToStringInvariant("yyyy-MM-dd")}";
             return HttpRequester(url);
         }
     }

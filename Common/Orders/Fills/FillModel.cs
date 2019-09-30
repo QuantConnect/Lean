@@ -20,6 +20,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders.Fills
 {
@@ -536,7 +537,7 @@ namespace QuantConnect.Orders.Fills
         /// <summary>
         /// Determines if the exchange is open using the current time of the asset
         /// </summary>
-        private static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
+        protected static bool IsExchangeOpen(Security asset, bool isExtendedMarketHours)
         {
             if (!asset.Exchange.DateTimeIsOpen(asset.LocalTime))
             {

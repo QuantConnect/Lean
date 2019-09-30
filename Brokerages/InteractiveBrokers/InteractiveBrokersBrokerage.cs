@@ -412,7 +412,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // this could be better
                 foreach (var id in order.BrokerId)
                 {
-                    var orderId = int.Parse(id);
+                    var orderId = Parse.Int(id);
 
                     _requestInformation[orderId] = "CancelOrder: " + order;
 
@@ -552,7 +552,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Exchange = exchange,
                 SecType = type ?? IB.SecurityType.Undefined,
                 Symbol = symbol,
-                Time = (timeSince ?? DateTime.MinValue).ToString("yyyyMMdd HH:mm:ss"),
+                Time = (timeSince ?? DateTime.MinValue).ToStringInvariant("yyyyMMdd HH:mm:ss"),
                 Side = side ?? IB.ActionSide.Undefined
             };
 
@@ -900,7 +900,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 order.Symbol.SecurityType == SecurityType.Option &&
                 (order.Type == OrderType.MarketOnOpen || order.Type == OrderType.MarketOnClose))
             {
-                exchange = Market.CBOE.ToUpper();
+                exchange = Market.CBOE.ToUpperInvariant();
             }
 
             var contract = CreateContract(order.Symbol, exchange);
@@ -910,13 +910,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 // the order ids are generated for us by the SecurityTransactionManaer
                 var id = GetNextBrokerageOrderId();
-                order.BrokerId.Add(id.ToString());
+                order.BrokerId.Add(id.ToStringInvariant());
                 ibOrderId = id;
             }
             else if (order.BrokerId.Any())
             {
                 // this is *not* perfect code
-                ibOrderId = int.Parse(order.BrokerId[0]);
+                ibOrderId = Parse.Int(order.BrokerId[0]);
             }
             else
             {
@@ -940,7 +940,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private static string GetUniqueKey(Contract contract)
         {
-            return string.Format("{0} {1} {2} {3}", contract, contract.LastTradeDateOrContractMonth, contract.Strike, contract.Right);
+            return $"{contract} {contract.LastTradeDateOrContractMonth.ToStringInvariant()} {contract.Strike.ToStringInvariant()} {contract.Right}";
         }
 
         private string GetPrimaryExchange(Contract contract)
@@ -1528,7 +1528,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var price = Convert.ToDecimal(execution.Price);
             var orderFee = new OrderFee(new CashAmount(
                 Convert.ToDecimal(commissionReport.Commission),
-                commissionReport.Currency.ToUpper()));
+                commissionReport.Currency.ToUpperInvariant()));
 
             // set order status based on remaining quantity
             var status = remainingQuantity > 0 ? OrderStatus.PartiallyFilled : OrderStatus.Filled;
@@ -1666,7 +1666,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                         if (ibOrder.FaMethod == "PctChange")
                         {
-                            ibOrder.FaPercentage = orderProperties.FaPercentage.ToString();
+                            ibOrder.FaPercentage = orderProperties.FaPercentage.ToStringInvariant();
                             ibOrder.TotalQuantity = 0;
                         }
                     }
@@ -1743,7 +1743,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     throw new InvalidEnumArgumentException("orderType", (int) orderType, typeof (OrderType));
             }
 
-            order.BrokerId.Add(ibOrder.OrderId.ToString());
+            order.BrokerId.Add(ibOrder.OrderId.ToStringInvariant());
 
             order.Properties.TimeInForce = ConvertTimeInForce(ibOrder.Tif, ibOrder.GoodTillDate);
 
@@ -1782,7 +1782,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (symbol.ID.SecurityType == SecurityType.Option)
             {
-                contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToString(DateFormat.EightCharacter);
+                contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter);
                 contract.Right = symbol.ID.OptionRight == OptionRight.Call ? IB.RightType.Call : IB.RightType.Put;
                 contract.Strike = Convert.ToDouble(symbol.ID.StrikePrice);
                 contract.Symbol = ibSymbol;
@@ -1796,7 +1796,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // Otherwise we convert Market.* markets into IB exchanges if we have them in our map
 
                 contract.Symbol = ibSymbol;
-                contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToString(DateFormat.EightCharacter);
+                contract.LastTradeDateOrContractMonth = symbol.ID.Date.ToStringInvariant(DateFormat.EightCharacter);
 
                 if (symbol.ID.Market == Market.USA)
                 {
@@ -2129,7 +2129,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var currencySymbol = Currencies.GetCurrencySymbol(e.Contract.Currency);
             var symbol = MapSymbol(e.Contract);
 
-            var multiplier = Convert.ToDecimal(e.Contract.Multiplier);
+            var multiplier = e.Contract.Multiplier.ConvertInvariant<decimal>();
             if (multiplier == 0m) multiplier = 1m;
 
             return new Holding
@@ -2452,7 +2452,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var market = symbol.ID.Market;
             var securityType = symbol.ID.SecurityType;
 
-            if (symbol.Value.ToLower().IndexOf("universe") != -1) return false;
+            if (symbol.Value.IndexOfInvariant("universe", true) != -1) return false;
 
             return
                 (securityType == SecurityType.Equity && market == Market.USA) ||
@@ -2852,7 +2852,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 CheckRateLimiting();
 
-                Client.ClientSocket.reqHistoricalData(historicalTicker, contract, endTime.ToString("yyyyMMdd HH:mm:ss UTC"),
+                Client.ClientSocket.reqHistoricalData(historicalTicker, contract, endTime.ToStringInvariant("yyyyMMdd HH:mm:ss UTC"),
                     duration, resolution, dataType, useRegularTradingHours, 2, false, new List<TagValue>());
 
                 var waitResult = 0;

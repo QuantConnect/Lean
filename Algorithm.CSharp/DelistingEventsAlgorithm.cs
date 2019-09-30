@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 var symbol = kvp.Key;
                 var tradeBar = kvp.Value;
-                Debug($"OnData(Slice): {Time}: {symbol}: {tradeBar.Close.ToString("0.00")}");
+                Debug($"OnData(Slice): {Time}: {symbol}: {tradeBar.Close.ToStringInvariant("0.00")}");
             }
 
             // the slice can also contain delisting data: data.Delistings in a dictionary string->Delisting

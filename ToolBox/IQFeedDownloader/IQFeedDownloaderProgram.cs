@@ -43,7 +43,7 @@ namespace QuantConnect.ToolBox.IQFeedDownloader
             try
             {
                 // Load settings from command line
-                var allResolutions = resolution.ToLower() == "all";
+                var allResolutions = resolution.ToLowerInvariant() == "all";
                 var castResolution = allResolutions ? Resolution.Tick : (Resolution)Enum.Parse(typeof(Resolution), resolution);
                 var startDate = fromDate.ConvertToUtc(TimeZones.NewYork);
                 var endDate = toDate.ConvertToUtc(TimeZones.NewYork);

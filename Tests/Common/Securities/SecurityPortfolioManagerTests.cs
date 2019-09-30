@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
@@ -42,7 +41,7 @@ namespace QuantConnect.Tests.Common.Securities
     public class SecurityPortfolioManagerTests
     {
         private static readonly SecurityExchangeHours SecurityExchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
-        private static readonly Symbol CASH = new Symbol(SecurityIdentifier.GenerateBase("CASH", Market.USA), "CASH");
+        private static readonly Symbol CASH = new Symbol(SecurityIdentifier.GenerateBase(null, "CASH", Market.USA), "CASH");
         private static readonly Symbol MCHJWB = new Symbol(SecurityIdentifier.GenerateForex("MCHJWB", Market.FXCM), "MCHJWB");
         private static readonly Symbol MCHUSD = new Symbol(SecurityIdentifier.GenerateForex("MCHUSD", Market.FXCM), "MCHUSD");
         private static readonly Symbol USDJWB = new Symbol(SecurityIdentifier.GenerateForex("USDJWB", Market.FXCM), "USDJWB");
@@ -80,7 +79,7 @@ namespace QuantConnect.Tests.Common.Securities
                 ).ToList();
 
             var equity = XDocument.Load(equityFile).Descendants("decimal")
-                .Select(x => decimal.Parse(x.Value, CultureInfo.InvariantCulture))
+                .Select(x => Parse.Decimal(x.Value))
                 .ToList();
 
             Assert.AreEqual(fills.Count + 1, equity.Count);
@@ -143,15 +142,15 @@ namespace QuantConnect.Tests.Common.Securities
                 ).ToList();
 
             var equity = XDocument.Load(equityFile).Descendants("decimal")
-                .Select(x => decimal.Parse(x.Value, CultureInfo.InvariantCulture))
+                .Select(x => Parse.Decimal(x.Value))
                 .ToList();
 
             var mchQuantity = XDocument.Load(mchQuantityFile).Descendants("decimal")
-                .Select(x => decimal.Parse(x.Value, CultureInfo.InvariantCulture))
+                .Select(x => Parse.Decimal(x.Value))
                 .ToList();
 
             var jwbQuantity = XDocument.Load(jwbQuantityFile).Descendants("decimal")
-                .Select(x => decimal.Parse(x.Value, CultureInfo.InvariantCulture))
+                .Select(x => Parse.Decimal(x.Value))
                 .ToList();
 
             Assert.AreEqual(fills.Count + 1, equity.Count);
@@ -251,7 +250,7 @@ namespace QuantConnect.Tests.Common.Securities
                 //}
                 //Console.WriteLine("CashValue: " + portfolio.CashBook.TotalValueInAccountCurrency);
 
-                Console.WriteLine(i + 1 + "   " + portfolio.TotalPortfolioValue.ToString("C"));
+                Console.WriteLine(i + 1 + "   " + portfolio.TotalPortfolioValue.ToStringInvariant("C"));
                 //Assert.AreEqual((double) equity[i + 1], (double)portfolio.TotalPortfolioValue, 2e-2);
                 Assert.AreEqual((double) mchQuantity[i + 1], (double)portfolio.CashBook["MCH"].Amount);
                 Assert.AreEqual((double) jwbQuantity[i + 1], (double)portfolio.CashBook["JWB"].Amount);

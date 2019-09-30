@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             );
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
             var enumerator = new EnqueueableEnumerator<BaseData>();
-            var subscriptionDataEnumerator = SubscriptionData.Enumerator(config, security, timeZoneOffsetProvider, enumerator);
+            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, enumerator);
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, start, end);
             var subscription = new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
 
@@ -104,6 +104,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }, cts.Token);
 
             Task.WaitAll(addTask, removeTask, readTask);
+            subscription.Dispose();
         }
         [Test]
         public void DefaultFillForwardResolution()
@@ -121,6 +122,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var fillForwardResolutio = subscriptionColletion.UpdateAndGetFillForwardResolution(subscription.Configuration);
             Assert.AreEqual(fillForwardResolutio.Value, new TimeSpan(1, 0, 0, 0));
+            subscription.Dispose();
         }
 
         [Test]
@@ -131,6 +133,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var fillForwardResolutio = subscriptionColletion.UpdateAndGetFillForwardResolution(subscription.Configuration);
             Assert.AreEqual(fillForwardResolutio.Value, new TimeSpan(0, 0, 1));
+            subscription.Dispose();
         }
 
         [Test]
@@ -151,6 +154,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             subscriptionColletion.TryAdd(subscription);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(1, 0, 0, 0));
+            subscription.Dispose();
         }
 
         [Test]
@@ -164,6 +168,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
             subscriptionColletion.TryAdd(subscription2);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
+            subscription.Dispose();
+            subscription2.Dispose();
         }
 
         [Test]
@@ -180,6 +186,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(1, 0, 0, 0));
             subscriptionColletion.TryRemove(subscription2.Configuration, out subscription2);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            subscription.Dispose();
+            subscription2.Dispose();
         }
 
         [Test]
@@ -192,6 +200,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
             subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            subscription.Dispose();
         }
 
         [Test]
@@ -204,6 +213,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
             subscriptionColletion.TryRemove(subscription.Configuration, out subscription);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            subscription.Dispose();
         }
 
         [Test]
@@ -221,6 +231,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 0, 1));
             subscriptionColletion.TryRemove(subscription2.Configuration, out subscription2);
             Assert.AreEqual(subscriptionColletion.UpdateAndGetFillForwardResolution().Value, new TimeSpan(0, 1, 0));
+            subscription.Dispose();
+            subscription2.Dispose();
         }
 
         [Test]
@@ -250,6 +262,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option,
                 SecurityType.Option, SecurityType.Option, SecurityType.Future });
+
+            subscription.Dispose();
+            subscription2.Dispose();
+            subscription3.Dispose();
+            subscription4.Dispose();
+            subscription5.Dispose();
+            subscription6.Dispose();
         }
 
         [Test]
@@ -271,6 +290,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.AreEqual(subscriptionColletion.ToList(), new[] { subscription4, subscription2, subscription3, subscription });
             Assert.AreEqual(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList(), new[] { SecurityType.Equity, SecurityType.Equity, SecurityType.Option, SecurityType.Future });
+
+            subscription.Dispose();
+            subscription2.Dispose();
+            subscription3.Dispose();
+            subscription4.Dispose();
         }
 
         [Test]
@@ -312,6 +336,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             subscriptionColletion.TryRemove(subscription4.Configuration, out subscription4);
             Assert.IsTrue(subscriptionColletion.Select(x => x.Configuration.SecurityType).ToList().IsNullOrEmpty());
+
+            subscription.Dispose();
+            subscription2.Dispose();
+            subscription3.Dispose();
+            subscription4.Dispose();
+            subscription5.Dispose();
+            subscription6.Dispose();
         }
 
         private Subscription CreateSubscription(Resolution resolution, string symbol = "AAPL", bool isInternalFeed = false,
@@ -363,7 +394,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var config = new SubscriptionDataConfig(typeof(TradeBar), _symbol, resolution, DateTimeZone.Utc, DateTimeZone.Utc, true, false, isInternalFeed, false, tickType);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
             var enumerator = new EnqueueableEnumerator<BaseData>();
-            var subscriptionDataEnumerator = SubscriptionData.Enumerator(config, security, timeZoneOffsetProvider, enumerator);
+            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, enumerator);
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, start, end);
             return new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
         }

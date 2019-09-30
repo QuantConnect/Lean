@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,27 +47,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Queues
         {
             _ticks = new ConcurrentQueue<BaseData>();
             _symbols = new HashSet<Symbol>();
-            
+
             // load it up to start
             PopulateQueue();
             PopulateQueue();
             PopulateQueue();
             PopulateQueue();
-            
+
             _timer = new Timer
             {
                 AutoReset = true,
                 Enabled = true,
                 Interval = 1000,
             };
-            
+
             var lastCount = 0;
             var lastTime = DateTime.Now;
             _timer.Elapsed += (sender, args) =>
             {
                 var elapsed = (DateTime.Now - lastTime);
                 var ticksPerSecond = (count - lastCount)/elapsed.TotalSeconds;
-                Console.WriteLine("TICKS PER SECOND:: " + ticksPerSecond.ToString("000000.0") + " ITEMS IN QUEUE:: " + _ticks.Count);
+                Console.WriteLine("TICKS PER SECOND:: " + ticksPerSecond.ToStringInvariant("000000.0") + " ITEMS IN QUEUE:: " + _ticks.Count);
                 lastCount = count;
                 lastTime = DateTime.Now;
                 PopulateQueue();

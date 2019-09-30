@@ -223,13 +223,7 @@ namespace QuantConnect.Tests.Engine
             {
             }
 
-            public void SendFinalResult(AlgorithmNodePacket job,
-                Dictionary<int, Order> orders,
-                Dictionary<DateTime, decimal> profitLoss,
-                Dictionary<string, Holding> holdings,
-                CashBook cashbook,
-                StatisticsResults statisticsResults,
-                Dictionary<string, string> banner)
+            public void SendFinalResult()
             {
             }
 

@@ -51,7 +51,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             // Date for the option bz files.
             var referenceDate = DateTime.ParseExact(date, DateFormat.EightCharacter, CultureInfo.InvariantCulture);
 
-            Log.Trace("DateTime: " + referenceDate.Date.ToString());
+            Log.Trace($"DateTime: {referenceDate.Date.ToStringInvariant()}");
 
             // checking if remote folder exists
             if (!Directory.Exists(remoteDirectory))
@@ -65,19 +65,19 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
             var converter = new AlgoSeekOptionsConverter(Resolution.Minute, referenceDate, remoteDirectory, remoteMask, sourceDirectory, dataDirectory);
 
             converter.Clean(referenceDate);
-            Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): {0} Cleaning finished in time: {1}", referenceDate, timer.Elapsed));
+            Log.Trace($"AlgoSeekOptionConverter.Main(): {referenceDate.ToStringInvariant()} Cleaning finished in time: {timer.Elapsed.ToStringInvariant(null)}");
 
             timer.Restart();
             converter.Convert();
-            Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): {0} Conversion finished in time: {1}", referenceDate, timer.Elapsed));
+            Log.Trace($"AlgoSeekOptionConverter.Main(): {referenceDate.ToStringInvariant()} Conversion finished in time: {timer.Elapsed.ToStringInvariant(null)}");
 
             timer.Restart();
             converter.Package(referenceDate);
-            Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): {0} Compression finished in time: {1}", referenceDate, timer.Elapsed));
+            Log.Trace($"AlgoSeekOptionConverter.Main(): {referenceDate.ToStringInvariant()} Compression finished in time: {timer.Elapsed.ToStringInvariant(null)}");
 
             if (cleanSourceDirectory)
             {
-                Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): Cleaning source directory: {0}", sourceDirectory));
+                Log.Trace($"AlgoSeekOptionConverter.Main(): Cleaning source directory: {sourceDirectory}");
 
                 try
                 {
@@ -85,7 +85,7 @@ namespace QuantConnect.ToolBox.AlgoSeekOptionsConverter
                 }
                 catch (Exception err)
                 {
-                    Log.Trace(string.Format("AlgoSeekOptionConverter.Main(): Error while cleaning source directory {0}", err.Message));
+                    Log.Trace($"AlgoSeekOptionConverter.Main(): Error while cleaning source directory {err.Message}");
                 }
             }
 

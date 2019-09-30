@@ -142,7 +142,7 @@ namespace QuantConnect.Data.Auxiliary
         /// </summary>
         public string ToCsv()
         {
-            return $"{Date.ToString(DateFormat.EightCharacter)},{MappedSymbol.ToLower()}";
+            return $"{Date.ToStringInvariant(DateFormat.EightCharacter)},{MappedSymbol.ToLowerInvariant()}";
         }
 
         public override string ToString()

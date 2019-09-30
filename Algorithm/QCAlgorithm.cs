@@ -920,7 +920,7 @@ namespace QuantConnect.Algorithm
             }
             catch (DateTimeZoneNotFoundException)
             {
-                throw new ArgumentException(string.Format("TimeZone with id '{0}' was not found. For a complete list of time zones please visit: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones", timeZone));
+                throw new ArgumentException($"TimeZone with id '{timeZone}' was not found. For a complete list of time zones please visit: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones");
             }
 
             SetTimeZone(tz);
@@ -1781,6 +1781,25 @@ namespace QuantConnect.Algorithm
         /// AddData<typeparam name="T"/> a new user defined data source, requiring only the minimum config options.
         /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time)
         /// </summary>
+        /// <param name="underlying">The underlying symbol for the custom data</param>
+        /// <param name="resolution">Resolution of the data</param>
+        /// <returns>The new <see cref="Security"/></returns>
+        /// <remarks>Generic type T must implement base data</remarks>
+        public Security AddData<T>(Symbol underlying, Resolution resolution = Resolution.Minute)
+            where T : IBaseData, new()
+        {
+            //Add this new generic data as a tradeable security:
+            // Defaults:extended market hours"      = true because we want events 24 hours,
+            //          fillforward                 = false because only want to trigger when there's new custom data.
+            //          leverage                    = 1 because no leverage on nonmarket data?
+            return AddData<T>(underlying, resolution, fillDataForward: false, leverage: 1m);
+        }
+
+
+        /// <summary>
+        /// AddData<typeparam name="T"/> a new user defined data source, requiring only the minimum config options.
+        /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time)
+        /// </summary>
         /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
@@ -1791,6 +1810,22 @@ namespace QuantConnect.Algorithm
             where T : IBaseData, new()
         {
             return AddData<T>(ticker, resolution, TimeZones.NewYork, fillDataForward, leverage);
+        }
+
+        /// <summary>
+        /// AddData<typeparam name="T"/> a new user defined data source, requiring only the minimum config options.
+        /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time)
+        /// </summary>
+        /// <param name="underlying">The underlying symbol for the custom data</param>
+        /// <param name="resolution">Resolution of the Data Required</param>
+        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="leverage">Custom leverage per security</param>
+        /// <returns>The new <see cref="Security"/></returns>
+        /// <remarks>Generic type T must implement base data</remarks>
+        public Security AddData<T>(Symbol underlying, Resolution resolution, bool fillDataForward, decimal leverage = 1.0m)
+            where T : IBaseData, new()
+        {
+            return AddData<T>(underlying, resolution, TimeZones.NewYork, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -1806,23 +1841,23 @@ namespace QuantConnect.Algorithm
         public Security AddData<T>(string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
             where T : IBaseData, new()
         {
-            //Add this custom symbol to our market hours database
-            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, ticker, SecurityType.Base, timeZone);
+            return AddData(typeof(T), ticker, resolution, timeZone, fillDataForward, leverage);
+        }
 
-            //Add this to the data-feed subscriptions
-            var symbol = new Symbol(SecurityIdentifier.GenerateBase(ticker, Market.USA, typeof(T).GetBaseDataInstance().RequiresMapping()), ticker);
-
-            //Add this new generic data as a tradeable security:
-            var config = SubscriptionManager.SubscriptionDataConfigService.Add(typeof(T),
-                symbol,
-                resolution,
-                fillDataForward,
-                extendedMarketHours: true,
-                isCustomData: true);
-            var security = Securities.CreateSecurity(symbol, config, leverage);
-
-            AddToUserDefinedUniverse(security, new List<SubscriptionDataConfig>{ config });
-            return security;
+        /// <summary>
+        /// AddData<typeparam name="T"/> a new user defined data source, requiring only the minimum config options.
+        /// </summary>
+        /// <param name="underlying">The underlying symbol for the custom data</param>
+        /// <param name="resolution">Resolution of the Data Required</param>
+        /// <param name="timeZone">Specifies the time zone of the raw data</param>
+        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="leverage">Custom leverage per security</param>
+        /// <returns>The new <see cref="Security"/></returns>
+        /// <remarks>Generic type T must implement base data</remarks>
+        public Security AddData<T>(Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+            where T : IBaseData, new()
+        {
+            return AddData(typeof(T), underlying, resolution, timeZone, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -1846,7 +1881,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Error(int)"/>
         public void Debug(int message)
         {
-            Debug(message.ToString());
+            Debug(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1857,7 +1892,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Error(double)"/>
         public void Debug(double message)
         {
-            Debug(message.ToString());
+            Debug(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1868,7 +1903,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Error(decimal)"/>
         public void Debug(decimal message)
         {
-            Debug(message.ToString());
+            Debug(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1891,7 +1926,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Error(int)"/>
         public void Log(int message)
         {
-            Log(message.ToString());
+            Log(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1902,7 +1937,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Error(double)"/>
         public void Log(double message)
         {
-            Log(message.ToString());
+            Log(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1913,7 +1948,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Error(decimal)"/>
         public void Log(decimal message)
         {
-            Log(message.ToString());
+            Log(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1937,7 +1972,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Log(int)"/>
         public void Error(int message)
         {
-            Error(message.ToString());
+            Error(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1948,7 +1983,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Log(double)"/>
         public void Error(double message)
         {
-            Error(message.ToString());
+            Error(message.ToStringInvariant());
         }
 
         /// <summary>
@@ -1959,7 +1994,7 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="Log(decimal)"/>
         public void Error(decimal message)
         {
-            Error(message.ToString());
+            Error(message.ToStringInvariant());
         }
 
         /// <summary>

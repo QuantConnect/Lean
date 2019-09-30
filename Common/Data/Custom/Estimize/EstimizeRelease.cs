@@ -14,12 +14,9 @@
 */
 
 using Newtonsoft.Json;
-using QuantConnect.Data.UniverseSelection;
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Custom.Estimize
 {
@@ -127,19 +124,19 @@ namespace QuantConnect.Data.Custom.Estimize
             // ReleaseDate[0], Id[1], FiscalYear[2], FiscalQuarter[3], Eps[4], Revenue[5], ConsensusEpsEstimate[6], ConsensusRevenueEstimate[7], WallStreetEpsEstimate[8], WallStreetRevenueEstimate[9], ConsensusWeightedEpsEstimate[10], ConsensusWeightedRevenueEstimate[11]");
             var csv = csvLine.Split(',');
 
-            ReleaseDate = DateTime.ParseExact(csv[0].Trim(), "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+            ReleaseDate = Parse.DateTimeExact(csv[0].Trim(), "yyyyMMdd HH:mm:ss");
             Time = ReleaseDate;
             Id = csv[1];
-            FiscalYear = Convert.ToInt32(csv[2], CultureInfo.InvariantCulture);
-            FiscalQuarter = Convert.ToInt32(csv[3], CultureInfo.InvariantCulture);
-            Eps = string.IsNullOrWhiteSpace(csv[4]) ? (decimal?)null : Convert.ToDecimal(csv[4], CultureInfo.InvariantCulture);
-            Revenue = string.IsNullOrWhiteSpace(csv[5]) ? (decimal?)null : Convert.ToDecimal(csv[5], CultureInfo.InvariantCulture);
-            ConsensusEpsEstimate = string.IsNullOrWhiteSpace(csv[6]) ? (decimal?)null : Convert.ToDecimal(csv[6], CultureInfo.InvariantCulture);
-            ConsensusRevenueEstimate = string.IsNullOrWhiteSpace(csv[7]) ? (decimal?)null : Convert.ToDecimal(csv[7], CultureInfo.InvariantCulture);
-            WallStreetEpsEstimate = string.IsNullOrWhiteSpace(csv[8]) ? (decimal?)null : Convert.ToDecimal(csv[8], CultureInfo.InvariantCulture);
-            WallStreetRevenueEstimate = string.IsNullOrWhiteSpace(csv[9]) ? (decimal?)null : Convert.ToDecimal(csv[9], CultureInfo.InvariantCulture);
-            ConsensusWeightedEpsEstimate = string.IsNullOrWhiteSpace(csv[10]) ? (decimal?)null : Convert.ToDecimal(csv[10], CultureInfo.InvariantCulture);
-            ConsensusWeightedRevenueEstimate = string.IsNullOrWhiteSpace(csv[11]) ? (decimal?)null : Convert.ToDecimal(csv[11], CultureInfo.InvariantCulture);
+            FiscalYear = Parse.Int(csv[2]);
+            FiscalQuarter = Parse.Int(csv[3]);
+            Eps = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            Revenue = csv[5].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            ConsensusEpsEstimate = csv[6].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            ConsensusRevenueEstimate = csv[7].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            WallStreetEpsEstimate = csv[8].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            WallStreetRevenueEstimate = csv[9].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            ConsensusWeightedEpsEstimate = csv[10].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
+            ConsensusWeightedRevenueEstimate = csv[11].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
         }
 
         /// <summary>
@@ -151,20 +148,12 @@ namespace QuantConnect.Data.Custom.Estimize
         /// <returns>Subscription Data Source.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            if (!config.Symbol.Value.EndsWith(".R"))
-            {
-                throw new ArgumentException($"EstimizeRelease.GetSource(): Invalid symbol {config.Symbol}");
-            }
-
-            var symbol = config.Symbol.Value;
-            symbol = symbol.Substring(0, symbol.Length - 2);
-
             var source = Path.Combine(
                 Globals.DataFolder,
                 "alternative",
                 "estimize",
                 "release",
-                $"{symbol.ToLower()}.csv"
+                $"{config.Symbol.Value.ToLowerInvariant()}.csv"
             );
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
@@ -192,7 +181,19 @@ namespace QuantConnect.Data.Custom.Estimize
         /// </summary>
         public override string ToString()
         {
-            return $"{Symbol}(Q{FiscalQuarter} {FiscalYear}) :: EPS: {Eps} Revenue: {Revenue} on {EndTime:yyyyMMdd}";
+            return Invariant($"{Symbol}(Q{FiscalQuarter} {FiscalYear}) :: ") +
+                   Invariant($"EPS: {Eps} ") +
+                   Invariant($"Revenue: {Revenue} on ") +
+                   Invariant($"{EndTime:yyyyMMdd}");
+        }
+
+        /// <summary>
+        /// Indicates if there is support for mapping
+        /// </summary>
+        /// <returns>True indicates mapping should be used</returns>
+        public override bool RequiresMapping()
+        {
+            return true;
         }
     }
 }

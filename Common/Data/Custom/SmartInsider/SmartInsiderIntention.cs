@@ -14,12 +14,8 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Data.Custom.SmartInsider
 {
@@ -191,7 +187,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
                     "alternative",
                     "smartinsider",
                     "intentions",
-                    $"{config.Symbol.Value.ToLower()}.tsv"
+                    $"{config.Symbol.Value.ToLowerInvariant()}.tsv"
                 ),
                 SubscriptionTransportMedium.LocalFile,
                 FileFormat.Csv
@@ -282,8 +278,8 @@ namespace QuantConnect.Data.Custom.SmartInsider
             return string.Join("\t",
                 TransactionID,
                 BuybackType,
-                LastUpdate.ToString("yyyyMMdd"),
-                LastIDsUpdate?.ToString("yyyyMMdd"),
+                LastUpdate.ToStringInvariant("yyyyMMdd"),
+                LastIDsUpdate?.ToStringInvariant("yyyyMMdd"),
                 ISIN,
                 USDMarketCap,
                 CompanyID,
@@ -293,18 +289,18 @@ namespace QuantConnect.Data.Custom.SmartInsider
                 ICBSubSector,
                 ICBCode,
                 CompanyName,
-                PreviousResultsAnnouncementDate?.ToString("yyyyMMdd"),
-                NextResultsAnnouncementsDate?.ToString("yyyyMMdd"),
-                NextCloseBegin?.ToString("yyyyMMdd"),
-                LastCloseEnded?.ToString("yyyyMMdd"),
+                PreviousResultsAnnouncementDate?.ToStringInvariant("yyyyMMdd"),
+                NextResultsAnnouncementsDate?.ToStringInvariant("yyyyMMdd"),
+                NextCloseBegin?.ToStringInvariant("yyyyMMdd"),
+                LastCloseEnded?.ToStringInvariant("yyyyMMdd"),
                 SecurityDescription,
                 TickerCountry,
                 TickerSymbol,
-                AnnouncementDate?.ToString("yyyyMMdd"),
-                TimeReleased?.ToString("yyyyMMdd HH:mm:ss"),
-                TimeProcessed?.ToString("yyyyMMdd HH:mm:ss"),
-                TimeReleasedUtc?.ToString("yyyyMMdd HH:mm:ss"),
-                TimeProcessedUtc?.ToString("yyyyMMdd HH:mm:ss"),
+                AnnouncementDate?.ToStringInvariant("yyyyMMdd"),
+                TimeReleased?.ToStringInvariant("yyyyMMdd HH:mm:ss"),
+                TimeProcessed?.ToStringInvariant("yyyyMMdd HH:mm:ss"),
+                TimeReleasedUtc?.ToStringInvariant("yyyyMMdd HH:mm:ss"),
+                TimeProcessedUtc?.ToStringInvariant("yyyyMMdd HH:mm:ss"),
                 AnnouncedIn,
                 IntentionVia,
                 IntentionBy,
@@ -313,8 +309,8 @@ namespace QuantConnect.Data.Custom.SmartInsider
                 ValueCurrency,
                 IntentionValue,
                 IntentionPercentage,
-                IntentionAuthorisationStartDate?.ToString("yyyyMMdd"),
-                IntentionAuthorisationEndDate?.ToString("yyyyMMdd"),
+                IntentionAuthorisationStartDate?.ToStringInvariant("yyyyMMdd"),
+                IntentionAuthorisationEndDate?.ToStringInvariant("yyyyMMdd"),
                 PriceCurrency,
                 MinimumPrice,
                 MaximumPrice,

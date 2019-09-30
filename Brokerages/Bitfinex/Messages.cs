@@ -142,12 +142,12 @@ namespace QuantConnect.Brokerages.Bitfinex.Messages
 
         public Candle(object[] entries)
         {
-            Timestamp = Convert.ToInt64(entries[0]);
-            Open = Convert.ToDecimal(entries[1]);
-            Close = Convert.ToDecimal(entries[2]);
-            High = Convert.ToDecimal(entries[3]);
-            Low = Convert.ToDecimal(entries[4]);
-            Volume = Convert.ToDecimal(entries[5]);
+            Timestamp = entries[0].ConvertInvariant<long>();
+            Open = entries[1].ConvertInvariant<decimal>();
+            Close = entries[2].ConvertInvariant<decimal>();
+            High = entries[3].ConvertInvariant<decimal>();
+            Low = entries[4].ConvertInvariant<decimal>();
+            Volume = entries[5].ConvertInvariant<decimal>();
         }
     }
 

@@ -21,6 +21,7 @@ using NodaTime;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Securities;
 using QuantConnect.Util;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data
 {
@@ -131,7 +132,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Consolidators that are registred with this subscription
         /// </summary>
-        public readonly HashSet<IDataConsolidator> Consolidators;
+        public readonly ISet<IDataConsolidator> Consolidators;
 
         /// <summary>
         /// Gets whether or not this subscription should have filters applied to it (market hours/user filters from security)
@@ -168,10 +169,10 @@ namespace QuantConnect.Data
             bool isFilteredSubscription = true,
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted)
         {
-            if (objectType == null) throw new ArgumentNullException("objectType");
-            if (symbol == null) throw new ArgumentNullException("symbol");
-            if (dataTimeZone == null) throw new ArgumentNullException("dataTimeZone");
-            if (exchangeTimeZone == null) throw new ArgumentNullException("exchangeTimeZone");
+            if (objectType == null) throw new ArgumentNullException(nameof(objectType));
+            if (symbol == null) throw new ArgumentNullException(nameof(symbol));
+            if (dataTimeZone == null) throw new ArgumentNullException(nameof(dataTimeZone));
+            if (exchangeTimeZone == null) throw new ArgumentNullException(nameof(exchangeTimeZone));
 
             Type = objectType;
             SecurityType = symbol.ID.SecurityType;
@@ -187,7 +188,7 @@ namespace QuantConnect.Data
             DataTimeZone = dataTimeZone;
             ExchangeTimeZone = exchangeTimeZone;
             IsFilteredSubscription = isFilteredSubscription;
-            Consolidators = new HashSet<IDataConsolidator>();
+            Consolidators = new ConcurrentSet<IDataConsolidator>();
             DataNormalizationMode = dataNormalizationMode;
 
             TickType = tickType ?? LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);
@@ -212,7 +213,7 @@ namespace QuantConnect.Data
                     Increment = TimeSpan.FromDays(1);
                     break;
                 default:
-                    throw new InvalidEnumArgumentException("Unexpected Resolution: " + resolution);
+                    throw new InvalidEnumArgumentException(Invariant($"Unexpected Resolution: {resolution}"));
             }
         }
 
@@ -379,7 +380,7 @@ namespace QuantConnect.Data
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Symbol.Value + "," + MappedSymbol + "," + Resolution + "," + Type.Name + "," + TickType + "," + DataNormalizationMode;
+            return Invariant($"{Symbol.Value},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode}");
         }
     }
 }

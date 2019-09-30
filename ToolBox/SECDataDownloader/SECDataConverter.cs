@@ -198,7 +198,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 var tickerInfo = line.Split('|');
 
                 var companyCik = tickerInfo[0].PadLeft(10, '0');
-                var companyTicker = tickerInfo[1].ToLower();
+                var companyTicker = tickerInfo[1].ToLowerInvariant();
 
                 List<string> symbol;
                 if (!CikTicker.TryGetValue(companyCik, out symbol))
@@ -213,7 +213,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 }
             }
 
-            var formattedDate = processingDate.ToString(DateFormat.EightCharacter);
+            var formattedDate = processingDate.ToStringInvariant(DateFormat.EightCharacter);
             var remoteRawData = new FileInfo(Path.Combine(RawSource, $"{formattedDate}.nc.tar.gz"));
             if (!remoteRawData.Exists)
             {
@@ -227,7 +227,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 
             // Copy the raw data to a temp path on disk
             Log.Trace($"SECDataConverter.Process(): Copying raw data locally...");
-            var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToStringInvariant(null));
             var localRawData = remoteRawData.CopyTo(tempPath);
             Log.Trace($"SECDataConverter.Process(): Copied raw data from {remoteRawData.FullName} - to: {tempPath}");
 
@@ -317,7 +317,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     if (counter % 100 == 0)
                     {
                         var interval = DateTime.Now - loopStartingTime;
-                        Log.Trace($"SECDataConverter.Process(): {counter} nc files read at {100 / interval.TotalMinutes:N2} files/min.");
+                        Log.Trace($"SECDataConverter.Process(): {counter.ToStringInvariant()} nc files read at {(100 / interval.TotalMinutes).ToStringInvariant("N2")} files/min.");
                         loopStartingTime = DateTime.Now;
                     }
 
@@ -355,7 +355,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
 
                     if (!File.Exists(Path.Combine(RawSource, "indexes", $"{companyCik}.json")))
                     {
-                        Log.Error($"SECDataConverter.Process(): {report.Report.FilingDate:yyyy-MM-dd}:{rawReportFilePath.Key} - Failed to find index file for ticker {tickers.FirstOrDefault()} with CIK: {companyCik}");
+                        Log.Error($"SECDataConverter.Process(): {report.Report.FilingDate.ToStringInvariant("yyyy-MM-dd")}:{rawReportFilePath.Key} - Failed to find index file for ticker {tickers.FirstOrDefault()} with CIK: {companyCik}");
                         return;
                     }
 
@@ -366,7 +366,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                     }
                     catch (Exception e)
                     {
-                        Log.Error(e, $"SECDataConverter.Process(): {report.Report.FilingDate:yyyy-MM-dd}:{rawReportFilePath.Key} - Index file loading failed for ticker: {tickers.FirstOrDefault()} with CIK: {companyCik} even though it exists");
+                        Log.Error(e, $"SECDataConverter.Process(): {report.Report.FilingDate.ToStringInvariant("yyyy-MM-dd")}:{rawReportFilePath.Key} - Index file loading failed for ticker: {tickers.FirstOrDefault()} with CIK: {companyCik} even though it exists");
                     }
 
                     // Default to company CIK if no known ticker is found.
@@ -377,7 +377,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         var tickerMapFile = _mapFileResolver.ResolveMapFile(ticker, processingDate);
                         if (!tickerMapFile.Any())
                         {
-                            Log.Trace($"SECDataConverter.Process(): {processingDate} - Failed to find map file for ticker: {ticker}");
+                            Log.Trace($"SECDataConverter.Process(): {processingDate.ToStringInvariant()} - Failed to find map file for ticker: {ticker}");
                             continue;
                         }
 
@@ -387,7 +387,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                         // If no suitable date is found for the symbol in the map file, we skip writing the data
                         if (string.IsNullOrEmpty(mappedTicker))
                         {
-                            Log.Trace($"SECDataConverter.Process(): {processingDate} - Failed to find mapped symbol for ticker: {ticker}");
+                            Log.Trace($"SECDataConverter.Process(): {processingDate.ToStringInvariant()} - Failed to find mapped symbol for ticker: {ticker}");
                             continue;
                         }
 
@@ -405,7 +405,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
                 }
             );
 
-            Log.Trace($"SECDataConverter.Process(): {ncFilesRead} nc files read finished in {DateTime.Now - startingTime:g}.");
+            Log.Trace($"SECDataConverter.Process(): {ncFilesRead} nc files read finished in {(DateTime.Now - startingTime).ToStringInvariant("g")}.");
 
             Parallel.ForEach(
                 Reports.Keys,
@@ -438,7 +438,7 @@ namespace QuantConnect.ToolBox.SECDataDownloader
         public void WriteReport(List<ISECReport> reports, string ticker)
         {
             var report = reports.First();
-            var reportPath = Path.Combine(Destination, "alternative", "sec", ticker.ToLower(), $"{report.Report.FilingDate:yyyyMMdd}");
+            var reportPath = Path.Combine(Destination, "alternative", "sec", ticker.ToLowerInvariant(), $"{report.Report.FilingDate.ToStringInvariant("yyyyMMdd")}");
             var formTypeNormalized = report.Report.FormType.Replace("-", "");
             var reportFilePath = $"{reportPath}_{formTypeNormalized}";
             var reportFile = Path.Combine(reportFilePath, $"{formTypeNormalized}.json");

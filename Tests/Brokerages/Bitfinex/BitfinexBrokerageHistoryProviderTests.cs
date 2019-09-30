@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -90,7 +90,6 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                 foreach (var slice in history)
                 {
                     var bar = slice.Bars[symbol];
-
                     Log.Trace("{0}: {1} - O={2}, H={3}, L={4}, C={5}", bar.Time, bar.Symbol, bar.Open, bar.High, bar.Low, bar.Close);
                 }
 

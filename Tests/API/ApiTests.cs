@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.API
         [Test]
         public void Projects_CanBeCreatedAndDeleted_Successfully()
         {
-            var name = "Test Project " + DateTime.Now;
+            var name = "Test Project " + DateTime.Now.ToStringInvariant();
 
             //Test create a new project successfully
             var project = _api.CreateProject(name, Language.CSharp);
@@ -134,7 +134,7 @@ namespace QuantConnect.Tests.API
             };
 
             // Create a new project and make sure there are no files
-            var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
+            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
             Assert.IsTrue(project.Success);
             Assert.IsTrue(project.Projects.First().ProjectId > 0);
 
@@ -250,7 +250,7 @@ namespace QuantConnect.Tests.API
 
                         break;
                     default:
-                        throw new Exception("Settings have not been implemented for this brokerage: " + brokerageName.ToString());
+                        throw new Exception($"Settings have not been implemented for this brokerage: {brokerageName}");
                 }
 
                 // Tests common to all brokerage configuration classes
@@ -329,7 +329,7 @@ namespace QuantConnect.Tests.API
             };
 
             // Create a new project
-            var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
+            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
             Assert.IsTrue(project.Success);
 
             // Add Project Files
@@ -387,7 +387,7 @@ namespace QuantConnect.Tests.API
 
 
             // Create a new project
-            var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
+            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
 
             // Add Project Files
             var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
@@ -441,7 +441,7 @@ namespace QuantConnect.Tests.API
                 };
 
             // Create a new project
-            var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
+            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
 
             // Add Project Files
             var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
@@ -497,7 +497,7 @@ namespace QuantConnect.Tests.API
             };
 
             // Create a new project
-            var project = _api.CreateProject("Test project - " + DateTime.Now, Language.CSharp);
+            var project = _api.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp);
 
             // Add Project Files
             var addProjectFile = _api.AddProjectFile(project.Projects.First().ProjectId, file.Name, file.Code);
@@ -658,7 +658,7 @@ namespace QuantConnect.Tests.API
             var language = Language.CSharp;
             var code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateAlgorithm.cs");
             var algorithmName = "main.cs";
-            var projectName = DateTime.UtcNow.ToString("u") + " Test " + _testAccount + " Lang " + language;
+            var projectName = $"{DateTime.UtcNow.ToStringInvariant("u")} Test {_testAccount} Lang {language}";
 
             Perform_CreateCompileBactest_Tests(projectName, language, algorithmName, code);
         }
@@ -672,7 +672,7 @@ namespace QuantConnect.Tests.API
             var language = Language.FSharp;
             var code = File.ReadAllText("../../../Algorithm.FSharp/BasicTemplateAlgorithm.fs");
             var algorithmName = "main.fs";
-            var projectName = DateTime.UtcNow.ToString("u") + " Test " + _testAccount + " Lang " + language;
+            var projectName = $"{DateTime.UtcNow.ToStringInvariant("u")} Test {_testAccount} Lang {language}";
 
             Perform_CreateCompileBactest_Tests(projectName, language, algorithmName, code);
         }
@@ -687,7 +687,7 @@ namespace QuantConnect.Tests.API
             var code = File.ReadAllText("../../../Algorithm.Python/BasicTemplateAlgorithm.py");
             var algorithmName = "main.py";
 
-            var projectName = DateTime.UtcNow.ToString("u") + " Test " + _testAccount + " Lang " + language;
+            var projectName = $"{DateTime.UtcNow.ToStringInvariant("u")} Test {_testAccount} Lang {language}";
 
             Perform_CreateCompileBactest_Tests(projectName, language, algorithmName, code);
         }
@@ -763,7 +763,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(compileError.State == CompileState.BuildError); //Resulting in build fail.
 
             // Using our successful compile; launch a backtest!
-            var backtestName = DateTime.Now.ToString("u") + " API Backtest";
+            var backtestName = $"{DateTime.Now.ToStringInvariant("u")} API Backtest";
             var backtest = _api.CreateBacktest(project.Projects.First().ProjectId, compileSuccess.CompileId, backtestName);
             Assert.IsTrue(backtest.Success);
 
@@ -788,7 +788,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(backtestRead.Name == backtestName);
 
             //Update the note and make sure its been updated:
-            var newNote = DateTime.Now.ToString("u");
+            var newNote = DateTime.Now.ToStringInvariant("u");
             var noteBacktest = _api.UpdateBacktest(project.Projects.First().ProjectId, backtest.BacktestId, note: newNote);
             Assert.IsTrue(noteBacktest.Success);
             backtestRead = _api.ReadBacktest(project.Projects.First().ProjectId, backtest.BacktestId);

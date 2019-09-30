@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using static QuantConnect.StringExtensions;
+
 namespace QuantConnect.Orders
 {
     /// <summary>
@@ -103,8 +105,9 @@ namespace QuantConnect.Orders
 
             if (IsError)
             {
-                return string.Format("Error: {0} - {1}", ErrorCode, ErrorMessage);
+                return Invariant($"Error: {ErrorCode} - {ErrorMessage}");
             }
+
             return "Success";
         }
 
@@ -137,7 +140,8 @@ namespace QuantConnect.Orders
         public static OrderResponse InvalidStatus(OrderRequest request, Order order)
         {
             return Error(request, OrderResponseErrorCode.InvalidOrderStatus,
-                string.Format("Unable to update order with id {0} because it already has {1} status", request.OrderId, order.Status));
+                Invariant($"Unable to update order with id {request.OrderId} because it already has {order.Status} status")
+            );
         }
 
         /// <summary>
@@ -146,7 +150,8 @@ namespace QuantConnect.Orders
         public static OrderResponse UnableToFindOrder(OrderRequest request)
         {
             return Error(request, OrderResponseErrorCode.UnableToFindOrder,
-                string.Format("Unable to locate order with id {0}.", request.OrderId));
+                Invariant($"Unable to locate order with id {request.OrderId}.")
+            );
         }
 
         /// <summary>
@@ -154,9 +159,9 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse ZeroQuantity(OrderRequest request)
         {
-            const string format = "Unable to {0} order with id {1} that has zero quantity.";
             return Error(request, OrderResponseErrorCode.OrderQuantityZero,
-                string.Format(format, request.OrderRequestType.ToString().ToLower(), request.OrderId));
+                Invariant($"Unable to {request.OrderRequestType.ToLower()} order with id {request.OrderId} that has zero quantity.")
+            );
         }
 
         /// <summary>
@@ -164,7 +169,10 @@ namespace QuantConnect.Orders
         /// </summary>
         public static OrderResponse WarmingUp(OrderRequest request)
         {
-            return Error(request, OrderResponseErrorCode.AlgorithmWarmingUp, $"This operation is not allowed in Initialize or during warm up: OrderRequest.{request.OrderRequestType}. Please move this code to the OnWarmupFinished() method.");
+            return Error(request, OrderResponseErrorCode.AlgorithmWarmingUp,
+                Invariant($"This operation is not allowed in Initialize or during warm up: OrderRequest.{request.OrderRequestType}. ") +
+                "Please move this code to the OnWarmupFinished() method."
+            );
         }
 
         #endregion

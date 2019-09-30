@@ -49,59 +49,175 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
-        /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time)
+        /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time).
+        /// This method is meant for custom data types that require a ticker, but have no underlying Symbol.
+        /// Examples of data sources that meet this criteria are U.S. Treasury Yield Curve Rates and Trading Economics data
         /// </summary>
         /// <param name="type">Data source type</param>
-        /// <param name="symbol">Key/Symbol for data</param>
+        /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="resolution">Resolution of the data</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(PyObject type, string symbol, Resolution resolution = Resolution.Minute)
+        public Security AddData(PyObject type, string ticker, Resolution resolution = Resolution.Minute)
         {
-            return AddData(type, symbol, resolution, TimeZones.NewYork, false, 1m);
+            return AddData(type, ticker, resolution, TimeZones.NewYork, false, 1m);
         }
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
+        /// The data is added with a default time zone of NewYork (Eastern Daylight Savings Time).
+        /// This adds a Symbol to the `Underlying` property in the custom data Symbol object.
+        /// Use this method when adding custom data with a ticker from the past, such as "AOL"
+        /// before it became "TWX", or if you need to filter using custom data and place trades on the
+        /// Symbol associated with the custom data.
         /// </summary>
         /// <param name="type">Data source type</param>
-        /// <param name="symbol">Key/Symbol for data</param>
-        /// <param name="resolution">Resolution of the Data Required</param>
-        /// <param name="timeZone">Specifies the time zone of the raw data</param>
-        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
-        /// <param name="leverage">Custom leverage per security</param>
+        /// <param name="underlying">The underlying symbol for the custom data</param>
+        /// <param name="resolution">Resolution of the data</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(PyObject type, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        /// <remarks>
+        /// We include three optional unused object parameters so that pythonnet chooses the intended method
+        /// correctly. Previously, calling the overloaded method that accepts a string would instead call this method.
+        /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
+        /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
+        /// </remarks>
+        public Security AddData(PyObject type, Symbol underlying, Resolution resolution = Resolution.Minute)
         {
-            return AddData(CreateType(type), symbol, resolution, timeZone, fillDataForward, leverage);
+            return AddData(type, underlying, resolution, TimeZones.NewYork, false, 1m);
         }
 
         /// <summary>
         /// AddData a new user defined data source, requiring only the minimum config options.
+        /// This method is meant for custom data types that require a ticker, but have no underlying Symbol.
+        /// Examples of data sources that meet this criteria are U.S. Treasury Yield Curve Rates and Trading Economics data
         /// </summary>
-        /// <param name="dataType">Data source type</param>
-        /// <param name="symbol">Key/Symbol for data</param>
+        /// <param name="type">Data source type</param>
+        /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="resolution">Resolution of the Data Required</param>
         /// <param name="timeZone">Specifies the time zone of the raw data</param>
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(Type dataType, string symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(PyObject type, string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, symbol, SecurityType.Base, timeZone);
+            return AddData(CreateType(type), ticker, resolution, timeZone, fillDataForward, leverage);
+        }
 
-            //Add this to the data-feed subscriptions
-            var symbolObject = new Symbol(SecurityIdentifier.GenerateBase(symbol, Market.USA, dataType.GetBaseDataInstance().RequiresMapping()), symbol);
+        /// <summary>
+        /// AddData a new user defined data source, requiring only the minimum config options.
+        /// This adds a Symbol to the `Underlying` property in the custom data Symbol object.
+        /// Use this method when adding custom data with a ticker from the past, such as "AOL"
+        /// before it became "TWX", or if you need to filter using custom data and place trades on the
+        /// Symbol associated with the custom data.
+        /// </summary>
+        /// <param name="type">Data source type</param>
+        /// <param name="underlying">The underlying symbol for the custom data</param>
+        /// <param name="resolution">Resolution of the Data Required</param>
+        /// <param name="timeZone">Specifies the time zone of the raw data</param>
+        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="leverage">Custom leverage per security</param>
+        /// <returns>The new <see cref="Security"/></returns>
+        /// <remarks>
+        /// We include three optional unused object parameters so that pythonnet chooses the intended method
+        /// correctly. Previously, calling the overloaded method that accepts a string would instead call this method.
+        /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
+        /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
+        /// </remarks>
+        public Security AddData(PyObject type, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        {
+            return AddData(CreateType(type), underlying, resolution, timeZone, fillDataForward, leverage);
+        }
+
+        /// <summary>
+        /// AddData a new user defined data source, requiring only the minimum config options.
+        /// This method is meant for custom data types that require a ticker, but have no underlying Symbol.
+        /// Examples of data sources that meet this criteria are U.S. Treasury Yield Curve Rates and Trading Economics data
+        /// </summary>
+        /// <param name="dataType">Data source type</param>
+        /// <param name="ticker">Key/Ticker for data</param>
+        /// <param name="resolution">Resolution of the Data Required</param>
+        /// <param name="timeZone">Specifies the time zone of the raw data</param>
+        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="leverage">Custom leverage per security</param>
+        /// <returns>The new <see cref="Security"/></returns>
+        public Security AddData(Type dataType, string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        {
+            // NOTE: Invoking methods on BaseData w/out setting the symbol may provide unexpected behavior
+            var baseInstance = dataType.GetBaseDataInstance();
+            if (!baseInstance.RequiresMapping())
+            {
+                var symbol = new Symbol(
+                    SecurityIdentifier.GenerateBase(dataType, ticker, Market.USA, baseInstance.RequiresMapping()),
+                    ticker);
+                return AddDataImpl(dataType, symbol, resolution, timeZone, fillDataForward, leverage);
+            }
+            // If we need a mappable ticker and we can't find one in the SymbolCache, throw
+            Symbol underlying;
+            if (!SymbolCache.TryGetSymbol(ticker, out underlying))
+            {
+                throw new InvalidOperationException($"The custom data type {dataType.Name} requires mapping, but the provided ticker is not in the cache. " +
+                                                    $"Please add this custom data type using a Symbol or perform this call after " +
+                                                    $"a Security has been added using AddEquity, AddForex, AddCfd, AddCrypto, AddFuture, AddOption or AddSecurity. " +
+                                                    $"An example use case can be found in CustomDataAddDataRegressionAlgorithm");
+            }
+
+            return AddData(dataType, underlying, resolution, timeZone, fillDataForward, leverage);
+        }
+
+        /// <summary>
+        /// AddData a new user defined data source, requiring only the minimum config options.
+        /// This adds a Symbol to the `Underlying` property in the custom data Symbol object.
+        /// Use this method when adding custom data with a ticker from the past, such as "AOL"
+        /// before it became "TWX", or if you need to filter using custom data and place trades on the
+        /// Symbol associated with the custom data.
+        /// </summary>
+        /// <param name="dataType">Data source type</param>
+        /// <param name="underlying"></param>
+        /// <param name="resolution">Resolution of the Data Required</param>
+        /// <param name="timeZone">Specifies the time zone of the raw data</param>
+        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="leverage">Custom leverage per security</param>
+        /// <returns>The new <see cref="Security"/></returns>
+        /// <remarks>
+        /// We include three optional unused object parameters so that pythonnet chooses the intended method
+        /// correctly. Previously, calling the overloaded method that accepts a string would instead call this method.
+        /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
+        /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
+        /// </remarks>
+        public Security AddData(Type dataType, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        {
+            var symbol = QuantConnect.Symbol.CreateBase(dataType, underlying, Market.USA);
+            return AddDataImpl(dataType, symbol, resolution, timeZone, fillDataForward, leverage);
+        }
+
+        /// <summary>
+        /// Adds the provided final Symbol with/without underlying set to the algorithm.
+        /// This method is meant for custom data types that require a ticker, but have no underlying Symbol.
+        /// Examples of data sources that meet this criteria are U.S. Treasury Yield Curve Rates and Trading Economics data
+        /// </summary>
+        /// <param name="dataType">Data source type</param>
+        /// <param name="symbol">Final symbol that includes underlying (if any)</param>
+        /// <param name="resolution">Resolution of the Data required</param>
+        /// <param name="timeZone">Specifies the time zone of the raw data</param>
+        /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
+        /// <param name="leverage">Custom leverage per security</param>
+        /// <returns>The new <see cref="Security"/></returns>
+        private Security AddDataImpl(Type dataType, Symbol symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward, decimal leverage)
+        {
+            var alias = symbol.ID.Symbol;
+            SymbolCache.Set(alias, symbol);
+            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, alias, SecurityType.Base, timeZone);
 
             //Add this new generic data as a tradeable security:
-            var config = SubscriptionManager.SubscriptionDataConfigService.Add(dataType,
-                symbolObject,
+            var config = SubscriptionManager.SubscriptionDataConfigService.Add(
+                dataType,
+                symbol,
                 resolution,
                 fillDataForward,
                 isCustomData: true,
                 extendedMarketHours: true);
-            var security = Securities.CreateSecurity(symbolObject, config, leverage);
+            var security = Securities.CreateSecurity(symbol, config, leverage, addToSymbolCache: false);
 
-            AddToUserDefinedUniverse(security, new List<SubscriptionDataConfig>{ config });
+            AddToUserDefinedUniverse(security, new List<SubscriptionDataConfig> { config });
             return security;
         }
 
@@ -298,7 +414,7 @@ namespace QuantConnect.Algorithm
             var marketHoursDbEntry = MarketHoursDatabase.GetEntry(market, name, securityType);
             var dataTimeZone = marketHoursDbEntry.DataTimeZone;
             var exchangeTimeZone = marketHoursDbEntry.ExchangeHours.TimeZone;
-            var symbol = QuantConnect.Symbol.Create(name, securityType, market);
+            var symbol = QuantConnect.Symbol.Create(name, securityType, market, baseDataType: dataType);
             var config = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, false, false, true, true, isFilteredSubscription: false);
 
             var selector = pySelector.ConvertToDelegate<Func<IEnumerable<IBaseData>, object>>();
@@ -308,7 +424,7 @@ namespace QuantConnect.Algorithm
                 var result = selector(baseDatas);
                 return ReferenceEquals(result, Universe.Unchanged)
                     ? Universe.Unchanged : ((object[])result)
-                        .Select(x => x is Symbol ? (Symbol)x : QuantConnect.Symbol.Create((string)x, securityType, market));
+                        .Select(x => x is Symbol ? (Symbol)x : QuantConnect.Symbol.Create((string)x, securityType, market, baseDataType: dataType));
                 }
             ));
         }
@@ -508,7 +624,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A new FilteredIdentity indicator for the specified symbol and selector</returns>
         public FilteredIdentity FilteredIdentity(Symbol symbol, TimeSpan resolution, PyObject selector = null, PyObject filter = null, string fieldName = null)
         {
-            var name = string.Format("{0}({1}_{2})", symbol, fieldName ?? "close", resolution);
+            var name = $"{symbol}({fieldName ?? "close"}_{resolution.ToStringInvariant(null)})";
             var pyselector = PythonUtil.ToFunc<IBaseData, IBaseDataBar>(selector);
             var pyfilter = PythonUtil.ToFunc<IBaseData, bool>(filter);
             var filteredIdentity = new FilteredIdentity(name, pyfilter);
@@ -526,7 +642,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         public PyObject History(PyObject tickers, int periods, Resolution? resolution = null)
         {
-            var symbols = GetSymbolsFromPyObject(tickers);
+            var symbols = tickers.ConvertToSymbolEnumerable();
             return PandasConverter.GetDataFrame(History(symbols, periods, resolution));
         }
 
@@ -540,7 +656,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         public PyObject History(PyObject tickers, TimeSpan span, Resolution? resolution = null)
         {
-            var symbols = GetSymbolsFromPyObject(tickers);
+            var symbols = tickers.ConvertToSymbolEnumerable();
             return PandasConverter.GetDataFrame(History(symbols, span, resolution));
         }
 
@@ -554,7 +670,7 @@ namespace QuantConnect.Algorithm
         /// <returns>A python dictionary with pandas DataFrame containing the requested historical data</returns>
         public PyObject History(PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
         {
-            var symbols = GetSymbolsFromPyObject(tickers);
+            var symbols = tickers.ConvertToSymbolEnumerable();
             return PandasConverter.GetDataFrame(History(symbols, start, end, resolution));
         }
 
@@ -569,7 +685,7 @@ namespace QuantConnect.Algorithm
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         public PyObject History(PyObject type, PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
         {
-            var symbols = GetSymbolsFromPyObject(tickers);
+            var symbols = tickers.ConvertToSymbolEnumerable();
 
             var requests = symbols.Select(x =>
             {
@@ -596,7 +712,7 @@ namespace QuantConnect.Algorithm
         /// <returns>pandas.DataFrame containing the requested historical data</returns>
         public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null)
         {
-            var symbols = GetSymbolsFromPyObject(tickers);
+            var symbols = tickers.ConvertToSymbolEnumerable();
 
             var requests = symbols.Select(x =>
             {
@@ -777,38 +893,6 @@ namespace QuantConnect.Algorithm
                 }
             }
             return Download(address, dict, userName, password);
-        }
-
-        /// <summary>
-        /// Gets Enumerable of <see cref="Symbol"/> from a PyObject
-        /// </summary>
-        /// <param name="pyObject">PyObject containing Symbol or Array of Symbol</param>
-        /// <returns>Enumerable of Symbol</returns>
-        private IEnumerable<Symbol> GetSymbolsFromPyObject(PyObject pyObject)
-        {
-            Symbol symbol;
-            Symbol[] symbols;
-
-            if (pyObject.TryConvert(out symbol))
-            {
-                if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
-                yield return symbol;
-            }
-            else if (pyObject.TryConvert(out symbols))
-            {
-                foreach (var s in symbols)
-                {
-                    if (s == null) throw new ArgumentException(_symbolEmptyErrorMessage);
-                    yield return s;
-                }
-            }
-            else
-            {
-                using (Py.GIL())
-                {
-                    throw new ArgumentException($"Argument type should be Symbol or a list of Symbol. Object: {pyObject}.");
-                }
-            }
         }
 
         /// <summary>

@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Orders.Fees;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {
@@ -165,9 +166,9 @@ namespace QuantConnect.Orders
         public override string ToString()
         {
             var message = FillQuantity == 0
-                ? $"Time: {UtcTime} OrderID: {OrderId} Symbol: {Symbol.Value} Status: {Status}"
-                : $"Time: {UtcTime} OrderID: {OrderId} Symbol: {Symbol.Value} Status: {Status} " +
-                $"Quantity: {FillQuantity} FillPrice: {FillPrice.SmartRounding()} {FillPriceCurrency}";
+                ? Invariant($"Time: {UtcTime} OrderID: {OrderId} Symbol: {Symbol.Value} Status: {Status}")
+                : Invariant($"Time: {UtcTime} OrderID: {OrderId} Symbol: {Symbol.Value} Status: {Status} ")+
+                  Invariant($"Quantity: {FillQuantity} FillPrice: {FillPrice.SmartRounding()} {FillPriceCurrency}");
 
             // attach the order fee so it ends up in logs properly.
             if (OrderFee.Value.Amount != 0m) message += $" OrderFee: {OrderFee}";

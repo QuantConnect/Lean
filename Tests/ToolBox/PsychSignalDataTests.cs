@@ -16,6 +16,7 @@
 
 using NUnit.Framework;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -33,13 +34,13 @@ namespace QuantConnect.Tests.ToolBox
             {
                 var fileSplit = file.Split('_');
 
-                var hour = Convert.ToInt32(fileSplit[fileSplit.Length - 4]);
+                var hour = fileSplit[fileSplit.Length - 4].ConvertInvariant<int>();
 
                 // Read one line of the file, and compare the hour of the day to the hour on the file
                 var line = File.ReadLines(file).Last().Split(',');
 
                 // SOURCE[0],SYMBOL[1],TIMESTAMP_UTC[2],BULLISH_INTENSITY[3],BEARISH_INTENSITY[4],BULL_MINUS_BEAR[5],BULL_SCORED_MESSAGES[6],BEAR_SCORED_MESSAGES[7],BULL_BEAR_MSG_RATIO[8],TOTAL_SCANNED_MESSAGES[9]
-                var date = DateTime.Parse(line[2]).ToUniversalTime();
+                var date = Parse.DateTime(line[2]).ToUniversalTime();
 
                 Assert.AreEqual(hour, date.Hour);
             }
@@ -51,7 +52,7 @@ namespace QuantConnect.Tests.ToolBox
             var line = File.ReadLines(Path.Combine("TestData", "00010101_05_example_psychsignal_testdata.csv")).Last().Split(',');
             var hour = 5;
 
-            var date = DateTime.Parse(line[2]).ToUniversalTime();
+            var date = Parse.DateTime(line[2]).ToUniversalTime();
 
             Assert.AreEqual(hour, date.Hour);
         }

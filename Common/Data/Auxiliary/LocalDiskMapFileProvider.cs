@@ -39,19 +39,21 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>A <see cref="MapFileRow"/> containing all map files for the specified market</returns>
         public MapFileResolver Get(string market)
         {
-            market = market.ToLower();
+            market = market.ToLowerInvariant();
             return _cache.GetOrAdd(market, GetMapFileResolver);
         }
 
         private static MapFileResolver GetMapFileResolver(string market)
         {
-            var mapFileDirectory = Path.Combine(Globals.CacheDataFolder, "equity", market.ToLower(), "map_files");
+            var mapFileDirectory = Path.Combine(Globals.CacheDataFolder, "equity", market.ToLowerInvariant(), "map_files");
             if (!Directory.Exists(mapFileDirectory))
             {
                 // only write this message once per application instance
                 if (Interlocked.CompareExchange(ref _wroteTraceStatement, 1, 0) == 0)
                 {
-                    Log.Error("LocalDiskMapFileProvider.GetMapFileResolver({0}): The specified directory does not exist: {1}", market, mapFileDirectory);
+                    Log.Error($"LocalDiskMapFileProvider.GetMapFileResolver({market}): " +
+                        $"The specified directory does not exist: {mapFileDirectory}"
+                    );
                 }
                 return MapFileResolver.Empty;
             }

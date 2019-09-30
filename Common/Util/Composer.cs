@@ -132,7 +132,7 @@ namespace QuantConnect.Util
         {
             if (predicate == null)
             {
-                throw new ArgumentNullException("predicate");
+                throw new ArgumentNullException(nameof(predicate));
             }
 
             return GetExportedValues<T>().Single(predicate);
@@ -208,7 +208,7 @@ namespace QuantConnect.Util
                         if (selectedPart == null)
                         {
                             throw new ArgumentException(
-                                "Unable to locate any exports matching the requested typeName: " + typeName, "typeName");
+                                $"Unable to locate any exports matching the requested typeName: {typeName}", nameof(typeName));
                         }
 
                         var exportDefinition =

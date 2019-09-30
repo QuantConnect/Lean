@@ -43,6 +43,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 Assert.That(synchronizer.Current.EndTime, Is.GreaterThanOrEqualTo(previous));
                 previous = synchronizer.Current.EndTime;
             }
+
+            synchronizer.Dispose();
         }
 
         [Test]
@@ -64,6 +66,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 previous = synchronizer.Current as Tick;
             }
             Assert.AreEqual(998877, previous.Quantity);
+
+            synchronizer.Dispose();
         }
 
         [Test]
@@ -81,6 +85,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(emitted);
             Assert.IsTrue(stream1.MoveNextWasCalled);
             Assert.AreEqual(1, stream1.MoveNextCallCount);
+
+            synchronizer.Dispose();
         }
 
         [Test]
@@ -94,6 +100,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             }
             Assert.IsTrue(stream1.MoveNextWasCalled);
             Assert.Pass();
+
+            synchronizer.Dispose();
         }
 
         [Test]
@@ -107,6 +115,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             }
             Assert.IsTrue(stream1.MoveNextWasCalled);
             Assert.Pass();
+
+            synchronizer.Dispose();
         }
 
         private class TestEnumerator : IEnumerator<BaseData>

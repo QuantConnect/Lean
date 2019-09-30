@@ -34,6 +34,9 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<TradeBar>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected.ToString("0.##E-00"), indicator.Current.Value.ToString("0.##E-00"));
+                Assert.AreEqual(
+                    expected.ToStringInvariant("0.##E-00"),
+                    indicator.Current.Value.ToStringInvariant("0.##E-00")
+                );
     }
 }

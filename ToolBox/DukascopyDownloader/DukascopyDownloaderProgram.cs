@@ -41,7 +41,7 @@ namespace QuantConnect.ToolBox.DukascopyDownloader
             try
             {
                 // Load settings from command line
-                var allResolutions = resolution.ToLower() == "all";
+                var allResolutions = resolution.ToLowerInvariant() == "all";
                 var castResolution = allResolutions ? Resolution.Tick : (Resolution)Enum.Parse(typeof(Resolution), resolution);
 
                 // Load settings from config.json

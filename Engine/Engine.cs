@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -33,8 +32,8 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
-using QuantConnect.Statistics;
 using QuantConnect.Util;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -193,7 +192,7 @@ namespace QuantConnect.Lean.Engine
                                 if (!algorithm.GetLocked() || algorithm.IsWarmingUp)
                                 {
                                     AlgorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History,
-                                        $"Processing history {progress}%...");
+                                        Invariant($"Processing history {progress}%..."));
                                 }
                             }
                         )
@@ -342,8 +341,8 @@ namespace QuantConnect.Lean.Engine
 
                         if (!complete)
                         {
-                            Log.Error("Engine.Main(): Failed to complete in time: " + AlgorithmHandlers.Setup.MaximumRuntime.ToString("F"));
-                            throw new Exception("Failed to complete algorithm within " + AlgorithmHandlers.Setup.MaximumRuntime.ToString("F")
+                            Log.Error("Engine.Main(): Failed to complete in time: " + AlgorithmHandlers.Setup.MaximumRuntime.ToStringInvariant("F"));
+                            throw new Exception("Failed to complete algorithm within " + AlgorithmHandlers.Setup.MaximumRuntime.ToStringInvariant("F")
                                 + " seconds. Please make it run faster.");
                         }
 
@@ -364,73 +363,22 @@ namespace QuantConnect.Lean.Engine
 
                     try
                     {
-                        var trades = algorithm.TradeBuilder.ClosedTrades;
-                        var charts = new Dictionary<string, Chart>(AlgorithmHandlers.Results.Charts);
-                        var orders = new Dictionary<int, Order>(AlgorithmHandlers.Transactions.Orders);
-                        var holdings = new Dictionary<string, Holding>();
-                        var banner = new Dictionary<string, string>();
-                        var statisticsResults = new StatisticsResults();
-
                         var csvTransactionsFileName = Config.Get("transaction-log");
                         if (!string.IsNullOrEmpty(csvTransactionsFileName))
                         {
                             SaveListOfTrades(AlgorithmHandlers.Transactions, csvTransactionsFileName);
                         }
 
-                        try
-                        {
-                            //Generates error when things don't exist (no charting logged, runtime errors in main algo execution)
-                            const string strategyEquityKey = "Strategy Equity";
-                            const string equityKey = "Equity";
-                            const string dailyPerformanceKey = "Daily Performance";
-                            const string benchmarkKey = "Benchmark";
-
-                            // make sure we've taken samples for these series before just blindly requesting them
-                            if (charts.ContainsKey(strategyEquityKey) &&
-                                charts[strategyEquityKey].Series.ContainsKey(equityKey) &&
-                                charts[strategyEquityKey].Series.ContainsKey(dailyPerformanceKey) &&
-                                charts.ContainsKey(benchmarkKey) &&
-                                charts[benchmarkKey].Series.ContainsKey(benchmarkKey)
-                            )
-                            {
-                                var equity = charts[strategyEquityKey].Series[equityKey].Values;
-                                var performance = charts[strategyEquityKey].Series[dailyPerformanceKey].Values;
-                                var profitLoss = new SortedDictionary<DateTime, decimal>(algorithm.Transactions.TransactionRecord);
-                                var totalTransactions = algorithm.Transactions.GetOrders(x => x.Status.IsFill()).Count();
-                                var benchmark = charts[benchmarkKey].Series[benchmarkKey].Values;
-
-                                statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity, performance, benchmark,
-                                    AlgorithmHandlers.Setup.StartingPortfolioValue, algorithm.Portfolio.TotalFees, totalTransactions);
-
-                                //Some users have $0 in their brokerage account / starting cash of $0. Prevent divide by zero errors
-                                var netReturn = AlgorithmHandlers.Setup.StartingPortfolioValue > 0 ?
-                                                (algorithm.Portfolio.TotalPortfolioValue - AlgorithmHandlers.Setup.StartingPortfolioValue) / AlgorithmHandlers.Setup.StartingPortfolioValue
-                                                : 0;
-
-                                //Add other fixed parameters.
-                                banner.Add("Unrealized", "$" + algorithm.Portfolio.TotalUnrealizedProfit.ToString("N2"));
-                                banner.Add("Fees", "-$" + algorithm.Portfolio.TotalFees.ToString("N2"));
-                                banner.Add("Net Profit", "$" + algorithm.Portfolio.TotalProfit.ToString("N2"));
-                                banner.Add("Return", netReturn.ToString("P"));
-                                banner.Add("Equity", "$" + algorithm.Portfolio.TotalPortfolioValue.ToString("N2"));
-                            }
-                        }
-                        catch (Exception err)
-                        {
-                            Log.Error(err, "Error generating statistics packet");
-                        }
-
-                        //Diagnostics Completed, Send Result Packet:
-                        var totalSeconds = (DateTime.Now - startTime).TotalSeconds;
-                        var dataPoints = algorithmManager.DataPoints + algorithm.HistoryProvider.DataPointCount;
-
                         if (!_liveMode)
                         {
+                            //Diagnostics Completed, Send Result Packet:
+                            var totalSeconds = (DateTime.Now - startTime).TotalSeconds;
+                            var dataPoints = algorithmManager.DataPoints + algorithm.HistoryProvider.DataPointCount;
                             var kps = dataPoints / (double) 1000 / totalSeconds;
                             AlgorithmHandlers.Results.DebugMessage($"Algorithm Id:({job.AlgorithmId}) completed in {totalSeconds:F2} seconds at {kps:F0}k data points per second. Processing total of {dataPoints:N0} data points.");
                         }
 
-                        AlgorithmHandlers.Results.SendFinalResult(job, orders, algorithm.Transactions.TransactionRecord, holdings, algorithm.Portfolio.CashBook, statisticsResults, banner);
+                        AlgorithmHandlers.Results.SendFinalResult();
                     }
                     catch (Exception err)
                     {
@@ -552,12 +500,8 @@ namespace QuantConnect.Lean.Engine
             {
                 foreach (var order in orders)
                 {
-                    var line = string.Format("{0},{1},{2},{3},{4}",
-                        order.Time.ToString("yyyy-MM-dd HH:mm:ss"),
-                        order.Symbol.Value,
-                        order.Direction,
-                        order.Quantity,
-                        order.Price);
+                    var line = Invariant($"{order.Time.ToStringInvariant("yyyy-MM-dd HH:mm:ss")},") +
+                               Invariant($"{order.Symbol.Value},{order.Direction},{order.Quantity},{order.Price}");
                     writer.WriteLine(line);
                 }
             }

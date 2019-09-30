@@ -17,6 +17,7 @@ using System;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -151,7 +152,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the margin currently alloted to the specified holding
+        /// Gets the margin currently allocated to the specified holding
         /// </summary>
         /// <param name="security">The security to compute maintenance margin for</param>
         /// <returns>The maintenance margin required for the </returns>
@@ -295,9 +296,9 @@ namespace QuantConnect.Securities
 
             if (Math.Abs(initialMarginRequiredForRemainderOfOrder) > freeMargin)
             {
-                var reason =$"Id: {parameters.Order.Id}, " +
-                    $"Initial Margin: {initialMarginRequiredForRemainderOfOrder.Normalize()}, " +
-                    $"Free Margin: {freeMargin.Normalize()}";
+                var reason = Invariant($"Id: {parameters.Order.Id}, ") +
+                    Invariant($"Initial Margin: {initialMarginRequiredForRemainderOfOrder.Normalize()}, ") +
+                    Invariant($"Free Margin: {freeMargin.Normalize()}");
 
                 Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): {reason}");
                 return new HasSufficientBuyingPowerForOrderResult(false, reason);
@@ -378,7 +379,7 @@ namespace QuantConnect.Securities
                     var amountOfOrdersToRemove = (orderValue - targetOrderValue) / currentOrderValuePerUnit;
                     if (amountOfOrdersToRemove < parameters.Security.SymbolProperties.LotSize)
                     {
-                        // we will always substract at leat 1 LotSize
+                        // we will always subtract at least 1 LotSize
                         amountOfOrdersToRemove = parameters.Security.SymbolProperties.LotSize;
                     }
 
@@ -388,10 +389,12 @@ namespace QuantConnect.Securities
 
                 if (orderQuantity <= 0)
                 {
-                    var reason = $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} " +
-                        $"and has been rounded to zero.Target order value {targetOrderValue}. Order fees " +
-                        $"{orderFees}. Order quantity {orderQuantity}.";
-                    return new GetMaximumOrderQuantityForTargetValueResult(0, reason);
+                    return new GetMaximumOrderQuantityForTargetValueResult(0,
+                        Invariant($"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} ") +
+                        Invariant($"and has been rounded to zero.Target order value {targetOrderValue}. Order fees ") +
+                        Invariant($"{orderFees}. Order quantity {orderQuantity}."),
+                        false
+                    );
                 }
 
                 // generate the order
@@ -422,8 +425,8 @@ namespace QuantConnect.Securities
                     if (lastOrderQuantity == orderQuantity)
                     {
                         var message = "GetMaximumOrderQuantityForTargetValue failed to converge to target order value " +
-                            $"{targetOrderValue}. Current order value is {orderValue}. Order quantity {orderQuantity}. " +
-                            $"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol " +
+                            Invariant($"{targetOrderValue}. Current order value is {orderValue}. Order quantity {orderQuantity}. ") +
+                            Invariant($"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol ") +
                             $"{parameters.Security.Symbol}";
                         throw new ArgumentException(message);
                     }
@@ -455,7 +458,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the buying power available for a trade
         /// </summary>
-        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
+        /// <param name="parameters">A parameters object containing the algorithm's portfolio, security, and order direction</param>
         /// <returns>The buying power available for the trade</returns>
         public virtual BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
         {

@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Globalization;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
@@ -47,11 +48,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(1, delta);
 
             Assert.AreEqual("1", data.Current.Symbol.Value);
+
+            rateLimit.Dispose();
         }
 
         private static Symbol CreateSymbol(int x)
         {
-            return new Symbol(SecurityIdentifier.GenerateBase(x.ToString(), Market.USA), x.ToString());
+            return new Symbol(
+                SecurityIdentifier.GenerateBase(null, x.ToString(CultureInfo.InvariantCulture), Market.USA),
+                 x.ToString(CultureInfo.InvariantCulture));
         }
     }
 }

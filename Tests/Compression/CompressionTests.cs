@@ -124,5 +124,35 @@ namespace QuantConnect.Tests.Compression
                 files.ForEach(File.Delete);
             }
         }
+
+        [Test]
+        public void UnzipToFolderUsesCorrectOutputFolder()
+        {
+            var name = nameof(UnzipToFolderUsesCorrectOutputFolder);
+            var root = new DirectoryInfo(name);
+            var testPath = Path.Combine(root.FullName, "test.txt");
+            var test2Path = Path.Combine(Path.Combine(root.FullName, "sub"), "test2.txt");
+            var zipFile = $"./jo\\se/{name}.zip";
+            var files = new List<string>();
+            try
+            {
+                Directory.CreateDirectory("./jo\\se");
+                root.Create();
+                File.WriteAllText(testPath, "string contents");
+                var sub = root.CreateSubdirectory("sub");
+                File.WriteAllText(test2Path, "string contents 2");
+                QuantConnect.Compression.ZipDirectory(root.FullName, zipFile);
+                Directory.Delete(root.FullName, true);
+                files = QuantConnect.Compression.UnzipToFolder(zipFile);
+
+                Assert.IsTrue(File.Exists(Path.Combine(root.Parent.FullName, "jo\\se", name, "test.txt")));
+                Assert.IsTrue(File.Exists(Path.Combine(root.Parent.FullName, "jo\\se", name, "sub", "test2.txt")));
+            }
+            finally
+            {
+                File.Delete(zipFile);
+                files.ForEach(File.Delete);
+            }
+        }
     }
 }

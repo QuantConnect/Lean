@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,8 +43,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         public int Remaining { get; private set; }
 
         /// <summary>
-        /// The average price of the shares that have been executed. 
-        /// This parameter is valid only if the filled parameter value is greater than zero. 
+        /// The average price of the shares that have been executed.
+        /// This parameter is valid only if the filled parameter value is greater than zero.
         /// Otherwise, the price parameter will be zero.
         /// </summary>
         public double AverageFillPrice { get; private set; }
@@ -67,13 +67,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         public double LastFillPrice { get; private set; }
 
         /// <summary>
-        /// The ID of the client (or TWS) that placed the order. 
+        /// The ID of the client (or TWS) that placed the order.
         /// Note that TWS orders have a fixed clientId and orderId of 0 that distinguishes them from API orders.
         /// </summary>
         public int ClientId { get; private set; }
 
         /// <summary>
-        /// This field is used to identify an order held when TWS is trying to locate shares for a short sell. 
+        /// This field is used to identify an order held when TWS is trying to locate shares for a short sell.
         /// The value used to indicate this is 'locate'.
         /// </summary>
         public string WhyHeld { get; private set; }
@@ -103,9 +103,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers.Client
         /// </returns>
         public override string ToString()
         {
-            return string.Format(
-                "OrderId: {0}, Status: {1}, Filled: {2}, Remaining: {3}, AverageFillPrice: {4}, PermId: {5}, ParentId: {6}, LastFillPrice: {7}, ClientId: {8}, WhyHeld: {9}", 
-                OrderId, Status, Filled, Remaining, AverageFillPrice, PermId, ParentId, LastFillPrice, ClientId, WhyHeld);
+            return $"OrderId: {OrderId.ToStringInvariant()}, " +
+                   $"Status: {Status}, " +
+                   $"Filled: {Filled.ToStringInvariant()}, " +
+                   $"Remaining: {Remaining.ToStringInvariant()}, " +
+                   $"AverageFillPrice: {AverageFillPrice.ToStringInvariant()}, " +
+                   $"PermId: {PermId.ToStringInvariant()}, " +
+                   $"ParentId: {ParentId.ToStringInvariant()}, " +
+                   $"LastFillPrice: {LastFillPrice.ToStringInvariant()}, " +
+                   $"ClientId: {ClientId.ToStringInvariant()}, " +
+                   $"WhyHeld: {WhyHeld}";
         }
     }
 }

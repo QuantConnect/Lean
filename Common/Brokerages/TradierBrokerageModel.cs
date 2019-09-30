@@ -62,7 +62,7 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     "This model only supports equities."
-                    );
+                );
 
                 return false;
             }
@@ -71,7 +71,7 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     "Tradier brokerage only supports Market orders. MarketOnOpen and MarketOnClose orders not supported."
-                    );
+                );
 
                 return false;
             }
@@ -80,7 +80,7 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "ExtendedMarket",
                     "Tradier does not support extended market hours trading.  Your order will be processed at market open."
-                    );
+                );
             }
 
             // tradier order limits
@@ -104,7 +104,7 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateRejected",
                     "Traider does not support updating order quantities."
-                    );
+                );
 
                 return false;
             }

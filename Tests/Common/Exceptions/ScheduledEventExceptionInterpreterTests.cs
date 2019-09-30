@@ -56,8 +56,8 @@ namespace QuantConnect.Tests.Common.Exceptions
         public void ReformsMessageToIncludeScheduledEventName()
         {
             var id = Guid.NewGuid();
-            var name = id.ToString("D");
-            var message = id.ToString("N");
+            var name = id.ToStringInvariant("D");
+            var message = id.ToStringInvariant("N");
             var exception = new ScheduledEventException(name, message, null);
             var interpreted = new ScheduledEventExceptionInterpreter().Interpret(exception, NullExceptionInterpreter.Instance);
 
@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             if (type == typeof(ScheduledEventException))
             {
                 var inner = new Exception("Sample inner message");
-                return new ScheduledEventException(Guid.NewGuid().ToString(), "Sample error message", inner);
+                return new ScheduledEventException(Guid.NewGuid().ToStringInvariant(null), "Sample error message", inner);
             }
 
             return (Exception)Activator.CreateInstance(type);

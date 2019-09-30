@@ -87,7 +87,7 @@ namespace QuantConnect.Python
                     return _pandas.DataFrame();
                 }
                 var dataFrames = sliceDataDict.Select(x => x.Value.ToPandasDataFrame(maxLevels));
-                return _pandas.concat(dataFrames.ToArray(), Py.kw("sort", true));
+                return PandasData.ApplySymbolMapper(_pandas.concat(dataFrames.ToArray(), Py.kw("sort", true)));
             }
         }
 
@@ -118,7 +118,7 @@ namespace QuantConnect.Python
                 {
                     return _pandas.DataFrame();
                 }
-                return sliceData.ToPandasDataFrame();
+                return PandasData.ApplySymbolMapper(sliceData.ToPandasDataFrame());
             }
         }
 
@@ -143,10 +143,10 @@ namespace QuantConnect.Python
                         index.Add(item.EndTime);
                         values.Add((double)item.Value);
                     }
-                    pyDict.SetItem(kvp.Key.ToLower(), _pandas.Series(values, index));
+                    pyDict.SetItem(kvp.Key.ToLowerInvariant(), _pandas.Series(values, index));
                 }
 
-                return _pandas.DataFrame(pyDict, columns: data.Keys.Select(x => x.ToLower()).OrderBy(x => x));
+                return _pandas.DataFrame(pyDict, columns: data.Keys.Select(x => x.ToLowerInvariant()).OrderBy(x => x));
             }
         }
 

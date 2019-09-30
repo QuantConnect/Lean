@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using Log = QuantConnect.Logging.Log;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect
 {
@@ -50,7 +51,7 @@ namespace QuantConnect
         /// <summary>
         /// Character Separating directories in this OS:
         /// </summary>
-        public static string PathSeparation => Path.DirectorySeparatorChar.ToString();
+        public static string PathSeparation => Path.DirectorySeparatorChar.ToStringInvariant();
 
         /// <summary>
         /// Get the drive space remaining on windows and linux in MB
@@ -130,7 +131,7 @@ namespace QuantConnect
                         _cpuUsageCounter = new PerformanceCounter(
                             "Process",
                             "% Processor Time",
-                            IsWindows ? Process.GetCurrentProcess().ProcessName : Process.GetCurrentProcess().Id.ToString());
+                            IsWindows ? Process.GetCurrentProcess().ProcessName : Process.GetCurrentProcess().Id.ToStringInvariant());
                     }
                     catch (Exception exception)
                     {
@@ -150,13 +151,13 @@ namespace QuantConnect
         {
             return new Dictionary<string, string>
             {
-                { "CPU Usage", CpuUsage.ToString("0.0") + "%" },
-                { "Used RAM (MB)", TotalPhysicalMemoryUsed.ToString() },
+                { "CPU Usage", Invariant($"{CpuUsage:0.0}%")},
+                { "Used RAM (MB)", TotalPhysicalMemoryUsed.ToStringInvariant() },
                 { "Total RAM (MB)", "" },
-                { "Used Disk Space (MB)", DriveSpaceUsed.ToString() },
-                { "Total Disk Space (MB)", DriveTotalSpace.ToString() },
+                { "Used Disk Space (MB)", DriveSpaceUsed.ToStringInvariant() },
+                { "Total Disk Space (MB)", DriveTotalSpace.ToStringInvariant() },
                 { "Hostname", Environment.MachineName },
-                { "LEAN Version", "v" + Globals.Version }
+                { "LEAN Version", $"v{Globals.Version}"}
             };
         }
     }

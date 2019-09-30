@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -77,7 +77,7 @@ namespace QuantConnect.Indicators
         /// Compares the current object with another object of the same type.
         /// </summary>
         /// <returns>
-        /// A value that indicates the relative order of the objects being compared. The return value has the following meanings: Value Meaning Less than zero This object is less than the <paramref name="other"/> parameter.Zero This object is equal to <paramref name="other"/>. Greater than zero This object is greater than <paramref name="other"/>. 
+        /// A value that indicates the relative order of the objects being compared. The return value has the following meanings: Value Meaning Less than zero This object is less than the <paramref name="other"/> parameter.Zero This object is equal to <paramref name="other"/>. Greater than zero This object is greater than <paramref name="other"/>.
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
         public int CompareTo(IndicatorDataPoint other)
@@ -94,7 +94,7 @@ namespace QuantConnect.Indicators
         /// Compares the current instance with another object of the same type and returns an integer that indicates whether the current instance precedes, follows, or occurs in the same position in the sort order as the other object.
         /// </summary>
         /// <returns>
-        /// A value that indicates the relative order of the objects being compared. The return value has these meanings: Value Meaning Less than zero This instance precedes <paramref name="obj"/> in the sort order. Zero This instance occurs in the same position in the sort order as <paramref name="obj"/>. Greater than zero This instance follows <paramref name="obj"/> in the sort order. 
+        /// A value that indicates the relative order of the objects being compared. The return value has these meanings: Value Meaning Less than zero This instance precedes <paramref name="obj"/> in the sort order. Zero This instance occurs in the same position in the sort order as <paramref name="obj"/>. Greater than zero This instance follows <paramref name="obj"/> in the sort order.
         /// </returns>
         /// <param name="obj">An object to compare with this instance. </param><exception cref="T:System.ArgumentException"><paramref name="obj"/> is not the same type as this instance. </exception><filterpriority>2</filterpriority>
         public int CompareTo(object obj)
@@ -102,7 +102,7 @@ namespace QuantConnect.Indicators
             var other = obj as IndicatorDataPoint;
             if (other == null)
             {
-                throw new ArgumentException("Object must be of type " + GetType().GetBetterTypeName());
+                throw new ArgumentException($"Object must be of type {GetType().GetBetterTypeName()}");
             }
             return CompareTo(other);
         }
@@ -116,7 +116,7 @@ namespace QuantConnect.Indicators
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return string.Format("{0} - {1}", Time.ToString("s"), Value);
+            return $"{Time.ToStringInvariant("s")} - {Value}";
         }
 
         /// <summary>

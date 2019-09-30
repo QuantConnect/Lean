@@ -169,7 +169,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             //Save the type of data we'll be getting from the source.
             try
             {
-                _dataFactory = _config.Type.GetBaseDataInstance();
+                _dataFactory = _config.GetBaseDataInstance();
             }
             catch (ArgumentException exception)
             {
@@ -213,15 +213,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // load up the map files for equities, options, and custom data if it supports it.
             // Only load up factor files for equities
-            if (_config.TickerShouldBeMapped())
+            if (_dataFactory.RequiresMapping())
             {
                 try
                 {
-                    // Load the symbol and date to complete the mapFile checks in one statement
-                    var symbol = _config.Symbol.HasUnderlying ? _config.Symbol.Underlying.ID.Symbol : _config.Symbol.ID.Symbol;
-                    var date = _config.Symbol.HasUnderlying ? _config.Symbol.Underlying.ID.Date : _config.Symbol.ID.Date;
-
-                    var mapFile = _mapFileResolver.ResolveMapFile(symbol, date);
+                    var mapFile = _mapFileResolver.ResolveMapFile(_config.Symbol, _config.Type);
 
                     // only take the resolved map file if it has data, otherwise we'll use the empty one we defined above
                     if (mapFile.Any()) _mapFile = mapFile;
@@ -452,6 +448,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private void AttachEventHandlers(ISubscriptionDataSourceReader dataSourceReader, SubscriptionDataSource source)
         {
+            // NOTE: There seems to be some overlap in InvalidSource and CreateStreamReaderError
+            //       this may be worthy of further investigation and potential consolidation of events.
+
             // handle missing files
             dataSourceReader.InvalidSource += (sender, args) =>
             {
@@ -483,7 +482,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var textSubscriptionFactory = (TextSubscriptionDataSourceReader)dataSourceReader;
                 textSubscriptionFactory.CreateStreamReaderError += (sender, args) =>
                 {
-                    //Log.Error(string.Format("Failed to get StreamReader for data source({0}), symbol({1}). Skipping date({2}). Reader is null.", args.Source.Source, _mappedSymbol, args.Date.ToShortDateString()));
                     if (_config.IsCustomData)
                     {
                         OnDownloadFailed(

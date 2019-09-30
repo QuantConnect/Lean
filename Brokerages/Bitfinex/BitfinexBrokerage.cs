@@ -92,8 +92,8 @@ namespace QuantConnect.Brokerages.Bitfinex
             var endpoint = GetEndpoint("order/cancel/multi");
             var payload = new JsonObject();
             payload.Add("request", endpoint);
-            payload.Add("nonce", GetNonce().ToString());
-            payload.Add("order_ids", order.BrokerId.Select(i => long.Parse(i)));
+            payload.Add("nonce", GetNonce().ToStringInvariant());
+            payload.Add("order_ids", order.BrokerId.Select(Parse.Long));
 
             var request = new RestRequest(endpoint, Method.POST);
             request.AddJsonBody(payload.ToString());
@@ -137,7 +137,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             JsonObject payload = new JsonObject();
             payload.Add("request", endpoint);
-            payload.Add("nonce", GetNonce().ToString());
+            payload.Add("nonce", GetNonce().ToStringInvariant());
 
             request.AddJsonBody(payload.ToString());
             SignRequest(request, payload.ToString());
@@ -208,7 +208,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             JsonObject payload = new JsonObject();
             payload.Add("request", endpoint);
-            payload.Add("nonce", GetNonce().ToString());
+            payload.Add("nonce", GetNonce().ToStringInvariant());
 
             request.AddJsonBody(payload.ToString());
             SignRequest(request, payload.ToString());
@@ -238,7 +238,7 @@ namespace QuantConnect.Brokerages.Bitfinex
 
             JsonObject payload = new JsonObject();
             payload.Add("request", endpoint);
-            payload.Add("nonce", GetNonce().ToString());
+            payload.Add("nonce", GetNonce().ToStringInvariant());
 
             request.AddJsonBody(payload.ToString());
             SignRequest(request, payload.ToString());
@@ -256,7 +256,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             {
                 if (item.Amount > 0)
                 {
-                    list.Add(new CashAmount(item.Amount, item.Currency.ToUpper()));
+                    list.Add(new CashAmount(item.Amount, item.Currency.ToUpperInvariant()));
                 }
             }
 

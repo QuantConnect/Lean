@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect
 {
@@ -117,6 +118,7 @@ namespace QuantConnect
             }
             while (true);
 
+            enumerator.DisposeSafely();
             return sampled;
         }
 

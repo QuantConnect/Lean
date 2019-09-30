@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using QuantConnect.Logging;
+using static System.FormattableString;
 
 namespace QuantConnect
 {
@@ -53,7 +54,7 @@ namespace QuantConnect
         {
             _filename = filename;
             _zipEntry = zipEntry;
-            _tempFilename = _filename + ".tmp";
+            _tempFilename = $"{_filename}.tmp";
             File.Delete(_tempFilename);
             if (!File.Exists(filename))
             {
@@ -102,7 +103,7 @@ namespace QuantConnect
             _writer.Flush();
             _writer.Dispose();
             _archive.Dispose();
-            
+
             CopyTempFile(5, throwOnFailure: false);
 
             _archive = ZipFile.Open(_tempFilename, ZipArchiveMode.Update);
@@ -151,7 +152,7 @@ namespace QuantConnect
 
             if (throwOnFailure)
             {
-                throw new InvalidOperationException(string.Format("Unable to save file: {0} after {1} attempts.", _filename, attempts));
+                throw new InvalidOperationException(Invariant($"Unable to save file: {_filename} after {attempts} attempts."));
             }
         }
     }

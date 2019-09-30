@@ -74,6 +74,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(ticks.Min(x => x.LastPrice), bar.Low);
             Assert.AreEqual(ticks.Last().LastPrice, bar.Close);
             Assert.AreEqual(ticks.Sum(x => x.Quantity), bar.Volume);
+
+            enumerator.Dispose();
         }
 
         [Test]
@@ -115,6 +117,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
                 price++;
                 enumerator.ProcessData(new Tick(currentTime, Symbols.SPY, price, price, price));
             }
+
+            enumerator.Dispose();
         }
     }
 }

@@ -68,12 +68,12 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     foreach (var contract in chain.Value)
                     {
-                        Log(String.Format("{0},Bid={1} Ask={2} Last={3} OI={4}",
-                             contract.Symbol.Value,
-                             contract.BidPrice,
-                             contract.AskPrice,
-                             contract.LastPrice,
-                             contract.OpenInterest));
+                        Log($"{contract.Symbol.Value}," +
+                            $"Bid={contract.BidPrice.ToStringInvariant()} " +
+                            $"Ask={contract.AskPrice.ToStringInvariant()} " +
+                            $"Last={contract.LastPrice.ToStringInvariant()} " +
+                            $"OI={contract.OpenInterest.ToStringInvariant()}"
+                        );
                     }
                 }
             }

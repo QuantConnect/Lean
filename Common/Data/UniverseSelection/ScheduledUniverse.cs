@@ -135,7 +135,7 @@ namespace QuantConnect.Data.UniverseSelection
             var ticker = $"{dateRule.Name}_{timeRule.Name}";
             foreach (var c in SecurityIdentifier.InvalidSymbolCharacters)
             {
-                ticker = ticker.Replace(c.ToString(), "_");
+                ticker = ticker.Replace(c.ToStringInvariant(), "_");
             }
 
             var symbol = Symbol.Create(ticker, SecurityType.Base, QuantConnect.Market.USA);

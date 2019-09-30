@@ -167,7 +167,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 var newLongLimit = longOrder.Get(OrderField.LimitPrice) + 0.01m;
                 var newShortLimit = shortOrder.Get(OrderField.LimitPrice) - 0.01m;
-                Log("Updating limits - Long: " + newLongLimit.ToString("0.00") + " Short: " + newShortLimit.ToString("0.00"));
+                Log($"Updating limits - Long: {newLongLimit.ToStringInvariant("0.00")} Short: {newShortLimit.ToStringInvariant("0.00")}");
 
                 longOrder.Update(new UpdateOrderFields
                 {
@@ -236,7 +236,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 var newLongStop = longOrder.Get(OrderField.StopPrice) - 0.01m;
                 var newShortStop = shortOrder.Get(OrderField.StopPrice) + 0.01m;
-                Log("Updating stops - Long: " + newLongStop.ToString("0.00") + " Short: " + newShortStop.ToString("0.00"));
+                Log($"Updating stops - Long: {newLongStop.ToStringInvariant("0.00")} Short: {newShortStop.ToStringInvariant("0.00")}");
 
                 longOrder.Update(new UpdateOrderFields
                 {
@@ -318,8 +318,8 @@ namespace QuantConnect.Algorithm.CSharp
                 var newLongLimit = longOrder.Get(OrderField.LimitPrice) + 0.01m;
                 var newShortStop = shortOrder.Get(OrderField.StopPrice) + 0.01m;
                 var newShortLimit = shortOrder.Get(OrderField.LimitPrice) - 0.01m;
-                Log("Updating stops  - Long: " + newLongStop.ToString("0.00") + " Short: " + newShortStop.ToString("0.00"));
-                Log("Updating limits - Long: " + newLongLimit.ToString("0.00") + " Short: " + newShortLimit.ToString("0.00"));
+                Log($"Updating stops  - Long: {newLongStop.ToStringInvariant("0.00")} Short: {newShortStop.ToStringInvariant("0.00")}");
+                Log($"Updating limits - Long: {newLongLimit.ToStringInvariant("0.00")} Short: {newShortLimit.ToStringInvariant("0.00")}");
 
                 longOrder.Update(new UpdateOrderFields
                 {

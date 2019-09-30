@@ -19,6 +19,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders
 {
@@ -274,7 +275,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return $"OrderId: {Id} {Status} {Type} order for {Quantity} unit{(Quantity == 1 ? "" : "s")} of {Symbol}";
+            return Invariant($"OrderId: {Id} {Status} {Type} order for {Quantity} unit{(Quantity == 1 ? "" : "s")} of {Symbol}");
         }
 
         /// <summary>

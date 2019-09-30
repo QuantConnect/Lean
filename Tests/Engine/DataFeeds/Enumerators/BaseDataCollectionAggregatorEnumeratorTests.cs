@@ -36,6 +36,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(aggregator.MoveNext());
             Assert.IsNotNull(aggregator.Current);
             Assert.AreEqual(5, aggregator.Current.Data.Count);
+
+            aggregator.Dispose();
         }
         [Test]
         public void AggregatesUntilTimeChange()
@@ -49,6 +51,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.IsTrue(aggregator.MoveNext());
             Assert.IsNotNull(aggregator.Current);
             Assert.AreEqual(5, aggregator.Current.Data.Count);
+
+            aggregator.Dispose();
         }
     }
 }

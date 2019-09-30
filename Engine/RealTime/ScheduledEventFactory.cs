@@ -93,8 +93,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                 }
                 catch (Exception err)
                 {
-                    resultHandler.RuntimeError(String.Format("Runtime error in {0} event: {1}", name, err.Message), err.StackTrace);
-                    Log.Error(err, string.Format("ScheduledEvent.{0}:", name));
+                    resultHandler.RuntimeError($"Runtime error in {name} event: {err.Message}", err.StackTrace);
+                    Log.Error(err, $"ScheduledEvent.{name}:");
                 }
             });
         }
@@ -140,8 +140,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                 }
                 catch (Exception err)
                 {
-                    resultHandler.RuntimeError(String.Format("Runtime error in {0} event: {1}", name, err.Message), err.StackTrace);
-                    Log.Error(err, string.Format("ScheduledEvent.{0}:", name));
+                    resultHandler.RuntimeError($"Runtime error in {name} event: {err.Message}", err.StackTrace);
+                    Log.Error(err, $"ScheduledEvent.{name}:");
                 }
             });
         }
@@ -154,7 +154,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <returns>A string representing a fully scoped event name</returns>
         public static string CreateEventName(string scope, string name)
         {
-            return String.Format("{0}.{1}", scope, name);
+            return $"{scope}.{name}";
         }
     }
 }

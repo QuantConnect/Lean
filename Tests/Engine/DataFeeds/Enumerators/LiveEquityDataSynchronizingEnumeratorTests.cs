@@ -73,6 +73,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
             Assert.AreEqual(tickList1.Count, count1);
             Assert.AreEqual(tickList2.Count, count2);
+            synchronizer.Dispose();
         }
     }
 }

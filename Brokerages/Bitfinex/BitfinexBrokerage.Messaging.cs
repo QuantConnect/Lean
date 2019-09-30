@@ -176,7 +176,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                     if (channel == 0)
                     {
                         var term = token[1].ToObject<string>();
-                        switch (term.ToLower())
+                        switch (term.ToLowerInvariant())
                         {
                             case "oc":
                                 OnOrderClose(token[2].ToObject<string[]>());
@@ -192,7 +192,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                 else if (token is JObject)
                 {
                     var raw = token.ToObject<Messages.BaseMessage>();
-                    switch (raw.Event.ToLower())
+                    switch (raw.Event.ToLowerInvariant())
                     {
                         case "auth":
                             var auth = token.ToObject<Messages.AuthResponseMessage>();

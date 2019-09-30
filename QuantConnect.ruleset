@@ -162,8 +162,8 @@
   </Rules>
   <Rules AnalyzerId="Microsoft.NetCore.Analyzers" RuleNamespace="Microsoft.NetCore.Analyzers">
     <Rule Id="CA1303" Action="None" />
-    <Rule Id="CA1304" Action="Warning" />
-    <Rule Id="CA1305" Action="Warning" />
+    <Rule Id="CA1304" Action="Error" />
+    <Rule Id="CA1305" Action="Error" />
     <Rule Id="CA1307" Action="None" />
     <Rule Id="CA1308" Action="None" />
     <Rule Id="CA1401" Action="None" />

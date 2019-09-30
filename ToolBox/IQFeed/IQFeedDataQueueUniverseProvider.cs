@@ -232,7 +232,7 @@ namespace QuantConnect.ToolBox.IQFeed
 
             // we update the files every week
             var dayOfWeek = DateTimeFormatInfo.CurrentInfo.Calendar.GetWeekOfYear(DateTime.Today, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
-            var thisYearWeek = DateTime.Today.ToString("yyyy") + "-" + dayOfWeek.ToString();
+            var thisYearWeek = $"{DateTime.Today.ToStringInvariant("yyyy")}-{dayOfWeek.ToStringInvariant()}";
 
             var todayZipFileName = "IQFeed-symbol-universe-" + thisYearWeek + ".zip";
             var todayFullZipName = Path.Combine(Globals.Cache, todayZipFileName);
@@ -443,7 +443,7 @@ namespace QuantConnect.ToolBox.IQFeed
         private IEnumerable<SymbolData> LoadSymbolOnDemand(SymbolData placeholder)
         {
             var dayOfWeek = DateTimeFormatInfo.CurrentInfo.Calendar.GetWeekOfYear(DateTime.Today, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
-            var thisYearWeek = DateTime.Today.ToString("yyyy") + "-" + dayOfWeek.ToString();
+            var thisYearWeek = $"{DateTime.Today.ToStringInvariant("yyyy")}-{dayOfWeek.ToStringInvariant()}";
 
             var todayCsvFileName = "mktsymbols_v2.txt";
             var todayFullCsvName = Path.Combine(Globals.Cache, todayCsvFileName);

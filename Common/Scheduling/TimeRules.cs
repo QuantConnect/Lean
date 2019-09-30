@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
 using QuantConnect.Securities;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Scheduling
 {
@@ -106,7 +107,7 @@ namespace QuantConnect.Scheduling
         /// <returns>A time rule that fires at the specified time in the algorithm's time zone</returns>
         public ITimeRule At(TimeSpan timeOfDay, DateTimeZone timeZone)
         {
-            var name = string.Join(",", timeOfDay.TotalHours.ToString("0.##"));
+            var name = string.Join(",", timeOfDay.TotalHours.ToStringInvariant("0.##"));
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
                 from date in dates
                 let localEventTime = date + timeOfDay
@@ -127,11 +128,11 @@ namespace QuantConnect.Scheduling
             {
                 throw new ArgumentException("TimeRules.Every(): time span interval can not be zero or less");
             }
-            var name = "Every " + interval.TotalMinutes.ToString("0.##") + " min";
+            var name = Invariant($"Every {interval.TotalMinutes:0.##} min");
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates => EveryIntervalIterator(dates, interval);
             return new FuncTimeRule(name, applicator);
         }
-        
+
 
         /// <summary>
         /// Specifies an event should fire at market open +- <paramref name="minutesAfterOpen"/>
@@ -145,7 +146,7 @@ namespace QuantConnect.Scheduling
             var security = GetSecurity(symbol);
 
             var type = extendedMarketOpen ? "ExtendedMarketOpen" : "MarketOpen";
-            var name = string.Format("{0}: {1} min after {2}", symbol, minutesAfterOpen.ToString("0.##"), type);
+            var name = Invariant($"{symbol}: {minutesAfterOpen:0.##} min after {type}");
 
             var timeAfterOpen = TimeSpan.FromMinutes(minutesAfterOpen);
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
@@ -171,7 +172,7 @@ namespace QuantConnect.Scheduling
             var security = GetSecurity(symbol);
 
             var type = extendedMarketClose ? "ExtendedMarketClose" : "MarketClose";
-            var name = string.Format("{0}: {1} min before {2}", security.Symbol, minutesBeforeClose.ToString("0.##"), type);
+            var name = Invariant($"{security.Symbol}: {minutesBeforeClose:0.##} min before {type}");
 
             var timeBeforeClose = TimeSpan.FromMinutes(minutesBeforeClose);
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
@@ -190,7 +191,7 @@ namespace QuantConnect.Scheduling
             Security security;
             if (!_securities.TryGetValue(symbol, out security))
             {
-                throw new KeyNotFoundException(symbol.ToString() + " not found in portfolio. Request this data when initializing the algorithm.");
+                throw new KeyNotFoundException($"{symbol} not found in portfolio. Request this data when initializing the algorithm.");
             }
             return security;
         }

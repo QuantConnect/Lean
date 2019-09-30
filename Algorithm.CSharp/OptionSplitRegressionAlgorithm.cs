@@ -92,11 +92,11 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (Time.Day == 6 && holdings != 1)
                 {
-                    throw new Exception(string.Format("Expected position quantity of 1 but was {0}", holdings));
+                    throw new Exception($"Expected position quantity of 1 but was {holdings.ToStringInvariant()}");
                 }
                 if (Time.Day == 9 && holdings != 7)
                 {
-                    throw new Exception(string.Format("Expected position quantity of 7 but was {0}", holdings));
+                    throw new Exception($"Expected position quantity of 7 but was {holdings.ToStringInvariant()}");
                 }
             }
         }

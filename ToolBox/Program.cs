@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.IO;
 using QuantConnect.Configuration;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
@@ -60,16 +61,16 @@ namespace QuantConnect.ToolBox
                 PrintMessageAndExit();
             }
 
-            var targetApp = GetParameterOrExit(optionsObject, "app").ToLower();
+            var targetApp = GetParameterOrExit(optionsObject, "app").ToLowerInvariant();
             if (targetApp.Contains("download") || targetApp.EndsWith("dl"))
             {
-                var fromDate = DateTime.ParseExact(GetParameterOrExit(optionsObject, "from-date"), "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture);
+                var fromDate = Parse.DateTimeExact(GetParameterOrExit(optionsObject, "from-date"), "yyyyMMdd-HH:mm:ss");
                 var resolution = optionsObject.ContainsKey("resolution") ? optionsObject["resolution"].ToString() : "";
                 var tickers = optionsObject.ContainsKey("tickers")
                     ? (optionsObject["tickers"] as Dictionary<string, object>)?.Keys.ToList()
                     : new List<string>();
                 var toDate = optionsObject.ContainsKey("to-date")
-                    ? DateTime.ParseExact(optionsObject["to-date"].ToString(), "yyyyMMdd-HH:mm:ss", CultureInfo.InvariantCulture)
+                    ? Parse.DateTimeExact(optionsObject["to-date"].ToString(), "yyyyMMdd-HH:mm:ss")
                     : DateTime.UtcNow;
                 switch (targetApp)
                 {
@@ -236,7 +237,7 @@ namespace QuantConnect.ToolBox
                         break;
                     case "seccv":
                     case "secconverter":
-                        var start = DateTime.ParseExact(GetParameterOrExit(optionsObject, "date"), "yyyyMMdd", CultureInfo.InvariantCulture);
+                        var start = Parse.DateTimeExact(GetParameterOrExit(optionsObject, "date"), "yyyyMMdd");
                         SECDataDownloaderProgram.SECDataConverter(
                             GetParameterOrExit(optionsObject, "source-dir"),
                             GetParameterOrDefault(optionsObject, "destination-dir", Globals.DataFolder),
@@ -260,7 +261,8 @@ namespace QuantConnect.ToolBox
                         SmartInsiderProgram.SmartInsiderConverter(
                             DateTime.ParseExact(GetParameterOrExit(optionsObject, "date"), "yyyyMMdd", CultureInfo.InvariantCulture),
                             GetParameterOrExit(optionsObject, "source-dir"),
-                            GetParameterOrExit(optionsObject, "destination-dir"));
+                            GetParameterOrExit(optionsObject, "destination-dir"),
+                            GetParameterOrDefault(optionsObject, "source-meta-dir", null));
                         break;
 
                     default:

@@ -74,6 +74,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(7.5, (enumerator.Current as Delisting).Price);
 
             Assert.IsFalse(enumerator.MoveNext());
+
+            enumerator.Dispose();
         }
 
         [Test]
@@ -113,6 +115,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(7.5, (enumerator.Current as Delisting).Price);
 
             Assert.IsFalse(enumerator.MoveNext());
+
+            enumerator.Dispose();
         }
 
         [Test]
@@ -163,6 +167,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             Assert.AreEqual(7.5, (enumerator.Current as Delisting).Price);
 
             Assert.IsFalse(enumerator.MoveNext());
+
+            enumerator.Dispose();
         }
     }
 }

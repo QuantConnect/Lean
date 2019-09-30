@@ -16,7 +16,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Data.Market;
@@ -24,6 +23,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Python;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -787,8 +787,9 @@ namespace QuantConnect.Securities
         public void LogMarginInformation(OrderRequest orderRequest = null)
         {
             Log.Trace("Total margin information: " +
-                      $"TotalMarginUsed: {TotalMarginUsed.ToString("F2", CultureInfo.InvariantCulture)}, " +
-                      $"MarginRemaining: {MarginRemaining.ToString("F2", CultureInfo.InvariantCulture)}");
+                  Invariant($"TotalMarginUsed: {TotalMarginUsed:F2}, ") +
+                  Invariant($"MarginRemaining: {MarginRemaining:F2}")
+              );
 
             var orderSubmitRequest = orderRequest as SubmitOrderRequest;
             if (orderSubmitRequest != null)
@@ -805,8 +806,9 @@ namespace QuantConnect.Securities
                 );
 
                 Log.Trace("Order request margin information: " +
-                          $"MarginUsed: {marginUsed.Value.ToString("F2", CultureInfo.InvariantCulture)}, " +
-                          $"MarginRemaining: {marginRemaining.Value.ToString("F2", CultureInfo.InvariantCulture)}");
+                    Invariant($"MarginUsed: {marginUsed.Value:F2}, ") +
+                    Invariant($"MarginRemaining: {marginRemaining.Value:F2}")
+                );
             }
         }
 

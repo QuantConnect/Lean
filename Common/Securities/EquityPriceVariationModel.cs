@@ -15,6 +15,7 @@
 */
 
 using System;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
 {
@@ -34,7 +35,7 @@ namespace QuantConnect.Securities
         {
             if (parameters.Security.Type != SecurityType.Equity)
             {
-                throw new ArgumentException($"EquityPriceVariationModel.GetMinimumPriceVariation(): Invalid SecurityType: {parameters.Security.Type}");
+                throw new ArgumentException(Invariant($"EquityPriceVariationModel.GetMinimumPriceVariation(): Invalid SecurityType: {parameters.Security.Type}"));
             }
 
             // If the quotation is priced less than $1.00 per share, the minimum pricing increment is $0.0001.
