@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
@@ -123,13 +122,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.647"},
-            {"Beta", "-0.872"},
+            {"Alpha", "-0.414"},
+            {"Beta", "-0.87"},
             {"Annual Standard Deviation", "0.171"},
             {"Annual Variance", "0.029"},
-            {"Information Ratio", "-2.322"},
-            {"Tracking Error", "0.35"},
-            {"Treynor Ratio", "0.831"},
+            {"Information Ratio", "-3.04"},
+            {"Tracking Error", "0.356"},
+            {"Treynor Ratio", "0.833"},
             {"Total Fees", "$10.77"},
             {"Total Insights Generated", "1"},
             {"Total Insights Closed", "0"},

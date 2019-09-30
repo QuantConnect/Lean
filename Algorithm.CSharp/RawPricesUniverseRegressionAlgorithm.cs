@@ -15,12 +15,9 @@
 
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -103,13 +100,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
             {"Profit-Loss Ratio", "1.01"},
-            {"Alpha", "-0.062"},
-            {"Beta", "0.277"},
+            {"Alpha", "-0.006"},
+            {"Beta", "0.278"},
             {"Annual Standard Deviation", "0.043"},
             {"Annual Variance", "0.002"},
-            {"Information Ratio", "-1.068"},
-            {"Tracking Error", "0.072"},
-            {"Treynor Ratio", "-0.203"},
+            {"Information Ratio", "1.57"},
+            {"Tracking Error", "0.079"},
+            {"Treynor Ratio", "-0.202"},
             {"Total Fees", "$0.00"}
         };
     }
