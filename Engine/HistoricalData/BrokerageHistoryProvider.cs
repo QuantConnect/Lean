@@ -103,7 +103,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 config,
                 new Cash(Currencies.NullCurrency, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.NullCurrency),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             var reader = history.GetEnumerator();

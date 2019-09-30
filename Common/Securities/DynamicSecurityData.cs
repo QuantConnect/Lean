@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -32,7 +33,17 @@ namespace QuantConnect.Securities
         private static readonly MethodInfo SetPropertyMethodInfo = typeof(DynamicSecurityData).GetMethod("SetProperty");
         private static readonly MethodInfo GetPropertyMethodInfo = typeof(DynamicSecurityData).GetMethod("GetProperty");
 
+        private readonly IRegisteredSecurityDataTypesProvider _registeredTypes;
         private readonly Dictionary<string, object> _storage = new Dictionary<string, object>();
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DynamicSecurityData"/> class
+        /// </summary>
+        /// <param name="registeredTypes">Provides all the registered data types for the algorithm</param>
+        public DynamicSecurityData(IRegisteredSecurityDataTypesProvider registeredTypes)
+        {
+            _registeredTypes = registeredTypes;
+        }
 
         /// <summary>Returns the <see cref="T:System.Dynamic.DynamicMetaObject" /> responsible for binding operations performed on this object.</summary>
         /// <returns>The <see cref="T:System.Dynamic.DynamicMetaObject" /> to bind this object.</returns>
@@ -72,7 +83,23 @@ namespace QuantConnect.Securities
         public void StoreData<T>(Type dataType, IReadOnlyList<T> data)
         {
             // this would, for example, be 'Bitcoin' or 'TradeBar'
-            SetProperty(dataType.Name, data);
+            if (typeof(T) == dataType)
+            {
+                SetProperty(dataType.Name, data);
+                return;
+            }
+
+            // common case where it's a List<BaseData> but dataType == TradeBar
+            // create a List<TradeBar> so that when accessed via GetAll<T> or .TradeBar
+            // the types line up as expected
+            var list = (IList) Activator.CreateInstance(typeof(List<>).MakeGenericType(dataType));
+            foreach (var datum in data)
+            {
+                // if the element type and dataType aren't in alignment we'll get an invalid cast exception here
+                list.Add(datum);
+            }
+
+            SetProperty(dataType.Name, list);
         }
 
         /// <summary>
@@ -134,6 +161,17 @@ namespace QuantConnect.Securities
             if (_storage.TryGetValue(name, out value))
             {
                 return value;
+            }
+
+            // check to see if the requested name matches one of the algorithm registered data types and if
+            // so, we'll return a new empty list. this precludes us from always needing to check HasData<T>
+            foreach (var type in _registeredTypes.GetRegisteredDataTypes())
+            {
+                if (type.Name == name)
+                {
+                    var listType = typeof(List<>).MakeGenericType(type);
+                    return Activator.CreateInstance(listType);
+                }
             }
 
             var keys = _storage.Keys.OrderBy(k => k);

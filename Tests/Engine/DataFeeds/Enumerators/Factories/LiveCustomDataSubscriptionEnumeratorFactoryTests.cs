@@ -68,7 +68,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     exchangeHours,
                     quoteCurrency,
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 );
                 var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddSeconds(-1), _referenceUtc.AddDays(1));
 
@@ -148,7 +149,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     exchangeHours,
                     quoteCurrency,
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 );
                 var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddSeconds(-4), _referenceUtc.AddDays(1));
 
@@ -235,7 +237,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     exchangeHours,
                     quoteCurrency,
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 );
                 var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddSeconds(-6), _referenceUtc.AddDays(1));
 
@@ -317,7 +320,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     exchangeHours,
                     quoteCurrency,
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 );
                 var request = new SubscriptionRequest(false, null, security, config, _referenceUtc.AddDays(-2), _referenceUtc.AddDays(1));
 

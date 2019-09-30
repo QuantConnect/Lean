@@ -14,10 +14,9 @@
  *
 */
 
-using Newtonsoft.Json;
+using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.SEC;
-using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -37,38 +36,35 @@ namespace QuantConnect.Algorithm.CSharp
 
             GOOGL = AddEquity(Ticker, Resolution.Daily);
 
-            AddData<SECReport8K>(Ticker);
-            AddData<SECReport10Q>(Ticker);
+            AddData<SECReport8K>(Ticker, Resolution.Daily);
+            AddData<SECReport10K>(Ticker, Resolution.Daily);
+            AddData<SECReport10Q>(Ticker, Resolution.Daily);
         }
 
         public override void OnData(Slice slice)
         {
-            dynamic securityData = GOOGL.Data;
+            // The Security object's Data property provides convenient access
+            // to the various types of data related to that security. You can
+            // access not only the security's price data, but also any custom
+            // data that is mapped to the security, such as our SEC reports.
 
-            // check if a particular type of data is available
-            if (GOOGL.Data.HasData<SECReport8K>())
+            // 1. Get the most recent data point of a particular type:
+            // 1.a Using the C# generic method, Get<T>:
+            SECReport8K googlSec8kReport = GOOGL.Data.Get<SECReport8K>();
+            SECReport10K googlSec10kReport = GOOGL.Data.Get<SECReport10K>();
+            Log($"{Time:o}:  8K: {googlSec8kReport}");
+            Log($"{Time:o}: 10K: {googlSec10kReport}");
+
+            // 2. Get the list of data points of a particular type for the most recent time step:
+            // 2.a Using the C# generic method, GetAll<T>:
+            List<SECReport8K> googlSec8kReports = GOOGL.Data.GetAll<SECReport8K>();
+            List<SECReport10K> googlSec10kReports = GOOGL.Data.GetAll<SECReport10K>();
+            Log($"{Time:o}: List:  8K: {googlSec8kReports.Count}");
+            Log($"{Time:o}: List: 10K: {googlSec10kReports.Count}");
+
+            if (!Portfolio.Invested)
             {
-                // access data using C# generics for strong typing
-                // GetAll<T> returns an IReadOnlyList<T>
-                var sec8k = GOOGL.Data.GetAll<SECReport8K>();
-                Log($"GOOGL.Data.GetAll<SECReport8K>(): {sec8k}");
-
-                // access data using dynamic access. this is the recommended access
-                // pattern for python as well.
-                sec8k = securityData.SECReport8K;
-                Log($"GOOGL.Data.SECReport8K: {sec8k}");
-            }
-
-            // you can access data of all types in this manner, even for TradeBar data
-            if (GOOGL.Data.HasData<TradeBar>())
-            {
-                // Get<T> returns the last item in the list
-                var tradeBar = GOOGL.Data.Get<TradeBar>();
-                Log($"GOOGL.Data.Get<TradeBar>(): {JsonConvert.SerializeObject(tradeBar, Formatting.Indented)}");
-
-                // the dynamic accessors always returns an IReadOnlyList<T>
-                var tradeBars = securityData.TradeBar;
-                Log($"GOOGL.Data.TradeBar: {JsonConvert.SerializeObject(tradeBar, Formatting.Indented)}");
+                Buy(GOOGL.Symbol, 10);
             }
         }
     }

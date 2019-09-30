@@ -46,7 +46,8 @@ namespace QuantConnect.Tests.Common
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
             equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
@@ -58,7 +59,8 @@ namespace QuantConnect.Tests.Common
                 new SubscriptionDataConfig(typeof(TradeBar), SPY_C_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             optionCall.Underlying = equity;
 
@@ -69,7 +71,8 @@ namespace QuantConnect.Tests.Common
                 new SubscriptionDataConfig(typeof(TradeBar), SPY_P_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             optionPut.Underlying = equity;
 
@@ -104,7 +107,8 @@ namespace QuantConnect.Tests.Common
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
             equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
@@ -116,7 +120,8 @@ namespace QuantConnect.Tests.Common
                 new SubscriptionDataConfig(typeof(TradeBar), SPY_C_192_Feb19_2016E, Resolution.Minute, tz, tz, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             optionCall.SetMarketPrice(new Tick { Value = price });
             optionCall.Underlying = equity;
@@ -149,7 +154,8 @@ namespace QuantConnect.Tests.Common
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
             equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
@@ -169,7 +175,8 @@ namespace QuantConnect.Tests.Common
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             optionCall.SetMarketPrice(new Tick { Value = price });
             optionCall.Underlying = equity;
@@ -207,7 +214,8 @@ namespace QuantConnect.Tests.Common
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
             equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
@@ -227,7 +235,8 @@ namespace QuantConnect.Tests.Common
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             optionCall.SetMarketPrice(new Tick { Value = price });
             optionCall.Underlying = equity;
@@ -259,7 +268,8 @@ namespace QuantConnect.Tests.Common
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             equity.SetMarketPrice(new Tick { Value = underlyingPrice });
             equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
@@ -279,7 +289,8 @@ namespace QuantConnect.Tests.Common
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             optionPut.SetMarketPrice(new Tick { Value = price });
             optionPut.Underlying = equity;

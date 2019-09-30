@@ -134,10 +134,12 @@ namespace QuantConnect.Lean.Engine
 
                     var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
+                    var registeredTypesProvider = new RegisteredSecurityDataTypesProvider();
                     var securityService = new SecurityService(algorithm.Portfolio.CashBook,
                         marketHoursDatabase,
                         symbolPropertiesDatabase,
-                        (ISecurityInitializerProvider)algorithm);
+                        algorithm,
+                        registeredTypesProvider);
 
                     algorithm.Securities.SetSecurityService(securityService);
 
@@ -148,7 +150,8 @@ namespace QuantConnect.Lean.Engine
                         algorithm,
                         algorithm.TimeKeeper,
                         marketHoursDatabase,
-                        _liveMode);
+                        _liveMode,
+                        registeredTypesProvider);
 
                     AlgorithmHandlers.Results.SetDataManager(dataManager);
                     algorithm.SubscriptionManager.SetDataManager(dataManager);

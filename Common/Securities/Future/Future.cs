@@ -48,7 +48,14 @@ namespace QuantConnect.Securities.Future
         /// <param name="symbolProperties">The symbol properties for this security</param>
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
-        public Future(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        public Future(SecurityExchangeHours exchangeHours,
+            SubscriptionDataConfig config,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypes
+            )
             : base(config,
                 quoteCurrency,
                 symbolProperties,
@@ -63,7 +70,8 @@ namespace QuantConnect.Securities.Future
                 new FutureMarginModel(),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
-                currencyConverter
+                currencyConverter,
+                registeredTypes
                 )
         {
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
@@ -81,8 +89,15 @@ namespace QuantConnect.Securities.Future
         /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
         /// <param name="symbolProperties">The symbol properties for this security</param>
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
-        /// instances into units of the account currency</param>
-        public Future(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        ///     instances into units of the account currency</param>
+        /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        public Future(Symbol symbol,
+            SecurityExchangeHours exchangeHours,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypes
+            )
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
@@ -97,7 +112,8 @@ namespace QuantConnect.Securities.Future
                 new FutureMarginModel(),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
-                currencyConverter
+                currencyConverter,
+                registeredTypes
                 )
         {
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account

@@ -42,7 +42,8 @@ namespace QuantConnect.Tests.Common.Securities
                     CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 )
             );
             securities[Symbols.SPY].SetMarketPrice(new TradeBar { Time = securities.UtcTime, Symbol = Symbols.SPY, Close = 195 });
@@ -55,7 +56,8 @@ namespace QuantConnect.Tests.Common.Securities
                     CreateTradeBarDataConfig(SecurityType.Option, option1),
                     new Cash(Currencies.USD, 0, 1m),
                     new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 )
             );
 
@@ -67,7 +69,8 @@ namespace QuantConnect.Tests.Common.Securities
                     CreateTradeBarDataConfig(SecurityType.Option, option2),
                     new Cash(Currencies.USD, 0, 1m),
                     new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 )
             );
 
@@ -79,7 +82,8 @@ namespace QuantConnect.Tests.Common.Securities
                     CreateTradeBarDataConfig(SecurityType.Future, future1),
                     new Cash(Currencies.USD, 0, 1m),
                     new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 )
             );
 
@@ -91,7 +95,8 @@ namespace QuantConnect.Tests.Common.Securities
                     CreateTradeBarDataConfig(SecurityType.Future, future2),
                     new Cash(Currencies.USD, 0, 1m),
                     new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 )
             );
 

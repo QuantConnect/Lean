@@ -77,7 +77,8 @@ namespace QuantConnect.Jupyter
                 _dataCacheProvider = new ZipDataCacheProvider(algorithmHandlers.DataProvider);
 
                 var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
-                var securityService = new SecurityService(Portfolio.CashBook, MarketHoursDatabase, symbolPropertiesDataBase, this);
+                var registeredTypes = new RegisteredSecurityDataTypesProvider();
+                var securityService = new SecurityService(Portfolio.CashBook, MarketHoursDatabase, symbolPropertiesDataBase, this, registeredTypes);
                 Securities.SetSecurityService(securityService);
                 SubscriptionManager.SetDataManager(
                     new DataManager(new NullDataFeed(),
@@ -85,7 +86,8 @@ namespace QuantConnect.Jupyter
                         this,
                         TimeKeeper,
                         MarketHoursDatabase,
-                        false));
+                        false,
+                        registeredTypes));
 
                 var mapFileProvider = algorithmHandlers.MapFileProvider;
                 HistoryProvider = composer.GetExportedValueByTypeName<IHistoryProvider>(Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider"));

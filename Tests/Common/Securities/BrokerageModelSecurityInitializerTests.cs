@@ -84,7 +84,8 @@ namespace QuantConnect.Tests.Common.Securities
                 _tradeBarConfig,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             _quoteBarSecurity = new Security(
@@ -92,7 +93,8 @@ namespace QuantConnect.Tests.Common.Securities
                 _quoteBarConfig,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             _brokerageInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(),

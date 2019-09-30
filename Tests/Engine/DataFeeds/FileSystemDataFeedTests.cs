@@ -48,11 +48,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataManager = new DataManager(feed,
                 new UniverseSelection(
                     algorithm,
-                    new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm)),
+                    new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm, RegisteredSecurityDataTypesProvider.Null)),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
-                false);
+                false,
+                RegisteredSecurityDataTypesProvider.Null);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             var synchronizer = new Synchronizer();
             synchronizer.Initialize(algorithm, dataManager);

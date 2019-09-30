@@ -61,7 +61,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USD", 0, 0),
                 SymbolProperties.GetDefault("USD"),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
@@ -87,7 +88,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USD", 0, 0),
                 new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
@@ -113,7 +115,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 SecurityExchangeHours.AlwaysOpen(tz),
                 new Cash("USD", 0, 0),
                 new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
@@ -140,7 +143,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new Cash("USD", 0, 1),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURUSD, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("EURUSD", "USD", 1, 0.01m, 0.00000001m),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
@@ -168,7 +172,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new Cash("GBP", 0, conversionRate),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("EURGBP", "GBP", 1, 0.01m, 0.00000001m),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
@@ -197,7 +202,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                         new Cash("EUR", 0, 0),
                         new SubscriptionDataConfig(typeof(QuoteBar), Symbols.DE30EUR, Resolution.Minute, tz, tz, true, false, false),
                         new SymbolProperties("DE30EUR", "EUR", 1, 0.01m, 1m),
-                        ErrorCurrencyConverter.Instance
+                        ErrorCurrencyConverter.Instance,
+                        RegisteredSecurityDataTypesProvider.Null
                     );
                     security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 12000, 12000));
 

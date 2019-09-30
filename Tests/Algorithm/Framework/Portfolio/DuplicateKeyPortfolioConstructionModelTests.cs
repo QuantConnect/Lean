@@ -54,7 +54,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 ),
                 new Cash(Currencies.USD, 0, 1),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             security.SetMarketPrice(new Tick(algorithm.Time, symbol, 1m, 1m));

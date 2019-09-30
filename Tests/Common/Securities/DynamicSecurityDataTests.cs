@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void StoreData_UsesTypeName_AsKey()
         {
-            var data = new DynamicSecurityData();
+            var data = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
             data.StoreData(typeof(int), new[] {1});
 
             Assert.IsTrue(data.HasProperty(typeof(int).Name));
@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void Get_UsesTypeName_AsKey_And_ReturnsLastItem()
         {
-            var data = new DynamicSecurityData();
+            var data = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
             data.StoreData(typeof(int), new[] {1, 2, 3});
 
             var item = data.Get<int>();
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void GetAll_UsesTypeName_AsKey()
         {
-            var data = new DynamicSecurityData();
+            var data = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
             data.SetProperty(typeof(int).Name, new[] {1});
 
             var arr = data.GetAll<int>();
@@ -62,7 +62,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void AccessesDataDynamically()
         {
-            var securityData = new DynamicSecurityData();
+            var securityData = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
             var data = new List<TradeBar>
             {
                 new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 15m, 10000)
@@ -72,6 +72,31 @@ namespace QuantConnect.Tests.Common.Securities
             dynamic dynamicSecurityData = securityData;
             var tradeBars = dynamicSecurityData.TradeBar;
             Assert.IsInstanceOf<IReadOnlyList<TradeBar>>(tradeBars);
+        }
+
+        [Test]
+        public void AccessingPropertyThatDoesNotExists_ThrowsKeyNotFoundException_WhenNotIncludedInRegisteredTypes()
+        {
+            var registeredTypes = new RegisteredSecurityDataTypesProvider();
+            registeredTypes.RegisterType(typeof(TradeBar));
+            dynamic securityData = new DynamicSecurityData(registeredTypes);
+
+            Assert.Throws<KeyNotFoundException>(() =>
+            {
+                var _ = securityData.NotFoundProperty;
+            });
+        }
+
+        [Test]
+        public void AccessPropertyThatDoesNotExists_ReturnsEmptyList_WhenTypeIsIncludedInRegisteredTypes()
+        {
+            var registeredTypes = new RegisteredSecurityDataTypesProvider();
+            registeredTypes.RegisterType(typeof(TradeBar));
+            dynamic securityData = new DynamicSecurityData(registeredTypes);
+
+            var tradeBars = securityData.TradeBar;
+            Assert.IsInstanceOf<List<TradeBar>>(tradeBars);
+            Assert.IsEmpty(tradeBars);
         }
     }
 }

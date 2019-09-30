@@ -264,7 +264,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Provides dynamic access to data in the cache
         /// </summary>
-        public DynamicSecurityData Data
+        public dynamic Data
         {
             get;
         }
@@ -272,7 +272,13 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        public Security(SecurityExchangeHours exchangeHours,
+            SubscriptionDataConfig config,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider
+            )
             : this(config,
                 quoteCurrency,
                 symbolProperties,
@@ -287,7 +293,8 @@ namespace QuantConnect.Securities
                 new SecurityMarginModel(),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
-                currencyConverter
+                currencyConverter,
+                registeredTypesProvider
                 )
         {
         }
@@ -295,7 +302,13 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        public Security(Symbol symbol,
+            SecurityExchangeHours exchangeHours,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider
+            )
             : this(symbol,
                 quoteCurrency,
                 symbolProperties,
@@ -310,7 +323,8 @@ namespace QuantConnect.Securities
                 new SecurityMarginModel(),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
-                currencyConverter
+                currencyConverter,
+                registeredTypesProvider
                 )
         {
         }
@@ -332,7 +346,8 @@ namespace QuantConnect.Securities
             IBuyingPowerModel buyingPowerModel,
             ISecurityDataFilter dataFilter,
             IPriceVariationModel priceVariationModel,
-            ICurrencyConverter currencyConverter
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider
             )
         {
             if (symbolProperties == null)
@@ -364,7 +379,7 @@ namespace QuantConnect.Securities
             SettlementModel = settlementModel;
             VolatilityModel = volatilityModel;
             Holdings = new SecurityHolding(this, currencyConverter);
-            Data = new DynamicSecurityData();
+            Data = new DynamicSecurityData(registeredTypesProvider);
             Cache.DataStored += (sender, args) => Data.StoreData(args.DataType, args.Data);
 
             UpdateSubscriptionProperties();
@@ -388,7 +403,8 @@ namespace QuantConnect.Securities
             IBuyingPowerModel buyingPowerModel,
             ISecurityDataFilter dataFilter,
             IPriceVariationModel priceVariationModel,
-            ICurrencyConverter currencyConverter
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider
             )
             : this(config.Symbol,
                 quoteCurrency,
@@ -404,7 +420,8 @@ namespace QuantConnect.Securities
                 buyingPowerModel,
                 dataFilter,
                 priceVariationModel,
-                currencyConverter
+                currencyConverter,
+                registeredTypesProvider
                 )
         {
             SubscriptionsBag.Add(config);

@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Common.Securities.Forex
         public void ConstructorDecomposesBaseAndQuoteCurrencies()
         {
             var config = new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, true);
-            var forex = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours.AlwaysOpen(config.DataTimeZone), new Cash(Currencies.USD, 0, 0), config, SymbolProperties.GetDefault(Currencies.USD), ErrorCurrencyConverter.Instance);
+            var forex = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours.AlwaysOpen(config.DataTimeZone), new Cash(Currencies.USD, 0, 0), config, SymbolProperties.GetDefault(Currencies.USD), ErrorCurrencyConverter.Instance, RegisteredSecurityDataTypesProvider.Null);
             Assert.AreEqual("EUR", forex.BaseCurrencySymbol);
             Assert.AreEqual(Currencies.USD, forex.QuoteCurrency.Symbol);
         }

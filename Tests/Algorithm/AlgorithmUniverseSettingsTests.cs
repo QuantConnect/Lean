@@ -98,17 +98,20 @@ namespace QuantConnect.Tests.Algorithm
                         algorithm.Portfolio.CashBook,
                         marketHoursDatabase,
                         symbolPropertiesDatabase,
-                        algorithm)),
+                        algorithm,
+                        RegisteredSecurityDataTypesProvider.Null)),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
-                false);
+                false,
+                RegisteredSecurityDataTypesProvider.Null);
 
             var securityService = new SecurityService(
                 algorithm.Portfolio.CashBook,
                 marketHoursDatabase,
                 symbolPropertiesDatabase,
-                algorithm);
+                algorithm,
+                RegisteredSecurityDataTypesProvider.Null);
 
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             algorithm.Securities.SetSecurityService(securityService);

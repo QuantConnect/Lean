@@ -207,7 +207,8 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
                 SymbolProperties.GetDefault("EUR"),
-                portfolio.CashBook
+                portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null
             );
             equity.Holdings.SetHoldings(50m, 100);
             portfolio.Securities.Add(equity);
@@ -247,7 +248,8 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
                 SymbolProperties.GetDefault("EUR"),
-                portfolio.CashBook
+                portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null
             );
             equity.Holdings.SetHoldings(50m, -100);
             portfolio.Securities.Add(equity);
@@ -287,7 +289,8 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
                 SymbolProperties.GetDefault("EUR"),
-                portfolio.CashBook
+                portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null
             );
             portfolio.Securities.Add(equity);
 
@@ -332,7 +335,8 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
                 SymbolProperties.GetDefault("EUR"),
-                portfolio.CashBook
+                portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null
             );
             portfolio.Securities.Add(equity);
 
@@ -377,7 +381,8 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
                 SymbolProperties.GetDefault("EUR"),
-                portfolio.CashBook
+                portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null
             );
             future.Holdings.SetHoldings(50m, 100);
             portfolio.Securities.Add(future);
@@ -418,7 +423,8 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
                 SymbolProperties.GetDefault("EUR"),
-                portfolio.CashBook
+                portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null
             );
             future.Holdings.SetHoldings(50m, -100);
             portfolio.Securities.Add(future);
@@ -459,7 +465,8 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
                 SymbolProperties.GetDefault("EUR"),
-                portfolio.CashBook
+                portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null
             );
             portfolio.Securities.Add(future);
 
@@ -504,7 +511,8 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
                 SymbolProperties.GetDefault("EUR"),
-                portfolio.CashBook
+                portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null
             );
             portfolio.Securities.Add(future);
 
@@ -550,7 +558,8 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
                 SymbolProperties.GetDefault("EUR"),
-                portfolio.CashBook
+                portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null
             );
             crypto.Holdings.SetHoldings(50m, 100);
             portfolio.Securities.Add(crypto);
@@ -588,7 +597,8 @@ namespace QuantConnect.Tests.Common.Securities
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
                 SymbolProperties.GetDefault("EUR"),
-                portfolio.CashBook
+                portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null
             );
             portfolio.Securities.Add(crypto);
 
@@ -618,7 +628,8 @@ namespace QuantConnect.Tests.Common.Securities
                 CreateTradeBarConfig(),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             security.SetMarketPrice(new Tick { Value = 100 });
             var timeKeeper = new TimeKeeper(reference);

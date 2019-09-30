@@ -64,7 +64,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 exchangeHours,
                 quoteCurrency,
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             var universeSettings = new UniverseSettings(Resolution.Minute, 0, true, false, TimeSpan.Zero);

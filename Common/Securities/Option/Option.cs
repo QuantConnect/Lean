@@ -51,7 +51,13 @@ namespace QuantConnect.Securities.Option
         /// <param name="symbolProperties">The symbol properties for this security</param>
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
-        public Option(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, OptionSymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        public Option(SecurityExchangeHours exchangeHours,
+            SubscriptionDataConfig config,
+            Cash quoteCurrency,
+            OptionSymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypes)
             : base(config,
                 quoteCurrency,
                 symbolProperties,
@@ -66,7 +72,8 @@ namespace QuantConnect.Securities.Option
                 new OptionMarginModel(),
                 new OptionDataFilter(),
                 new SecurityPriceVariationModel(),
-                currencyConverter
+                currencyConverter,
+                registeredTypes
                 )
         {
             ExerciseSettlement = SettlementType.PhysicalDelivery;
@@ -87,7 +94,13 @@ namespace QuantConnect.Securities.Option
         /// <param name="symbolProperties">The symbol properties for this security</param>
         /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
         /// instances into units of the account currency</param>
-        public Option(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, OptionSymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        public Option(Symbol symbol,
+            SecurityExchangeHours exchangeHours,
+            Cash quoteCurrency,
+            OptionSymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypes)
            : base(symbol,
                quoteCurrency,
                symbolProperties,
@@ -102,7 +115,8 @@ namespace QuantConnect.Securities.Option
                new OptionMarginModel(),
                new OptionDataFilter(),
                new SecurityPriceVariationModel(),
-               currencyConverter
+               currencyConverter,
+               registeredTypes
                )
         {
             ExerciseSettlement = SettlementType.PhysicalDelivery;
