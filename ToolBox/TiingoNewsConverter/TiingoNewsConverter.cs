@@ -41,138 +41,132 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
         public TiingoNewsConverter(DirectoryInfo sourceDirectory, DirectoryInfo destinationDirectory)
         {
             _sourceDirectory = sourceDirectory;
-            _rootDestinationDirectory = new DirectoryInfo(Path.Combine(destinationDirectory.FullName, "alternative\\tiingo"));
+            _rootDestinationDirectory = new DirectoryInfo(Path.Combine(destinationDirectory.FullName, "alternative", "tiingo"));
             _contentDirectory = Directory.CreateDirectory(Path.Combine(_rootDestinationDirectory.FullName, "content"));
         }
 
-        public void Convert()
+        public bool Convert()
         {
-            // supposing sourceFiles are the different daily files, eg: bulkfile_2014-01-11_2014-01-12.tar.gz
-            var sourceFiles = _sourceDirectory.EnumerateFiles()
-                .OrderBy(info => info.Name)
-                .ToList(info => info);
-
-            var ioTasks = new Queue<Task>();
-            var indexesPerTicker = new Dictionary<TickerIndex, List<Article>>();
-            var newsPerDateCollection = new Dictionary<DateTime, List<Article>>();
-            var currentDate = DateTime.MinValue;
-            var tempPaths = new Queue<string>();
-
-            Log.Trace($"TiingoNewsConverter.Convert(): untar daily files. Count {sourceFiles.Count}...");
-            foreach (var bulkFilePerDate in sourceFiles)
+            try
             {
-                Log.Trace($"TiingoNewsConverter.Convert(): file: {bulkFilePerDate.Name}...");
-                var tempPath = GetTempPath();
-                tempPaths.Enqueue(tempPath);
-                Compression.UnTarGzFiles(bulkFilePerDate.FullName, tempPath);
+                // supposing sourceFiles are the different daily files, eg: bulkfile_2014-01-11_2014-01-12.tar.gz
+                var sourceFiles = _sourceDirectory.EnumerateFiles()
+                    .OrderBy(info => info.Name)
+                    .ToList(info => info);
 
-                // we expect 1 bulk json file for each date
-                var newsForDateFile = Directory.EnumerateFiles(tempPath).Single();
+                var ioTasks = new Queue<Task>();
+                var indexesPerTicker = new Dictionary<TickerIndex, List<Article>>();
+                var newsPerDateCollection = new Dictionary<DateTime, List<Article>>();
+                var currentDate = DateTime.MinValue;
 
-                var jsonNews2 = JsonConvert.DeserializeObject(File.ReadAllText(newsForDateFile)) as JArray;
-                if (jsonNews2 == null)
+                Log.Trace($"TiingoNewsConverter.Convert(): untar daily files. Count {sourceFiles.Count}...");
+                foreach (var bulkFilePerDate in sourceFiles)
                 {
-                    Log.Error($"TiingoNewsConverter.Convert(): Failed to deserialize file: {bulkFilePerDate.Name}");
-                    continue;
-                }
+                    Log.Trace($"TiingoNewsConverter.Convert(): file: {bulkFilePerDate.Name}...");
+                    var tempPath = TemporaryPathProvider.Get();
+                    Compression.UnTarGzFiles(bulkFilePerDate.FullName, tempPath);
 
-                // this is required else memory grows for ever
-                if (ioTasks.Count > TaskCountLimit)
-                {
-                    WaitForTasksToFinish(ioTasks);
-                    ioTasks.Enqueue(StartDirectoryCleaner(tempPaths));
-                }
+                    // we expect 1 bulk json file for each date
+                    var newsForDateFile = Directory.EnumerateFiles(tempPath).Single();
 
-                Log.Trace("TiingoNewsConverter.Convert(): processing news...");
-                foreach (var jNews in jsonNews2)
-                {
-                    var singleNewsData = TiingoNewsJsonConverter.DeserializeNews(jNews);
-                    var newsPublishDate = singleNewsData.PublishedDate.Date;
-
-                    // we store the data after 1 day difference
-                    // raw data is not really ordered and can have jumps +-1 day
-                    if (singleNewsData.PublishedDate.Date > (currentDate + Time.OneDay))
+                    var jsonNews2 = JsonConvert.DeserializeObject(File.ReadAllText(newsForDateFile)) as JArray;
+                    if (jsonNews2 == null)
                     {
-                        var keysToRemove = new List<DateTime>();
-                        foreach (var news in newsPerDateCollection
-                            .Where(kvp => kvp.Key < currentDate))
-                        {
-                            Log.Trace($"TiingoNewsConverter.Convert(): StoreDataForDate {news.Key}...");
-                            keysToRemove.Add(news.Key);
-
-                            StoreDataForDate(
-                                news.Key,
-                                indexesPerTicker,
-                                news.Value,
-                                ioTasks);
-                        }
-
-                        foreach (var key in keysToRemove)
-                        {
-                            newsPerDateCollection.Remove(key);
-                        }
-                        currentDate = singleNewsData.PublishedDate.Date;
-                    }
-
-                    // just in case...
-                    if (singleNewsData.PublishedDate.Date < (currentDate - Time.OneDay))
-                    {
-                        throw new Exception(
-                            $"Unexpected date {singleNewsData.PublishedDate.Date} current at {currentDate} file {bulkFilePerDate.Name}");
-                    }
-
-                    if (singleNewsData.Symbols.Count == 0)
-                    {
-                        // skip articles with not symbols
+                        Log.Error($"TiingoNewsConverter.Convert(): Failed to deserialize file: {bulkFilePerDate.Name}");
                         continue;
                     }
 
-                    var article = new Article(singleNewsData.ArticleID + ".json",
-                        singleNewsData.PublishedDate,
-                        // Formatting.None -> 1 line
-                        jNews.ToString(Formatting.None));
-
-                    // store article by ID
-                    List<Article> newsForDate;
-                    if (!newsPerDateCollection.TryGetValue(newsPublishDate, out newsForDate))
+                    // this is required else memory grows for ever
+                    if (ioTasks.Count > TaskCountLimit)
                     {
-                        newsPerDateCollection[newsPublishDate] = newsForDate = new List<Article>();
+                        WaitForTasksToFinish(ioTasks);
                     }
-                    newsForDate.Add(article);
 
-                    // update tickers indexes adding the new article id
-                    foreach (var newsDataSymbol in singleNewsData.Symbols)
+                    Log.Trace("TiingoNewsConverter.Convert(): processing news...");
+                    foreach (var jNews in jsonNews2)
                     {
-                        if (newsDataSymbol.Value.All(char.IsDigit))
+                        var singleNewsData = TiingoNewsJsonConverter.DeserializeNews(jNews);
+                        var newsPublishDate = singleNewsData.PublishedDate.Date;
+
+                        // we store the data after 1 day difference
+                        // raw data is not really ordered and can have jumps +-1 day
+                        if (singleNewsData.PublishedDate.Date > (currentDate + Time.OneDay))
                         {
-                            // skip symbols which only have numbers as value
+                            var newsToStore = newsPerDateCollection.Where(kvp => kvp.Key < currentDate).ToList();
+                            foreach (var news in newsToStore)
+                            {
+                                Log.Trace($"TiingoNewsConverter.Convert(): StoreDataForDate {news.Key}...");
+                                StoreDataForDate(news.Key, indexesPerTicker, news.Value, ioTasks);
+                                newsPerDateCollection.Remove(news.Key);
+                            }
+
+                            currentDate = singleNewsData.PublishedDate.Date;
+                        }
+
+                        // just in case: we don't expect published dates to go back in time more than 1 day
+                        // if they do we want to know about it
+                        if (singleNewsData.PublishedDate.Date < (currentDate - Time.OneDay))
+                        {
+                            throw new InvalidOperationException(
+                                $"Unexpected date {singleNewsData.PublishedDate.Date} current at {currentDate} file {bulkFilePerDate.Name}"
+                            );
+                        }
+
+                        if (singleNewsData.Symbols.Count == 0)
+                        {
+                            // skip articles with not symbols
                             continue;
                         }
 
-                        var indexCacheKey = new TickerIndex(newsDataSymbol.Value, newsPublishDate);
+                        var article = new Article(
+                            singleNewsData.ArticleID + ".json",
+                            singleNewsData.PublishedDate,
+                            // Formatting.None -> 1 line
+                            jNews.ToString(Formatting.None)
+                        );
 
-                        List<Article> articles;
-                        if (!indexesPerTicker.TryGetValue(indexCacheKey, out articles))
+                        // store article by PublishDate
+                        List<Article> newsForDate;
+                        if (!newsPerDateCollection.TryGetValue(newsPublishDate, out newsForDate))
                         {
-                            indexesPerTicker[indexCacheKey] = articles = new List<Article>();
+                            newsPerDateCollection[newsPublishDate] = newsForDate = new List<Article>();
                         }
-                        articles.Add(article);
+                        newsForDate.Add(article);
+
+                        // update tickers indexes adding the new article id
+                        foreach (var newsDataSymbol in singleNewsData.Symbols
+                            // skip symbols which only have numbers as Value
+                            .Where(symbol => !symbol.Value.All(char.IsDigit)))
+                        {
+                            var indexCacheKey = new TickerIndex(newsDataSymbol.Value, newsPublishDate);
+
+                            List<Article> articles;
+                            if (!indexesPerTicker.TryGetValue(indexCacheKey, out articles))
+                            {
+                                indexesPerTicker[indexCacheKey] = articles = new List<Article>();
+                            }
+                            articles.Add(article);
+                        }
                     }
                 }
-            }
 
-            foreach (var news in newsPerDateCollection)
+                foreach (var news in newsPerDateCollection)
+                {
+                    Log.Trace("TiingoNewsConverter.Convert(): store remaining data...");
+                    StoreDataForDate(news.Key, indexesPerTicker, news.Value, ioTasks);
+                }
+
+                WaitForTasksToFinish(ioTasks);
+                // after all tasks finished clean up
+                TemporaryPathProvider.Delete();
+            }
+            catch (Exception exception)
             {
-                Log.Trace("TiingoNewsConverter.Convert(): store remaining data...");
-                StoreDataForDate(
-                    news.Key,
-                    indexesPerTicker,
-                    news.Value,
-                    ioTasks);
+                Log.Error(exception);
+                TemporaryPathProvider.Delete();
+                return false;
             }
-
-            ioTasks.Enqueue(StartDirectoryCleaner(tempPaths));
-            WaitForTasksToFinish(ioTasks);
+            return true;
         }
 
         private void StoreDataForDate(DateTime date,
@@ -180,15 +174,12 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
             List<Article> newsForDate,
             Queue<Task> ioTasks)
         {
-            var toRemove = new List<TickerIndex>();
             var newsDateStr = date.ToStringInvariant(DateFormat.EightCharacter);
 
-            foreach (var kvp in indexesPerTicker
-                .Where(index => index.Key.Date == date))
+            var indexesToStore = indexesPerTicker.Where(index => index.Key.Date == date).ToList();
+            foreach (var kvp in indexesToStore)
             {
                 var indexKey = kvp.Key;
-                toRemove.Add(indexKey);
-
                 // Store index: this is slow so send it to a task
                 ioTasks.Enqueue(Task.Run(() =>
                 {
@@ -197,7 +188,7 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                         // we have to order the articles here when we are about to store them
                         // by publish date
                         var orderedArticles = kvp.Value.OrderBy(article => article.PublishDate).ToList();
-                        var data = string.Join(Environment.NewLine, orderedArticles.Select(article => article.Name));
+                        var data = string.Join(Environment.NewLine, orderedArticles.Select(article => article.ID));
 
                         // the ticker directory
                         var tickerDir = Directory.CreateDirectory(
@@ -218,6 +209,8 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                         Log.Error($"TiingoNewsConverter.Convert(): Failed to store index: {indexKey}", exception);
                     }
                 }));
+
+                indexesPerTicker.Remove(indexKey);
             }
 
             if (newsForDate.Count > 0)
@@ -225,7 +218,7 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                 // Store news for date: this is slow so send it to a task too
                 ioTasks.Enqueue(Task.Run(() =>
                 {
-                    var data = newsForDate.ToDictionary(article => article.Name, article => article.RawData);
+                    var data = newsForDate.ToDictionary(article => article.ID, article => article.RawData);
                     var contentPath = Path.Combine(_contentDirectory.FullName, $"{newsDateStr}.zip");
                     if (!Compression.ZipData(contentPath, data))
                     {
@@ -233,27 +226,28 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                     }
                 }));
             }
-
-            foreach (var index in toRemove)
-            {
-                indexesPerTicker.Remove(index);
-            }
         }
 
+        /// <summary>
+        /// Helper class that contains a Tiingo news article
+        /// </summary>
         private class Article
         {
-            public string Name { get; }
+            public string ID { get; }
             public string RawData { get; }
             public DateTime PublishDate { get; }
 
-            public Article(string name, DateTime date, string rawData)
+            public Article(string id, DateTime date, string rawData)
             {
-                Name = name;
+                ID = id;
                 PublishDate = date;
                 RawData = rawData;
             }
         }
 
+        /// <summary>
+        /// Helper class used to store a Tickers which has news for a date
+        /// </summary>
         private class TickerIndex
         {
             public string Ticker { get; }
@@ -265,17 +259,11 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                 Date = date;
             }
 
-            /// <summary>
-            /// 
-            /// </summary>
             public override int GetHashCode()
             {
                 return Ticker.GetHashCode() + Date.GetHashCode();
             }
 
-            /// <summary>
-            /// 
-            /// </summary>
             public override bool Equals(object obj)
             {
                 if (ReferenceEquals(null, obj)) return false;
@@ -287,43 +275,14 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
             }
         }
 
-        private string GetTempPath()
-        {
-            return Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToStringInvariant(null));
-        }
-
         private void WaitForTasksToFinish(Queue<Task> tasks)
         {
-            if (tasks.Count > TaskCountLimit)
+            Log.Trace("TiingoNewsConverter.WaitForTasksToFinish(): start...");
+            while (tasks.Count > 0)
             {
-                Log.Trace("TiingoNewsConverter.WaitForTasksToFinish(): start...");
-                while (tasks.Count > 0)
-                {
-                    var task = tasks.Dequeue();
-                    task.Wait();
-                }
+                var task = tasks.Dequeue();
+                task.Wait();
             }
-        }
-
-        private Task StartDirectoryCleaner(Queue<string> paths)
-        {
-            var copy = new Queue<string>(paths);
-            paths.Clear();
-            return Task.Run(() =>
-            {
-                while (copy.Count > 0)
-                {
-                    var path = copy.Dequeue();
-                    try
-                    {
-                        Directory.Delete(path, recursive: true);
-                    }
-                    catch
-                    {
-                        // pass
-                    }
-                }
-            });
         }
     }
 }

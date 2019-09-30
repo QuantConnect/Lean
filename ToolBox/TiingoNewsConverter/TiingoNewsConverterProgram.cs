@@ -18,20 +18,20 @@ using System.IO;
 namespace QuantConnect.ToolBox.TiingoNewsConverter
 {
     /// <summary>
-    /// 
+    /// Primary entry point to the program
     /// </summary>
     public class TiingoNewsConverterProgram
     {
         /// <summary>
         /// Converts Tiingo news data
         /// </summary>
-        public static void TiingoNewsConverter(string sourceDirectory, string destinationDirectory)
+        public static bool TiingoNewsConverter(string sourceDirectory, string destinationDirectory)
         {
             var converter = new TiingoNewsConverter(
                 new DirectoryInfo(sourceDirectory),
                 new DirectoryInfo(destinationDirectory));
 
-            converter.Convert();
+            return converter.Convert();
         }
     }
 }

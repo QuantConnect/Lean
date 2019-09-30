@@ -279,6 +279,7 @@
     <Compile Include="SECDataDownloader\SECDataDownloaderProgram.cs" />
     <Compile Include="SmartInsider\SmartInsiderConverter.cs" />
     <Compile Include="SmartInsider\SmartInsiderProgram.cs" />
+    <Compile Include="TemporaryPathProvider.cs" />
     <Compile Include="TickAggregator.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesConverter.cs" />
     <Compile Include="AlgoSeekFuturesConverter\AlgoSeekFuturesProcessor.cs" />
