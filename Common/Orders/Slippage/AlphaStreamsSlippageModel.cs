@@ -14,8 +14,7 @@
 */
 
 using QuantConnect.Securities;
-using QuantConnect.Data.Market;
-
+​
 namespace QuantConnect.Orders.Slippage
 {
     /// <summary>
@@ -23,15 +22,10 @@ namespace QuantConnect.Orders.Slippage
     /// </summary>
     public class AlphaStreamsSlippageModel : ISlippageModel
     {
-        private readonly decimal _slippagePercent = 0.001m;
+        private const decimal _slippagePercent = 0.001m;
+​
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConstantSlippageModel"/> class
-        /// </summary>
-        /// <param name="slippagePercent">The slippage percent for each order. Percent is ranged 0 to 1.</param>
-        public AlphaStreamsSlippageModel() {}
-
-        /// <summary>
-        /// Slippage Model. Return a decimal cash slippage approximation on the order.
+        /// SReturn a decimal cash slippage approximation on the order.
         /// </summary>
         public decimal GetSlippageApproximation(Security asset, Order order)
         {
@@ -39,7 +33,7 @@ namespace QuantConnect.Orders.Slippage
             {
                 return 0;
             }
-
+​
             return _slippagePercent * asset.GetLastData()?.Value ?? 0;
         }
     }
