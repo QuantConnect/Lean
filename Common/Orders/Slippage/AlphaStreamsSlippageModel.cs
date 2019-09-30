@@ -35,21 +35,12 @@ namespace QuantConnect.Orders.Slippage
         /// </summary>
         public decimal GetSlippageApproximation(Security asset, Order order)
         {
-            var lastData = asset.GetLastData();
-            if (lastData == null) return 0;
-
-            if (lastData.DataType == MarketDataType.TradeBar)
-            {
-                return _slippagePercent * ((TradeBar)lastData).Close;
-            }
-            else if (lastData.DataType == MarketDataType.Tick && asset.Type == SecurityType.Equity)
-            {
-                return _slippagePercent * ((Tick)lastData).Value;
-            }
-            else
+            if (asset.Type != SecurityType.Equity)
             {
                 return 0;
             }
+
+            return _slippagePercent * asset.GetLastData()?.Value ?? 0;
         }
     }
 }
