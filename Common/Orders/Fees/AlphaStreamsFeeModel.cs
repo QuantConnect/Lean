@@ -31,8 +31,11 @@ namespace QuantConnect.Orders.Fees
             {SecurityType.Forex, 0.000002m},
             // Commission plus clearing fee
             {SecurityType.Future, 0.4m + 0.1m},
-            {SecurityType.Option, 0.4m + 0.1m}
+            {SecurityType.Option, 0.4m + 0.1m},
+            {SecurityType.Cfd, 0m}
         };
+        private const decimal _makerFee = 0.001m;
+        private const decimal _takerFee = 0.002m;
 
         /// <summary>
         /// Gets the order fee associated with the specified order. This returns the cost
@@ -44,7 +47,7 @@ namespace QuantConnect.Orders.Fees
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
             var order = parameters.Order;
-            var security = parameters.Security;
+            var security = parameters.Security;            
 
             // Option exercise is free of charge
             if (order.Type == OrderType.OptionExercise)
@@ -52,12 +55,41 @@ namespace QuantConnect.Orders.Fees
                 return OrderFee.Zero;
             }
 
+            if (security.Type == SecurityType.Crypto)
+            {
+                decimal fee = _takerFee;
+                var props = order.Properties as BitfinexOrderProperties;
+
+                if (order.Type == OrderType.Limit &&
+                    props?.Hidden != true &&
+                    (props?.PostOnly == true || !order.IsMarketable))
+                {
+                    // limit order posted to the order book
+                    fee = _makerFee;
+                }
+
+                // get order value in quote currency
+                var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+                if (order.Type == OrderType.Limit)
+                {
+                    // limit order posted to the order book
+                    unitPrice = ((LimitOrder)order).LimitPrice;
+                }
+
+                unitPrice *= security.SymbolProperties.ContractMultiplier;
+
+                // apply fee factor, currently we do not model 30-day volume, so we use the first tier
+                return new OrderFee(new CashAmount(
+                    unitPrice * order.AbsoluteQuantity * fee,
+                    security.QuoteCurrency.Symbol));
+            }
+
             decimal feeRate;
 
             if (!_feeRates.TryGetValue(security.Type, out feeRate))
             {
                 throw new ArgumentException(
-                    Invariant($"Unsupported security type: {security.Type}. For direct-to-exchange assets such as Crypto, use the fee model specified by the exchange.")
+                    Invariant($"Unsupported security type: {security.Type}.")
                 );
             }
 
@@ -72,7 +104,7 @@ namespace QuantConnect.Orders.Fees
                     value = Math.Abs(order.GetValue(security));
                     break;
             }
-
+            
             return new OrderFee(new CashAmount(feeRate * value, Currencies.USD));
         }
     }
