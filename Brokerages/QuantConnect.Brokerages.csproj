@@ -274,6 +274,8 @@
     <Compile Include="Alpaca\Markets\RestClientErrorException.cs" />
     <Compile Include="Alpaca\Markets\SockClient.cs" />
     <Compile Include="Alpaca\Markets\ThrottleParameters.cs" />
+    <Compile Include="AlphaStreams\AlphaStreamsBrokerageModel.cs" />
+    <Compile Include="AlphaStreams\AlphaStreamsSlippageModel.cs" />
     <Compile Include="Backtesting\BacktestingBrokerage.cs" />
     <Compile Include="Backtesting\BacktestingBrokerageFactory.cs" />
     <Compile Include="Backtesting\BasicOptionAssignmentSimulation.cs" />

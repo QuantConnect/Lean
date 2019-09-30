@@ -134,5 +134,27 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             var actual = model.GetSlippageApproximation(_forex, _forexBuyOrder);
             Assert.AreEqual(expected, actual);
         }
+
+        [Test]
+        public void AlphaStreamsSlippageModel_EquityTest()
+        {
+            decimal slippagePercent = 0.001m;
+
+            var model = new AlphaStreamsSlippageModel();
+
+            var expected = _equity.Price * slippagePercent;
+            var actual = model.GetSlippageApproximation(_equity, _equityBuyOrder);
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void AlphaStreamsSlippageModel_ForexTest()
+        {
+            var model = new AlphaStreamsSlippageModel();
+
+            var expected = 0;
+            var actual = model.GetSlippageApproximation(_forex, _forexBuyOrder);
+            Assert.AreEqual(expected, actual);
+        }
     }
 }

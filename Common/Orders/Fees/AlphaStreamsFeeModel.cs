@@ -27,7 +27,7 @@ namespace QuantConnect.Orders.Fees
     {
         private readonly IDictionary<SecurityType, decimal> _feeRates = new Dictionary<SecurityType, decimal>
         {
-            {SecurityType.Equity, 0.004m},
+            {SecurityType.Equity, 0m},  // Temporary while we work on borrowing costs -- fee is temporarily built into slippage model for competition
             {SecurityType.Forex, 0.000002m},
             // Commission plus clearing fee
             {SecurityType.Future, 0.4m + 0.1m},
