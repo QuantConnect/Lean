@@ -284,31 +284,66 @@ namespace QuantConnect.Brokerages.Bitfinex
                 yield break;
             }
 
-            string resolution = ConvertResolution(request.Resolution);
-            long resolutionInMS = (long)request.Resolution.ToTimeSpan().TotalMilliseconds;
-            string symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
-            long startMTS = (long)Time.DateTimeToUnixTimeStamp(request.StartTimeUtc) * 1000;
-            long endMTS = (long)Time.DateTimeToUnixTimeStamp(request.EndTimeUtc) * 1000;
-            string endpoint = $"v2/candles/trade:{resolution}:t{symbol}/hist?limit=1000&sort=1";
-
-            while ((endMTS - startMTS) > resolutionInMS)
+            if (request.StartTimeUtc >= request.EndTimeUtc)
             {
-                var timeframe = $"&start={startMTS}&end={endMTS}";
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidDateRange",
+                    "The history request start date must precede the end date, no history returned"));
+                yield break;
+            }
+
+            // if the end time cannot be rounded to resolution without a remainder
+            if (request.EndTimeUtc.Ticks % request.Resolution.ToTimeSpan().Ticks > 0)
+            {
+                // give a warning and return
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "InvalidEndTime",
+                    "The history request's end date is not a full multiple of a resolution. " +
+                    "Bitfinex API only allows to support trade bar history requests. The start and end dates " +
+                    "of a such request are expected to match exactly with the beginning of the first bar and ending of the last"));
+                yield break;
+            }
+
+            string resolution = ConvertResolution(request.Resolution);
+            long resolutionInMsec = (long)request.Resolution.ToTimeSpan().TotalMilliseconds;
+            string symbol = _symbolMapper.GetBrokerageSymbol(request.Symbol);
+            long startMsec = (long)Time.DateTimeToUnixTimeStamp(request.StartTimeUtc) * 1000;
+            long endMsec = (long)Time.DateTimeToUnixTimeStamp(request.EndTimeUtc) * 1000;
+            string endpoint = $"v2/candles/trade:{resolution}:t{symbol}/hist?limit=1000&sort=1";
+            var period = request.Resolution.ToTimeSpan();
+
+            do
+            {
+                var timeframe = $"&start={startMsec}&end={endMsec}";
 
                 var restRequest = new RestRequest(endpoint + timeframe, Method.GET);
                 var response = ExecuteRestRequest(restRequest);
 
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
-                    throw new Exception($"BitfinexBrokerage.GetHistory: request failed: [{(int)response.StatusCode}] {response.StatusDescription}, Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
+                    throw new Exception(
+                        $"BitfinexBrokerage.GetHistory: request failed: [{(int) response.StatusCode}] {response.StatusDescription}, " +
+                        $"Content: {response.Content}, ErrorMessage: {response.ErrorMessage}");
                 }
 
+                // we need to drop the last bar provided by the exchange as its open time is a history request's end time
                 var candles = JsonConvert.DeserializeObject<object[][]>(response.Content)
                     .Select(entries => new Messages.Candle(entries))
+                    .Where(candle => candle.Timestamp != endMsec)
                     .ToList();
 
-                startMTS = candles.Last().Timestamp + resolutionInMS;
-                var period = request.Resolution.ToTimeSpan();
+                // bitfinex exchange may return us an empty result - if we request data for a small time interval
+                // during which no trades occurred - so it's rational to ensure 'candles' list is not empty before
+                // we proceed to avoid an exception to be thrown
+                if (candles.Any())
+                {
+                    startMsec = candles.Last().Timestamp + resolutionInMsec;
+                }
+                else
+                {
+                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "NoHistoricalData",
+                        $"Exchange returned no data for {symbol} on history request " +
+                        $"from {request.StartTimeUtc:s} to {request.EndTimeUtc:s}"));
+                    yield break;
+                }
 
                 foreach (var candle in candles)
                 {
@@ -327,7 +362,7 @@ namespace QuantConnect.Brokerages.Bitfinex
                         EndTime = Time.UnixMillisecondTimeStampToDateTime(candle.Timestamp + (long)period.TotalMilliseconds)
                     };
                 }
-            }
+            } while (startMsec < endMsec);
         }
 
         #endregion

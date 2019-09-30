@@ -25,7 +25,8 @@ using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Brokerages.Bitfinex
 {
-    [TestFixture, Ignore("This test requires a configured and testable Oanda practice account")]
+    [TestFixture]
+    [Ignore("This test requires a configured Bitfinex account")]
     public partial class BitfinexBrokerageTests : BrokerageTests
     {
         /// <summary>
@@ -36,8 +37,11 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
         /// <returns></returns>
         protected override IBrokerage CreateBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider)
         {
-            var securities = new SecurityManager(new TimeKeeper(DateTime.UtcNow, new[] { TimeZones.NewYork }));
-            securities.Add(Symbol, CreateSecurity(Symbol));
+            var securities = new SecurityManager(new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork))
+            {
+                {Symbol, CreateSecurity(Symbol)}
+            };
+
             var transactions = new SecurityTransactionManager(null, securities);
             transactions.SetOrderProcessor(new FakeOrderProcessor());
 
