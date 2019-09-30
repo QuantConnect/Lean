@@ -245,7 +245,7 @@ namespace QuantConnect
                 {"Long Insight Count", $"{Invariant(LongCount)}"},
                 {"Short Insight Count", $"{Invariant(ShortCount)}"},
                 {"Long/Short Ratio", $"{Invariant(Math.Round(100*LongShortRatio, 2))}%"},
-                {"Estimated Monthly Alpha Value", $"{accountCurrencySymbol}{Invariant(Invariant(EstimatedMonthlyAlphaValue.SmartRounding()))}"},
+                {"Estimated Monthly Alpha Value", $"{accountCurrencySymbol}{Invariant(EstimatedMonthlyAlphaValue.SmartRounding())}"},
                 {"Total Accumulated Estimated Alpha Value", $"{accountCurrencySymbol}{Invariant(TotalAccumulatedEstimatedAlphaValue.SmartRounding())}"},
                 {"Mean Population Estimated Insight Value", $"{accountCurrencySymbol}{Invariant(MeanPopulationEstimatedInsightValue.SmartRounding())}"},
                 {"Mean Population Direction", $"{Invariant(Math.Round(100 * MeanPopulationScore.Direction, 4))}%"},
