@@ -255,7 +255,8 @@ namespace QuantConnect.Tests.Common.Securities
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
         }
     }

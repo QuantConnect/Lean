@@ -48,7 +48,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             var timeInForce = new GoodTilCanceledTimeInForce();
@@ -82,7 +83,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
             security.SetLocalTimeKeeper(localTimeKeeper);
@@ -129,7 +131,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true
                 ),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
             security.SetLocalTimeKeeper(localTimeKeeper);
@@ -178,7 +181,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true
                 ),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
             security.SetLocalTimeKeeper(localTimeKeeper);
@@ -230,7 +234,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true
                 ),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.Utc);
             security.SetLocalTimeKeeper(localTimeKeeper);
@@ -276,7 +281,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
             security.SetLocalTimeKeeper(localTimeKeeper);
@@ -337,7 +343,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true
                 ),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
             security.SetLocalTimeKeeper(localTimeKeeper);
@@ -397,7 +404,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true
                 ),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.Utc);
             security.SetLocalTimeKeeper(localTimeKeeper);
@@ -457,7 +465,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
             security.SetLocalTimeKeeper(localTimeKeeper);
@@ -504,7 +513,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true
                 ),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
             security.SetLocalTimeKeeper(localTimeKeeper);
@@ -553,7 +563,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true
                 ),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.NewYork);
             security.SetLocalTimeKeeper(localTimeKeeper);
@@ -605,7 +616,8 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
                     true
                 ),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var localTimeKeeper = new LocalTimeKeeper(utcTime, TimeZones.Utc);
             security.SetLocalTimeKeeper(localTimeKeeper);

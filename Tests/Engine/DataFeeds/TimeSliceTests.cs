@@ -60,7 +60,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 subscriptionDataConfig,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             DateTime refTime = DateTime.UtcNow;
@@ -109,7 +110,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 subscriptionDataConfig1,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             var security2 = new Security(
@@ -117,7 +119,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 subscriptionDataConfig1,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             var timeSlice = _timeSliceFactory.Create(DateTime.UtcNow,
@@ -185,7 +188,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 subscriptionDataConfig,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             var timeSlice = _timeSliceFactory.Create(DateTime.UtcNow,
@@ -217,7 +221,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 subscriptionDataConfig,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var refTime = DateTime.UtcNow;
 

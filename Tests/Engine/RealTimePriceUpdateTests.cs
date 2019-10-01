@@ -69,11 +69,12 @@ namespace QuantConnect.Tests.Engine
             var dataManager = new DataManager(_liveTradingDataFeed,
                 new UniverseSelection(
                     algo,
-                    new SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algo)),
+                    new SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algo, RegisteredSecurityDataTypesProvider.Null)),
                 algo,
                 algo.TimeKeeper,
                 marketHoursDatabase,
-                true);
+                true,
+                RegisteredSecurityDataTypesProvider.Null);
             algo.SubscriptionManager.SetDataManager(dataManager);
             var synchronizer = new LiveSynchronizer();
             synchronizer.Initialize(algo, dataManager);
@@ -114,7 +115,8 @@ namespace QuantConnect.Tests.Engine
                 _exchangeHours,
                 new Cash("USA", 100m, 1m),
                 SymbolProperties.GetDefault("USA"),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             var subscriptionRequest = new SubscriptionRequest(false, null, security, _config, DateTime.MinValue, DateTime.MaxValue);
@@ -130,7 +132,8 @@ namespace QuantConnect.Tests.Engine
                 _exchangeHours,
                 new Cash("USA", 100m, 1m),
                 SymbolProperties.GetDefault("USA"),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             var subscriptionRequest = new SubscriptionRequest(false, null, security, _config, DateTime.MinValue, DateTime.MaxValue);

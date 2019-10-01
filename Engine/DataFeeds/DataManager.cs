@@ -39,6 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly ITimeKeeper _timeKeeper;
         private readonly bool _liveMode;
+        private readonly IRegisteredSecurityDataTypesProvider _registeredTypesProvider;
 
         /// There is no ConcurrentHashSet collection in .NET,
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
@@ -64,7 +65,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             IAlgorithm algorithm,
             ITimeKeeper timeKeeper,
             MarketHoursDatabase marketHoursDatabase,
-            bool liveMode)
+            bool liveMode,
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider)
         {
             _dataFeed = dataFeed;
             UniverseSelection = universeSelection;
@@ -74,6 +76,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _timeKeeper = timeKeeper;
             _marketHoursDatabase = marketHoursDatabase;
             _liveMode = liveMode;
+            _registeredTypesProvider = registeredTypesProvider;
 
             // wire ourselves up to receive notifications when universes are added/removed
             algorithm.UniverseManager.CollectionChanged += (sender, args) =>
@@ -98,7 +101,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     config,
                                     algorithm.Portfolio.CashBook[algorithm.AccountCurrency],
                                     SymbolProperties.GetDefault(algorithm.AccountCurrency),
-                                    algorithm.Portfolio.CashBook
+                                    algorithm.Portfolio.CashBook,
+                                    RegisteredSecurityDataTypesProvider.Null
                                  );
                             }
                             AddSubscription(
@@ -444,6 +448,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             for (int i = 0; i < result.Count; i++)
             {
                 result[i] = SubscriptionManagerGetOrAdd(result[i]);
+
+                // track all registered data types
+                _registeredTypesProvider.RegisterType(result[i].Type);
             }
             return result;
         }

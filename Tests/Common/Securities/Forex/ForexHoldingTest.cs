@@ -45,10 +45,20 @@ namespace QuantConnect.Tests.Common.Securities.Forex
                                                           TimeZones.NewYork, TimeZones.NewYork, fillForward: true,
                                                           extendedHours: true, isInternalFeed: true);
 
-            var pair = new QuantConnect.Securities.Forex.Forex(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                                                               cash, subscription,
-                                                               new SymbolProperties("", pairQuoteCurrency, 1,
-                                                                                    minimumPriceVariation, lotSize), ErrorCurrencyConverter.Instance);
+            var pair = new QuantConnect.Securities.Forex.Forex(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                cash,
+                subscription,
+                new SymbolProperties(
+                    "",
+                    pairQuoteCurrency,
+                    1,
+                    minimumPriceVariation,
+                    lotSize
+                ),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
             pair.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             pair.SetFeeModel(new ConstantFeeModel(decimal.Zero));
             var forexHolding = new ForexHolding(pair, new IdentityCurrencyConverter(Currencies.USD));

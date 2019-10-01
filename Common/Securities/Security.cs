@@ -262,9 +262,23 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Provides dynamic access to data in the cache
+        /// </summary>
+        public dynamic Data
+        {
+            get;
+        }
+
+        /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(SecurityExchangeHours exchangeHours, SubscriptionDataConfig config, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        public Security(SecurityExchangeHours exchangeHours,
+            SubscriptionDataConfig config,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider
+            )
             : this(config,
                 quoteCurrency,
                 symbolProperties,
@@ -279,7 +293,8 @@ namespace QuantConnect.Securities
                 new SecurityMarginModel(),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
-                currencyConverter
+                currencyConverter,
+                registeredTypesProvider
                 )
         {
         }
@@ -287,7 +302,13 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Construct a new security vehicle based on the user options.
         /// </summary>
-        public Security(Symbol symbol, SecurityExchangeHours exchangeHours, Cash quoteCurrency, SymbolProperties symbolProperties, ICurrencyConverter currencyConverter)
+        public Security(Symbol symbol,
+            SecurityExchangeHours exchangeHours,
+            Cash quoteCurrency,
+            SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider
+            )
             : this(symbol,
                 quoteCurrency,
                 symbolProperties,
@@ -302,7 +323,8 @@ namespace QuantConnect.Securities
                 new SecurityMarginModel(),
                 new SecurityDataFilter(),
                 new SecurityPriceVariationModel(),
-                currencyConverter
+                currencyConverter,
+                registeredTypesProvider
                 )
         {
         }
@@ -324,7 +346,8 @@ namespace QuantConnect.Securities
             IBuyingPowerModel buyingPowerModel,
             ISecurityDataFilter dataFilter,
             IPriceVariationModel priceVariationModel,
-            ICurrencyConverter currencyConverter
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider
             )
         {
             if (symbolProperties == null)
@@ -356,6 +379,8 @@ namespace QuantConnect.Securities
             SettlementModel = settlementModel;
             VolatilityModel = volatilityModel;
             Holdings = new SecurityHolding(this, currencyConverter);
+            Data = new DynamicSecurityData(registeredTypesProvider);
+            Cache.DataStored += (sender, args) => Data.StoreData(args.DataType, args.Data);
 
             UpdateSubscriptionProperties();
         }
@@ -378,7 +403,8 @@ namespace QuantConnect.Securities
             IBuyingPowerModel buyingPowerModel,
             ISecurityDataFilter dataFilter,
             IPriceVariationModel priceVariationModel,
-            ICurrencyConverter currencyConverter
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider
             )
             : this(config.Symbol,
                 quoteCurrency,
@@ -394,7 +420,8 @@ namespace QuantConnect.Securities
                 buyingPowerModel,
                 dataFilter,
                 priceVariationModel,
-                currencyConverter
+                currencyConverter,
+                registeredTypesProvider
                 )
         {
             SubscriptionsBag.Add(config);
@@ -557,6 +584,24 @@ namespace QuantConnect.Securities
             if (data is OpenInterest || data.Price == 0m) return;
             Holdings.UpdateMarketPrice(Price);
             VolatilityModel.Update(this, data);
+        }
+
+        /// <summary>
+        /// Updates all of the security properties, such as price/OHLCV/bid/ask based
+        /// on the data provided. Data is also stored into the security's data cache
+        /// </summary>
+        /// <param name="data">The security update data</param>
+        public void Update(IEnumerable<BaseData> data)
+        {
+            foreach (var grp in data.GroupBy(d => d.GetType()))
+            {
+                // use the last of each type to set market price
+                SetMarketPrice(grp.Last());
+
+                // maintaining regression requires us to NOT cache FF data
+                var nonFillForward = grp.Where(d => !d.IsFillForward).ToList();
+                Cache.StoreData(nonFillForward.ToList());
+            }
         }
 
         /// <summary>

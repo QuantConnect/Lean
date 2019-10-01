@@ -89,11 +89,12 @@ namespace QuantConnect.Tests.Brokerages.Paper
             var dataManager = new DataManager(feed,
                 new UniverseSelection(
                     algorithm,
-                    new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm)),
+                    new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm, RegisteredSecurityDataTypesProvider.Null)),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
-                true);
+                true,
+                RegisteredSecurityDataTypesProvider.Null);
             var synchronizer = new NullSynchronizer(algorithm, dividend);
 
             algorithm.SubscriptionManager.SetDataManager(dataManager);

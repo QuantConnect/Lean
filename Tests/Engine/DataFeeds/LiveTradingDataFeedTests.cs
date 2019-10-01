@@ -870,14 +870,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 algorithm.Portfolio.CashBook,
                 marketHoursDatabase,
                 symbolPropertiesDataBase,
-                algorithm);
+                algorithm,
+                RegisteredSecurityDataTypesProvider.Null);
             algorithm.Securities.SetSecurityService(securityService);
             var dataManager = new DataManager(feed,
                 new UniverseSelection(algorithm, securityService),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
-                true);
+                true,
+                RegisteredSecurityDataTypesProvider.Null);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             var synchronizer = new TestableLiveSynchronizer();
             synchronizer.Initialize(algorithm, dataManager);
@@ -1110,14 +1112,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var fileProvider = new DefaultDataProvider();
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
-            var securityService = new SecurityService(_algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, _algorithm);
+            var securityService = new SecurityService(_algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, _algorithm, RegisteredSecurityDataTypesProvider.Null);
             _algorithm.Securities.SetSecurityService(securityService);
             _dataManager = new DataManager(feed,
                 new UniverseSelection(_algorithm, securityService),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 marketHoursDatabase,
-                true);
+                true,
+                RegisteredSecurityDataTypesProvider.Null);
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.AddSecurities(resolution, equities, forex, crypto);
             _synchronizer = new TestableLiveSynchronizer(_manualTimeProvider);
@@ -1404,14 +1407,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 algorithm.Portfolio.CashBook,
                 marketHoursDatabase,
                 symbolPropertiesDataBase,
-                algorithm);
+                algorithm,
+                RegisteredSecurityDataTypesProvider.Null);
             algorithm.Securities.SetSecurityService(securityService);
             var dataManager = new DataManager(feed,
                 new UniverseSelection(algorithm, securityService),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
-                true);
+                true,
+                RegisteredSecurityDataTypesProvider.Null);
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             algorithm.SetLiveMode(true);
 

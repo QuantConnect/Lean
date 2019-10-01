@@ -54,7 +54,8 @@ namespace QuantConnect.Tests.Common.Orders
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             equity.SetMarketPrice(new Tick {Value = price});
 
@@ -65,7 +66,8 @@ namespace QuantConnect.Tests.Common.Orders
                 gbpCash,
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.EURGBP, Resolution.Minute, tz, tz, true, false, false),
                 properties,
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             forex.SetMarketPrice(new Tick {Value= price});
 
@@ -76,7 +78,8 @@ namespace QuantConnect.Tests.Common.Orders
                 eurCash,
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.DE10YBEUR, Resolution.Minute, tz, tz, true, false, false),
                 properties,
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             cfd.SetMarketPrice(new Tick { Value = price });
             var multiplierTimesConversionRate = properties.ContractMultiplier*eurCash.ConversionRate;
@@ -95,7 +98,8 @@ namespace QuantConnect.Tests.Common.Orders
                 ),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             option.SetMarketPrice(new Tick { Value = price });
 

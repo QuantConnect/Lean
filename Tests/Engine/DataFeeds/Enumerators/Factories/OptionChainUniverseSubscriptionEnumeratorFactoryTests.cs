@@ -64,7 +64,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 exchangeHours,
                 quoteCurrency,
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             var fillForwardResolution = Ref.CreateReadOnly(() => Resolution.Minute.ToTimeSpan());

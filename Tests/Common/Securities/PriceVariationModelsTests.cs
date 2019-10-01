@@ -99,7 +99,8 @@ namespace QuantConnect.Tests.Common.Securities.Equity
                     ),
                     new Cash(Currencies.USD, 0, 1m),
                     symbolProperties,
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 );
             }
             else
@@ -118,7 +119,8 @@ namespace QuantConnect.Tests.Common.Securities.Equity
                         false
                     ),
                     symbolProperties,
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 );
             }
 

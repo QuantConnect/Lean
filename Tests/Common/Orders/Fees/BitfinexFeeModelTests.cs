@@ -40,7 +40,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new Cash(Currencies.USD, 0, 1),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("BTCUSD", Currencies.USD, 1, 0.01m, 0.00000001m),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             _btcusd.SetMarketPrice(new Tick(DateTime.UtcNow, _btcusd.Symbol, 100, 100));
 
@@ -49,7 +50,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new Cash("EUR", 0, 10),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCEUR, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("BTCEUR", "EUR", 1, 0.01m, 0.00000001m),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             _btceur.SetMarketPrice(new Tick(DateTime.UtcNow, _btceur.Symbol, 100, 100));
         }

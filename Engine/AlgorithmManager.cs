@@ -317,9 +317,16 @@ namespace QuantConnect.Lean.Engine
                 foreach (var update in timeSlice.SecuritiesUpdateData)
                 {
                     var security = update.Target;
-                    foreach (var data in update.Data)
+                    security.Update(update.Data);
+
+                    // set custom derivative data in the underlying's cache
+                    if (security.Symbol.SecurityType == SecurityType.Base && security.Symbol.HasUnderlying)
                     {
-                        security.SetMarketPrice(data);
+                        Security underlyingSecurity;
+                        if (algorithm.Securities.TryGetValue(security.Symbol.Underlying, out underlyingSecurity))
+                        {
+                            underlyingSecurity.Cache.StoreData(update.Data);
+                        }
                     }
 
                     if (!update.IsInternalConfig)
@@ -339,7 +346,7 @@ namespace QuantConnect.Lean.Engine
                             Security security;
                             if (algorithm.Securities.TryGetValue(data.Symbol, out security))
                             {
-                                security.Cache.StoreData(data);
+                                security.Cache.StoreData(new[] {data});
                             }
                         }
                     }

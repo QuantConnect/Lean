@@ -298,6 +298,7 @@
     <Compile Include="Common\Data\BaseDataTests.cs" />
     <Compile Include="Common\Data\CalendarConsolidatorsTests.cs" />
     <Compile Include="Common\Data\Custom\EstimizeTests.cs" />
+    <Compile Include="Common\Data\DynamicDataTests.cs" />
     <Compile Include="Common\Data\Fundamental\MultiPeriodFieldTests.cs" />
     <Compile Include="Common\Data\MockSubscriptionDataConfigProvider.cs" />
     <Compile Include="Common\Data\UniverseSelection\UniverseTests.cs" />
@@ -320,6 +321,7 @@
     <Compile Include="Common\Securities\AccountCurrencyImmediateSettlementModelTests.cs" />
     <Compile Include="Common\Securities\Options\OptionPortfolioModelTests.cs" />
     <Compile Include="Common\Securities\ProcessVolatilityHistoryRequirementsTests.cs" />
+    <Compile Include="Common\Securities\DynamicSecurityDataTests.cs" />
     <Compile Include="Common\Securities\SecurityHoldingTests.cs" />
     <Compile Include="Common\Securities\SecurityServiceTests.cs" />
     <Compile Include="Common\Securities\TestAccountCurrencyProvider.cs" />

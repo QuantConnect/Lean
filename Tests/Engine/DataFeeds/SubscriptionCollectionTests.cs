@@ -49,7 +49,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 new Cash(Currencies.USD, 0, 1),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
             var enumerator = new EnqueueableEnumerator<BaseData>();
@@ -360,7 +361,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                     new Cash(Currencies.USD, 0, 1),
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 );
             }
             else if (type == SecurityType.Option)
@@ -373,7 +375,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                     new Cash(Currencies.USD, 0, 1),
                     new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 );
             }
             else if (type == SecurityType.Future)
@@ -384,7 +387,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                     new Cash(Currencies.USD, 0, 1),
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 );
             }
             else

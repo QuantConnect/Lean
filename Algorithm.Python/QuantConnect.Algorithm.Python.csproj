@@ -68,6 +68,7 @@
     <None Include="CustomDataAddDataRegressionAlgorithm.py" />
     <Content Include="CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm.py" />
     <Content Include="CustomDataAddDataCoarseSelectionRegressionAlgorithm.py" />
+    <Content Include="DynamicSecurityDataAlgorithm.py" />
     <Content Include="KerasNeuralNetworkAlgorithm.py" />
     <None Include="PsychSignalSentimentRegressionAlgorithm.py" />
     <Content Include="CustomDataUsingMapFileRegressionAlgorithm.py" />

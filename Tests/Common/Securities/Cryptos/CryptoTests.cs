@@ -39,7 +39,8 @@ namespace QuantConnect.Tests.Common.Securities.Cryptos
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
                 SymbolProperties.GetDefault(quote),
-                portfolio.CashBook
+                portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             Assert.AreEqual(symbol.Value.RemoveFromEnd(quote), crypto.BaseCurrencySymbol);
@@ -68,7 +69,8 @@ namespace QuantConnect.Tests.Common.Securities.Cryptos
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
                 cash,
                 SymbolProperties.GetDefault(quote),
-                portfolio.CashBook
+                portfolio.CashBook,
+                RegisteredSecurityDataTypesProvider.Null
             );
 
             Assert.AreEqual(symbol.Value.RemoveFromEnd(quote), crypto.BaseCurrencySymbol);
