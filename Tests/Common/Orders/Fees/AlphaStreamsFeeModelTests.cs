@@ -199,7 +199,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                     new Cash(Currencies.USD, 0, 1),
                     new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false),
                     new SymbolProperties("BTCUSD", Currencies.USD, 1, 0.01m, 0.00000001m),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 );
             btcusd.SetMarketPrice(new Tick(DateTime.UtcNow, btcusd.Symbol, 100, 100));
 
@@ -224,7 +225,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new Cash("EUR", 0, 10),
                 new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCEUR, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false),
                 new SymbolProperties("BTCEUR", "EUR", 1, 0.01m, 0.00000001m),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             btceur.SetMarketPrice(new Tick(DateTime.UtcNow, btceur.Symbol, 100, 100));
 
@@ -250,7 +252,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new Cash("EUR", 0, 0),
                 new SubscriptionDataConfig(typeof(QuoteBar), Symbols.DE30EUR, Resolution.Minute, tz, tz, true, false, false),
                 new SymbolProperties("DE30EUR", "EUR", 1, 0.01m, 1m),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 12000, 12000));
 
