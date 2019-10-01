@@ -19,6 +19,7 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static System.FormattableString;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 {
@@ -50,7 +51,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
         protected override string GetExpectedModelName(IAlphaModel model)
         {
-            return $"{nameof(ConstantAlphaModel)}({_type},{_direction},{_period},{_magnitude})";
+            return Invariant($"{nameof(ConstantAlphaModel)}({_type},{_direction},{_period},{_magnitude})");
         }
     }
 }

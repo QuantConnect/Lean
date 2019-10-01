@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
+using static System.FormattableString;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
@@ -60,7 +61,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _pairs = new Dictionary<Tuple<Symbol, Symbol>, PairData>();
 
             Securities = new HashSet<Security>();
-            Name = $"{nameof(BasePairsTradingAlphaModel)}({_lookback},{_resolution},{_threshold.Normalize()})";
+            Name = Invariant($"{nameof(BasePairsTradingAlphaModel)}({_lookback},{_resolution},{_threshold.Normalize()})");
         }
 
         /// <summary>
