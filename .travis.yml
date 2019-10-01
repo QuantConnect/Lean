@@ -1,7 +1,7 @@
 sudo: required
 language: csharp
 mono:
-  - 5.8.0
+  - 5.12.0
 solution: QuantConnect.Lean.sln
 before_install:
   - export PATH="$HOME/miniconda3/bin:$PATH"
