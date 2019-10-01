@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// Base exchange class providing information and helper tools for reading the current exchange situation
     /// </summary>
-    public class SecurityExchange 
+    public class SecurityExchange
     {
         private DateTime _localFrontier;
         private SecurityExchangeHours _exchangeHours;
@@ -32,43 +32,28 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the <see cref="SecurityExchangeHours"/> for this exchange
         /// </summary>
-        public SecurityExchangeHours Hours
-        {
-            get { return _exchangeHours; }
-        }
+        public SecurityExchangeHours Hours => _exchangeHours;
 
         /// <summary>
         /// Gets the time zone for this exchange
         /// </summary>
-        public DateTimeZone TimeZone 
-        {
-            get { return _exchangeHours.TimeZone; }
-        }
+        public DateTimeZone TimeZone => _exchangeHours.TimeZone;
 
         /// <summary>
         /// Number of trading days per year for this security. By default the market is open 365 days per year.
         /// </summary>
         /// <remarks>Used for performance statistics to calculate sharpe ratio accurately</remarks>
-        public virtual int TradingDaysPerYear
-        {
-            get { return 365; }
-        }
+        public virtual int TradingDaysPerYear => 365;
 
         /// <summary>
         /// Time from the most recent data
         /// </summary>
-        public DateTime LocalTime
-        {
-            get { return _localFrontier; }
-        }
+        public DateTime LocalTime => _localFrontier;
 
         /// <summary>
         /// Boolean property for quickly testing if the exchange is open.
         /// </summary>
-        public bool ExchangeOpen
-        {
-            get { return _exchangeHours.IsOpen(_localFrontier, false); }
-        }
+        public bool ExchangeOpen => _exchangeHours.IsOpen(_localFrontier, false);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityExchange"/> class using the specified
@@ -84,7 +69,7 @@ namespace QuantConnect.Securities
         /// Set the current datetime in terms of the exchange's local time zone
         /// </summary>
         /// <param name="newLocalTime">Most recent data tick</param>
-        public void SetLocalDateTimeFrontier(DateTime newLocalTime) 
+        public void SetLocalDateTimeFrontier(DateTime newLocalTime)
         {
             _localFrontier = newLocalTime;
         }
@@ -127,7 +112,7 @@ namespace QuantConnect.Securities
         public void SetMarketHours(IEnumerable<MarketHoursSegment> marketHoursSegments, params DayOfWeek[] days)
         {
             if (days.IsNullOrEmpty()) days = Enum.GetValues(typeof(DayOfWeek)).OfType<DayOfWeek>().ToArray();
-            
+
             var marketHours = _exchangeHours.MarketHours.ToDictionary();
             marketHoursSegments = marketHoursSegments as IList<MarketHoursSegment> ?? marketHoursSegments.ToList();
             foreach (var day in days)
@@ -136,7 +121,7 @@ namespace QuantConnect.Securities
             }
 
             // create a new exchange hours instance for the new hours
-            _exchangeHours = new SecurityExchangeHours(_exchangeHours.TimeZone, _exchangeHours.Holidays, marketHours, _exchangeHours.EarlyCloses);
+            _exchangeHours = new SecurityExchangeHours(_exchangeHours.TimeZone, _exchangeHours.Holidays, marketHours, _exchangeHours.EarlyCloses, _exchangeHours.LateOpens);
         }
     }
 }
