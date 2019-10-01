@@ -1046,28 +1046,35 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Sets the benchmark used for computing statistics of the algorithm to the specified symbol, defaulting to SecurityType.Equity
-        /// if the symbol doesn't exist in the algorithm
+        /// Sets the benchmark used for computing statistics of the algorithm to the specified ticker, defaulting to SecurityType.Equity
+        /// if the ticker doesn't exist in the algorithm
         /// </summary>
-        /// <param name="symbol">symbol to use as the benchmark</param>
+        /// <param name="ticker">Ticker to use as the benchmark</param>
         /// <remarks>
-        /// Overload to accept symbol without passing SecurityType. If symbol is in portfolio it will use that SecurityType, otherwise will default to SecurityType.Equity
+        /// Overload to accept ticker without passing SecurityType. If ticker is in portfolio it will use that SecurityType, otherwise will default to SecurityType.Equity
         /// </remarks>
-        public void SetBenchmark(string symbol)
+        public void SetBenchmark(string ticker)
         {
             if (_locked)
             {
                 throw new InvalidOperationException("Algorithm.SetBenchmark(): Cannot change Benchmark after algorithm initialized.");
             }
 
-            // check existence
-            symbol = symbol.LazyToUpper();
-            var security = Securities.FirstOrDefault(x => x.Key.Value == symbol).Value;
+            Symbol symbol;
+            Security security;
+            // lets first check the cache and use that symbol to check the securities collection
+            // else use the first matching the given ticker in the collection
+            if (!SymbolCache.TryGetSymbol(ticker, out symbol)
+                || !Securities.TryGetValue(symbol, out security))
+            {
+                ticker = ticker.LazyToUpper();
+                security = Securities.FirstOrDefault(x => x.Key.Value == ticker).Value;
+            }
 
             if (security == null)
             {
-                Debug($"Warning: SetBenchmark({symbol}): no existing security found, benchmark security will be added with {SecurityType.Equity} type.");
-                _benchmarkSymbol = QuantConnect.Symbol.Create(symbol, SecurityType.Equity, Market.USA);
+                Debug($"Warning: SetBenchmark({ticker}): no existing security found, benchmark security will be added with {SecurityType.Equity} type.");
+                _benchmarkSymbol = QuantConnect.Symbol.Create(ticker, SecurityType.Equity, Market.USA);
             }
             else
             {
