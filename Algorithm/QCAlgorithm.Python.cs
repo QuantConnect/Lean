@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The new <see cref="Security"/></returns>
         public Security AddData(PyObject type, string ticker, Resolution resolution = Resolution.Minute)
         {
-            return AddData(type, ticker, resolution, TimeZones.NewYork, false, 1m);
+            return AddData(type, ticker, resolution, null, false, 1m);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm
         /// </remarks>
         public Security AddData(PyObject type, Symbol underlying, Resolution resolution = Resolution.Minute)
         {
-            return AddData(type, underlying, resolution, TimeZones.NewYork, false, 1m);
+            return AddData(type, underlying, resolution, null, false, 1m);
         }
 
         /// <summary>
@@ -205,7 +205,18 @@ namespace QuantConnect.Algorithm
         {
             var alias = symbol.ID.Symbol;
             SymbolCache.Set(alias, symbol);
-            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, alias, SecurityType.Base, timeZone);
+
+            if (timeZone != null)
+            {
+                // user set time zone
+                MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, alias, SecurityType.Base, timeZone);
+            }
+            else
+            {
+                var baseInstance = dataType.GetBaseDataInstance();
+                baseInstance.Symbol = symbol;
+                MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, alias, SecurityType.Base, baseInstance.DataTimeZone());
+            }
 
             //Add this new generic data as a tradeable security:
             var config = SubscriptionManager.SubscriptionDataConfigService.Add(

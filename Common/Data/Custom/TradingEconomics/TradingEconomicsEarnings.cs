@@ -15,7 +15,7 @@
 
 using Newtonsoft.Json;
 using System;
-using QLNet;
+using NodaTime;
 
 namespace QuantConnect.Data.Custom.TradingEconomics
 {
@@ -101,6 +101,15 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// </summary>
         [JsonProperty(PropertyName = "LastUpdate"), JsonConverter(typeof(TradingEconomicsDateTimeConverter))]
         public DateTime LastUpdate { get; set; }
+
+        /// <summary>
+        /// Specifies the data time zone for this data type. This is useful for custom data types
+        /// </summary>
+        /// <returns>The <see cref="DateTimeZone"/> of this data type</returns>
+        public override DateTimeZone DataTimeZone()
+        {
+            return TimeZones.Utc;
+        }
     }
 
     /// <summary>

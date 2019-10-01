@@ -17,6 +17,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using NodaTime;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using static QuantConnect.StringExtensions;
@@ -187,6 +188,15 @@ namespace QuantConnect.Data.Custom.Tiingo
         public override bool RequiresMapping()
         {
             return true;
+        }
+
+        /// <summary>
+        /// Specifies the data time zone for this data type. This is useful for custom data types
+        /// </summary>
+        /// <returns>The <see cref="DateTimeZone"/> of this data type</returns>
+        public override DateTimeZone DataTimeZone()
+        {
+            return TimeZones.Utc;
         }
     }
 }

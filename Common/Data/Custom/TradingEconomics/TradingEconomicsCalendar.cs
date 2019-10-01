@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using NodaTime;
 using QuantConnect.Data.UniverseSelection;
 using static QuantConnect.StringExtensions;
 
@@ -232,6 +233,15 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         {
             var symbol = string.IsNullOrWhiteSpace(TESymbol) ? Ticker : TESymbol;
             return Invariant($"{symbol} ({Country} - {Category}): {Event} : Importance.{Importance}");
+        }
+
+        /// <summary>
+        /// Specifies the data time zone for this data type. This is useful for custom data types
+        /// </summary>
+        /// <returns>The <see cref="DateTimeZone"/> of this data type</returns>
+        public override DateTimeZone DataTimeZone()
+        {
+            return TimeZones.Utc;
         }
     }
 
