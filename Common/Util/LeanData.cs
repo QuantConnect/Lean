@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -33,6 +34,13 @@ namespace QuantConnect.Util
     /// </summary>
     public static class LeanData
     {
+        /// <summary>
+        /// The different <see cref="SecurityType"/> used for data paths
+        /// </summary>
+        /// <remarks>This includes 'alternative'</remarks>
+        public static IReadOnlyList<string> SecurityTypeAsDataPath => Enum.GetNames(typeof(SecurityType))
+            .Select(x => x.ToLowerInvariant()).Union(new[] { "alternative" }).ToList();
+
         /// <summary>
         /// Converts the specified base data instance into a lean data file csv line.
         /// This method takes into account the fake that base data instances typically
@@ -770,6 +778,21 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Matches a data path security type with the <see cref="SecurityType"/>
+        /// </summary>
+        /// <remarks>This includes 'alternative'</remarks>
+        /// <param name="securityType">The data path security type</param>
+        /// <returns>The matching security type for the given data path</returns>
+        public static SecurityType ParseDataSecurityType(string securityType)
+        {
+            if (securityType.Equals("alternative", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return SecurityType.Base;
+            }
+            return (SecurityType) Enum.Parse(typeof(SecurityType), securityType, true);
+        }
+
+        /// <summary>
         /// Parses file name into a <see cref="Security"/> and DateTime
         /// </summary>
         /// <param name="fileName">File name to be parsed</param>
@@ -783,7 +806,6 @@ namespace QuantConnect.Util
             date = default(DateTime);
 
             var pathSeparators = new[] { '/', '\\'};
-            var securityTypes = Enum.GetNames(typeof(SecurityType)).Select(x => x.ToLowerInvariant()).ToList();
 
             try
             {
@@ -800,13 +822,13 @@ namespace QuantConnect.Util
                 var info = fileName.Split(pathSeparators, StringSplitOptions.RemoveEmptyEntries).ToList();
 
                 // find where the useful part of the path starts - i.e. the securityType
-                var startIndex = info.FindIndex(x => securityTypes.Contains(x.ToLowerInvariant()));
+                var startIndex = info.FindIndex(x => SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
 
                 // Gather components useed to create the security
                 var market = info[startIndex + 1];
                 var ticker = info[startIndex + 3];
                 resolution = (Resolution)Enum.Parse(typeof(Resolution), info[startIndex + 2], true);
-                var securityType = (SecurityType)Enum.Parse(typeof(SecurityType), info[startIndex], true);
+                var securityType = ParseDataSecurityType(info[startIndex]);
 
                 // If resolution is Daily or Hour, we do not need to set the date and tick type
                 if (resolution < Resolution.Hour)

@@ -301,6 +301,32 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(date.Date, Parse.DateTime("2016-10-07").Date);
         }
 
+        [TestCase(SecurityType.Base, "alteRNative")]
+        [TestCase(SecurityType.Equity, "Equity")]
+        [TestCase(SecurityType.Cfd, "Cfd")]
+        [TestCase(SecurityType.Commodity, "Commodity")]
+        [TestCase(SecurityType.Crypto, "Crypto")]
+        [TestCase(SecurityType.Forex, "Forex")]
+        [TestCase(SecurityType.Future, "Future")]
+        [TestCase(SecurityType.Option, "Option")]
+        public void ParsesDataSecurityType(SecurityType type, string path)
+        {
+            Assert.AreEqual(type, LeanData.ParseDataSecurityType(path));
+        }
+
+        [Test]
+        public void SecurityTypeAsDataPath()
+        {
+            Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("alternative"));
+            Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("equity"));
+            Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("base"));
+            Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("option"));
+            Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("cfd"));
+            Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("crypto"));
+            Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("future"));
+            Assert.IsTrue(LeanData.SecurityTypeAsDataPath.Contains("forex"));
+        }
+
         private static void AssertBarsAreEqual(IBar expected, IBar actual)
         {
             if (expected == null && actual == null)
