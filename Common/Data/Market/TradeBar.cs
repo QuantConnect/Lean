@@ -631,6 +631,20 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// Formats a string with the symbol and value.
+        /// </summary>
+        /// <returns>string - a string formatted as SPY: 167.753</returns>
+        public override string ToString()
+        {
+            return $"{Symbol}: " +
+                   $"O: {Open.SmartRounding()} " +
+                   $"H: {High.SmartRounding()} " +
+                   $"L: {Low.SmartRounding()} " +
+                   $"C: {Close.SmartRounding()} " +
+                   $"V: {Volume.SmartRounding()}";
+        }
+
+        /// <summary>
         /// Initializes this bar with a first data point
         /// </summary>
         /// <param name="value">The seed value for this bar</param>

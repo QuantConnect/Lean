@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
+using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
@@ -221,6 +222,22 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(securityCache.BidPrice, 0m);
             Assert.AreEqual(securityCache.AskPrice, 0m);
             Assert.AreEqual(securityCache.Volume, volume);
+        }
+
+        [Test]
+        public void GetAllData_ReturnsListOfData()
+        {
+            var cache = new SecurityCache();
+            cache.StoreData(new []
+            {
+                new CustomDataBitcoinAlgorithm.Bitcoin{Ask = 1m},
+                new CustomDataBitcoinAlgorithm.Bitcoin{Ask = 2m}
+            });
+
+            var data = cache.GetAll<CustomDataBitcoinAlgorithm.Bitcoin>().ToList();
+            Assert.AreEqual(2, data.Count);
+            Assert.AreEqual(1m, data[0].Ask);
+            Assert.AreEqual(2m, data[1].Ask);
         }
 
         private void AddDataAndAssertChanges(SecurityCache cache, SecuritySeedData seedType, SecuritySeedData dataType, BaseData data, Dictionary<string, string> cacheToBaseDataPropertyMap = null)

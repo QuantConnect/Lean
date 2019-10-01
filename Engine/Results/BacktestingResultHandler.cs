@@ -427,7 +427,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="algorithm">Algorithm we're working on.</param>
         /// <param name="startingPortfolioValue">Algorithm starting capital for statistics calculations</param>
         /// <remarks>While setting the algorithm the backtest result handler.</remarks>
-        public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
+        public virtual void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
             Algorithm = algorithm;
             StartingPortfolioValue = startingPortfolioValue;
@@ -611,7 +611,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="time">Current backtest date.</param>
         /// <param name="value">Current daily performance value.</param>
-        public void SamplePerformance(DateTime time, decimal value)
+        public virtual void SamplePerformance(DateTime time, decimal value)
         {
             //Added a second chart to equity plot - daily perforamnce:
             Sample("Strategy Equity", "Daily Performance", 1, SeriesType.Bar, time, value, "%");
@@ -770,7 +770,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// This method is triggered from the algorithm manager thread.
         /// </summary>
         /// <remarks>Prime candidate for putting into a base class. Is identical across all result handlers.</remarks>
-        public void ProcessSynchronousEvents(bool forceProcess = false)
+        public virtual void ProcessSynchronousEvents(bool forceProcess = false)
         {
             if (Algorithm == null) return;
 

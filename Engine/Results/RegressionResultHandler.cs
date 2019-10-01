@@ -15,8 +15,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using QuantConnect.Configuration;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Util;
 
@@ -29,25 +33,84 @@ namespace QuantConnect.Lean.Engine.Results
     public class RegressionResultHandler : BacktestingResultHandler
     {
         private Language Language => Config.GetValue<Language>("algorithm-language");
-        private readonly Lazy<StreamWriter> _ordersLogStreamWriter;
+
+        private DateTime _lastAlphaRuntimeStatisticsDate;
+        private DateTime _testStartTime;
+
+        private StreamWriter _writer;
+        private readonly object _sync = new object();
+        private readonly Dictionary<string, string> _currentAlphaRuntimeStatistics;
+
+        // this defaults to false since it can create massive files. a full regression run takes about 800MB
+        // for each folder (800MB for ./passed and 800MB for ./regression)
+        private static readonly bool HighFidelityLogging = Config.GetBool("regression-high-fidelity-logging", false);
 
         /// <summary>
-        /// Gets the path used for logging all order events
+        /// Gets the path used for logging all portfolio changing events, such as orders, TPV, daily holdings values
         /// </summary>
-        public string OrdersLogFilePath => $"./regression/{Algorithm.AlgorithmId}.{Language.ToLower()}.orders.log";
+        public string LogFilePath => $"./regression/{Algorithm.AlgorithmId}.{Language.ToLower()}.details.log";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RegressionResultHandler"/> class
         /// </summary>
         public RegressionResultHandler()
         {
-            _ordersLogStreamWriter = new Lazy<StreamWriter>(() =>
+            _testStartTime = DateTime.UtcNow;
+            _currentAlphaRuntimeStatistics = new Dictionary<string, string>();
+        }
+
+        /// <summary>
+        /// Initializes the stream writer using the algorithm's id (name) in the file path
+        /// </summary>
+        public override void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
+        {
+            base.SetAlgorithm(algorithm, startingPortfolioValue);
+
+            var fileInfo = new FileInfo(LogFilePath);
+            Directory.CreateDirectory(fileInfo.DirectoryName);
+            if (fileInfo.Exists)
             {
-                var fileInfo = new FileInfo(OrdersLogFilePath);
-                Directory.CreateDirectory(fileInfo.DirectoryName);
-                if (fileInfo.Exists) fileInfo.Delete();
-                return new StreamWriter(OrdersLogFilePath);
-            });
+                fileInfo.Delete();
+            }
+
+            _writer = new StreamWriter(LogFilePath);
+            _writer.WriteLine($"{_testStartTime}: Starting regression test");
+        }
+
+        /// <summary>
+        /// Runs on date changes, use this to log TPV and holdings values each day
+        /// </summary>
+        public override void SamplePerformance(DateTime time, decimal value)
+        {
+            lock (_sync)
+            {
+                _writer.WriteLine($"{Algorithm.UtcTime}: Total Portfolio Value: {Algorithm.Portfolio.TotalPortfolioValue}");
+
+                // write the entire cashbook each day, includes current conversion rates and total value of cash holdings
+                _writer.WriteLine(Algorithm.Portfolio.CashBook);
+
+                foreach (var kvp in Algorithm.Securities)
+                {
+                    var symbol = kvp.Key;
+                    var security = kvp.Value;
+                    if (!security.HoldStock)
+                    {
+                        continue;
+                    }
+
+                    // detailed logging of security holdings
+                    _writer.WriteLine(
+                        $"{Algorithm.UtcTime}: " +
+                        $"Holdings: {symbol.Value} ({symbol.ID}): " +
+                        $"Price: {security.Price} " +
+                        $"Quantity: {security.Holdings.Quantity} " +
+                        $"Value: {security.Holdings.HoldingsValue} " +
+                        $"LastData: {security.GetLastData()}"
+                    );
+                }
+            }
+
+            base.SamplePerformance(time, value);
         }
 
         /// <summary>
@@ -59,9 +122,108 @@ namespace QuantConnect.Lean.Engine.Results
         {
             // log order events to a separate file for easier diffing of regression runs
             var order = Algorithm.Transactions.GetOrderById(newEvent.OrderId);
-            _ordersLogStreamWriter.Value.WriteLine($"{Algorithm.UtcTime}: Order: {order}  OrderEvent: {newEvent}");
+
+            lock (_sync)
+            {
+                _writer.WriteLine($"{Algorithm.UtcTime}: Order: {order}  OrderEvent: {newEvent}");
+            }
 
             base.OrderEvent(newEvent);
+        }
+
+        /// <summary>
+        /// Perform daily logging of the alpha runtime statistics
+        /// </summary>
+        public override void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics)
+        {
+            if (HighFidelityLogging || _lastAlphaRuntimeStatisticsDate != Algorithm.Time.Date)
+            {
+                lock (_sync)
+                {
+                    _lastAlphaRuntimeStatisticsDate = Algorithm.Time.Date;
+
+                    foreach (var kvp in statistics.ToDictionary())
+                    {
+                        string value;
+                        if (!_currentAlphaRuntimeStatistics.TryGetValue(kvp.Key, out value) || value != kvp.Value)
+                        {
+                            // only log new or updated values
+                            _currentAlphaRuntimeStatistics[kvp.Key] = kvp.Value;
+                            _writer.WriteLine($"{Algorithm.Time}: AlphaRuntimeStatistics: {kvp.Key}: {kvp.Value}");
+                        }
+                    }
+                }
+            }
+
+            base.SetAlphaRuntimeStatistics(statistics);
+        }
+
+        /// <summary>
+        /// Runs at the end of each time loop. When HighFidelityLogging is enabled, we'll
+        /// log each piece of data to allow for faster determination of regression causes
+        /// </summary>
+        public override void ProcessSynchronousEvents(bool forceProcess = false)
+        {
+            if (HighFidelityLogging)
+            {
+                var slice = Algorithm.CurrentSlice;
+                if (slice != null)
+                {
+                    lock (_sync)
+                    {
+                        // aggregate slice data
+                        _writer.WriteLine($"{Algorithm.UtcTime}: Slice Time: {slice.Time:o} Slice Count: {slice.Count}");
+                        var data = new Dictionary<Symbol, List<BaseData>>();
+                        foreach (var kvp in slice.Bars)
+                        {
+                            data.Add(kvp.Key, (BaseData) kvp.Value);
+                        }
+
+                        foreach (var kvp in slice.QuoteBars)
+                        {
+                            data.Add(kvp.Key, (BaseData)kvp.Value);
+                        }
+
+                        foreach (var kvp in slice.Ticks)
+                        {
+                            foreach (var tick in kvp.Value)
+                            {
+                                data.Add(kvp.Key, (BaseData) tick);
+                            }
+                        }
+
+                        foreach (var kvp in slice.Delistings)
+                        {
+                            data.Add(kvp.Key, (BaseData) kvp.Value);
+                        }
+
+                        foreach (var kvp in slice.Splits)
+                        {
+                            data.Add(kvp.Key, (BaseData) kvp.Value);
+                        }
+
+                        foreach (var kvp in slice.SymbolChangedEvents)
+                        {
+                            data.Add(kvp.Key, (BaseData) kvp.Value);
+                        }
+
+                        foreach (var kvp in slice.Dividends)
+                        {
+                            data.Add(kvp.Key, (BaseData) kvp.Value);
+                        }
+
+                        foreach (var kvp in data.OrderBy(kvp => kvp.Key))
+                        {
+                            foreach (var item in kvp.Value)
+                            {
+                                _writer.WriteLine($"{Algorithm.UtcTime}: Slice: DataTime: {item.EndTime} {item}");
+                            }
+                        }
+                    }
+                }
+            }
+
+            base.ProcessSynchronousEvents(forceProcess);
         }
 
         /// <summary>
@@ -71,9 +233,16 @@ namespace QuantConnect.Lean.Engine.Results
         public override void Exit()
         {
             base.Exit();
-            if (_ordersLogStreamWriter.IsValueCreated)
+            lock (_sync)
             {
-                _ordersLogStreamWriter.Value.DisposeSafely();
+                if (_writer != null)
+                {
+                    var end = DateTime.UtcNow;
+                    var delta = end - _testStartTime;
+                    _writer.WriteLine($"{end}: Completed regression test, took: {delta.TotalSeconds:0.0} seconds");
+                    _writer.DisposeSafely();
+                    _writer = null;
+                }
             }
         }
     }

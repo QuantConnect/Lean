@@ -39,7 +39,8 @@ namespace QuantConnect.Tests.Common.Benchmarks
                     true, true, false),
                 new Cash(Currencies.USD, 0, conversionRate),
                 SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
             );
             var price = 25;
             security.SetMarketPrice(new Tick { Value = price });

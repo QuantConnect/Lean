@@ -265,6 +265,7 @@
     <Compile Include="Data\Custom\USEnergyInformation.cs" />
     <Compile Include="Data\Custom\USTreasury\USTreasuryYieldCurveRate.cs" />
     <Compile Include="Data\Fundamental\AssetClassificationHelper.cs" />
+    <Compile Include="Data\GetSetPropertyDynamicMetaObject.cs" />
     <Compile Include="Data\HistoryProviderBase.cs" />
     <Compile Include="Data\HistoryProviderInitializeParameters.cs" />
     <Compile Include="Data\HistoryRequestFactory.cs" />
@@ -305,6 +306,7 @@
     <Compile Include="Securities\BuyingPowerParameters.cs" />
     <Compile Include="Securities\BuyingPowerModel.cs" />
     <Compile Include="Securities\BuyingPowerModelExtensions.cs" />
+    <Compile Include="Securities\RegisteredSecurityDataTypesProvider.cs" />
     <Compile Include="Securities\ErrorCurrencyConverter.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForTargetValueParameters.cs" />
     <Compile Include="Securities\HasSufficientBuyingPowerForOrderParameters.cs" />
@@ -313,11 +315,14 @@
     <Compile Include="Securities\CashAmount.cs" />
     <Compile Include="Securities\IdentityCurrencyConverter.cs" />
     <Compile Include="Securities\AccountCurrencyImmediateSettlementModel.cs" />
+    <Compile Include="Securities\IRegisteredSecurityDataTypesProvider.cs" />
     <Compile Include="Securities\InitialMarginRequiredForOrderParameters.cs" />
     <Compile Include="Securities\IOrderEventProvider.cs" />
     <Compile Include="Securities\GetMinimumPriceVariationParameters.cs" />
     <Compile Include="Securities\ReservedBuyingPowerForPosition.cs" />
     <Compile Include="Securities\ReservedBuyingPowerForPositionParameters.cs" />
+    <Compile Include="Securities\SecurityCacheDataStoredEventArgs.cs" />
+    <Compile Include="Securities\DynamicSecurityData.cs" />
     <Compile Include="Securities\SecurityService.cs" />
     <Compile Include="Securities\Volatility\BaseVolatilityModel.cs" />
     <Compile Include="Series.cs" />

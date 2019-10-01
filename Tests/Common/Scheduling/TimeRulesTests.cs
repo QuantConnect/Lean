@@ -227,7 +227,8 @@ namespace QuantConnect.Tests.Common.Scheduling
                     config,
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
-                    ErrorCurrencyConverter.Instance
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null
                 )
             );
             var rules = new TimeRules(manager, dateTimeZone);

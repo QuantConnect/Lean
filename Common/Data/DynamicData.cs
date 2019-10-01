@@ -28,6 +28,9 @@ namespace QuantConnect.Data
     /// <remarks>Intended for use with Quandl class.</remarks>
     public abstract class DynamicData : BaseData, IDynamicMetaObjectProvider
     {
+        private static readonly MethodInfo SetPropertyMethodInfo = typeof(DynamicData).GetMethod("SetProperty");
+        private static readonly MethodInfo GetPropertyMethodInfo = typeof(DynamicData).GetMethod("GetProperty");
+
         private readonly IDictionary<string, object> _storage = new Dictionary<string, object>();
 
         /// <summary>
@@ -35,7 +38,7 @@ namespace QuantConnect.Data
         /// </summary>
         public DynamicMetaObject GetMetaObject(Expression parameter)
         {
-            return new DynamicDataMetaObject(parameter, this);
+            return new GetSetPropertyDynamicMetaObject(parameter, this, SetPropertyMethodInfo, GetPropertyMethodInfo);
         }
 
         /// <summary>
@@ -152,62 +155,6 @@ namespace QuantConnect.Data
                 clone._storage.Add(kvp);
             }
             return clone;
-        }
-
-        /// <summary>
-        /// Custom implementation of Dynamic Data MetaObject
-        /// </summary>
-        private class DynamicDataMetaObject : DynamicMetaObject
-        {
-            private static readonly MethodInfo SetPropertyMethodInfo = typeof(DynamicData).GetMethod("SetProperty");
-            private static readonly MethodInfo GetPropertyMethodInfo = typeof(DynamicData).GetMethod("GetProperty");
-
-            public DynamicDataMetaObject(Expression expression, DynamicData instance)
-                : base(expression, BindingRestrictions.Empty, instance)
-            {
-            }
-
-            public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
-            {
-                // we need to build up an expression tree that represents accessing our instance
-                var restrictions = BindingRestrictions.GetTypeRestriction(Expression, LimitType);
-
-                var args = new Expression[]
-                {
-                    // this is the name of the property to set
-                    Expression.Constant(binder.Name),
-
-                    // this is the value
-                    Expression.Convert(value.Expression, typeof (object))
-                };
-
-                // set the 'this' reference
-                var self = Expression.Convert(Expression, LimitType);
-
-                var call = Expression.Call(self, SetPropertyMethodInfo, args);
-
-                return new DynamicMetaObject(call, restrictions);
-            }
-
-            public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
-            {
-                // we need to build up an expression tree that represents accessing our instance
-                var restrictions = BindingRestrictions.GetTypeRestriction(Expression, LimitType);
-
-                // arguments for 'call'
-                var args = new Expression[]
-                {
-                    // this is the name of the property to set
-                    Expression.Constant(binder.Name)
-                };
-
-                // set the 'this' reference
-                var self = Expression.Convert(Expression, LimitType);
-
-                var call = Expression.Call(self, GetPropertyMethodInfo, args);
-
-                return new DynamicMetaObject(call, restrictions);
-            }
         }
     }
 }

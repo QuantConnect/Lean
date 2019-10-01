@@ -556,5 +556,18 @@ namespace QuantConnect.Data.Market
                 Period = Period
             };
         }
+
+        public override string ToString()
+        {
+            return $"{Symbol}: " +
+                   $"Bid: O: {Bid?.Open.SmartRounding()} " +
+                   $"Bid: H: {Bid?.High.SmartRounding()} " +
+                   $"Bid: L: {Bid?.Low.SmartRounding()} " +
+                   $"Bid: C: {Bid?.Close.SmartRounding()} " +
+                   $"Ask: O: {Ask?.Open.SmartRounding()} " +
+                   $"Ask: H: {Ask?.High.SmartRounding()} " +
+                   $"Ask: L: {Ask?.Low.SmartRounding()} " +
+                   $"Ask: C: {Ask?.Close.SmartRounding()} ";
+        }
     }
 }
