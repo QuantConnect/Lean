@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -34,7 +35,7 @@ namespace QuantConnect.Securities
         private static readonly MethodInfo GetPropertyMethodInfo = typeof(DynamicSecurityData).GetMethod("GetProperty");
 
         private readonly IRegisteredSecurityDataTypesProvider _registeredTypes;
-        private readonly Dictionary<string, object> _storage = new Dictionary<string, object>();
+        private readonly ConcurrentDictionary<string, object> _storage = new ConcurrentDictionary<string, object>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DynamicSecurityData"/> class
