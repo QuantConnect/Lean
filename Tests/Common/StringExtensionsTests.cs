@@ -92,7 +92,7 @@ namespace QuantConnect.Tests.Common
             string format
             )
         {
-            var formattable = (IFormattable) Convert.ChangeType(value, typeCode, null);
+            var formattable = (IFormattable) Convert.ChangeType(value, typeCode, CultureInfo.InvariantCulture);
             var formatted = formattable.ToStringInvariant(format);
             var expected = formattable.ToString(format, CultureInfo.InvariantCulture);
             Assert.AreEqual(expected, formatted, $"Failed on type code: {typeCode}");
