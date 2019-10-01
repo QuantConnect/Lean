@@ -182,6 +182,50 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        public void DataFrame_loc_UsingSymbol()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+def Test(dataFrame, symbol):
+    data = dataFrame.loc[symbol]").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [Test]
+        public void DataFrame_unstack_UsingSymbol()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+def Test(dataFrame, symbol):
+    data = dataFrame.unstack(level = 0).lastprice[symbol]").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [Test]
+        public void DataFrame_get_UsingSymbol()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+def Test(dataFrame, symbol):
+    data = dataFrame['lastprice'].unstack(level=0).get(symbol)
+    if data.empty:
+        raise Exception('Data is empty')").GetAttr("Test");
+
+                Assert.DoesNotThrow(() => test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+            }
+        }
+
+        [Test]
         public void BackwardsCompatibilityDataFrame_get_NewWay()
         {
             using (Py.GIL())

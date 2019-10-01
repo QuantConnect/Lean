@@ -78,8 +78,12 @@ class Remapper(wrapt.ObjectProxy):
     # Our remapping method. Originally implemented in C# but some cases were not working
     # correctly and using Py did the trick
     def _self_mapper(self, key):
+        # this is to improve user experience, they can use Symbol
+        # as key and we convert it to string for pandas
+        if isinstance(key, Symbol):
+            key = str(key.ID)
         # this is the most normal use case
-        if isinstance(key, str):
+        elif isinstance(key, str):
             tupleResult = SymbolCache.TryGetSymbol(key, None)
             if tupleResult[0]:
                 return str(tupleResult[1].ID)
