@@ -153,6 +153,7 @@
     <Compile Include="Alphas\VixDualThrustAlpha.cs" />
     <Compile Include="BasicPythonIntegrationTemplateAlgorithm.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
+    <Compile Include="CustomBenchmarkRegressionAlgorithm.cs" />
     <Compile Include="CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm.cs" />
     <Compile Include="CustomDataAddDataCoarseSelectionRegressionAlgorithm.cs" />
     <Compile Include="CustomDataAddDataRegressionAlgorithm.cs" />
