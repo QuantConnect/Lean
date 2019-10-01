@@ -1809,7 +1809,7 @@ namespace QuantConnect.Algorithm
         public Security AddData<T>(string ticker, Resolution resolution, bool fillDataForward, decimal leverage = 1.0m)
             where T : IBaseData, new()
         {
-            return AddData<T>(ticker, resolution, TimeZones.NewYork, fillDataForward, leverage);
+            return AddData<T>(ticker, resolution, null, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -1825,7 +1825,7 @@ namespace QuantConnect.Algorithm
         public Security AddData<T>(Symbol underlying, Resolution resolution, bool fillDataForward, decimal leverage = 1.0m)
             where T : IBaseData, new()
         {
-            return AddData<T>(underlying, resolution, TimeZones.NewYork, fillDataForward, leverage);
+            return AddData<T>(underlying, resolution, null, fillDataForward, leverage);
         }
 
         /// <summary>

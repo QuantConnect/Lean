@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using NodaTime;
 using QuantConnect.Util;
 
 namespace QuantConnect.Data
@@ -157,6 +158,21 @@ namespace QuantConnect.Data
         {
             // by default, we'll assume all custom data is sparse data
             return Symbol.SecurityType == SecurityType.Base;
+        }
+
+        /// <summary>
+        /// Specifies the data time zone for this data type. This is useful for custom data types
+        /// </summary>
+        /// <remarks>Will throw <see cref="InvalidOperationException"/> for security types
+        /// other than <see cref="SecurityType.Base"/></remarks>
+        /// <returns>The <see cref="DateTimeZone"/> of this data type</returns>
+        public virtual DateTimeZone DataTimeZone()
+        {
+            if (Symbol.SecurityType != SecurityType.Base)
+            {
+                throw new InvalidOperationException("BaseData.DataTimeZone(): is only valid for base data types");
+            }
+            return TimeZones.NewYork;
         }
 
         /// <summary>
