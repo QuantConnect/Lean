@@ -353,13 +353,14 @@ namespace QuantConnect
         /// <param name="market">The market</param>
         /// <param name="mapSymbol">Specifies if symbol should be mapped using map file provider</param>
         /// <param name="mapFileProvider">Specifies the IMapFileProvider to use for resolving symbols, specify null to load from Composer</param>
+        /// <param name="mappingResolveDate">The date to use to resolve the map file. Default value is <see cref="DateTime.Today"/></param>
         /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified symbol today</returns>
-        public static SecurityIdentifier GenerateEquity(string symbol, string market, bool mapSymbol = true, IMapFileProvider mapFileProvider = null)
+        public static SecurityIdentifier GenerateEquity(string symbol, string market, bool mapSymbol = true, IMapFileProvider mapFileProvider = null, DateTime? mappingResolveDate = null)
         {
             var firstDate = DefaultDate;
             if (mapSymbol)
             {
-                var firstTickerDate = GetFirstTickerAndDate(mapFileProvider ?? MapFileProvider.Value, symbol, market);
+                var firstTickerDate = GetFirstTickerAndDate(mapFileProvider ?? MapFileProvider.Value, symbol, market, mappingResolveDate: mappingResolveDate);
                 firstDate = firstTickerDate.Item2;
                 symbol = firstTickerDate.Item1;
             }
@@ -512,11 +513,12 @@ namespace QuantConnect
         /// <param name="mapFileProvider">The IMapFileProvider instance used for resolving map files</param>
         /// <param name="tickerToday">The security's ticker as it trades today</param>
         /// <param name="market">The market the security exists in</param>
+        /// <param name="mappingResolveDate">The date to use to resolve the map file. Default value is <see cref="DateTime.Today"/></param>
         /// <returns>The security's first ticker/date if mapping data available, otherwise, the provided ticker and DefaultDate are returned</returns>
-        private static Tuple<string, DateTime> GetFirstTickerAndDate(IMapFileProvider mapFileProvider, string tickerToday, string market)
+        private static Tuple<string, DateTime> GetFirstTickerAndDate(IMapFileProvider mapFileProvider, string tickerToday, string market, DateTime? mappingResolveDate = null)
         {
             var resolver = mapFileProvider.Get(market);
-            var mapFile = resolver.ResolveMapFile(tickerToday, DateTime.Today);
+            var mapFile = resolver.ResolveMapFile(tickerToday, mappingResolveDate ?? DateTime.Today);
 
             // if we have mapping data, use the first ticker/date from there, otherwise use provided ticker and DefaultDate
             return mapFile.Any()

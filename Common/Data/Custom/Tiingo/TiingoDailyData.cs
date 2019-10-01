@@ -28,6 +28,7 @@ namespace QuantConnect.Data.Custom.Tiingo
     /// Tiingo daily price data
     /// https://api.tiingo.com/docs/tiingo/daily
     /// </summary>
+    /// <remarks>Requires setting <see cref="Tiingo.AuthCode"/></remarks>
     public class TiingoDailyData : TradeBar
     {
         private readonly ConcurrentDictionary<string, DateTime> _startDates = new ConcurrentDictionary<string, DateTime>();
@@ -151,7 +152,8 @@ namespace QuantConnect.Data.Custom.Tiingo
                 _startDates.TryAdd(config.Symbol.Value, startDate);
             }
 
-            var source = Invariant($"https://api.tiingo.com/tiingo/daily/{config.Symbol.Value}/prices?startDate={startDate:yyyy-MM-dd}&token={Tiingo.AuthCode}");
+            var tiingoTicker = TiingoSymbolMapper.GetTiingoTicker(config.Symbol);
+            var source = Invariant($"https://api.tiingo.com/tiingo/daily/{tiingoTicker}/prices?startDate={startDate:yyyy-MM-dd}&token={Tiingo.AuthCode}");
             return new SubscriptionDataSource(source, SubscriptionTransportMedium.RemoteFile, FileFormat.Collection);
         }
 

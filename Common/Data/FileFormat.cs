@@ -38,6 +38,11 @@ namespace QuantConnect.Data
         /// <summary>
         /// Reader returns a BaseDataCollection object.
         /// </summary>
-        Collection
+        Collection,
+
+        /// <summary>
+        /// Data stored using an intermediate index source
+        /// </summary>
+        Index
     }
 }

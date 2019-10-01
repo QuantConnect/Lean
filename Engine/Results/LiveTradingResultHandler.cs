@@ -1202,7 +1202,8 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (dictionary.ContainsKey(key))
             {
-                Log.Error($"LiveTradingResultHandler.DictionarySafeAdd(): dictionary {dictionaryName} already contains key {key}");
+                // TODO: GH issue 3609
+                Log.Debug($"LiveTradingResultHandler.DictionarySafeAdd(): dictionary {dictionaryName} already contains key {key}");
             }
             else
             {
