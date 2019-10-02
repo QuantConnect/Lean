@@ -202,7 +202,7 @@
     <Compile Include="BlackLittermanPortfolioOptimizationFrameworkAlgorithm.cs" />
     <Compile Include="DailyResolutionSplitRegressionAlgorithm.cs" />
     <Compile Include="MeanVarianceOptimizationFrameworkAlgorithm.cs" />
-    <Compile Include="TiingoDailyDataAlgorithm.cs" />
+    <Compile Include="TiingoPriceAlgorithm.cs" />
     <Compile Include="OptionExpiryDateOnHolidayCase.cs" />
     <Compile Include="OptionDataNullReferenceRegressionAlgorithm.cs" />
     <Compile Include="CancelOpenOrdersRegressionAlgorithm.cs" />

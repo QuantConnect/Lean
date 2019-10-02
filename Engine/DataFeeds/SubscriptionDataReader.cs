@@ -189,7 +189,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // If Tiingo data, set the access token in data factory
-            var tiingo = _dataFactory as TiingoDailyData;
+            var tiingo = _dataFactory as TiingoPrice;
             if (tiingo != null)
             {
                 if (!Tiingo.IsAuthCodeSet)

@@ -95,7 +95,7 @@
     <None Include="BlackLittermanPortfolioOptimizationFrameworkAlgorithm.py" />
     <None Include="packages.config" />
     <None Include="TensorFlowNeuralNetworkAlgorithm.py" />
-    <None Include="TiingoDailyDataAlgorithm.py" />
+    <None Include="TiingoPriceAlgorithm.py" />
     <None Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.py" />
   </ItemGroup>
   <ItemGroup>

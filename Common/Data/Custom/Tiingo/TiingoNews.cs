@@ -29,8 +29,20 @@ namespace QuantConnect.Data.Custom.Tiingo
     /// https://api.tiingo.com/documentation/news
     /// </summary>
     /// <remarks>Requires setting <see cref="Tiingo.AuthCode"/></remarks>
-    public class TiingoNewsData : IndexedBaseData
+    public class TiingoNews : IndexedBaseData
     {
+        /// <summary>
+        /// For backtesting, an offset to add to <see cref="BaseData.Time"/>
+        /// </summary>
+        /// <remarks>
+        /// For backtesting we use as <see cref="BaseData.Time"/>, the published date.
+        /// of a piece of news. This is because old data (eg 2014) can have newer crawl date (eg 2019).
+        /// But doing so would be optimistic since it means algorithms will get the news immediately,
+        /// so we add this offset.
+        /// Live trading uses as <see cref="BaseData.Time"/> the crawler date.
+        /// </remarks>
+        public static TimeSpan HistoricalCrawlOffset { get; set; } = TimeSpan.FromHours(1);
+
         /// <summary>
         /// The domain the news source is from.
         /// </summary>
@@ -146,7 +158,7 @@ namespace QuantConnect.Data.Custom.Tiingo
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
         {
-            var data = JsonConvert.DeserializeObject<List<TiingoNewsData>>(content,
+            var data = JsonConvert.DeserializeObject<List<TiingoNews>>(content,
                 new TiingoNewsJsonConverter(config.Symbol, isLiveMode));
 
             if (isLiveMode)
@@ -155,6 +167,7 @@ namespace QuantConnect.Data.Custom.Tiingo
                 var newest = data.LastOrDefault();
                 return new BaseDataCollection(newest?.Time ?? date, config.Symbol, data);
             }
+            // we expect a single piece of news for backtesting
             var single = data.Single();
             return single;
         }

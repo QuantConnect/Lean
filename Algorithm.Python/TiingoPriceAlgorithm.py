@@ -28,7 +28,7 @@ from QuantConnect.Data.Custom.Tiingo import *
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="custom data" />
 ### <meta name="tag" content="tiingo" />
-class TiingoDailyDataAlgorithm(QCAlgorithm):
+class TiingoPriceAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -40,7 +40,7 @@ class TiingoDailyDataAlgorithm(QCAlgorithm):
         Tiingo.SetAuthCode("my-tiingo-api-token")
 
         self.ticker = "AAPL"
-        self.symbol = self.AddData(TiingoDailyData, self.ticker, Resolution.Daily).Symbol
+        self.symbol = self.AddData(TiingoPrice, self.ticker, Resolution.Daily).Symbol
 
         self.emaFast = self.EMA(self.symbol, 5)
         self.emaSlow = self.EMA(self.symbol, 10)
