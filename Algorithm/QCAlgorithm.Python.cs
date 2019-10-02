@@ -21,8 +21,6 @@ using System;
 using QuantConnect.Securities;
 using NodaTime;
 using System.Collections.Generic;
-using System.Reflection.Emit;
-using System.Reflection;
 using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
@@ -34,7 +32,6 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
-        private readonly Dictionary<IntPtr, PythonActivator> _pythonActivators = new Dictionary<IntPtr, PythonActivator>();
         private readonly Dictionary<IntPtr, PythonIndicator> _pythonIndicators = new Dictionary<IntPtr, PythonIndicator>();
 
         public PandasConverter PandasConverter { get; private set; }
@@ -99,7 +96,7 @@ namespace QuantConnect.Algorithm
         /// <returns>The new <see cref="Security"/></returns>
         public Security AddData(PyObject type, string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            return AddData(CreateType(type), ticker, resolution, timeZone, fillDataForward, leverage);
+            return AddData(type.CreateType(), ticker, resolution, timeZone, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -124,7 +121,7 @@ namespace QuantConnect.Algorithm
         /// </remarks>
         public Security AddData(PyObject type, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
-            return AddData(CreateType(type), underlying, resolution, timeZone, fillDataForward, leverage);
+            return AddData(type.CreateType(), underlying, resolution, timeZone, fillDataForward, leverage);
         }
 
         /// <summary>
@@ -334,7 +331,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse(PyObject T, string name, PyObject selector)
         {
-            AddUniverse(CreateType(T), SecurityType.Equity, name, Resolution.Daily, Market.USA, UniverseSettings, selector);
+            AddUniverse(T.CreateType(), SecurityType.Equity, name, Resolution.Daily, Market.USA, UniverseSettings, selector);
         }
 
         /// <summary>
@@ -348,7 +345,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse(PyObject T, string name, Resolution resolution, PyObject selector)
         {
-            AddUniverse(CreateType(T), SecurityType.Equity, name, resolution, Market.USA, UniverseSettings, selector);
+            AddUniverse(T.CreateType(), SecurityType.Equity, name, resolution, Market.USA, UniverseSettings, selector);
         }
 
         /// <summary>
@@ -363,7 +360,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse(PyObject T, string name, Resolution resolution, UniverseSettings universeSettings, PyObject selector)
         {
-            AddUniverse(CreateType(T), SecurityType.Equity, name, resolution, Market.USA, universeSettings, selector);
+            AddUniverse(T.CreateType(), SecurityType.Equity, name, resolution, Market.USA, universeSettings, selector);
         }
 
         /// <summary>
@@ -377,7 +374,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse(PyObject T, string name, UniverseSettings universeSettings, PyObject selector)
         {
-            AddUniverse(CreateType(T), SecurityType.Equity, name, Resolution.Daily, Market.USA, universeSettings, selector);
+            AddUniverse(T.CreateType(), SecurityType.Equity, name, Resolution.Daily, Market.USA, universeSettings, selector);
         }
 
         /// <summary>
@@ -392,7 +389,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse(PyObject T, SecurityType securityType, string name, Resolution resolution, string market, PyObject selector)
         {
-            AddUniverse(CreateType(T), securityType, name, resolution, market, UniverseSettings, selector);
+            AddUniverse(T.CreateType(), securityType, name, resolution, market, UniverseSettings, selector);
         }
 
         /// <summary>
@@ -407,7 +404,7 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Function delegate that performs selection on the universe data</param>
         public void AddUniverse(PyObject T, SecurityType securityType, string name, Resolution resolution, string market, UniverseSettings universeSettings, PyObject selector)
         {
-            AddUniverse(CreateType(T), securityType, name, resolution, market, universeSettings, selector);
+            AddUniverse(T.CreateType(), securityType, name, resolution, market, universeSettings, selector);
         }
 
         /// <summary>
@@ -697,12 +694,13 @@ namespace QuantConnect.Algorithm
         public PyObject History(PyObject type, PyObject tickers, DateTime start, DateTime end, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
+            var requestedType = type.CreateType();
 
             var requests = symbols.Select(x =>
             {
                 var security = Securities[x];
                 var config = security.Subscriptions.OrderByDescending(s => s.Resolution)
-                        .FirstOrDefault(s => s.Type.BaseType == CreateType(type).BaseType);
+                        .FirstOrDefault(s => s.Type.BaseType == requestedType.BaseType);
                 if (config == null) return null;
 
                 return _historyRequestFactory.CreateHistoryRequest(config, start, end, GetExchangeHours(x), resolution);
@@ -724,12 +722,13 @@ namespace QuantConnect.Algorithm
         public PyObject History(PyObject type, PyObject tickers, int periods, Resolution? resolution = null)
         {
             var symbols = tickers.ConvertToSymbolEnumerable();
+            var requestedType = type.CreateType();
 
             var requests = symbols.Select(x =>
             {
                 var security = Securities[x];
                 var config = security.Subscriptions.OrderByDescending(s => s.Resolution)
-                        .FirstOrDefault(s => s.Type.BaseType == CreateType(type).BaseType);
+                        .FirstOrDefault(s => s.Type.BaseType == requestedType.BaseType);
                 if (config == null) return null;
 
                 var res = GetResolution(x, resolution);
@@ -768,7 +767,7 @@ namespace QuantConnect.Algorithm
         {
             var security = Securities[symbol];
             // verify the types match
-            var requestedType = CreateType(type);
+            var requestedType = type.CreateType();
             var config = security.Subscriptions.OrderByDescending(s => s.Resolution)
                 .FirstOrDefault(s => s.Type.BaseType == requestedType.BaseType);
             if (config == null)
@@ -1119,44 +1118,6 @@ namespace QuantConnect.Algorithm
             }
 
             return pythonIndicator;
-        }
-
-        /// <summary>
-        /// Creates a type with a given name, if PyObject is not a CLR type. Otherwise, convert it.
-        /// </summary>
-        /// <param name="pyObject">Python object representing a type.</param>
-        /// <returns>Type object</returns>
-        private Type CreateType(PyObject pyObject)
-        {
-            Type type;
-            if (pyObject.TryConvert(out type) &&
-                type != typeof(PythonQuandl) &&
-                type != typeof(PythonData))
-            {
-                return type;
-            }
-
-            PythonActivator pythonType;
-            if (!_pythonActivators.TryGetValue(pyObject.Handle, out pythonType))
-            {
-                AssemblyName an;
-                using (Py.GIL())
-                {
-                    an = new AssemblyName(pyObject.Repr().Split('\'')[1]);
-                }
-                var typeBuilder = AppDomain.CurrentDomain
-                    .DefineDynamicAssembly(an, AssemblyBuilderAccess.Run)
-                    .DefineDynamicModule("MainModule")
-                    .DefineType(an.Name, TypeAttributes.Class, type);
-
-                pythonType = new PythonActivator(typeBuilder.CreateType(), pyObject);
-
-                ObjectActivator.AddActivator(pythonType.Type, pythonType.Factory);
-
-                // Save to prevent future additions
-                _pythonActivators.Add(pyObject.Handle, pythonType);
-            }
-            return pythonType.Type;
         }
     }
 }

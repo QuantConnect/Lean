@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
@@ -109,7 +110,6 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(2, TickData.Count);
         }
 
-
         [Test]
         public void AccessesTradeBarGenericallyByType()
         {
@@ -130,6 +130,168 @@ namespace QuantConnect.Tests.Common.Data
 
             Quandl quandlData = slice.Get<Quandl>(Symbols.SPY);
             Assert.AreEqual(quandlSpy, quandlData);
+        }
+
+        [Test]
+        public void PythonGetCustomData()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+from QuantConnect.Data.Custom import *
+
+def Test(slice):
+    data = slice.Get(Quandl)
+    return data").GetAttr("Test");
+                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10};
+                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
+
+                var data = test(slice);
+                Assert.AreEqual(2, (int)data.Count);
+                Assert.AreEqual(10, (int)data[Symbols.SPY].Value);
+                Assert.AreEqual(11, (int)data[Symbols.AAPL].Value);
+            }
+        }
+
+        [Test]
+        public void PythonGetBySymbolCustomData()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+from QuantConnect.Tests import *
+from QuantConnect.Data.Custom import *
+
+def Test(slice):
+    data = slice.Get(Quandl)
+    value = data[Symbols.AAPL].Value
+    if value != 11:
+        raise Exception('Unexpected value')").GetAttr("Test");
+                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
+
+                Assert.DoesNotThrow(() => test(slice));
+            }
+        }
+
+        [Test]
+        public void PythonGetAndSymbolCustomData()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+from QuantConnect.Tests import *
+from QuantConnect.Data.Custom import *
+
+def Test(slice):
+    data = slice.Get(Quandl, Symbols.AAPL)
+    value = data.Value
+    if value != 11:
+        raise Exception('Unexpected value')").GetAttr("Test");
+                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
+
+                Assert.DoesNotThrow(() => test(slice));
+            }
+        }
+
+        [Test]
+        public void PythonGetTradeBar()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+from QuantConnect.Data.Market import *
+
+def Test(slice):
+    data = slice.Get(TradeBar)
+    return data").GetAttr("Test");
+                var TradeBarSpy = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 8 };
+                var TradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
+                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, TradeBarAapl, quandlAapl, TradeBarSpy });
+
+                var data = test(slice);
+                Assert.AreEqual(2, (int)data.Count);
+                Assert.AreEqual(8, (int)data[Symbols.SPY].Value);
+                Assert.AreEqual(9, (int)data[Symbols.AAPL].Value);
+            }
+        }
+
+        [Test]
+        public void PythonGetBySymbolTradeBar()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+from QuantConnect.Tests import *
+from QuantConnect.Data.Market import *
+
+def Test(slice):
+    data = slice.Get(TradeBar)
+    value = data[Symbols.AAPL].Value
+    if value != 9:
+        raise Exception('Unexpected value')").GetAttr("Test");
+                var TradeBarSpy = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 8 };
+                var TradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
+                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, TradeBarAapl, quandlAapl, TradeBarSpy });
+
+                Assert.DoesNotThrow(() => test(slice));
+            }
+        }
+
+        [Test]
+        public void PythonGetAndSymbolTradeBar()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+from QuantConnect.Tests import *
+from QuantConnect.Data.Market import *
+
+def Test(slice):
+    data = slice.Get(TradeBar, Symbols.AAPL)
+    value = data.Value
+    if value != 9:
+        raise Exception('Unexpected value')").GetAttr("Test");
+                var TradeBarSpy = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 8 };
+                var TradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
+                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, TradeBarAapl, quandlAapl, TradeBarSpy });
+
+                Assert.DoesNotThrow(() => test(slice));
+            }
         }
 
         [Test]

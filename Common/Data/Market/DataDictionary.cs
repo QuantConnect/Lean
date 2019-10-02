@@ -40,12 +40,9 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="data">The data source for this data dictionary</param>
         /// <param name="keySelector">Delegate used to select a key from the value</param>
-        public DataDictionary(IEnumerable<T> data, Func<T, Symbol> keySelector)
+        public DataDictionary(IEnumerable<dynamic> data, Func<dynamic, Symbol> keySelector)
         {
-            foreach (var datum in data)
-            {
-                this[keySelector(datum)] = datum;
-            }
+            Add(data, keySelector);
         }
 
         /// <summary>
@@ -96,6 +93,19 @@ namespace QuantConnect.Data.Market
         public void Add(KeyValuePair<Symbol, T> item)
         {
             _data.Add(item);
+        }
+
+        /// <summary>
+        /// Add method used for python use case where we do not know the type until runtime
+        /// </summary>
+        /// <param name="data">The data to add</param>
+        /// <param name="keySelector">The key selector to use</param>
+        public void Add(IEnumerable<dynamic> data, Func<dynamic, Symbol> keySelector)
+        {
+            foreach (var datum in data)
+            {
+                this[keySelector(datum)] = datum;
+            }
         }
 
         /// <summary>
@@ -300,6 +310,21 @@ namespace QuantConnect.Data.Market
             T value;
             TryGetValue(key, out value);
             return value;
+        }
+
+        /// <summary>
+        /// This implicit conversion is to support python <see cref="Slice.Get"/>
+        /// </summary>
+        /// <param name="dictionary">The source dictionary</param>
+        /// <returns>A <see cref="DataDictionary{dynamic}"/> instance</returns>
+        public static implicit operator DataDictionary<dynamic>(DataDictionary<T> dictionary)
+        {
+            var result = new DataDictionary<dynamic>();
+            foreach (var data in dictionary)
+            {
+                result[data.Key] = data.Value;
+            }
+            return result;
         }
     }
 

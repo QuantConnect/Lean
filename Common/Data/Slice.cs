@@ -17,6 +17,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 
@@ -245,20 +246,48 @@ namespace QuantConnect.Data
         public DataDictionary<T> Get<T>()
             where T : IBaseData
         {
+            return GetImpl(typeof(T));
+        }
+
+        /// <summary>
+        /// Gets the data of the specified symbol and type.
+        /// </summary>
+        /// <remarks>Can not directly return dynamic because it causes PythonNet to use the
+        /// generic implementation. Will use <see cref="DataDictionary{T}.op_Implicit"/></remarks>
+        /// <param name="type">The type of data we seek</param>
+        /// <returns>The data for the requested symbol</returns>
+        public DataDictionary<dynamic> Get(PyObject type)
+        {
+            return GetImpl(type.CreateType());
+        }
+
+        /// <summary>
+        /// Gets the data of the specified symbol and type.
+        /// </summary>
+        /// <remarks>Supports both C# and Python use cases</remarks>
+        private dynamic GetImpl(Type type)
+        {
             Lazy<object> dictionary;
-            if (!_dataByType.TryGetValue(typeof(T), out dictionary))
+            if (!_dataByType.TryGetValue(type, out dictionary))
             {
-                if (typeof(T) == typeof(Tick))
+                if (type == typeof(Tick))
                 {
-                    dictionary = new Lazy<object>(() => new DataDictionary<T>(_data.Value.Values.SelectMany<dynamic, dynamic>(x => x.GetData()).OfType<T>(), x => x.Symbol));
+                    dictionary = new Lazy<object>(() =>
+                    {
+                        var dic = Activator.CreateInstance(typeof(DataDictionary<>).MakeGenericType(type)) as dynamic;
+                        dic.Add(_data.Value.Values.SelectMany<dynamic, dynamic>(x => x.GetData()).Where(o => (Type)o.GetType() == type),
+                            new Func<dynamic, Symbol>(x => x.Symbol));
+                        return dic;
+                    }
+                    );
                 }
-                else if (typeof(T) == typeof(TradeBar))
+                else if (type == typeof(TradeBar))
                 {
                     dictionary = new Lazy<object>(() => new DataDictionary<TradeBar>(
                         _data.Value.Values.Where(x => x.TradeBar != null).Select(x => x.TradeBar),
                         x => x.Symbol));
                 }
-                else if (typeof(T) == typeof(QuoteBar))
+                else if (type == typeof(QuoteBar))
                 {
                     dictionary = new Lazy<object>(() => new DataDictionary<QuoteBar>(
                         _data.Value.Values.Where(x => x.QuoteBar != null).Select(x => x.QuoteBar),
@@ -266,12 +295,30 @@ namespace QuantConnect.Data
                 }
                 else
                 {
-                    dictionary = new Lazy<object>(() => new DataDictionary<T>(_data.Value.Values.Select(x => x.GetData()).OfType<T>(), x => x.Symbol));
+                    dictionary = new Lazy<object>(() =>
+                    {
+                        var dic = Activator.CreateInstance(typeof(DataDictionary<>).MakeGenericType(type)) as dynamic;
+                        dic.Add(_data.Value.Values.Select(x => x.GetData()).Where(o => (Type)o.GetType() == type),
+                                new Func<dynamic, Symbol>(x => x.Symbol));
+                        return dic;
+                    }
+                    );
                 }
 
-                _dataByType[typeof(T)] = dictionary;
+                _dataByType[type] = dictionary;
             }
-            return (DataDictionary<T>)dictionary.Value;
+            return dictionary.Value;
+        }
+
+        /// <summary>
+        /// Gets the data of the specified symbol and type.
+        /// </summary>
+        /// <param name="type">The type of data we seek</param>
+        /// <param name="symbol">The specific symbol was seek</param>
+        /// <returns>The data for the requested symbol</returns>
+        public dynamic Get(PyObject type, Symbol symbol)
+        {
+            return Get(type)[symbol];
         }
 
         /// <summary>

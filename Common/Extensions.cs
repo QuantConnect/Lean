@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -31,6 +33,7 @@ using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data;
 using QuantConnect.Orders;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using Timer = System.Timers.Timer;
@@ -43,6 +46,9 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
+        private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
+            = new Dictionary<IntPtr, PythonActivator>();
+
         /// <summary>
         /// Given a type will create a new instance using the parameterless constructor
         /// and assert the type implements <see cref="BaseData"/>
@@ -1481,6 +1487,44 @@ namespace QuantConnect
                     throw new ArgumentException($"GetEnumString(): {pyObject.Repr()} is not a C# Type.");
                 }
             }
+        }
+
+        /// <summary>
+        /// Creates a type with a given name, if PyObject is not a CLR type. Otherwise, convert it.
+        /// </summary>
+        /// <param name="pyObject">Python object representing a type.</param>
+        /// <returns>Type object</returns>
+        public static Type CreateType(this PyObject pyObject)
+        {
+            Type type;
+            if (pyObject.TryConvert(out type) &&
+                type != typeof(PythonQuandl) &&
+                type != typeof(PythonData))
+            {
+                return type;
+            }
+
+            PythonActivator pythonType;
+            if (!PythonActivators.TryGetValue(pyObject.Handle, out pythonType))
+            {
+                AssemblyName an;
+                using (Py.GIL())
+                {
+                    an = new AssemblyName(pyObject.Repr().Split('\'')[1]);
+                }
+                var typeBuilder = AppDomain.CurrentDomain
+                    .DefineDynamicAssembly(an, AssemblyBuilderAccess.Run)
+                    .DefineDynamicModule("MainModule")
+                    .DefineType(an.Name, TypeAttributes.Class, type);
+
+                pythonType = new PythonActivator(typeBuilder.CreateType(), pyObject);
+
+                ObjectActivator.AddActivator(pythonType.Type, pythonType.Factory);
+
+                // Save to prevent future additions
+                PythonActivators.Add(pyObject.Handle, pythonType);
+            }
+            return pythonType.Type;
         }
 
         /// <summary>
