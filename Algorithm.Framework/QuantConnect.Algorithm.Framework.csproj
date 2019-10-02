@@ -148,6 +148,13 @@
     <Compile Include="Selection\ScheduledUniverseSelectionModel.cs" />
     <Compile Include="Selection\QC500UniverseSelectionModel.cs" />
     <Compile Include="Alphas\HistoricalReturnsAlphaModel.cs" />
+    <Compile Include="Selection\BaseETFUniverseSelectionModel.cs" />
+    <Compile Include="Selection\EnergyETFUniverse.cs" />
+    <Compile Include="Selection\MetalsETFUniverse.cs" />
+    <Compile Include="Selection\SP500SectorsETFUniverse.cs" />
+    <Compile Include="Selection\TechnologyETFUniverse.cs" />
+    <Compile Include="Selection\USTreasuriesETFUniverse.cs" />
+    <Compile Include="Selection\VolatilityETFUniverse.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
