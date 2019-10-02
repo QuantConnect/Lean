@@ -17,6 +17,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Python.Runtime;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
@@ -28,6 +29,7 @@ namespace QuantConnect.Data
     /// </summary>
     public class Slice : IEnumerable<KeyValuePair<Symbol, BaseData>>
     {
+        private static Dictionary<Type, MethodInfo> _methodCache = new Dictionary<Type, MethodInfo>();
         private readonly Ticks _ticks;
         private readonly TradeBars _bars;
         private readonly QuoteBars _quoteBars;
@@ -276,9 +278,19 @@ namespace QuantConnect.Data
                 {
                     dictionary = new Lazy<object>(() =>
                     {
-                        var dic = Activator.CreateInstance(typeof(DataDictionary<>).MakeGenericType(type)) as dynamic;
-                        dic.Add(_data.Value.Values.SelectMany<dynamic, dynamic>(x => x.GetData()).Where(o => (Type)o.GetType() == type),
-                            new Func<dynamic, Symbol>(x => x.Symbol));
+                        var dic = Activator.CreateInstance(typeof(DataDictionary<>).MakeGenericType(type));
+                        MethodInfo method;
+                        if (!_methodCache.TryGetValue(type, out method))
+                        {
+                            _methodCache[type] = method
+                            = typeof(DataDictionary<>).MakeGenericType(type).GetMethod("Add", new[] { typeof(Symbol), type });
+                        }
+
+                        foreach (var data in
+                            _data.Value.Values.SelectMany<dynamic, dynamic>(x => x.GetData()).Where(o => (Type)o.GetType() == type))
+                        {
+                            method.Invoke(dic, new []{ data.Symbol, data });
+                        }
                         return dic;
                     }
                     );
@@ -299,9 +311,18 @@ namespace QuantConnect.Data
                 {
                     dictionary = new Lazy<object>(() =>
                     {
-                        var dic = Activator.CreateInstance(typeof(DataDictionary<>).MakeGenericType(type)) as dynamic;
-                        dic.Add(_data.Value.Values.Select(x => x.GetData()).Where(o => (Type)o.GetType() == type),
-                                new Func<dynamic, Symbol>(x => x.Symbol));
+                        var dic = Activator.CreateInstance(typeof(DataDictionary<>).MakeGenericType(type));
+                        MethodInfo method;
+                        if (!_methodCache.TryGetValue(type, out method))
+                        {
+                            _methodCache[type] = method
+                                = typeof(DataDictionary<>).MakeGenericType(type).GetMethod("Add", new[] { typeof(Symbol), type });
+                        }
+
+                        foreach (var data in _data.Value.Values.Select(x => x.GetData()).Where(o => (Type)o.GetType() == type))
+                        {
+                            method.Invoke(dic, new[] { data.Symbol, data });
+                        }
                         return dic;
                     }
                     );
