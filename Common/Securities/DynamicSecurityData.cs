@@ -21,6 +21,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Python.Runtime;
 using QuantConnect.Data;
 
 namespace QuantConnect.Securities
@@ -137,6 +138,34 @@ namespace QuantConnect.Securities
                 $"Expected a list with type '{typeof(IReadOnlyList<T>).GetBetterTypeName()}' " +
                 $"but found type '{data.GetType().GetBetterTypeName()}"
             );
+        }
+
+
+        /// <summary>
+        /// Get the matching cached object in a python friendly accessor
+        /// </summary>
+        /// <param name="type">Type to search for</param>
+        /// <returns>Matching object</returns>
+        public PyObject Get(Type type)
+        {
+            var list = GetAll(type);
+
+            if (list.Count == 0)
+            {
+                return null;
+            }
+
+            return list[list.Count-1].ToPython();
+        }
+
+        /// <summary>
+        /// Get all the matching types with a python friendly overload.
+        /// </summary>
+        /// <param name="type">Search type</param>
+        /// <returns>List of matching objects cached</returns>
+        public IList GetAll(Type type)
+        {
+
         }
 
         /// <summary>
