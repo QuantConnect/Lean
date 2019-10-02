@@ -1089,7 +1089,7 @@ namespace QuantConnect.Tests.Algorithm
             Update(btcusd, 26);
             // (100000 * 0.9975) / 26 = 3836.53846153m
             actual = algo.CalculateOrderQuantity(Symbols.BTCUSD, 1m);
-            Assert.AreEqual(3836.53846153m, actual);
+            Assert.AreEqual(3836.538m, actual);
         }
 
         [Test]
