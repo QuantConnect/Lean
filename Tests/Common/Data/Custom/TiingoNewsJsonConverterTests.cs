@@ -88,7 +88,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
     ""crawlDate"":""2019-01-29T22:20:01.696871Z"",
     ""description"":""description"",
     ""url"":""url"",
-    ""publishedDate"":""2019-01-29T22:17:00Z"",
+    ""publishedDate"":""2018-01-29T22:17:00Z"",
     ""tags"":[ ""tag1"", ""tag2""],
     ""tickers"":[""aapl""],
     ""id"":1,

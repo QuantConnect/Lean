@@ -178,9 +178,16 @@ namespace QuantConnect.Data.Custom.Tiingo
                 }
                 else
                 {
-                    // for backtesting use published time + 'TiingoNews.HistoricalCrawlOffset'
-                    // old data (eg 2014) can have newer crawl date (eg 2019)
-                    dataPoint.Time = dataPoint.PublishedDate.Add(TiingoNews.HistoricalCrawlOffset);
+                    if ((dataPoint.CrawlDate - dataPoint.PublishedDate) > Time.OneDay)
+                    {
+                        // old data (eg 2014 PublishedDate) can have newer crawl date (eg 2019)
+                        // for these cases, for backtesting, use published time + 'TiingoNews.HistoricalCrawlOffset'
+                        dataPoint.Time = dataPoint.PublishedDate.Add(TiingoNews.HistoricalCrawlOffset);
+                    }
+                    else
+                    {
+                        dataPoint.Time = dataPoint.CrawlDate;
+                    }
                 }
             }
         }

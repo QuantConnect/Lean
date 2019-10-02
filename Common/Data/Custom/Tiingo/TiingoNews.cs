@@ -35,11 +35,13 @@ namespace QuantConnect.Data.Custom.Tiingo
         /// For backtesting, an offset to add to <see cref="BaseData.Time"/>
         /// </summary>
         /// <remarks>
-        /// For backtesting we use as <see cref="BaseData.Time"/>, the published date.
-        /// of a piece of news. This is because old data (eg 2014) can have newer crawl date (eg 2019).
-        /// But doing so would be optimistic since it means algorithms will get the news immediately,
-        /// so we add this offset.
+        /// Old data (eg 2014 PublishedDate) can have newer crawl date (eg 2019)
+        /// for these cases, where the diff is > 1 day, for backtesting,
+        /// we use as <see cref="BaseData.Time"/> the published date of a piece of news.
+        /// But doing so would be optimistic since it means algorithms
+        /// will get the news immediately, so we add this offset.
         /// Live trading uses as <see cref="BaseData.Time"/> the crawler date.
+        /// <see cref="TiingoNewsJsonConverter"/>
         /// </remarks>
         public static TimeSpan HistoricalCrawlOffset { get; set; } = TimeSpan.FromHours(1);
 
