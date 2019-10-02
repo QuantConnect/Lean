@@ -253,7 +253,8 @@
     <Compile Include="Data\Custom\SEC\SECReport10K.cs" />
     <Compile Include="Data\Custom\SEC\SECReportIndexFile.cs" />
     <Compile Include="Data\Custom\SEC\SECReportSubmission.cs" />
-    <Compile Include="Data\Custom\Tiingo\TiingoNewsData.cs" />
+    <Compile Include="Data\Custom\Tiingo\TiingoDailyData.cs" />
+    <Compile Include="Data\Custom\Tiingo\TiingoNews.cs" />
     <Compile Include="Data\Custom\Tiingo\TiingoNewsJsonConverter.cs" />
     <Compile Include="Data\Custom\Tiingo\TiingoSymbolMapper.cs" />
     <Compile Include="Data\Custom\TradingEconomics\TradingEconomics.cs" />
@@ -334,7 +335,7 @@
     <Compile Include="Data\Custom\Intrinio\IntrinioEconomicData.cs" />
     <Compile Include="Data\Custom\Intrinio\EconomicDataSources.cs" />
     <Compile Include="Data\Custom\Tiingo\Tiingo.cs" />
-    <Compile Include="Data\Custom\Tiingo\TiingoDailyData.cs" />
+    <Compile Include="Data\Custom\Tiingo\TiingoPrice.cs" />
     <Compile Include="Data\Fundamental\Fundamentals.cs" />
     <Compile Include="Data\Fundamental\Generated\AssetClassification.cs" />
     <Compile Include="Data\Fundamental\Generated\CompanyProfile.cs" />

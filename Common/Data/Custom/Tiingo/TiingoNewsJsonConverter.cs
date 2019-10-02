@@ -18,13 +18,12 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NodaTime;
 
 namespace QuantConnect.Data.Custom.Tiingo
 {
     /// <summary>
     /// Helper json converter class used to convert a list of Tiingo news data
-    /// into <see cref="List{TiingoNewsData}"/>
+    /// into <see cref="List{TiingoNews}"/>
     /// </summary>
     public class TiingoNewsJsonConverter : JsonConverter
     {
@@ -65,7 +64,7 @@ namespace QuantConnect.Data.Custom.Tiingo
         {
             var data = JToken.Load(reader);
 
-            var result = new List<TiingoNewsData>();
+            var result = new List<TiingoNews>();
             if (data is JArray)
             {
                 foreach (var token in data)
@@ -96,15 +95,15 @@ namespace QuantConnect.Data.Custom.Tiingo
         /// </returns>
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(List<TiingoNewsData>);
+            return objectType == typeof(List<TiingoNews>);
         }
 
         /// <summary>
         /// Helper method to deserialize a single json Tiingo news
         /// </summary>
         /// <param name="token">The json token containing the Tiingo news to deserialize</param>
-        /// <returns>The deserialized <see cref="TiingoNewsData"/> instance</returns>
-        public static TiingoNewsData DeserializeNews(JToken token)
+        /// <returns>The deserialized <see cref="TiingoNews"/> instance</returns>
+        public static TiingoNews DeserializeNews(JToken token)
         {
             // just in case we add some default values for these
             var title = token["title"]?.ToString() ?? "";
@@ -132,7 +131,7 @@ namespace QuantConnect.Data.Custom.Tiingo
                 symbols.Add(new Symbol(sid, ticker));
             }
 
-            var dataPoint = new TiingoNewsData
+            var dataPoint = new TiingoNews
             {
                 ArticleID = articleID,
                 CrawlDate = crawlDate,
@@ -167,7 +166,7 @@ namespace QuantConnect.Data.Custom.Tiingo
             return jToken.ToObject<DateTime>();
         }
 
-        private void SetSymbolAndTime(TiingoNewsData dataPoint)
+        private void SetSymbolAndTime(TiingoNews dataPoint)
         {
             if (_symbol != null)
             {
@@ -179,9 +178,16 @@ namespace QuantConnect.Data.Custom.Tiingo
                 }
                 else
                 {
-                    // for backtesting use published time
-                    // old data (eg 2014) can have newer crawl date (eg 2019)
-                    dataPoint.Time = dataPoint.PublishedDate;
+                    if ((dataPoint.CrawlDate - dataPoint.PublishedDate) > Time.OneDay)
+                    {
+                        // old data (eg 2014 PublishedDate) can have newer crawl date (eg 2019)
+                        // for these cases, for backtesting, use published time + 'TiingoNews.HistoricalCrawlOffset'
+                        dataPoint.Time = dataPoint.PublishedDate.Add(TiingoNews.HistoricalCrawlOffset);
+                    }
+                    else
+                    {
+                        dataPoint.Time = dataPoint.CrawlDate;
+                    }
                 }
             }
         }

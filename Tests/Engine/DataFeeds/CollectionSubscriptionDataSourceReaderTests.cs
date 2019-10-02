@@ -30,9 +30,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void HandlesInitializationErrors()
         {
             var date = new DateTime(2018, 7, 7);
-            var config = new SubscriptionDataConfig(typeof(TiingoDailyData), Symbols.AAPL, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, true);
+            var config = new SubscriptionDataConfig(typeof(TiingoPrice), Symbols.AAPL, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, true);
             var reader = new CollectionSubscriptionDataSourceReader(null, config, date, false);
-            var source = new TiingoDailyData().GetSource(config, date, false);
+            var source = new TiingoPrice().GetSource(config, date, false);
 
             // should not throw with an empty or invalid Tiingo API token
             Assert.DoesNotThrow(() =>

@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="custom data" />
     /// <meta name="tag" content="tiingo" />
-    public class TiingoDailyDataAlgorithm : QCAlgorithm
+    public class TiingoPriceAlgorithm : QCAlgorithm
     {
         private const string Ticker = "AAPL";
         private Symbol _symbol;
@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Set your Tiingo API Token here
             Tiingo.SetAuthCode("my-tiingo-api-token");
 
-            _symbol = AddData<TiingoDailyData>(Ticker, Resolution.Daily).Symbol;
+            _symbol = AddData<TiingoPrice>(Ticker, Resolution.Daily).Symbol;
 
             _emaFast = EMA(_symbol, 5);
             _emaSlow = EMA(_symbol, 10);
@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             // Extract Tiingo data from the slice
-            var tiingoData = slice.Get<TiingoDailyData>();
+            var tiingoData = slice.Get<TiingoPrice>();
             foreach (var row in tiingoData.Values)
             {
                 Log($"{Time} - {row.Symbol.Value} - {row.Close} {row.Value} {row.Price} - EmaFast:{_emaFast} - EmaSlow:{_emaSlow}");
