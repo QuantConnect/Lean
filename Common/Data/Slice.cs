@@ -252,13 +252,15 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets the data of the specified symbol and type.
         /// </summary>
-        /// <remarks>Can not directly return dynamic because it causes PythonNet to use the
-        /// generic implementation. Will use <see cref="DataDictionary{T}.op_Implicit"/></remarks>
         /// <param name="type">The type of data we seek</param>
         /// <returns>The data for the requested symbol</returns>
-        public DataDictionary<dynamic> Get(PyObject type)
+        public PyObject Get(PyObject type)
         {
-            return GetImpl(type.CreateType());
+            var result = GetImpl(type.CreateType()) as object;
+            using (Py.GIL())
+            {
+                return result.ToPython();
+            }
         }
 
         /// <summary>
@@ -318,7 +320,7 @@ namespace QuantConnect.Data
         /// <returns>The data for the requested symbol</returns>
         public dynamic Get(PyObject type, Symbol symbol)
         {
-            return Get(type)[symbol];
+            return GetImpl(type.CreateType())[symbol];
         }
 
         /// <summary>

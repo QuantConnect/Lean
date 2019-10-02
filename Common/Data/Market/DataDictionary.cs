@@ -311,21 +311,6 @@ namespace QuantConnect.Data.Market
             TryGetValue(key, out value);
             return value;
         }
-
-        /// <summary>
-        /// This implicit conversion is to support python <see cref="Slice.Get"/>
-        /// </summary>
-        /// <param name="dictionary">The source dictionary</param>
-        /// <returns>A <see cref="DataDictionary{dynamic}"/> instance</returns>
-        public static implicit operator DataDictionary<dynamic>(DataDictionary<T> dictionary)
-        {
-            var result = new DataDictionary<dynamic>();
-            foreach (var data in dictionary)
-            {
-                result[data.Key] = data.Value;
-            }
-            return result;
-        }
     }
 
     /// <summary>
