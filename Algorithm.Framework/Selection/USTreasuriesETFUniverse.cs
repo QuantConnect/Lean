@@ -63,7 +63,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 {"TMV", new DateTime(2009,  4, 16)},
                 {"TBF", new DateTime(2009,  8, 20)},
                 {"VGSH", new DateTime(2009, 11, 23)},
-                {"VGSH", new DateTime(2009, 11, 23)},
                 {"VGIT", new DateTime(2009, 11, 23)},
                 {"VGLT", new DateTime(2009, 11, 24)},
                 {"SCHO", new DateTime(2010,  8,  6)},
