@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -53,15 +53,18 @@ namespace QuantConnect.ToolBox.CoinApi
                     Market.Bitfinex,
                     new Dictionary<string, string>
                     {
-                        { "ANIO", "NIO" },
-                        { "BCHSV", "BSV" },
-                        { "DASH", "DSH" },
-                        { "IOTA", "IOT" },
-                        { "MANA", "MNA" },
-                        { "PKGO", "GOT" },
-                        { "QTUM", "QTM" },
-                        { "USDT", "UST" },
-                        { "YOYOW", "YYW" }
+                        { "ALGO", "ALO"},
+                        { "ANIO", "NIO"},
+                        { "BCHSV", "BSV"},
+                        { "DASH", "DSH"},
+                        { "IOTA", "IOT"},
+                        { "LINK", "LIK"},
+                        { "LOOM", "LOM"},
+                        { "MANA", "MNA"},
+                        { "PKGO", "GOT"},
+                        { "QTUM", "QTM"},
+                        { "USDT", "UST"},
+                        { "YOYOW", "YYW"}
                     }
                 }
             };

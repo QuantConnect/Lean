@@ -303,7 +303,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var order = Order.CreateOrder(orderRequest);
             var actual = transactionHandler.RoundOffOrder(order, security);
 
-            Assert.AreEqual(123.12345678m, actual);
+            Assert.AreEqual(123.123m, actual);
         }
 
         [Test]
@@ -327,7 +327,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var order = Order.CreateOrder(orderRequest);
             var actual = transactionHandler.RoundOffOrder(order, security);
 
-            Assert.AreEqual(-123.12345678m, actual);
+            Assert.AreEqual(-123.123m, actual);
         }
 
         [Test]
