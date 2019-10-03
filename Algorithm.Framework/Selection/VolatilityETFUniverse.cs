@@ -23,7 +23,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// 2010-02-11   SQQQ   ProShares UltraPro ShortQQQ
     /// 2010-02-11   TQQQ   ProShares UltraProQQQ
     /// 2010-11-30   TVIX   VelocityShares Daily 2x VIX Short Term ETN
-    /// 2010-12-08   DUST   Direxion Daily Gold Miners Bear 3X Shares
     /// 2011-01-04   VIXY   ProShares VIX Short-Term Futures ETF
     /// 2011-05-05   SPLV   Invesco S&P 500® Low Volatility ETF
     /// 2011-10-04   SVXY   ProShares Short VIX Short-Term Futures
@@ -43,7 +42,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 {"SQQQ", new DateTime(2010,  2, 11)},
                 {"TQQQ", new DateTime(2010,  2, 11)},
                 {"TVIX", new DateTime(2010,  11, 30)},
-                {"DUST", new DateTime(2010, 12,  8)},
                 {"VIXY", new DateTime(2011,  1,  4)},
                 {"SPLV", new DateTime(2011,  5,  5)},
                 {"SVXY", new DateTime(2011,  10,  4)},
