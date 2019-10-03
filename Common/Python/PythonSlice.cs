@@ -72,6 +72,31 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Gets the data of the specified symbol and type.
+        /// </summary>
+        /// <param name="type">The type of data we seek</param>
+        /// <param name="symbol">The specific symbol was seek</param>
+        /// <returns>The data for the requested symbol</returns>
+        public dynamic Get(PyObject type, Symbol symbol)
+        {
+            return GetImpl(type.CreateType(), _slice)[symbol];
+        }
+
+        /// <summary>
+        /// Gets the data of the specified symbol and type.
+        /// </summary>
+        /// <param name="type">The type of data we seek</param>
+        /// <returns>The data for the requested symbol</returns>
+        public PyObject Get(PyObject type)
+        {
+            var result = GetImpl(type.CreateType(), _slice) as object;
+            using (Py.GIL())
+            {
+                return result.ToPython();
+            }
+        }
+
+        /// <summary>
         /// Gets the number of symbols held in this slice
         /// </summary>
         public new int Count

@@ -21,6 +21,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Python.Runtime;
 using QuantConnect.Data;
 
 namespace QuantConnect.Securities
@@ -83,24 +84,7 @@ namespace QuantConnect.Securities
         /// <param name="data">The data to be stored</param>
         public void StoreData<T>(Type dataType, IReadOnlyList<T> data)
         {
-            // this would, for example, be 'Bitcoin' or 'TradeBar'
-            if (typeof(T) == dataType)
-            {
-                SetProperty(dataType.Name, data);
-                return;
-            }
-
-            // common case where it's a List<BaseData> but dataType == TradeBar
-            // create a List<TradeBar> so that when accessed via GetAll<T> or .TradeBar
-            // the types line up as expected
-            var list = (IList) Activator.CreateInstance(typeof(List<>).MakeGenericType(dataType));
-            foreach (var datum in data)
-            {
-                // if the element type and dataType aren't in alignment we'll get an invalid cast exception here
-                list.Add(datum);
-            }
-
-            SetProperty(dataType.Name, list);
+            StoreData(typeof(T), dataType, (IList)data);
         }
 
         /// <summary>
@@ -117,26 +101,34 @@ namespace QuantConnect.Securities
         /// </summary>
         public IReadOnlyList<T> GetAll<T>()
         {
-            var data = GetProperty(typeof(T).Name);
+            return GetAllImpl(typeof(T));
+        }
 
-            var list = data as IReadOnlyList<T>;
-            if (list != null)
+        /// <summary>
+        /// Get the matching cached object in a python friendly accessor
+        /// </summary>
+        /// <param name="type">Type to search for</param>
+        /// <returns>Matching object</returns>
+        public PyObject Get(Type type)
+        {
+            var list = GetAll(type);
+
+            if (list.Count == 0)
             {
-                return list;
+                return null;
             }
 
-            var baseDataList = data as IReadOnlyList<BaseData>;
-            if (baseDataList != null)
-            {
-                list = new List<T>(baseDataList.OfType<T>());
-                StoreData(typeof(T), list);
-                return list;
-            }
+            return list[list.Count-1].ToPython();
+        }
 
-            throw new InvalidOperationException(
-                $"Expected a list with type '{typeof(IReadOnlyList<T>).GetBetterTypeName()}' " +
-                $"but found type '{data.GetType().GetBetterTypeName()}"
-            );
+        /// <summary>
+        /// Get all the matching types with a python friendly overload.
+        /// </summary>
+        /// <param name="type">Search type</param>
+        /// <returns>List of matching objects cached</returns>
+        public IList GetAll(Type type)
+        {
+            return GetAllImpl(type);
         }
 
         /// <summary>
@@ -178,6 +170,65 @@ namespace QuantConnect.Securities
             var keys = _storage.Keys.OrderBy(k => k);
             throw new KeyNotFoundException($"Property with name '{name}' does not exist. Properties: {string.Join(", ", keys)}");
 
+        }
+
+        /// <summary>
+        /// Get all implementation that covers both Python and C#
+        /// </summary>
+        private dynamic GetAllImpl(Type type)
+        {
+            var data = GetProperty(type.Name);
+
+            var dataType = data.GetType();
+            if (dataType.GetElementType() == type // covers arrays
+                // covers lists
+                || dataType.GenericTypeArguments.Length == 1
+                && dataType.GenericTypeArguments[0] == type)
+            {
+                return data;
+            }
+
+            var baseDataList = data as IReadOnlyList<BaseData>;
+            if (baseDataList != null)
+            {
+                var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(type));
+                foreach (var baseData in baseDataList)
+                {
+                    list.Add(baseData);
+                }
+                StoreData(type, type, list);
+                return list;
+            }
+
+            throw new InvalidOperationException(
+                $"Expected a list with type '{type.GetBetterTypeName()}' " +
+                $"but found type '{data.GetType().GetBetterTypeName()}"
+            );
+        }
+
+        /// <summary>
+        /// Store data implementation that covers both Python and C#
+        /// </summary>
+        private void StoreData(Type type, Type dataType, IList data)
+        {
+            // this would, for example, be 'Bitcoin' or 'TradeBar'
+            if (type == dataType)
+            {
+                SetProperty(dataType.Name, data);
+                return;
+            }
+
+            // common case where it's a List<BaseData> but dataType == TradeBar
+            // create a List<TradeBar> so that when accessed via GetAll<T> or .TradeBar
+            // the types line up as expected
+            var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(dataType));
+            foreach (var datum in data)
+            {
+                // if the element type and dataType aren't in alignment we'll get an invalid cast exception here
+                list.Add(datum);
+            }
+
+            SetProperty(dataType.Name, list);
         }
     }
 }
