@@ -482,7 +482,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var textSubscriptionFactory = (TextSubscriptionDataSourceReader)dataSourceReader;
                 textSubscriptionFactory.CreateStreamReaderError += (sender, args) =>
                 {
-                    if (_config.IsCustomData)
+                    if (_config.IsCustomData && !_config.Type.GetBaseDataInstance().IsSparseData())
                     {
                         OnDownloadFailed(
                             new DownloadFailedEventArgs(
