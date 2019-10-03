@@ -18,7 +18,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Python.Runtime;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 
@@ -248,31 +247,17 @@ namespace QuantConnect.Data
         public DataDictionary<T> Get<T>()
             where T : IBaseData
         {
-            return GetImpl(typeof(T));
-        }
-
-        /// <summary>
-        /// Gets the data of the specified symbol and type.
-        /// </summary>
-        /// <param name="type">The type of data we seek</param>
-        /// <returns>The data for the requested symbol</returns>
-        public PyObject Get(PyObject type)
-        {
-            var result = GetImpl(type.CreateType()) as object;
-            using (Py.GIL())
-            {
-                return result.ToPython();
-            }
+            return GetImpl(typeof(T), this);
         }
 
         /// <summary>
         /// Gets the data of the specified symbol and type.
         /// </summary>
         /// <remarks>Supports both C# and Python use cases</remarks>
-        private dynamic GetImpl(Type type)
+        protected static dynamic GetImpl(Type type, Slice instance)
         {
             Lazy<object> dictionary;
-            if (!_dataByType.TryGetValue(type, out dictionary))
+            if (!instance._dataByType.TryGetValue(type, out dictionary))
             {
                 if (type == typeof(Tick))
                 {
@@ -287,7 +272,7 @@ namespace QuantConnect.Data
                         }
 
                         foreach (var data in
-                            _data.Value.Values.SelectMany<dynamic, dynamic>(x => x.GetData()).Where(o => (Type)o.GetType() == type))
+                            instance._data.Value.Values.SelectMany<dynamic, dynamic>(x => x.GetData()).Where(o => o != null && (Type)o.GetType() == type))
                         {
                             method.Invoke(dic, new []{ data.Symbol, data });
                         }
@@ -298,13 +283,13 @@ namespace QuantConnect.Data
                 else if (type == typeof(TradeBar))
                 {
                     dictionary = new Lazy<object>(() => new DataDictionary<TradeBar>(
-                        _data.Value.Values.Where(x => x.TradeBar != null).Select(x => x.TradeBar),
+                        instance._data.Value.Values.Where(x => x.TradeBar != null).Select(x => x.TradeBar),
                         x => x.Symbol));
                 }
                 else if (type == typeof(QuoteBar))
                 {
                     dictionary = new Lazy<object>(() => new DataDictionary<QuoteBar>(
-                        _data.Value.Values.Where(x => x.QuoteBar != null).Select(x => x.QuoteBar),
+                        instance._data.Value.Values.Where(x => x.QuoteBar != null).Select(x => x.QuoteBar),
                         x => x.Symbol));
                 }
                 else
@@ -319,7 +304,7 @@ namespace QuantConnect.Data
                                 = typeof(DataDictionary<>).MakeGenericType(type).GetMethod("Add", new[] { typeof(Symbol), type });
                         }
 
-                        foreach (var data in _data.Value.Values.Select(x => x.GetData()).Where(o => (Type)o.GetType() == type))
+                        foreach (var data in instance._data.Value.Values.Select(x => x.GetData()).Where(o => o != null && (Type)o.GetType() == type))
                         {
                             method.Invoke(dic, new[] { data.Symbol, data });
                         }
@@ -328,20 +313,9 @@ namespace QuantConnect.Data
                     );
                 }
 
-                _dataByType[type] = dictionary;
+                instance._dataByType[type] = dictionary;
             }
             return dictionary.Value;
-        }
-
-        /// <summary>
-        /// Gets the data of the specified symbol and type.
-        /// </summary>
-        /// <param name="type">The type of data we seek</param>
-        /// <param name="symbol">The specific symbol was seek</param>
-        /// <returns>The data for the requested symbol</returns>
-        public dynamic Get(PyObject type, Symbol symbol)
-        {
-            return GetImpl(type.CreateType())[symbol];
         }
 
         /// <summary>

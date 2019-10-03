@@ -20,8 +20,10 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Python;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -151,7 +153,7 @@ def Test(slice):
                 var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
                 var slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
 
-                var data = test(slice);
+                var data = test(new PythonSlice(slice));
                 Assert.AreEqual(2, (int)data.Count);
                 Assert.AreEqual(10, (int)data[Symbols.SPY].Value);
                 Assert.AreEqual(11, (int)data[Symbols.AAPL].Value);
@@ -180,7 +182,7 @@ def Test(slice):
                 var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
                 var slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
 
-                Assert.DoesNotThrow(() => test(slice));
+                Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
         }
 
@@ -206,7 +208,7 @@ def Test(slice):
                 var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
                 var slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
 
-                Assert.DoesNotThrow(() => test(slice));
+                Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
         }
 
@@ -231,7 +233,7 @@ def Test(slice):
                 var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
                 var slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, TradeBarAapl, quandlAapl, TradeBarSpy });
 
-                var data = test(slice);
+                var data = test(new PythonSlice(slice));
                 Assert.AreEqual(2, (int)data.Count);
                 Assert.AreEqual(8, (int)data[Symbols.SPY].Value);
                 Assert.AreEqual(9, (int)data[Symbols.AAPL].Value);
@@ -262,7 +264,7 @@ def Test(slice):
                 var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
                 var slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, TradeBarAapl, quandlAapl, TradeBarSpy });
 
-                Assert.DoesNotThrow(() => test(slice));
+                Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
         }
 
@@ -290,7 +292,94 @@ def Test(slice):
                 var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
                 var slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, TradeBarAapl, quandlAapl, TradeBarSpy });
 
-                Assert.DoesNotThrow(() => test(slice));
+                Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
+            }
+        }
+
+        [Test]
+        public void PythonGetCustomData_Iterate_Tiingo()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+from QuantConnect.Data.Custom.Tiingo import TiingoNews
+from QuantConnect.Logging import *
+
+def Test(slice):
+    data = slice.Get(TiingoNews)
+    count = 0
+    for singleData in data:
+        Log.Trace(str(singleData))
+        count += 1
+    if count != 2:
+        raise Exception('Unexpected value')").GetAttr("Test");
+                var quandlSpy = new TiingoNews { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var tradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
+                var quandlAapl = new TiingoNews { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new BaseData[] { quandlSpy, tradeBarAapl, quandlAapl });
+
+                Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
+            }
+        }
+
+        [Test]
+        public void PythonGetCustomData_Iterate_Tiingo_Empty()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+from QuantConnect.Data.Custom.Tiingo import TiingoNews
+
+def Test(slice):
+    data = slice.Get(TiingoNews)
+    for singleData in data:
+        raise Exception('Unexpected iteration')
+    for singleData in data.Values:
+        raise Exception('Unexpected iteration')
+    data = slice.Get(TiingoNews)
+    for singleData in data:
+        raise Exception('Unexpected iteration')
+    for singleData in data.Values:
+        raise Exception('Unexpected iteration')").GetAttr("Test");
+                var tradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
+                var slice = new Slice(DateTime.Now, new List<BaseData> { tradeBarAapl });
+
+                Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
+            }
+        }
+
+        [Test]
+        public void PythonGetCustomData_Iterate()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+from QuantConnect.Data.Custom import *
+
+def Test(slice):
+    data = slice.Get(Quandl)
+    count = 0
+    for singleData in data:
+        count += 1
+    if count != 2:
+        raise Exception('Unexpected value')").GetAttr("Test");
+                var quandlSpy = new Quandl { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+                var quandlAapl = new Quandl { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+                var slice = new Slice(DateTime.Now, new[] { quandlSpy, quandlAapl });
+
+                Assert.DoesNotThrow(() => test(new PythonSlice(slice)));
             }
         }
 
