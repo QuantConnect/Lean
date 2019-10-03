@@ -151,6 +151,7 @@
     <Compile Include="Alphas\TriangleExchangeRateArbitrageAlpha.cs" />
     <Compile Include="Alphas\TripleLeveragedETFPairVolatilityDecayAlpha.cs" />
     <Compile Include="Alphas\VixDualThrustAlpha.cs" />
+    <Compile Include="AltData\TradingEconomicsAlgorithm.cs" />
     <Compile Include="BasicPythonIntegrationTemplateAlgorithm.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
     <Compile Include="CustomBenchmarkRegressionAlgorithm.cs" />
