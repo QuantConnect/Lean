@@ -28,7 +28,6 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class PsychSignalSentimentAlgorithm : QCAlgorithm
     {
-        private List<Symbol> _sentimentSymbols = new List<Symbol>();
         private DateTime _timeEntered = DateTime.MinValue;
 
         /// <summary>
