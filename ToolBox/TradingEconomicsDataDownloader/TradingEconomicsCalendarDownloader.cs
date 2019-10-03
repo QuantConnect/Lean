@@ -229,7 +229,15 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                 .Replace("(R)", "")
                 .Replace("--", "-")
                 .Replace(".5.1", ".5")
-                .Replace("-4-", "-");
+                .Replace("-1-", "-")
+                .Replace("-2-", "-")
+                .Replace("-3-", "-")
+                .Replace("-4-", "-")
+                .Replace("-5-", "-")
+                .Replace("-6-", "-")
+                .Replace("-7-", "-")
+                .Replace("-8-", "-")
+                .Replace("-9-", "-");
 
             if (newFigure.EndsWith("."))
             {
