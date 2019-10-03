@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             _symbol = AddEquity(Ticker).Symbol;
-            AddData<PsychSignalSentimentData>(Ticker);
+            AddData<PsychSignalSentiment>(Ticker);
         }
 
         /// <summary>
@@ -52,9 +52,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object containing the sentiment data</param>
         public override void OnData(Slice slice)
         {
-            foreach (var message in slice.Get<PsychSignalSentimentData>().Values)
+            foreach (var message in slice.Get<PsychSignalSentiment>().Values)
             {
-                if (!Portfolio.Invested && Transactions.GetOpenOrders().Count == 0 && slice.ContainsKey(_symbol) && 
+                if (!Portfolio.Invested && Transactions.GetOpenOrders().Count == 0 && slice.ContainsKey(_symbol) &&
                     message.BullIntensity > 1.5m && message.BullScoredMessages > 3.0m)
                 {
                     SetHoldings(_symbol, 0.25);
@@ -81,25 +81,25 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "9"},
-            {"Average Win", "0.32%"},
-            {"Average Loss", "-0.05%"},
-            {"Compounding Annual Return", "59.645%"},
+            {"Total Trades", "13"},
+            {"Average Win", "0.36%"},
+            {"Average Loss", "-0.25%"},
+            {"Compounding Annual Return", "160.597%"},
             {"Drawdown", "0.700%"},
-            {"Expectancy", "4.327"},
-            {"Net Profit", "0.901%"},
-            {"Sharpe Ratio", "6.985"},
-            {"Loss Rate", "25%"},
-            {"Win Rate", "75%"},
-            {"Profit-Loss Ratio", "6.10"},
-            {"Alpha", "-0.901"},
-            {"Beta", "98.136"},
-            {"Annual Standard Deviation", "0.041"},
-            {"Annual Variance", "0.002"},
-            {"Information Ratio", "6.725"},
-            {"Tracking Error", "0.04"},
-            {"Treynor Ratio", "0.003"},
-            {"Total Fees", "$9.00"}
+            {"Expectancy", "0.612"},
+            {"Net Profit", "1.276%"},
+            {"Sharpe Ratio", "11.154"},
+            {"Loss Rate", "33%"},
+            {"Win Rate", "67%"},
+            {"Profit-Loss Ratio", "1.42"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0.057"},
+            {"Annual Variance", "0.003"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$13.00"}
         };
     }
 }

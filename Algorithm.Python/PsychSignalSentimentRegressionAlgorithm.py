@@ -19,7 +19,7 @@ AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Data.Custom.PsychSignal import PsychSignalSentimentData
+from QuantConnect.Data.Custom.PsychSignal import PsychSignalSentiment
 
 ### <summary>
 ### This example algorithm shows how to import and use psychsignal sentiment data
@@ -39,9 +39,8 @@ class PsychSignalSentimentRegressionAlgorithm(QCAlgorithm):
 
         self.ticker = "AAPL"
 
-        # Find more symbols here: http://quantconnect.com/data
-        self.AddData(PsychSignalSentimentData, self.ticker)
         self.symbol = self.AddEquity(self.ticker).Symbol
+        self.AddData(PsychSignalSentiment, self.ticker)
 
     def OnData(self, slice):
         '''Loads each new data point into the algorithm. On sentiment data, we place orders depending on the sentiment'''
@@ -49,7 +48,7 @@ class PsychSignalSentimentRegressionAlgorithm(QCAlgorithm):
         for message in slice.Values:
             # Price data can be lumped in with the values. We only want to work with
             # sentiment data, so we filter out any TradeBars that might make their way in here
-            if not isinstance(message, PsychSignalSentimentData):
+            if not isinstance(message, PsychSignalSentiment):
                 return
 
             if not self.Portfolio.Invested and len(self.Transactions.GetOpenOrders()) == 0 and slice.ContainsKey(self.symbol) and message.BullIntensity > 1.5 and message.BullScoredMessages > 3.0:
