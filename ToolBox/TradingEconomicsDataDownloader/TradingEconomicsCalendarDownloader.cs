@@ -229,7 +229,15 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                 .Replace("(R)", "")
                 .Replace("--", "-")
                 .Replace(".5.1", ".5")
-                .Replace("-4-", "-");
+                .Replace("-1-", "-")
+                .Replace("-2-", "-")
+                .Replace("-3-", "-")
+                .Replace("-4-", "-")
+                .Replace("-5-", "-")
+                .Replace("-6-", "-")
+                .Replace("-7-", "-")
+                .Replace("-8-", "-")
+                .Replace("-9-", "-");
 
             if (newFigure.EndsWith("."))
             {
@@ -256,28 +264,36 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                 return null;
             }
 
-            if (inPercent)
+            // Return null If we can't parse the result as is
+            decimal finalFigure;
+            if (!decimal.TryParse(newFigure, NumberStyles.Any, CultureInfo.InvariantCulture, out finalFigure))
             {
-                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) / 100m;
-            }
-            else if (inTrillions)
-            {
-                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000000000000m;
-            }
-            else if (inBillions)
-            {
-                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000000000m;
-            }
-            else if (inMillions)
-            {
-                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000000m;
-            }
-            else if (inThousands)
-            {
-                return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture) * 1000m;
+                Log.Error($"TradingEconomicsCalendarDownloader.ParseDecimal(): Failed to parse the figure {value}. Final form before parsing: {newFigure}");
+                return null;
             }
 
-            return Convert.ToDecimal(newFigure, CultureInfo.InvariantCulture);
+            if (inPercent)
+            {
+                return finalFigure / 100m;
+            }
+            if (inTrillions)
+            {
+                return finalFigure * 1000000000000m;
+            }
+            if (inBillions)
+            {
+                return finalFigure * 1000000000m;
+            }
+            if (inMillions)
+            {
+                return finalFigure * 1000000m;
+            }
+            if (inThousands)
+            {
+                return finalFigure * 1000m;
+            }
+
+            return finalFigure;
         }
     }
 }
