@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Look for positive and negative words in the news article description
     /// and trade based on the sum of the sentiment
     /// </summary>
-    public class TiingoNLPDemonstrationAlgorithm : QCAlgorithm
+    public class TiingoNewsAlgorithm : QCAlgorithm
     {
         private Symbol _tiingoSymbol;
 

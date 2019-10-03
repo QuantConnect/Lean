@@ -25,7 +25,7 @@ from QuantConnect.Data.Custom.Tiingo import *
 ### Look for positive and negative words in the news article description
 ### and trade based on the sum of the sentiment
 ### </summary>
-class TiingoNLPDemonstrationAlgorithm(QCAlgorithm):
+class TiingoNewsAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         # Predefine a dictionary of words with scores to scan for in the description
