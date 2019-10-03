@@ -807,6 +807,73 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void PyObjectDictionaryConvertToDictionary_Success()
+        {
+            using (Py.GIL())
+            {
+                var actualDictionary = PythonEngine.ModuleFromString(
+                    "PyObjectDictionaryConvertToDictionary_Success",
+                    @"
+from datetime import datetime as dt
+actualDictionary = dict()
+actualDictionary.update({'SPY': dt(2019,10,3)})
+actualDictionary.update({'QQQ': dt(2019,10,4)})
+actualDictionary.update({'IBM': dt(2019,10,5)})
+"
+                ).GetAttr("actualDictionary").ConvertToDictionary<string, DateTime>();
+
+                Assert.AreEqual(3, actualDictionary.Count);
+                var expectedDictionary = new Dictionary<string, DateTime>
+                {
+                    {"SPY", new DateTime(2019,10,3) },
+                    {"QQQ", new DateTime(2019,10,4) },
+                    {"IBM", new DateTime(2019,10,5) },
+                };
+
+                foreach (var kvp in expectedDictionary)
+                {
+                    Assert.IsTrue(actualDictionary.ContainsKey(kvp.Key));
+                    var actual = actualDictionary[kvp.Key];
+                    Assert.AreEqual(kvp.Value, actual);
+                }
+            }
+        }
+
+        [Test]
+        public void PyObjectDictionaryConvertToDictionary_FailNotDictionary()
+        {
+            using (Py.GIL())
+            {
+                var pyObject = PythonEngine.ModuleFromString(
+                    "PyObjectDictionaryConvertToDictionary_FailNotDictionary",
+                    "actualDictionary = list()"
+                ).GetAttr("actualDictionary");
+
+                Assert.Throws<ArgumentException>(() => pyObject.ConvertToDictionary<string, DateTime>());
+            }
+        }
+
+        [Test]
+        public void PyObjectDictionaryConvertToDictionary_FailWrongItemType()
+        {
+            using (Py.GIL())
+            {
+                var pyObject = PythonEngine.ModuleFromString(
+                    "PyObjectDictionaryConvertToDictionary_FailWrongItemType",
+                    @"
+actualDictionary = dict()
+actualDictionary.update({'SPY': 3})
+actualDictionary.update({'QQQ': 4})
+actualDictionary.update({'IBM': 5})
+"
+                ).GetAttr("actualDictionary");
+
+                Assert.Throws<ArgumentException>(() => pyObject.ConvertToDictionary<string, DateTime>());
+            }
+        }
+
+
+        [Test]
         public void BatchByDoesNotDropItems()
         {
             var list = new List<int> {1, 2, 3, 4, 5};

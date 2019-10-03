@@ -40,34 +40,37 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// 2012-02-08   UGAZ   VelocityShares 3x Long Natural Gas
     /// 2012-02-15   TAN    Invesco Solar ETF
     /// </summary>
-	public class EnergyETFUniverse : BaseETFUniverseSelectionModel
+	public class EnergyETFUniverse : InceptionDateUniverseSelectionModel
     {
         /// <summary>
         /// Initializes a new instance of the EnergyETFUniverse class
         /// </summary>
         public EnergyETFUniverse() :
-            base(new Dictionary<string, DateTime>()
-            {
-                {"XLE", new DateTime(1998, 12, 22)},
-                {"IYE", new DateTime(2000,  6, 16)},
-                {"VDE", new DateTime(2004,  9, 29)},
-                {"USO", new DateTime(2006,  4, 10)},
-                {"XES", new DateTime(2006,  6, 22)},
-                {"XOP", new DateTime(2006,  6, 22)},
-                {"UNG", new DateTime(2007,  4, 18)},
-                {"ICLN", new DateTime(2008,  6, 25)},
-                {"ERX", new DateTime(2008, 11,  6)},
-                {"ERY", new DateTime(2008, 11,  6)},
-                {"SCO", new DateTime(2008, 11, 25)},
-                {"UCO", new DateTime(2008, 11, 25)},
-                {"AMJ", new DateTime(2009,  6,  2)},
-                {"BNO", new DateTime(2010,  6,  2)},
-                {"AMLP", new DateTime(2010,  8, 25)},
-                {"OIH", new DateTime(2011, 12, 21)},
-                {"DGAZ", new DateTime(2012,  2,  8)},
-                {"UGAZ", new DateTime(2012,  2,  8)},
-                {"TAN", new DateTime(2012,  2, 15)}
-            })
+            base(
+                "qc-energy-etf-basket",
+                new Dictionary<string, DateTime>()
+                {
+                    {"XLE", new DateTime(1998, 12, 22)},
+                    {"IYE", new DateTime(2000, 6, 16)},
+                    {"VDE", new DateTime(2004, 9, 29)},
+                    {"USO", new DateTime(2006, 4, 10)},
+                    {"XES", new DateTime(2006, 6, 22)},
+                    {"XOP", new DateTime(2006, 6, 22)},
+                    {"UNG", new DateTime(2007, 4, 18)},
+                    {"ICLN", new DateTime(2008, 6, 25)},
+                    {"ERX", new DateTime(2008, 11, 6)},
+                    {"ERY", new DateTime(2008, 11, 6)},
+                    {"SCO", new DateTime(2008, 11, 25)},
+                    {"UCO", new DateTime(2008, 11, 25)},
+                    {"AMJ", new DateTime(2009, 6, 2)},
+                    {"BNO", new DateTime(2010, 6, 2)},
+                    {"AMLP", new DateTime(2010, 8, 25)},
+                    {"OIH", new DateTime(2011, 12, 21)},
+                    {"DGAZ", new DateTime(2012, 2, 8)},
+                    {"UGAZ", new DateTime(2012, 2, 8)},
+                    {"TAN", new DateTime(2012, 2, 15)}
+                }
+            )
         {
 
         }

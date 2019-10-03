@@ -148,7 +148,7 @@
     <Compile Include="Selection\ScheduledUniverseSelectionModel.cs" />
     <Compile Include="Selection\QC500UniverseSelectionModel.cs" />
     <Compile Include="Alphas\HistoricalReturnsAlphaModel.cs" />
-    <Compile Include="Selection\BaseETFUniverseSelectionModel.cs" />
+    <Compile Include="Selection\InceptionDateUniverseSelectionModel.cs" />
     <Compile Include="Selection\EnergyETFUniverse.cs" />
     <Compile Include="Selection\MetalsETFUniverse.cs" />
     <Compile Include="Selection\SP500SectorsETFUniverse.cs" />
