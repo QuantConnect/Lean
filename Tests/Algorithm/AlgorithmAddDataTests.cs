@@ -174,11 +174,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(data.Price, 2);
         }
 
-        [TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Cfd, false, true)]
-        [TestCase("BTCUSD", typeof(PsychSignalSentimentData), SecurityType.Crypto, false, true)]
-        [TestCase("CL", typeof(PsychSignalSentimentData), SecurityType.Future, false, true)]
-        [TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Forex, false, true)]
-        [TestCase("AAPL", typeof(PsychSignalSentimentData), SecurityType.Equity, true, true)]
+        [TestCase("EURUSD", typeof(PsychSignalSentiment), SecurityType.Cfd, false, true)]
+        [TestCase("BTCUSD", typeof(PsychSignalSentiment), SecurityType.Crypto, false, true)]
+        [TestCase("CL", typeof(PsychSignalSentiment), SecurityType.Future, false, true)]
+        [TestCase("EURUSD", typeof(PsychSignalSentiment), SecurityType.Forex, false, true)]
+        [TestCase("AAPL", typeof(PsychSignalSentiment), SecurityType.Equity, true, true)]
         [TestCase("EURUSD", typeof(TradingEconomicsCalendar), SecurityType.Cfd, false, false)]
         [TestCase("BTCUSD", typeof(TradingEconomicsCalendar), SecurityType.Crypto, false, false)]
         [TestCase("CL", typeof(TradingEconomicsCalendar), SecurityType.Future, false, false)]
@@ -240,11 +240,11 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        [TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Cfd, false, false)]
-        [TestCase("BTCUSD", typeof(PsychSignalSentimentData), SecurityType.Crypto, false, false)]
-        [TestCase("CL", typeof(PsychSignalSentimentData), SecurityType.Future, false, false)]
-        [TestCase("EURUSD", typeof(PsychSignalSentimentData), SecurityType.Forex, false, false)]
-        [TestCase("AAPL", typeof(PsychSignalSentimentData), SecurityType.Equity, true, true)]
+        [TestCase("EURUSD", typeof(PsychSignalSentiment), SecurityType.Cfd, false, false)]
+        [TestCase("BTCUSD", typeof(PsychSignalSentiment), SecurityType.Crypto, false, false)]
+        [TestCase("CL", typeof(PsychSignalSentiment), SecurityType.Future, false, false)]
+        [TestCase("EURUSD", typeof(PsychSignalSentiment), SecurityType.Forex, false, false)]
+        [TestCase("AAPL", typeof(PsychSignalSentiment), SecurityType.Equity, true, true)]
         public void AddDataSecurityTickerWithUnderlying(string ticker, Type customDataType, SecurityType securityType, bool securityShouldBeMapped, bool customDataShouldBeMapped)
         {
             SymbolCache.Clear();
@@ -382,10 +382,10 @@ namespace QuantConnect.Tests.Algorithm
             }
         }
 
-        [TestCase("AAPL", typeof(PsychSignalSentimentData), true)]
-        [TestCase("TWX", typeof(PsychSignalSentimentData), true)]
-        [TestCase("FB", typeof(PsychSignalSentimentData), true)]
-        [TestCase("NFLX", typeof(PsychSignalSentimentData), true)]
+        [TestCase("AAPL", typeof(PsychSignalSentiment), true)]
+        [TestCase("TWX", typeof(PsychSignalSentiment), true)]
+        [TestCase("FB", typeof(PsychSignalSentiment), true)]
+        [TestCase("NFLX", typeof(PsychSignalSentiment), true)]
         [TestCase("TWX", typeof(TradingEconomicsCalendar), false)]
         [TestCase("AAPL", typeof(TradingEconomicsCalendar), false)]
         public void AddDataOptionsSymbolHasChainedUnderlyingSymbols(string ticker, Type customDataType, bool customDataShouldBeMapped)
@@ -417,10 +417,10 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual($"?{assetSubscription.MappedSymbol}", customDataSubscription.MappedSymbol);
         }
 
-        [TestCase("AAPL", typeof(PsychSignalSentimentData))]
-        [TestCase("TWX", typeof(PsychSignalSentimentData))]
-        [TestCase("FB", typeof(PsychSignalSentimentData))]
-        [TestCase("NFLX", typeof(PsychSignalSentimentData))]
+        [TestCase("AAPL", typeof(PsychSignalSentiment))]
+        [TestCase("TWX", typeof(PsychSignalSentiment))]
+        [TestCase("FB", typeof(PsychSignalSentiment))]
+        [TestCase("NFLX", typeof(PsychSignalSentiment))]
         public void AddDataOptionsTickerHasChainedUnderlyingSymbol(string ticker, Type customDataType)
         {
             SymbolCache.Clear();
