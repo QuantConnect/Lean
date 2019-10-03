@@ -173,6 +173,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QCAlgorithm.Universe.cs" />
     <Compile Include="Selection\CompositeUniverseSelectionModel.cs" />
+    <Compile Include="Selection\CustomUniverse.cs" />
+    <Compile Include="Selection\CustomUniverseSelectionModel.cs" />
     <Compile Include="Selection\IUniverseSelectionModel.cs" />
     <Compile Include="Selection\ManualUniverse.cs" />
     <Compile Include="Selection\ManualUniverseSelectionModel.cs" />

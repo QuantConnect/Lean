@@ -37,31 +37,34 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// 2013-08-01   KWEB   KraneShares CSI China Internet ETF
     /// 2013-10-24   FTEC   Fidelity MSCI Information Technology Index ETF
     /// </summary>
-    public class TechnologyETFUniverse : BaseETFUniverseSelectionModel
+    public class TechnologyETFUniverse : InceptionDateUniverseSelectionModel
     {
         /// <summary>
         /// Initializes a new instance of the TechnologyETFUniverse class
         /// </summary>
         public TechnologyETFUniverse() :
-            base(new Dictionary<string, DateTime>()
-            {
-                {"XLK", new DateTime(1998, 12, 22)},
-                {"QQQ", new DateTime(1999,  3, 10)},
-                {"SOXX", new DateTime(2001,  7, 13)},
-                {"IGV", new DateTime(2001,  7, 13)},
-                {"VGT", new DateTime(2004,  1, 30)},
-                {"QTEC", new DateTime(2006,  4, 25)},
-                {"FDN", new DateTime(2006,  6, 23)},
-                {"FXL", new DateTime(2007,  5, 10)},
-                {"TECL", new DateTime(2008, 12, 17)},
-                {"TECS", new DateTime(2008, 12, 17)},
-                {"SOXL", new DateTime(2010,  3, 11)},
-                {"SOXS", new DateTime(2010,  3, 11)},
-                {"SKYY", new DateTime(2011,  7,  6)},
-                {"SMH", new DateTime(2011,  12, 21)},
-                {"KWEB", new DateTime(2013,  8,  1)},
-                {"FTEC", new DateTime(2013,  10, 24)}
-            })
+            base(
+                "qc-technology-etf-basket",
+                new Dictionary<string, DateTime>()
+                {
+                    {"XLK", new DateTime(1998, 12, 22)},
+                    {"QQQ", new DateTime(1999, 3, 10)},
+                    {"SOXX", new DateTime(2001, 7, 13)},
+                    {"IGV", new DateTime(2001, 7, 13)},
+                    {"VGT", new DateTime(2004, 1, 30)},
+                    {"QTEC", new DateTime(2006, 4, 25)},
+                    {"FDN", new DateTime(2006, 6, 23)},
+                    {"FXL", new DateTime(2007, 5, 10)},
+                    {"TECL", new DateTime(2008, 12, 17)},
+                    {"TECS", new DateTime(2008, 12, 17)},
+                    {"SOXL", new DateTime(2010, 3, 11)},
+                    {"SOXS", new DateTime(2010, 3, 11)},
+                    {"SKYY", new DateTime(2011, 7, 6)},
+                    {"SMH", new DateTime(2011, 12, 21)},
+                    {"KWEB", new DateTime(2013, 8, 1)},
+                    {"FTEC", new DateTime(2013, 10, 24)}
+                }
+            )
         {
 
         }

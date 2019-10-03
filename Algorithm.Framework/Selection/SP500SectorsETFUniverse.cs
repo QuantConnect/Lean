@@ -30,24 +30,27 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// 1998-12-22   XLV   Health Care Select Sector SPDR Fund
     /// 1998-12-22   XLY   Consumer Discretionary Select Sector SPDR Fund
     /// </summary>
-    public class SP500SectorsETFUniverse : BaseETFUniverseSelectionModel
+    public class SP500SectorsETFUniverse : InceptionDateUniverseSelectionModel
     {
         /// <summary>
         /// Initializes a new instance of the SP500SectorsETFUniverse class
         /// </summary>
         public SP500SectorsETFUniverse() :
-            base(new Dictionary<string, DateTime>()
-            {
-                {"XLB", new DateTime(1998, 12, 22)},
-                {"XLE", new DateTime(1998, 12, 22)},
-                {"XLF", new DateTime(1998, 12, 22)},
-                {"XLI", new DateTime(1998, 12, 22)},
-                {"XLK", new DateTime(1998, 12, 22)},
-                {"XLP", new DateTime(1998, 12, 22)},
-                {"XLU", new DateTime(1998, 12, 22)},
-                {"XLV", new DateTime(1998, 12, 22)},
-                {"XLY", new DateTime(1998, 12, 22)}
-            })
+            base(
+                "qc-sp500-sectors-etf-basket",
+                new Dictionary<string, DateTime>()
+                {
+                    {"XLB", new DateTime(1998, 12, 22)},
+                    {"XLE", new DateTime(1998, 12, 22)},
+                    {"XLF", new DateTime(1998, 12, 22)},
+                    {"XLI", new DateTime(1998, 12, 22)},
+                    {"XLK", new DateTime(1998, 12, 22)},
+                    {"XLP", new DateTime(1998, 12, 22)},
+                    {"XLU", new DateTime(1998, 12, 22)},
+                    {"XLV", new DateTime(1998, 12, 22)},
+                    {"XLY", new DateTime(1998, 12, 22)}
+                }
+            )
         {
 
         }

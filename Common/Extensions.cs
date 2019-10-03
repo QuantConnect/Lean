@@ -1426,6 +1426,50 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Convert a <see cref="PyObject"/> into a managed dictionary
+        /// </summary>
+        /// <typeparam name="TKey">Target type of the resulting dictionary key</typeparam>
+        /// <typeparam name="TValue">Target type of the resulting dictionary value</typeparam>
+        /// <param name="pyObject">PyObject to be converted</param>
+        /// <returns>Dictionary of TValue keyed by TKey</returns>
+        public static Dictionary<TKey, TValue> ConvertToDictionary<TKey, TValue>(this PyObject pyObject)
+        {
+            var result = new List<KeyValuePair<TKey, TValue>>();
+            using (Py.GIL())
+            {
+                var inputType = pyObject.GetPythonType().ToString();
+                var targetType = nameof(PyDict);
+
+                try
+                {
+                    using (var pyDict = new PyDict(pyObject))
+                    {
+                        targetType = $"{typeof(TKey).Name}: {typeof(TValue).Name}";
+
+                        foreach (PyObject item in pyDict.Items())
+                        {
+                            inputType = $"{item[0].GetPythonType()}: {item[1].GetPythonType()}";
+
+                            var key = item[0].As<TKey>();
+                            var value = item[1].As<TValue>();
+
+                            result.Add(new KeyValuePair<TKey, TValue>(key, value));
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw new ArgumentException(
+                        $"ConvertToDictionary cannot be used to convert a {inputType} into {targetType}. Reason: {e.Message}",
+                        e
+                    );
+                }
+            }
+
+            return result.ToDictionary();
+        }
+
+        /// <summary>
         /// Gets Enumerable of <see cref="Symbol"/> from a PyObject
         /// </summary>
         /// <param name="pyObject">PyObject containing Symbol or Array of Symbol</param>

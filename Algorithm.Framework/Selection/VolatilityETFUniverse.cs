@@ -31,25 +31,28 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// 2011-10-20   EFAV   iShares Edge MSCI Min Vol EAFE ETF
     /// 2011-10-20   USMV   iShares Edge MSCI Min Vol USA ETF
     /// </summary>
-    public class VolatilityETFUniverse : BaseETFUniverseSelectionModel
+    public class VolatilityETFUniverse : InceptionDateUniverseSelectionModel
     {
         /// <summary>
         /// Initializes a new instance of the VolatilityETFUniverse class
         /// </summary>
         public VolatilityETFUniverse() :
-            base(new Dictionary<string, DateTime>()
-            {
-                {"SQQQ", new DateTime(2010,  2, 11)},
-                {"TQQQ", new DateTime(2010,  2, 11)},
-                {"TVIX", new DateTime(2010,  11, 30)},
-                {"VIXY", new DateTime(2011,  1,  4)},
-                {"SPLV", new DateTime(2011,  5,  5)},
-                {"SVXY", new DateTime(2011,  10,  4)},
-                {"UVXY", new DateTime(2011,  10,  4)},
-                {"EEMV", new DateTime(2011,  10,  20)},
-                {"EFAV", new DateTime(2011,  10,  20)},
-                {"USMV", new DateTime(2011,  10,  20)}
-            })
+            base(
+                "qc-volatility-etf-basket",
+                new Dictionary<string, DateTime>()
+                {
+                    {"SQQQ", new DateTime(2010, 2, 11)},
+                    {"TQQQ", new DateTime(2010, 2, 11)},
+                    {"TVIX", new DateTime(2010, 11, 30)},
+                    {"VIXY", new DateTime(2011, 1, 4)},
+                    {"SPLV", new DateTime(2011, 5, 5)},
+                    {"SVXY", new DateTime(2011, 10, 4)},
+                    {"UVXY", new DateTime(2011, 10, 4)},
+                    {"EEMV", new DateTime(2011, 10, 20)},
+                    {"EFAV", new DateTime(2011, 10, 20)},
+                    {"USMV", new DateTime(2011, 10, 20)}
+                }
+            )
         {
 
         }
