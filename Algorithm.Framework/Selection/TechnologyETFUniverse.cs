@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 {"IGV", new DateTime(2001,  7, 13)},
                 {"VGT", new DateTime(2004,  1, 30)},
                 {"QTEC", new DateTime(2006,  4, 25)},
-                {"FND", new DateTime(2006,  6, 23)},
+                {"FDN", new DateTime(2006,  6, 23)},
                 {"FXL", new DateTime(2007,  5, 10)},
                 {"TECL", new DateTime(2008, 12, 17)},
                 {"TECS", new DateTime(2008, 12, 17)},
