@@ -35,10 +35,8 @@ class PsychSignalSentimentAlgorithm(QCAlgorithm):
         self.SetStartDate(2018, 3, 1)
         self.SetEndDate(2018, 10, 1)
         self.SetCash(100000)
-
         self.AddUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseUniverse))
         self.timeEntered = datetime(1, 1, 1)
-        self.sentimentSymbols = []
 
     # You can use custom data with a universe of assets.
     def CoarseUniverse(self, coarse):
