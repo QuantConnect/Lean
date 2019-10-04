@@ -24,10 +24,10 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class PythonIndicatorNoinheritanceTests : PythonIndicatorTests
+    public class PythonIndicatorNoinheritanceTestsLegacy : PythonIndicatorTests
     {
         /// <summary>
-        /// In this Custom Indicator, Update returns a boolean
+        /// In this Custom Indicator, Update returns void
         /// </summary>
         protected override IndicatorBase<IBaseData> CreateIndicator()
         {
@@ -53,7 +53,6 @@ class CustomSimpleMovingAverage():
         count = len(self.queue)
         self.Value = sum(self.queue) / count
         self.IsReady = count == self.queue.maxlen
-        return self.IsReady
 "
                 );
                 var indicator = module.GetAttr("CustomSimpleMovingAverage")
