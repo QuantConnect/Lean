@@ -355,6 +355,7 @@
     <Compile Include="Engine\DataFeeds\SubscriptionTests.cs" />
     <Compile Include="Engine\HistoricalData\SubscriptionDataReaderHistoryProviderTests.cs" />
     <Compile Include="Engine\RealTime\BacktestingRealTimeHandlerTests.cs" />
+    <Compile Include="Indicators\PythonIndicatorNoinheritanceTestsLegacy.cs" />
     <Compile Include="Indicators\PythonIndicatorNoinheritanceTests.cs" />
     <Compile Include="Indicators\PythonIndicatorTests.cs" />
     <Compile Include="PythonSetup.cs" />
