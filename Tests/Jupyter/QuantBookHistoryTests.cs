@@ -17,6 +17,7 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Securities;
 using System;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Jupyter
 {
@@ -132,7 +133,7 @@ namespace QuantConnect.Tests.Jupyter
         }
 
         [Test]
-        public void OptionQuantBookHistoryTests()
+        public void CanonicalOptionQuantBookHistoryTests()
         {
             using (Py.GIL())
             {
@@ -142,13 +143,31 @@ namespace QuantConnect.Tests.Jupyter
 
                 // Get the one day of data, ending on start date
                 var startEndHistory = securityTestHistory.test_daterange_overload(startDate);
+                Console.WriteLine(startEndHistory.ToString());
                 var firstIndex = (DateTime) (startEndHistory.index.values[0][4] as PyObject).AsManagedObject(typeof(DateTime));
                 Assert.GreaterOrEqual(startDate.AddDays(-1).Date, firstIndex.Date);
             }
         }
 
         [Test]
-        public void FutureQuantBookHistoryTests()
+        public void OptionContractQuantBookHistoryTests()
+        {
+            using (Py.GIL())
+            {
+                var symbol = Symbol.CreateOption("TWX", Market.USA, OptionStyle.American, OptionRight.Call, 70, new DateTime(2015, 01, 17));
+                var startDate = new DateTime(2014, 6, 6);
+                var securityTestHistory = _module.OptionContractHistoryTest(startDate, SecurityType.Option, symbol);
+
+                // Get the one day of data, ending on start date
+                var startEndHistory = securityTestHistory.test_daterange_overload(startDate);
+                Console.WriteLine(startEndHistory.ToString());
+                var firstIndex = (DateTime)(startEndHistory.index.values[0][4] as PyObject).AsManagedObject(typeof(DateTime));
+                Assert.GreaterOrEqual(startDate.AddDays(-1).Date, firstIndex.Date);
+            }
+        }
+
+        [Test]
+        public void CanonicalFutureQuantBookHistory()
         {
             using (Py.GIL())
             {
@@ -158,7 +177,25 @@ namespace QuantConnect.Tests.Jupyter
 
                 // Get the one day of data, ending on start date
                 var startEndHistory = securityTestHistory.test_daterange_overload(startDate);
+                Console.WriteLine(startEndHistory.ToString());
                 var firstIndex = (DateTime) (startEndHistory.index.values[0][2] as PyObject).AsManagedObject(typeof(DateTime));
+                Assert.GreaterOrEqual(startDate.AddDays(-1).Date, firstIndex.Date);
+            }
+        }
+
+        [Test]
+        public void FutureContractQuantBookHistory()
+        {
+            using (Py.GIL())
+            {
+                var symbol = Symbol.CreateFuture("ES", Market.USA, new DateTime(2014, 12, 19));
+                var startDate = new DateTime(2013, 10, 11);
+                var securityTestHistory = _module.FutureContractHistoryTest(startDate, SecurityType.Future, symbol);
+
+                // Get the one day of data, ending on start date
+                var startEndHistory = securityTestHistory.test_daterange_overload(startDate);
+                Console.WriteLine(startEndHistory.ToString());
+                var firstIndex = (DateTime)(startEndHistory.index.values[0][2] as PyObject).AsManagedObject(typeof(DateTime));
                 Assert.GreaterOrEqual(startDate.AddDays(-1).Date, firstIndex.Date);
             }
         }
