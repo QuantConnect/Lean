@@ -338,6 +338,7 @@
     <Compile Include="Common\Util\ValidateTests.cs" />
     <Compile Include="Engine\Alphas\InsightAnalysisContextTests.cs" />
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BacktestingTransactionHandlerTests.cs" />
+    <Compile Include="Engine\DataFeeds\BacktestingFutureChainProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerStub.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\Factories\OptionChainUniverseSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\DelistingEnumeratorTests.cs" />

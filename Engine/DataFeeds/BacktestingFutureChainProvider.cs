@@ -44,11 +44,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // build the zip file name for open interest data
             var zipFileName = LeanData.GenerateZipFilePath(Globals.DataFolder, symbol, date, Resolution.Minute, TickType.OpenInterest);
-
             if (!File.Exists(zipFileName))
             {
-                Log.Trace($"BacktestingFutureChainProvider.GetFutureContractList(): File not found: {zipFileName}");
-                yield break;
+                // lets give quote a chance - some futures do not have an open interest file
+                var zipFileNameQuote = LeanData.GenerateZipFilePath(Globals.DataFolder, symbol, date, Resolution.Minute, TickType.Quote);
+                if (!File.Exists(zipFileNameQuote))
+                {
+                    Log.Error($"BacktestingFutureChainProvider.GetFutureContractList(): Failed, files not found: {zipFileName} {zipFileNameQuote}");
+                    yield break;
+                }
+                zipFileName = zipFileNameQuote;
             }
 
             // generate and return the contract symbol for each zip entry

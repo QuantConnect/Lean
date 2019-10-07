@@ -222,17 +222,16 @@ namespace QuantConnect.Jupyter
 
             var future = Securities[symbol] as Future;
 
-            var allSymbols = new List<Symbol>();
+            var allSymbols = new HashSet<Symbol>();
             for (var date = start; date < end; date = date.AddDays(1))
             {
                 if (future.Exchange.DateIsOpen(date))
                 {
-                    allSymbols.AddRange(FutureChainProvider.GetFutureContractList(future.Symbol, date));
+                    allSymbols.UnionWith(FutureChainProvider.GetFutureContractList(future.Symbol, date));
                 }
             }
-            var symbols = allSymbols.Distinct();
 
-            return new FutureHistory(History(symbols, start, end.Value, resolution));
+            return new FutureHistory(History(allSymbols, start, end.Value, resolution));
         }
 
         /// <summary>
