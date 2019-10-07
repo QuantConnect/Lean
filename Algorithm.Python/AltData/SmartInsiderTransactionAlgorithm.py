@@ -28,7 +28,7 @@ class SmartInsiderTransactionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         self.SetStartDate(2019, 3, 1)
-        self.SetEndDate(2019, 8, 30)
+        self.SetEndDate(2019, 7, 4)
         self.SetCash(1000000)
 
         self.AddUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseUniverse))
@@ -54,3 +54,9 @@ class SmartInsiderTransactionAlgorithm(QCAlgorithm):
             # Using the SmartInsider transaction information, buy when company does a stock buyback
             if transaction.BuybackType == "Transaction" and transaction.VolumePercentage > 5:
                 self.SetHoldings(transaction.Symbol.Underlying, transaction.VolumePercentage / 100)
+
+    def OnSecuritiesChanged(self, changes):
+        for r in [i for i in changes.RemovedSecurities if i.Symbol.SecurityType == SecurityType.Equity]:
+            # If removed from the universe, liquidate and remove the custom data from the algorithm
+            self.Liquidate(r.Symbol)
+            self.RemoveSecurity(Symbol.CreateBase(SmartInsiderTransaction, r.Symbol, Market.USA))

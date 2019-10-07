@@ -75,5 +75,15 @@ namespace QuantConnect.Algorithm.CSharp
                 SetHoldings(equitySymbol, 1m / longEquitySymbols.Count);
             }
         }
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            foreach (var r in changes.RemovedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Equity))
+            {
+                // If removed from the universe, liquidate and remove the custom data from the algorithm
+                Liquidate(r.Symbol);
+                RemoveSecurity(QuantConnect.Symbol.CreateBase(typeof(SECReport8K), r.Symbol, Market.USA));
+            }
+        }
     }
 }
