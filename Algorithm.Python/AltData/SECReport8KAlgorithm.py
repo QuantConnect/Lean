@@ -58,3 +58,9 @@ class SECReport8KAlgorithm(QCAlgorithm):
 
         for equitySymbol in longEquitySymbols:
             self.SetHoldings(equitySymbol, 1.0 / len(longEquitySymbols))
+
+    def OnSecuritiesChanged(self, changes):
+        for r in [i for i in changes.RemovedSecurities if i.Symbol.SecurityType == SecurityType.Equity]:
+            # If removed from the universe, liquidate and remove the custom data from the algorithm
+            self.Liquidate(r.Symbol)
+            self.RemoveSecurity(Symbol.CreateBase(SECReport8K, r.Symbol, Market.USA))

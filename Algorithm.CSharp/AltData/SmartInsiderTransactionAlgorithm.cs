@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             SetStartDate(2019, 3, 1);
-            SetEndDate(2019, 8, 30);
+            SetEndDate(2019, 7, 4);
             SetCash(1000000);
 
             AddUniverseSelection(new CoarseFundamentalUniverseSelectionModel(CoarseUniverse));
@@ -66,6 +66,16 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     SetHoldings(transaction.Symbol.Underlying, (decimal)transaction.VolumePercentage / 100);
                 }
+            }
+        }
+
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            foreach (var r in changes.RemovedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Equity))
+            {
+                // If removed from the universe, liquidate and remove the custom data from the algorithm
+                Liquidate(r.Symbol);
+                RemoveSecurity(QuantConnect.Symbol.CreateBase(typeof(SmartInsiderTransaction), r.Symbol, Market.USA));
             }
         }
     }
