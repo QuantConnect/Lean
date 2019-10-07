@@ -45,15 +45,35 @@ class SecurityHistoryTest():
         return history[self.column].unstack(level=0)
 
 class OptionHistoryTest(SecurityHistoryTest):
-    def test_daterange_overload(self, end):
-        start = end - timedelta(1)
+    def test_daterange_overload(self, end, start = None):
+        if start is None:
+            start = end - timedelta(1)
         history = self.qb.GetOptionHistory(self.symbol, start, end)
         return history.GetAllData()
 
 class FutureHistoryTest(SecurityHistoryTest):
+    def test_daterange_overload(self, end, start = None):
+        if start is None:
+            start = end - timedelta(1)
+        history = self.qb.GetFutureHistory(self.symbol, start, end)
+        return history.GetAllData()
+
+class FutureContractHistoryTest():
+    def __init__(self, start_date, security_type, symbol):
+        self.qb = QuantBook()
+        self.qb.SetStartDate(start_date)
+        self.symbol = symbol
+        self.column = 'close'
+
     def test_daterange_overload(self, end):
         start = end - timedelta(1)
         history = self.qb.GetFutureHistory(self.symbol, start, end)
+        return history.GetAllData()
+
+class OptionContractHistoryTest(FutureContractHistoryTest):
+    def test_daterange_overload(self, end):
+        start = end - timedelta(1)
+        history = self.qb.GetOptionHistory(self.symbol, start, end)
         return history.GetAllData()
 
 class CustomDataHistoryTest(SecurityHistoryTest):
