@@ -60,6 +60,7 @@
     <Content Include="Alphas\ShareClassMeanReversionAlpha.py" />
     <Content Include="Alphas\TripleLeverageETFPairVolatilityDecayAlpha.py" />
     <Content Include="Alphas\VIXDualThrustAlpha.py" />
+    <Content Include="AltData\USTreasuryYieldCurveRateAlgorithm.py" />
     <Content Include="AltData\PsychSignalSentimentAlgorithm.py" />
     <Content Include="AltData\TradingEconomicsAlgorithm.py" />
     <Content Include="AltData\TiingoNewsAlgorithm.py" />
