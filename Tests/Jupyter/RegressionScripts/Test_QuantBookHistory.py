@@ -45,14 +45,16 @@ class SecurityHistoryTest():
         return history[self.column].unstack(level=0)
 
 class OptionHistoryTest(SecurityHistoryTest):
-    def test_daterange_overload(self, end):
-        start = end - timedelta(1)
+    def test_daterange_overload(self, end, start = None):
+        if start is None:
+            start = end - timedelta(1)
         history = self.qb.GetOptionHistory(self.symbol, start, end)
         return history.GetAllData()
 
 class FutureHistoryTest(SecurityHistoryTest):
-    def test_daterange_overload(self, end):
-        start = end - timedelta(1)
+    def test_daterange_overload(self, end, start = None):
+        if start is None:
+            start = end - timedelta(1)
         history = self.qb.GetFutureHistory(self.symbol, start, end)
         return history.GetAllData()
 

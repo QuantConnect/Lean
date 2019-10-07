@@ -181,7 +181,7 @@ namespace QuantConnect.Jupyter
         /// <returns>A <see cref="OptionHistory"/> object that contains historical option data.</returns>
         public OptionHistory GetOptionHistory(Symbol symbol, DateTime start, DateTime? end = null, Resolution? resolution = null)
         {
-            if (!end.HasValue || end.Value.Date == start.Date)
+            if (!end.HasValue || end.Value == start)
             {
                 end = start.AddDays(1);
             }
@@ -230,7 +230,7 @@ namespace QuantConnect.Jupyter
         /// <returns>A <see cref="FutureHistory"/> object that contains historical future data.</returns>
         public FutureHistory GetFutureHistory(Symbol symbol, DateTime start, DateTime? end = null, Resolution? resolution = null)
         {
-            if (!end.HasValue || end.Value.Date == start.Date)
+            if (!end.HasValue || end.Value == start)
             {
                 end = start.AddDays(1);
             }
