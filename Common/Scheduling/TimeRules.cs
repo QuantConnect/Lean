@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
+using QuantConnect.Data;
 using QuantConnect.Securities;
 using static QuantConnect.StringExtensions;
 
@@ -108,6 +109,9 @@ namespace QuantConnect.Scheduling
         public ITimeRule At(TimeSpan timeOfDay, DateTimeZone timeZone)
         {
             var name = string.Join(",", timeOfDay.TotalHours.ToStringInvariant("0.##"));
+
+            ValidateInterval(name, timeOfDay);
+
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
                 from date in dates
                 let localEventTime = date + timeOfDay
@@ -128,7 +132,11 @@ namespace QuantConnect.Scheduling
             {
                 throw new ArgumentException("TimeRules.Every(): time span interval can not be zero or less");
             }
+
             var name = Invariant($"Every {interval.TotalMinutes:0.##} min");
+
+            ValidateInterval(name, interval);
+
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates => EveryIntervalIterator(dates, interval);
             return new FuncTimeRule(name, applicator);
         }
@@ -149,6 +157,9 @@ namespace QuantConnect.Scheduling
             var name = Invariant($"{symbol}: {minutesAfterOpen:0.##} min after {type}");
 
             var timeAfterOpen = TimeSpan.FromMinutes(minutesAfterOpen);
+
+            ValidateInterval(name, timeAfterOpen, security);
+
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
                 from date in dates
                 where security.Exchange.DateIsOpen(date)
@@ -175,6 +186,9 @@ namespace QuantConnect.Scheduling
             var name = Invariant($"{security.Symbol}: {minutesBeforeClose:0.##} min before {type}");
 
             var timeBeforeClose = TimeSpan.FromMinutes(minutesBeforeClose);
+
+            ValidateInterval(name, timeBeforeClose, security);
+
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates =>
                 from date in dates
                 where security.Exchange.DateIsOpen(date)
@@ -213,6 +227,30 @@ namespace QuantConnect.Scheduling
                 {
                     yield return date + time;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Check whether the data resolution is compatible with a interval defined by a <see cref="ITimeRule"/>. 
+        /// </summary>
+        /// <param name="name"><see cref="ITimeRule"/> name</param>
+        /// <param name="interval">The interval defined by a <see cref="ITimeRule"/></param>
+        /// <param name="security">The security with the data subscriptions. If not defined, will use all the available securities</param>
+        public void ValidateInterval(string name, TimeSpan interval, Security security = null)
+        {
+            var resolution = (security?.Subscriptions ?? _securities.SelectMany(x => x.Value.Subscriptions))
+                .GetHighestResolution();
+
+            if (resolution == Resolution.Daily && interval != TimeSpan.Zero ||
+                resolution == Resolution.Hour && interval.TotalHours - interval.Hours > 0)
+            {
+                Logging.Log.Trace(
+                    $"{name} : Scheduled Event API that runs at a frequency that is greater than the data resolution. " +
+                    "The data resolution must greater than or equal to the frequency with which the scheduled event occurs. " +
+                    "e.g., daily data cannot be used with a Scheduled Event set to run every 6 hours. " +
+                    $"Data resolution: {resolution}. Frequency: {interval.TotalMinutes:0.##} min." +
+                    "For more details, please check out the documentation at https://www.quantconnect.com/docs/"
+                );
             }
         }
     }
