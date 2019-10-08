@@ -11,6 +11,12 @@
 #r "Accord.Math.dll"
 #r "MathNet.Numerics.dll"
 #r "Newtonsoft.Json.dll"
+#r "QuantConnect.AlgorithmFactory.dll"
+#r "QuantConnect.Logging.dll"
+#r "QuantConnect.Messaging.dll"
+#r "QuantConnect.Configuration.dll"
+#r "QuantConnect.Lean.Engine.dll"
+#r "QuantConnect.Algorithm.CSharp.dll"
 // Note: #r directives must be in the beggining of the file
 
 /*
@@ -35,10 +41,39 @@
  * Usage:
  * #load "QuantConnect.csx"
 */
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Globalization;
 using QuantConnect;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework;
+using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Execution;
+using QuantConnect.Algorithm.Framework.Risk;
+using QuantConnect.Parameters;
+using QuantConnect.Benchmarks;
+using QuantConnect.Brokerages;
+using QuantConnect.Util;
+using QuantConnect.Interfaces;
 using QuantConnect.Indicators;
 using QuantConnect.Jupyter;
-using QCAlgorithmFramework = QuantConnect.Algorithm.QCAlgorithm;
-using QCAlgorithmFrameworkBridge = QuantConnect.Algorithm.QCAlgorithm;
+using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
+using QuantConnect.Data.Custom;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Notifications;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
+using QuantConnect.Scheduling;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Equity;
+using QuantConnect.Securities.Forex;
+using QuantConnect.Securities.Interfaces;
