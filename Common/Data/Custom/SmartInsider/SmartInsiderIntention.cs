@@ -51,9 +51,9 @@ namespace QuantConnect.Data.Custom.SmartInsider
         public string ValueCurrency { get; set; }
 
         /// <summary>
-        /// Valueof shares to be authorised to be traded
+        /// Value of shares to be authorised to be traded
         /// </summary>
-        public long? SharesAuthorized { get; set; }
+        public long? AmountValue { get; set; }
 
         /// <summary>
         /// Percentage of oustanding shares to be authorised to be traded
@@ -109,7 +109,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
             ExecutionHolding = string.IsNullOrWhiteSpace(tsv[28]) ? (SmartInsiderExecutionHolding?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[28]}\"");
             Amount = string.IsNullOrWhiteSpace(tsv[29]) ? (int?)null : Convert.ToInt32(tsv[29], CultureInfo.InvariantCulture);
             ValueCurrency = string.IsNullOrWhiteSpace(tsv[30]) ? null : tsv[30];
-            SharesAuthorized = string.IsNullOrWhiteSpace(tsv[31]) ? (long?)null : Convert.ToInt64(tsv[31], CultureInfo.InvariantCulture);
+            AmountValue = string.IsNullOrWhiteSpace(tsv[31]) ? (long?)null : Convert.ToInt64(tsv[31], CultureInfo.InvariantCulture);
             Percentage = string.IsNullOrWhiteSpace(tsv[32]) ? (decimal?)null : Convert.ToDecimal(tsv[32], CultureInfo.InvariantCulture);
             AuthorizationStartDate = string.IsNullOrWhiteSpace(tsv[33]) ? (DateTime?)null : DateTime.ParseExact(tsv[33], "yyyyMMdd", CultureInfo.InvariantCulture);
             AuthorizationEndDate = string.IsNullOrWhiteSpace(tsv[34]) ? (DateTime?)null : DateTime.ParseExact(tsv[34], "yyyyMMdd", CultureInfo.InvariantCulture);
@@ -161,7 +161,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
             ExecutionHolding = string.IsNullOrWhiteSpace(tsv[45]) ? (SmartInsiderExecutionHolding?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[45]}\"");
             Amount = string.IsNullOrWhiteSpace(tsv[46]) ? (int?)null : Convert.ToInt32(tsv[46], CultureInfo.InvariantCulture);
             ValueCurrency = string.IsNullOrWhiteSpace(tsv[47]) ? null : tsv[47];
-            SharesAuthorized = string.IsNullOrWhiteSpace(tsv[48]) ? (long?)null : Convert.ToInt64(tsv[48], CultureInfo.InvariantCulture);
+            AmountValue = string.IsNullOrWhiteSpace(tsv[48]) ? (long?)null : Convert.ToInt64(tsv[48], CultureInfo.InvariantCulture);
             Percentage = string.IsNullOrWhiteSpace(tsv[49]) ? (decimal?)null : Convert.ToDecimal(tsv[49], CultureInfo.InvariantCulture);
             AuthorizationStartDate = string.IsNullOrWhiteSpace(tsv[50]) ? (DateTime?)null : DateTime.ParseExact(tsv[50], "yyyy-MM-dd", CultureInfo.InvariantCulture);
             AuthorizationEndDate = string.IsNullOrWhiteSpace(tsv[51]) ? (DateTime?)null : DateTime.ParseExact(tsv[51], "yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -256,7 +256,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
                 ExecutionHolding = ExecutionHolding,
                 Amount = Amount,
                 ValueCurrency = ValueCurrency,
-                SharesAuthorized = SharesAuthorized,
+                AmountValue = AmountValue,
                 Percentage = Percentage,
                 AuthorizationStartDate = AuthorizationStartDate,
                 AuthorizationEndDate = AuthorizationEndDate,
@@ -306,7 +306,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
                 JsonConvert.SerializeObject(ExecutionHolding).Replace("\"", ""),
                 Amount,
                 ValueCurrency,
-                SharesAuthorized,
+                AmountValue,
                 Percentage,
                 AuthorizationStartDate?.ToStringInvariant("yyyyMMdd"),
                 AuthorizationEndDate?.ToStringInvariant("yyyyMMdd"),
