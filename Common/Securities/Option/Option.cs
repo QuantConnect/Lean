@@ -174,6 +174,16 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Gets the most recent bid price if available
+        /// </summary>
+        public override decimal BidPrice => Cache.BidPrice;
+
+        /// <summary>
+        /// Gets the most recent ask price if available
+        /// </summary>
+        public override decimal AskPrice => Cache.AskPrice;
+
+        /// <summary>
         /// When the holder of an equity option exercises one contract, or when the writer of an equity option is assigned
         /// an exercise notice on one contract, this unit of trade, usually 100 shares of the underlying security, changes hands.
         /// </summary>
