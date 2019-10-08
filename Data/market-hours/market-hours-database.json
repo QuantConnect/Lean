@@ -28079,7 +28079,7 @@
     },
     "Cfd-oanda-SG30SGD": {
       "dataTimeZone": "UTC",
-      "exchangeTimeZone": "UTC",
+      "exchangeTimeZone": "Asia/Singapore",
       "sunday": [
         {
           "start": "00:30:00",
