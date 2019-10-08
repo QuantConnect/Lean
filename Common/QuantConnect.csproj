@@ -253,6 +253,10 @@
     <Compile Include="Data\Custom\SEC\SECReport10K.cs" />
     <Compile Include="Data\Custom\SEC\SECReportIndexFile.cs" />
     <Compile Include="Data\Custom\SEC\SECReportSubmission.cs" />
+    <Compile Include="Data\Custom\SmartInsider\SmartInsiderExecutionHolding.cs" />
+    <Compile Include="Data\Custom\SmartInsider\SmartInsiderExecutionEntity.cs" />
+    <Compile Include="Data\Custom\SmartInsider\SmartInsiderEventType.cs" />
+    <Compile Include="Data\Custom\SmartInsider\SmartInsiderExecutionType.cs" />
     <Compile Include="Data\Custom\Tiingo\TiingoDailyData.cs" />
     <Compile Include="Data\Custom\Tiingo\TiingoNews.cs" />
     <Compile Include="Data\Custom\Tiingo\TiingoNewsJsonConverter.cs" />

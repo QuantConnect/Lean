@@ -58,12 +58,12 @@ class SmartInsiderDataAlgoritm(QCAlgorithm):
 
         elif isinstance(ko_data, SmartInsiderIntention):
             if not self.Portfolio.Invested and not has_open_orders:
-                if ko_data.IntentionPercentage > 0.0001:
+                if ko_data.Percentage > 0.0001:
                     self.Log(f"Buying {self.symbol.Value} due to intention to purchase stock")
                     self.SetHoldings(self.symbol, 0.50)
 
             elif self.Portfolio.Invested and not has_open_orders:
-                if ko_data.IntentionPercentage < 0.0:
+                if ko_data.Percentage < 0.0:
                     self.Log(f"Liquidating {self.symbol.Value}")
                     self.Liquidate(self.symbol)
 

@@ -13,13 +13,15 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
 using System;
 using System.Globalization;
 
 namespace QuantConnect.Data.Custom.SmartInsider
 {
     /// <summary>
-    /// SmartInsider Intention and Transaction events structure
+    /// SmartInsider Intention and Transaction events. These are fields
+    /// that are shared between intentions and transactions.
     /// </summary>
     public abstract class SmartInsiderEvent : BaseData
     {
@@ -29,9 +31,9 @@ namespace QuantConnect.Data.Custom.SmartInsider
         public string TransactionID { get; set; }
 
         /// <summary>
-        /// Row definition. Nullable
+        /// Description of what has or will take place in an execution
         /// </summary>
-        public string BuybackType { get; set; }
+        public SmartInsiderEventType? EventType { get; set; }
 
         /// <summary>
         /// The date when a transaction is updated after it has been reported. Not nullable
@@ -210,39 +212,39 @@ namespace QuantConnect.Data.Custom.SmartInsider
         }
 
         /// <summary>
-        /// Parses a line of CSV (tab delimited) from Smart Insider data
+        /// Parses a line of TSV (tab delimited) from Smart Insider data
         /// </summary>
         /// <param name="csvLine">Tab delimited line of data</param>
-        public SmartInsiderEvent(string csvLine)
+        public SmartInsiderEvent(string tsvLine)
         {
-            var csv = csvLine.Split('\t');
+            var tsv = tsvLine.Split('\t');
 
-            TransactionID = csv[0];
-            BuybackType = string.IsNullOrWhiteSpace(csv[1]) ? null : csv[1];
-            LastUpdate = DateTime.ParseExact(csv[2], "yyyyMMdd", CultureInfo.InvariantCulture);
-            LastIDsUpdate = string.IsNullOrWhiteSpace(csv[3]) ? (DateTime?)null : DateTime.ParseExact(csv[3], "yyyyMMdd", CultureInfo.InvariantCulture);
-            ISIN = string.IsNullOrWhiteSpace(csv[4]) ? null : csv[4];
-            USDMarketCap = string.IsNullOrWhiteSpace(csv[5]) ? (decimal?)null : Convert.ToDecimal(csv[5], CultureInfo.InvariantCulture);
-            CompanyID = string.IsNullOrWhiteSpace(csv[6]) ? (int?)null : Convert.ToInt32(csv[6], CultureInfo.InvariantCulture);
-            ICBIndustry = string.IsNullOrWhiteSpace(csv[7]) ? null : csv[7];
-            ICBSuperSector = string.IsNullOrWhiteSpace(csv[8]) ? null : csv[8];
-            ICBSector = string.IsNullOrWhiteSpace(csv[9]) ? null : csv[9];
-            ICBSubSector = string.IsNullOrWhiteSpace(csv[10]) ? null : csv[10];
-            ICBCode = string.IsNullOrWhiteSpace(csv[11]) ? (int?)null : Convert.ToInt32(csv[11], CultureInfo.InvariantCulture);
-            CompanyName = string.IsNullOrWhiteSpace(csv[12]) ? null : csv[12];
-            PreviousResultsAnnouncementDate = string.IsNullOrWhiteSpace(csv[13]) ? (DateTime?)null : DateTime.ParseExact(csv[13], "yyyyMMdd", CultureInfo.InvariantCulture);
-            NextResultsAnnouncementsDate = string.IsNullOrWhiteSpace(csv[14]) ? (DateTime?)null : DateTime.ParseExact(csv[14], "yyyyMMdd", CultureInfo.InvariantCulture);
-            NextCloseBegin = string.IsNullOrWhiteSpace(csv[15]) ? (DateTime?)null : DateTime.ParseExact(csv[15], "yyyyMMdd", CultureInfo.InvariantCulture);
-            LastCloseEnded = string.IsNullOrWhiteSpace(csv[16]) ? (DateTime?)null : DateTime.ParseExact(csv[16], "yyyyMMdd", CultureInfo.InvariantCulture);
-            SecurityDescription = string.IsNullOrWhiteSpace(csv[17]) ? null : csv[17];
-            TickerCountry = string.IsNullOrWhiteSpace(csv[18]) ? null : csv[18];
-            TickerSymbol = string.IsNullOrWhiteSpace(csv[19]) ? null : csv[19];
-            AnnouncementDate = string.IsNullOrWhiteSpace(csv[20]) ? (DateTime?)null : DateTime.ParseExact(csv[20], "yyyyMMdd", CultureInfo.InvariantCulture);
-            TimeReleased = string.IsNullOrWhiteSpace(csv[21]) ? (DateTime?)null : DateTime.ParseExact(csv[21], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
-            TimeProcessed = string.IsNullOrWhiteSpace(csv[22]) ? (DateTime?)null : DateTime.ParseExact(csv[22], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
-            TimeReleasedUtc = string.IsNullOrWhiteSpace(csv[23]) ? (DateTime?)null : DateTime.ParseExact(csv[23], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
-            TimeProcessedUtc = string.IsNullOrWhiteSpace(csv[24]) ? (DateTime?)null : DateTime.ParseExact(csv[24], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
-            AnnouncedIn = string.IsNullOrWhiteSpace(csv[25]) ? null : csv[25];
+            TransactionID = tsv[0];
+            EventType = string.IsNullOrWhiteSpace(tsv[1]) ? (SmartInsiderEventType?)null : JsonConvert.DeserializeObject<SmartInsiderEventType>($"\"{tsv[1]}\"");
+            LastUpdate = DateTime.ParseExact(tsv[2], "yyyyMMdd", CultureInfo.InvariantCulture);
+            LastIDsUpdate = string.IsNullOrWhiteSpace(tsv[3]) ? (DateTime?)null : DateTime.ParseExact(tsv[3], "yyyyMMdd", CultureInfo.InvariantCulture);
+            ISIN = string.IsNullOrWhiteSpace(tsv[4]) ? null : tsv[4];
+            USDMarketCap = string.IsNullOrWhiteSpace(tsv[5]) ? (decimal?)null : Convert.ToDecimal(tsv[5], CultureInfo.InvariantCulture);
+            CompanyID = string.IsNullOrWhiteSpace(tsv[6]) ? (int?)null : Convert.ToInt32(tsv[6], CultureInfo.InvariantCulture);
+            ICBIndustry = string.IsNullOrWhiteSpace(tsv[7]) ? null : tsv[7];
+            ICBSuperSector = string.IsNullOrWhiteSpace(tsv[8]) ? null : tsv[8];
+            ICBSector = string.IsNullOrWhiteSpace(tsv[9]) ? null : tsv[9];
+            ICBSubSector = string.IsNullOrWhiteSpace(tsv[10]) ? null : tsv[10];
+            ICBCode = string.IsNullOrWhiteSpace(tsv[11]) ? (int?)null : Convert.ToInt32(tsv[11], CultureInfo.InvariantCulture);
+            CompanyName = string.IsNullOrWhiteSpace(tsv[12]) ? null : tsv[12];
+            PreviousResultsAnnouncementDate = string.IsNullOrWhiteSpace(tsv[13]) ? (DateTime?)null : DateTime.ParseExact(tsv[13], "yyyyMMdd", CultureInfo.InvariantCulture);
+            NextResultsAnnouncementsDate = string.IsNullOrWhiteSpace(tsv[14]) ? (DateTime?)null : DateTime.ParseExact(tsv[14], "yyyyMMdd", CultureInfo.InvariantCulture);
+            NextCloseBegin = string.IsNullOrWhiteSpace(tsv[15]) ? (DateTime?)null : DateTime.ParseExact(tsv[15], "yyyyMMdd", CultureInfo.InvariantCulture);
+            LastCloseEnded = string.IsNullOrWhiteSpace(tsv[16]) ? (DateTime?)null : DateTime.ParseExact(tsv[16], "yyyyMMdd", CultureInfo.InvariantCulture);
+            SecurityDescription = string.IsNullOrWhiteSpace(tsv[17]) ? null : tsv[17];
+            TickerCountry = string.IsNullOrWhiteSpace(tsv[18]) ? null : tsv[18];
+            TickerSymbol = string.IsNullOrWhiteSpace(tsv[19]) ? null : tsv[19];
+            AnnouncementDate = string.IsNullOrWhiteSpace(tsv[20]) ? (DateTime?)null : DateTime.ParseExact(tsv[20], "yyyyMMdd", CultureInfo.InvariantCulture);
+            TimeReleased = string.IsNullOrWhiteSpace(tsv[21]) ? (DateTime?)null : DateTime.ParseExact(tsv[21], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+            TimeProcessed = string.IsNullOrWhiteSpace(tsv[22]) ? (DateTime?)null : DateTime.ParseExact(tsv[22], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+            TimeReleasedUtc = string.IsNullOrWhiteSpace(tsv[23]) ? (DateTime?)null : DateTime.ParseExact(tsv[23], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+            TimeProcessedUtc = string.IsNullOrWhiteSpace(tsv[24]) ? (DateTime?)null : DateTime.ParseExact(tsv[24], "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture);
+            AnnouncedIn = string.IsNullOrWhiteSpace(tsv[25]) ? null : tsv[25];
 
             // Files are made available at the earliest @ 17:00 U.K. time. Adjust this in the Reader to reflect this fact
             Time = LastUpdate;
