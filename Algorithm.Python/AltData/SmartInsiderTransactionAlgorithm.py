@@ -48,11 +48,11 @@ class SmartInsiderTransactionAlgorithm(QCAlgorithm):
 
         # Loop over all the insider transactions
         for transaction in transactions.Values:
-            if transaction.VolumePercentage is None or transaction.BuybackType is None:
+            if transaction.VolumePercentage is None or transaction.EventType is None:
                 continue
 
             # Using the SmartInsider transaction information, buy when company does a stock buyback
-            if transaction.BuybackType == "Transaction" and transaction.VolumePercentage > 5:
+            if transaction.EventType == SmartInsiderEventType.Transaction and transaction.VolumePercentage > 5:
                 self.SetHoldings(transaction.Symbol.Underlying, transaction.VolumePercentage / 100)
 
     def OnSecuritiesChanged(self, changes):

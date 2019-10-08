@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
 using System;
 using System.Globalization;
 using System.IO;
@@ -20,8 +21,7 @@ using System.IO;
 namespace QuantConnect.Data.Custom.SmartInsider
 {
     /// <summary>
-    /// Smart Insider Transaction - Contains information
-    /// about insider trading transactions
+    /// Smart Insider Transaction - Execution of a stock buyback and details about the event occurred
     /// </summary>
     public class SmartInsiderTransaction : SmartInsiderEvent
     {
@@ -33,17 +33,17 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// <summary>
         /// Describes how transaction was executed
         /// </summary>
-        public string BuybackVia { get; set; }
+        public SmartInsiderExecution? Execution { get; set; }
 
         /// <summary>
         /// Describes which entity carried out the transaction
         /// </summary>
-        public string BuybackBy { get; set; }
+        public SmartInsiderExecutionEntity? ExecutionEntity { get; set; }
 
         /// <summary>
         /// Describes what will be done with those shares following repurchase
         /// </summary>
-        public string HoldingType { get; set; }
+        public SmartInsiderExecutionHolding? ExecutionHolding { get; set; }
 
         /// <summary>
         /// Currency of transation (ISO Code)
@@ -58,7 +58,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// <summary>
         /// Number of shares traded
         /// </summary>
-        public decimal? TransactionAmount { get; set; }
+        public decimal? Amount { get; set; }
 
         /// <summary>
         /// Currency conversion rates are updated daily and values are calculated at rate prevailing on the trade date
@@ -126,12 +126,12 @@ namespace QuantConnect.Data.Custom.SmartInsider
             var tsv = line.Split('\t');
 
             BuybackDate = string.IsNullOrWhiteSpace(tsv[26]) ? (DateTime?)null : DateTime.ParseExact(tsv[26], "yyyyMMdd", CultureInfo.InvariantCulture);
-            BuybackVia = string.IsNullOrWhiteSpace(tsv[27]) ? null : tsv[27];
-            BuybackBy = string.IsNullOrWhiteSpace(tsv[28]) ? null : tsv[28];
-            HoldingType = string.IsNullOrWhiteSpace(tsv[29]) ? null : tsv[29];
+            Execution = string.IsNullOrWhiteSpace(tsv[27]) ? (SmartInsiderExecution?)null : JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[27]}\"");
+            ExecutionEntity = string.IsNullOrWhiteSpace(tsv[28]) ? (SmartInsiderExecutionEntity?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[28]}\"");
+            ExecutionHolding = string.IsNullOrWhiteSpace(tsv[29]) ? (SmartInsiderExecutionHolding?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[29]}\"");
             Currency = string.IsNullOrWhiteSpace(tsv[30]) ? null : tsv[30];
             Price = string.IsNullOrWhiteSpace(tsv[31]) ? (decimal?)null : Convert.ToDecimal(tsv[31], CultureInfo.InvariantCulture);
-            TransactionAmount = string.IsNullOrWhiteSpace(tsv[32]) ? (decimal?)null : Convert.ToDecimal(tsv[32], CultureInfo.InvariantCulture);
+            Amount = string.IsNullOrWhiteSpace(tsv[32]) ? (decimal?)null : Convert.ToDecimal(tsv[32], CultureInfo.InvariantCulture);
             GBPValue = string.IsNullOrWhiteSpace(tsv[33]) ? (decimal?)null : Convert.ToDecimal(tsv[33], CultureInfo.InvariantCulture);
             EURValue = string.IsNullOrWhiteSpace(tsv[34]) ? (decimal?)null : Convert.ToDecimal(tsv[34], CultureInfo.InvariantCulture);
             USDValue = string.IsNullOrWhiteSpace(tsv[35]) ? (decimal?)null : Convert.ToDecimal(tsv[35], CultureInfo.InvariantCulture);
@@ -153,7 +153,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
             var tsv = line.Split('\t');
 
             TransactionID = string.IsNullOrWhiteSpace(tsv[0]) ? null : tsv[0];
-            BuybackType = string.IsNullOrWhiteSpace(tsv[1]) ? null : tsv[1];
+            EventType = string.IsNullOrWhiteSpace(tsv[1]) ? (SmartInsiderEventType?)null : JsonConvert.DeserializeObject<SmartInsiderEventType>($"\"{tsv[1]}\"");
             LastUpdate = DateTime.ParseExact(tsv[2], "yyyy-MM-dd", CultureInfo.InvariantCulture);
             LastIDsUpdate = string.IsNullOrWhiteSpace(tsv[3]) ? (DateTime?)null : DateTime.ParseExact(tsv[3], "yyyy-MM-dd", CultureInfo.InvariantCulture);
             ISIN = string.IsNullOrWhiteSpace(tsv[4]) ? null : tsv[4];
@@ -174,12 +174,12 @@ namespace QuantConnect.Data.Custom.SmartInsider
             TickerSymbol = string.IsNullOrWhiteSpace(tsv[19]) ? null : tsv[19];
 
             BuybackDate = string.IsNullOrWhiteSpace(tsv[20]) ? (DateTime?)null : DateTime.ParseExact(tsv[20], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            BuybackVia = string.IsNullOrWhiteSpace(tsv[21]) ? null : tsv[21];
-            BuybackBy = string.IsNullOrWhiteSpace(tsv[22]) ? null : tsv[22];
-            HoldingType = string.IsNullOrWhiteSpace(tsv[23]) ? null : tsv[23];
+            Execution = string.IsNullOrWhiteSpace(tsv[21]) ? (SmartInsiderExecution?)null : JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[21]}\"");
+            ExecutionEntity = string.IsNullOrWhiteSpace(tsv[22]) ? (SmartInsiderExecutionEntity?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[22]}\"");
+            ExecutionHolding = string.IsNullOrWhiteSpace(tsv[23]) ? (SmartInsiderExecutionHolding?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[23]}\"");
             Currency = string.IsNullOrWhiteSpace(tsv[24]) ? null : tsv[24];
             Price = string.IsNullOrWhiteSpace(tsv[25]) ? (decimal?)null : Convert.ToDecimal(tsv[25], CultureInfo.InvariantCulture);
-            TransactionAmount = string.IsNullOrWhiteSpace(tsv[26]) ? (decimal?)null : Convert.ToDecimal(tsv[26], CultureInfo.InvariantCulture);
+            Amount = string.IsNullOrWhiteSpace(tsv[26]) ? (decimal?)null : Convert.ToDecimal(tsv[26], CultureInfo.InvariantCulture);
             GBPValue = string.IsNullOrWhiteSpace(tsv[27]) ? (decimal?)null : Convert.ToDecimal(tsv[27], CultureInfo.InvariantCulture);
             EURValue = string.IsNullOrWhiteSpace(tsv[28]) ? (decimal?)null : Convert.ToDecimal(tsv[28], CultureInfo.InvariantCulture);
             USDValue = string.IsNullOrWhiteSpace(tsv[29]) ? (decimal?)null : Convert.ToDecimal(tsv[29], CultureInfo.InvariantCulture);
@@ -253,7 +253,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
             return new SmartInsiderTransaction
             {
                 TransactionID = TransactionID,
-                BuybackType = BuybackType,
+                EventType = EventType,
                 LastUpdate = LastUpdate,
                 LastIDsUpdate = LastIDsUpdate,
                 ISIN = ISIN,
@@ -280,12 +280,12 @@ namespace QuantConnect.Data.Custom.SmartInsider
                 AnnouncedIn = AnnouncedIn,
 
                 BuybackDate = BuybackDate,
-                BuybackVia = BuybackVia,
-                BuybackBy = BuybackBy,
-                HoldingType = HoldingType,
+                Execution = Execution,
+                ExecutionEntity = ExecutionEntity,
+                ExecutionHolding = ExecutionHolding,
                 Currency = Currency,
                 Price = Price,
-                TransactionAmount = TransactionAmount,
+                Amount = Amount,
                 GBPValue = GBPValue,
                 EURValue = EURValue,
                 USDValue = USDValue,
@@ -312,7 +312,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
         {
             return string.Join("\t",
                 TransactionID,
-                BuybackType,
+                JsonConvert.SerializeObject(EventType).Replace("\"", ""),
                 LastUpdate.ToStringInvariant("yyyyMMdd"),
                 LastIDsUpdate?.ToStringInvariant("yyyyMMdd"),
                 ISIN,
@@ -338,12 +338,12 @@ namespace QuantConnect.Data.Custom.SmartInsider
                 TimeProcessedUtc?.ToStringInvariant("yyyyMMdd HH:mm:ss"),
                 AnnouncedIn,
                 BuybackDate?.ToStringInvariant("yyyyMMdd"),
-                BuybackVia,
-                BuybackBy,
-                HoldingType,
+                JsonConvert.SerializeObject(Execution).Replace("\"", ""),
+                JsonConvert.SerializeObject(ExecutionEntity).Replace("\"", ""),
+                JsonConvert.SerializeObject(ExecutionHolding).Replace("\"", ""),
                 Currency,
                 Price,
-                TransactionAmount,
+                Amount,
                 GBPValue,
                 EURValue,
                 USDValue,

@@ -56,13 +56,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             foreach (var transaction in transactions.Values)
             {
-                if (transaction.VolumePercentage == null || transaction.BuybackType == null)
+                if (transaction.VolumePercentage == null || transaction.EventType == null)
                 {
                     continue;
                 }
 
                 // Using the Smart Insider transaction information, buy when company does a stock buyback
-                if (transaction.BuybackType == "Transaction" && transaction.VolumePercentage > 5)
+                if (transaction.EventType == SmartInsiderEventType.Transaction && transaction.VolumePercentage > 5)
                 {
                     SetHoldings(transaction.Symbol.Underlying, (decimal)transaction.VolumePercentage / 100);
                 }

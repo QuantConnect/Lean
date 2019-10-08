@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!Portfolio.Invested && !hasOpenOrders)
             {
-                if (data.IntentionPercentage > 0.0001m)
+                if (data.Percentage > 0.0001m)
                 {
                     Log($"Buying {_symbol.Value} due to intention to purchase stock");
                     SetHoldings(_symbol, 0.50m);
@@ -97,7 +97,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else if (Portfolio.Invested && !hasOpenOrders)
             {
-                if (data.IntentionPercentage < 0.00m)
+                if (data.Percentage < 0.00m)
                 {
                     Log($"Liquidating {_symbol.Value}");
                     Liquidate(_symbol);
