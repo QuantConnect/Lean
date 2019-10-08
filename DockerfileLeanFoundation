@@ -48,7 +48,7 @@ RUN wget https://cdn.quantconnect.com/miniconda/${CONDA} && \
     ln -s /opt/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
 
 # Install supported third party python packages
-RUN conda update -y conda pip 
+RUN conda update -y conda pip
 RUN conda install -y python=3.6.8   \
     blaze=0.11.3                    \
     cvxopt=1.2.0                    \
@@ -97,7 +97,7 @@ RUN pip install gym==0.13.1         \
     theano==1.0.4                   \
     tsfresh==0.12.0                 \
     xgboost==0.90
-RUN pip install --upgrade --user hmmlearn==0.2.2
+RUN pip install --upgrade hmmlearn==0.2.2
 RUN python -c "import nltk; nltk.download('punkt')"
 RUN conda clean -y --all
 
