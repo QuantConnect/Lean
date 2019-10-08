@@ -534,7 +534,7 @@ namespace QuantConnect
         /// <returns>Last 4 character string of string.</returns>
         public static string GetExtension(this string str) {
             var ext = str.Substring(Math.Max(0, str.Length - 4));
-            var allowedExt = new List<string>() { ".zip", ".csv", ".json" };
+            var allowedExt = new List<string> { ".zip", ".csv", ".json", ".tsv" };
             if (!allowedExt.Contains(ext))
             {
                 ext = ".custom";
