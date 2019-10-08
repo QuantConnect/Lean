@@ -805,7 +805,7 @@ namespace QuantConnect.Util
             resolution = Resolution.Daily;
             date = default(DateTime);
 
-            var pathSeparators = new[] { '/', '\\'};
+            var pathSeparators = new[] { '/', '\\' };
 
             try
             {
@@ -824,21 +824,53 @@ namespace QuantConnect.Util
                 // find where the useful part of the path starts - i.e. the securityType
                 var startIndex = info.FindIndex(x => SecurityTypeAsDataPath.Contains(x.ToLowerInvariant()));
 
-                // Gather components useed to create the security
-                var market = info[startIndex + 1];
-                var ticker = info[startIndex + 3];
-                resolution = (Resolution)Enum.Parse(typeof(Resolution), info[startIndex + 2], true);
                 var securityType = ParseDataSecurityType(info[startIndex]);
 
-                // If resolution is Daily or Hour, we do not need to set the date and tick type
-                if (resolution < Resolution.Hour)
+                var market = Market.USA;
+                string ticker;
+                if (securityType == SecurityType.Base)
                 {
-                    date = Parse.DateTimeExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter);
-                }
+                    if (!Enum.TryParse(info[startIndex + 2], true, out resolution))
+                    {
+                        resolution = Resolution.Daily;
+                    }
 
-                if (securityType == SecurityType.Crypto)
+                    // the last part of the path is the file name
+                    var fileNameNoPath = info[info.Count - 1].Split('_').First();
+
+                    if (!DateTime.TryParseExact(fileNameNoPath,
+                        DateFormat.EightCharacter,
+                        DateTimeFormatInfo.InvariantInfo,
+                        DateTimeStyles.None,
+                        out date))
+                    {
+                        // if parsing the date failed we assume filename is ticker
+                        ticker = fileNameNoPath;
+                    }
+                    else
+                    {
+                        // ticker must be the previous part of the path
+                        ticker = info[info.Count - 2];
+                    }
+                }
+                else
                 {
-                    ticker = ticker.Split('_').First();
+                    resolution = (Resolution)Enum.Parse(typeof(Resolution), info[startIndex + 2], true);
+
+                    // Gather components used to create the security
+                    market = info[startIndex + 1];
+                    ticker = info[startIndex + 3];
+
+                    // If resolution is Daily or Hour, we do not need to set the date and tick type
+                    if (resolution < Resolution.Hour)
+                    {
+                        date = Parse.DateTimeExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter);
+                    }
+
+                    if (securityType == SecurityType.Crypto)
+                    {
+                        ticker = ticker.Split('_').First();
+                    }
                 }
 
                 symbol = Symbol.Create(ticker, securityType, market);
