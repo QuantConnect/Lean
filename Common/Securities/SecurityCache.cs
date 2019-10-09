@@ -236,7 +236,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Get last data packet recieved for this security of the specified ty[e
+        /// Get last data packet received for this security of the specified type
         /// </summary>
         /// <typeparam name="T">The data type</typeparam>
         /// <returns>The last data packet, null if none received of type</returns>
@@ -249,7 +249,7 @@ namespace QuantConnect.Securities
                 return default(T);
             }
 
-            return list.LastOrDefault() as T;
+            return list[list.Count - 1] as T;
         }
 
         /// <summary>
