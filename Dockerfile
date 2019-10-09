@@ -9,17 +9,17 @@ MAINTAINER QuantConnect <contact@quantconnect.com>
 
 #################################
 # Option 1: Download from Master
-# RUN \
-# 	wget https://github.com/QuantConnect/Lean/archive/master.zip && \
-# 	unzip master.zip -d /root/ && \
-#   mv /root/Lean-master /root/Lean
-# RUN \
-# 	cd /root/Lean && \
-# 	sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj && \
-# 	wget https://nuget.org/nuget.exe && \
-# 	mono nuget.exe restore QuantConnect.Lean.sln -NonInteractive && \
-# 	msbuild /property:Configuration=Release && \
-# 	cd /root/Lean/Launcher/bin/Release/
+RUN \
+    wget https://github.com/QuantConnect/Lean/archive/master.zip && \
+    unzip master.zip -d /root/ && \
+    mv /root/Lean-master /root/Lean
+RUN \
+    cd /root/Lean && \
+    sed -i 's/4.5/4.0/' Algorithm.VisualBasic/QuantConnect.Algorithm.VisualBasic.vbproj && \
+    wget https://nuget.org/nuget.exe && \
+    mono nuget.exe restore QuantConnect.Lean.sln -NonInteractive && \
+    msbuild /property:Configuration=Release && \
+    cd /root/Lean/Launcher/bin/Release/
 #################################
 
 
