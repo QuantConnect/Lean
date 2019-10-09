@@ -33,6 +33,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using QuantConnect.Logging;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Jupyter
@@ -44,6 +45,12 @@ namespace QuantConnect.Jupyter
     {
         private dynamic _pandas;
         private IDataCacheProvider _dataCacheProvider;
+
+        static QuantBook()
+        {
+            Logging.Log.LogHandler =
+                Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+        }
 
         /// <summary>
         /// <see cref = "QuantBook" /> constructor.
@@ -68,6 +75,8 @@ namespace QuantConnect.Jupyter
                 var composer = new Composer();
                 var algorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(composer);
                 var systemHandlers = LeanEngineSystemHandlers.FromConfiguration(composer);
+                // init the API
+                systemHandlers.Initialize();
                 systemHandlers.LeanManager.Initialize(systemHandlers,
                     algorithmHandlers,
                     new BacktestNodePacket(),

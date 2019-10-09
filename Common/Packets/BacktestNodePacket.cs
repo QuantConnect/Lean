@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json;
 
@@ -26,6 +27,10 @@ namespace QuantConnect.Packets
     /// </summary>
     public class BacktestNodePacket : AlgorithmNodePacket
     {
+        // default random id, static so its one per process
+        private static readonly string DefaultId
+            = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
+
         /// <summary>
         /// Name of the backtest as randomly defined in the IDE.
         /// </summary>
@@ -36,7 +41,7 @@ namespace QuantConnect.Packets
         /// BacktestId / Algorithm Id for this task
         /// </summary>
         [JsonProperty(PropertyName = "sBacktestID")]
-        public string BacktestId = "";
+        public string BacktestId = DefaultId;
 
         /// <summary>
         /// Backtest start-date as defined in the Initialize() method.
