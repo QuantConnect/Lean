@@ -593,14 +593,23 @@ namespace QuantConnect.Securities
         /// <param name="data">The security update data</param>
         public void Update(IEnumerable<BaseData> data)
         {
+            BaseData last = null;
             foreach (var grp in data.GroupBy(d => d.GetType()))
             {
+                var nonFillForward = new List<BaseData>();
+                foreach (var baseData in grp)
+                {
+                    last = baseData;
+                    if (!baseData.IsFillForward)
+                    {
+                        nonFillForward.Add(baseData);
+                    }
+                }
                 // use the last of each type to set market price
-                SetMarketPrice(grp.Last());
+                SetMarketPrice(last);
 
                 // maintaining regression requires us to NOT cache FF data
-                var nonFillForward = grp.Where(d => !d.IsFillForward).ToList();
-                Cache.StoreData(nonFillForward.ToList());
+                Cache.StoreData(nonFillForward);
             }
         }
 

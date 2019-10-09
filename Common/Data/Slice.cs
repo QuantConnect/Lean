@@ -28,7 +28,6 @@ namespace QuantConnect.Data
     /// </summary>
     public class Slice : IEnumerable<KeyValuePair<Symbol, BaseData>>
     {
-        private static Dictionary<Type, MethodInfo> _methodCache = new Dictionary<Type, MethodInfo>();
         private readonly Ticks _ticks;
         private readonly TradeBars _bars;
         private readonly QuoteBars _quoteBars;
@@ -263,18 +262,13 @@ namespace QuantConnect.Data
                 {
                     dictionary = new Lazy<object>(() =>
                     {
-                        var dic = Activator.CreateInstance(typeof(DataDictionary<>).MakeGenericType(type));
-                        MethodInfo method;
-                        if (!_methodCache.TryGetValue(type, out method))
-                        {
-                            _methodCache[type] = method
-                            = typeof(DataDictionary<>).MakeGenericType(type).GetMethod("Add", new[] { typeof(Symbol), type });
-                        }
+                        var dataDictionaryCache = GenericDataDictionary.Get(type);
+                        var dic = Activator.CreateInstance(dataDictionaryCache.GenericType);
 
                         foreach (var data in
                             instance._data.Value.Values.SelectMany<dynamic, dynamic>(x => x.GetData()).Where(o => o != null && (Type)o.GetType() == type))
                         {
-                            method.Invoke(dic, new []{ data.Symbol, data });
+                            dataDictionaryCache.MethodInfo.Invoke(dic, new[] { data.Symbol, data });
                         }
                         return dic;
                     }
@@ -296,17 +290,12 @@ namespace QuantConnect.Data
                 {
                     dictionary = new Lazy<object>(() =>
                     {
-                        var dic = Activator.CreateInstance(typeof(DataDictionary<>).MakeGenericType(type));
-                        MethodInfo method;
-                        if (!_methodCache.TryGetValue(type, out method))
-                        {
-                            _methodCache[type] = method
-                                = typeof(DataDictionary<>).MakeGenericType(type).GetMethod("Add", new[] { typeof(Symbol), type });
-                        }
+                        var dataDictionaryCache = GenericDataDictionary.Get(type);
+                        var dic = Activator.CreateInstance(dataDictionaryCache.GenericType);
 
                         foreach (var data in instance._data.Value.Values.Select(x => x.GetData()).Where(o => o != null && (Type)o.GetType() == type))
                         {
-                            method.Invoke(dic, new[] { data.Symbol, data });
+                            dataDictionaryCache.MethodInfo.Invoke(dic, new[] { data.Symbol, data });
                         }
                         return dic;
                     }
@@ -528,5 +517,48 @@ namespace QuantConnect.Data
             }
         }
 
+        /// <summary>
+        /// Helper class for generic <see cref="DataDictionary{T}"/>
+        /// </summary>
+        /// <remarks>The value of this class is primarily performance since it keeps a cache
+        /// of the generic types instances and there add methods.</remarks>
+        private class GenericDataDictionary
+        {
+            private static readonly Dictionary<Type, GenericDataDictionary> _genericCache = new Dictionary<Type, GenericDataDictionary>();
+
+            /// <summary>
+            /// The <see cref="DataDictionary{T}.Add(KeyValuePair{QuantConnect.Symbol,T})"/> method
+            /// </summary>
+            public MethodInfo MethodInfo { get; }
+
+            /// <summary>
+            /// The <see cref="DataDictionary{T}"/> type
+            /// </summary>
+            public Type GenericType { get; }
+
+            private GenericDataDictionary(Type genericType, MethodInfo methodInfo)
+            {
+                GenericType = genericType;
+                MethodInfo = methodInfo;
+            }
+
+            /// <summary>
+            /// Provides a <see cref="GenericDataDictionary"/> instance for a given <see cref="Type"/>
+            /// </summary>
+            /// <param name="type"></param>
+            /// <returns>A new instance or retrieved from the cache</returns>
+            public static GenericDataDictionary Get(Type type)
+            {
+                GenericDataDictionary dataDictionaryCache;
+                if (!_genericCache.TryGetValue(type, out dataDictionaryCache))
+                {
+                    var generic = typeof(DataDictionary<>).MakeGenericType(type);
+                    var method = generic.GetMethod("Add", new[] { typeof(Symbol), type });
+                    _genericCache[type] = dataDictionaryCache = new GenericDataDictionary(generic, method);
+                }
+
+                return dataDictionaryCache;
+            }
+        }
     }
 }

@@ -37,6 +37,7 @@ namespace QuantConnect.Securities
 
         private readonly IRegisteredSecurityDataTypesProvider _registeredTypes;
         private readonly ConcurrentDictionary<string, object> _storage = new ConcurrentDictionary<string, object>();
+        private readonly ConcurrentDictionary<Type, Type> _genericTypes = new ConcurrentDictionary<Type, Type>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DynamicSecurityData"/> class
@@ -221,7 +222,13 @@ namespace QuantConnect.Securities
             // common case where it's a List<BaseData> but dataType == TradeBar
             // create a List<TradeBar> so that when accessed via GetAll<T> or .TradeBar
             // the types line up as expected
-            var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(dataType));
+            Type containerType;
+            if (!_genericTypes.TryGetValue(dataType, out containerType))
+            {
+                // for performance we keep the generic type
+                _genericTypes[dataType] = containerType = typeof(List<>).MakeGenericType(dataType);
+            }
+            var list = (IList)Activator.CreateInstance(containerType);
             foreach (var datum in data)
             {
                 // if the element type and dataType aren't in alignment we'll get an invalid cast exception here
