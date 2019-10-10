@@ -129,6 +129,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
             Execution = string.IsNullOrWhiteSpace(tsv[27]) ? (SmartInsiderExecution?)null : JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[27]}\"");
             ExecutionEntity = string.IsNullOrWhiteSpace(tsv[28]) ? (SmartInsiderExecutionEntity?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[28]}\"");
             ExecutionHolding = string.IsNullOrWhiteSpace(tsv[29]) ? (SmartInsiderExecutionHolding?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[29]}\"");
+            ExecutionHolding = ExecutionHolding == SmartInsiderExecutionHolding.Error ? SmartInsiderExecutionHolding.SatisfyStockVesting : ExecutionHolding;
             Currency = string.IsNullOrWhiteSpace(tsv[30]) ? null : tsv[30];
             Price = string.IsNullOrWhiteSpace(tsv[31]) ? (decimal?)null : Convert.ToDecimal(tsv[31], CultureInfo.InvariantCulture);
             Amount = string.IsNullOrWhiteSpace(tsv[32]) ? (decimal?)null : Convert.ToDecimal(tsv[32], CultureInfo.InvariantCulture);
@@ -177,6 +178,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
             Execution = string.IsNullOrWhiteSpace(tsv[21]) ? (SmartInsiderExecution?)null : JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[21]}\"");
             ExecutionEntity = string.IsNullOrWhiteSpace(tsv[22]) ? (SmartInsiderExecutionEntity?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[22]}\"");
             ExecutionHolding = string.IsNullOrWhiteSpace(tsv[23]) ? (SmartInsiderExecutionHolding?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[23]}\"");
+            ExecutionHolding = ExecutionHolding == SmartInsiderExecutionHolding.Error ? SmartInsiderExecutionHolding.SatisfyStockVesting : ExecutionHolding;
             Currency = string.IsNullOrWhiteSpace(tsv[24]) ? null : tsv[24];
             Price = string.IsNullOrWhiteSpace(tsv[25]) ? (decimal?)null : Convert.ToDecimal(tsv[25], CultureInfo.InvariantCulture);
             Amount = string.IsNullOrWhiteSpace(tsv[26]) ? (decimal?)null : Convert.ToDecimal(tsv[26], CultureInfo.InvariantCulture);

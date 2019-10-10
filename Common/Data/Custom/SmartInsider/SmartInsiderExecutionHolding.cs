@@ -44,19 +44,25 @@ namespace QuantConnect.Data.Custom.SmartInsider
         Trust,
 
         /// <summary>
-        /// Unknown - Transactions only
+        /// Shares will be used to satisfy employee tax liabilities
         /// </summary>
         [EnumMember(Value = "To Satisfy Employee Tax")]
         SatisfyEmployeeTax,
 
         /// <summary>
-        /// Unknown
+        /// Not disclosed by the issuer in the announcements
         /// </summary>
         [EnumMember(Value = "Not Reported")]
         NotReported,
 
         /// <summary>
-        /// Unknown
+        /// Shares will be used to satisfy vesting of employee stock
+        /// </summary>
+        [EnumMember(Value = "To Satisfy Vesting of Stock")]
+        SatisfyStockVesting,
+
+        /// <summary>
+        /// Error, but should actually be SatisfyStockVesting
         /// </summary>
         [EnumMember(Value = "Missing Lookup Formula for BuybackHoldingTypeId 10.00")]
         Error

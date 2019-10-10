@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
     public enum SmartInsiderEventType
     {
         /// <summary>
-        /// Board's authority to repurchase.
+        /// Notification that the board has gained the authority to repurchase
         /// </summary>
         [EnumMember(Value = "Authorisation")]
         Authorization,
@@ -44,21 +44,27 @@ namespace QuantConnect.Data.Custom.SmartInsider
         Transaction,
 
         /// <summary>
-        /// Unknown - intentions only
+        /// Increase in the scope of the existing plan (extended date, increased value, etc.)
         /// </summary>
         [EnumMember(Value = "Upwards Revision")]
         UpwardsRevision,
 
         /// <summary>
-        /// Unknown - intentions only
+        /// Decrease in the scope of the existing plan (shortened date, reduced value, etc.)
         /// </summary>
         [EnumMember(Value = "Downwards Revision")]
         DownwardsRevision,
 
         /// <summary>
-        /// Unknown - intentions only
+        /// General change of details of the plan (max/min price alteration, etc.)
         /// </summary>
         [EnumMember(Value = "Revised Details")]
         RevisedDetails,
+
+        /// <summary>
+        /// Total cancellation of the plan
+        /// </summary>
+        [EnumMember(Value = "Programme Cancellation")]
+        Cancellation
     }
 }
