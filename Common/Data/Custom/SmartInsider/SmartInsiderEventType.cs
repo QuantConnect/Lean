@@ -44,7 +44,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
         Transaction,
 
         /// <summary>
-        /// Increase in teh scope of the existing plan (extended date, increased value, etc.)
+        /// Increase in the scope of the existing plan (extended date, increased value, etc.)
         /// </summary>
         [EnumMember(Value = "Upwards Revision")]
         UpwardsRevision,
