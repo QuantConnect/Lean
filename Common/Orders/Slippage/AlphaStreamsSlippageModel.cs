@@ -49,14 +49,14 @@ namespace QuantConnect.Orders.Slippage
                 return 0;
             }
 
-            decimal slippagePercent;
+            decimal slippageValue;
 
-            if (!_spreads.TryGetValue(asset.Symbol.Value, out slippagePercent))
+            if (!_spreads.TryGetValue(asset.Symbol.Value, out slippageValue))
             {
                 return _slippagePercent * asset.GetLastData()?.Value ?? 0;
             }
 
-            return slippagePercent * asset.GetLastData()?.Value ?? 0;
+            return slippageValue;
         }
     }
 }
