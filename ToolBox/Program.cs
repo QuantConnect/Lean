@@ -20,6 +20,7 @@ using System.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.AlgoSeekOptionsConverter;
+using QuantConnect.ToolBox.Benzinga;
 using QuantConnect.ToolBox.BitfinexDownloader;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.CoinApiDataConverter;
@@ -268,6 +269,13 @@ namespace QuantConnect.ToolBox
                         TiingoNewsConverterProgram.TiingoNewsConverter(
                             GetParameterOrExit(optionsObject, "source-dir"),
                             GetParameterOrExit(optionsObject, "destination-dir"));
+                        break;
+                    case "bzcv":
+                    case "benzingaconverter":
+                        BenzingaProgram.BenzingaDataConverter(
+                            GetParameterOrExit(optionsObject, "source-dir"),
+                            GetParameterOrExit(optionsObject, "destination-dir"),
+                            GetParameterOrExit(optionsObject, "date"));
                         break;
 
                     default:
