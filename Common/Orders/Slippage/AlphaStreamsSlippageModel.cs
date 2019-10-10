@@ -23,7 +23,7 @@ namespace QuantConnect.Orders.Slippage
     /// </summary>
     public class AlphaStreamsSlippageModel : ISlippageModel
     {
-        private const decimal _slippagePercent = 0.0005m;
+        private const decimal _slippagePercent = 0.0001m;
 
         /// <summary>
         /// Unfortunate dictionary of ETFs and their spread on 10/10 so that we can better approximate
