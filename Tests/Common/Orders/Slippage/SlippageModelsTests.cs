@@ -168,7 +168,7 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             var model = new AlphaStreamsSlippageModel();
 
             var actual = model.GetSlippageApproximation(equity, equityBuyOrder);
-            Assert.AreEqual(0.0135m, actual);
+            Assert.AreEqual(0.135m, actual);
         }
 
         [Test]
