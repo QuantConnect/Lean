@@ -32,7 +32,7 @@ namespace QuantConnect.Orders.Fees
 
         private readonly IDictionary<SecurityType, decimal> _feeRates = new Dictionary<SecurityType, decimal>
         {
-            // CommissionZ
+            // Commission
             {SecurityType.Forex, 0.000002m},
             // Commission plus clearing fee
             {SecurityType.Future, 0.4m + 0.1m},
@@ -73,11 +73,7 @@ namespace QuantConnect.Orders.Fees
             switch (security.Type)
             {
                 case SecurityType.Option:
-                    return new OrderFee(new CashAmount(feeRate * order.AbsoluteQuantity, Currencies.USD));
-
                 case SecurityType.Future:
-                    return new OrderFee(new CashAmount(feeRate * order.AbsoluteQuantity, Currencies.USD));
-
                 case SecurityType.Cfd:
                     return new OrderFee(new CashAmount(feeRate * order.AbsoluteQuantity, Currencies.USD));
 
