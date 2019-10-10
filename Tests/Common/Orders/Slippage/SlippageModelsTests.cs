@@ -140,13 +140,35 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
         [Test]
         public void AlphaStreamsSlippageModel_EquityTest()
         {
-            decimal slippagePercent = 0.001m;
+            decimal slippagePercent = 0.0001m;
 
             var model = new AlphaStreamsSlippageModel();
 
             var expected = _equity.Price * slippagePercent;
             var actual = model.GetSlippageApproximation(_equity, _equityBuyOrder);
             Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void AlphaStreamsSlippageModel_HardCodedEquityTest()
+        {
+            Symbol symbol = Symbol.Create("DGAZ", SecurityType.Equity, Market.USA);
+            Equity equity = new Equity(
+                symbol,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+
+            equity.SetMarketPrice(new TradeBar(DateTime.Now, Symbols.SPY, 100m, 100m, 100m, 100m, 1));
+            Order equityBuyOrder = new MarketOrder(symbol, 1, DateTime.Now);
+
+            var model = new AlphaStreamsSlippageModel();
+
+            var actual = model.GetSlippageApproximation(equity, equityBuyOrder);
+            Assert.AreEqual(0.135m, actual);
         }
 
         [Test]

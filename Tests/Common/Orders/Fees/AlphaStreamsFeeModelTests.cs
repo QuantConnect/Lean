@@ -32,25 +32,40 @@ namespace QuantConnect.Tests.Common.Orders.Fees
     [TestFixture]
     public class AlphaStreamsFeeModelTests
     {
-        [TestCase(-100)]
-        [TestCase(100)]
-        public void CalculateOrderFeeForLongOrShortEquity(int quantity)
+        [Test]
+        public void CalculateEquityMinimumFeeInUSD()
         {
+            var feeModel = new AlphaStreamsFeeModel();
             var security = SecurityTests.GetSecurity();
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
-            var feeModel = new AlphaStreamsFeeModel();
-
-            var parameters = new OrderFeeParameters(
-                security,
-                new MarketOrder(security.Symbol, quantity, DateTime.UtcNow)
+            var fee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 1, DateTime.UtcNow)
+                )
             );
 
-            var fee = feeModel.GetOrderFee(parameters);
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(1m, fee.Value.Amount);
+        }
+
+        [Test]
+        public void CalculateEquityFeeInUSD()
+        {
+            var feeModel = new AlphaStreamsFeeModel();
+            var security = SecurityTests.GetSecurity();
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
+
+            var fee = feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 1000, DateTime.UtcNow)
+                )
+            );
 
             Assert.AreEqual(Currencies.USD, fee.Value.Currency);
-            var expected = 0m * security.Price * quantity;
-            Assert.AreEqual(expected, fee.Value.Amount);
+            Assert.AreEqual(5m, fee.Value.Amount);
         }
 
         [TestCase(-1)]

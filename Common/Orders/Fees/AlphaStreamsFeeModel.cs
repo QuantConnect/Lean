@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
+using QuantConnect.Securities;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Orders.Fees
@@ -25,9 +25,14 @@ namespace QuantConnect.Orders.Fees
     /// </summary>
     public class AlphaStreamsFeeModel : FeeModel
     {
+        private readonly Dictionary<string, EquityFee> _equityFee =
+            new Dictionary<string, EquityFee> {
+                { Market.USA, new EquityFee("USD", feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m) }
+            };
+
         private readonly IDictionary<SecurityType, decimal> _feeRates = new Dictionary<SecurityType, decimal>
         {
-            {SecurityType.Equity, 0m},
+            // Commission
             {SecurityType.Forex, 0.000002m},
             // Commission plus clearing fee
             {SecurityType.Future, 0.4m + 0.1m},
@@ -55,57 +60,100 @@ namespace QuantConnect.Orders.Fees
                 return OrderFee.Zero;
             }
 
-            if (security.Type == SecurityType.Crypto)
-            {
-                decimal fee = _takerFee;
-                var props = order.Properties as BitfinexOrderProperties;
-
-                if (order.Type == OrderType.Limit &&
-                    props?.Hidden != true &&
-                    (props?.PostOnly == true || !order.IsMarketable))
-                {
-                    // limit order posted to the order book
-                    fee = _makerFee;
-                }
-
-                // get order value in quote currency
-                var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
-                if (order.Type == OrderType.Limit)
-                {
-                    // limit order posted to the order book
-                    unitPrice = ((LimitOrder)order).LimitPrice;
-                }
-
-                unitPrice *= security.SymbolProperties.ContractMultiplier;
-
-                // apply fee factor, currently we do not model 30-day volume, so we use the first tier
-                return new OrderFee(new CashAmount(
-                    unitPrice * order.AbsoluteQuantity * fee,
-                    security.QuoteCurrency.Symbol));
-            }
-
+            var market = security.Symbol.ID.Market;
             decimal feeRate;
-
-            if (!_feeRates.TryGetValue(security.Type, out feeRate))
-            {
-                throw new ArgumentException(
-                    Invariant($"Unsupported security type: {security.Type}.")
-                );
-            }
-
-            var value = order.AbsoluteQuantity;
-
+            
             switch (security.Type)
             {
-                case SecurityType.Equity:
-                    value = order.GetValue(security);
-                    break;
-                case SecurityType.Forex:
-                    value = Math.Abs(order.GetValue(security));
-                    break;
-            }
+                case SecurityType.Option:
+                case SecurityType.Future:
+                case SecurityType.Cfd:
+                    _feeRates.TryGetValue(security.Type, out feeRate);
+                    return new OrderFee(new CashAmount(feeRate * order.AbsoluteQuantity, Currencies.USD));
 
-            return new OrderFee(new CashAmount(feeRate * value, Currencies.USD));
+                case SecurityType.Forex:
+                    _feeRates.TryGetValue(security.Type, out feeRate);
+                    return new OrderFee(new CashAmount(feeRate * Math.Abs(order.GetValue(security)), Currencies.USD));
+
+                case SecurityType.Crypto:
+                    decimal fee = _takerFee;
+                    var props = order.Properties as BitfinexOrderProperties;
+
+                    if (order.Type == OrderType.Limit &&
+                        props?.Hidden != true &&
+                        (props?.PostOnly == true || !order.IsMarketable))
+                    {
+                        // limit order posted to the order book
+                        fee = _makerFee;
+                    }
+
+                    // get order value in quote currency
+                    var unitPrice = order.Direction == OrderDirection.Buy ? security.AskPrice : security.BidPrice;
+                    if (order.Type == OrderType.Limit)
+                    {
+                        // limit order posted to the order book
+                        unitPrice = ((LimitOrder)order).LimitPrice;
+                    }
+
+                    unitPrice *= security.SymbolProperties.ContractMultiplier;
+
+                    // apply fee factor, currently we do not model 30-day volume, so we use the first tier
+                    return new OrderFee(new CashAmount(
+                        unitPrice * order.AbsoluteQuantity * fee,
+                        security.QuoteCurrency.Symbol));
+
+                // Use the IB fee model
+                case SecurityType.Equity:
+                    EquityFee equityFee;
+                    if (!_equityFee.TryGetValue(market, out equityFee))
+                    {
+                        throw new KeyNotFoundException($"AlphaStreamsFeeModel(): unexpected equity Market {market}");
+                    }
+                    var tradeValue = Math.Abs(order.GetValue(security));
+
+                    //Per share fees
+                    var tradeFee = equityFee.FeePerShare * order.AbsoluteQuantity;
+
+                    //Maximum Per Order: equityFee.MaximumFeeRate
+                    //Minimum per order. $equityFee.MinimumFee
+                    var maximumPerOrder = equityFee.MaximumFeeRate * tradeValue;
+                    if (tradeFee < equityFee.MinimumFee)
+                    {
+                        tradeFee = equityFee.MinimumFee;
+                    }
+                    else if (tradeFee > maximumPerOrder)
+                    {
+                        tradeFee = maximumPerOrder;
+                    }
+                    
+                    return new OrderFee(new CashAmount(Math.Abs(tradeFee), equityFee.Currency));
+                    
+                default:
+                    // unsupported security type
+                    throw new ArgumentException(Invariant($"Unsupported security type: {security.Type}"));
+            }
+        }
+
+        /// <summary>
+        /// Helper class to handle Equity fees
+        /// </summary>
+        private class EquityFee
+        {
+            public string Currency { get; }
+            public decimal FeePerShare { get; }
+            public decimal MinimumFee { get; }
+            public decimal MaximumFeeRate { get; }
+
+            public EquityFee(string currency,
+                decimal feePerShare,
+                decimal minimumFee,
+                decimal maximumFeeRate)
+            {
+                Currency = currency;
+                FeePerShare = feePerShare;
+                MinimumFee = minimumFee;
+                MaximumFeeRate = maximumFeeRate;
+            }
         }
     }
 }
