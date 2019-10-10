@@ -266,6 +266,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             foreach (var item in GetSortedReferenceDateIntervals(previous, fillForwardResolution, _dataResolution))
             {
                 var potentialBarEndTime = RoundDown(item.ReferenceDateTime + item.Interval, item.Interval);
+                if (potentialBarEndTime == previous.EndTime)
+                {
+                    // time didn't advance, the interval we added is being swallowed by a daylight time change
+                    // so lets use interval * 2, and this should give us 1 rounded interval as result, which is what we want
+                    potentialBarEndTime = RoundDown(
+                        item.ReferenceDateTime + item.Interval + item.Interval,
+                        item.Interval);
+                }
                 if (potentialBarEndTime < next.EndTime)
                 {
                     var nextFillForwardBarStartTime = potentialBarEndTime - item.Interval;

@@ -858,5 +858,39 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(new DateTime(2018, 3, 11, 20, 0, 0), fillForwardBars[1].Time);
             fillForwardEnumerator.Dispose();
         }
+
+        [Test]
+        public void HandlesDaylightSavingTimeChange_InifinteLoop()
+        {
+            var dailyBarsEmitted = 0;
+            var fillForwardBars = new List<BaseData>();
+
+            var data = new BaseData[]
+            {
+                new QuoteBar{Value = 0, Time = new DateTime(2019, 10, 4, 10, 0, 0), Period = Time.OneDay},
+                new QuoteBar{Value = 1, Time = new DateTime(2019, 10, 8, 11, 0, 0), Period = Time.OneDay}
+            }.ToList();
+            var enumerator = data.GetEnumerator();
+
+            var algo = new AlgorithmStub();
+            var market = Market.Oanda;
+            var security = algo.AddCfd("AU200AUD", Resolution.Daily, market);
+
+            var fillForwardEnumerator = new FillForwardEnumerator(enumerator, security.Exchange, Ref.Create(TimeSpan.FromDays(1)), false, data.Last().EndTime, Time.OneDay, TimeZones.Utc);
+
+            while (fillForwardEnumerator.MoveNext())
+            {
+                fillForwardBars.Add(fillForwardEnumerator.Current);
+                Console.WriteLine(fillForwardEnumerator.Current.Time.DayOfWeek + " " + fillForwardEnumerator.Current.Time + " - " + fillForwardEnumerator.Current.EndTime.DayOfWeek + " " + fillForwardEnumerator.Current.EndTime + " " + fillForwardEnumerator.Current.IsFillForward);
+                dailyBarsEmitted++;
+            }
+
+            Assert.AreEqual(4, dailyBarsEmitted);
+            Assert.AreEqual(new DateTime(2019, 10, 4, 10, 0, 0), fillForwardBars[0].Time);
+            Assert.AreEqual(new DateTime(2019, 10, 6, 11, 0, 0), fillForwardBars[1].Time);
+            Assert.AreEqual(new DateTime(2019, 10, 7, 11, 0, 0), fillForwardBars[2].Time);
+            Assert.AreEqual(new DateTime(2019, 10, 8, 11, 0, 0), fillForwardBars[3].Time);
+            fillForwardEnumerator.Dispose();
+        }
     }
 }

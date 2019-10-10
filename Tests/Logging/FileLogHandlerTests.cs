@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Logging
         [Test]
         public void WritesMessageToFile()
         {
-            const string file = "log.txt";
+            const string file = "log2.txt";
             File.Delete(file);
 
             var debugMessage = "*debug message*" + DateTime.UtcNow.ToStringInvariant("o");
