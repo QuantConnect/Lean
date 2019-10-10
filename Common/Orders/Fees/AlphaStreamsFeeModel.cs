@@ -60,11 +60,6 @@ namespace QuantConnect.Orders.Fees
                 return OrderFee.Zero;
             }
 
-            if (security.Type == SecurityType.Crypto)
-            {
-                
-            }
-
             var market = security.Symbol.ID.Market;
             decimal feeRate;
 
