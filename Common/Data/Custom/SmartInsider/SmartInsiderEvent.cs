@@ -103,12 +103,12 @@ namespace QuantConnect.Data.Custom.SmartInsider
         public DateTime? NextResultsAnnouncementsDate { get; set; }
 
         /// <summary>
-        /// ???
+        /// Start date of next trading embargo ahead of scheduled results announcment
         /// </summary>
         public DateTime? NextCloseBegin { get; set; }
 
         /// <summary>
-        /// ???
+        /// Date trading embargo (Close Period) is lifted as results are made public
         /// </summary>
         public DateTime? LastCloseEnded { get; set; }
 
