@@ -107,6 +107,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
             Execution = string.IsNullOrWhiteSpace(tsv[26]) ? (SmartInsiderExecution?)null : JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[26]}\"");
             ExecutionEntity = string.IsNullOrWhiteSpace(tsv[27]) ? (SmartInsiderExecutionEntity?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[27]}\"");
             ExecutionHolding = string.IsNullOrWhiteSpace(tsv[28]) ? (SmartInsiderExecutionHolding?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[28]}\"");
+            ExecutionHolding = ExecutionHolding == SmartInsiderExecutionHolding.Error ? SmartInsiderExecutionHolding.SatisfyStockVesting : ExecutionHolding;
             Amount = string.IsNullOrWhiteSpace(tsv[29]) ? (int?)null : Convert.ToInt32(tsv[29], CultureInfo.InvariantCulture);
             ValueCurrency = string.IsNullOrWhiteSpace(tsv[30]) ? null : tsv[30];
             AmountValue = string.IsNullOrWhiteSpace(tsv[31]) ? (long?)null : Convert.ToInt64(tsv[31], CultureInfo.InvariantCulture);
@@ -159,6 +160,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
             Execution = string.IsNullOrWhiteSpace(tsv[43]) ? (SmartInsiderExecution?)null : JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[43]}\"");
             ExecutionEntity = string.IsNullOrWhiteSpace(tsv[44]) ? (SmartInsiderExecutionEntity?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionEntity>($"\"{tsv[44]}\"");
             ExecutionHolding = string.IsNullOrWhiteSpace(tsv[45]) ? (SmartInsiderExecutionHolding?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[45]}\"");
+            ExecutionHolding = ExecutionHolding == SmartInsiderExecutionHolding.Error ? SmartInsiderExecutionHolding.SatisfyStockVesting : ExecutionHolding;
             Amount = string.IsNullOrWhiteSpace(tsv[46]) ? (int?)null : Convert.ToInt32(tsv[46], CultureInfo.InvariantCulture);
             ValueCurrency = string.IsNullOrWhiteSpace(tsv[47]) ? null : tsv[47];
             AmountValue = string.IsNullOrWhiteSpace(tsv[48]) ? (long?)null : Convert.ToInt64(tsv[48], CultureInfo.InvariantCulture);

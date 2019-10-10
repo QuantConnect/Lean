@@ -297,6 +297,8 @@
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
     <Compile Include="Common\Data\BaseDataTests.cs" />
     <Compile Include="Common\Data\CalendarConsolidatorsTests.cs" />
+    <Compile Include="Common\Data\Custom\SECReportTests.cs" />
+    <Compile Include="Common\Data\Custom\SmartInsiderTests.cs" />
     <Compile Include="Common\Data\Custom\EstimizeTests.cs" />
     <Compile Include="Common\Data\DynamicDataTests.cs" />
     <Compile Include="Common\Data\Custom\TiingoNewsJsonConverterTests.cs" />
