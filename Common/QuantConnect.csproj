@@ -251,6 +251,10 @@
     <Compile Include="Data\Custom\Fred\OECDRecessionIndicators.cs" />
     <Compile Include="Data\Custom\Fred\TradeWeightedIndexes.cs" />
     <Compile Include="Data\Custom\Fred\Wilshire.cs" />
+    <Compile Include="Data\Custom\Benzinga\BenzingaMetadata.cs" />
+    <Compile Include="Data\Custom\Benzinga\BenzingaSymbolData.cs" />
+    <Compile Include="Data\Custom\Benzinga\BenzingaCategory.cs" />
+    <Compile Include="Data\Custom\Benzinga\BenzingaNews.cs" />
     <Compile Include="Data\Custom\FxcmVolume.cs" />
     <Compile Include="Data\Custom\SEC\ISECReport.cs" />
     <Compile Include="Data\Custom\SEC\SECReportBusinessAddress.cs" />

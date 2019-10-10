@@ -152,6 +152,7 @@
     <Compile Include="Alphas\TripleLeveragedETFPairVolatilityDecayAlpha.cs" />
     <Compile Include="Alphas\VixDualThrustAlpha.cs" />
     <Compile Include="AltData\CachedAlternativeDataAlgorithm.cs" />
+    <Compile Include="AltData\BenzingaNewsAlgorithm.cs" />
     <Compile Include="AltData\SECReport8KAlgorithm.cs" />
     <Compile Include="AltData\SmartInsiderTransactionAlgorithm.cs" />
     <Compile Include="AltData\USTreasuryYieldCurveRateAlgorithm.cs" />
