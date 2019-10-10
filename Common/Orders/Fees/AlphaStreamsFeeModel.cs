@@ -62,22 +62,17 @@ namespace QuantConnect.Orders.Fees
 
             var market = security.Symbol.ID.Market;
             decimal feeRate;
-
-            if (!_feeRates.TryGetValue(security.Type, out feeRate))
-            {
-                throw new ArgumentException(
-                    Invariant($"Unsupported security type: {security.Type}.")
-                );
-            }
-
+            
             switch (security.Type)
             {
                 case SecurityType.Option:
                 case SecurityType.Future:
                 case SecurityType.Cfd:
+                    _feeRates.TryGetValue(security.Type, out feeRate);
                     return new OrderFee(new CashAmount(feeRate * order.AbsoluteQuantity, Currencies.USD));
 
                 case SecurityType.Forex:
+                    _feeRates.TryGetValue(security.Type, out feeRate);
                     return new OrderFee(new CashAmount(feeRate * Math.Abs(order.GetValue(security)), Currencies.USD));
 
                 case SecurityType.Crypto:
