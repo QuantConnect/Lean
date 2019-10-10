@@ -114,20 +114,24 @@ RUN wget http://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     pip install TA-lib
 
 # Install DX Analytics
-RUN git clone https://github.com/yhilpisch/dx.git && cd dx && \
-    python setup.py install && cd .. && rm -irf dx
+RUN wget https://cdn.quantconnect.com/dx/dx-master-ffe19a6.zip && \
+    unzip -q dx-master-ffe19a6.zip && cd dx-master && \
+    python setup.py install && cd .. && rm -irf dx-master
 
 # Install py-earth
-RUN git clone git://github.com/scikit-learn-contrib/py-earth.git && cd py-earth && \
-    python setup.py install && cd .. && rm -irf py-earth
+RUN wget https://cdn.quantconnect.com/py-earth/py-earth-master-b209d19.zip && \
+    unzip -q py-earth-master-b209d19.zip && cd py-earth-master && \
+    python setup.py install && cd .. && rm -irf py-earth-master
 
 # Install fastText
-RUN git clone https://github.com/facebookresearch/fastText.git && cd fastText && \
-    python setup.py install && cd .. && rm -irf fastText
+RUN wget https://cdn.quantconnect.com/fastText/fastText-master-9479e4e.zip && \
+    unzip -q fastText-master-9479e4e.zip && cd fastText-master && \
+    python setup.py install && cd .. && rm -irf fastText-master
 
 # Update ODO
-RUN git clone https://github.com/blaze/odo.git && cd odo && \
-    python setup.py install && cd .. && rm -irf odo
+RUN wget https://cdn.quantconnect.com/odo/odo-master-9fce669.zip && \ 
+    unzip -q odo-master-9fce669.zip && cd odo-master && \
+    python setup.py install && cd .. && rm -irf odo-master
 
 # List all packages
 RUN conda list
