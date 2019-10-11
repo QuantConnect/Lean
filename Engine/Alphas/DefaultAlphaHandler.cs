@@ -161,7 +161,9 @@ namespace QuantConnect.Lean.Engine.Alphas
                 _lastStepTime = Algorithm.UtcTime;
                 lock (_insights)
                 {
-                    InsightManager.Step(_lastStepTime, _securityValuesProvider.GetAllValues(), new GeneratedInsightsCollection(_lastStepTime, _insights, clone: false));
+                    InsightManager.Step(_lastStepTime,
+                        _securityValuesProvider.GetAllValues(),
+                        new GeneratedInsightsCollection(_lastStepTime, _insights.Count == 0 ? Enumerable.Empty<Insight>() : _insights, clone: false));
                     _insights.Clear();
                 }
             }

@@ -269,7 +269,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new TradeBar(DateTime.UtcNow, security.Symbol, 10m, 20m, 5m, 15m, 10000)
             };
 
-            security.Cache.StoreData(tradeBars);
+            security.Cache.StoreData(tradeBars, typeof(TradeBar));
 
             TradeBar fromSecurityData = security.Data.GetAll<TradeBar>()[0];
             Assert.AreEqual(tradeBars[0].Time, fromSecurityData.Time);

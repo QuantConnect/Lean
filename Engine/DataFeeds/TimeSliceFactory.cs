@@ -170,7 +170,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 var securityUpdate = new List<BaseData>(list.Count);
                 var consolidatorUpdate = new List<BaseData>(list.Count);
-                for (int i = 0; i < list.Count; i++)
+                var containsFillForwardData = false;
+                for (var i = 0; i < list.Count; i++)
                 {
                     var baseData = list[i];
                     if (!packet.Configuration.IsInternalFeed)
@@ -178,6 +179,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // this is all the data that goes into the algorithm
                         allDataForAlgorithm.Add(baseData);
                     }
+
+                    containsFillForwardData |= baseData.IsFillForward;
+
                     // don't add internal feed data to ticks/bars objects
                     if (baseData.DataType != MarketDataType.Auxiliary)
                     {
@@ -346,11 +350,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (securityUpdate.Count > 0)
                 {
-                    security.Add(new UpdateData<ISecurityPrice>(packet.Security, packet.Configuration.Type, securityUpdate, packet.Configuration.IsInternalFeed));
+                    security.Add(new UpdateData<ISecurityPrice>(packet.Security, packet.Configuration.Type, securityUpdate, packet.Configuration.IsInternalFeed, containsFillForwardData));
                 }
                 if (consolidatorUpdate.Count > 0)
                 {
-                    consolidator.Add(new UpdateData<SubscriptionDataConfig>(packet.Configuration, packet.Configuration.Type, consolidatorUpdate, packet.Configuration.IsInternalFeed));
+                    consolidator.Add(new UpdateData<SubscriptionDataConfig>(packet.Configuration, packet.Configuration.Type, consolidatorUpdate, packet.Configuration.IsInternalFeed, containsFillForwardData));
                 }
             }
 

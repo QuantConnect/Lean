@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
@@ -37,8 +36,9 @@ namespace QuantConnect.Securities
         bool UnregisterType(Type type);
 
         /// <summary>
-        /// Gets an enumerable of data types registered with the algorithm
+        /// Determines if the specified type is registered or not and returns it
         /// </summary>
-        IEnumerable<Type> GetRegisteredDataTypes();
+        /// <returns>True if the type was previously registered</returns>
+        bool TryGetType(string name, out Type type);
     }
 }
