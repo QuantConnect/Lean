@@ -15,15 +15,10 @@
 
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.CBOE;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Algorithm.CSharp.AltData
 {
-    public class CBOEAlgorithm : QCAlgorithm
+    public class CachedAlternativeDataAlgorithm : QCAlgorithm
     {
         public override void Initialize()
         {
@@ -31,16 +26,17 @@ namespace QuantConnect.Algorithm.CSharp.AltData
             SetEndDate(2019, 10, 11);
             SetCash(100000);
 
+            // QuantConnect caches a small subset of alternative data for easy consumption for the community.
+            // You can use this in your algorithm as demonstrated below:
+
+            // CBOE VIX: http://cache.quantconnect.com/alternative/cboe/vix.csv
             AddData<CBOE>("VIX");
         }
 
         public override void OnData(Slice data)
         {
-            foreach (var point in data.Get<CBOE>())
-            {
-                var value = point.Value;
-                Log($"{Time} - {value.Time}, {value.Open}, {value.High}, {value.Low}, {value.Close}");
-            }
+            var vix = data.Get<CBOE>("VIX");
+            Log($"VIX: {Time}, {vix.Open}, {vix.High}, {vix.Low}, {vix.Close}");
         }
     }
 }
