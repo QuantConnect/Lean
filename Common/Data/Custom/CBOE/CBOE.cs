@@ -59,7 +59,7 @@ namespace QuantConnect.Data.Custom.CBOE
         /// <returns>New BaseData instance to be used in the algorithm</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            if (line.StartsWith("Cboe") || line.StartsWith("Date"))
+            if (line.StartsWith("Cboe") || line.StartsWith("Date") || line.StartsWith(","))
             {
                 return null;
             }
@@ -68,15 +68,37 @@ namespace QuantConnect.Data.Custom.CBOE
                 .Select(x => x.Trim())
                 .ToList();
 
+            decimal open;
+            decimal high;
+            decimal low;
+            decimal close;
+
+            if (!decimal.TryParse(csv[1], NumberStyles.Any, CultureInfo.InvariantCulture, out open))
+            {
+                return null;
+            }
+            if (!decimal.TryParse(csv[2], NumberStyles.Any, CultureInfo.InvariantCulture, out high))
+            {
+                return null;
+            }
+            if (!decimal.TryParse(csv[3], NumberStyles.Any, CultureInfo.InvariantCulture, out low))
+            {
+                return null;
+            }
+            if (!decimal.TryParse(csv[4], NumberStyles.Any, CultureInfo.InvariantCulture, out close))
+            {
+                return null;
+            }
+
             return new CBOE
             {
                 // Add a day delay to the data so that we LEAN doesn't assume that we get the data at 00:00 the day of
                 Time = DateTime.Parse(csv[0], CultureInfo.InvariantCulture).AddDays(1),
                 Symbol = config.Symbol,
-                Open = Convert.ToDecimal(csv[1], CultureInfo.InvariantCulture),
-                High = Convert.ToDecimal(csv[2], CultureInfo.InvariantCulture),
-                Low = Convert.ToDecimal(csv[3], CultureInfo.InvariantCulture),
-                Close = Convert.ToDecimal(csv[4], CultureInfo.InvariantCulture)
+                Open = open,
+                High = high,
+                Low = low,
+                Close = close
             };
         }
 
