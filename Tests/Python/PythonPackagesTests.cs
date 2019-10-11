@@ -505,14 +505,106 @@ def RunTest():
         }
 
         [Test]
-        public void WraptTest()
+        public void GensimTest()
         {
             AssetCode(
                 @"
-import wrapt
+from gensim import models
 
 def RunTest():
-    assert(wrapt.__version__ == '1.10.11')
+    # https://radimrehurek.com/gensim/tutorial.html
+    corpus = [[(0, 1.0), (1, 1.0), (2, 1.0)],
+              [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],
+              [(1, 1.0), (3, 1.0), (4, 1.0), (7, 1.0)],
+              [(0, 1.0), (4, 2.0), (7, 1.0)],
+              [(3, 1.0), (5, 1.0), (6, 1.0)],
+              [(9, 1.0)],
+              [(9, 1.0), (10, 1.0)],
+              [(9, 1.0), (10, 1.0), (11, 1.0)],
+              [(8, 1.0), (10, 1.0), (11, 1.0)]]
+
+    tfidf = models.TfidfModel(corpus)
+    vec = [(0, 1), (4, 1)]
+    return f'{tfidf[vec]}'"
+            );
+        }
+
+        [Test]
+        public void ScikitMultiflowTest()
+        {
+            AssetCode(
+                @"
+from skmultiflow.data import WaveformGenerator
+from skmultiflow.trees import HoeffdingTree
+from skmultiflow.evaluation import EvaluatePrequential
+
+def RunTest():
+    # 1. Create a stream
+    stream = WaveformGenerator()
+    stream.prepare_for_use()
+
+    # 2. Instantiate the HoeffdingTree classifier
+    ht = HoeffdingTree()
+
+    # 3. Setup the evaluator
+    evaluator = EvaluatePrequential(show_plot=False,
+                                    pretrain_size=200,
+                                    max_samples=20000)
+
+    # 4. Run evaluation
+    evaluator.evaluate(stream=stream, model=ht)
+    return 'Test passed, module exists'"
+            );
+        }
+
+        [Test]
+        public void ScikitOptimizeTest()
+        {
+            AssetCode(
+                @"
+import numpy as np
+from skopt import gp_minimize
+
+def f(x):
+    return (np.sin(5 * x[0]) * (1 - np.tanh(x[0] ** 2)) * np.random.randn() * 0.1)
+
+def RunTest():
+    res = gp_minimize(f, [(-2.0, 2.0)])
+    return f'Test passed: {res}'"
+            );
+        }
+
+        [Test]
+        public void CremeTest()
+        {
+            AssetCode(
+                @"
+from creme import datasets
+
+def RunTest():
+    X_y = datasets.fetch_bikes()
+    x, y = next(X_y)
+    return f'Number of bikes: {y}'"
+            );
+        }
+
+        /// <summary>
+        /// Simple test for modules that don't have short test example
+        /// </summary>
+        /// <param name="module">The module we are testing</param>
+        /// <param name="version">The module version</param>
+        [TestCase("pulp", "1.6.8", "VERSION")]
+        [TestCase("pymc3", "3.7", "__version__")]
+        [TestCase("pypfopt", "pypfopt", "__name__")]
+        [TestCase("wrapt", "1.11.2", "__version__")]
+        public void ModuleVersionTest(string module, string value, string attribute)
+        {
+            AssetCode(
+                $@"
+import {module}
+
+def RunTest():
+    assert({module}.{attribute} == '{value}')
     return 'Test passed, module exists'"
             );
         }
