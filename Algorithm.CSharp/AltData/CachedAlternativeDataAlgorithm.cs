@@ -15,11 +15,15 @@
 
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.CBOE;
+using QuantConnect.Data.Custom.USEnergy;
 
 namespace QuantConnect.Algorithm.CSharp.AltData
 {
     public class CachedAlternativeDataAlgorithm : QCAlgorithm
     {
+        private Symbol _cboeVix;
+        private Symbol _usEnergy;
+
         public override void Initialize()
         {
             SetStartDate(2003, 1, 1);
@@ -30,13 +34,24 @@ namespace QuantConnect.Algorithm.CSharp.AltData
             // You can use this in your algorithm as demonstrated below:
 
             // CBOE VIX: http://cache.quantconnect.com/alternative/cboe/vix.csv
-            AddData<CBOE>("VIX");
+            _cboeVix = AddData<CBOE>("VIX").Symbol;
+            // United States EIA data: https://eia.gov/
+            _usEnergy = AddData<USEnergy>(USEnergyCategory.Petroleum.UnitedStates.WeeklyGrossInputsIntoRefineries).Symbol;
         }
 
         public override void OnData(Slice data)
         {
-            var vix = data.Get<CBOE>("VIX");
-            Log($"{vix}");
+            if (data.ContainsKey(_cboeVix))
+            {
+                var vix = data.Get<CBOE>(_cboeVix);
+                Log($"VIX: {vix}");
+            }
+
+            if (data.ContainsKey(_usEnergy))
+            {
+                var inputIntoRefineries = data.Get<USEnergy>(_usEnergy);
+                Log($"U.S. Input Into Refineries: {Time}, {inputIntoRefineries.Value}");
+            }
         }
     }
 }

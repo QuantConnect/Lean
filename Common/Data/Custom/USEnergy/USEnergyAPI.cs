@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Custom
     /// and forecasting across all US energy sectors.
     /// https://www.eia.gov/opendata/
     /// </summary>
-    public class USEnergyInformation : BaseData
+    public class USEnergyAPI : BaseData
     {
         private TimeSpan _period = TimeSpan.Zero;
         private string _previousContent = string.Empty;
@@ -87,7 +87,7 @@ namespace QuantConnect.Data.Custom
         /// <param name="date">Date of the requested data</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>
-        /// Collection of USEnergyInformation objects
+        /// Collection of USEnergyAPI objects
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
         {
@@ -122,7 +122,7 @@ namespace QuantConnect.Data.Custom
                     from jToken in series["data"]
                     where jToken[1].Type != JTokenType.Null
                     let closeTime = DateTimeConverter(jToken[0], format).ConvertFromUtc(config.DataTimeZone)
-                    select new USEnergyInformation
+                    select new USEnergyAPI
                     {
                         Symbol = config.Symbol,
                         Time = closeTime - _period,

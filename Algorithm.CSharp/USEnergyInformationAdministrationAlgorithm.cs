@@ -49,10 +49,10 @@ namespace QuantConnect.Algorithm.CSharp
             // Set your Tiingo API Token here
             Tiingo.SetAuthCode("my-tiingo-api-token");
             // Set your US Energy Information Administration (EIA) Token here
-            USEnergyInformation.SetAuthCode("my-us-energy-information-api-token");
+            USEnergyAPI.SetAuthCode("my-us-energy-information-api-token");
 
             _tiingoSymbol = AddData<TiingoPrice>(tiingoTicker, Resolution.Daily).Symbol;
-            _energySymbol = AddData<USEnergyInformation>(energyTicker).Symbol;
+            _energySymbol = AddData<USEnergyAPI>(energyTicker).Symbol;
 
             _emaFast = EMA(_tiingoSymbol, 5);
             _emaSlow = EMA(_tiingoSymbol, 10);
@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Extract US EIA data from the slice
-            var energyData = slice.Get<USEnergyInformation>();
+            var energyData = slice.Get<USEnergyAPI>();
             foreach (var row in energyData.Values)
             {
                 Log($"{Time} - {row.Symbol.Value} - {row.Value} ");

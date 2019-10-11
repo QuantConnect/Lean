@@ -274,7 +274,9 @@
     <Compile Include="Data\Custom\Estimize\EstimizeEstimate.cs" />
     <Compile Include="Data\Custom\Estimize\EstimizeRelease.cs" />
     <Compile Include="Data\Custom\PsychSignal\PsychSignalSentiment.cs" />
-    <Compile Include="Data\Custom\USEnergyInformation.cs" />
+    <Compile Include="Data\Custom\USEnergy\USEnergy.cs" />
+    <Compile Include="Data\Custom\USEnergy\USEnergyAPI.cs" />
+    <Compile Include="Data\Custom\USEnergy\USEnergyCategory.cs" />
     <Compile Include="Data\Custom\USTreasury\USTreasuryYieldCurveRate.cs" />
     <Compile Include="Data\Fundamental\AssetClassificationHelper.cs" />
     <Compile Include="Data\GetSetPropertyDynamicMetaObject.cs" />
