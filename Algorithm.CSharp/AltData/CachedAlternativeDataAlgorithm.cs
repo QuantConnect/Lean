@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp.AltData
         public override void OnData(Slice data)
         {
             var vix = data.Get<CBOE>("VIX");
-            Log($"VIX: {Time}, {vix.Open}, {vix.High}, {vix.Low}, {vix.Close}");
+            Log($"{vix}");
         }
     }
 }

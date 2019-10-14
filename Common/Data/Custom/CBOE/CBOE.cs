@@ -25,6 +25,19 @@ namespace QuantConnect.Data.Custom.CBOE
     public class CBOE : TradeBar
     {
         /// <summary>
+        /// Market data type
+        /// </summary>
+        public new MarketDataType DataType;
+
+        /// <summary>
+        /// Creates a new instance of the object
+        /// </summary>
+        public CBOE()
+        {
+            DataType = MarketDataType.Base;
+        }
+
+        /// <summary>
         /// Gets the source location of the CBOE file
         /// </summary>
         /// <param name="config"></param>
@@ -73,19 +86,19 @@ namespace QuantConnect.Data.Custom.CBOE
             decimal low;
             decimal close;
 
-            if (!decimal.TryParse(csv[1], NumberStyles.Any, CultureInfo.InvariantCulture, out open))
+            if (!QuantConnect.Parse.TryParse(csv[1], NumberStyles.Any, out open))
             {
                 return null;
             }
-            if (!decimal.TryParse(csv[2], NumberStyles.Any, CultureInfo.InvariantCulture, out high))
+            if (!QuantConnect.Parse.TryParse(csv[2], NumberStyles.Any, out high))
             {
                 return null;
             }
-            if (!decimal.TryParse(csv[3], NumberStyles.Any, CultureInfo.InvariantCulture, out low))
+            if (!QuantConnect.Parse.TryParse(csv[3], NumberStyles.Any, out low))
             {
                 return null;
             }
-            if (!decimal.TryParse(csv[4], NumberStyles.Any, CultureInfo.InvariantCulture, out close))
+            if (!QuantConnect.Parse.TryParse(csv[4], NumberStyles.Any, out close))
             {
                 return null;
             }
@@ -93,7 +106,7 @@ namespace QuantConnect.Data.Custom.CBOE
             return new CBOE
             {
                 // Add a day delay to the data so that we LEAN doesn't assume that we get the data at 00:00 the day of
-                Time = DateTime.Parse(csv[0], CultureInfo.InvariantCulture).AddDays(1),
+                Time = QuantConnect.Parse.DateTime(csv[0]).AddDays(1),
                 Symbol = config.Symbol,
                 Open = open,
                 High = high,
@@ -118,6 +131,15 @@ namespace QuantConnect.Data.Custom.CBOE
         public override bool IsSparseData()
         {
             return false;
+        }
+
+        /// <summary>
+        /// Converts the instance to a string
+        /// </summary>
+        /// <returns>String containing open, high, low, close</returns>
+        public override string ToString()
+        {
+            return $"{Symbol} - O: {Open}, H: {High}, L: {Low}, C: {Close}";
         }
     }
 }

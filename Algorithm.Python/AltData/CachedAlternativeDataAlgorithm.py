@@ -39,5 +39,5 @@ class CachedAlternativeDataAlgorithm(QCAlgorithm):
 
     def OnData(self, data):
         vix = data.Get(CBOE, "VIX")
-        self.Log(f"VIX: {self.Time}, {vix.Open}, {vix.High}, {vix.Low}, {vix.Close}")
+        self.Log(f"{vix}")
 
