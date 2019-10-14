@@ -265,7 +265,11 @@ namespace QuantConnect.Data.Custom.SmartInsider
                 PriceCurrency = PriceCurrency,
                 MinimumPrice = MinimumPrice,
                 MaximumPrice = MaximumPrice,
-                NoteText = NoteText
+                NoteText = NoteText,
+
+                Symbol = Symbol,
+                Value = Value,
+                Time = Time,
             };
         }
 
