@@ -16,12 +16,12 @@
 
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.Custom.SEC;
+using QuantConnect.Data.Custom.SmartInsider;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp.Benchmarks
 {
-    public class SECReportBenchmarkAlgorithm : QCAlgorithm
+    public class SmartInsiderEventBenchmarkAlgorithm : QCAlgorithm
     {
         private List<Security> _securities;
         /// <summary>
@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2018, 1, 1);
+            SetStartDate(2005, 1, 1);
             SetEndDate(2019, 1, 1);
 
             var tickers = new List<string> {"AAPL", "AMZN", "MSFT", "IBM", "FB", "QQQ",
@@ -38,22 +38,25 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
 
             foreach (var ticker in tickers)
             {
-                var equity = AddEquity(ticker);
+                var equity = AddEquity(ticker, Resolution.Daily);
                 _securities.Add(equity);
 
-                AddData<SECReport8K>(equity.Symbol, Resolution.Daily);
-                AddData<SECReport10K>(equity.Symbol, Resolution.Daily);
+                AddData<SmartInsiderIntention>(equity.Symbol, Resolution.Daily);
+                AddData<SmartInsiderTransaction>(equity.Symbol, Resolution.Daily);
             }
         }
 
         public override void OnData(Slice data)
         {
+            var intentions = data.Get<SmartInsiderIntention>();
+            var transactions = data.Get<SmartInsiderTransaction>();
+
             foreach (var security in _securities)
             {
-                SECReport8K report8K = security.Data.Get<SECReport8K>();
-                SECReport10K report10K = security.Data.Get<SECReport10K>();
+                SmartInsiderIntention intention = security.Data.Get<SmartInsiderIntention>();
+                SmartInsiderTransaction transaction = security.Data.Get<SmartInsiderTransaction>();
 
-                if (!security.HoldStock && report8K != null && report10K != null)
+                if (!security.HoldStock && intention != null && transaction != null && intentions.Count == transactions.Count)
                 {
                     SetHoldings(security.Symbol, 1d / _securities.Count);
                 }
