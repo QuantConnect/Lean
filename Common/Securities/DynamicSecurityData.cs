@@ -119,7 +119,10 @@ namespace QuantConnect.Securities
                 return null;
             }
 
-            return list[list.Count-1].ToPython();
+            using (Py.GIL())
+            {
+                return list[list.Count - 1].ToPython();
+            }
         }
 
         /// <summary>
