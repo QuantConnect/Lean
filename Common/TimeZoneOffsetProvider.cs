@@ -48,7 +48,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="timeZone">The time zone to provide offsets for</param>
         /// <param name="utcStartTime">The start of the range of offsets</param>
-        /// <param name="utcEndTime">The en of the range of offsets</param>
+        /// <param name="utcEndTime">The end of the range of offsets</param>
         public TimeZoneOffsetProvider(DateTimeZone timeZone, DateTime utcStartTime, DateTime utcEndTime)
         {
             _timeZone = timeZone;
