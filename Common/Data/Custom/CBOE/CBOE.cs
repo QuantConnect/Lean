@@ -72,7 +72,8 @@ namespace QuantConnect.Data.Custom.CBOE
         /// <returns>New BaseData instance to be used in the algorithm</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            if (line.StartsWith("Cboe") || line.StartsWith("Date") || line.StartsWith(","))
+            // Return null if we don't have a valid date for the first entry
+            if (!char.IsNumber(line.FirstOrDefault()))
             {
                 return null;
             }
@@ -86,22 +87,10 @@ namespace QuantConnect.Data.Custom.CBOE
             decimal low;
             decimal close;
 
-            if (!QuantConnect.Parse.TryParse(csv[1], NumberStyles.Any, out open))
-            {
-                return null;
-            }
-            if (!QuantConnect.Parse.TryParse(csv[2], NumberStyles.Any, out high))
-            {
-                return null;
-            }
-            if (!QuantConnect.Parse.TryParse(csv[3], NumberStyles.Any, out low))
-            {
-                return null;
-            }
-            if (!QuantConnect.Parse.TryParse(csv[4], NumberStyles.Any, out close))
-            {
-                return null;
-            }
+            QuantConnect.Parse.TryParse(csv[1], NumberStyles.Any, out open);
+            QuantConnect.Parse.TryParse(csv[2], NumberStyles.Any, out high);
+            QuantConnect.Parse.TryParse(csv[3], NumberStyles.Any, out low);
+            QuantConnect.Parse.TryParse(csv[4], NumberStyles.Any, out close);
 
             return new CBOE
             {
