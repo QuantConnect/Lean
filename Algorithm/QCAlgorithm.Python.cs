@@ -26,6 +26,7 @@ using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Fundamental;
 using System.Linq;
+using QuantConnect.Brokerages;
 using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm
@@ -840,7 +841,13 @@ namespace QuantConnect.Algorithm
         /// <param name="model">The brokerage model to use</param>
         public void SetBrokerageModel(PyObject model)
         {
-            SetBrokerageModel(new BrokerageModelPythonWrapper(model));
+            IBrokerageModel brokerageModel;
+            if (!model.TryConvert(out brokerageModel))
+            {
+                brokerageModel = new BrokerageModelPythonWrapper(model);
+            }
+
+            SetBrokerageModel(brokerageModel);
         }
 
         /// <summary>
