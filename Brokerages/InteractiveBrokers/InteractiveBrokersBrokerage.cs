@@ -2581,7 +2581,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var symbol = entry.Symbol;
 
             var securityType = symbol.ID.SecurityType;
-            var quantity = AdjustQuantity(securityType, e.Size);
+
+            // negative size (-1) means no quantity available, normalize to zero
+            var quantity = e.Size < 0 ? 0 : AdjustQuantity(securityType, e.Size);
 
             Tick tick;
             switch (e.Field)
