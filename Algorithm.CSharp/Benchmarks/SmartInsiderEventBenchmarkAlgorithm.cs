@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.SmartInsider;
@@ -24,43 +25,57 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
     public class SmartInsiderEventBenchmarkAlgorithm : QCAlgorithm
     {
         private List<Security> _securities;
+        private List<Symbol> _customSymbols;
+        private int _historySymbolCount;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2005, 1, 1);
+            SetStartDate(2010, 1, 1);
             SetEndDate(2019, 1, 1);
 
             var tickers = new List<string> {"AAPL", "AMZN", "MSFT", "IBM", "FB", "QQQ",
                 "IWM", "BAC", "BNO", "AIG", "UW", "WM" };
             _securities = new List<Security>();
+            _customSymbols = new List<Symbol>();
 
             foreach (var ticker in tickers)
             {
-                var equity = AddEquity(ticker, Resolution.Daily);
+                var equity = AddEquity(ticker, Resolution.Hour);
                 _securities.Add(equity);
 
-                AddData<SmartInsiderIntention>(equity.Symbol, Resolution.Daily);
-                AddData<SmartInsiderTransaction>(equity.Symbol, Resolution.Daily);
+                _customSymbols.Add(
+                    AddData<SmartInsiderIntention>(equity.Symbol, Resolution.Daily).Symbol);
+                _customSymbols.Add(
+                    AddData<SmartInsiderTransaction>(equity.Symbol, Resolution.Daily).Symbol);
             }
+
+            Schedule.On(DateRules.EveryDay(), TimeRules.At(16, 0), () =>
+                {
+                    foreach (var slice in History(_customSymbols, TimeSpan.FromDays(5)))
+                    {
+                        _historySymbolCount += slice.Count;
+                    }
+
+                    foreach (var security in _securities)
+                    {
+                        SmartInsiderIntention intention = security.Data.Get<SmartInsiderIntention>();
+                        SmartInsiderTransaction transaction = security.Data.Get<SmartInsiderTransaction>();
+
+                        if (!security.HoldStock && intention != null && transaction != null)
+                        {
+                            SetHoldings(security.Symbol, 1d / _securities.Count);
+                        }
+                    }
+                });
         }
 
         public override void OnData(Slice data)
         {
             var intentions = data.Get<SmartInsiderIntention>();
             var transactions = data.Get<SmartInsiderTransaction>();
-
-            foreach (var security in _securities)
-            {
-                SmartInsiderIntention intention = security.Data.Get<SmartInsiderIntention>();
-                SmartInsiderTransaction transaction = security.Data.Get<SmartInsiderTransaction>();
-
-                if (!security.HoldStock && intention != null && transaction != null && intentions.Count == transactions.Count)
-                {
-                    SetHoldings(security.Symbol, 1d / _securities.Count);
-                }
-            }
         }
     }
 }
