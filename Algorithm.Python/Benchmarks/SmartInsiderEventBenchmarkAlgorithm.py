@@ -19,27 +19,40 @@ AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Data.Custom.SEC import *
+from QuantConnect.Data.Custom.SmartInsider import *
 
-class SECReportBenchmarksAlgorithm(QCAlgorithm):
+class SmartInsiderEventBenchmarkAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        self.SetStartDate(2018, 1, 1)
+        self.SetStartDate(2010, 1, 1)
         self.SetEndDate(2019, 1, 1)
 
         tickers = {"AAPL", "AMZN", "MSFT", "IBM", "FB", "QQQ", "IWM", "BAC", "BNO", "AIG", "UW", "WM" }
         self.securities = []
+        self.customSymbols = []
         for ticker in tickers:
-            security = self.AddEquity(ticker)
+            security = self.AddEquity(ticker, Resolution.Hour)
             self.securities.append(security)
-            self.AddData(SECReport10K, security.Symbol, Resolution.Daily)
-            self.AddData(SECReport8K, security.Symbol, Resolution.Daily)
+
+            intetion = self.AddData(SmartInsiderIntention, security.Symbol, Resolution.Daily)
+            transaction = self.AddData(SmartInsiderTransaction, security.Symbol, Resolution.Daily)
+            self.customSymbols.append(intetion.Symbol)
+            self.customSymbols.append(transaction.Symbol)
+
+        self.Schedule.On(self.DateRules.EveryDay(), self.TimeRules.At(16, 0), self.DailyRebalance)
 
     def OnData(self, slice):
-        for security in self.securities:
-            report8K = security.Data.Get(SECReport8K)
-            report10K = security.Data.Get(SECReport10K)
+        intentions = slice.Get(SmartInsiderIntention)
+        transactions = slice.Get(SmartInsiderTransaction)
 
-            if not security.HoldStock and report8K != None and report10K != None:
+    def DailyRebalance(self):
+        history = self.History(self.customSymbols, timedelta(5))
+        historySymbolCount = len(history.index)
+
+        for security in self.securities:
+            intention = security.Data.Get(SmartInsiderIntention)
+            transaction = security.Data.Get(SmartInsiderTransaction)
+
+            if not security.HoldStock and intention != None and transaction != None:
                 self.SetHoldings(security.Symbol, 1 / len(self.securities))

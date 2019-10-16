@@ -161,6 +161,7 @@
     <Compile Include="BasicPythonIntegrationTemplateAlgorithm.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
     <Compile Include="Benchmarks\SECReportBenchmarkAlgorithm.cs" />
+    <Compile Include="Benchmarks\SmartInsiderEventBenchmarkAlgorithm.cs" />
     <Compile Include="CustomBenchmarkRegressionAlgorithm.cs" />
     <Compile Include="CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm.cs" />
     <Compile Include="CustomDataAddDataCoarseSelectionRegressionAlgorithm.cs" />

@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2015, 1, 1);
+            SetStartDate(2018, 1, 1);
             SetEndDate(2019, 1, 1);
 
             var tickers = new List<string> {"AAPL", "AMZN", "MSFT", "IBM", "FB", "QQQ",
@@ -38,11 +38,11 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
 
             foreach (var ticker in tickers)
             {
-                var equity = AddEquity(ticker, Resolution.Daily);
+                var equity = AddEquity(ticker);
                 _securities.Add(equity);
 
-                AddData<SECReport8K>(equity.Symbol);
-                AddData<SECReport10K>(equity.Symbol);
+                AddData<SECReport8K>(equity.Symbol, Resolution.Daily);
+                AddData<SECReport10K>(equity.Symbol, Resolution.Daily);
             }
         }
 
