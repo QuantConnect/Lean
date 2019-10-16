@@ -18,7 +18,9 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Python
 {
@@ -64,6 +66,35 @@ namespace QuantConnect.Tests.Python
                 Assert.Null(algorithm.RunTimeError);
                 Assert.DoesNotThrow(() => algorithm.OnEndOfDay());
                 Assert.NotNull(algorithm.RunTimeError);
+            }
+        }
+
+        [TestCase("", false)]
+        [TestCase("def OnMarginCall(self, orders): pass", true)]
+        [TestCase("def OnMarginCall(self, orders): return orders", false)]
+        public void OnMarginCall(string code, bool throws)
+        {
+            using (Py.GIL())
+            {
+                var algorithm = GetAlgorithm(code);
+                Assert.Null(algorithm.RunTimeError);
+
+                var order = new SubmitOrderRequest(OrderType.Limit,
+                        SecurityType.Base,
+                        Symbol.Empty,
+                        1,
+                        1,
+                        1,
+                        DateTime.UtcNow,
+                        "");
+                if (throws)
+                {
+                    Assert.Throws<Exception>(() => algorithm.OnMarginCall(new List<SubmitOrderRequest> { order }));
+                }
+                else
+                {
+                    Assert.DoesNotThrow(() => algorithm.OnMarginCall(new List<SubmitOrderRequest> { order }));
+                }
             }
         }
 

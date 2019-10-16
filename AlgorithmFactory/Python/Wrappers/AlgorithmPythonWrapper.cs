@@ -41,11 +41,12 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
     /// </summary>
     public class AlgorithmPythonWrapper : IAlgorithm
     {
-        private readonly dynamic _algorithm = null;
+        private readonly dynamic _algorithm;
         private readonly dynamic _onData;
         private readonly dynamic _onOrderEvent;
         private readonly IAlgorithm _baseAlgorithm;
-        private readonly bool _isOnDataDefined = false;
+        private readonly bool _isOnDataDefined;
+        private readonly bool _isOnMaginCallDefined;
 
         /// <summary>
         /// <see cref = "AlgorithmPythonWrapper"/> constructor.
@@ -85,8 +86,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             // determines whether OnData method was defined or inherits from QCAlgorithm
                             // If it is not, OnData from the base class will not be called
                             _onData = (_algorithm as PyObject).GetAttr("OnData");
-                            var pythonType = _onData.GetPythonType();
-                            _isOnDataDefined = pythonType.Repr().Equals("<class \'method\'>");
+                            var onDataPythonType = _onData.GetPythonType();
+                            _isOnDataDefined = onDataPythonType.Repr().Equals("<class \'method\'>");
+
+                            var onMarginCallPythonType = _algorithm.OnMarginCall.GetPythonType();
+                            _isOnMaginCallDefined = onMarginCallPythonType.Repr().Equals("<class \'method\'>");
 
                             _onOrderEvent = (_algorithm as PyObject).GetAttr("OnOrderEvent");
                         }
@@ -628,12 +632,13 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="requests">The orders to be executed to bring this algorithm within margin limits</param>
         public void OnMarginCall(List<SubmitOrderRequest> requests)
         {
-            try
+            using (Py.GIL())
             {
-                using (Py.GIL())
-                {
-                    var pyRequests = _algorithm.OnMarginCall(requests) as PyObject;
+                var result = _algorithm.OnMarginCall(requests);
 
+                if (_isOnMaginCallDefined)
+                {
+                    var pyRequests = result as PyObject;
                     // If the method does not return or returns a non-iterable PyObject, throw an exception
                     if (pyRequests == null || !pyRequests.IsIterable())
                     {
@@ -656,19 +661,6 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                     {
                         throw new Exception("OnMarginCall must return a non-empty list of SubmitOrderRequest");
                     }
-                }
-            }
-            catch (PythonException pythonException)
-            {
-                // Pythonnet generated error due to List conversion
-                if (pythonException.Message.Contains("TypeError : No method matches given arguments"))
-                {
-                    _baseAlgorithm.OnMarginCall(requests);
-                }
-                // User code generated error
-                else
-                {
-                    throw pythonException;
                 }
             }
         }
