@@ -21,7 +21,7 @@ namespace QuantConnect.Data.Custom.USEnergy
     /// <summary>
     /// United States Energy Information Administration (EIA). This loads U.S. Energy data from QuantConnect's cache.
     /// </summary>
-    public class USEnergy : BaseData
+    public partial class USEnergy : BaseData
     {
         /// <summary>
         /// Determines the location of the data

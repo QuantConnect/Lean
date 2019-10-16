@@ -38,7 +38,7 @@ class CachedAlternativeDataAlgorithm(QCAlgorithm):
         # CBOE VIX: http://cache.quantconnect.com/alternative/cboe/vix.csv
         self.cboeVix = self.AddData(CBOE, "VIX").Symbol
         # United States EIA data: https://eia.gov/
-        self.usEnergy = self.AddData(USEnergy, USEnergyCategory.Petroleum.UnitedStates.WeeklyGrossInputsIntoRefineries).Symbol
+        self.usEnergy = self.AddData(USEnergy, USEnergy.Petroleum.UnitedStates.WeeklyGrossInputsIntoRefineries).Symbol
 
     def OnData(self, data):
         if data.ContainsKey(self.cboeVix):

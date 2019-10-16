@@ -15,10 +15,7 @@
 
 namespace QuantConnect.Data.Custom.USEnergy
 {
-    /// <summary>
-    /// United States Energy category
-    /// </summary>
-    public static class USEnergyCategory
+    public partial class USEnergy
     {
         /// <summary>
         /// Petroleum

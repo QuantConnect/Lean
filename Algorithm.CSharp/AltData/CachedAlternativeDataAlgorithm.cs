@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp.AltData
             // CBOE VIX: http://cache.quantconnect.com/alternative/cboe/vix.csv
             _cboeVix = AddData<CBOE>("VIX").Symbol;
             // United States EIA data: https://eia.gov/
-            _usEnergy = AddData<USEnergy>(USEnergyCategory.Petroleum.UnitedStates.WeeklyGrossInputsIntoRefineries).Symbol;
+            _usEnergy = AddData<USEnergy>(USEnergy.Petroleum.UnitedStates.WeeklyGrossInputsIntoRefineries).Symbol;
         }
 
         public override void OnData(Slice data)
