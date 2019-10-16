@@ -17,7 +17,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -43,6 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly DateTime _subscriptionEndTime;
         private readonly IEnumerator<BaseData> _enumerator;
         private readonly IReadOnlyRef<TimeSpan> _fillForwardResolution;
+        private readonly TimeZoneOffsetProvider _offsetProvider;
 
         /// <summary>
         /// The exchange used to determine when to insert fill forward data
@@ -62,13 +62,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="dataResolution">The source enumerator's data resolution</param>
         /// <param name="dataTimeZone">The time zone of the underlying source data. This is used for rounding calculations and
         /// is NOT the time zone on the BaseData instances (unless of course data time zone equals the exchange time zone)</param>
+        /// <param name="subscriptionStartTime">The subscriptions start time</param>
         public FillForwardEnumerator(IEnumerator<BaseData> enumerator,
             SecurityExchange exchange,
             IReadOnlyRef<TimeSpan> fillForwardResolution,
             bool isExtendedMarketHours,
             DateTime subscriptionEndTime,
             TimeSpan dataResolution,
-            DateTimeZone dataTimeZone
+            DateTimeZone dataTimeZone,
+            DateTime subscriptionStartTime
             )
         {
             _subscriptionEndTime = subscriptionEndTime;
@@ -78,6 +80,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _dataTimeZone = dataTimeZone;
             _fillForwardResolution = fillForwardResolution;
             _isExtendedMarketHours = isExtendedMarketHours;
+            _offsetProvider = new TimeZoneOffsetProvider(Exchange.TimeZone,
+                subscriptionStartTime.ConvertToUtc(Exchange.TimeZone),
+                subscriptionEndTime.ConvertToUtc(Exchange.TimeZone));
         }
 
         /// <summary>
@@ -265,7 +270,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
             foreach (var item in GetSortedReferenceDateIntervals(previous, fillForwardResolution, _dataResolution))
             {
-                var potentialBarEndTime = RoundDown(item.ReferenceDateTime + item.Interval, item.Interval);
+                // add interval in utc to avoid daylight savings from swallowing it, see GH 3707
+                var potentialUtc = _offsetProvider.ConvertToUtc(item.ReferenceDateTime) + item.Interval;
+                var potentialInTimeZone = _offsetProvider.ConvertFromUtc(potentialUtc);
+                var potentialBarEndTime = RoundDown(potentialInTimeZone, item.Interval);
                 if (potentialBarEndTime < next.EndTime)
                 {
                     var nextFillForwardBarStartTime = potentialBarEndTime - item.Interval;

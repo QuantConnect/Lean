@@ -166,6 +166,27 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        // this unit test reproduces a fixed infinite loop situation, due to a daylight saving time change, GH issue 3707.
+        public void RoundDownInTimeZoneAroundDaylightTimeChanges()
+        {
+            // sydney time advanced Sunday, 6 October 2019, 02:00:00 clocks were turned forward 1 hour to
+            // Sunday, 6 October 2019, 03:00:00 local daylight time instead.
+            var timeAt = new DateTime(2019, 10, 6, 10, 0, 0);
+            var expected = new DateTime(2019, 10, 5, 10, 0, 0);
+
+            var exchangeRoundedAt = timeAt.RoundDownInTimeZone(Time.OneDay, TimeZones.Sydney, TimeZones.Utc);
+            // even though there is an entire 'roundingInterval' unit (1 day) between 'timeAt' and 'expected' round down
+            // is affected by daylight savings and rounds down the timeAt
+            Assert.AreEqual(expected, exchangeRoundedAt);
+
+            timeAt = new DateTime(2019, 10, 7, 10, 0, 0);
+            expected = new DateTime(2019, 10, 6, 11, 0, 0);
+
+            exchangeRoundedAt = timeAt.RoundDownInTimeZone(Time.OneDay, TimeZones.Sydney, TimeZones.Utc);
+            Assert.AreEqual(expected, exchangeRoundedAt);
+        }
+
+        [Test]
         public void RoundDownInTimeZoneReturnsCorrectValuesAroundDaylightTimeChanges_AddingOneHour_UTC()
         {
             var timeAt = new DateTime(2014, 3, 9, 2, 0, 0);
