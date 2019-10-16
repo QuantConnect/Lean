@@ -35,7 +35,6 @@ class CachedAlternativeDataAlgorithm(QCAlgorithm):
         # QuantConnect caches a small subset of alternative data for easy consumption for the community.
         # You can use this in your algorithm as demonstrated below:
 
-        # CBOE VIX: http://cache.quantconnect.com/alternative/cboe/vix.csv
         self.cboeVix = self.AddData(CBOE, "VIX").Symbol
         # United States EIA data: https://eia.gov/
         self.usEnergy = self.AddData(USEnergy, USEnergy.Petroleum.UnitedStates.WeeklyGrossInputsIntoRefineries).Symbol

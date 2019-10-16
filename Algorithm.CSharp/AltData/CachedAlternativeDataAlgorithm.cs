@@ -33,7 +33,6 @@ namespace QuantConnect.Algorithm.CSharp.AltData
             // QuantConnect caches a small subset of alternative data for easy consumption for the community.
             // You can use this in your algorithm as demonstrated below:
 
-            // CBOE VIX: http://cache.quantconnect.com/alternative/cboe/vix.csv
             _cboeVix = AddData<CBOE>("VIX").Symbol;
             // United States EIA data: https://eia.gov/
             _usEnergy = AddData<USEnergy>(USEnergy.Petroleum.UnitedStates.WeeklyGrossInputsIntoRefineries).Symbol;
