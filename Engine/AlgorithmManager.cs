@@ -50,8 +50,8 @@ namespace QuantConnect.Lean.Engine
         private decimal _dailyPortfolioValue;
         private IAlgorithm _algorithm;
         private readonly object _lock;
-        private DateTime _currentTimeStepTime;
         private readonly bool _liveMode;
+        private readonly AlgorithmTimeLimitManager _timeLimitManager;
 
         /// <summary>
         /// Publicly accessible algorithm status
@@ -64,27 +64,10 @@ namespace QuantConnect.Lean.Engine
         public string AlgorithmId { get; private set; }
 
         /// <summary>
-        /// Gets the amount of time spent on the current time step
+        /// Provides the isolator with a function for verifying that we're not spending too much time in each
+        /// algorithm manager time loop
         /// </summary>
-        public TimeSpan CurrentTimeStepElapsed
-        {
-            get
-            {
-                if (_currentTimeStepTime == DateTime.MinValue)
-                {
-                    _currentTimeStepTime = DateTime.UtcNow;
-                    return TimeSpan.Zero;
-                }
-
-                return DateTime.UtcNow - _currentTimeStepTime;
-            }
-        }
-
-        /// <summary>
-        /// Gets a function used with the Isolator for verifying we're not spending too much time in each
-        /// algo manager timer loop
-        /// </summary>
-        public readonly Func<IsolatorLimitResult> TimeLoopWithinLimits;
+        public IIsolatorLimitResultProvider TimeLimit => _timeLimitManager;
 
         /// <summary>
         /// Quit state flag for the running algorithm. When true the user has requested the backtest stops through a Quit() method.
@@ -107,16 +90,7 @@ namespace QuantConnect.Lean.Engine
             var timeLoopMaximum
                 = TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-maximum", 20));
             AlgorithmId = "";
-            TimeLoopWithinLimits = () =>
-            {
-                var message = string.Empty;
-                if (CurrentTimeStepElapsed > timeLoopMaximum)
-                {
-                    message = $"Algorithm took longer than {timeLoopMaximum.TotalMinutes} minutes on a single time loop.";
-                }
-
-                return new IsolatorLimitResult(CurrentTimeStepElapsed, message);
-            };
+            _timeLimitManager = new AlgorithmTimeLimitManager(timeLoopMaximum);
             _liveMode = liveMode;
         }
 
@@ -197,7 +171,7 @@ namespace QuantConnect.Lean.Engine
             foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
             {
                 // reset our timer on each loop
-                _currentTimeStepTime = DateTime.MinValue;
+                _timeLimitManager.StartNewTimeStep();
 
                 //Check this backtest is still running:
                 if (_algorithm.Status != AlgorithmStatus.Running)
@@ -704,7 +678,7 @@ namespace QuantConnect.Lean.Engine
             } // End of ForEach feed.Bridge.GetConsumingEnumerable
 
             // stop timing the loops
-            _currentTimeStepTime = DateTime.MinValue;
+            _timeLimitManager.StopEnforcingTimeLimit();
 
             //Stream over:: Send the final packet and fire final events:
             Log.Trace("AlgorithmManager.Run(): Firing On End Of Algorithm...");

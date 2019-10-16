@@ -162,6 +162,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AlgorithmManager.cs" />
+    <Compile Include="AlgorithmTimeLimitManager.cs" />
     <Compile Include="Alphas\ChartingInsightManagerExtension.cs" />
     <Compile Include="Alphas\StatisticsInsightManagerExtension.cs" />
     <Compile Include="DataFeeds\ApiDataProvider.cs" />

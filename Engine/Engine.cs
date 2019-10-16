@@ -320,7 +320,7 @@ namespace QuantConnect.Lean.Engine
                         var isolator = new Isolator();
 
                         // Execute the Algorithm Code:
-                        var complete = isolator.ExecuteWithTimeLimit(AlgorithmHandlers.Setup.MaximumRuntime, algorithmManager.TimeLoopWithinLimits, () =>
+                        var complete = isolator.ExecuteWithTimeLimit(AlgorithmHandlers.Setup.MaximumRuntime, algorithmManager.TimeLimit.IsWithinLimit, () =>
                         {
                             try
                             {
