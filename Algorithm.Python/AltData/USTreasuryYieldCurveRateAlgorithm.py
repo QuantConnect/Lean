@@ -33,8 +33,14 @@ class USTreasuryYieldCurveRateAlgorithm(QCAlgorithm):
         self.SetCash(100000)
 
         self.spy = self.AddEquity("SPY", Resolution.Hour).Symbol
-        self.yieldCurve = self.AddData(USTreasuryYieldCurveRate, "YIELDCURVE").Symbol
+        self.yieldCurve = self.AddData(USTreasuryYieldCurveRate, "USTYCR").Symbol
         self.lastInversion = datetime(1, 1, 1)
+
+        # Request 60 days of history with the USTreasuryYieldCurveRate custom data Symbol.
+        history = self.History(USTreasuryYieldCurveRate, self.yieldCurve, 60, Resolution.Daily)
+
+        # Count the number of items we get from our history request
+        self.Debug(f"We got {len(history)} items from our history request")
 
     def OnData(self, data):
 

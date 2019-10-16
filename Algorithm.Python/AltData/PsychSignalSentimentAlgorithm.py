@@ -38,6 +38,16 @@ class PsychSignalSentimentAlgorithm(QCAlgorithm):
         self.AddUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseUniverse))
         self.timeEntered = datetime(1, 1, 1)
 
+        # Request underlying equity data.
+        ibm = self.AddEquity("IBM", Resolution.Minute).Symbol
+        # Add sentiment data for the underlying IBM asset
+        psy = self.AddData(PsychSignalSentiment, ibm).Symbol
+        # Request 120 minutes of history with the PsychSignal IBM Custom Data Symbol
+        history = self.History(PsychSignalSentiment, psy, 120, Resolution.Minute)
+
+        # Count the number of items we get from our history request
+        self.Debug(f"We got {len(history)} items from our history request")
+
     # You can use custom data with a universe of assets.
     def CoarseUniverse(self, coarse):
         if (self.Time - self.timeEntered) <= timedelta(days=10):

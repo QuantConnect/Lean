@@ -35,6 +35,16 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.Resolution = Resolution.Minute;
             AddUniverseSelection(new CoarseFundamentalUniverseSelectionModel(CoarseSelector));
+
+            // Request underlying equity data.
+            var ibm = AddEquity("IBM", Resolution.Minute).Symbol;
+            // Add SEC report 10-Q data for the underlying IBM asset
+            var earningsFiling = AddData<SECReport10Q>(ibm).Symbol;
+            // Request 120 days of history with the SECReport10Q IBM custom data Symbol.
+            var history = History<SECReport10Q>(earningsFiling, 120, Resolution.Daily);
+
+            // Count the number of items we get from our history request
+            Debug($"We got {history.Count()} items from our history request");
         }
 
         public IEnumerable<Symbol> CoarseSelector(IEnumerable<CoarseFundamental> coarse)

@@ -33,6 +33,16 @@ class SmartInsiderTransactionAlgorithm(QCAlgorithm):
 
         self.AddUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseUniverse))
 
+        # Request underlying equity data.
+        ibm = self.AddEquity("IBM", Resolution.Minute).Symbol
+        # Add Smart Insider stock buyback transaction data for the underlying IBM asset
+        si = self.AddData(SmartInsiderTransaction, ibm).Symbol
+        # Request 60 days of history with the SmartInsiderTransaction IBM Custom Data Symbol
+        history = self.History(SmartInsiderTransaction, si, 60, Resolution.Daily)
+
+        # Count the number of items we get from our history request
+        self.Debug(f"We got {len(history)} items from our history request")
+
     def CoarseUniverse(self, coarse):
         symbols = [i.Symbol for i in coarse if i.HasFundamentalData and i.DollarVolume > 50000000][:10]
 

@@ -33,6 +33,16 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(1000000);
 
             AddUniverseSelection(new CoarseFundamentalUniverseSelectionModel(CoarseUniverse));
+
+            // Request underlying equity data.
+            var ibm = AddEquity("IBM", Resolution.Minute).Symbol;
+            // Add Smart Insider stock buyback transaction data for the underlying IBM asset
+            var si = AddData<SmartInsiderTransaction>(ibm).Symbol;
+            // Request 60 days of history with the SmartInsiderTransaction IBM Custom Data Symbol.
+            var history = History<SmartInsiderTransaction>(si, 60, Resolution.Daily);
+
+            // Count the number of items we get from our history request
+            Debug($"We got {history.Count()} items from our history request");
         }
 
         public IEnumerable<Symbol> CoarseUniverse(IEnumerable<CoarseFundamental> coarse)

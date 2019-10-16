@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.TradingEconomics;
 
@@ -35,6 +36,13 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("SPY", Resolution.Hour);
 
             _interestRate = AddData<TradingEconomicsCalendar>(TradingEconomics.Calendar.UnitedStates.InterestRate).Symbol;
+
+            // Request 365 days of interest rate history with the TradingEconomicsCalendar custom data Symbol.
+            // We should expect no historical data because 2013-11-01 is before the absolute first point of data
+            var history = History<TradingEconomicsCalendar>(_interestRate, 365, Resolution.Daily);
+
+            // Count the number of items we get from our history request (should be zero)
+            Debug($"We got {history.Count()} items from our history request");
         }
 
         public override void OnData(Slice data)
