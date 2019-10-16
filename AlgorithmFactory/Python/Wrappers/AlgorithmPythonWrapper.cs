@@ -569,7 +569,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             }
             else
             {
-                _baseAlgorithm.OnFrameworkData(slice);
+                _algorithm.OnFrameworkData(slice);
             }
         }
 
