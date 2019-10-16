@@ -53,7 +53,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// <summary>
         /// Denominated in Currency of Transaction
         /// </summary>
-        public new decimal? Price { get; set; }
+        public decimal? ExecutionPrice { get; set; }
 
         /// <summary>
         /// Number of shares traded
@@ -131,7 +131,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
             ExecutionHolding = string.IsNullOrWhiteSpace(tsv[29]) ? (SmartInsiderExecutionHolding?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[29]}\"");
             ExecutionHolding = ExecutionHolding == SmartInsiderExecutionHolding.Error ? SmartInsiderExecutionHolding.SatisfyStockVesting : ExecutionHolding;
             Currency = string.IsNullOrWhiteSpace(tsv[30]) ? null : tsv[30];
-            Price = string.IsNullOrWhiteSpace(tsv[31]) ? (decimal?)null : Convert.ToDecimal(tsv[31], CultureInfo.InvariantCulture);
+            ExecutionPrice = string.IsNullOrWhiteSpace(tsv[31]) ? (decimal?)null : Convert.ToDecimal(tsv[31], CultureInfo.InvariantCulture);
             Amount = string.IsNullOrWhiteSpace(tsv[32]) ? (decimal?)null : Convert.ToDecimal(tsv[32], CultureInfo.InvariantCulture);
             GBPValue = string.IsNullOrWhiteSpace(tsv[33]) ? (decimal?)null : Convert.ToDecimal(tsv[33], CultureInfo.InvariantCulture);
             EURValue = string.IsNullOrWhiteSpace(tsv[34]) ? (decimal?)null : Convert.ToDecimal(tsv[34], CultureInfo.InvariantCulture);
@@ -180,7 +180,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
             ExecutionHolding = string.IsNullOrWhiteSpace(tsv[23]) ? (SmartInsiderExecutionHolding?)null : JsonConvert.DeserializeObject<SmartInsiderExecutionHolding>($"\"{tsv[23]}\"");
             ExecutionHolding = ExecutionHolding == SmartInsiderExecutionHolding.Error ? SmartInsiderExecutionHolding.SatisfyStockVesting : ExecutionHolding;
             Currency = string.IsNullOrWhiteSpace(tsv[24]) ? null : tsv[24];
-            Price = string.IsNullOrWhiteSpace(tsv[25]) ? (decimal?)null : Convert.ToDecimal(tsv[25], CultureInfo.InvariantCulture);
+            ExecutionPrice = string.IsNullOrWhiteSpace(tsv[25]) ? (decimal?)null : Convert.ToDecimal(tsv[25], CultureInfo.InvariantCulture);
             Amount = string.IsNullOrWhiteSpace(tsv[26]) ? (decimal?)null : Convert.ToDecimal(tsv[26], CultureInfo.InvariantCulture);
             GBPValue = string.IsNullOrWhiteSpace(tsv[27]) ? (decimal?)null : Convert.ToDecimal(tsv[27], CultureInfo.InvariantCulture);
             EURValue = string.IsNullOrWhiteSpace(tsv[28]) ? (decimal?)null : Convert.ToDecimal(tsv[28], CultureInfo.InvariantCulture);
@@ -286,7 +286,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
                 ExecutionEntity = ExecutionEntity,
                 ExecutionHolding = ExecutionHolding,
                 Currency = Currency,
-                Price = Price,
+                ExecutionPrice = ExecutionPrice,
                 Amount = Amount,
                 GBPValue = GBPValue,
                 EURValue = EURValue,
@@ -344,7 +344,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
                 JsonConvert.SerializeObject(ExecutionEntity).Replace("\"", ""),
                 JsonConvert.SerializeObject(ExecutionHolding).Replace("\"", ""),
                 Currency,
-                Price,
+                ExecutionPrice,
                 Amount,
                 GBPValue,
                 EURValue,
