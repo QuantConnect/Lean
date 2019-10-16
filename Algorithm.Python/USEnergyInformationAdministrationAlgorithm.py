@@ -19,7 +19,7 @@ AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Data.Custom import USEnergyInformation
+from QuantConnect.Data.Custom.USEnergy import USEnergyAPI
 from QuantConnect.Data.Custom.Tiingo import *
 
 ### <summary>
@@ -40,13 +40,13 @@ class USEnergyInformationAdministrationAlgorithm(QCAlgorithm):
         # Set your Tiingo API Token here
         Tiingo.SetAuthCode("my-tiingo-api-token")
         # Set your US Energy Information Administration (EIA) API Token here
-        USEnergyInformation.SetAuthCode("my-us-energy-information-api-token")
+        USEnergyAPI.SetAuthCode("my-us-energy-information-api-token")
 
 
         self.tiingoTicker = "AAPL"
         self.energyTicker = "NUC_STATUS.OUT.US.D"
         self.tiingoSymbol = self.AddData(TiingoDailyData, self.tiingoTicker, Resolution.Daily).Symbol
-        self.energySymbol = self.AddData(USEnergyInformation, self.energyTicker).Symbol
+        self.energySymbol = self.AddData(USEnergyAPI, self.energyTicker).Symbol
 
 
         self.emaFast = self.EMA(self.tiingoSymbol, 5)

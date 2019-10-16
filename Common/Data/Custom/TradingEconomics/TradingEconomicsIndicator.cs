@@ -93,7 +93,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// <param name="date">Date of the requested data</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>
-        /// Collection of USEnergyInformation objects
+        /// Collection of TradingEconomicsIndicator objects
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
         {

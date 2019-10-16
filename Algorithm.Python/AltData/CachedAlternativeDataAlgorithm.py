@@ -23,6 +23,7 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Custom.CBOE import *
+from QuantConnect.Data.Custom.USEnergy import *
 
 class CachedAlternativeDataAlgorithm(QCAlgorithm):
 
@@ -34,10 +35,16 @@ class CachedAlternativeDataAlgorithm(QCAlgorithm):
         # QuantConnect caches a small subset of alternative data for easy consumption for the community.
         # You can use this in your algorithm as demonstrated below:
 
-        # CBOE VIX: http://cache.quantconnect.com/alternative/cboe/vix.csv
-        self.AddData(CBOE, "VIX")
+        self.cboeVix = self.AddData(CBOE, "VIX").Symbol
+        # United States EIA data: https://eia.gov/
+        self.usEnergy = self.AddData(USEnergy, USEnergy.Petroleum.UnitedStates.WeeklyGrossInputsIntoRefineries).Symbol
 
     def OnData(self, data):
-        vix = data.Get(CBOE, "VIX")
-        self.Log(f"{vix}")
+        if data.ContainsKey(self.cboeVix):
+            vix = data.Get(CBOE, self.cboeVix)
+            self.Log(f"VIX: {vix}")
+
+        if data.ContainsKey(self.usEnergy):
+            inputIntoRefineries = data.Get(USEnergy, self.usEnergy)
+            self.Log(f"U.S. Input Into Refineries: {inputIntoRefineries}")
 
