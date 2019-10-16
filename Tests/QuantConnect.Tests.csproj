@@ -333,6 +333,7 @@
     <Compile Include="Common\Statistics\FitnessScoreManagerTests.cs" />
     <Compile Include="Common\Statistics\KellyCriterionManagerTests.cs" />
     <Compile Include="Common\ParseTests.cs" />
+    <Compile Include="Common\Statistics\ProbabilisticSharpeRatioTests.cs" />
     <Compile Include="Common\StringExtensionsTests.cs" />
     <Compile Include="Common\Util\ConcurrentSetTests.cs" />
     <Compile Include="Common\Util\RateGateTests.cs" />

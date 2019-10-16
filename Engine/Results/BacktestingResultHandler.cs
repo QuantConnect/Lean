@@ -229,6 +229,8 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 var deltaCharts = new Dictionary<string, Chart>();
+
+                var performanceCharts = new Dictionary<string, Chart>();
                 lock (ChartLock)
                 {
                     //Get the updates since the last chart
@@ -237,6 +239,11 @@ namespace QuantConnect.Lean.Engine.Results
                         var chart = kvp.Value;
 
                         deltaCharts.Add(chart.Name, chart.GetUpdates());
+
+                        if (AlgorithmPerformanceCharts.Contains(kvp.Key))
+                        {
+                            performanceCharts[kvp.Key] = chart.Clone();
+                        }
                     }
                 }
 
@@ -249,7 +256,8 @@ namespace QuantConnect.Lean.Engine.Results
                         runtimeStatistics.Add(pair.Key, pair.Value);
                     }
                 }
-                GetAlgorithmRuntimeStatistics(runtimeStatistics);
+                var summary = GenerateStatisticsResults(performanceCharts).Summary;
+                GetAlgorithmRuntimeStatistics(summary, runtimeStatistics);
 
                 //Profit Loss Changes:
                 var progress = Convert.ToDecimal(_daysProcessed / _jobDays);
@@ -386,8 +394,8 @@ namespace QuantConnect.Lean.Engine.Results
                 var charts = new Dictionary<string, Chart>(Charts);
                 var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                 var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                var runtime = GetAlgorithmRuntimeStatistics();
                 var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
+                var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
 
                 FinalStatistics = statisticsResults.Summary;
 

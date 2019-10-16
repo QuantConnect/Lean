@@ -19,6 +19,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using MathNet.Numerics.Distributions;
 using MathNet.Numerics.Statistics;
 using QuantConnect.Logging;
 
@@ -557,6 +558,48 @@ namespace QuantConnect.Statistics
             return (AnnualPerformance(algoPerformance) - riskFreeRate) / (Beta(algoPerformance, benchmarkPerformance));
         }
 
+        /// <summary>
+        /// Helper method to calculate the probabilistic sharpe ratio
+        /// </summary>
+        /// <param name="listPerformance">The list of algorithm performance values</param>
+        /// <param name="benchmarkSharpeRatio">The benchmark sharpe ratio to use</param>
+        /// <returns>Probabilistic Sharpe Ratio</returns>
+        public static double ProbabilisticSharpeRatio(List<double> listPerformance,
+             double benchmarkSharpeRatio)
+        {
+            var observedSharpeRatio = ObservedSharpeRatio(listPerformance);
+
+            var skewness = listPerformance.Skewness();
+            var kurtosis = listPerformance.Kurtosis();
+
+            var operandA = skewness * observedSharpeRatio;
+            var operandB = ((kurtosis - 1) / 4) * (Math.Pow(observedSharpeRatio, 2));
+
+            // Calculated standard deviation of point estimate
+            var estimateStandardDeviation = Math.Pow((1 - operandA + operandB) / (listPerformance.Count - 1), 0.5);
+
+            if (double.IsNaN(estimateStandardDeviation))
+            {
+                return 0;
+            }
+
+            // Calculate PSR(benchmark)
+            var value = estimateStandardDeviation.IsNaNOrZero() ? 0 : (observedSharpeRatio - benchmarkSharpeRatio) / estimateStandardDeviation;
+            return (new Normal()).CumulativeDistribution(value);
+        }
+
+        /// <summary>
+        /// Calculates the observed sharpe ratio
+        /// </summary>
+        /// <param name="listPerformance">The performance samples to use</param>
+        /// <returns>The observed sharpe ratio</returns>
+        public static double ObservedSharpeRatio(List<double> listPerformance)
+        {
+            var performanceAverage = listPerformance.Average();
+            var standardDeviation = listPerformance.StandardDeviation();
+            // we don't annualize it
+            return standardDeviation.IsNaNOrZero() ? 0 : performanceAverage / standardDeviation;
+        }
     } // End of Statistics
 
 } // End of Namespace

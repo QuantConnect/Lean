@@ -34,6 +34,12 @@ namespace QuantConnect.Lean.Engine.Results
     public abstract class BaseResultsHandler
     {
         /// <summary>
+        /// Algorithms performance related chart names
+        /// </summary>
+        /// <remarks>Used to calculate the probabilistic sharpe ratio</remarks>
+        protected List<string> AlgorithmPerformanceCharts { get; } = new List<string> { "Strategy Equity", "Benchmark" };
+
+        /// <summary>
         /// Lock to be used when accessing the chart collection
         /// </summary>
         protected object ChartLock { get; }
@@ -156,26 +162,30 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Gets the algorithm runtime statistics
         /// </summary>
-        /// <remarks>
-        /// TODO: we should not be adding ':' in the collection key
-        /// </remarks>
-        protected Dictionary<string, string> GetAlgorithmRuntimeStatistics(
-            Dictionary<string, string> runtimeStatistics = null,
-            bool addColon = false)
+        protected Dictionary<string, string> GetAlgorithmRuntimeStatistics(Dictionary<string, string> summary,
+            Dictionary<string, string> runtimeStatistics = null)
         {
-
             if (runtimeStatistics == null)
             {
                 runtimeStatistics = new Dictionary<string, string>();
             }
 
-            runtimeStatistics["Unrealized" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalUnrealizedProfit.ToStringInvariant("N2");
-            runtimeStatistics["Fees" + (addColon ? ":" : string.Empty)] = "-$" + Algorithm.Portfolio.TotalFees.ToStringInvariant("N2");
-            runtimeStatistics["Net Profit" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalProfit.ToStringInvariant("N2");
-            runtimeStatistics["Return" + (addColon ? ":" : string.Empty)] = GetNetReturn().ToStringInvariant("P");
-            runtimeStatistics["Equity" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalPortfolioValue.ToStringInvariant("N2");
-            runtimeStatistics["Holdings" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalHoldingsValue.ToStringInvariant("N2");
-            runtimeStatistics["Volume" + (addColon ? ":" : string.Empty)] = "$" + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
+            if (summary.ContainsKey("Probabilistic Sharpe Ratio"))
+            {
+                runtimeStatistics["Probabilistic Sharpe Ratio"] = summary["Probabilistic Sharpe Ratio"];
+            }
+            else
+            {
+                runtimeStatistics["Probabilistic Sharpe Ratio"] = "0%";
+            }
+
+            runtimeStatistics["Unrealized"] = "$" + Algorithm.Portfolio.TotalUnrealizedProfit.ToStringInvariant("N2");
+            runtimeStatistics["Fees"] = "-$" + Algorithm.Portfolio.TotalFees.ToStringInvariant("N2");
+            runtimeStatistics["Net Profit"] = "$" + Algorithm.Portfolio.TotalProfit.ToStringInvariant("N2");
+            runtimeStatistics["Return"] = GetNetReturn().ToStringInvariant("P");
+            runtimeStatistics["Equity"] = "$" + Algorithm.Portfolio.TotalPortfolioValue.ToStringInvariant("N2");
+            runtimeStatistics["Holdings"] = "$" + Algorithm.Portfolio.TotalHoldingsValue.ToStringInvariant("N2");
+            runtimeStatistics["Volume"] = "$" + Algorithm.Portfolio.TotalSaleVolume.ToStringInvariant("N2");
 
             return runtimeStatistics;
         }
@@ -184,9 +194,14 @@ namespace QuantConnect.Lean.Engine.Results
         /// Will generate the statistics results and update the provided runtime statistics
         /// </summary>
         protected StatisticsResults GenerateStatisticsResults(Dictionary<string, Chart> charts,
-            SortedDictionary<DateTime, decimal> profitLoss)
+            SortedDictionary<DateTime, decimal> profitLoss = null)
         {
             var statisticsResults = new StatisticsResults();
+            if (profitLoss == null)
+            {
+                profitLoss = new SortedDictionary<DateTime, decimal>();
+            }
+
             try
             {
                 //Generates error when things don't exist (no charting logged, runtime errors in main algo execution)
