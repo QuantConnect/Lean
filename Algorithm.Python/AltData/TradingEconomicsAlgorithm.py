@@ -35,6 +35,13 @@ class TradingEconomicsAlgorithm(QCAlgorithm):
         self.AddEquity("SPY", Resolution.Hour)
         self.interestRate = self.AddData(TradingEconomicsCalendar, TradingEconomics.Calendar.UnitedStates.InterestRate).Symbol
 
+        # Request 365 days of interest rate history with the TradingEconomicsCalendar custom data Symbol.
+        # We should expect no historical data because 2013-11-01 is before the absolute first point of data
+        history = self.History(TradingEconomicsCalendar, self.interestRate, 365, Resolution.Daily)
+
+        # Count the amount of items we get from our history request (should be zero)
+        self.Debug(f"We got {len(history)} items from our history request")
+
     def OnData(self, data):
         # Make sure we have an interest rate calendar event
         if not data.ContainsKey(self.interestRate):

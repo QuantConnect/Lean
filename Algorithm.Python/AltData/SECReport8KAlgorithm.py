@@ -34,6 +34,16 @@ class SECReport8KAlgorithm(QCAlgorithm):
         self.UniverseSettings.Resolution = Resolution.Minute
         self.AddUniverseSelection(CoarseFundamentalUniverseSelectionModel(self.CoarseSelector))
 
+        # Request underlying equity data.
+        ibm = self.AddEquity("IBM", Resolution.Minute).Symbol
+        # Add news data for the underlying IBM asset
+        earningsFiling = self.AddData(SECReport10Q, ibm).Symbol
+        # Request 120 days of history with the SECReport10Q IBM custom data Symbol
+        history = self.History(SECReport10Q, earningsFiling, 120, Resolution.Daily)
+
+        # Count the number of items we get from our history request
+        self.Debug(f"We got {len(history)} items from our history request")
+
     def CoarseSelector(self, coarse):
         # Add SEC data from the filtered coarse selection
         symbols = [i.Symbol for i in coarse if i.HasFundamentalData and i.DollarVolume > 50000000][:10]

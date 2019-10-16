@@ -33,7 +33,13 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             _spy = AddEquity("SPY", Resolution.Hour).Symbol;
-            _yieldCurve = AddData<USTreasuryYieldCurveRate>("YIELDCURVE").Symbol;
+            _yieldCurve = AddData<USTreasuryYieldCurveRate>("USTYCR").Symbol;
+
+            // Request 60 days of history with the USTreasuryYieldCurveRate custom data Symbol.
+            var history = History<USTreasuryYieldCurveRate>(_yieldCurve, 60, Resolution.Daily);
+
+            // Count the number of items we get from our history request
+            Debug($"We got {history.Count()} items from our history request");
         }
 
         public override void OnData(Slice data)

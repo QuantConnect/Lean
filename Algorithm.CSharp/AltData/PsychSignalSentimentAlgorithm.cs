@@ -40,6 +40,16 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             AddUniverseSelection(new CoarseFundamentalUniverseSelectionModel(CoarseUniverse));
+
+            // Request underlying equity data.
+            var ibm = AddEquity("IBM", Resolution.Minute).Symbol;
+            // Add news data for the underlying IBM asset
+            var psy = AddData<PsychSignalSentiment>(ibm).Symbol;
+            // Request 120 minutes of history with the PsychSignal IBM Custom Data Symbol.
+            var history = History<PsychSignalSentiment>(psy, 120, Resolution.Minute);
+
+            // Count the number of items we get from our history request
+            Debug($"We got {history.Count()} items from our history request");
         }
 
         /// <summary>

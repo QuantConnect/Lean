@@ -45,6 +45,16 @@ class TiingoNewsAlgorithm(QCAlgorithm):
         aapl = self.AddEquity("AAPL", Resolution.Hour).Symbol
         self.aaplCustom = self.AddData(TiingoNews, aapl).Symbol
 
+        # Request underlying equity data.
+        ibm = self.AddEquity("IBM", Resolution.Minute).Symbol
+        # Add news data for the underlying IBM asset
+        news = self.AddData(TiingoNews, ibm).Symbol
+        # Request 60 days of history with the TiingoNews IBM Custom Data Symbol
+        history = self.History(TiingoNews, news, 60, Resolution.Daily)
+
+        # Count the number of items we get from our history request
+        self.Debug(f"We got {len(history)} items from our history request")
+
     def OnData(self, data):
         # Confirm that the data is in the collection
         if not data.ContainsKey(self.aaplCustom):

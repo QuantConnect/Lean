@@ -48,6 +48,16 @@ namespace QuantConnect.Algorithm.CSharp
 
             var aapl = AddEquity("AAPL", Resolution.Hour).Symbol;
             _tiingoSymbol = AddData<TiingoNews>(aapl).Symbol;
+
+            // Request underlying equity data
+            var ibm = AddEquity("IBM", Resolution.Minute).Symbol;
+            // Add news data for the underlying IBM asset
+            var news = AddData<TiingoNews>(ibm).Symbol;
+            // Request 60 days of history with the TiingoNews IBM Custom Data Symbol.
+            var history = History<TiingoNews>(news, 60, Resolution.Daily);
+
+            // Count the number of items we get from our history request
+            Debug($"We got {history.Count()} items from our history request");
         }
 
         public override void OnData(Slice data)
