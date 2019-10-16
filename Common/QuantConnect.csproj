@@ -306,6 +306,7 @@
     <Compile Include="Interfaces\ISubscriptionDataConfigService.cs" />
     <Compile Include="Interfaces\ITimeKeeper.cs" />
     <Compile Include="IsolatorLimitResult.cs" />
+    <Compile Include="ITimeProvider.cs" />
     <Compile Include="Orders\Fees\AlphaStreamsFeeModel.cs" />
     <Compile Include="Orders\Fills\Fill.cs" />
     <Compile Include="Orders\Fills\FillModelParameters.cs" />
@@ -318,6 +319,7 @@
     <Compile Include="Python\MarginCallModelPythonWrapper.cs" />
     <Compile Include="Python\PythonInitializer.cs" />
     <Compile Include="Python\PythonWrapper.cs" />
+    <Compile Include="RealTimeProvider.cs" />
     <Compile Include="Securities\BuyingPower.cs" />
     <Compile Include="Securities\BuyingPowerParameters.cs" />
     <Compile Include="Securities\BuyingPowerModel.cs" />

@@ -16,7 +16,7 @@
 
 using System;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect
 {
     /// <summary>
     /// Provides an implementation of <see cref="ITimeProvider"/> that
