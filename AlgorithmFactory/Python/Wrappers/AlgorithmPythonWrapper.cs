@@ -560,16 +560,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="slice">The current data slice</param>
         public void OnFrameworkData(Slice slice)
         {
-            if (SubscriptionManager.HasCustomData)
+            using (Py.GIL())
             {
-                using (Py.GIL())
-                {
-                    _algorithm.OnFrameworkData(new PythonSlice(slice));
-                }
-            }
-            else
-            {
-                _algorithm.OnFrameworkData(slice);
+                _algorithm.OnFrameworkData(SubscriptionManager.HasCustomData ? new PythonSlice(slice) : slice);
             }
         }
 
