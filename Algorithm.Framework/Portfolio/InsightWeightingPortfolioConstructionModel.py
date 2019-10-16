@@ -21,7 +21,7 @@ from itertools import groupby
 from datetime import datetime, timedelta
 from pytz import utc
 UTCMIN = datetime.min.replace(tzinfo=utc)
-from EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
 
 class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that generates percent targets based on the
