@@ -1233,7 +1233,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 subscribedSymbols = _subscribedSymbols.Keys.ToList();
 
                 _subscribedSymbols.Clear();
-                _subscribedTickets.Clear();
+                _subscribedTickers.Clear();
                 _underlyings.Clear();
             }
 
@@ -2372,7 +2372,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                                 Client.ClientSocket.reqMktData(id, contract, "101", false, false, new List<TagValue>());
 
                                 _subscribedSymbols[symbol] = id;
-                                _subscribedTickets[id] = subscribeSymbol;
+                                _subscribedTickers[id] = new SubscriptionEntry { Symbol = subscribeSymbol };
 
                                 Log.Trace("InteractiveBrokersBrokerage.Subscribe(): Subscribe Processed: {0} ({1}) # {2}", symbol.Value, contract.ToString(), id);
                             }
@@ -2429,8 +2429,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                                 Client.ClientSocket.cancelMktData(id);
 
-                                Symbol s;
-                                _subscribedTickets.TryRemove(id, out s);
+                                SubscriptionEntry entry;
+                                _subscribedTickers.TryRemove(id, out entry);
                             }
                         }
                     }
@@ -2481,62 +2481,79 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private void HandleTickPrice(object sender, IB.TickPriceEventArgs e)
         {
-            Symbol symbol;
+            // tickPrice events are always followed by tickSize events,
+            // so we save off the bid/ask/last prices and only emit ticks in the tickSize event handler.
 
-            if (!_subscribedTickets.TryGetValue(e.TickerId, out symbol)) return;
-
-            var price = Convert.ToDecimal(e.Price);
-
-            var tick = new Tick();
-            // in the event of a symbol change this will break since we'll be assigning the
-            // new symbol to the permtick which won't be known by the algorithm
-            tick.Symbol = symbol;
-            tick.Time = GetRealTimeTickTime(symbol);
-            var securityType = symbol.ID.SecurityType;
-            tick.Value = price;
-
-            if (e.Price <= 0 &&
-                securityType != SecurityType.Future &&
-                securityType != SecurityType.Option)
+            SubscriptionEntry entry;
+            if (!_subscribedTickers.TryGetValue(e.TickerId, out entry))
+            {
                 return;
+            }
 
-            int quantity;
+            var symbol = entry.Symbol;
+
+            // negative price (-1) means no price available, normalize to zero
+            var price = e.Price < 0 ? 0 : Convert.ToDecimal(e.Price);
+
             switch (e.Field)
             {
                 case IBApi.TickType.BID:
                 case IBApi.TickType.DELAYED_BID:
 
-                    tick.TickType = TickType.Quote;
-                    tick.BidPrice = price;
-                    _lastBidSizes.TryGetValue(symbol, out quantity);
-                    tick.Quantity = quantity;
-                    _lastBidPrices[symbol] = price;
+                    if (entry.LastQuoteTick == null)
+                    {
+                        entry.LastQuoteTick = new Tick
+                        {
+                            // in the event of a symbol change this will break since we'll be assigning the
+                            // new symbol to the permtick which won't be known by the algorithm
+                            Symbol = symbol,
+                            TickType = TickType.Quote
+                        };
+                    }
+
+                    // set the last bid price
+                    entry.LastQuoteTick.BidPrice = price;
                     break;
 
                 case IBApi.TickType.ASK:
                 case IBApi.TickType.DELAYED_ASK:
 
-                    tick.TickType = TickType.Quote;
-                    tick.AskPrice = price;
-                    _lastAskSizes.TryGetValue(symbol, out quantity);
-                    tick.Quantity = quantity;
-                    _lastAskPrices[symbol] = price;
+                    if (entry.LastQuoteTick == null)
+                    {
+                        entry.LastQuoteTick = new Tick
+                        {
+                            // in the event of a symbol change this will break since we'll be assigning the
+                            // new symbol to the permtick which won't be known by the algorithm
+                            Symbol = symbol,
+                            TickType = TickType.Quote
+                        };
+                    }
+
+                    // set the last ask price
+                    entry.LastQuoteTick.AskPrice = price;
                     break;
 
                 case IBApi.TickType.LAST:
                 case IBApi.TickType.DELAYED_LAST:
 
-                    tick.TickType = TickType.Trade;
-                    tick.Value = price;
-                    _lastPrices[symbol] = price;
+                    if (entry.LastTradeTick == null)
+                    {
+                        entry.LastTradeTick = new Tick
+                        {
+                            // in the event of a symbol change this will break since we'll be assigning the
+                            // new symbol to the permtick which won't be known by the algorithm
+                            Symbol = symbol,
+                            TickType = TickType.Trade
+                        };
+                    }
+
+                    // set the last traded price
+                    entry.LastTradeTick.Value = price;
                     break;
 
                 default:
                     return;
             }
-
-            lock (_ticks)
-                if (tick.IsValid()) _ticks.Add(tick);
         }
 
         /// <summary>
@@ -2555,79 +2572,146 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private void HandleTickSize(object sender, IB.TickSizeEventArgs e)
         {
-            Symbol symbol;
+            SubscriptionEntry entry;
+            if (!_subscribedTickers.TryGetValue(e.TickerId, out entry))
+            {
+                return;
+            }
 
-            if (!_subscribedTickets.TryGetValue(e.TickerId, out symbol)) return;
+            var symbol = entry.Symbol;
 
-            var tick = new Tick();
-            // in the event of a symbol change this will break since we'll be assigning the
-            // new symbol to the permtick which won't be known by the algorithm
-            tick.Symbol = symbol;
             var securityType = symbol.ID.SecurityType;
-            tick.Quantity = AdjustQuantity(securityType, e.Size);
-            tick.Time = GetRealTimeTickTime(symbol);
 
-            if (tick.Quantity == 0) return;
+            // negative size (-1) means no quantity available, normalize to zero
+            var quantity = e.Size < 0 ? 0 : AdjustQuantity(securityType, e.Size);
 
+            Tick tick;
             switch (e.Field)
             {
                 case IBApi.TickType.BID_SIZE:
                 case IBApi.TickType.DELAYED_BID_SIZE:
 
-                    tick.TickType = TickType.Quote;
+                    tick = entry.LastQuoteTick;
 
-                    _lastBidPrices.TryGetValue(symbol, out tick.BidPrice);
-                    _lastBidSizes[symbol] = (int)tick.Quantity;
+                    if (tick == null)
+                    {
+                        // tick size message must be preceded by a tick price message
+                        return;
+                    }
 
-                    tick.Value = tick.BidPrice;
-                    tick.BidSize = tick.Quantity;
+                    tick.BidSize = quantity;
+
+                    if (tick.BidPrice == 0)
+                    {
+                        // no bid price, do not emit tick
+                        return;
+                    }
+
+                    if (tick.BidPrice > 0 && tick.AskPrice > 0 && tick.BidPrice >= tick.AskPrice)
+                    {
+                        // new bid price jumped at or above previous ask price, wait for new ask price
+                        return;
+                    }
+
+                    if (tick.AskPrice == 0)
+                    {
+                        // we have a bid price but no ask price, use bid price as value
+                        tick.Value = tick.BidPrice;
+                    }
+                    else
+                    {
+                        // we have both bid price and ask price, use mid price as value
+                        tick.Value = (tick.BidPrice + tick.AskPrice) / 2;
+                    }
                     break;
 
                 case IBApi.TickType.ASK_SIZE:
                 case IBApi.TickType.DELAYED_ASK_SIZE:
 
-                    tick.TickType = TickType.Quote;
+                    tick = entry.LastQuoteTick;
 
-                    _lastAskPrices.TryGetValue(symbol, out tick.AskPrice);
-                    _lastAskSizes[symbol] = (int)tick.Quantity;
+                    if (tick == null)
+                    {
+                        // tick size message must be preceded by a tick price message
+                        return;
+                    }
 
-                    tick.Value = tick.AskPrice;
-                    tick.AskSize = tick.Quantity;
+                    tick.AskSize = quantity;
+
+                    if (tick.AskPrice == 0)
+                    {
+                        // no ask price, do not emit tick
+                        return;
+                    }
+
+                    if (tick.BidPrice > 0 && tick.AskPrice > 0 && tick.BidPrice >= tick.AskPrice)
+                    {
+                        // new ask price jumped at or below previous bid price, wait for new bid price
+                        return;
+                    }
+
+                    if (tick.BidPrice == 0)
+                    {
+                        // we have an ask price but no bid price, use ask price as value
+                        tick.Value = tick.AskPrice;
+                    }
+                    else
+                    {
+                        // we have both bid price and ask price, use mid price as value
+                        tick.Value = (tick.BidPrice + tick.AskPrice) / 2;
+                    }
                     break;
-
 
                 case IBApi.TickType.LAST_SIZE:
                 case IBApi.TickType.DELAYED_LAST_SIZE:
-                    tick.TickType = TickType.Trade;
 
-                    decimal lastPrice;
-                    _lastPrices.TryGetValue(symbol, out lastPrice);
-                    _lastVolumes[symbol] = (int)tick.Quantity;
+                    tick = entry.LastTradeTick;
 
-                    tick.Value = lastPrice;
+                    if (tick == null)
+                    {
+                        // tick size message must be preceded by a tick price message
+                        return;
+                    }
 
+                    // set the traded quantity
+                    tick.Quantity = quantity;
                     break;
 
                 case IBApi.TickType.OPEN_INTEREST:
                 case IBApi.TickType.OPTION_CALL_OPEN_INTEREST:
                 case IBApi.TickType.OPTION_PUT_OPEN_INTEREST:
 
-                    if (symbol.ID.SecurityType == SecurityType.Option || symbol.ID.SecurityType == SecurityType.Future)
+                    if (symbol.ID.SecurityType != SecurityType.Option && symbol.ID.SecurityType != SecurityType.Future)
                     {
-                        if (!_openInterests.ContainsKey(symbol) || _openInterests[symbol] != e.Size)
-                        {
-                            tick.TickType = TickType.OpenInterest;
-                            tick.Value = e.Size;
-                            _openInterests[symbol] = e.Size;
-                        }
+                        return;
                     }
+
+                    if (entry.LastOpenInterestTick == null)
+                    {
+                        entry.LastOpenInterestTick = new Tick { Symbol = symbol, TickType = TickType.OpenInterest };
+                    }
+
+                    tick = entry.LastOpenInterestTick;
+
+                    tick.Value = e.Size;
                     break;
 
                 default:
                     return;
             }
+
             lock (_ticks)
-                if (tick.IsValid()) _ticks.Add(tick);
+            {
+                if (tick.IsValid())
+                {
+                    tick = new Tick(tick)
+                    {
+                        Time = GetRealTimeTickTime(symbol)
+                    };
+
+                    _ticks.Add(tick);
+                }
+            }
         }
 
         /// <summary>
@@ -3044,16 +3128,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         private readonly ConcurrentDictionary<Symbol, int> _subscribedSymbols = new ConcurrentDictionary<Symbol, int>();
-        private readonly ConcurrentDictionary<int, Symbol> _subscribedTickets = new ConcurrentDictionary<int, Symbol>();
+        private readonly ConcurrentDictionary<int, SubscriptionEntry> _subscribedTickers = new ConcurrentDictionary<int, SubscriptionEntry>();
         private readonly Dictionary<Symbol, Symbol> _underlyings = new Dictionary<Symbol, Symbol>();
-        private readonly ConcurrentDictionary<Symbol, decimal> _lastPrices = new ConcurrentDictionary<Symbol, decimal>();
-        private readonly ConcurrentDictionary<Symbol, int> _lastVolumes = new ConcurrentDictionary<Symbol, int>();
-        private readonly ConcurrentDictionary<Symbol, decimal> _lastBidPrices = new ConcurrentDictionary<Symbol, decimal>();
-        private readonly ConcurrentDictionary<Symbol, int> _lastBidSizes = new ConcurrentDictionary<Symbol, int>();
-        private readonly ConcurrentDictionary<Symbol, decimal> _lastAskPrices = new ConcurrentDictionary<Symbol, decimal>();
-        private readonly ConcurrentDictionary<Symbol, int> _lastAskSizes = new ConcurrentDictionary<Symbol, int>();
-        private readonly ConcurrentDictionary<Symbol, int> _openInterests = new ConcurrentDictionary<Symbol, int>();
+
         private readonly List<Tick> _ticks = new List<Tick>();
+
+        private class SubscriptionEntry
+        {
+            public Symbol Symbol { get; set; }
+            public Tick LastTradeTick { get; set; }
+            public Tick LastQuoteTick { get; set; }
+            public Tick LastOpenInterestTick { get; set; }
+        }
 
         private static class AccountValueKeys
         {
