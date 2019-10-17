@@ -195,7 +195,7 @@ namespace QuantConnect.Scheduling
         internal void SkipEventsUntil(DateTime utcTime)
         {
             // check if our next event is in the past
-            if (utcTime < _orderedEventUtcTimes.Current) return;
+            if (utcTime <= _orderedEventUtcTimes.Current) return;
 
             while (_orderedEventUtcTimes.MoveNext())
             {
