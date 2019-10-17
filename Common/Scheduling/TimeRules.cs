@@ -53,6 +53,21 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
+        /// Specifies an event should fire at the current time
+        /// </summary>
+        public ITimeRule Now => new FuncTimeRule("Now", dates => dates.Select(date => date.Add(_securities.UtcTime.TimeOfDay)));
+
+        /// <summary>
+        /// Convenience property for running a scheduled event at midnight in the algorithm time zone
+        /// </summary>
+        public ITimeRule Midnight => new FuncTimeRule("Midnight", dates => dates.Select(date => date.ConvertFromUtc(_timeZone).Date));
+
+        /// <summary>
+        /// Convenience property for running a scheduled event at noon in the algorithm time zone
+        /// </summary>
+        public ITimeRule Noon => new FuncTimeRule("Noon", dates => dates.Select(date => date.ConvertFromUtc(_timeZone).Date.AddHours(12)));
+
+        /// <summary>
         /// Specifies an event should fire at the specified time of day in the algorithm's time zone
         /// </summary>
         /// <param name="timeOfDay">The time of day in the algorithm's time zone the event should fire</param>
@@ -132,7 +147,6 @@ namespace QuantConnect.Scheduling
             Func<IEnumerable<DateTime>, IEnumerable<DateTime>> applicator = dates => EveryIntervalIterator(dates, interval);
             return new FuncTimeRule(name, applicator);
         }
-
 
         /// <summary>
         /// Specifies an event should fire at market open +- <paramref name="minutesAfterOpen"/>

@@ -53,7 +53,7 @@ namespace QuantConnect.Scheduling
         public ScheduleManager(SecurityManager securities, DateTimeZone timeZone)
         {
             _securities = securities;
-            DateRules = new DateRules(securities);
+            DateRules = new DateRules(securities, timeZone);
             TimeRules = new TimeRules(securities, timeZone);
 
             // used for storing any events before the event schedule is set
