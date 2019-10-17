@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -11,34 +11,26 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using System;
+using System.Threading;
 
-namespace QuantConnect
+namespace QuantConnect.Util.RateLimit
 {
     /// <summary>
-    /// Provides an implementation of <see cref="ITimeProvider"/> that
-    /// uses <see cref="DateTime.UtcNow"/> to provide the current time
+    /// Provides a CPU intensive means of waiting for more tokens to be available in <see cref="ITokenBucket"/>.
+    /// This strategy is only viable when the requested number of tokens is expected to become available in an
+    /// extremely short period of time. This implementation aims to keep the current thread executing to prevent
+    /// potential content switches arising from a thread yielding or sleeping strategy.
     /// </summary>
-    public sealed class RealTimeProvider : ITimeProvider
+    public class BusyWaitSleepStrategy : ISleepStrategy
     {
         /// <summary>
-        /// Provides a static instance of the <see cref="RealTimeProvider"/>
+        /// Provides a CPU intensive sleep by executing <see cref="Thread.SpinWait"/> for a single spin.
         /// </summary>
-        /// <remarks>
-        /// Since this implementation is stateless, it doesn't make sense to have multiple instances.
-        /// </remarks>
-        public static readonly ITimeProvider Instance = new RealTimeProvider();
-
-        /// <summary>
-        /// Gets the current time in UTC
-        /// </summary>
-        /// <returns>The current time in UTC</returns>
-        public DateTime GetUtcNow()
+        public void Sleep()
         {
-            return DateTime.UtcNow;
+            Thread.SpinWait(1);
         }
     }
 }

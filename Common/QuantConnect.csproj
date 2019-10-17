@@ -758,6 +758,13 @@
     <Compile Include="Util\FixedSizeHashQueue.cs" />
     <Compile Include="Util\FuncTextWriter.cs" />
     <Compile Include="Util\JsonRoundingConverter.cs" />
+    <Compile Include="Util\RateLimit\BusyWaitSleepStrategy.cs" />
+    <Compile Include="Util\RateLimit\FixedIntervalRefillStrategy.cs" />
+    <Compile Include="Util\RateLimit\IRefillStrategy.cs" />
+    <Compile Include="Util\RateLimit\ISleepStrategy.cs" />
+    <Compile Include="Util\RateLimit\ITokenBucket.cs" />
+    <Compile Include="Util\RateLimit\LeakyBucket.cs" />
+    <Compile Include="Util\RateLimit\ThreadSleepStrategy.cs" />
     <Compile Include="Util\LeanData.cs" />
     <Compile Include="Util\LeanDataPathComponents.cs" />
     <Compile Include="Util\ListComparer.cs" />

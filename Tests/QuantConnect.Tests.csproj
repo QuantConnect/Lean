@@ -337,6 +337,8 @@
     <Compile Include="Common\Util\ConcurrentSetTests.cs" />
     <Compile Include="Common\Util\RateGateTests.cs" />
     <Compile Include="Common\Util\ListComparerTests.cs" />
+    <Compile Include="Common\Util\RateLimit\FixedIntervalRefillStrategyTests.cs" />
+    <Compile Include="Common\Util\RateLimit\LeakyBucketTests.cs" />
     <Compile Include="Common\Util\SeriesJsonConverterTests.cs" />
     <Compile Include="Common\Util\StreamReaderEnumerableTests.cs" />
     <Compile Include="Common\Util\ValidateTests.cs" />

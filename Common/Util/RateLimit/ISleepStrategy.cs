@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -11,34 +11,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using System;
-
-namespace QuantConnect
+namespace QuantConnect.Util.RateLimit
 {
     /// <summary>
-    /// Provides an implementation of <see cref="ITimeProvider"/> that
-    /// uses <see cref="DateTime.UtcNow"/> to provide the current time
+    /// Defines a strategy for sleeping the current thread of execution. This is currently used via the
+    /// <see cref="ITokenBucket.Consume"/> in order to wait for new tokens to become available for consumption.
     /// </summary>
-    public sealed class RealTimeProvider : ITimeProvider
+    public interface ISleepStrategy
     {
         /// <summary>
-        /// Provides a static instance of the <see cref="RealTimeProvider"/>
+        /// Sleeps the current thread in an implementation specific way
+        /// and for an implementation specific amount of time
         /// </summary>
-        /// <remarks>
-        /// Since this implementation is stateless, it doesn't make sense to have multiple instances.
-        /// </remarks>
-        public static readonly ITimeProvider Instance = new RealTimeProvider();
-
-        /// <summary>
-        /// Gets the current time in UTC
-        /// </summary>
-        /// <returns>The current time in UTC</returns>
-        public DateTime GetUtcNow()
-        {
-            return DateTime.UtcNow;
-        }
+        void Sleep();
     }
 }

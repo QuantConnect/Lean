@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -11,34 +11,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-using System;
-
-namespace QuantConnect
+namespace QuantConnect.Util.RateLimit
 {
     /// <summary>
-    /// Provides an implementation of <see cref="ITimeProvider"/> that
-    /// uses <see cref="DateTime.UtcNow"/> to provide the current time
+    /// Provides a strategy for making tokens available for consumption in the <see cref="ITokenBucket"/>
     /// </summary>
-    public sealed class RealTimeProvider : ITimeProvider
+    public interface IRefillStrategy
     {
         /// <summary>
-        /// Provides a static instance of the <see cref="RealTimeProvider"/>
+        /// Computes the number of new tokens made available, typically via the passing of time.
         /// </summary>
-        /// <remarks>
-        /// Since this implementation is stateless, it doesn't make sense to have multiple instances.
-        /// </remarks>
-        public static readonly ITimeProvider Instance = new RealTimeProvider();
-
-        /// <summary>
-        /// Gets the current time in UTC
-        /// </summary>
-        /// <returns>The current time in UTC</returns>
-        public DateTime GetUtcNow()
-        {
-            return DateTime.UtcNow;
-        }
+        long Refill();
     }
 }
