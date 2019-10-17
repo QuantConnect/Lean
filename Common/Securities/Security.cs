@@ -119,6 +119,15 @@ namespace QuantConnect.Securities
         public bool HasData => GetLastData() != null;
 
         /// <summary>
+        /// True if the type cache being used is shared among different <see cref="SecurityCache"/> instances
+        /// </summary>
+        /// <remarks>This is useful for custom data securities which also have an underlying security,
+        /// will allow both securities to access the same data by type</remarks>
+        /// <remarks>This flag is particularly useful for performance since it helps determine
+        /// at runtime whether two securities should start sharing their type cache</remarks>
+        public bool IsTypeCacheShared => Cache.IsTypeCacheShared;
+
+        /// <summary>
         /// Gets or sets whether or not this security should be considered tradable
         /// </summary>
         public bool IsTradable
@@ -379,8 +388,7 @@ namespace QuantConnect.Securities
             SettlementModel = settlementModel;
             VolatilityModel = volatilityModel;
             Holdings = new SecurityHolding(this, currencyConverter);
-            Data = new DynamicSecurityData(registeredTypesProvider);
-            Cache.DataStored += (sender, args) => Data.StoreData(args.DataType, args.Data);
+            Data = new DynamicSecurityData(registeredTypesProvider, Cache);
 
             UpdateSubscriptionProperties();
         }
@@ -482,7 +490,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// If this uses tradebar data, return the most recent open.
         /// </summary>
-        public virtual decimal Open => Cache.Open == 0 ? Price: Cache.Open;
+        public virtual decimal Open => Cache.Open == 0 ? Price : Cache.Open;
 
         /// <summary>
         /// Access to the volume of the equity today
@@ -581,9 +589,7 @@ namespace QuantConnect.Securities
             if (data == null) return;
             Cache.AddData(data);
 
-            if (data is OpenInterest || data.Price == 0m) return;
-            Holdings.UpdateMarketPrice(Price);
-            VolatilityModel.Update(this, data);
+            UpdateConsumersMarketPrice(data);
         }
 
         /// <summary>
@@ -596,20 +602,9 @@ namespace QuantConnect.Securities
         /// <paramref name="data"/> contains any fill forward bar or not</param>
         public void Update(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null)
         {
-            // use the last of each type to set market price
-            SetMarketPrice(data[data.Count - 1]);
+            Cache.AddDataList(data, dataType, containsFillForwardData);
 
-            var nonFillForwardData = data;
-            // maintaining regression requires us to NOT cache FF data
-            if (!containsFillForwardData.HasValue || containsFillForwardData.Value)
-            {
-                nonFillForwardData = data.Where(baseData => !baseData.IsFillForward).ToList();
-                if (nonFillForwardData.Count == 0)
-                {
-                    return;
-                }
-            }
-            Cache.StoreData(nonFillForwardData, dataType);
+            UpdateConsumersMarketPrice(data[data.Count - 1]);
         }
 
         /// <summary>
@@ -826,6 +821,13 @@ namespace QuantConnect.Securities
                 SubscriptionsBag.Add(subscription);
             }
             UpdateSubscriptionProperties();
+        }
+
+        private void UpdateConsumersMarketPrice(BaseData data)
+        {
+            if (data is OpenInterest || data.Price == 0m) return;
+            Holdings.UpdateMarketPrice(Price);
+            VolatilityModel.Update(this, data);
         }
 
         private void UpdateSubscriptionProperties()

@@ -274,11 +274,8 @@ namespace QuantConnect.Lean.Engine
                     foreach (var security in timeSlice.SecurityChanges.AddedSecurities)
                     {
                         security.IsTradable = true;
-                        if (!algorithm.Securities.ContainsKey(security.Symbol))
-                        {
-                            // add the new security
-                            algorithm.Securities.Add(security);
-                        }
+                        // uses TryAdd, so don't need to worry about duplicates here
+                        algorithm.Securities.Add(security);
                     }
 
                     var activeSecurities = algorithm.UniverseManager.ActiveSecurities;
@@ -297,17 +294,21 @@ namespace QuantConnect.Lean.Engine
                 foreach (var update in timeSlice.SecuritiesUpdateData)
                 {
                     var security = update.Target;
-                    security.Update(update.Data, update.DataType, update.ContainsFillForwardData);
 
-                    // set custom derivative data in the underlying's cache
-                    if (security.Symbol.SecurityType == SecurityType.Base && security.Symbol.HasUnderlying)
+                    if (security.Symbol.SecurityType == SecurityType.Base
+                        && security.Symbol.HasUnderlying
+                        && !security.IsTypeCacheShared)
                     {
                         Security underlyingSecurity;
                         if (algorithm.Securities.TryGetValue(security.Symbol.Underlying, out underlyingSecurity))
                         {
-                            underlyingSecurity.Cache.StoreData(update.Data, update.DataType);
+                            // set custom derivative data in the underlying's cache
+                            SecurityCache.ShareTypeCacheInstance(underlyingSecurity.Cache,
+                                algorithm.Securities[security.Symbol].Cache);
                         }
                     }
+
+                    security.Update(update.Data, update.DataType, update.ContainsFillForwardData);
 
                     if (!update.IsInternalConfig)
                     {

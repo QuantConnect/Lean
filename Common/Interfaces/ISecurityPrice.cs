@@ -73,6 +73,15 @@ namespace QuantConnect.Interfaces
         Symbol Symbol { get; }
 
         /// <summary>
+        /// True if the type cache being used is shared among different <see cref="SecurityCache"/> instances
+        /// </summary>
+        /// <remarks>This is useful for custom data securities which also have an underlying security,
+        /// will allow both securities to access the same data by type</remarks>
+        /// <remarks>This flag is particularly useful for performance since it helps determine
+        /// at runtime whether two securities should start sharing their type cache</remarks>
+        bool IsTypeCacheShared { get; }
+
+        /// <summary>
         /// Update any security properties based on the latest market data and time
         /// </summary>
         /// <param name="data">New data packet from LEAN</param>

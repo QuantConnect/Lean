@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities
 {
@@ -68,7 +69,19 @@ namespace QuantConnect.Securities
         /// </summary>
         public bool TryGetType(string name, out Type type)
         {
-            return _types.TryGetValue(name, out type);
+            if (!_types.TryGetValue(name, out type))
+            {
+                // lets try a case insensitive search
+                var kvp = _types.FirstOrDefault(pair => pair.Key.ToLowerInvariant() == name.ToLowerInvariant());
+                if (kvp.Equals(default(KeyValuePair<string, Type>)))
+                {
+                    return false;
+                }
+
+                type = kvp.Value;
+                return true;
+            }
+            return true;
         }
     }
 }
