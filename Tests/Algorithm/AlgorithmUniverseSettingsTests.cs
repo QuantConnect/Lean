@@ -99,7 +99,8 @@ namespace QuantConnect.Tests.Algorithm
                         marketHoursDatabase,
                         symbolPropertiesDatabase,
                         algorithm,
-                        RegisteredSecurityDataTypesProvider.Null)),
+                        RegisteredSecurityDataTypesProvider.Null,
+                        new SecurityCacheProvider(algorithm.Securities))),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -111,7 +112,8 @@ namespace QuantConnect.Tests.Algorithm
                 marketHoursDatabase,
                 symbolPropertiesDatabase,
                 algorithm,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCacheProvider(algorithm.Securities));
 
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             algorithm.Securities.SetSecurityService(securityService);

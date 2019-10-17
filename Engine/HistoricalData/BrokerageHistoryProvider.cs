@@ -104,7 +104,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 new Cash(Currencies.NullCurrency, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.NullCurrency),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
 
             var reader = history.GetEnumerator();

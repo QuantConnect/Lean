@@ -93,15 +93,6 @@ namespace QuantConnect.Securities
         public long OpenInterest { get; private set; }
 
         /// <summary>
-        /// True if the type cache being used is shared among different <see cref="SecurityCache"/> instances
-        /// </summary>
-        /// <remarks>This is useful for custom data securities which also have an underlying security,
-        /// will allow both securities to access the same data by type</remarks>
-        /// <remarks>This flag is particularly useful for performance since it helps determine
-        /// at runtime whether two securities should start sharing their type cache</remarks>
-        public bool IsTypeCacheShared { get; private set; }
-
-        /// <summary>
         /// Add a list of market data points to the local security cache for the current market price.
         /// </summary>
         /// <remarks>Internally uses <see cref="AddData"/> using the last data point of the provided list
@@ -335,9 +326,6 @@ namespace QuantConnect.Securities
                 sourceToShare._dataByType.TryAdd(kvp.Key, kvp.Value);
             }
             targetToModify._dataByType = sourceToShare._dataByType;
-
-            sourceToShare.IsTypeCacheShared = true;
-            targetToModify.IsTypeCacheShared = true;
         }
     }
 }

@@ -102,7 +102,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     algorithm.Portfolio.CashBook[algorithm.AccountCurrency],
                                     SymbolProperties.GetDefault(algorithm.AccountCurrency),
                                     algorithm.Portfolio.CashBook,
-                                    RegisteredSecurityDataTypesProvider.Null
+                                    RegisteredSecurityDataTypesProvider.Null,
+                                    new SecurityCache()
                                  );
                             }
                             AddSubscription(

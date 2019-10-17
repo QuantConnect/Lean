@@ -74,7 +74,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     marketHoursDatabase,
                     symbolPropertiesDatabase,
                     algorithm,
-                    RegisteredSecurityDataTypesProvider.Null))
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCacheProvider(algorithm.Securities)))
         {
         }
 

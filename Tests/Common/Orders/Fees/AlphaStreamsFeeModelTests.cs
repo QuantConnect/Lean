@@ -78,7 +78,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new Cash("USD", 0, 0),
                 SymbolProperties.GetDefault("USD"),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
@@ -105,7 +106,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new Cash("USD", 0, 0),
                 new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 
@@ -132,7 +134,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 new Cash("USD", 0, 0),
                 new OptionSymbolProperties(SymbolProperties.GetDefault("USD")),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100, 100));
 

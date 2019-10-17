@@ -148,11 +148,6 @@ namespace QuantConnect.Lean.Engine
             var hasOnDataDelistings = AddMethodInvoker<Delistings>(algorithm, methodInvokers);
             var hasOnDataSymbolChangedEvents = AddMethodInvoker<SymbolChangedEvents>(algorithm, methodInvokers);
 
-            // Algorithm 3.0 data accessors
-            var hasOnDataSlice = algorithm.GetType().GetMethods()
-                .Where(x => x.Name == "OnData" && x.GetParameters().Length == 1 && x.GetParameters()[0].ParameterType == typeof (Slice))
-                .FirstOrDefault(x => x.DeclaringType == algorithm.GetType()) != null;
-
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
             foreach (var config in algorithm.SubscriptionManager.Subscriptions)
             {
@@ -294,19 +289,6 @@ namespace QuantConnect.Lean.Engine
                 foreach (var update in timeSlice.SecuritiesUpdateData)
                 {
                     var security = update.Target;
-
-                    if (security.Symbol.SecurityType == SecurityType.Base
-                        && security.Symbol.HasUnderlying
-                        && !security.IsTypeCacheShared)
-                    {
-                        Security underlyingSecurity;
-                        if (algorithm.Securities.TryGetValue(security.Symbol.Underlying, out underlyingSecurity))
-                        {
-                            // set custom derivative data in the underlying's cache
-                            SecurityCache.ShareTypeCacheInstance(underlyingSecurity.Cache,
-                                algorithm.Securities[security.Symbol].Cache);
-                        }
-                    }
 
                     security.Update(update.Data, update.DataType, update.ContainsFillForwardData);
 

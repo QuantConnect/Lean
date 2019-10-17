@@ -344,6 +344,7 @@
     <Compile Include="Securities\ReservedBuyingPowerForPositionParameters.cs" />
     <Compile Include="Securities\SecurityCacheDataStoredEventArgs.cs" />
     <Compile Include="Securities\DynamicSecurityData.cs" />
+    <Compile Include="Securities\SecurityCacheProvider.cs" />
     <Compile Include="Securities\SecurityService.cs" />
     <Compile Include="Securities\Volatility\BaseVolatilityModel.cs" />
     <Compile Include="Series.cs" />

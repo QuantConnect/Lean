@@ -119,15 +119,6 @@ namespace QuantConnect.Securities
         public bool HasData => GetLastData() != null;
 
         /// <summary>
-        /// True if the type cache being used is shared among different <see cref="SecurityCache"/> instances
-        /// </summary>
-        /// <remarks>This is useful for custom data securities which also have an underlying security,
-        /// will allow both securities to access the same data by type</remarks>
-        /// <remarks>This flag is particularly useful for performance since it helps determine
-        /// at runtime whether two securities should start sharing their type cache</remarks>
-        public bool IsTypeCacheShared => Cache.IsTypeCacheShared;
-
-        /// <summary>
         /// Gets or sets whether or not this security should be considered tradable
         /// </summary>
         public bool IsTradable
@@ -286,13 +277,14 @@ namespace QuantConnect.Securities
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypesProvider
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider,
+            SecurityCache cache
             )
             : this(config,
                 quoteCurrency,
                 symbolProperties,
                 new SecurityExchange(exchangeHours),
-                new SecurityCache(),
+                cache,
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
@@ -316,13 +308,14 @@ namespace QuantConnect.Securities
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypesProvider
+            IRegisteredSecurityDataTypesProvider registeredTypesProvider,
+            SecurityCache cache
             )
             : this(symbol,
                 quoteCurrency,
                 symbolProperties,
                 new SecurityExchange(exchangeHours),
-                new SecurityCache(),
+                cache,
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),
