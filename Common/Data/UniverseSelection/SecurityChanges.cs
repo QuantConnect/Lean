@@ -102,7 +102,7 @@ namespace QuantConnect.Data.UniverseSelection
             if (right == None) return left;
 
             // perf: no need to use Union here, SecurityChanges.Constructor will use hashset
-            var additions = left.AddedSecurities.Concat(right.AddedSecurities).ToList();
+            var additions = left.AddedSecurities.Concat(right.AddedSecurities).ToHashSet();
             var removals = left.RemovedSecurities.Concat(right.RemovedSecurities).Where(x => !additions.Contains(x));
             return new SecurityChanges(additions, removals);
         }
