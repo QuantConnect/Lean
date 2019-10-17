@@ -306,6 +306,7 @@
     <Compile Include="Interfaces\ISubscriptionDataConfigService.cs" />
     <Compile Include="Interfaces\ITimeKeeper.cs" />
     <Compile Include="IsolatorLimitResult.cs" />
+    <Compile Include="IsolatorLimitResultProvider.cs" />
     <Compile Include="ITimeProvider.cs" />
     <Compile Include="Orders\Fees\AlphaStreamsFeeModel.cs" />
     <Compile Include="Orders\Fills\Fill.cs" />
@@ -315,11 +316,13 @@
     <Compile Include="Orders\Fees\OrderFeeParameters.cs" />
     <Compile Include="Orders\Slippage\AlphaStreamsSlippageModel.cs" />
     <Compile Include="Packets\Breakpoint.cs" />
+    <Compile Include="Packets\LeakyBucketControlParameters.cs" />
     <Compile Include="Python\BrokerageMessageHandlerPythonWrapper.cs" />
     <Compile Include="Python\MarginCallModelPythonWrapper.cs" />
     <Compile Include="Python\PythonInitializer.cs" />
     <Compile Include="Python\PythonWrapper.cs" />
     <Compile Include="RealTimeProvider.cs" />
+    <Compile Include="Scheduling\ScheduledEventException.cs" />
     <Compile Include="Securities\BuyingPower.cs" />
     <Compile Include="Securities\BuyingPowerParameters.cs" />
     <Compile Include="Securities\BuyingPowerModel.cs" />
@@ -772,6 +775,7 @@
     <Compile Include="Util\ColorJsonConverter.cs" />
     <Compile Include="Util\PythonUtil.cs" />
     <Compile Include="Util\RateGate.cs" />
+    <Compile Include="Util\RateLimit\TokenBucket.cs" />
     <Compile Include="Util\SecurityExtensions.cs" />
     <Compile Include="Util\SecurityIdentifierJsonConverter.cs" />
     <Compile Include="Util\SeriesJsonConverter.cs" />

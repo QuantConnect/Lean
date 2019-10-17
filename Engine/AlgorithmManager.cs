@@ -38,6 +38,7 @@ using QuantConnect.Securities;
 using QuantConnect.Util;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Volatility;
+using QuantConnect.Util.RateLimit;
 
 namespace QuantConnect.Lean.Engine
 {
@@ -51,7 +52,6 @@ namespace QuantConnect.Lean.Engine
         private IAlgorithm _algorithm;
         private readonly object _lock;
         private readonly bool _liveMode;
-        private readonly AlgorithmTimeLimitManager _timeLimitManager;
 
         /// <summary>
         /// Publicly accessible algorithm status
@@ -67,7 +67,7 @@ namespace QuantConnect.Lean.Engine
         /// Provides the isolator with a function for verifying that we're not spending too much time in each
         /// algorithm manager time loop
         /// </summary>
-        public IIsolatorLimitResultProvider TimeLimit => _timeLimitManager;
+        public AlgorithmTimeLimitManager TimeLimit { get; }
 
         /// <summary>
         /// Quit state flag for the running algorithm. When true the user has requested the backtest stops through a Quit() method.
@@ -84,14 +84,20 @@ namespace QuantConnect.Lean.Engine
         /// Initializes a new instance of the <see cref="AlgorithmManager"/> class
         /// </summary>
         /// <param name="liveMode">True if we're running in live mode, false for backtest mode</param>
-        public AlgorithmManager(bool liveMode)
+        /// <param name="job">Provided by LEAN when creating a new algo manager. This is the job
+        /// that the algo manager is about to execute. Jupyter and other consumers can provide the
+        /// default value of null</param>
+        public AlgorithmManager(bool liveMode, AlgorithmNodePacket job = null)
         {
-            _lock = new object();
-            var timeLoopMaximum
-                = TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-maximum", 20));
             AlgorithmId = "";
-            _timeLimitManager = new AlgorithmTimeLimitManager(timeLoopMaximum);
             _liveMode = liveMode;
+            _lock = new object();
+
+            // initialize the time limit manager
+            TimeLimit = new AlgorithmTimeLimitManager(
+                CreateTokenBucket(job?.Controls?.TrainingLimits),
+                TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-maximum", 20))
+            );
         }
 
         /// <summary>
@@ -171,7 +177,7 @@ namespace QuantConnect.Lean.Engine
             foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
             {
                 // reset our timer on each loop
-                _timeLimitManager.StartNewTimeStep();
+                TimeLimit.StartNewTimeStep();
 
                 //Check this backtest is still running:
                 if (_algorithm.Status != AlgorithmStatus.Running)
@@ -678,7 +684,7 @@ namespace QuantConnect.Lean.Engine
             } // End of ForEach feed.Bridge.GetConsumingEnumerable
 
             // stop timing the loops
-            _timeLimitManager.StopEnforcingTimeLimit();
+            TimeLimit.StopEnforcingTimeLimit();
 
             //Stream over:: Send the final packet and fire final events:
             Log.Trace("AlgorithmManager.Run(): Firing On End Of Algorithm...");
@@ -1016,7 +1022,6 @@ namespace QuantConnect.Lean.Engine
             return false;
         }
 
-
         /// <summary>
         /// Performs delisting logic for the securities specified in <paramref name="newDelistings"/> that are marked as <see cref="DelistingType.Delisted"/>.
         /// </summary>
@@ -1281,6 +1286,36 @@ namespace QuantConnect.Lean.Engine
 
             var roundedDataPointEndTime = dataPointEndTime.RoundDownInTimeZone(config.Increment, config.ExchangeTimeZone, config.DataTimeZone);
             return dataPointEndTime == roundedDataPointEndTime;
+        }
+
+        /// <summary>
+        /// Constructs the correct <see cref="ITokenBucket"/> instance per the provided controls.
+        /// The provided controls will be null when
+        /// </summary>
+        private static ITokenBucket CreateTokenBucket(LeakyBucketControlParameters controls)
+        {
+            if (controls == null)
+            {
+                // this will only be null when the AlgorithmManager is being initialized outside of LEAN
+                // for example, in unit tests that don't provide a job package as well as from Jupyter
+                // in each of the above cases, it seems best to not enforce the leaky bucket restrictions
+                return TokenBucket.Null;
+            }
+
+            Log.Trace("AlgorithmManager.CreateTokenBucket(): Initializing LeakyBucket: " +
+                $"Capacity: {controls.Capacity} " +
+                $"RefillAmount: {controls.RefillAmount} " +
+                $"TimeInterval: {controls.TimeIntervalMinutes}"
+            );
+
+            // these parameters view 'minutes' as the resource being rate limited. the capacity is the total
+            // number of minutes available for burst operations and after controls.TimeIntervalMinutes time
+            // has passed, we'll add controls.RefillAmount to the 'minutes' available, maxing at controls.Capacity
+            return new LeakyBucket(
+                controls.Capacity,
+                controls.RefillAmount,
+                TimeSpan.FromMinutes(controls.TimeIntervalMinutes)
+            );
         }
     }
 }

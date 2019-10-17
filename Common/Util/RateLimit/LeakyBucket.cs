@@ -27,10 +27,14 @@ namespace QuantConnect.Util.RateLimit
         private readonly object _sync = new object();
 
         private long _available;
-        private readonly long _capacity;
         private readonly ISleepStrategy _sleep;
         private readonly IRefillStrategy _refill;
         private readonly ITimeProvider _timeProvider;
+
+        /// <summary>
+        /// Gets the maximum capacity of tokens this bucket can hold.
+        /// </summary>
+        public long Capacity { get; }
 
         /// <summary>
         /// Gets the total number of currently available tokens for consumption
@@ -71,7 +75,7 @@ namespace QuantConnect.Util.RateLimit
         {
             _sleep = sleep;
             _refill = refill;
-            _capacity = capacity;
+            Capacity = capacity;
             _available = capacity;
             _timeProvider = timeProvider ?? RealTimeProvider.Instance;
         }
@@ -132,7 +136,7 @@ namespace QuantConnect.Util.RateLimit
                 );
             }
 
-            if (tokens > _capacity)
+            if (tokens > Capacity)
             {
                 throw new ArgumentOutOfRangeException(nameof(tokens),
                     "Number of tokens to consume must be less than or equal to the capacity"
@@ -145,7 +149,7 @@ namespace QuantConnect.Util.RateLimit
                 var refilled = Math.Max(0, _refill.Refill());
 
                 // the number of tokens to add, the max of which is the difference between capacity and currently available
-                var deltaTokens = Math.Min(_capacity - _available, refilled);
+                var deltaTokens = Math.Min(Capacity - _available, refilled);
 
                 // update the available number of units with the new tokens
                 _available += deltaTokens;
@@ -153,11 +157,13 @@ namespace QuantConnect.Util.RateLimit
                 if (tokens > _available)
                 {
                     // we don't have enough tokens yet
+                    Logging.Log.Trace($"LeakyBucket.TryConsume({tokens}): Failed to consumed tokens. Available: {_available}");
                     return false;
                 }
 
                 // subtract the number of tokens consumed
                 _available = _available - tokens;
+                Logging.Log.Trace($"LeakyBucket.TryConsume({tokens}): Successfully consumed tokens. Available: {_available}");
                 return true;
             }
         }

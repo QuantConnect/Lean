@@ -30,6 +30,11 @@ namespace QuantConnect.Util.RateLimit
     public interface ITokenBucket
     {
         /// <summary>
+        /// Gets the maximum capacity of tokens this bucket can hold.
+        /// </summary>
+        long Capacity { get; }
+
+        /// <summary>
         /// Gets the total number of currently available tokens for consumption
         /// </summary>
         long AvailableTokens { get; }

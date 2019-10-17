@@ -17,6 +17,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
@@ -31,6 +33,7 @@ namespace QuantConnect.Lean.Engine.RealTime
     public class BacktestingRealTimeHandler : BaseRealTimeHandler, IRealTimeHandler
     {
         private bool _sortingScheduledEventsRequired;
+        private IIsolatorLimitResultProvider _isolatorLimitProvider;
         private List<ScheduledEvent> _scheduledEventsSortedByTime = new List<ScheduledEvent>();
 
         /// <summary>
@@ -42,11 +45,12 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Initializes the real time handler for the specified algorithm and job
         /// </summary>
-        public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api)
+        public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api, IIsolatorLimitResultProvider isolatorLimitProvider)
         {
             //Initialize:
             Algorithm = algorithm;
             ResultHandler =  resultHandler;
+            _isolatorLimitProvider = isolatorLimitProvider;
 
             // create events for algorithm's end of tradeable dates
             // set up the events for each security to fire every tradeable date before market close
@@ -111,7 +115,10 @@ namespace QuantConnect.Lean.Engine.RealTime
             // poke each event to see if it has fired, be sure to invoke these in time order
             foreach (var scheduledEvent in GetScheduledEventsSortedByTime())
             {
-                scheduledEvent.Scan(time);
+                _isolatorLimitProvider.ConsumeWhileExecuting(
+                    scheduledEvent.Name,
+                    () => scheduledEvent.Scan(time)
+                );
             }
         }
 
@@ -129,7 +136,10 @@ namespace QuantConnect.Lean.Engine.RealTime
 
                     try
                     {
-                        scheduledEvent.Scan(scheduledEvent.NextEventUtcTime);
+                        _isolatorLimitProvider.ConsumeWhileExecuting(
+                            scheduledEvent.Name,
+                            () => scheduledEvent.Scan(scheduledEvent.NextEventUtcTime)
+                        );
                     }
                     catch (ScheduledEventException scheduledEventException)
                     {

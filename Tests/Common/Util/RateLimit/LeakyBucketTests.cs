@@ -74,7 +74,7 @@ namespace QuantConnect.Tests.Common.Util.RateLimit
             for (int i = 0; i < 5; i++)
             {
                 timeProvider.Advance(refillInterval);
-                Thread.Yield();
+                Thread.Sleep(1);
 
                 // on the last loop, the bucket will consume all ten
                 if (i != 4)

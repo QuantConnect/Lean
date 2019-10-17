@@ -306,6 +306,7 @@
     <Compile Include="Common\Data\Fundamental\MultiPeriodFieldTests.cs" />
     <Compile Include="Common\Data\MockSubscriptionDataConfigProvider.cs" />
     <Compile Include="Common\Data\UniverseSelection\UniverseTests.cs" />
+    <Compile Include="Common\IsolatorLimitResultProviderTests.cs" />
     <Compile Include="Common\IsolatorTests.cs" />
     <Compile Include="Common\Orders\Fees\AlphaStreamsFeeModelTests.cs" />
     <Compile Include="Common\Notifications\NotificationEmailTests.cs" />

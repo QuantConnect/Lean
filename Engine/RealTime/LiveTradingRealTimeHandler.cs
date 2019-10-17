@@ -33,8 +33,10 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class LiveTradingRealTimeHandler : BaseRealTimeHandler, IRealTimeHandler
     {
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private static MarketHoursDatabase _marketHoursDatabase;
+
+        private IIsolatorLimitResultProvider _isolatorLimitProvider;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// Boolean flag indicating thread state.
@@ -44,11 +46,12 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <summary>
         /// Initializes the real time handler for the specified algorithm and job
         /// </summary>
-        public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api)
+        public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api, IIsolatorLimitResultProvider isolatorLimitProvider)
         {
             //Initialize:
             Algorithm = algorithm;
             ResultHandler = resultHandler;
+            _isolatorLimitProvider = isolatorLimitProvider;
             _cancellationTokenSource = new CancellationTokenSource();
             _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
 
@@ -99,15 +102,20 @@ namespace QuantConnect.Lean.Engine.RealTime
                 Thread.Sleep(delay < 0 ? 1 : delay);
 
                 // poke each event to see if it should fire, we order by unique id to be deterministic
-                foreach (var scheduledEvent in ScheduledEvents.OrderBy(pair => pair.Value))
+                foreach (var kvp in ScheduledEvents.OrderBy(pair => pair.Value))
                 {
+                    var scheduledEvent = kvp.Key;
                     try
                     {
-                        scheduledEvent.Key.Scan(time);
+                        _isolatorLimitProvider.ConsumeWhileExecuting(
+                            scheduledEvent.Name,
+                            () => scheduledEvent.Scan(time)
+                        );
                     }
                     catch (ScheduledEventException scheduledEventException)
                     {
-                        var errorMessage = $"LiveTradingRealTimeHandler.Run(): There was an error in a scheduled event {scheduledEvent.Key}. The error was {scheduledEventException.Message}";
+                        var errorMessage = "LiveTradingRealTimeHandler.Run(): There was an error in a scheduled " +
+                                           $"event {scheduledEvent.Name}. The error was {scheduledEventException.Message}";
 
                         Log.Error(scheduledEventException, errorMessage);
 

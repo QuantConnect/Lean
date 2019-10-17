@@ -120,7 +120,7 @@ namespace QuantConnect.Lean.Launcher
 
             try
             {
-                var algorithmManager = new AlgorithmManager(liveMode);
+                var algorithmManager = new AlgorithmManager(liveMode, job);
 
                 leanEngineSystemHandlers.LeanManager.Initialize(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job, algorithmManager);
 

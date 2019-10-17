@@ -39,9 +39,9 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Intializes the real time handler for the specified algorithm and job
+        /// Initializes the real time handler for the specified algorithm and job
         /// </summary>
-        void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api);
+        void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api, IIsolatorLimitResultProvider isolatorLimitProvider);
 
         /// <summary>
         /// Main entry point to scan and trigger the realtime events.

@@ -26,5 +26,12 @@ namespace QuantConnect
         /// Determines whether or not a custom isolator limit has be reached.
         /// </summary>
         IsolatorLimitResult IsWithinLimit();
+
+        /// <summary>
+        /// Requests additional time from the isolator result provider. This is intended
+        /// to prevent <see cref="IsWithinLimit"/> from returning an error result.
+        /// </summary>
+        /// <param name="minutes">The number of additional minutes to request</param>
+        void RequestAdditionalTime(int minutes);
     }
 }

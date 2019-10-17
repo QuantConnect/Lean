@@ -90,6 +90,13 @@ namespace QuantConnect.Packets
         public int SecondTimeOut;
 
         /// <summary>
+        /// Sets parameters used for determining the behavior of the leaky bucket algorithm that
+        /// controls how much time is available for an algorithm to use the training feature.
+        /// </summary>
+        [JsonProperty(PropertyName = "oTrainingLimits")]
+        public LeakyBucketControlParameters TrainingLimits;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
         public Controls()
@@ -105,6 +112,9 @@ namespace QuantConnect.Packets
             BacktestingMaxInsights = 10000;
             MaximumDataPointsPerChartSeries = 4000;
             SecondTimeOut = 300;
+
+            // initialize to default leaky bucket values in case they're not specified
+            TrainingLimits = new LeakyBucketControlParameters();
         }
 
         /// <summary>
