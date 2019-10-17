@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect
 {
     /// <summary>
@@ -30,8 +32,19 @@ namespace QuantConnect
         /// <summary>
         /// Requests additional time from the isolator result provider. This is intended
         /// to prevent <see cref="IsWithinLimit"/> from returning an error result.
+        /// This method will throw a <see cref="TimeoutException"/> if there is insufficient
+        /// resources available to fulfill the specified number of minutes.
         /// </summary>
         /// <param name="minutes">The number of additional minutes to request</param>
         void RequestAdditionalTime(int minutes);
+
+        /// <summary>
+        /// Attempts to request additional time from the isolator result provider. This is intended
+        /// to prevent <see cref="IsWithinLimit"/> from returning an error result.
+        /// This method will only return false if there is insufficient resources available to fulfill
+        /// the specified number of minutes.
+        /// </summary>
+        /// <param name="minutes">The number of additional minutes to request</param>
+        bool TryRequestAdditionalTime(int minutes);
     }
 }

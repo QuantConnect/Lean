@@ -115,10 +115,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             // poke each event to see if it has fired, be sure to invoke these in time order
             foreach (var scheduledEvent in GetScheduledEventsSortedByTime())
             {
-                _isolatorLimitProvider.ConsumeWhileExecuting(
-                    scheduledEvent.Name,
-                    () => scheduledEvent.Scan(time)
-                );
+                _isolatorLimitProvider.Consume(scheduledEvent, time);
             }
         }
 
@@ -136,10 +133,7 @@ namespace QuantConnect.Lean.Engine.RealTime
 
                     try
                     {
-                        _isolatorLimitProvider.ConsumeWhileExecuting(
-                            scheduledEvent.Name,
-                            () => scheduledEvent.Scan(scheduledEvent.NextEventUtcTime)
-                        );
+                        _isolatorLimitProvider.Consume(scheduledEvent, scheduledEvent.NextEventUtcTime);
                     }
                     catch (ScheduledEventException scheduledEventException)
                     {

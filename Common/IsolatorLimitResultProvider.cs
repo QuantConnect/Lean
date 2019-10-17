@@ -17,12 +17,12 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Logging;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect
 {
     /// <summary>
-    /// Provides access to the <see cref="NullIsolatorLimitResultProvider"/> and can be a place for future
-    /// extension methods of <see cref="IIsolatorLimitResultProvider"/>
+    /// Provides access to the <see cref="NullIsolatorLimitResultProvider"/> and extension methods supporting <see cref="ScheduledEvent"/>
     /// </summary>
     public static class IsolatorLimitResultProvider
     {
@@ -35,17 +35,15 @@ namespace QuantConnect
         public static readonly IIsolatorLimitResultProvider Null = new NullIsolatorLimitResultProvider();
 
         /// <summary>
-        /// Executes the provided code block and while the code block is running, continually consume from
-        /// the limit result provided one token each minute. This function allows the code to run for the
-        /// first full second without requesting additional time from the provider. Following that, every
-        /// minute an additional one minute will be requested from the provider.
+        /// Convenience method for invoking a scheduled event's Scan method inside the <see cref="IsolatorLimitResultProvider"/>
         /// </summary>
-        public static void ConsumeWhileExecuting(
+        public static void Consume(
             this IIsolatorLimitResultProvider isolatorLimitProvider,
-            Action code
+            ScheduledEvent scheduledEvent,
+            DateTime scanTimeUtc
             )
         {
-            isolatorLimitProvider.ConsumeWhileExecuting(string.Empty, code);
+            isolatorLimitProvider.Consume(scheduledEvent.Name, () => scheduledEvent.Scan(scanTimeUtc));
         }
 
         /// <summary>
@@ -54,38 +52,76 @@ namespace QuantConnect
         /// first full second without requesting additional time from the provider. Following that, every
         /// minute an additional one minute will be requested from the provider.
         /// </summary>
-        public static void ConsumeWhileExecuting(
+        /// <remarks>
+        /// This method exists to support scheduled events, and as such, intercepts any errors raised via the
+        /// provided code and wraps them in a <see cref="ScheduledEventException"/>. If in the future this is
+        /// usable elsewhere, consider refactoring to handle the errors in a different fashion.
+        /// </remarks>
+        public static void Consume(
             this IIsolatorLimitResultProvider isolatorLimitProvider,
             string name,
             Action code
             )
         {
+            Exception error = null;
+            var memoryFence = new object();
             var codeFinished = new ManualResetEvent(false);
+
+            // execute the code in a separate task so we can track time and request more as needed
             Task.Run(() =>
             {
                 code();
                 codeFinished.Set();
-            });
+            }).ContinueWith(task =>
+            {
+                // use full locking semantics to guarantee the value is propagated between threads
+                lock (memoryFence)
+                {
+                    // in the event an error is raised, capture the exception
+                    error = task.Exception;
+                    codeFinished.Set();
+                }
+            }, TaskContinuationOptions.OnlyOnFaulted);
 
             // permit up to one second w/out requesting additional time from the provider
-            if (codeFinished.WaitOne(Second))
+            if (!codeFinished.WaitOne(Second))
             {
-                return;
+                var count = 0;
+                do
+                {
+                    if (count % 60 != 0)
+                    {
+                        continue;
+                    }
+
+                    // on the first iteration and every minute following, request additional time
+                    Log.Trace($"IsolatorLimitResultProvider.ConsumeForScheduledEvent({name}): Requesting additional time. Elapsed minutes: {count / 60}");
+                    if (!isolatorLimitProvider.TryRequestAdditionalTime(minutes: 1))
+                    {
+                        error = new TimeoutException("The scheduled event exceeded the available amount of time for processing. " +
+                                                    $"Elapsed: {count/60.0:0.0} minutes. Scheduled Event: {name}");
+                        break;
+                    }
+
+                    count++;
+                } while (!codeFinished.WaitOne(Second));
             }
 
-            var count = 0;
-            do
+            lock (memoryFence)
             {
-                if (count % 60 != 0)
+                if (error != null)
                 {
-                    continue;
+                    var scheduledEventError = error as ScheduledEventException;
+                    if (scheduledEventError != null)
+                    {
+                        throw scheduledEventError;
+                    }
+
+                    // otherwise wrap it in a ScheduledEventException
+                    var errorMessage = $"There was an error in a scheduled event {name}. The error was {error.Message}";
+                    throw new ScheduledEventException(name, errorMessage, error);
                 }
-
-                // on the first iteration and every minute following, request additional time
-                Log.Trace($"IsolatorLimitResultProvider.ConsumeWhileExecuting({name}): Requesting additional time. Elapsed minutes: {count / 60}");
-                isolatorLimitProvider.RequestAdditionalTime(minutes: 1);
-
-            } while (!codeFinished.WaitOne(Second));
+            }
         }
 
 
@@ -95,6 +131,7 @@ namespace QuantConnect
 
             public void RequestAdditionalTime(int minutes) { }
             public IsolatorLimitResult IsWithinLimit() { return OK; }
+            public bool TryRequestAdditionalTime(int minutes) { return true; }
         }
     }
 }

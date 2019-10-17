@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Tests.Common
 {
@@ -28,7 +29,7 @@ namespace QuantConnect.Tests.Common
         {
             var provider = new FakeIsolatorLimitResultProvider();
             Action code = () => Thread.Sleep(TimeSpan.FromSeconds(1.01));
-            provider.ConsumeWhileExecuting(code);
+            provider.Consume(nameof(ConsumeWhileExecutingRequestsAdditionalTimeAfterOneSecond), code);
 
             Assert.AreEqual(1, provider.Invocations.Count);
             Assert.AreEqual(1, provider.Invocations[0]);
@@ -39,9 +40,20 @@ namespace QuantConnect.Tests.Common
         {
             var provider = new FakeIsolatorLimitResultProvider();
             Action code = () => Thread.Sleep(TimeSpan.FromSeconds(0.99));
-            provider.ConsumeWhileExecuting(code);
+            provider.Consume(nameof(ConsumeWhileExecutingDoesNotRequestAdditionalTimeBeforeOneSecond), code);
 
             Assert.IsEmpty(provider.Invocations);
+        }
+
+        [Test]
+        public void WrapsExceptionInScheduledEventException()
+        {
+            var provider = new FakeIsolatorLimitResultProvider();
+            Action code = () => { throw new Exception("message"); };
+
+            Assert.Throws<ScheduledEventException>(
+                () => provider.Consume(nameof(WrapsExceptionInScheduledEventException), code)
+            );
         }
 
         private class FakeIsolatorLimitResultProvider : IIsolatorLimitResultProvider
@@ -56,6 +68,12 @@ namespace QuantConnect.Tests.Common
             public void RequestAdditionalTime(int minutes)
             {
                 Invocations.Add(minutes);
+            }
+
+            public bool TryRequestAdditionalTime(int minutes)
+            {
+                Invocations.Add(minutes);
+                return true;
             }
         }
     }

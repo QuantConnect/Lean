@@ -125,7 +125,28 @@ namespace QuantConnect.Lean.Engine
         {
             // consumes w/out waiting, will throw if requested time is not available
             AdditionalTimeBucket.Consume(minutes, timeout: 0);
-            Interlocked.Increment(ref _additionalMinutes);
+            Interlocked.Add(ref _additionalMinutes, minutes);
+        }
+
+        /// <summary>
+        /// Attempts to requests additional time to continue executing the current time step.
+        /// At time of writing, this is intended to be used to provide training scheduled events
+        /// additional time to allow complex training models time to execute while also preventing
+        /// abuse by enforcing certain control parameters set via the job packet.
+        ///
+        /// Each time this method is invoked, this time limit manager will increase the allowable
+        /// execution time by the specified number of whole minutes
+        /// </summary>
+        public bool TryRequestAdditionalTime(int minutes)
+        {
+            // safely attempts to consume from the bucket, returning false if insufficient resources available
+            if (AdditionalTimeBucket.TryConsume(minutes))
+            {
+                Interlocked.Add(ref _additionalMinutes, minutes);
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

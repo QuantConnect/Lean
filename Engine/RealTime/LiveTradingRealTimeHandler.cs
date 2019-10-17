@@ -93,7 +93,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             // continue thread until cancellation is requested
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
-
                 var time = DateTime.UtcNow;
 
                 // pause until the next second
@@ -107,10 +106,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                     var scheduledEvent = kvp.Key;
                     try
                     {
-                        _isolatorLimitProvider.ConsumeWhileExecuting(
-                            scheduledEvent.Name,
-                            () => scheduledEvent.Scan(time)
-                        );
+                        _isolatorLimitProvider.Consume(scheduledEvent, time);
                     }
                     catch (ScheduledEventException scheduledEventException)
                     {
