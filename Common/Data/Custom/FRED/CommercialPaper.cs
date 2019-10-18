@@ -32,15 +32,14 @@ namespace QuantConnect.Data.Custom.FRED
         /// </summary>
         public static class CommercialPaper
         {
-            D:\Anaconda3\python.exe D:/DATA/FRED/enum_creator.py
-///<summary>
-/// 3-Month AA Nonfinancial Commercial Paper Rate (in Percent)
-/// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DCPN3M
-/// </summary> 
-/// <remarks>
-/// Discount Basis
-/// </remarks>
-public static string ThreeMonthAANonfinancialCommercialPaperRate => "DCPN3M";
+            ///<summary>
+            /// 3-Month AA Nonfinancial Commercial Paper Rate (in Percent)
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DCPN3M
+            /// </summary> 
+            /// <remarks>
+            /// Discount Basis
+            /// </remarks>
+            public static string ThreeMonthAANonfinancialCommercialPaperRate => "DCPN3M";
 
             ///<summary>
             /// 1-Month AA Nonfinancial Commercial Paper Rate (in Percent)
