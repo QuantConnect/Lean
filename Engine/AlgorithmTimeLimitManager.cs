@@ -15,6 +15,7 @@
 
 using System;
 using System.Threading;
+using QuantConnect.Logging;
 using QuantConnect.Util.RateLimit;
 
 namespace QuantConnect.Lean.Engine
@@ -27,6 +28,7 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public class AlgorithmTimeLimitManager : IIsolatorLimitResultProvider
     {
+        private volatile bool _failed;
         private volatile bool _stopped;
         private long _additionalMinutes;
 
@@ -82,7 +84,7 @@ namespace QuantConnect.Lean.Engine
         /// This is invoked at the end of the algorithm to prevent the isolator from terminating
         /// the algorithm during final clean up and shutdown.
         /// </summary>
-        public void StopEnforcingTimeLimit()
+        internal void StopEnforcingTimeLimit()
         {
             _stopped = true;
         }
@@ -92,23 +94,8 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public IsolatorLimitResult IsWithinLimit()
         {
-            if (_stopped)
-            {
-                return new IsolatorLimitResult(TimeSpan.Zero, string.Empty);
-            }
-
-            var message = string.Empty;
-            var currentTimeStepElapsed = GetCurrentTimeStepElapsed();
-            var additionalMinutes = TimeSpan.FromMinutes(Interlocked.Read(ref _additionalMinutes));
-            if (currentTimeStepElapsed > _timeLoopMaximum.Add(additionalMinutes))
-            {
-                message = $"Algorithm took longer than {_timeLoopMaximum.TotalMinutes} minutes on a single time loop.";
-                if (_additionalMinutes > 0)
-                {
-                    message = $"{message} An additional {_additionalMinutes} minutes were also allocated and consumed.";
-                }
-            }
-
+            TimeSpan currentTimeStepElapsed;
+            var message = IsOutOfTime(out currentTimeStepElapsed) ? GetErrorMessage(currentTimeStepElapsed) : string.Empty;
             return new IsolatorLimitResult(currentTimeStepElapsed, message);
         }
 
@@ -123,9 +110,11 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public void RequestAdditionalTime(int minutes)
         {
-            // consumes w/out waiting, will throw if requested time is not available
-            AdditionalTimeBucket.Consume(minutes, timeout: 0);
-            Interlocked.Add(ref _additionalMinutes, minutes);
+            if (!TryRequestAdditionalTime(minutes))
+            {
+                _failed = true;
+                Log.Debug($"AlgorithmTimeLimitManager.RequestAdditionalTime({minutes}): Failed to acquire additional time. Marking failed.");
+            }
         }
 
         /// <summary>
@@ -139,14 +128,38 @@ namespace QuantConnect.Lean.Engine
         /// </summary>
         public bool TryRequestAdditionalTime(int minutes)
         {
+            Log.Debug($"AlgorithmTimeLimitManager.TryRequestAdditionalTime({minutes}): Requesting additional time. Available: {AdditionalTimeBucket.AvailableTokens}");
+
             // safely attempts to consume from the bucket, returning false if insufficient resources available
             if (AdditionalTimeBucket.TryConsume(minutes))
             {
-                Interlocked.Add(ref _additionalMinutes, minutes);
+                var newValue = Interlocked.Add(ref _additionalMinutes, minutes);
+                Log.Debug($"AlgorithmTimeLimitManager.TryRequestAdditionalTime({minutes}): Success: AdditionalMinutes: {newValue}");
                 return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Determines whether or not the algorithm should be terminated due to exceeding the time limits
+        /// </summary>
+        private bool IsOutOfTime(out TimeSpan currentTimeStepElapsed)
+        {
+            if (_stopped)
+            {
+                currentTimeStepElapsed = TimeSpan.Zero;
+                return false;
+            }
+
+            currentTimeStepElapsed = GetCurrentTimeStepElapsed();
+            if (_failed)
+            {
+                return true;
+            }
+
+            var additionalMinutes = TimeSpan.FromMinutes(Interlocked.Read(ref _additionalMinutes));
+            return currentTimeStepElapsed > _timeLoopMaximum.Add(additionalMinutes);
         }
 
         /// <summary>
@@ -162,6 +175,20 @@ namespace QuantConnect.Lean.Engine
             }
 
             return DateTime.UtcNow - _currentTimeStepTime;
+        }
+
+        private string GetErrorMessage(TimeSpan currentTimeStepElapsed)
+        {
+            var message = $"Algorithm took longer than {_timeLoopMaximum.TotalMinutes} minutes on a single time loop.";
+
+            if (_additionalMinutes > 0)
+            {
+                message = $"{message} An additional {_additionalMinutes} minutes were also allocated and consumed.";
+            }
+
+            message = $"{message} CurrentTimeStepElapsed: {currentTimeStepElapsed.TotalMinutes:0.0} minutes";
+
+            return message;
         }
     }
 }

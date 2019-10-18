@@ -115,7 +115,16 @@ namespace QuantConnect.Lean.Engine.RealTime
             // poke each event to see if it has fired, be sure to invoke these in time order
             foreach (var scheduledEvent in GetScheduledEventsSortedByTime())
             {
+                if (scheduledEvent.NextEventUtcTime > time)
+                {
+                    // since they're sorted, we don't need to go through every single one
+                    break;
+                }
+
                 _isolatorLimitProvider.Consume(scheduledEvent, time);
+
+                // since we changed this event's next time, we need to resort all of them
+                _sortingScheduledEventsRequired = true;
             }
         }
 
@@ -127,6 +136,12 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             foreach (var scheduledEvent in GetScheduledEventsSortedByTime())
             {
+                if (scheduledEvent.NextEventUtcTime > time)
+                {
+                    // since they're sorted, we don't need to go through every single one
+                    break;
+                }
+
                 while (scheduledEvent.NextEventUtcTime < time)
                 {
                     Algorithm.SetDateTime(scheduledEvent.NextEventUtcTime);
@@ -148,6 +163,9 @@ namespace QuantConnect.Lean.Engine.RealTime
                         Algorithm.RunTimeError = scheduledEventException;
                     }
                 }
+
+                // since we changed this event's next time, we need to resort all of them
+                _sortingScheduledEventsRequired = true;
             }
         }
 

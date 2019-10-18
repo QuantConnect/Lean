@@ -16,7 +16,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using QuantConnect.Logging;
 using QuantConnect.Scheduling;
 
 namespace QuantConnect
@@ -26,9 +25,6 @@ namespace QuantConnect
     /// </summary>
     public static class IsolatorLimitResultProvider
     {
-        // this just makes the code below prettier
-        private static TimeSpan Second => TimeSpan.FromSeconds(1);
-
         /// <summary>
         /// Provides access to a null implementation of <see cref="IIsolatorLimitResultProvider"/>
         /// </summary>
@@ -43,7 +39,14 @@ namespace QuantConnect
             DateTime scanTimeUtc
             )
         {
-            isolatorLimitProvider.Consume(scheduledEvent.Name, () => scheduledEvent.Scan(scanTimeUtc));
+            // perform initial filtering to prevent starting a task when not necessary
+            if (scheduledEvent.NextEventUtcTime > scanTimeUtc)
+            {
+                return;
+            }
+
+            var timeProvider = RealTimeProvider.Instance;
+            isolatorLimitProvider.Consume(timeProvider, scheduledEvent.Name, () => scheduledEvent.Scan(scanTimeUtc));
         }
 
         /// <summary>
@@ -59,69 +62,39 @@ namespace QuantConnect
         /// </remarks>
         public static void Consume(
             this IIsolatorLimitResultProvider isolatorLimitProvider,
+            ITimeProvider timeProvider,
             string name,
             Action code
             )
         {
-            Exception error = null;
-            var memoryFence = new object();
-            var codeFinished = new ManualResetEvent(false);
-
-            // execute the code in a separate task so we can track time and request more as needed
-            Task.Run(() =>
+            var finished = 0L;
+            Task.Run(async () =>
             {
-                code();
-                codeFinished.Set();
-            }).ContinueWith(task =>
-            {
-                // use full locking semantics to guarantee the value is propagated between threads
-                lock (memoryFence)
+                if (Interlocked.Read(ref finished) != 0L)
                 {
-                    // in the event an error is raised, capture the exception
-                    error = task.Exception;
-                    codeFinished.Set();
+                    // case when the code block has virtually no code in it and
+                    // was able to complete faster than the task was able to start
+                    return;
                 }
-            }, TaskContinuationOptions.OnlyOnFaulted);
 
-            // permit up to one second w/out requesting additional time from the provider
-            if (!codeFinished.WaitOne(Second))
-            {
-                var count = 0;
-                do
+                var next = timeProvider.GetUtcNow().AddMinutes(1);
+                while (Interlocked.Read(ref finished) == 0L)
                 {
-                    if (count % 60 != 0)
+                    if (timeProvider.GetUtcNow() >= next)
                     {
-                        continue;
+                        // each minute request additional time from the isolator
+                        next = next.AddMinutes(1);
+
+                        // this will throw and notify the isolator that we've exceed the limits
+                        isolatorLimitProvider.RequestAdditionalTime(minutes: 1);
                     }
 
-                    // on the first iteration and every minute following, request additional time
-                    Log.Trace($"IsolatorLimitResultProvider.ConsumeForScheduledEvent({name}): Requesting additional time. Elapsed minutes: {count / 60}");
-                    if (!isolatorLimitProvider.TryRequestAdditionalTime(minutes: 1))
-                    {
-                        error = new TimeoutException("The scheduled event exceeded the available amount of time for processing. " +
-                                                    $"Elapsed: {count/60.0:0.0} minutes. Scheduled Event: {name}");
-                        break;
-                    }
-
-                    count++;
-                } while (!codeFinished.WaitOne(Second));
-            }
-
-            lock (memoryFence)
-            {
-                if (error != null)
-                {
-                    var scheduledEventError = error as ScheduledEventException;
-                    if (scheduledEventError != null)
-                    {
-                        throw scheduledEventError;
-                    }
-
-                    // otherwise wrap it in a ScheduledEventException
-                    var errorMessage = $"There was an error in a scheduled event {name}. The error was {error.Message}";
-                    throw new ScheduledEventException(name, errorMessage, error);
+                    await Task.Delay(5).ConfigureAwait(false);
                 }
-            }
+            });
+
+            code();
+            Interlocked.Increment(ref finished);
         }
 
 

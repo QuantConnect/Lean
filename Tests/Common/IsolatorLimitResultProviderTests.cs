@@ -16,8 +16,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
-using QuantConnect.Scheduling;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common
 {
@@ -25,35 +26,75 @@ namespace QuantConnect.Tests.Common
     public class IsolatorLimitResultProviderTests
     {
         [Test]
-        public void ConsumeWhileExecutingRequestsAdditionalTimeAfterOneSecond()
+        public void ConsumeRequestsAdditionalTimeAfterOneMinute()
         {
+            var minuteElapsed = new ManualResetEvent(false);
+            var consumeCompleted = new ManualResetEvent(false);
+
+            Action code = () => minuteElapsed.WaitOne();
             var provider = new FakeIsolatorLimitResultProvider();
-            Action code = () => Thread.Sleep(TimeSpan.FromSeconds(1.01));
-            provider.Consume(nameof(ConsumeWhileExecutingRequestsAdditionalTimeAfterOneSecond), code);
+            var timeProvider = new ManualTimeProvider(new DateTime(2000, 01, 01));
+
+            Task.Run(() =>
+            {
+                var name = nameof(ConsumeRequestsAdditionalTimeAfterOneMinute);
+                provider.Consume(timeProvider, name, code);
+                consumeCompleted.Set();
+            });
+
+            Thread.Sleep(15);
+            timeProvider.Advance(TimeSpan.FromSeconds(45));
+
+            Assert.AreEqual(0, provider.Invocations.Count);
+
+            timeProvider.Advance(TimeSpan.FromSeconds(15));
+            Thread.Sleep(15);
+
+            minuteElapsed.Set();
+            if (!consumeCompleted.WaitOne(50))
+            {
+                Assert.Fail("Consume should have returned.");
+            }
 
             Assert.AreEqual(1, provider.Invocations.Count);
             Assert.AreEqual(1, provider.Invocations[0]);
         }
 
         [Test]
-        public void ConsumeWhileExecutingDoesNotRequestAdditionalTimeBeforeOneSecond()
+        public void ConsumeDoesNotRequestAdditionalTimeBeforeOneMinute()
         {
+            var timeProvider = new ManualTimeProvider(new DateTime(2000, 01, 01));
             var provider = new FakeIsolatorLimitResultProvider();
-            Action code = () => Thread.Sleep(TimeSpan.FromSeconds(0.99));
-            provider.Consume(nameof(ConsumeWhileExecutingDoesNotRequestAdditionalTimeBeforeOneSecond), code);
+            Action code = () =>
+            {
+                Thread.Sleep(5);
+                timeProvider.Advance(TimeSpan.FromMinutes(.99));
+                Thread.Sleep(5);
+            };
+            provider.Consume(timeProvider, nameof(ConsumeDoesNotRequestAdditionalTimeBeforeOneMinute), code);
 
             Assert.IsEmpty(provider.Invocations);
         }
 
         [Test]
-        public void WrapsExceptionInScheduledEventException()
+        public void ConsumesMultipleMinutes()
         {
+            var timeProvider = new ManualTimeProvider(new DateTime(2000, 01, 01));
             var provider = new FakeIsolatorLimitResultProvider();
-            Action code = () => { throw new Exception("message"); };
+            Action code = () =>
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    Thread.Sleep(15);
+                    timeProvider.AdvanceSeconds(45);
+                }
+                Thread.Sleep(15);
+            };
 
-            Assert.Throws<ScheduledEventException>(
-                () => provider.Consume(nameof(WrapsExceptionInScheduledEventException), code)
-            );
+            provider.Consume(timeProvider, nameof(ConsumeDoesNotRequestAdditionalTimeBeforeOneMinute), code);
+
+            Assert.AreEqual(3, provider.Invocations.Count);
+            Assert.IsTrue(provider.Invocations.TrueForAll(invoc => invoc == 1));
         }
 
         private class FakeIsolatorLimitResultProvider : IIsolatorLimitResultProvider

@@ -47,8 +47,8 @@ namespace QuantConnect.Tests
             if (parameters.Algorithm == "TrainingInitializeRegressionAlgorithm" ||
                 parameters.Algorithm == "TrainingOnDataRegressionAlgorithm")
             {
-                // limit time loop to 30 seconds and set leaky bucket capacity to one minute w/ zero refill
-                Config.Set("algorithm-manager-time-loop-maximum", "0.5");
+                // limit time loop to 90 seconds and set leaky bucket capacity to one minute w/ zero refill
+                Config.Set("algorithm-manager-time-loop-maximum", "1.5");
                 Config.Set("scheduled-event-leaky-bucket-capacity", "1");
                 Config.Set("scheduled-event-leaky-bucket-refill-amount", "0");
             }

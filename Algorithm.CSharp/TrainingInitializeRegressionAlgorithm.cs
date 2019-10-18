@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
             // this should cause the algorithm to fail
             // the regression test sets the time limit to 30 seconds and there's one extra
             // minute in the bucket, so a two minute sleep should result in RuntimeError
-            Schedule.TrainingNow(() => Thread.Sleep(TimeSpan.FromMinutes(2)));
+            Schedule.TrainingNow(() => Thread.Sleep(TimeSpan.FromMinutes(2.5)));
         }
 
         public bool CanRunLocally => true;

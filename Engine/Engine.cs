@@ -358,6 +358,8 @@ namespace QuantConnect.Lean.Engine
                     catch (Exception err)
                     {
                         //Error running the user algorithm: purge datafeed, send error messages, set algorithm status to failed.
+                        algorithm.RunTimeError = err;
+                        algorithm.SetStatus(AlgorithmStatus.RuntimeError);
                         HandleAlgorithmError(job, err);
                     }
 
