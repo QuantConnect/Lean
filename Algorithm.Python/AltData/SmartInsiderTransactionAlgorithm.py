@@ -66,7 +66,7 @@ class SmartInsiderTransactionAlgorithm(QCAlgorithm):
                 self.SetHoldings(transaction.Symbol.Underlying, transaction.VolumePercentage / 100)
 
     def OnSecuritiesChanged(self, changes):
-        for r in [i for i in changes.RemovedSecurities if i.Symbol.SecurityType == SecurityType.Equity]:
+        for r in changes.RemovedSecurities:
             # If removed from the universe, liquidate and remove the custom data from the algorithm
             self.Liquidate(r.Symbol)
             self.RemoveSecurity(Symbol.CreateBase(SmartInsiderTransaction, r.Symbol, Market.USA))

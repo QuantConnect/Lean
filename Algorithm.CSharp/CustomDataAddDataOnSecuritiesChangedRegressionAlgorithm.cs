@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
@@ -79,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             bool iterated = false;
-            foreach (var added in changes.AddedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Equity))
+            foreach (var added in changes.AddedSecurities)
             {
                 if (!iterated)
                 {

@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.USTreasury;
 

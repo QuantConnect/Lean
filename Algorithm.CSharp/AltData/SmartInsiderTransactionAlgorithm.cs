@@ -15,8 +15,6 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect;
-using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.SmartInsider;
@@ -81,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            foreach (var r in changes.RemovedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Equity))
+            foreach (var r in changes.RemovedSecurities)
             {
                 // If removed from the universe, liquidate and remove the custom data from the algorithm
                 Liquidate(r.Symbol);

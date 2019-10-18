@@ -57,7 +57,7 @@ class CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm(QCAlgorithm):
     def OnSecuritiesChanged(self, changes):
         iterated = False
 
-        for added in [i for i in changes.AddedSecurities if i.Symbol.SecurityType == SecurityType.Equity]:
+        for added in changes.AddedSecurities:
             if not iterated:
                 self.customSymbols = []
                 iterated = True

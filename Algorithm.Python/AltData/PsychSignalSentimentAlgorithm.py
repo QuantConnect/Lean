@@ -77,8 +77,7 @@ class PsychSignalSentimentAlgorithm(QCAlgorithm):
 
     # When adding custom data from a universe we should also remove the data afterwards.
     def OnSecuritiesChanged(self, changes):
-        # Make sure to filter out other security removals (i.e. custom data)
-        for r in [i for i in changes.RemovedSecurities if i.Symbol.SecurityType == SecurityType.Equity]:
+        for r in changes.RemovedSecurities:
             self.Liquidate(r.Symbol)
             # Remove the custom data from our algorithm and collection
             self.RemoveSecurity(Symbol.CreateBase(PsychSignalSentiment, r.Symbol, Market.USA))

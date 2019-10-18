@@ -39,11 +39,26 @@ namespace QuantConnect.Data.UniverseSelection
         public int Count => _addedSecurities.Count + _removedSecurities.Count;
 
         /// <summary>
+        /// True will filter out custom securities from the
+        /// <see cref="AddedSecurities"/> and <see cref="RemovedSecurities"/> properties
+        /// </summary>
+        /// <remarks>This allows us to filter but also to disable
+        /// the filtering if desired</remarks>
+        public bool FilterCustomSecurities { get; set; }
+
+        /// <summary>
         /// Gets the symbols that were added by universe selection
         /// </summary>
+        /// <remarks>Will use <see cref="FilterCustomSecurities"/> value
+        /// to determine if custom securities should be filtered</remarks>
         public IReadOnlyList<Security> AddedSecurities
         {
-            get { return _addedSecurities.OrderBy(x => x.Symbol.Value).ToList(); }
+            get
+            {
+                return _addedSecurities.OrderBy(x => x.Symbol.Value)
+                    .Where(security => !FilterCustomSecurities || security.Type != SecurityType.Base)
+                    .ToList();
+            }
         }
 
         /// <summary>
@@ -51,9 +66,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// include symbols that were removed, but are still receiving data due to
         /// existing holdings or open orders
         /// </summary>
+        /// <remarks>Will use <see cref="FilterCustomSecurities"/> value
+        /// to determine if custom securities should be filtered</remarks>
         public IReadOnlyList<Security> RemovedSecurities
         {
-            get { return _removedSecurities.OrderBy(x => x.Symbol.Value).ToList(); }
+            get
+            {
+                return _removedSecurities.OrderBy(x => x.Symbol.Value)
+                    .Where(security => !FilterCustomSecurities || security.Type != SecurityType.Base)
+                    .ToList();
+            }
         }
 
         /// <summary>
@@ -65,6 +87,17 @@ namespace QuantConnect.Data.UniverseSelection
         {
             _addedSecurities = addedSecurities.ToHashSet();
             _removedSecurities = removedSecurities.ToHashSet();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecurityChanges"/> class
+        /// as a shallow clone of a given instance, sharing the same collections
+        /// </summary>
+        /// <param name="changes">The instance to clone</param>
+        public SecurityChanges(SecurityChanges changes)
+        {
+            _addedSecurities = changes._addedSecurities;
+            _removedSecurities = changes._removedSecurities;
         }
 
         /// <summary>

@@ -105,8 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            // Make sure to filter out other security removals (i.e. custom data)
-            foreach (var r in changes.RemovedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Equity))
+            foreach (var r in changes.RemovedSecurities)
             {
                 Liquidate(r.Symbol);
 
