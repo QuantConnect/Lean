@@ -37,6 +37,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.Collections.Concurrent;
+using Python.Runtime;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Crypto;
 using QuantConnect.Algorithm.Framework.Alphas;
@@ -2148,6 +2149,26 @@ namespace QuantConnect.Algorithm
         public string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
         {
             return _api.Download(address, headers, userName, password);
+        }
+
+        /// <summary>
+        /// Schedules the provided training code to execute immediately
+        /// </summary>
+        /// <param name="trainingCode">The training code to be invoked</param>
+        public ScheduledEvent Train(Action trainingCode)
+        {
+            return Schedule.TrainingNow(trainingCode);
+        }
+
+        /// <summary>
+        /// Schedules the training code to run using the specified date and time rules
+        /// </summary>
+        /// <param name="dateRule">Specifies what dates the event should run</param>
+        /// <param name="timeRule">Specifies the times on those dates the event should run</param>
+        /// <param name="trainingCode">The training code to be invoked</param>
+        public ScheduledEvent Train(IDateRule dateRule, ITimeRule timeRule, Action trainingCode)
+        {
+            return Schedule.Training(dateRule, timeRule, trainingCode);
         }
 
         /// <summary>
