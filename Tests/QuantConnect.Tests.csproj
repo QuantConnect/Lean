@@ -323,6 +323,7 @@
     <Compile Include="Common\Securities\IdentityCurrencyConverterTests.cs" />
     <Compile Include="Common\Securities\AccountCurrencyImmediateSettlementModelTests.cs" />
     <Compile Include="Common\Securities\Options\OptionPortfolioModelTests.cs" />
+    <Compile Include="Common\Securities\Options\OptionSymbolTests.cs" />
     <Compile Include="Common\Securities\ProcessVolatilityHistoryRequirementsTests.cs" />
     <Compile Include="Common\Securities\DynamicSecurityDataTests.cs" />
     <Compile Include="Common\Securities\SecurityHoldingTests.cs" />

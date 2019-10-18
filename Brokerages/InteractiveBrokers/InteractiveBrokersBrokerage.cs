@@ -38,6 +38,7 @@ using NodaTime;
 using QuantConnect.IBAutomater;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
+using QuantConnect.Securities.Option;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -501,7 +502,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Connect();
             }
 
-            var holdings = _accountData.AccountHoldings.Select(x => ObjectActivator.Clone(x.Value)).Where(x => x.Quantity != 0).ToList();
+            var utcNow = DateTime.UtcNow;
+            var holdings = _accountData.AccountHoldings
+                .Select(x => ObjectActivator.Clone(x.Value))
+                .Where(x => x.Quantity != 0 && !OptionSymbol.IsOptionContractExpired(x.Symbol, utcNow))
+                .ToList();
 
             return holdings;
         }
