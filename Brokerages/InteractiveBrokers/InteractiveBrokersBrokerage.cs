@@ -38,6 +38,7 @@ using NodaTime;
 using QuantConnect.IBAutomater;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
+using QuantConnect.Securities.Option;
 using Bar = QuantConnect.Data.Market.Bar;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
@@ -501,7 +502,29 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Connect();
             }
 
-            var holdings = _accountData.AccountHoldings.Select(x => ObjectActivator.Clone(x.Value)).Where(x => x.Quantity != 0).ToList();
+            var utcNow = DateTime.UtcNow;
+            var holdings = new List<Holding>();
+
+            foreach (var kvp in _accountData.AccountHoldings)
+            {
+                var holding = ObjectActivator.Clone(kvp.Value);
+
+                if (holding.Quantity != 0)
+                {
+                    if (OptionSymbol.IsOptionContractExpired(holding.Symbol, utcNow))
+                    {
+                        OnMessage(
+                            new BrokerageMessageEvent(
+                                BrokerageMessageType.Warning,
+                                "ExpiredOptionHolding",
+                                $"The option holding for [{holding.Symbol.Value}] is expired and will be excluded from the account holdings."));
+
+                        continue;
+                    }
+
+                    holdings.Add(holding);
+                }
+            }
 
             return holdings;
         }
