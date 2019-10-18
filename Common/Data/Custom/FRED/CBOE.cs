@@ -16,14 +16,14 @@
 
 namespace QuantConnect.Data.Custom.FRED
 {
-    public  static partial class FredDataSeries
+    public static partial class FredDataSeries
     {
         public static class CBOE
         {
             ///<summary>
             /// CBOE Equity VIX on Google (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXGOGCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -32,7 +32,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE DJIA Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXDCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -41,7 +41,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE Equity VIX on Goldman Sachs (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXGSCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -50,7 +50,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE Equity VIX on IBM (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXIBMCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -59,7 +59,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE Equity VIX on Amazon (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXAZNCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -68,7 +68,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE S&P 100 Volatility Index: VXO (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXOCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -77,7 +77,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE NASDAQ 100 Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXNCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -86,7 +86,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE 10-Year Treasury Note Volatility Futures (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXTYN
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -95,7 +95,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE Russell 2000 Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RVXCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -104,7 +104,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE S&P 500 3-Month Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXVCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -113,7 +113,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE Equity VIX on Apple (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXAPLCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -122,7 +122,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE Gold Miners ETF Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXGDXCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -131,7 +131,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE China ETF Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXFXICLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -140,7 +140,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE Brazil ETF Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXEWZCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -149,7 +149,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE Emerging Markets ETF Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXEEMCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -158,7 +158,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE EuroCurrency ETF Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EVZCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -167,7 +167,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE Gold ETF Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GVZCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -176,7 +176,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE Crude Oil ETF Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/OVXCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -185,7 +185,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE Silver ETF Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXSLVCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -194,7 +194,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE Energy Sector ETF Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXXLECLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
@@ -203,7 +203,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// CBOE Volatility Index: VIX (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VIXCLS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// VIX measures market expectation of near term volatility conveyed by stock index option prices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>

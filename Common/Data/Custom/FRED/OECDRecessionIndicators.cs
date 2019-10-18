@@ -35,7 +35,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Four Big European Countries from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/4BIGEURORECDM
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The Four Big European Countries are: France, Germany, Italy, and United Kingdom.
             /// </remarks>
@@ -44,79 +44,79 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Australia from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AUSRECDM
-            /// </summary> 
+            /// </summary>
             public static string AustraliaFromPeakThroughTheTrough => "AUSRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Austria from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AUTRECDM
-            /// </summary> 
+            /// </summary>
             public static string AustriaFromPeakThroughTheTrough => "AUTRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Belgium from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BELRECDM
-            /// </summary> 
+            /// </summary>
             public static string BelgiumFromPeakThroughTheTrough => "BELRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Brazil from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BRARECDM
-            /// </summary> 
+            /// </summary>
             public static string BrazilFromPeakThroughTheTrough => "BRARECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Canada from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CANRECDM
-            /// </summary> 
+            /// </summary>
             public static string CanadaFromPeakThroughTheTrough => "CANRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Switzerland from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHERECDM
-            /// </summary> 
+            /// </summary>
             public static string SwitzerlandFromPeakThroughTheTrough => "CHERECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Chile from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHLRECDM
-            /// </summary> 
+            /// </summary>
             public static string ChileFromPeakThroughTheTrough => "CHLRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for China from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHNRECDM
-            /// </summary> 
+            /// </summary>
             public static string ChinaFromPeakThroughTheTrough => "CHNRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for the Czech Republic from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CZERECDM
-            /// </summary> 
+            /// </summary>
             public static string CzechRepublicFromPeakThroughTheTrough => "CZERECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Germany from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DEURECDM
-            /// </summary> 
+            /// </summary>
             public static string GermanyFromPeakThroughTheTrough => "DEURECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Denmark from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DNKRECDM
-            /// </summary> 
+            /// </summary>
             public static string DenmarkFromPeakThroughTheTrough => "DNKRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Spain from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ESPRECDM
-            /// </summary> 
+            /// </summary>
             public static string SpainFromPeakThroughTheTrough => "ESPRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Estonia from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ESTRECDM
-            /// </summary> 
+            /// </summary>
             public static string EstoniaFromPeakThroughTheTrough => "ESTRECDM";
 
             ///<summary>
@@ -131,79 +131,79 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Finland from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FINRECDM
-            /// </summary> 
+            /// </summary>
             public static string FinlandFromPeakThroughTheTrough => "FINRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for France from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FRARECDM
-            /// </summary> 
+            /// </summary>
             public static string FranceFromPeakThroughTheTrough => "FRARECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for the United Kingdom from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBRRECDM
-            /// </summary> 
+            /// </summary>
             public static string UnitedKingdomFromPeakThroughTheTrough => "GBRRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Greece from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GRCRECDM
-            /// </summary> 
+            /// </summary>
             public static string GreeceFromPeakThroughTheTrough => "GRCRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Hungary from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/HUNRECDM
-            /// </summary> 
+            /// </summary>
             public static string HungaryFromPeakThroughTheTrough => "HUNRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Indonesia from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/IDNRECDM
-            /// </summary> 
+            /// </summary>
             public static string IndonesiaFromPeakThroughTheTrough => "IDNRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for India from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/INDRECDM
-            /// </summary> 
+            /// </summary>
             public static string IndiaFromPeakThroughTheTrough => "INDRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Ireland from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/IRLRECDM
-            /// </summary> 
+            /// </summary>
             public static string IrelandFromPeakThroughTheTrough => "IRLRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Israel from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ISRRECDM
-            /// </summary> 
+            /// </summary>
             public static string IsraelFromPeakThroughTheTrough => "ISRRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Italy from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ITARECDM
-            /// </summary> 
+            /// </summary>
             public static string ItalyFromPeakThroughTheTrough => "ITARECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Japan from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPNRECDM
-            /// </summary> 
+            /// </summary>
             public static string JapanFromPeakThroughTheTrough => "JPNRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Korea from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/KORRECDM
-            /// </summary> 
+            /// </summary>
             public static string KoreaFromPeakThroughTheTrough => "KORRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Luxembourg from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/LUXRECDM
-            /// </summary> 
+            /// </summary>
             public static string LuxembourgFromPeakThroughTheTrough => "LUXRECDM";
 
             ///<summary>
@@ -218,7 +218,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Mexico from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MEXRECDM
-            /// </summary> 
+            /// </summary>
             public static string MexicoFromPeakThroughTheTrough => "MEXRECDM";
 
             ///<summary>
@@ -242,31 +242,31 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Netherlands from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NDLRECDM
-            /// </summary> 
+            /// </summary>
             public static string NetherlandsFromPeakThroughTheTrough => "NDLRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Norway from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NORRECDM
-            /// </summary> 
+            /// </summary>
             public static string NorwayFromPeakThroughTheTrough => "NORRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for New Zealand from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NZLRECDM
-            /// </summary> 
+            /// </summary>
             public static string NewZealandFromPeakThroughTheTrough => "NZLRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for OECD Europe from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/OECDEUROPERECDM
-            /// </summary> 
+            /// </summary>
             public static string OECDEuropeFromPeakThroughTheTrough => "OECDEUROPERECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for OECD and Non-member Economies from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/OECDNMERECDM
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The OECD and Non-member economies covers the following 35 countries: Australia, Austria, Belgium, Brazil, Canada, China, Czech Republic, Denmark, Finland, France, Germany, Greece, Hungary, India, Indonesia, Ireland, Italy, Japan, Korea, Luxembourg, Mexico, Netherlands, New Zealand, Norway, Poland, Portugal, Russian Federation, Slovak Republic, Spain, South Africa, Sweden, Switzerland, Turkey, United Kingdom and United States.
             /// </remarks>
@@ -275,7 +275,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for the OECD Total Area from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/OECDRECDM
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The OECD-Total covers the following 29 countries: Australia, Austria, Belgium, Canada, Czech Republic, Denmark, Finland, France, Germany, Greece, Hungary, Ireland, Italy, Japan, Korea, Luxembourg, Mexico, Netherlands, New Zealand, Norway, Poland, Portugal, Slovak Republic, Spain, Sweden, Switzerland, Turkey, United Kingdom, and United States.
             /// </remarks>
@@ -284,55 +284,55 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Poland from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/POLRECDM
-            /// </summary> 
+            /// </summary>
             public static string PolandFromPeakThroughTheTrough => "POLRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Portugal from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/PRTRECDM
-            /// </summary> 
+            /// </summary>
             public static string PortugalFromPeakThroughTheTrough => "PRTRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Russian Federation from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RUSRECDM
-            /// </summary> 
+            /// </summary>
             public static string RussianFederationFromPeakThroughTheTrough => "RUSRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for the Slovak Republic from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/SVKRECDM
-            /// </summary> 
+            /// </summary>
             public static string SlovakRepublicFromPeakThroughTheTrough => "SVKRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Slovenia from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/SVNRECDM
-            /// </summary> 
+            /// </summary>
             public static string SloveniaFromPeakThroughTheTrough => "SVNRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Sweden from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/SWERECDM
-            /// </summary> 
+            /// </summary>
             public static string SwedenFromPeakThroughTheTrough => "SWERECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for Turkey from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/TURRECDM
-            /// </summary> 
+            /// </summary>
             public static string TurkeyFromPeakThroughTheTrough => "TURRECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for the United States from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USARECDM
-            /// </summary> 
+            /// </summary>
             public static string UnitedStatesFromPeakThroughTheTrough => "USARECDM";
 
             ///<summary>
             /// OECD based Recession Indicators for South Africa from the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ZAFRECDM
-            /// </summary> 
+            /// </summary>
             public static string SouthAfricaFromPeakThroughTheTrough => "ZAFRECDM";
 
             ///<summary>
@@ -347,85 +347,85 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Australia from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AUSRECD
-            /// </summary> 
+            /// </summary>
             public static string AustraliaFromPeriodFollowingPeakThroughTheTrough => "AUSRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Austria from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AUTRECD
-            /// </summary> 
+            /// </summary>
             public static string AustriaFromPeriodFollowingPeakThroughTheTrough => "AUTRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Belgium from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BELRECD
-            /// </summary> 
+            /// </summary>
             public static string BelgiumFromPeriodFollowingPeakThroughTheTrough => "BELRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Brazil from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BRARECD
-            /// </summary> 
+            /// </summary>
             public static string BrazilFromPeriodFollowingPeakThroughTheTrough => "BRARECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Canada from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CANRECD
-            /// </summary> 
+            /// </summary>
             public static string CanadaFromPeriodFollowingPeakThroughTheTrough => "CANRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Switzerland from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHERECD
-            /// </summary> 
+            /// </summary>
             public static string SwitzerlandFromPeriodFollowingPeakThroughTheTrough => "CHERECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Chile from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHLRECD
-            /// </summary> 
+            /// </summary>
             public static string ChileFromPeriodFollowingPeakThroughTheTrough => "CHLRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for China from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHNRECD
-            /// </summary> 
+            /// </summary>
             public static string ChinaFromPeriodFollowingPeakThroughTheTrough => "CHNRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for the Czech Republic from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CZERECD
-            /// </summary> 
+            /// </summary>
             public static string CzechRepublicFromPeriodFollowingPeakThroughTheTrough => "CZERECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Germany from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DEURECD
-            /// </summary> 
+            /// </summary>
             public static string GermanyFromPeriodFollowingPeakThroughTheTrough => "DEURECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Denmark from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DNKRECD
-            /// </summary> 
+            /// </summary>
             public static string DenmarkFromPeriodFollowingPeakThroughTheTrough => "DNKRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Spain from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ESPRECD
-            /// </summary> 
+            /// </summary>
             public static string SpainFromPeriodFollowingPeakThroughTheTrough => "ESPRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Estonia from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ESTRECD
-            /// </summary> 
+            /// </summary>
             public static string EstoniaFromPeriodFollowingPeakThroughTheTrough => "ESTRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Euro Area from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EURORECD
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The Euro area covers the Europe 16 area excluding Denmark, Sweden, and United Kingdom.
             /// </remarks>
@@ -434,85 +434,85 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Finland from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FINRECD
-            /// </summary> 
+            /// </summary>
             public static string FinlandFromPeriodFollowingPeakThroughTheTrough => "FINRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for France from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FRARECD
-            /// </summary> 
+            /// </summary>
             public static string FranceFromPeriodFollowingPeakThroughTheTrough => "FRARECD";
 
             ///<summary>
             /// OECD based Recession Indicators for the United Kingdom from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBRRECD
-            /// </summary> 
+            /// </summary>
             public static string UnitedKingdomFromPeriodFollowingPeakThroughTheTrough => "GBRRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Greece from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GRCRECD
-            /// </summary> 
+            /// </summary>
             public static string GreeceFromPeriodFollowingPeakThroughTheTrough => "GRCRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Hungary from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/HUNRECD
-            /// </summary> 
+            /// </summary>
             public static string HungaryFromPeriodFollowingPeakThroughTheTrough => "HUNRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Indonesia from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/IDNRECD
-            /// </summary> 
+            /// </summary>
             public static string IndonesiaFromPeriodFollowingPeakThroughTheTrough => "IDNRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for India from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/INDRECD
-            /// </summary> 
+            /// </summary>
             public static string IndiaFromPeriodFollowingPeakThroughTheTrough => "INDRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Ireland from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/IRLRECD
-            /// </summary> 
+            /// </summary>
             public static string IrelandFromPeriodFollowingPeakThroughTheTrough => "IRLRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Israel from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ISRRECD
-            /// </summary> 
+            /// </summary>
             public static string IsraelFromPeriodFollowingPeakThroughTheTrough => "ISRRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Italy from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ITARECD
-            /// </summary> 
+            /// </summary>
             public static string ItalyFromPeriodFollowingPeakThroughTheTrough => "ITARECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Japan from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPNRECD
-            /// </summary> 
+            /// </summary>
             public static string JapanFromPeriodFollowingPeakThroughTheTrough => "JPNRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Korea from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/KORRECD
-            /// </summary> 
+            /// </summary>
             public static string KoreaFromPeriodFollowingPeakThroughTheTrough => "KORRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Luxembourg from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/LUXRECD
-            /// </summary> 
+            /// </summary>
             public static string LuxembourgFromPeriodFollowingPeakThroughTheTrough => "LUXRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Major 5 Asia from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MAJOR5ASIARECD
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The Major 5 Asia countries are: China, India, Indonesia, Japan and Korea.
             /// </remarks>
@@ -521,13 +521,13 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Mexico from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MEXRECD
-            /// </summary> 
+            /// </summary>
             public static string MexicoFromPeriodFollowingPeakThroughTheTrough => "MEXRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Major Seven Countries from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MSCRECD
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The Major Seven countries are: Canada, France, Germany, Italy, Japan, United Kingdom, and United States.
             /// </remarks>
@@ -536,7 +536,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for NAFTA Area from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NAFTARECD
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The NAFTA area covers the following 3 countries: Canada, Mexico, and United States.
             /// </remarks>
@@ -545,31 +545,31 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Netherlands from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NDLRECD
-            /// </summary> 
+            /// </summary>
             public static string NetherlandsFromPeriodFollowingPeakThroughTheTrough => "NDLRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Norway from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NORRECD
-            /// </summary> 
+            /// </summary>
             public static string NorwayFromPeriodFollowingPeakThroughTheTrough => "NORRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for New Zealand from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NZLRECD
-            /// </summary> 
+            /// </summary>
             public static string NewZealandFromPeriodFollowingPeakThroughTheTrough => "NZLRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for OECD Europe from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/OECDEUROPERECD
-            /// </summary> 
+            /// </summary>
             public static string OECDEuropeFromPeriodFollowingPeakThroughTheTrough => "OECDEUROPERECD";
 
             ///<summary>
             /// OECD based Recession Indicators for OECD and Non-member Economies from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/OECDNMERECD
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The OECD and Non-member economies covers the following 35 countries: Australia, Austria, Belgium, Brazil, Canada, China, Czech Republic, Denmark, Finland, France, Germany, Greece, Hungary, India, Indonesia, Ireland, Italy, Japan, Korea, Luxembourg, Mexico, Netherlands, New Zealand, Norway, Poland, Portugal, Russian Federation, Slovak Republic, Spain, South Africa, Sweden, Switzerland, Turkey, United Kingdom and United States.
             /// </remarks>
@@ -578,7 +578,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for the OECD Total Area from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/OECDRECD
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The OECD-Total covers the following 29 countries: Australia, Austria, Belgium, Canada, Czech Republic, Denmark, Finland, France, Germany, Greece, Hungary, Ireland, Italy, Japan, Korea, Luxembourg, Mexico, Netherlands, New Zealand, Norway, Poland, Portugal, Slovak Republic, Spain, Sweden, Switzerland, Turkey, United Kingdom, and United States.
             /// </remarks>
@@ -587,55 +587,55 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Poland from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/POLRECD
-            /// </summary> 
+            /// </summary>
             public static string PolandFromPeriodFollowingPeakThroughTheTrough => "POLRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Portugal from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/PRTRECD
-            /// </summary> 
+            /// </summary>
             public static string PortugalFromPeriodFollowingPeakThroughTheTrough => "PRTRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Russian Federation from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RUSRECD
-            /// </summary> 
+            /// </summary>
             public static string RussianFederationFromPeriodFollowingPeakThroughTheTrough => "RUSRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for the Slovak Republic from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/SVKRECD
-            /// </summary> 
+            /// </summary>
             public static string SlovakRepublicFromPeriodFollowingPeakThroughTheTrough => "SVKRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Slovenia from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/SVNRECD
-            /// </summary> 
+            /// </summary>
             public static string SloveniaFromPeriodFollowingPeakThroughTheTrough => "SVNRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Sweden from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/SWERECD
-            /// </summary> 
+            /// </summary>
             public static string SwedenFromPeriodFollowingPeakThroughTheTrough => "SWERECD";
 
             ///<summary>
             /// OECD based Recession Indicators for Turkey from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/TURRECD
-            /// </summary> 
+            /// </summary>
             public static string TurkeyFromPeriodFollowingPeakThroughTheTrough => "TURRECD";
 
             ///<summary>
             /// OECD based Recession Indicators for the United States from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USARECD
-            /// </summary> 
+            /// </summary>
             public static string UnitedStatesFromPeriodFollowingPeakThroughTheTrough => "USARECD";
 
             ///<summary>
             /// OECD based Recession Indicators for South Africa from the Period following the Peak through the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ZAFRECD
-            /// </summary> 
+            /// </summary>
             public static string SouthAfricaFromPeriodFollowingPeakThroughTheTrough => "ZAFRECD";
 
             ///<summary>
@@ -650,85 +650,85 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Australia from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AUSRECDP
-            /// </summary> 
+            /// </summary>
             public static string AustraliaFromPeakThroughThePeriodPrecedingtheTrough => "AUSRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Austria from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AUTRECDP
-            /// </summary> 
+            /// </summary>
             public static string AustriaFromPeakThroughThePeriodPrecedingtheTrough => "AUTRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Belgium from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BELRECDP
-            /// </summary> 
+            /// </summary>
             public static string BelgiumFromPeakThroughThePeriodPrecedingtheTrough => "BELRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Brazil from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BRARECDP
-            /// </summary> 
+            /// </summary>
             public static string BrazilFromPeakThroughThePeriodPrecedingtheTrough => "BRARECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Canada from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CANRECDP
-            /// </summary> 
+            /// </summary>
             public static string CanadaFromPeakThroughThePeriodPrecedingtheTrough => "CANRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Switzerland from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHERECDP
-            /// </summary> 
+            /// </summary>
             public static string SwitzerlandFromPeakThroughThePeriodPrecedingtheTrough => "CHERECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Chile from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHLRECDP
-            /// </summary> 
+            /// </summary>
             public static string ChileFromPeakThroughThePeriodPrecedingtheTrough => "CHLRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for China from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHNRECDP
-            /// </summary> 
+            /// </summary>
             public static string ChinaFromPeakThroughThePeriodPrecedingtheTrough => "CHNRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for the Czech Republic from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CZERECDP
-            /// </summary> 
+            /// </summary>
             public static string CzechRepublicFromPeakThroughThePeriodPrecedingtheTrough => "CZERECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Germany from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DEURECDP
-            /// </summary> 
+            /// </summary>
             public static string GermanyFromPeakThroughThePeriodPrecedingtheTrough => "DEURECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Denmark from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DNKRECDP
-            /// </summary> 
+            /// </summary>
             public static string DenmarkFromPeakThroughThePeriodPrecedingtheTrough => "DNKRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Spain from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ESPRECDP
-            /// </summary> 
+            /// </summary>
             public static string SpainFromPeakThroughThePeriodPrecedingtheTrough => "ESPRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Estonia from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ESTRECDP
-            /// </summary> 
+            /// </summary>
             public static string EstoniaFromPeakThroughThePeriodPrecedingtheTrough => "ESTRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Euro Area from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EURORECDP
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The Euro area covers the Europe 16 area excluding Denmark, Sweden, and United Kingdom.
             /// </remarks>
@@ -737,85 +737,85 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Finland from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FINRECDP
-            /// </summary> 
+            /// </summary>
             public static string FinlandFromPeakThroughThePeriodPrecedingtheTrough => "FINRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for France from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FRARECDP
-            /// </summary> 
+            /// </summary>
             public static string FranceFromPeakThroughThePeriodPrecedingtheTrough => "FRARECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for the United Kingdom from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBRRECDP
-            /// </summary> 
+            /// </summary>
             public static string UnitedKingdomFromPeakThroughThePeriodPrecedingtheTrough => "GBRRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Greece from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GRCRECDP
-            /// </summary> 
+            /// </summary>
             public static string GreeceFromPeakThroughThePeriodPrecedingtheTrough => "GRCRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Hungary from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/HUNRECDP
-            /// </summary> 
+            /// </summary>
             public static string HungaryFromPeakThroughThePeriodPrecedingtheTrough => "HUNRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Indonesia from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/IDNRECDP
-            /// </summary> 
+            /// </summary>
             public static string IndonesiaFromPeakThroughThePeriodPrecedingtheTrough => "IDNRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for India from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/INDRECDP
-            /// </summary> 
+            /// </summary>
             public static string IndiaFromPeakThroughThePeriodPrecedingtheTrough => "INDRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Ireland from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/IRLRECDP
-            /// </summary> 
+            /// </summary>
             public static string IrelandFromPeakThroughThePeriodPrecedingtheTrough => "IRLRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Israel from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ISRRECDP
-            /// </summary> 
+            /// </summary>
             public static string IsraelFromPeakThroughThePeriodPrecedingtheTrough => "ISRRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Italy from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ITARECDP
-            /// </summary> 
+            /// </summary>
             public static string ItalyFromPeakThroughThePeriodPrecedingtheTrough => "ITARECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Japan from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPNRECDP
-            /// </summary> 
+            /// </summary>
             public static string JapanFromPeakThroughThePeriodPrecedingtheTrough => "JPNRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Korea from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/KORRECDP
-            /// </summary> 
+            /// </summary>
             public static string KoreaFromPeakThroughThePeriodPrecedingtheTrough => "KORRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Luxembourg from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/LUXRECDP
-            /// </summary> 
+            /// </summary>
             public static string LuxembourgFromPeakThroughThePeriodPrecedingtheTrough => "LUXRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Major 5 Asia from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MAJOR5ASIARECDP
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The Major 5 Asia countries are: China, India, Indonesia, Japan and Korea.
             /// </remarks>
@@ -824,13 +824,13 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Mexico from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MEXRECDP
-            /// </summary> 
+            /// </summary>
             public static string MexicoFromPeakThroughThePeriodPrecedingtheTrough => "MEXRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Major Seven Countries from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MSCRECDP
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The Major Seven countries are: Canada, France, Germany, Italy, Japan, United Kingdom, and United States.
             /// </remarks>
@@ -839,7 +839,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for NAFTA Area from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NAFTARECDP
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The NAFTA area covers the following 3 countries: Canada, Mexico, and United States.
             /// </remarks>
@@ -848,31 +848,31 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Netherlands from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NDLRECDP
-            /// </summary> 
+            /// </summary>
             public static string NetherlandsFromPeakThroughThePeriodPrecedingtheTrough => "NDLRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Norway from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NORRECDP
-            /// </summary> 
+            /// </summary>
             public static string NorwayFromPeakThroughThePeriodPrecedingtheTrough => "NORRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for New Zealand from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NZLRECDP
-            /// </summary> 
+            /// </summary>
             public static string NewZealandFromPeakThroughThePeriodPrecedingtheTrough => "NZLRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for OECD Europe from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/OECDEUROPERECDP
-            /// </summary> 
+            /// </summary>
             public static string OECDEuropeFromPeakThroughThePeriodPrecedingtheTrough => "OECDEUROPERECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for OECD and Non-member Economies from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/OECDNMERECDP
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The OECD and Non-member economies covers the following 35 countries: Australia, Austria, Belgium, Brazil, Canada, China, Czech Republic, Denmark, Finland, France, Germany, Greece, Hungary, India, Indonesia, Ireland, Italy, Japan, Korea, Luxembourg, Mexico, Netherlands, New Zealand, Norway, Poland, Portugal, Russian Federation, Slovak Republic, Spain, South Africa, Sweden, Switzerland, Turkey, United Kingdom and United States.
             /// </remarks>
@@ -881,7 +881,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for the OECD Total Area from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/OECDRECDP
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The OECD-Total covers the following 29 countries: Australia, Austria, Belgium, Canada, Czech Republic, Denmark, Finland, France, Germany, Greece, Hungary, Ireland, Italy, Japan, Korea, Luxembourg, Mexico, Netherlands, New Zealand, Norway, Poland, Portugal, Slovak Republic, Spain, Sweden, Switzerland, Turkey, United Kingdom, and United States.
             /// </remarks>
@@ -890,57 +890,56 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// OECD based Recession Indicators for Poland from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/POLRECDP
-            /// </summary> 
+            /// </summary>
             public static string PolandFromPeakThroughThePeriodPrecedingtheTrough => "POLRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Portugal from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/PRTRECDP
-            /// </summary> 
+            /// </summary>
             public static string PortugalFromPeakThroughThePeriodPrecedingtheTrough => "PRTRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Russian Federation from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RUSRECDP
-            /// </summary> 
+            /// </summary>
             public static string RussianFederationFromPeakThroughThePeriodPrecedingtheTrough => "RUSRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for the Slovak Republic from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/SVKRECDP
-            /// </summary> 
+            /// </summary>
             public static string SlovakRepublicFromPeakThroughThePeriodPrecedingtheTrough => "SVKRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Slovenia from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/SVNRECDP
-            /// </summary> 
+            /// </summary>
             public static string SloveniaFromPeakThroughThePeriodPrecedingtheTrough => "SVNRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Sweden from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/SWERECDP
-            /// </summary> 
+            /// </summary>
             public static string SwedenFromPeakThroughThePeriodPrecedingtheTrough => "SWERECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for Turkey from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/TURRECDP
-            /// </summary> 
+            /// </summary>
             public static string TurkeyFromPeakThroughThePeriodPrecedingtheTrough => "TURRECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for the United States from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USARECDP
-            /// </summary> 
+            /// </summary>
             public static string UnitedStatesFromPeakThroughThePeriodPrecedingtheTrough => "USARECDP";
 
             ///<summary>
             /// OECD based Recession Indicators for South Africa from the Peak through the Period preceding the Trough (in +1 or 0)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ZAFRECDP
-            /// </summary> 
+            /// </summary>
             public static string SouthAfricaFromPeakThroughThePeriodPrecedingtheTrough => "ZAFRECDP";
-
         }
     }
 }

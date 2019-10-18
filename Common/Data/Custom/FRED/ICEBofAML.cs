@@ -23,7 +23,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML AAA-A Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM1BRRAAA2ACRPITRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML AAA-A Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated AAA through A3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -34,7 +34,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML AAA-A US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM1RAAA2ALCRPIUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML AAA-A US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML US Emerging Markets Liquid Corporate Plus Index, which includes only securities rated AAA through A3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -45,7 +45,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Asia Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMRACRPIASIATRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Asia Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities issued by countries associated with the region of Asia, excluding Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -56,7 +56,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Asia US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMALLCRPIASIAUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Asia US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities issued by countries associated with the region of Asia, excluding Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -67,7 +67,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML B and Lower Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM4BRRBLCRPITRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML B and Lower Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated B1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -78,7 +78,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML B and Lower US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM4RBLLCRPIUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML B and Lower US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated B1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -89,7 +89,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BB Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM3BRRBBCRPITRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML BB Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -100,7 +100,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BB US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM3RBBLCRPIUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML BB US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -111,7 +111,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BBB Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM2BRRBBBCRPITRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML BBB Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BBB1 through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -122,7 +122,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BBB US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM2RBBBLCRPIUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML BBB US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BBB1 through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -133,7 +133,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Crossover Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM5BCOCRPITRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Crossover Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BBB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -144,7 +144,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Crossover US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMXOCOLCRPIUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Crossover US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BBB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -155,7 +155,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Emerging Markets Corporate Plus Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMCBPITRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Emerging Markets Corporate Plus Index tracks the performance of US dollar (USD) and Euro denominated emerging markets non-sovereign debt publicly issued within the major domestic and Eurobond markets. To qualify for inclusion in the index, the issuer of debt must have risk exposure to countries other than members of the FX G10 (US, Japan, New Zealand, Australia, Canada, Sweden, UK, Switzerland, Norway, and Euro Currency Members), all Western European countries, and territories of the US and Western European countries. Each security must also be denominated in USD or Euro with a time to maturity greater than 1 year and have a fixed coupon. For inclusion in the index, investment grade rated bonds of qualifying issuers must have at least 250 million (Euro or USD) in outstanding face value, and below investment grade rated bonds must have at least 100 million (Euro or USD) in outstanding face value. The index includes corporate and quasi-government debt of qualifying countries, but excludes sovereign and supranational debt. Other types of securities acceptable for inclusion in this index are: original issue zero coupon bonds, ‚Äúglobal‚Äù securities (debt issued in the US domestic bond markets as well the Eurobond Market simultaneously), 144a securities, pay-in-kind securities (includes toggle notes), callable perpetual securities (qualify if they are at least one year from the first call date), fixed-to-floating rate securities (qualify if the securities are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security). Defaulted securities are excluded from the Index.
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -170,7 +170,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Euro Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMEBCRPIETRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Euro Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities denominated in Euros. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -181,7 +181,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMRECRPIEMEATRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Europe, the Middle East, and Africa (EMEA) Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities issued by countries associated with the region of Europe, the Middle East and Africa, also including Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -192,7 +192,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMELLCRPIEMEAUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Europe, the Middle East, and Africa (EMEA) US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities issued by countries associated with the region of Europe, the Middle East and Africa, also including Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -203,7 +203,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Financial Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMFSFCRPITRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Financial Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes all Financial securities except the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -214,7 +214,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Financial US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMFLFLCRPIUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Financial US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes all Financial securities except the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -225,7 +225,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Grade Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMIBHGCRPITRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML High Grade Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated AAA through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -236,7 +236,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Grade US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMHGHGLCRPIUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML High Grade US Emerging Markets Liquid Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated AAA through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -247,7 +247,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Yield Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMHBHYCRPITRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML High Yield Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BB1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -258,7 +258,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Yield US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMHYHYLCRPIUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML High Yield US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BB1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -269,7 +269,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Latin America Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMRLCRPILATRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Latin America Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities issued by countries associated with the region of Latin America. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -280,7 +280,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Latin America US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMLLLCRPILAUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Latin America US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities issued by countries associated with the region of Latin America. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -291,7 +291,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Non-Financial Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMNSNFCRPITRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Non-Financial Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which excludes all Financial securities as well as the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -302,7 +302,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Non-Financial US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMNFNFLCRPIUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Non-Financial US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which excludes all Financial securities as well as the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -313,7 +313,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate Master Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A0CM
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Option-Adjusted Spreads (OASs) are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. The Corporate Master OAS uses an index of bonds that are considered investment grade (those rated BBB or better). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// This data represents the ICE BofAML US Corporate Master Index value, which tracks the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. To qualify for inclusion in the index, securities must have an investment grade rating (based on an average of Moody's, S&P, and Fitch) and an investment grade rated country of risk (based on an average of Moody's, S&P, and Fitch foreign currency long term sovereign debt ratings). Each security must have greater than 1 year of remaining maturity, a fixed coupon schedule, and a minimum amount outstanding of $250 million. Original issue zero coupon bonds, "global" securities (debt issued simultaneously in the eurobond and US
@@ -337,7 +337,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield Master II Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLH0A0HYM2
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Option-Adjusted Spreads (OASs) are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. The ICE BofAML High Yield Master II OAS uses an index of bonds that are below investment grade (those rated BB or below).
             /// This data represents the ICE BofAML US High Yield Master II Index value, which tracks the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. To qualify for inclusion in the index, securities must have a below investment grade rating (based on an average of Moody's, S&P, and Fitch) and an investment grade rated country of risk (based on an average of Moody's, S&P, and Fitch foreign currency long term sovereign debt ratings). Each security must have greater than 1 year of remaining maturity, a fixed coupon schedule, and a minimum amount outstanding of $100 million. Original issue zero coupon bonds, "global" securities (debt issued simultaneously in the eurobond and US domestic bond markets), 144a securities and pay-in-kind securities, including toggle notes, qualify for inclusion in the Index. Callable perpetual securities qualify provided they are at least one year from the first call date. Fixed-to-floating rate securities also qualify provided they are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security. DRD-eligible and defaulted securities are excluded from the Index
@@ -352,7 +352,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 1-3 Year Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC1A0C13Y
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Option-Adjusted Spreads (OASs) are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. The US Corporate 1-3 Year OAS is a subset of the ICE BofAML US Corporate Master OAS, BAMLC0A0CM. This subset includes all securities with a remaining term to maturity of less than 3 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -363,7 +363,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 10-15 Year Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC7A0C1015Y
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Option-Adjusted Spreads (OASs) are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. The US Corporate 10-15 Year OAS is a subset of the ICE BofAML US Corporate Master OAS, BAMLC0A0CM. This subset includes all securities with a remaining term to maturity of greater than or equal to 10 years and less than 15 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -374,7 +374,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 15+ Year Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC8A0C15PY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Option-Adjusted Spreads (OASs) are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. The US Corporate 15+ Year OAS is a subset of the ICE BofAML US Corporate Master OAS, BAMLC0A0CM. This subset includes all securities with a remaining term to maturity of greater than or equal to 15 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -385,7 +385,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 3-5 Year Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC2A0C35Y
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Option-Adjusted Spreads (OASs) are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. The US Corporate 3-5 Year OAS is a subset of the ICE BofAML US Corporate Master OAS, BAMLC0A0CM. This subset includes all securities with a remaining term to maturity of greater than or equal to 3 years and less than 5 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -396,7 +396,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 5-7 Year Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC3A0C57Y
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Option-Adjusted Spreads (OASs) are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. The US Corporate 5-7 Year OAS is a subset of the ICE BofAML US Corporate Master OAS, BAMLC0A0CM. This subset includes all securities with a remaining term to maturity of greater than or equal to 5 years and less than 7 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -407,7 +407,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 7-10 Year Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC4A0C710Y
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Option-Adjusted Spreads (OASs) are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. The US Corporate 7-10 Year OAS is a subset of the ICE BofAML US Corporate Master OAS, BAMLC0A0CM. This subset includes all securities with a remaining term to maturity of greater than or equal to 7 years and less than 10 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -418,7 +418,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Public Sector Issuers US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMPUPUBSLCRPIUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML Public Sector US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes all quasi-government securities as well as the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -429,7 +429,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMUBCRPIUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML US Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities denominated in US Dollars. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -440,7 +440,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Emerging Markets Liquid Corporate Plus Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The ICE BofAML US Emerging Markets Liquid Corporate Plus Index tracks the performance of US dollar (USD) denominated emerging markets non-sovereign debt publicly issued in the major domestic and Eurobond markets. To qualify for inclusion in the index, the issuer of debt must have risk exposure to countries other than members of the FX G10 (US, Japan, New Zealand, Australia, Canada, Sweden, UK, Switzerland, Norway, and Euro Currency Members), all Western European countries, and territories of the US and Western European countries. Each security must also be denominated in USD with a time to maturity greater than 1 year until final maturity and have a fixed coupon. For inclusion in the index, investment grade rated bonds of qualifying issuers must have at least $500 million in outstanding face value, and below investment grade rated bonds must have at least $300 million in outstanding face value. The index includes corporate and quasi-government debt of qualifying countries, but excludes sovereign and supranational debt. Other types of securities acceptable for inclusion in this index are: original issue zero coupon bonds, ‚Äúglobal‚Äù securities (debt issued in the US domestic bond markets as well the Eurobond Market simultaneously), 144a securities, pay-in-kind securities (includes toggle notes), callable perpetual securities (qualify if they are at least one year from the first call date), fixed-t-floating rate securities (qualify if the securities are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security). Defaulted securities are excluded from the Index.
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -454,7 +454,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Euro High Yield Index Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLHE00EHYITRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML Euro High Yield Index value, which tracks the performance of Euro denominated below investment grade corporate debt publicly issued in the euro domestic or eurobond markets. Qualifying securities must have a below investment grade rating (based on an average of Moody's, S&P, and Fitch). Qualifying securities must have at least one year remaining term to maturity, a fixed coupon schedule, and a minimum amount outstanding of Euro 100 million. Original issue zero coupon bonds, "global" securities (debt issued simultaneously in the eurobond and euro domestic markets), 144a securities and pay-in-kind securities, including toggle notes, qualify for inclusion in the Index. Callable perpetual securities qualify provided they are at least one year from the first call date. Fixed-to-floating rate securities also qualify provided they are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security. Defaulted, warrant-bearing and euro legacy currency securities are excluded from the Index.
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -468,7 +468,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corp 1-3yr Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLCC1A013YTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate 1-3 Year Index value, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of less than 3 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -479,7 +479,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corp 10-15yr Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLCC7A01015YTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate 10-15 Year Index value, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 10 years and less than 15 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -490,7 +490,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corp 15+yr Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLCC8A015PYTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate 15+ Year Index value, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 15 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -501,7 +501,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corp 3-5yr Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLCC2A035YTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate 3-5 Year Index value, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 3 years and less than 5 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -512,7 +512,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corp 5-7yr Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLCC3A057YTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate 5-7 Year Index value, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 5 years and less than 7 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -523,7 +523,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 7-10yr Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLCC4A0710YTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate 7-10 Year Index value, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 7 years and less than 10 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -534,7 +534,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corp A Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLCC0A3ATRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate A Index value, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating A. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -545,7 +545,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corp AA Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLCC0A2AATRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate AA Index value, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating AA. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -556,7 +556,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corp AAA Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLCC0A1AAATRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate AAA Index value, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating AAA. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -567,7 +567,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield B Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLHYH0A2BTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate B Index value, a subset of the ICE BofAML US High Yield Master II Index tracking the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating B. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -578,7 +578,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield BB Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLHYH0A1BBTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate BB Index value, a subset of the ICE BofAML US High Yield Master II Index tracking the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating BB. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -589,7 +589,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corp BBB Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLCC0A4BBBTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate BBB Index value, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating BBB. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -600,7 +600,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield CCC or Below Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLHYH0A3CMTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate C Index value, a subset of the ICE BofAML US High Yield Master II Index tracking the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating CCC or below. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -611,7 +611,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corp Master Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLCC0A0CMTRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US Corporate Master Index value, which tracks the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. To qualify for inclusion in the index, securities must have an investment grade rating (based on an average of Moody's, S&P, and Fitch) and an investment grade rated country of risk (based on an average of Moody's, S&P, and Fitch foreign currency long term sovereign debt ratings). Each security must have greater than 1 year of remaining maturity, a fixed coupon schedule, and a minimum amount outstanding of $250 million. Original issue zero coupon bonds, "global" securities (debt issued simultaneously in the eurobond and US
             /// domestic bond markets), 144a securities and pay-in-kind securities, including toggle notes, qualify for inclusion in the Index. Callable perpetual securities qualify provided they are at least one year from the first call date. Fixed-to-floating rate securities also qualify provided they are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security. DRD-eligible and defaulted securities are excluded from the Index
@@ -626,7 +626,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield Master II Total Return Index Value (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLHYH0A0HYM2TRIV
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the ICE BofAML US High Yield Master II Index value, which tracks the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. To qualify for inclusion in the index, securities must have a below investment grade rating (based on an average of Moody's, S&P, and Fitch) and an investment grade rated country of risk (based on an average of Moody's, S&P, and Fitch foreign currency long term sovereign debt ratings). Each security must have greater than 1 year of remaining maturity, a fixed coupon schedule, and a minimum amount outstanding of $100 million. Original issue zero coupon bonds, "global" securities (debt issued simultaneously in the eurobond and US domestic bond markets), 144a securities and pay-in-kind securities, including toggle notes, qualify for inclusion in the Index. Callable perpetual securities qualify provided they are at least one year from the first call date. Fixed-to-floating rate securities also qualify provided they are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security. DRD-eligible and defaulted securities are excluded from the Index
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -640,7 +640,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML AAA-A Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM1BRRAAA2ACRPIOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML AAA-A Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated AAA through A3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -652,7 +652,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML AAA-A US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM1RAAA2ALCRPIUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML AAA-A US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML US Emerging Markets Liquid Corporate Plus Index, which includes only securities rated AAA through A3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -664,7 +664,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Asia Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMRACRPIASIAOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Asia Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities issued by countries associated with the region of Asia, excluding Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -676,7 +676,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Asia US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMALLCRPIASIAUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Asia US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities issued by countries associated with the region of Asia, excluding Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -688,7 +688,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML B and Lower Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM4BRRBLCRPIOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML B and Lower Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated B1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -700,7 +700,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML B and Lower US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM4RBLLCRPIUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML B and Lower US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated B1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -712,7 +712,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BB Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM3BRRBBCRPIOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML BB Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -724,7 +724,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BB US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM3RBBLCRPIUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML BB US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -736,7 +736,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BBB Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM2BRRBBBCRPIOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML BBB Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BBB1 through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -748,7 +748,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BBB US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM2RBBBLCRPIUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML BBB US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BBB1 through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -760,7 +760,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Crossover Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM5BCOCRPIOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Crossover Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BBB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -772,7 +772,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Crossover US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMXOCOLCRPIUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Crossover US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BBB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -784,7 +784,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Emerging Markets Corporate Plus Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMCBPIOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413), which tracks the performance of US dollar (USD) and Euro denominated emerging markets non-sovereign debt publicly issued within the major domestic and Eurobond markets. To qualify for inclusion in the index, the issuer of debt must have risk exposure to countries other than members of the FX G10 (US, Japan, New Zealand, Australia, Canada, Sweden, UK, Switzerland, Norway, and Euro Currency Members), all Western European countries, and territories of the US and Western European countries. Each security must also be denominated in USD or Euro with a time to maturity greater than 1 year and have a fixed coupon. For inclusion in the index, investment grade rated bonds of qualifying issuers must have at least 250 million (Euro or USD) in outstanding face value, and below investment grade rated bonds must have at least 100 million (Euro or USD) in outstanding face value. The index includes corporate and quasi-government debt of qualifying countries, but excludes sovereign and supranational debt. Other types of securities acceptable for inclusion in this index are: original issue zero coupon bonds, ‚Äúglobal‚Äù securities (debt issued in the US domestic bond markets as well the Eurobond Market simultaneously), 144a securities, pay-in-kind securities (includes toggle notes), callable perpetual securities (qualify if they are at least one year from the first call date), fixed-to-floating rate securities (qualify if the securities are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security). Defaulted securities are excluded from the Index.
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -799,7 +799,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Euro Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMEBCRPIEOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Euro Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities denominated in Euros. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -811,7 +811,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMRECRPIEMEAOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Europe, the Middle East, and Africa (EMEA) Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities issued by countries associated with the region of Europe, the Middle East and Africa, also including Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -823,7 +823,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMELLCRPIEMEAUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Europe, the Middle East, and Africa (EMEA) US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities issued by countries associated with the region of Europe, the Middle East and Africa, also including Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -835,7 +835,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Financial Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMFSFCRPIOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Financial Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes all Financial securities except the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -847,7 +847,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Financial US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMFLFLCRPIUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Financial US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes all Financial securities except the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -859,7 +859,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Grade Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMIBHGCRPIOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML High Grade Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated AAA through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -871,7 +871,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Grade US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMHGHGLCRPIUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML High Grade US Emerging Markets Liquid Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated AAA through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -883,7 +883,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Yield Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMHBHYCRPIOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML High Yield Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BB1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -895,7 +895,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Yield US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMHYHYLCRPIUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML High Yield US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BB1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -907,7 +907,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Latin America Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMRLCRPILAOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Latin America Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities issued by countries associated with the region of Latin America. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -919,7 +919,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Latin America US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMLLLCRPILAUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Latin America US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities issued by countries associated with the region of Latin America. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -931,7 +931,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Non-Financial Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMNSNFCRPIOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Non-Financial Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which excludes all Financial securities as well as the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -943,7 +943,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Non-Financial US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMNFNFLCRPIUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Non-Financial US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which excludes all Financial securities as well as the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -955,7 +955,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Public Sector Issuers US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMPUPUBSLCRPIUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML Public Sector US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes all quasi-government securities as well as the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -967,7 +967,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMUBCRPIUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML US Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities denominated in US Dollars. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413).
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -979,7 +979,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Emerging Markets Liquid Corporate Plus Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) for the ICE BofAML US Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413) tracks the performance of US dollar (USD) denominated emerging markets non-sovereign debt publicly issued in the major domestic and Eurobond markets. To qualify for inclusion in the index, the issuer of debt must have risk exposure to countries other than members of the FX G10 (US, Japan, New Zealand, Australia, Canada, Sweden, UK, Switzerland, Norway, and Euro Currency Members), all Western European countries, and territories of the US and Western European countries. Each security must also be denominated in USD with a time to maturity greater than 1 year until final maturity and have a fixed coupon. For inclusion in the index, investment grade rated bonds of qualifying issuers must have at least $500 million in outstanding face value, and below investment grade rated bonds must have at least $300 million in outstanding face value. The index includes corporate and quasi-government debt of qualifying countries, but excludes sovereign and supranational debt. Other types of securities acceptable for inclusion in this index are: original issue zero coupon bonds, ‚Äúglobal‚Äù securities (debt issued in the US domestic bond markets as well the Eurobond Market simultaneously), 144a securities, pay-in-kind securities (includes toggle notes), callable perpetual securities (qualify if they are at least one year from the first call date), fixed-t-floating rate securities (qualify if the securities are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security). Defaulted securities are excluded from the Index.
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -993,7 +993,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Euro High Yield Index Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLHE00EHYIOAS
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) of the ICE BofAML Euro High Yield Index tracks the performance of Euro denominated below investment grade corporate debt publicly issued in the euro domestic or eurobond markets. Qualifying securities must have a below investment grade rating (based on an average of Moody's, S&P, and Fitch). Qualifying securities must have at least one year remaining term to maturity, a fixed coupon schedule, and a minimum amount outstanding of Euro 100 million. Original issue zero coupon bonds, "global" securities (debt issued simultaneously in the eurobond and euro domestic markets), 144a securities and pay-in-kind securities, including toggle notes, qualify for inclusion in the Index. Callable perpetual securities qualify provided they are at least one year from the first call date. Fixed-to-floating rate securities also qualify provided they are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security. Defaulted, warrant-bearing and euro legacy currency securities are excluded from the Index.
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -1008,7 +1008,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate A Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A3CA
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) of the ICE BofAML US Corporate A Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating A.
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -1020,7 +1020,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate AA Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A2CAA
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) of the ICE BofAML US Corporate AA Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating AA.
             /// The ICE BofAML OAS are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -1032,7 +1032,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate AAA Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A1CAAA
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) of the ICE BofAML US Corporate AAA Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating AAA.
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -1044,7 +1044,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield B Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLH0A2HYB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) of the ICE BofAML US Corporate B Index, a subset of the ICE BofAML US High Yield Master II Index tracking the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating B.
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -1056,7 +1056,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield BB Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLH0A1HYBB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) of the ICE BofAML US Corporate BB Index, a subset of the ICE BofAML US High Yield Master II Index tracking the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating BB.
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -1068,7 +1068,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate BBB Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A4CBBB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) of the ICE BofAML US Corporate BBB Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating BBB.
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -1080,7 +1080,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield CCC or Below Option-Adjusted Spread (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLH0A3HYC
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the Option-Adjusted Spread (OAS) of the ICE BofAML US Corporate C Index, a subset of the ICE BofAML US High Yield Master II Index tracking the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating CCC or below.
             /// The ICE BofAML OASs are the calculated spreads between a computed OAS index of all bonds in a given rating category and a spot Treasury curve. An OAS index is constructed using each constituent bond‚Äôs OAS, weighted by market capitalization. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
@@ -1092,7 +1092,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML AAA-A Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM1BRRAAA2ACRPIEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML AAA-A Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated AAA through A3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1103,7 +1103,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML AAA-A US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM1RAAA2ALCRPIUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML AAA-A US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML US Emerging Markets Liquid Corporate Plus Index, which includes only securities rated AAA through A3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1114,7 +1114,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Asia Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMRACRPIASIAEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Asia Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities issued by countries associated with the region of Asia, excluding Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1125,7 +1125,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Asia US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMALLCRPIASIAUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Asia US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities issued by countries associated with the region of Asia, excluding Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1136,7 +1136,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML B and Lower Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM4BRRBLCRPIEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML B and Lower Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated B1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1147,7 +1147,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML B and Lower US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM4RBLLCRPIUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML B and Lower US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated B1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1158,7 +1158,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BB Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM3BRRBBCRPIEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML BB Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1169,7 +1169,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BB US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM3RBBLCRPIUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML BB US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1180,7 +1180,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BBB Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM2BRRBBBCRPIEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML BBB Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BBB1 through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1191,7 +1191,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BBB US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM2RBBBLCRPIUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML BBB US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BBB1 through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1202,7 +1202,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Crossover Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM5BCOCRPIEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Crossover Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BBB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1213,7 +1213,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Crossover US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMXOCOLCRPIUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Crossover US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BBB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1224,7 +1224,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Emerging Markets Corporate Plus Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMCBPIEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413), which tracks the performance of US dollar (USD) and Euro denominated emerging markets non-sovereign debt publicly issued within the major domestic and Eurobond markets. To qualify for inclusion in the index, the issuer of debt must have risk exposure to countries other than members of the FX G10 (US, Japan, New Zealand, Australia, Canada, Sweden, UK, Switzerland, Norway, and Euro Currency Members), all Western European countries, and territories of the US and Western European countries. Each security must also be denominated in USD or Euro with a time to maturity greater than 1 year and have a fixed coupon. For inclusion in the index, investment grade rated bonds of qualifying issuers must have at least 250 million (Euro or USD) in outstanding face value, and below investment grade rated bonds must have at least 100 million (Euro or USD) in outstanding face value. The index includes corporate and quasi-government debt of qualifying countries, but excludes sovereign and supranational debt. Other types of securities acceptable for inclusion in this index are: original issue zero coupon bonds, ‚Äúglobal‚Äù securities (debt issued in the US domestic bond markets as well the Eurobond Market simultaneously), 144a securities, pay-in-kind securities (includes toggle notes), callable perpetual securities (qualify if they are at least one year from the first call date), fixed-to-floating rate securities (qualify if the securities are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security). Defaulted securities are excluded from the Index.
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -1238,7 +1238,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Euro Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMEBCRPIEEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Euro Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities denominated in Euros. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1249,7 +1249,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Euro High Yield Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLHE00EHYIEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Euro High Yield Index tracks the performance of Euro denominated below investment grade corporate debt publicly issued in the euro domestic or eurobond markets. Qualifying securities must have a below investment grade rating (based on an average of Moody's, S&P, and Fitch). Qualifying securities must have at least one year remaining term to maturity, a fixed coupon schedule, and a minimum amount outstanding of Euro 100 million. Original issue zero coupon bonds, "global" securities (debt issued simultaneously in the eurobond and euro domestic markets), 144a securities and pay-in-kind securities, including toggle notes, qualify for inclusion in the Index. Callable perpetual securities qualify provided they are at least one year from the first call date. Fixed-to-floating rate securities also qualify provided they are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security. Defaulted, warrant-bearing and euro legacy currency securities are excluded from the Index.
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -1263,7 +1263,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMRECRPIEMEAEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Europe, the Middle East, and Africa (EMEA) Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities issued by countries associated with the region of Europe, the Middle East and Africa, also including Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1274,7 +1274,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMELLCRPIEMEAUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Europe, the Middle East, and Africa (EMEA) US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities issued by countries associated with the region of Europe, the Middle East and Africa, also including Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1285,7 +1285,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Financial Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMFSFCRPIEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Financial Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes all Financial securities except the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1296,7 +1296,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Financial US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMFLFLCRPIUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Financial US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes all Financial securities except the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1307,7 +1307,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Grade Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMIBHGCRPIEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML High Grade Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated AAA through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1318,7 +1318,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Grade US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMHGHGLCRPIUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML High Grade US Emerging Markets Liquid Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated AAA through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1329,7 +1329,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Yield Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMHBHYCRPIEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML High Yield Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BB1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1340,7 +1340,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Yield US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMHYHYLCRPIUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML High Yield US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BB1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1351,7 +1351,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Latin America Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMRLCRPILAEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Latin America Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities issued by countries associated with the region of Latin America. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1362,7 +1362,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Latin America US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMLLLCRPILAUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Latin America US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities issued by countries associated with the region of Latin America. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1373,7 +1373,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Non-Financial Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMNSNFCRPIEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Non-Financial Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which excludes all Financial securities as well as the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1384,7 +1384,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Non-Financial US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMNFNFLCRPIUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Non-Financial US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which excludes all Financial securities as well as the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1395,7 +1395,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Public Sector Issuers US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMPUPUBSLCRPIUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML Public Sector US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes all quasi-government securities as well as the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1406,7 +1406,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 1-3 Year Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC1A0C13YEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate 1-3 Year Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of less than 3 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1417,7 +1417,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 10-15 Year Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC7A0C1015YEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate 10-15 Year Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 10 years and less than 15 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1428,7 +1428,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 15+ Year Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC8A0C15PYEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate 15+ Year Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 15 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1439,7 +1439,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 3-5 Year Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC2A0C35YEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate 3-5 Year Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 3 years and less than 5 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1450,7 +1450,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 5-7 Year Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC3A0C57YEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate 5-7 Year Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 5 years and less than 7 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1461,7 +1461,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 7-10 Year Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC4A0C710YEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate 7-10 Year Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 7 years and less than 10 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1472,7 +1472,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate A Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A3CAEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate A Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating A. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1483,7 +1483,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate AA Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A2CAAEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate AA Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating AA. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1494,7 +1494,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate AAA Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A1CAAAEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate AAA Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating AAA. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1505,7 +1505,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield B Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLH0A2HYBEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate B Index, a subset of the ICE BofAML US High Yield Master II Index tracking the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating B. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1516,7 +1516,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield BB Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLH0A1HYBBEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate BB Index, a subset of the ICE BofAML US High Yield Master II Index tracking the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating BB. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1527,7 +1527,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate BBB Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A4CBBBEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate BBB Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating BBB. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1538,7 +1538,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield CCC or Below Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLH0A3HYCEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate C Index, a subset of the ICE BofAML US High Yield Master II Index tracking the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating CCC or below. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1549,7 +1549,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate Master Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A0CMEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Corporate Master Index, which tracks the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. To qualify for inclusion in the index, securities must have an investment grade rating (based on an average of Moody's, S&P, and Fitch) and an investment grade rated country of risk (based on an average of Moody's, S&P, and Fitch foreign currency long term sovereign debt ratings). Each security must have greater than 1 year of remaining maturity, a fixed coupon schedule, and a minimum amount outstanding of $250 million. Original issue zero coupon bonds, "global" securities (debt issued simultaneously in the eurobond and US domestic bond markets), 144a securities and pay-in-kind securities, including toggle notes, qualify for inclusion in the Index. Callable perpetual securities qualify provided they are at least one year from the first call date. Fixed-to-floating rate securities also qualify provided they are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security. DRD-eligible and defaulted securities are excluded from the Index
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -1563,7 +1563,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMUBCRPIUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities denominated in US Dollars. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
@@ -1574,7 +1574,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Emerging Markets Liquid Corporate Plus Index Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSEY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413) tracks the performance of US dollar (USD) denominated emerging markets non-sovereign debt publicly issued in the major domestic and Eurobond markets. To qualify for inclusion in the index, the issuer of debt must have risk exposure to countries other than members of the FX G10 (US, Japan, New Zealand, Australia, Canada, Sweden, UK, Switzerland, Norway, and Euro Currency Members), all Western European countries, and territories of the US and Western European countries. Each security must also be denominated in USD with a time to maturity greater than 1 year until final maturity and have a fixed coupon. For inclusion in the index, investment grade rated bonds of qualifying issuers must have at least $500 million in outstanding face value, and below investment grade rated bonds must have at least $300 million in outstanding face value. The index includes corporate and quasi-government debt of qualifying countries, but excludes sovereign and supranational debt. Other types of securities acceptable for inclusion in this index are: original issue zero coupon bonds, ‚Äúglobal‚Äù securities (debt issued in the US domestic bond markets as well the Eurobond Market simultaneously), 144a securities, pay-in-kind securities (includes toggle notes), callable perpetual securities (qualify if they are at least one year from the first call date), fixed-t-floating rate securities (qualify if the securities are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security). Defaulted securities are excluded from the Index.
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -1588,7 +1588,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield Master II Effective Yield (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLH0A0HYM2EY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the effective yield of the ICE BofAML US High Yield Master II Index, which tracks the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. To qualify for inclusion in the index, securities must have a below investment grade rating (based on an average of Moody's, S&P, and Fitch) and an investment grade rated country of risk (based on an average of Moody's, S&P, and Fitch foreign currency long term sovereign debt ratings). Each security must have greater than 1 year of remaining maturity, a fixed coupon schedule, and a minimum amount outstanding of $100 million. Original issue zero coupon bonds, "global" securities (debt issued simultaneously in the eurobond and US domestic bond markets), 144a securities and pay-in-kind securities, including toggle notes, qualify for inclusion in the Index. Callable perpetual securities qualify provided they are at least one year from the first call date. Fixed-to-floating rate securities also qualify provided they are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security. DRD-eligible and defaulted securities are excluded from the Index
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -1602,7 +1602,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML AAA-A Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM1BRRAAA2ACRPISYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML AAA-A Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated AAA through A3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1614,7 +1614,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML AAA-A US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM1RAAA2ALCRPIUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML AAA-A US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML US Emerging Markets Liquid Corporate Plus Index, which includes only securities rated AAA through A3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1626,7 +1626,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Asia Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMRACRPIASIASYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Asia Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities issued by countries associated with the region of Asia, excluding Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1638,7 +1638,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Asia US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMALLCRPIASIAUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Asia US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities issued by countries associated with the region of Asia, excluding Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1650,7 +1650,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML B and Lower Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM4BRRBLCRPISYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML B and Lower Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated B1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1662,7 +1662,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML B and Lower US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM4RBLLCRPIUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML B and Lower US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated B1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1674,7 +1674,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BB Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM3BRRBBCRPISYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML BB Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1686,7 +1686,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BB US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM3RBBLCRPIUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML BB US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1698,7 +1698,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BBB Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM2BRRBBBCRPISYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML BBB Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BBB1 through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1710,7 +1710,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML BBB US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM2RBBBLCRPIUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML BBB US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BBB1 through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1722,7 +1722,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Crossover Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEM5BCOCRPISYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Crossover Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BBB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1734,7 +1734,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Crossover US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMXOCOLCRPIUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Crossover US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BBB1 through BB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1746,7 +1746,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Emerging Markets Corporate Plus Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMCBPISYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413), which tracks the performance of US dollar (USD) and Euro denominated emerging markets non-sovereign debt publicly issued within the major domestic and Eurobond markets. To qualify for inclusion in the index, the issuer of debt must have risk exposure to countries other than members of the FX G10 (US, Japan, New Zealand, Australia, Canada, Sweden, UK, Switzerland, Norway, and Euro Currency Members), all Western European countries, and territories of the US and Western European countries. Each security must also be denominated in USD or Euro with a time to maturity greater than 1 year and have a fixed coupon. For inclusion in the index, investment grade rated bonds of qualifying issuers must have at least 250 million (Euro or USD) in outstanding face value, and below investment grade rated bonds must have at least 100 million (Euro or USD) in outstanding face value. The index includes corporate and quasi-government debt of qualifying countries, but excludes sovereign and supranational debt. Other types of securities acceptable for inclusion in this index are: original issue zero coupon bonds, "global" securities (debt issued in the US domestic bond markets as well the Eurobond Market simultaneously), 144a securities, pay-in-kind securities (includes toggle notes), callable perpetual securities (qualify if they are at least one year from the first call date), fixed-to-floating rate securities (qualify if the securities are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security). Defaulted securities are excluded from the Index.
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -1760,7 +1760,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Euro Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMEBCRPIESYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Euro Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities denominated in Euros. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1772,7 +1772,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Euro High Yield Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLHE00EHYISYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Euro High Yield Index tracks the performance of Euro denominated below investment grade corporate debt publicly issued in the euro domestic or eurobond markets. Qualifying securities must have a below investment grade rating (based on an average of Moody's, S&P, and Fitch). Qualifying securities must have at least one year remaining term to maturity, a fixed coupon schedule, and a minimum amount outstanding of Euro 100 million. Original issue zero coupon bonds, "global" securities (debt issued simultaneously in the eurobond and euro domestic markets), 144a securities and pay-in-kind securities, including toggle notes, qualify for inclusion in the Index. Callable perpetual securities qualify provided they are at least one year from the first call date. Fixed-to-floating rate securities also qualify provided they are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security. Defaulted, warrant-bearing and euro legacy currency securities are excluded from the Index.
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -1787,7 +1787,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMRECRPIEMEASYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Europe, the Middle East, and Africa (EMEA) Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities issued by countries associated with the region of Europe, the Middle East and Africa, also including Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1799,7 +1799,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMELLCRPIEMEAUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Europe, the Middle East, and Africa (EMEA) US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities issued by countries associated with the region of Europe, the Middle East and Africa, also including Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, and Uzbekistan. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1811,7 +1811,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Financial Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMFSFCRPISYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Financial Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes all Financial securities except the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1823,7 +1823,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Financial US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMFLFLCRPIUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Financial US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes all Financial securities except the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1835,7 +1835,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Grade Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMIBHGCRPISYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML High Grade Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated AAA through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1847,7 +1847,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Grade US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMHGHGLCRPIUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML High Grade US Emerging Markets Liquid Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated AAA through BBB3. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1859,7 +1859,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Yield Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMHBHYCRPISYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML High Yield Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities rated BB1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1871,7 +1871,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML High Yield US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMHYHYLCRPIUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML High Yield US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities rated BB1 or lower. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1883,7 +1883,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Latin America Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMRLCRPILASYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Latin America Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities issued by countries associated with the region of Latin America. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1895,7 +1895,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Latin America US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMLLLCRPILAUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Latin America US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes only securities issued by countries associated with the region of Latin America. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1907,7 +1907,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Non-Financial Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMNSNFCRPISYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Non-Financial Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which excludes all Financial securities as well as the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1919,7 +1919,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Non-Financial US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMNFNFLCRPIUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Non-Financial US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which excludes all Financial securities as well as the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1931,7 +1931,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Private Sector Issuers Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMPTPRVICRPISYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Private Sector Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes all corporate securities except for the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1943,7 +1943,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Private Sector Issuers US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMPVPRIVSLCRPIUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Private Sector US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes all corporate securities except for the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1955,7 +1955,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Public Sector Issuers Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMPBPUBSICRPISYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Public Sector Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes all quasi-government securities as well as the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1967,7 +1967,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML Public Sector Issuers US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMPUPUBSLCRPIUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML Public Sector US Emerging Markets Liquid Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Liquid Corporate Plus Index, which includes all quasi-government securities as well as the debt of corporate issuers designated as government owned or controlled by ICE BofAML emerging markets credit research. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1979,7 +1979,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 1-3 Year Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC1A0C13YSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate 1-3 Year Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of less than 3 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -1991,7 +1991,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 10-15 Year Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC7A0C1015YSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate 10-15 Year Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 10 years and less than 15 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -2003,7 +2003,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 15+ Year Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC8A0C15PYSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate 15+ Year Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 15 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -2015,7 +2015,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 3-5 Year Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC2A0C35YSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate 3-5 Year Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 3 years and less than 5 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -2027,7 +2027,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 5-7 Year Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC3A0C57YSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate 5-7 Year Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 5 years and less than 7 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -2039,7 +2039,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate 7-10 Year Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC4A0C710YSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate 7-10 Year Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a remaining term to maturity of greater than or equal to 7 years and less than 10 years. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -2051,7 +2051,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate A Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A3CASYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate A Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating A. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -2063,7 +2063,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate AA Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A2CAASYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate AA Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating AA. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -2075,7 +2075,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate AAA Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A1CAAASYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate AAA Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating AAA. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -2087,7 +2087,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield B Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLH0A2HYBSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate B Index, a subset of the ICE BofAML US High Yield Master II Index tracking the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating B. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -2099,7 +2099,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield BB Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLH0A1HYBBSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate BB Index, a subset of the ICE BofAML US High Yield Master II Index tracking the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating BB. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -2111,7 +2111,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate BBB Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A4CBBBSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate BBB Index, a subset of the ICE BofAML US Corporate Master Index tracking the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating BBB. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -2123,7 +2123,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield CCC or Below Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLH0A3HYCSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate C Index, a subset of the ICE BofAML US High Yield Master II Index tracking the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. This subset includes all securities with a given investment grade rating CCC or below. When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -2135,7 +2135,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Corporate Master Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLC0A0CMSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Corporate Master Index, which tracks the performance of US dollar denominated investment grade rated corporate debt publically issued in the US domestic market. To qualify for inclusion in the index, securities must have an investment grade rating (based on an average of Moody's, S&P, and Fitch) and an investment grade rated country of risk (based on an average of Moody's, S&P, and Fitch foreign currency long term sovereign debt ratings). Each security must have greater than 1 year of remaining maturity, a fixed coupon schedule, and a minimum amount outstanding of $250 million. Original issue zero coupon bonds, "global" securities (debt issued simultaneously in the eurobond and US domestic bond markets), 144a securities and pay-in-kind securities, including toggle notes, qualify for inclusion in the Index. Callable perpetual securities qualify provided they are at least one year from the first call date. Fixed-to-floating rate securities also qualify provided they are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security. DRD-eligible and defaulted securities are excluded from the Index.
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -2150,7 +2150,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMUBCRPIUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Emerging Markets Corporate Plus Index is the subset of the ICE BofAML Emerging Markets Corporate Plus Index, which includes only securities denominated in US Dollars. The same inclusion rules apply for this series as those that apply for ICE BofAML Emerging Markets Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCBPITRIV?cid=32413). When the last calendar day of the month takes place on the weekend, weekend observations will occur as a result of month ending accrued interest adjustments.
             /// Yield to worst is the lowest potential yield that a bond can generate without the issuer defaulting. The standard US convention for this series is to use semi-annual coupon payments, whereas the standard in the foreign markets is to use coupon payments with frequencies of annual, semi-annual, quarterly, and monthly.
@@ -2162,7 +2162,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US Emerging Markets Liquid Corporate Plus Index Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSSYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US Emerging Markets Liquid Corporate Plus Index (https://fred.stlouisfed.org/series/BAMLEMCLLCRPIUSTRIV?cid=32413) tracks the performance of US dollar (USD) denominated emerging markets non-sovereign debt publicly issued in the major domestic and Eurobond markets. To qualify for inclusion in the index, the issuer of debt must have risk exposure to countries other than members of the FX G10 (US, Japan, New Zealand, Australia, Canada, Sweden, UK, Switzerland, Norway, and Euro Currency Members), all Western European countries, and territories of the US and Western European countries. Each security must also be denominated in USD with a time to maturity greater than 1 year until final maturity and have a fixed coupon. For inclusion in the index, investment grade rated bonds of qualifying issuers must have at least $500 million in outstanding face value, and below investment grade rated bonds must have at least $300 million in outstanding face value. The index includes corporate and quasi-government debt of qualifying countries, but excludes sovereign and supranational debt. Other types of securities acceptable for inclusion in this index are: original issue zero coupon bonds, "global" securities (debt issued in the US domestic bond markets as well the Eurobond Market simultaneously), 144a securities, pay-in-kind securities (includes toggle notes), callable perpetual securities (qualify if they are at least one year from the first call date), fixed-t-floating rate securities (qualify if the securities are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security). Defaulted securities are excluded from the Index.
             /// ICE BofAML Explains the Construction Methodology of this series as:
@@ -2176,7 +2176,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// ICE BofAML US High Yield Master II Semi-Annual Yield to Worst (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/BAMLH0A0HYM2SYTW
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// This data represents the semi-annual yield to worst of the ICE BofAML US High Yield Master II Index, which tracks the performance of US dollar denominated below investment grade rated corporate debt publically issued in the US domestic market. To qualify for inclusion in the index, securities must have a below investment grade rating (based on an average of Moody's, S&P, and Fitch) and an investment grade rated country of risk (based on an average of Moody's, S&P, and Fitch foreign currency long term sovereign debt ratings). Each security must have greater than 1 year of remaining maturity, a fixed coupon schedule, and a minimum amount outstanding of $100 million. Original issue zero coupon bonds, "global" securities (debt issued simultaneously in the eurobond and US domestic bond markets), 144a securities and pay-in-kind securities, including toggle notes, qualify for inclusion in the Index. Callable perpetual securities qualify provided they are at least one year from the first call date. Fixed-to-floating rate securities also qualify provided they are callable within the fixed rate period and are at least one year from the last call prior to the date the bond transitions from a fixed to a floating rate security. DRD-eligible and defaulted securities are excluded from the Index
             /// ICE BofAML Explains the Construction Methodology of this series as:
