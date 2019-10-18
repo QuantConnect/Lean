@@ -26,6 +26,7 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.Custom.CBOE;
 using QuantConnect.Tests.ToolBox;
 using QuantConnect.ToolBox;
 using QuantConnect.Util;
@@ -914,6 +915,7 @@ def Test(dataFrame, symbol):
                     var index = subDataFrame.index[i];
                     var value = subDataFrame.loc[index].value.AsManagedObject(typeof(decimal));
                     Assert.AreEqual(rawBars[i].Value, value);
+
                     var transactions = subDataFrame.loc[index].transactions.AsManagedObject(typeof(decimal));
                     var expected = (rawBars[i] as DynamicData)?.GetProperty("transactions");
                     expected = expected ?? type.GetProperty("Transactions")?.GetValue(rawBars[i]);
@@ -944,6 +946,69 @@ def Test(dataFrame, symbol):
                     var expected = (rawBars[i] as DynamicData)?.GetProperty("transactions");
                     expected = expected ?? type.GetProperty("Transactions")?.GetValue(rawBars[i]);
                     Assert.AreEqual(expected, transactions);
+                }
+            }
+        }
+
+        [Test]
+        public void HandlesCustomDataBarsInheritsFromTradeBar()
+        {
+            var converter = new PandasConverter();
+            var symbol = Symbols.LTCUSD;
+
+            var config = GetSubscriptionDataConfig<Quandl>(symbol, Resolution.Daily);
+            var custom = new CBOE();
+            var type = custom.GetType();
+
+            var rawBars = Enumerable
+                .Range(0, 10)
+                .Select(i =>
+                {
+                    var line = $"{DateTime.UtcNow.AddDays(i).ToStringInvariant("yyyy-MM-dd")},{i + 101},{i + 102},{i + 100},{i + 101},{i + 101}";
+                    return custom.Reader(config, line, DateTime.UtcNow.AddDays(i), false);
+                })
+                .ToArray();
+
+            // GetDataFrame with argument of type IEnumerable<BaseData>
+            dynamic dataFrame = converter.GetDataFrame(rawBars);
+
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var subDataFrame = dataFrame.loc[symbol];
+                Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(count, 10);
+
+                for (var i = 0; i < count; i++)
+                {
+                    var index = subDataFrame.index[i];
+                    var value = subDataFrame.loc[index].value.AsManagedObject(typeof(decimal));
+                    Assert.AreEqual(rawBars[i].Value, value);
+                }
+            }
+
+            // GetDataFrame with argument of type IEnumerable<BaseData>
+            var history = GetHistory(symbol, Resolution.Daily, rawBars);
+            dataFrame = converter.GetDataFrame(history);
+
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var subDataFrame = dataFrame.loc[symbol];
+                Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(10, count);
+
+                for (var i = 0; i < count; i++)
+                {
+                    var index = subDataFrame.index[i];
+                    var value = subDataFrame.loc[index].value.AsManagedObject(typeof(decimal));
+                    Assert.AreEqual(rawBars[i].Value, value);
                 }
             }
         }

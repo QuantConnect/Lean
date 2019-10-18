@@ -245,8 +245,9 @@ class Remapper(wrapt.ObjectProxy):
                 }
             }
 
-            var type = data.GetType() as Type;
-            _isCustomData = type.Namespace != "QuantConnect.Data.Market";
+            var type = data.GetType();
+            var dataMarketNamespace = typeof(Bar).Namespace;
+            _isCustomData = type.Namespace != dataMarketNamespace;
             _members = Enumerable.Empty<MemberInfo>();
             _symbol = (data as IBaseData)?.Symbol;
 
@@ -276,7 +277,14 @@ class Remapper(wrapt.ObjectProxy):
                         throw new ArgumentException($"PandasData.ctor(): More than one \'{duplicateKey}\' member was found in \'{type.FullName}\' class.");
                     }
 
-                    keys = members.Select(x => x.Name.ToLowerInvariant()).Except(_baseDataProperties).Concat(new[] { "value" });
+                    // If the custom data derives from a Market Data (e.g. Tick, TradeBar, QuoteBar), exclude its keys
+                    var baseType = type.BaseType;
+                    var inheritedProperties = baseType != null && baseType.Namespace == dataMarketNamespace
+                        ? baseType.GetProperties().ToHashSet(x => x.Name.ToLowerInvariant())
+                        : _baseDataProperties;
+
+                    keys = members.Select(x => x.Name.ToLowerInvariant()).Except(inheritedProperties).Concat(new[] {"value"});
+
                     _members = members.Where(x => keys.Contains(x.Name.ToLowerInvariant()));
                 }
 
