@@ -36,7 +36,7 @@ namespace QuantConnect.Securities
         private static readonly MethodInfo GetPropertyMethodInfo = typeof(DynamicSecurityData).GetMethod("GetProperty");
 
         private readonly IRegisteredSecurityDataTypesProvider _registeredTypes;
-        private readonly ConcurrentDictionary<string, object> _storage = new ConcurrentDictionary<string, object>();
+        private readonly ConcurrentDictionary<string, Lazy<object>> _storage = new ConcurrentDictionary<string, Lazy<object>>();
         private readonly ConcurrentDictionary<Type, Type> _genericTypes = new ConcurrentDictionary<Type, Type>();
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace QuantConnect.Securities
         /// <param name="name">The property name to set</param>
         /// <param name="value">The new property value</param>
         /// <returns>Returns the input value back to the caller</returns>
-        public object SetProperty(string name, object value)
+        public object SetProperty(string name, Lazy<object> value)
         {
             _storage[name] = value;
             return value;
@@ -154,21 +154,19 @@ namespace QuantConnect.Securities
         /// <returns>object value of BaseData</returns>
         public object GetProperty(string name)
         {
-            object value;
+            Lazy<object> value;
             if (_storage.TryGetValue(name, out value))
             {
-                return value;
+                return value.Value;
             }
 
             // check to see if the requested name matches one of the algorithm registered data types and if
             // so, we'll return a new empty list. this precludes us from always needing to check HasData<T>
-            foreach (var type in _registeredTypes.GetRegisteredDataTypes())
+            Type type;
+            if (_registeredTypes.TryGetType(name, out type))
             {
-                if (type.Name == name)
-                {
-                    var listType = typeof(List<>).MakeGenericType(type);
-                    return Activator.CreateInstance(listType);
-                }
+                var listType = GetGenericListType(type);
+                return Activator.CreateInstance(listType);
             }
 
             var keys = _storage.Keys.OrderBy(k => k);
@@ -195,7 +193,8 @@ namespace QuantConnect.Securities
             var baseDataList = data as IReadOnlyList<BaseData>;
             if (baseDataList != null)
             {
-                var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(type));
+                var listType = GetGenericListType(type);
+                var list = (IList)Activator.CreateInstance(listType);
                 foreach (var baseData in baseDataList)
                 {
                     list.Add(baseData);
@@ -215,30 +214,43 @@ namespace QuantConnect.Securities
         /// </summary>
         private void StoreData(Type type, Type dataType, IList data)
         {
+            Lazy<object> lazyData;
+
             // this would, for example, be 'Bitcoin' or 'TradeBar'
             if (type == dataType)
             {
-                SetProperty(dataType.Name, data);
-                return;
+                lazyData = new Lazy<object>(() => data);
+            }
+            else
+            {
+                lazyData = new Lazy<object>(() => {
+                    // common case where it's a List<BaseData> but dataType == TradeBar
+                    // create a List<TradeBar> so that when accessed via GetAll<T> or .TradeBar
+                    // the types line up as expected
+                    var listType = GetGenericListType(dataType);
+                    var list = (IList)Activator.CreateInstance(listType);
+                    foreach (var datum in data)
+                    {
+                        // if the element type and dataType aren't in alignment we'll get an invalid cast exception here
+                        list.Add(datum);
+                    }
+
+                    return list;});
             }
 
-            // common case where it's a List<BaseData> but dataType == TradeBar
-            // create a List<TradeBar> so that when accessed via GetAll<T> or .TradeBar
-            // the types line up as expected
+            SetProperty(dataType.Name, lazyData);
+        }
+
+        private Type GetGenericListType(Type type)
+        {
             Type containerType;
-            if (!_genericTypes.TryGetValue(dataType, out containerType))
+            if (!_genericTypes.TryGetValue(type, out containerType))
             {
                 // for performance we keep the generic type
-                _genericTypes[dataType] = containerType = typeof(List<>).MakeGenericType(dataType);
-            }
-            var list = (IList)Activator.CreateInstance(containerType);
-            foreach (var datum in data)
-            {
-                // if the element type and dataType aren't in alignment we'll get an invalid cast exception here
-                list.Add(datum);
+                _genericTypes[type] = containerType = typeof(List<>).MakeGenericType(type);
             }
 
-            SetProperty(dataType.Name, list);
+            return containerType;
         }
     }
 }

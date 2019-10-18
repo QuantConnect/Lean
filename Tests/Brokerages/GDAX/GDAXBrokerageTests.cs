@@ -85,6 +85,12 @@ namespace QuantConnect.Tests.Brokerages.GDAX
             _algo.Setup(a => a.AccountCurrency).Returns(Currencies.USD);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _unit.Disconnect();
+        }
+
         private void SetupResponse(string body, HttpStatusCode httpStatus = HttpStatusCode.OK)
         {
             _rest.Setup(m => m.Execute(It.Is<IRestRequest>(r => !r.Resource.StartsWith("/products/") && !r.Resource.StartsWith("/orders/" + _brokerId))))

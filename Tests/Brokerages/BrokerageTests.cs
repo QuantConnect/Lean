@@ -222,6 +222,7 @@ namespace QuantConnect.Tests.Brokerages
         /// <param name="brokerage">The brokerage instance to be disposed of</param>
         protected virtual void DisposeBrokerage(IBrokerage brokerage)
         {
+            brokerage.Disconnect();
         }
 
         /// <summary>

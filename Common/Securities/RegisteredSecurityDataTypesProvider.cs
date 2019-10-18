@@ -30,7 +30,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public static readonly IRegisteredSecurityDataTypesProvider Null = new RegisteredSecurityDataTypesProvider();
 
-        private readonly HashSet<Type> _types = new HashSet<Type>();
+        private readonly Dictionary<string, Type> _types = new Dictionary<string, Type>();
 
         /// <summary>
         /// Registers the specified type w/ the provider
@@ -38,7 +38,20 @@ namespace QuantConnect.Securities
         /// <returns>True if the type was previously not registered</returns>
         public bool RegisterType(Type type)
         {
-            return _types.Add(type);
+            Type existingType;
+            if (_types.TryGetValue(type.Name, out existingType))
+            {
+                if (existingType != type)
+                {
+                    // shouldn't happen but we want to know if it does
+                    throw new InvalidOperationException(
+                        $"Two different types were detected trying to register the same type name: {existingType} - {type}");
+                }
+                return true;
+            }
+
+            _types[type.Name] = type;
+            return false;
         }
 
         /// <summary>
@@ -47,15 +60,15 @@ namespace QuantConnect.Securities
         /// <returns>True if the type was previously registered</returns>
         public bool UnregisterType(Type type)
         {
-            return _types.Remove(type);
+            return _types.Remove(type.Name);
         }
 
         /// <summary>
         /// Gets an enumerable of data types expected to be contained in a <see cref="DynamicSecurityData"/> instance
         /// </summary>
-        public IEnumerable<Type> GetRegisteredDataTypes()
+        public bool TryGetType(string name, out Type type)
         {
-            return _types;
+            return _types.TryGetValue(name, out type);
         }
     }
 }

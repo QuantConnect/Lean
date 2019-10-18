@@ -591,26 +591,25 @@ namespace QuantConnect.Securities
         /// on the data provided. Data is also stored into the security's data cache
         /// </summary>
         /// <param name="data">The security update data</param>
-        public void Update(IEnumerable<BaseData> data)
+        /// <param name="dataType">The data type</param>
+        /// <param name="containsFillForwardData">Flag indicating whether
+        /// <paramref name="data"/> contains any fill forward bar or not</param>
+        public void Update(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null)
         {
-            BaseData last = null;
-            foreach (var grp in data.GroupBy(d => d.GetType()))
-            {
-                var nonFillForward = new List<BaseData>();
-                foreach (var baseData in grp)
-                {
-                    last = baseData;
-                    if (!baseData.IsFillForward)
-                    {
-                        nonFillForward.Add(baseData);
-                    }
-                }
-                // use the last of each type to set market price
-                SetMarketPrice(last);
+            // use the last of each type to set market price
+            SetMarketPrice(data[data.Count - 1]);
 
-                // maintaining regression requires us to NOT cache FF data
-                Cache.StoreData(nonFillForward);
+            var nonFillForwardData = data;
+            // maintaining regression requires us to NOT cache FF data
+            if (!containsFillForwardData.HasValue || containsFillForwardData.Value)
+            {
+                nonFillForwardData = data.Where(baseData => !baseData.IsFillForward).ToList();
+                if (nonFillForwardData.Count == 0)
+                {
+                    return;
+                }
             }
+            Cache.StoreData(nonFillForwardData, dataType);
         }
 
         /// <summary>

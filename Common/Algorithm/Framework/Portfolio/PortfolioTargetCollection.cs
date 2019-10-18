@@ -33,7 +33,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Gets the number of targets in this collection
         /// </summary>
-        public int Count => _targets.Count;
+        public int Count => _targets.Skip(0).Count();
 
         /// <summary>
         /// Gets `false`. This collection is not read-only.

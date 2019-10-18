@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void GetAll_UsesTypeName_AsKey()
         {
             var data = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
-            data.SetProperty(typeof(int).Name, new[] {1});
+            data.SetProperty(typeof(int).Name, new Lazy<object>(() => new[] { 1 }));
 
             var arr = data.GetAll<int>();
             Assert.AreEqual(1, arr.Count);

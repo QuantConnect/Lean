@@ -232,7 +232,7 @@ namespace QuantConnect.Tests.Common.Securities
             {
                 new CustomDataBitcoinAlgorithm.Bitcoin{Ask = 1m},
                 new CustomDataBitcoinAlgorithm.Bitcoin{Ask = 2m}
-            });
+            }, typeof(CustomDataBitcoinAlgorithm.Bitcoin));
 
             var data = cache.GetAll<CustomDataBitcoinAlgorithm.Bitcoin>().ToList();
             Assert.AreEqual(2, data.Count);

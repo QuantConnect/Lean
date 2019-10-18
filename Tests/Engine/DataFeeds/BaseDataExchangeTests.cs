@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -58,6 +57,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Task.Run(() => exchange.Start());
 
             Assert.AreEqual(0, WaitHandle.WaitAny(new[] { firedHandler, firedWrongHandler }, DefaultTimeout));
+            exchange.Stop();
         }
 
         [Test]
@@ -90,6 +90,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.IsTrue(WaitHandle.WaitAll(new[] { firedHandler1, firedHandler2 }, DefaultTimeout));
             Assert.IsFalse(firedWrongHandler.WaitOne(DefaultTimeout));
+            exchange.Stop();
         }
 
         [Test]
@@ -111,6 +112,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Task.Run(() => exchange.Start());
 
             Assert.IsFalse(touchedHandler.WaitOne(DefaultTimeout));
+            exchange.Stop();
         }
 
         [Test]
@@ -273,15 +275,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsNull(removed);
             removed = exchange.RemoveEnumerator(Symbols.SPY);
             Assert.AreEqual(Symbols.SPY, removed.Symbol);
-        }
-
-        private sealed class ExceptionEnumerator<T> : IEnumerator<T>
-        {
-            public void Reset() { }
-            public void Dispose() { }
-            public T Current { get; private set; }
-            object IEnumerator.Current { get { return Current; } }
-            public bool MoveNext() { throw new Exception("ExceptionEnumerator.MoveNext always throws exceptions!"); }
         }
 
         private static BaseDataExchange CreateExchange(ConcurrentQueue<BaseData> dataQueue)

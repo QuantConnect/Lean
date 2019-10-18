@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Securities;
@@ -82,7 +83,10 @@ namespace QuantConnect.Interfaces
         /// on the data provided. Data is also stored into the security's data cache
         /// </summary>
         /// <param name="data">The security update data</param>
-        void Update(IEnumerable<BaseData> data);
+        /// <param name="dataType">The data type</param>
+        /// <param name="containsFillForwardData">Flag indicating whether
+        /// <paramref name="data"/> contains any fill forward bar or not</param>
+        void Update(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData);
 
         /// <summary>
         /// Get the last price update set to the security.

@@ -207,13 +207,9 @@ namespace QuantConnect.Securities
         /// Stores the specified data list in the cache WITHOUT updating any of the cache properties, such as Price
         /// </summary>
         /// <param name="data">The collection of data to store in this cache</param>
-        public void StoreData(IReadOnlyList<BaseData> data)
+        /// <param name="dataType">The data type</param>
+        public void StoreData(IReadOnlyList<BaseData> data, Type dataType)
         {
-            if (data.Count == 0)
-            {
-                return;
-            }
-
 #if DEBUG // don't run this in release as we should never fail here, but it's also nice to have here as documentation of intent
             if (data.DistinctBy(d => d.GetType()).Skip(1).Any())
             {
@@ -221,7 +217,6 @@ namespace QuantConnect.Securities
             }
 #endif
 
-            var dataType = data[0].GetType();
             _dataByType[dataType] = data;
             OnDataStored(dataType, data);
         }
