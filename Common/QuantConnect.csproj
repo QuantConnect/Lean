@@ -243,10 +243,13 @@
     <Compile Include="Data\Custom\CBOE\CBOE.cs" />
     <Compile Include="Data\Custom\FRED\CentralBankInterventions.cs" />
     <Compile Include="Data\Custom\FRED\CommercialPaper.cs" />
+    <Compile Include="Data\Custom\FRED\FRED.cs" />
+    <Compile Include="Data\Custom\FRED\FREDApi.cs" />
     <Compile Include="Data\Custom\FRED\LIBOR.cs" />
     <Compile Include="Data\Custom\FRED\OECDRecessionIndicators.cs" />
     <Compile Include="Data\Custom\FRED\ICEBofAML.cs" />
     <Compile Include="Data\Custom\FRED\CBOE.cs" />
+    <Compile Include="Data\Custom\FRED\TradeWeightedIndexes.cs" />
     <Compile Include="Data\Custom\FRED\Wilshire.cs" />
     <Compile Include="Data\Custom\FxcmVolume.cs" />
     <Compile Include="Data\Custom\SEC\ISECReport.cs" />
