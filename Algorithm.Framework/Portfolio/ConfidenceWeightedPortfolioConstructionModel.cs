@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
