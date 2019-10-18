@@ -13,29 +13,27 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
     /// <summary>
     /// Provides an implementation of <see cref="IPortfolioConstructionModel"/> that generates percent targets based on the
-    /// <see cref="Insight.Weight"/>. The target percent holdings of each Symbol is given by the <see cref="Insight.Weight"/>
+    /// <see cref="Insight.Confidence"/>. The target percent holdings of each Symbol is given by the <see cref="Insight.Confidence"/>
     /// from the last active <see cref="Insight"/> for that symbol.
     /// For insights of direction <see cref="InsightDirection.Up"/>, long targets are returned and for insights of direction
     /// <see cref="InsightDirection.Down"/>, short targets are returned.
     /// If the sum of all the last active <see cref="Insight"/> per symbol is bigger than 1, it will factor down each target
     /// percent holdings proportionally so the sum is 1.
-    /// It will ignore <see cref="Insight"/> that have no <see cref="Insight.Weight"/> value.
+    /// It will ignore <see cref="Insight"/> that have no <see cref="Insight.Confidence"/> value.
     /// </summary>
-    public class InsightWeightingPortfolioConstructionModel : EqualWeightingPortfolioConstructionModel
+    public class ConfidenceWeightedPortfolioConstructionModel : InsightWeightingPortfolioConstructionModel
     {
         /// <summary>
-        /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
+        /// Initialize a new instance of <see cref="ConfidenceWeightedPortfolioConstructionModel"/>
         /// </summary>
         /// <param name="resolution">Rebalancing frequency</param>
-        public InsightWeightingPortfolioConstructionModel(Resolution resolution = Resolution.Daily)
+        public ConfidenceWeightedPortfolioConstructionModel(Resolution resolution = Resolution.Daily)
             : base(resolution)
         {
         }
@@ -48,29 +46,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>True if the portfolio should create a target for the insight</returns>
         public override bool ShouldCreateTargetForInsight(Insight insight)
         {
-            return insight.Weight.HasValue;
-        }
-
-        /// <summary>
-        /// Will determine the target percent for each insight
-        /// </summary>
-        /// <param name="activeInsights">The active insights to generate a target for</param>
-        /// <returns>A target percent for each insight</returns>
-        public override Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
-        {
-            var result = new Dictionary<Insight, double>();
-            // We will adjust weights proportionally in case the sum is > 1 so it sums to 1.
-            var weightSums = activeInsights.Sum(insight => GetValue(insight));
-            var weightFactor = 1.0;
-            if (weightSums > 1)
-            {
-                weightFactor = 1 / weightSums;
-            }
-            foreach (var insight in activeInsights)
-            {
-                result[insight] = (int)insight.Direction * GetValue(insight) * weightFactor;
-            }
-            return result;
+            return insight.Confidence.HasValue;
         }
 
         /// <summary>
@@ -78,6 +54,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="insight">The insight to create a target for</param>
         /// <returns>The value of the selected insight member</returns>
-        protected virtual double GetValue(Insight insight) => insight.Weight ?? 0;
+        protected override double GetValue(Insight insight) => insight.Confidence ?? 0;
     }
 }

@@ -16,21 +16,20 @@ AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm.Framework")
 
 from QuantConnect import Resolution
-from QuantConnect.Algorithm.Framework.Alphas import *
-from EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from InsightWeightingPortfolioConstructionModel import InsightWeightingPortfolioConstructionModel
 
-class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstructionModel):
+class ConfidenceWeightedPortfolioConstructionModel(InsightWeightingPortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that generates percent targets based on the
-    Insight.Weight. The target percent holdings of each Symbol is given by the Insight.Weight from the last
+    Insight.Confidence. The target percent holdings of each Symbol is given by the Insight.Confidence from the last
     active Insight for that symbol.
     For insights of direction InsightDirection.Up, long targets are returned and for insights of direction
     InsightDirection.Down, short targets are returned.
     If the sum of all the last active Insight per symbol is bigger than 1, it will factor down each target
     percent holdings proportionally so the sum is 1.
-    It will ignore Insight that have no Insight.Weight value.'''
+    It will ignore Insight that have no Insight.Confidence value.'''
 
     def __init__(self, resolution = Resolution.Daily):
-        '''Initialize a new instance of InsightWeightingPortfolioConstructionModel
+        '''Initialize a new instance of ConfidenceWeightedPortfolioConstructionModel
         Args:
             resolution: Rebalancing frequency'''
         super().__init__(resolution)
@@ -40,22 +39,8 @@ class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstruc
         target for this insight
         Args:
             insight: The insight to create a target for'''
-        # Ignore insights that don't have Weight value
-        return insight.Weight is not None
-
-    def DetermineTargetPercent(self, activeInsights):
-        '''Will determine the target percent for each insight
-        Args:
-            activeInsights: The active insights to generate a target for'''
-        result = {}
-        # We will adjust weights proportionally in case the sum is > 1 so it sums to 1.
-        weightSums = sum(self.GetValue(insight) for insight in activeInsights)
-        weightFactor = 1.0
-        if weightSums > 1:
-            weightFactor = 1 / weightSums
-        for insight in activeInsights:
-            result[insight] = insight.Direction * self.GetValue(insight) * weightFactor
-        return result
+        # Ignore insights that don't have Confidence value
+        return insight.Confidence is not None
 
     def GetValue(self, insight):
         '''Method that will determine which member will be used to compute the weights and gets its value
@@ -63,4 +48,4 @@ class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstruc
             insight: The insight to create a target for
         Returns:
             The value of the selected insight member'''
-        return insight.Weight
+        return insight.Confidence

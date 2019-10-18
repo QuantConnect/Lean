@@ -276,6 +276,7 @@
     <Compile Include="Algorithm\Framework\InsightTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\DuplicateKeyPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\BlackLittermanOptimizationPortfolioConstructionModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\ConfidenceWeightedPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\InsightWeightingPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetCollectionTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\EqualWeightingPortfolioConstructionModelTests.cs" />

@@ -167,6 +167,7 @@
     <Compile Include="CustomDataAddDataCoarseSelectionRegressionAlgorithm.cs" />
     <Compile Include="CustomDataAddDataRegressionAlgorithm.cs" />
     <Compile Include="DynamicSecurityDataAlgorithm.cs" />
+    <Compile Include="ConfidenceWeightedFrameworkAlgorithm.cs" />
     <Compile Include="SmartInsiderDataAlgorithm.cs" />
     <Compile Include="BasicTemplateAlgorithm.cs" />
     <Compile Include="Benchmarks\StatefulCoarseUniverseSelectionBenchmark.cs" />
