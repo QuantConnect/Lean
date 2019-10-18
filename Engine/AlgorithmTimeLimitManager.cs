@@ -181,9 +181,10 @@ namespace QuantConnect.Lean.Engine
         {
             var message = $"Algorithm took longer than {_timeLoopMaximum.TotalMinutes} minutes on a single time loop.";
 
-            if (_additionalMinutes > 0)
+            var minutesAboveStandardLimit = _additionalMinutes - (int) _timeLoopMaximum.TotalMinutes;
+            if (minutesAboveStandardLimit > 0)
             {
-                message = $"{message} An additional {_additionalMinutes} minutes were also allocated and consumed.";
+                message = $"{message} An additional {minutesAboveStandardLimit} minutes were also allocated and consumed.";
             }
 
             message = $"{message} CurrentTimeStepElapsed: {currentTimeStepElapsed.TotalMinutes:0.0} minutes";
