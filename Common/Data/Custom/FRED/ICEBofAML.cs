@@ -14,9 +14,9 @@
  *
 */
 
-namespace QuantConnect.Data.Custom.FRED
+namespace QuantConnect.Data.Custom.Fred
 {
-    public static partial class FredDataSeries
+    public static partial class FredSeries
     {
         public static class ICEBofAML
         {

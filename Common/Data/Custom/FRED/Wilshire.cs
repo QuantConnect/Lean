@@ -14,21 +14,19 @@
  *
 */
 
-
-
-namespace QuantConnect.Data.Custom.FRED
+namespace QuantConnect.Data.Custom.Fred
 {
-    public static partial class FredDataSeries
+    public static partial class FredSeries
     {
         /// <summary>
-        /// Wilshire Indexes help clients, investment professionals and researchers accurately measure and better understand the market. The Wilshire Index family leverages more than 40 years of Wilshire performance measurement expertise and employs unbiased construction rules. 
+        /// Wilshire Indexes help clients, investment professionals and researchers accurately measure and better understand the market. The Wilshire Index family leverages more than 40 years of Wilshire performance measurement expertise and employs unbiased construction rules.
         /// </summary>
         public static class Wilshire
         {
             ///<summary>
             /// Wilshire US Small-Cap Value Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLSMLCAPVALPR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -37,7 +35,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire 2500 Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILL2500PR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -46,7 +44,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire 4500 Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILL4500PR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -55,7 +53,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire 2500 Value Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILL2500PRVAL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -64,7 +62,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire 2500 Growth Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILL2500PRGR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -73,7 +71,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Small-Cap Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLSMLCAPPR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -82,7 +80,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire 5000 Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILL5000PR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -91,7 +89,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Small-Cap Growth Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLSMLCAPGRPR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -100,7 +98,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Mid-Cap Value Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLMIDCAPVALPR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -109,7 +107,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Real Estate Securities Price Index (Wilshire US RESI) (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLRESIPR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -118,7 +116,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Large-Cap Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLLRGCAPPR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -127,7 +125,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Mid-Cap Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLMIDCAPPR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -136,7 +134,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Mid-Cap Growth Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLMIDCAPGRPR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -145,7 +143,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Micro-Cap Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLMICROCAPPR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -154,7 +152,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Real Estate Investment Trust Price Index (Wilshire US REIT) (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLREITPR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -163,7 +161,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Large-Cap Value Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLLRGCAPVALPR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -172,7 +170,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Large-Cap Growth Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLLRGCAPGRPR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -181,7 +179,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire 5000 Full Cap Price Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILL5000PRFC
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. The designation Full Cap for an index signifies a float adjusted market capitalization that includes shares of stock not considered available to "ordinary" investors. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -190,7 +188,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Mid-Cap Value Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLMIDCAPVAL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -199,7 +197,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Mid-Cap Growth Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLMIDCAPGR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -208,7 +206,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Mid-Cap Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLMIDCAP
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -217,7 +215,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Real Estate Securities Total Market Index (Wilshire US RESI) (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLRESIND
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -226,7 +224,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire 4500 Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILL4500IND
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -235,7 +233,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire 5000 Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILL5000IND
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -244,7 +242,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Large-Cap Growth Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLLRGCAPGR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -253,7 +251,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Micro-Cap Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLMICROCAP
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -262,7 +260,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire 2500 Value Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILL2500INDVAL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -271,7 +269,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Small-Cap Growth Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLSMLCAPGR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -280,7 +278,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Small-Cap Value Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLSMLCAPVAL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -289,7 +287,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Large-Cap Value Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLLRGCAPVAL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -298,7 +296,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Real Estate Investment Trust Total Market Index (Wilshire US REIT) (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLREITIND
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -307,7 +305,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire 2500 Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILL2500IND
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -316,7 +314,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Small-Cap Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLSMLCAP
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -325,7 +323,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire US Large-Cap Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILLLRGCAP
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -334,7 +332,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire 2500 Growth Total Market Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILL2500INDGR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
@@ -343,7 +341,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Wilshire 5000 Total Market Full Cap Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/WILL5000INDFC
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. The designation Full Cap for an index signifies a float adjusted market capitalization that includes shares of stock not considered available to "ordinary" investors. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. For more information about the various indexes, visit Wilshire Associates (http://www.wilshire.com/Indexes/).
             /// </remarks>

@@ -1,14 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
 using Newtonsoft.Json;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 
-namespace QuantConnect.Data.Custom.FRED
+namespace QuantConnect.Data.Custom.Fred
 {
     public class Observation
     {
@@ -25,7 +37,7 @@ namespace QuantConnect.Data.Custom.FRED
         public string Value { get; set; }
     }
 
-    public class FREDApi : BaseData
+    public class FredApi : BaseData
     {
         [JsonProperty("realtime_start")]
         public string RealtimeStart { get; set; }
@@ -115,14 +127,14 @@ namespace QuantConnect.Data.Custom.FRED
         /// <returns></returns>
         public override BaseData Reader(SubscriptionDataConfig config, string content, DateTime date, bool isLiveMode)
         {
-            var series = JsonConvert.DeserializeObject<FREDApi>(content).Observations;
-            var objectList = new List<FREDApi>();
+            var series = JsonConvert.DeserializeObject<FredApi>(content).Observations;
+            var objectList = new List<FredApi>();
             foreach (var observation in series)
             {
                 decimal value;
                 if (decimal.TryParse(observation.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
                 {
-                    objectList.Add(new FREDApi
+                    objectList.Add(new FredApi
                     {
                         Symbol = config.Symbol,
                         Time = observation.Date - TimeSpan.FromDays(1),

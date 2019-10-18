@@ -14,9 +14,9 @@
  *
 */
 
-namespace QuantConnect.Data.Custom.FRED
+namespace QuantConnect.Data.Custom.Fred
 {
-    public static partial class FredDataSeries
+    public static partial class FredSeries
     {
         /// <summary>
         /// Commercial paper (CP) consists of short-term, promissory notes issued primarily by corporations. Maturities range up to 270 days but average about 30 days. Many companies use CP to raise cash needed for current transactions, and many find it to be a lower-cost alternative to bank loans.
@@ -29,7 +29,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 3-Month AA Nonfinancial Commercial Paper Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DCPN3M
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Discount Basis
             /// </remarks>
@@ -38,7 +38,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 1-Month AA Nonfinancial Commercial Paper Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DCPN30
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Discount Basis
             /// </remarks>
@@ -47,7 +47,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 2-Month AA Nonfinancial Commercial Paper Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DCPN2M
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Discount Basis
             /// </remarks>
@@ -56,7 +56,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 3-Month AA Financial Commercial Paper Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DCPF3M
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Discount Basis
             /// </remarks>
@@ -65,7 +65,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 2-Month AA Financial Commercial Paper Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DCPF2M
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Discount Basis
             /// </remarks>
@@ -74,7 +74,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 1-Month AA Financial Commercial Paper Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/DCPF1M
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Discount Basis
             /// </remarks>
@@ -83,7 +83,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 1 and 4 Days, Used in Calculating the A2/P2 Nonfinancial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN14A2P2VOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -92,7 +92,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 5 and 9 Days, Used in Calculating the A2/P2 Nonfinancial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN59A2P2VOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -101,7 +101,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 5 and 9 Days, Used in Calculating the A2/P2 Nonfinancial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN59A2P2AMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -110,7 +110,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 41 and 80 Days, Used in Calculating the AA Nonfinancial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN4180AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -119,7 +119,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Greater Than 80 Days, Used in Calculating the AA Asset-Backed Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ABGT80AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -128,7 +128,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 41 and 80 Days, Used in Calculating the AA Nonfinancial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN4180AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -137,7 +137,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 41 and 80 Days, Used in Calculating the A2/P2 Nonfinancial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN4180A2P2VOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -146,7 +146,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 41 and 80 Days, Used in Calculating the A2/P2 Nonfinancial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN4180A2P2AMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -155,7 +155,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 21 and 40 Days, Used in Calculating the AA Nonfinancial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN2140AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -164,7 +164,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 21 and 40 Days, Used in Calculating the AA Nonfinancial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN2140AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -173,7 +173,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 21 and 40 Days, Used in Calculating the A2/P2 Nonfinancial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN2140A2P2VOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -182,7 +182,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 21 and 40 Days, Used in Calculating the A2/P2 Nonfinancial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN2140A2P2AMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -191,7 +191,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 1 and 4 Days, Used in Calculating the AA Nonfinancial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN14AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -200,7 +200,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 10 and 20 Days, Used in Calculating the A2/P2 Nonfinancial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN1020A2P2VOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -209,7 +209,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 10 and 20 Days, Used in Calculating the AA Nonfinancial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN1020AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -218,7 +218,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 21 and 40 Days, Used in Calculating the AA Asset-Backed Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AB2140AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -227,7 +227,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 10 and 20 Days, Used in Calculating the AA Nonfinancial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN1020AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -236,7 +236,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 1 and 4 Days, Used in Calculating the A2/P2 Nonfinancial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN14A2P2AMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -245,7 +245,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 1 and 4 Days, Used in Calculating the AA Nonfinancial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN14AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -254,7 +254,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Commercial Paper Issues with a Maturity Between 1 and 4 Days (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MKT14MKTAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -263,7 +263,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 10 and 20 Days, Used in Calculating the A2/P2 Nonfinancial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN1020A2P2AMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -272,7 +272,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Greater Than 80 Days, Used in Calculating the AA Financial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FINGT80AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -281,7 +281,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 10 and 20 Days, Used in Calculating the AA Financial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FIN1020AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -290,7 +290,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 1 and 4 Days, Used in Calculating the AA Financial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FIN14AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -299,7 +299,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 1 and 4 Days, Used in Calculating the AA Financial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FIN14AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -308,7 +308,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Commercial Paper Issues with a Maturity Between 10 and 20 Days (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MKT1020MKTAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -317,7 +317,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Commercial Paper Issues with a Maturity Between 10 and 20 Days (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MKT1020MKTVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -326,7 +326,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 21 and 40 Days, Used in Calculating the AA Financial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FIN2140AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -335,7 +335,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Commercial Paper Issues with a Maturity Between 1 and 4 Days (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MKT14MKTVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -344,7 +344,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issuers of Commercial Paper with a Maturity Between 21 and 40 Days (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MKT2140MKTAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -353,7 +353,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Commercial Paper Issues with a Maturity Between 21 and 40 Days (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MKT2140MKTVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -362,7 +362,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 21 and 40 Days, Used in Calculating the AA Financial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FIN2140AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -371,7 +371,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issuers of Commercial Paper with a Maturity Between 41 and 80 Days (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MKT4180MKTAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -380,7 +380,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 5 and 9 Days, Used in Calculating the AA Nonfinancial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN59AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -389,7 +389,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Commercial Paper Issues with a Maturity Between 41 and 80 Days (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MKT4180MKTVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -398,7 +398,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Commercial Paper Issues with a Maturity Between 5 and 9 Days (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MKT59MKTVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -407,7 +407,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issuers of Commercial Paper with a Maturity Greater Than 80 Days (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MKTGT80MKTAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -416,7 +416,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Commercial Paper Issues with a Maturity Greater Than 80 Days (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MKTGT80MKTVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -425,7 +425,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 41 and 80 Days, Used in Calculating the AA Financial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FIN4180AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -434,7 +434,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 41 and 80 Days, Used in Calculating the AA Financial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FIN4180AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -443,7 +443,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 41 and 80 Days, Used in Calculating the AA Asset-Backed Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AB4180AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -452,7 +452,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 5 and 9 Days, Used in Calculating the AA Financial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FIN59AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -461,7 +461,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 5 and 9 Days, Used in Calculating the AA Financial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FIN59AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -470,7 +470,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Greater Than 80 Days, Used in Calculating the AA Financial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FINGT80AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -479,7 +479,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 10 and 20 Days, Used in Calculating the AA Financial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/FIN1020AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -488,7 +488,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 21 and 40 Days, Used in Calculating the AA Asset-Backed Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AB2140AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -497,7 +497,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issuers of Commercial Paper with a Maturity Between 5 and 9 Days (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MKT59MKTAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -506,7 +506,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Greater Than 80 Days, Used in Calculating the AA Asset-Backed Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/ABGT80AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -515,7 +515,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 5 and 9 Days, Used in Calculating the AA Nonfinancial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFIN59AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -524,7 +524,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 15-Day AA Asset-backed Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPAAAD15NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -533,7 +533,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 5 and 9 Days, Used in Calculating the AA Asset-Backed Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AB59AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -542,7 +542,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 41 and 80 Days, Used in Calculating the AA Asset-Backed Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AB4180AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -551,7 +551,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 15-Day A2/P2 Nonfinancial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPNA2P2D15NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -560,7 +560,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 7-Day A2/P2 Nonfinancial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPNA2P2D07NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -569,7 +569,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Overnight A2/P2 Nonfinancial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPNA2P2D01NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -578,7 +578,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 90-Day AA Financial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPFAAD90NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -587,7 +587,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Overnight AA Asset-backed Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPAAAD01NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -596,7 +596,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 30-Day A2/P2 Nonfinancial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPNA2P2D30NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -605,7 +605,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 60-Day AA Financial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPFAAD60NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -614,7 +614,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 30-Day AA Financial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPFAAD30NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -623,7 +623,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Greater Than 80 Days, Used in Calculating the A2/P2 Nonfinancial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFINGT80A2P2AMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -632,7 +632,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 30-Day AA Asset-backed Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPAAAD30NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -641,7 +641,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 60-Day AA Asset-backed Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPAAAD60NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -650,7 +650,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 90-Day AA Asset-backed Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPAAAD90NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -659,7 +659,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 15-Day AA Financial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPFAAD15NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -668,7 +668,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 7-Day AA Financial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPFAAD07NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -677,7 +677,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 7-Day AA Asset-backed Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPAAAD07NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -686,7 +686,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Overnight AA Financial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPFAAD01NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -695,7 +695,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 60-Day A2/P2 Nonfinancial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPNA2P2D60NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -704,7 +704,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 5 and 9 Days, Used in Calculating the AA Asset-Backed Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AB59AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -713,7 +713,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 1 and 4 Days, Used in Calculating the AA Asset-Backed Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AB14AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -722,7 +722,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Greater Than 80 Days, Used in Calculating the A2/P2 Nonfinancial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFINGT80A2P2VOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -731,7 +731,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 1 and 4 Days, Used in Calculating the AA Asset-Backed Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AB14AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -740,7 +740,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 90-Day A2/P2 Nonfinancial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPNA2P2D90NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -749,7 +749,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Between 10 and 20 Days, Used in Calculating the AA Asset-Backed Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AB1020AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -758,7 +758,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Greater Than 80 Days, Used in Calculating the AA Nonfinancial Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFINGT80AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -767,7 +767,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Overnight AA Nonfinancial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPNAAD01NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -776,7 +776,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Total Value of Issues, with a Maturity Between 10 and 20 Days, Used in Calculating the AA Asset-Backed Commercial Paper Rates (in Millions of Dollars)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/AB1020AAAMT
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -785,7 +785,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 7-Day AA Nonfinancial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPNAAD07NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -794,7 +794,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 90-Day AA Nonfinancial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPNAAD90NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -803,7 +803,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 15-Day AA Nonfinancial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPNAAD15NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -812,7 +812,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 30-Day AA Nonfinancial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPNAAD30NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -821,7 +821,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 60-Day AA Nonfinancial Commercial Paper Interest Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RIFSPPNAAD60NB
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -830,7 +830,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Number of Issues, with a Maturity Greater Than 80 Days, Used in Calculating the AA Nonfinancial Commercial Paper Rates (in Number)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/NONFINGT80AAVOL
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// For more information, please see http://www.federalreserve.gov/releases/cp/about.htm.
             /// </remarks>
@@ -839,7 +839,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// 3-Month Commercial Paper Minus Federal Funds Rate (in Percent)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CPFF
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Series is calculated as the spread between 3-Month AA Financial Commercial Paper (RIFSPPFAAD90NB) and Effective Federal Funds Rate (https://fred.stlouisfed.org/series/DFF).
             /// Starting with the update on June 21, 2019, the Treasury bond data used in calculating interest rate spreads is obtained directly from the U.S.Treasury Department(https://www.treasury.gov/resource-center/data-chart-center/interest-rates/Pages/TextView.aspx?data=yield).

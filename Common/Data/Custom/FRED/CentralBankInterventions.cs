@@ -14,18 +14,16 @@
  *
 */
 
-
-
-namespace QuantConnect.Data.Custom.FRED
+namespace QuantConnect.Data.Custom.Fred
 {
-    public static partial class FredDataSeries
+    public static partial class FredSeries
     {
         public static class CentralBankInterventions
         {
             ///<summary>
             /// Japan Intervention: Japanese Bank purchases of DM/Euro against JPY (in 100 Million Yen)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPINTDDMEJPY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// (+) numbers mean purchases of DM/EURO (Sell Yen), (-)numbers mean sales of DM/EURO (Buy Yen). Unpublished Data
             /// Copyright, 2016, Bank of Japan.
@@ -35,7 +33,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Japan Intervention: Japanese Bank purchases of USD against DM (in 100 Million Yen)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPINTDEXR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// (+) numbers mean purchases of USD (Sell DM), (-)numbers mean sales of USD (Buy DM). Unpublished Data
             /// Copyright, 2016, Bank of Japan.
@@ -45,7 +43,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Japan Intervention: Japanese Bank purchases of USD against Rupiah (in 100 Million Yen)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPINTDUSDRP
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// (+) numbers mean purchases of USD (Sell Rupiah), (-)numbers mean sales of USD (Buy Rupiah). Unpublished Data
             /// Copyright, 2016, Bank of Japan.
@@ -55,7 +53,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// U.S. Intervention: in Market Transactions in the JPY/USD (Millions of USD) (in Millions of USD)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USINTDMRKTJPY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// (+) numbers mean purchases of USD, (-) numbers mean sales of USD. Unpublished data.
             /// </remarks>
@@ -64,7 +62,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// U.S. Intervention: With-Customer Transactions in Other Currencies (Millions of USD) (in Millions of USD)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USINTDCSOTH
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// (+) numbers mean purchases of USD, (-) numbers mean sales of USD. Unpublished data.
             /// </remarks>
@@ -73,7 +71,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// U.S. Intervention: With-Customer Transactions in the JPY/USD (Millions of USD) (in Millions of USD)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USINTDCSJPY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// (+) numbers mean purchases of USD, (-) numbers mean sales of USD. Unpublished data.
             /// </remarks>
@@ -82,7 +80,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// U.S. Intervention: With-Customer Transactions in the DEM/USD (Euro since 1999) (Millions of USD) (in Millions of USD)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USINTDCSDM
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// (+) numbers mean purchases of USD, (-) numbers mean sales of USD. Unpublished data.
             /// </remarks>
@@ -91,7 +89,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// U.S. Intervention: in Market Transactions in Other Currencies (Millions of USD) (in Millions of USD)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USINTDMRKTOTH
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// (+) numbers mean purchases of USD, (-) numbers mean sales of USD. Unpublished data.
             /// </remarks>
@@ -100,7 +98,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Turkish Intervention: Central Bank of Turkey Purchases of USD (Millions of USD) (in Millions of USD)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/TRINTDEXR
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// (+) numbers mean purchases of USD, (-) numbers mean sales of USD. Unpublished data.
             /// Since 2002, the foreign exchange interventions have started to be published through press releases at the same day when the intervention was made. The amount that was bought/sold at an intervention is published on the first working day of the month which comes after 3 months following the intervention date.
@@ -110,7 +108,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Japan Intervention: Japanese Bank purchases of USD against JPY (in 100 Million Yen)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPINTDUSDJPY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// (+) numbers mean purchases of the USD (sell Yen), (-) numbers mean sales of USD (buy Yen). Unpublished data.
             /// Copyright, 2016, Bank of Japan.
@@ -120,7 +118,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// U.S. Intervention: in Market Transactions in the DEM/USD (Euro since 1999) (Millions of USD) (in Millions of USD)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USINTDMRKTDM
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// (+)numbers mean purchases of USD, (-) numbers mean sales of USD. Unpublished data.
             /// </remarks>
@@ -129,7 +127,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Swiss Intervention: Swiss National Bank Purchases of DEM against CHF (Millions of DEM) (in Millions of DEM)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHINTDCHFDM
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Swiss National Bank.
             /// (+) numbers mean purchases of DEM, (-) numbers mean sales of DEM. Unpublished data.
@@ -139,7 +137,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Swiss Intervention: Swiss National Bank Purchases of USD against DEM (Millions of USD) (in Millions of USD)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHINTDUSDDM
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Swiss National Bank.
             /// (+) numbers mean purchases of USD, (-) numbers mean sales of USD. Unpublished data.
@@ -149,7 +147,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Swiss Intervention: Swiss National Bank Purchases of USD against JPY (Millions of USD) (in Millions of USD)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHINTDUSDJPY
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Swiss National Bank.
             /// (+) numbers mean purchases of USD, (-) numbers mean sales of USD. Unpublished data.
@@ -159,7 +157,7 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Swiss Intervention: Swiss National Bank Purchases of USD against CHF (Millions of USD) (in Millions of USD)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHINTDCHFUSD
-            /// </summary> 
+            /// </summary>
             /// <remarks>
             /// Copyright, 2016, Swiss National Bank.
             /// (+) numbers mean purchases of USD, (-) numbers mean sales of USD. Unpublished data.
@@ -169,9 +167,9 @@ namespace QuantConnect.Data.Custom.FRED
             ///<summary>
             /// Mexican Intervention: Banco de Mexico Purchase on the USD (in Millions of USD)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/MEXINTDUSD
-            /// </summary> 
+            /// </summary>
             /// <remarks>
-            /// 
+            ///
             /// </remarks>
             public static string BancoDeMexicoPurchaseOnTheUsd => "MEXINTDUSD";
         }

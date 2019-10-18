@@ -1,9 +1,25 @@
-﻿using System;
+﻿/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+using System;
 using System.IO;
 
-namespace QuantConnect.Data.Custom.FRED
+namespace QuantConnect.Data.Custom.Fred
 {
-    public class FRED : BaseData
+    public class Fred : BaseData
     {
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream
@@ -45,7 +61,7 @@ namespace QuantConnect.Data.Custom.FRED
         {
             var csv = line.Split(',');
 
-            return new FRED
+            return new Fred
             {
                 Symbol = config.Symbol,
                 Value = Parse.Decimal(csv[1]),
@@ -59,7 +75,7 @@ namespace QuantConnect.Data.Custom.FRED
         /// <returns>A clone of the object</returns>
         public override BaseData Clone()
         {
-            return new FRED()
+            return new Fred()
             {
                 Symbol = Symbol,
                 Value = Value,
