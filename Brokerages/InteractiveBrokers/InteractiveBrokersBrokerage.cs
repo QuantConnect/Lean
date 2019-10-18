@@ -503,10 +503,28 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             var utcNow = DateTime.UtcNow;
-            var holdings = _accountData.AccountHoldings
-                .Select(x => ObjectActivator.Clone(x.Value))
-                .Where(x => x.Quantity != 0 && !OptionSymbol.IsOptionContractExpired(x.Symbol, utcNow))
-                .ToList();
+            var holdings = new List<Holding>();
+
+            foreach (var kvp in _accountData.AccountHoldings)
+            {
+                var holding = ObjectActivator.Clone(kvp.Value);
+
+                if (holding.Quantity != 0)
+                {
+                    if (OptionSymbol.IsOptionContractExpired(holding.Symbol, utcNow))
+                    {
+                        OnMessage(
+                            new BrokerageMessageEvent(
+                                BrokerageMessageType.Warning,
+                                "ExpiredOptionHolding",
+                                $"The option holding for [{holding.Symbol.Value}] is expired and will be excluded from the account holdings."));
+
+                        continue;
+                    }
+
+                    holdings.Add(holding);
+                }
+            }
 
             return holdings;
         }
