@@ -923,7 +923,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 throw new ArgumentException("Expected order with populated BrokerId for updating orders.");
             }
 
-            _requestInformation[ibOrderId] = "IBPlaceOrder: " + contract;
+            _requestInformation[ibOrderId] = $"IBPlaceOrder: {order.Symbol.Value} ({contract})";
 
             CheckRateLimiting();
 
@@ -943,7 +943,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return $"{contract} {contract.LastTradeDateOrContractMonth.ToStringInvariant()} {contract.Strike.ToStringInvariant()} {contract.Right}";
         }
 
-        private string GetPrimaryExchange(Contract contract)
+        private string GetPrimaryExchange(Contract contract, Symbol symbol)
         {
             ContractDetails details;
             if (_contractDetails.TryGetValue(GetUniqueKey(contract), out details))
@@ -951,7 +951,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return details.Summary.PrimaryExch;
             }
 
-            details = GetContractDetails(contract);
+            details = GetContractDetails(contract, symbol);
             if (details == null)
             {
                 // we were unable to find the contract details
@@ -961,7 +961,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return details.Summary.PrimaryExch;
         }
 
-        private string GetTradingClass(Contract contract)
+        private string GetTradingClass(Contract contract, Symbol symbol)
         {
             ContractDetails details;
             if (_contractDetails.TryGetValue(GetUniqueKey(contract), out details))
@@ -969,7 +969,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return details.Summary.TradingClass;
             }
 
-            details = GetContractDetails(contract);
+            details = GetContractDetails(contract, symbol);
             if (details == null)
             {
                 // we were unable to find the contract details
@@ -979,7 +979,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return details.Summary.TradingClass;
         }
 
-        private decimal GetMinTick(Contract contract)
+        private decimal GetMinTick(Contract contract, Symbol symbol)
         {
             ContractDetails details;
             if (_contractDetails.TryGetValue(GetUniqueKey(contract), out details))
@@ -987,7 +987,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 return (decimal) details.MinTick;
             }
 
-            details = GetContractDetails(contract);
+            details = GetContractDetails(contract, symbol);
             if (details == null)
             {
                 // we were unable to find the contract details
@@ -997,14 +997,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return (decimal) details.MinTick;
         }
 
-        private ContractDetails GetContractDetails(Contract contract)
+        private ContractDetails GetContractDetails(Contract contract, Symbol symbol)
         {
             const int timeout = 60; // sec
 
             ContractDetails details = null;
             var requestId = GetNextRequestId();
 
-            _requestInformation[requestId] = "GetContractDetails: " + contract;
+            _requestInformation[requestId] = $"GetContractDetails: {symbol.Value} ({contract})";
 
             var manualResetEvent = new ManualResetEvent(false);
 
@@ -1038,10 +1038,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             return details;
         }
 
-        private string GetFuturesContractExchange(Contract contract)
+        private string GetFuturesContractExchange(Contract contract, string ticker)
         {
             // searching for available contracts on different exchanges
-            var contractDetails = FindContracts(contract);
+            var contractDetails = FindContracts(contract, ticker);
 
             var exchanges = _futuresExchanges.Values.Reverse().ToArray();
 
@@ -1052,13 +1052,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     .FirstOrDefault();
         }
 
-        private IEnumerable<ContractDetails> FindContracts(Contract contract)
+        private IEnumerable<ContractDetails> FindContracts(Contract contract, string ticker)
         {
             const int timeout = 60; // sec
 
             var requestId = GetNextRequestId();
 
-            _requestInformation[requestId] = "FindContracts: " + contract;
+            _requestInformation[requestId] = $"FindContracts: {ticker} ({contract})";
 
             var manualResetEvent = new ManualResetEvent(false);
             var contractDetails = new List<ContractDetails>();
@@ -1626,15 +1626,15 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var stopLimitOrder = order as StopLimitOrder;
             if (limitOrder != null)
             {
-                ibOrder.LmtPrice = Convert.ToDouble(RoundPrice(limitOrder.LimitPrice, GetMinTick(contract)));
+                ibOrder.LmtPrice = Convert.ToDouble(RoundPrice(limitOrder.LimitPrice, GetMinTick(contract, order.Symbol)));
             }
             else if (stopMarketOrder != null)
             {
-                ibOrder.AuxPrice = Convert.ToDouble(RoundPrice(stopMarketOrder.StopPrice, GetMinTick(contract)));
+                ibOrder.AuxPrice = Convert.ToDouble(RoundPrice(stopMarketOrder.StopPrice, GetMinTick(contract, order.Symbol)));
             }
             else if (stopLimitOrder != null)
             {
-                var minTick = GetMinTick(contract);
+                var minTick = GetMinTick(contract, order.Symbol);
                 ibOrder.LmtPrice = Convert.ToDouble(RoundPrice(stopLimitOrder.LimitPrice, minTick));
                 ibOrder.AuxPrice = Convert.ToDouble(RoundPrice(stopLimitOrder.StopPrice, minTick));
             }
@@ -1777,7 +1777,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (symbol.ID.SecurityType == SecurityType.Equity)
             {
-                contract.PrimaryExch = GetPrimaryExchange(contract);
+                contract.PrimaryExch = GetPrimaryExchange(contract, symbol);
             }
 
             if (symbol.ID.SecurityType == SecurityType.Option)
@@ -1787,7 +1787,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 contract.Strike = Convert.ToDouble(symbol.ID.StrikePrice);
                 contract.Symbol = ibSymbol;
                 contract.Multiplier = _securityProvider.GetSecurity(symbol)?.SymbolProperties.ContractMultiplier.ToString(CultureInfo.InvariantCulture) ?? "100";
-                contract.TradingClass = GetTradingClass(contract);
+                contract.TradingClass = GetTradingClass(contract, symbol);
             }
 
             if (symbol.ID.SecurityType == SecurityType.Future)
@@ -1801,7 +1801,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 if (symbol.ID.Market == Market.USA)
                 {
                     contract.Exchange = "";
-                    contract.Exchange = GetFuturesContractExchange(contract);
+                    contract.Exchange = GetFuturesContractExchange(contract, symbol.Value);
                 }
                 else
                 {
@@ -2354,7 +2354,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                                 var id = GetNextTickerId();
                                 var contract = CreateContract(subscribeSymbol);
 
-                                _requestInformation[id] = "Subscribe: " + contract;
+                                _requestInformation[id] = $"Subscribe: {symbol.Value} ({contract})";
 
                                 CheckRateLimiting();
 
@@ -2374,7 +2374,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                                 _subscribedSymbols[symbol] = id;
                                 _subscribedTickers[id] = new SubscriptionEntry { Symbol = subscribeSymbol };
 
-                                Log.Trace("InteractiveBrokersBrokerage.Subscribe(): Subscribe Processed: {0} ({1}) # {2}", symbol.Value, contract.ToString(), id);
+                                Log.Trace($"InteractiveBrokersBrokerage.Subscribe(): Subscribe Processed: {symbol.Value} ({contract}) # {id}");
                             }
                         }
                     }
@@ -2755,7 +2755,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else
             {
                 // processing request
-                var results = FindContracts(contract);
+                var results = FindContracts(contract, contract.Symbol);
 
                 // filtering results
                 var filteredResults =
@@ -2818,8 +2818,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var startTime = request.Resolution == Resolution.Daily ? request.StartTimeUtc.Date : request.StartTimeUtc;
             var endTime = request.Resolution == Resolution.Daily ? request.EndTimeUtc.Date : request.EndTimeUtc;
 
-            Log.Trace("InteractiveBrokersBrokerage::GetHistory(): Submitting request: {0}({1}): {2} {3} UTC -> {4} UTC",
-                request.Symbol.Value, contract, request.Resolution, startTime, endTime);
+            Log.Trace($"InteractiveBrokersBrokerage::GetHistory(): Submitting request: {request.Symbol.Value} ({contract}): {request.Resolution} {startTime} UTC -> {endTime} UTC");
 
             DateTimeZone exchangeTimeZone;
             if (!_symbolExchangeTimeZones.TryGetValue(request.Symbol, out exchangeTimeZone))
@@ -2892,7 +2891,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var historyPiece = new List<TradeBar>();
                 var historicalTicker = GetNextTickerId();
 
-                _requestInformation[historicalTicker] = "GetHistory: " + contract;
+                _requestInformation[historicalTicker] = $"GetHistory: {request.Symbol.Value} ({contract})";
 
                 EventHandler<IB.HistoricalDataEventArgs> clientOnHistoricalData = (sender, args) =>
                 {
