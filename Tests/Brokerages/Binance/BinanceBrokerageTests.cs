@@ -35,6 +35,8 @@ namespace QuantConnect.Tests.Brokerages.Binance
     [TestFixture, Ignore("This test requires a configured and testable Binance practice account")]
     public partial class BinanceBrokerageTests : BrokerageTests
     {
+        private BinanceRestApiClient _bibanceApi;
+
         /// <summary>
         /// Creates the brokerage under test and connects it
         /// </summary>
@@ -56,11 +58,23 @@ namespace QuantConnect.Tests.Brokerages.Binance
             var priceProvider = new Mock<IPriceProvider>();
             priceProvider.Setup(a => a.GetLastPrice(It.IsAny<Symbol>())).Returns(1.234m);
 
+            var wssUrl = Config.Get("binance-wss", "wss://stream.binance.com:9443");
+            var restUrl = Config.Get("binance-rest", "https://api.binance.com");
+            var apiKey = Config.Get("binance-api-key");
+            var apiSecret = Config.Get("binance-api-secret");
+
+            _bibanceApi = new BinanceRestApiClient(
+                new BinanceSymbolMapper(),
+                algorithm.Object?.Portfolio,
+                restUrl,
+                apiKey,
+                apiSecret);
+
             return new BinanceBrokerage(
-                    Config.Get("binance-wss", "wss://stream.binance.com:9443"),
-                    Config.Get("binance-rest", "https://api.binance.com"),
-                    Config.Get("binance-api-key"),
-                    Config.Get("binance-api-secret"),
+                    wssUrl,
+                    restUrl,
+                    apiKey,
+                    apiSecret,
                     algorithm.Object,
                     priceProvider.Object
                 );
@@ -104,7 +118,7 @@ namespace QuantConnect.Tests.Brokerages.Binance
         /// </summary>
         protected override decimal GetAskPrice(Symbol symbol)
         {
-            var prices = ((BinanceBrokerage)this.Brokerage).GetTickers();
+            var prices = _bibanceApi.GetTickers();
             return prices
                 .FirstOrDefault(t => t.Symbol == SymbolMapper.GetBrokerageSymbol(symbol))
                 .Price;

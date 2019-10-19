@@ -341,6 +341,7 @@
     <Compile Include="Binance\BinanceBrokerage.cs" />
     <Compile Include="Binance\BinanceBrokerageFactory.cs" />
     <Compile Include="Binance\BinanceOrderBook.cs" />
+    <Compile Include="Binance\BinanceOrderSubmitEventArgs.cs" />
     <Compile Include="Binance\BinanceRestApiClient.cs" />
     <Compile Include="Binance\BinanceSymbolMapper.cs" />
     <Compile Include="Binance\BinanceWebSocketWrapper.cs" />

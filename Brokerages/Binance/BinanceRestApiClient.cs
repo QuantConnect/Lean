@@ -44,6 +44,21 @@ namespace QuantConnect.Brokerages.Binance
         private readonly RateGate _restRateLimiter = new RateGate(10, TimeSpan.FromSeconds(1));
         private readonly object _listenKeyLocker = new object();
         private readonly string userDataStreamEndpoint = "/api/v1/userDataStream";
+        
+        /// <summary>
+        /// Event that fires each time an order is filled
+        /// </summary>
+        public event EventHandler<BinanceOrderSubmitEventArgs> OrderSubmit;
+
+        /// <summary>
+        /// Event that fires each time an order is filled
+        /// </summary>
+        public event EventHandler<OrderEvent> OrderStatusChanged;
+
+        /// <summary>
+        /// Event that fires when an error is encountered in the brokerage
+        /// </summary>
+        public event EventHandler<BrokerageMessageEvent> Message;
 
         /// <summary>
         /// Key Header
@@ -212,28 +227,7 @@ namespace QuantConnect.Brokerages.Binance
                     return true;
                 }
 
-                var brokerId = raw.Id;
-                if (CachedOrderIDs.ContainsKey(order.Id))
-                {
-                    order.BrokerId.Clear();
-                    order.BrokerId.Add(brokerId);
-                }
-                else
-                {
-                    order.BrokerId.Add(brokerId);
-                    CachedOrderIDs.TryAdd(order.Id, order);
-                }
-
-                // Generate submitted event
-                OnOrderEvent(new OrderEvent(
-                    order,
-                    Time.UnixMillisecondTimeStampToDateTime(raw.TransactionTime),
-                    OrderFee.Zero,
-                    "Binance Order Event")
-                { Status = OrderStatus.Submitted }
-                );
-                Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
-
+                OnOrderSubmit(raw, order);
                 return true;
             }
 
@@ -461,7 +455,7 @@ namespace QuantConnect.Brokerages.Binance
             {
                 if (!_restRateLimiter.WaitToProceed(TimeSpan.Zero))
                 {
-                    OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "RateLimit",
+                    Log.Trace("Brokerage.OnMessage(): " + new BrokerageMessageEvent(BrokerageMessageType.Warning, "RateLimit",
                         "The API request has been rate limited. To avoid this message, please reduce the frequency of API calls."));
 
                     _restRateLimiter.WaitToProceed();
@@ -542,5 +536,78 @@ namespace QuantConnect.Brokerages.Binance
                 throw new ArgumentException($"BinanceBrokerage.ConvertResolution: Unsupported resolution type: {resolution}");
             }
         }
+
+        /// <summary>
+        /// Event invocator for the OrderFilled event
+        /// </summary>
+        /// <param name="newOrder">The brokerage order submit result</param>
+        /// <param name="order">The lean order</param>
+        protected void OnOrderSubmit(Messages.NewOrder newOrder, Order order)
+        {
+            try
+            {
+                OrderSubmit?.Invoke(
+                    this, 
+                    new BinanceOrderSubmitEventArgs(newOrder.Id, order));
+
+                // Generate submitted event
+                OnOrderEvent(new OrderEvent(
+                    order,
+                    Time.UnixMillisecondTimeStampToDateTime(newOrder.TransactionTime),
+                    OrderFee.Zero,
+                    "Binance Order Event")
+                { Status = OrderStatus.Submitted }
+                );
+                Log.Trace($"Order submitted successfully - OrderId: {order.Id}");
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+        }
+
+        /// <summary>
+        /// Event invocator for the OrderFilled event
+        /// </summary>
+        /// <param name="e">The OrderEvent</param>
+        protected void OnOrderEvent(OrderEvent e)
+        {
+            try
+            {
+                Log.Debug("Brokerage.OnOrderEvent(): " + e);
+
+                OrderStatusChanged?.Invoke(this, e);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+        }
+
+        /// <summary>
+        /// Event invocator for the Message event
+        /// </summary>
+        /// <param name="e">The error</param>
+        protected virtual void OnMessage(BrokerageMessageEvent e)
+        {
+            try
+            {
+                if (e.Type == BrokerageMessageType.Error)
+                {
+                    Log.Error("Brokerage.OnMessage(): " + e);
+                }
+                else
+                {
+                    Log.Trace("Brokerage.OnMessage(): " + e);
+                }
+
+                Message?.Invoke(this, e);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+        }
+
     }
 }

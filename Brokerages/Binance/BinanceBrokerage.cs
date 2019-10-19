@@ -76,8 +76,12 @@ namespace QuantConnect.Brokerages.Binance
                 apiKey,
                 apiSecret);
 
-            WebSocket = new WebSocketWrapper();
+            _apiClient.OrderSubmit += (s, e) => OnOrderSubmit(e);
+            _apiClient.OrderStatusChanged += (s, e) => OnOrderEvent(e);
+            _apiClient.Message += (s, e) => OnMessage(e);
 
+            WebSocket = new WebSocketWrapper();
+            
             WebSocket.Message += OnMessage;
             WebSocket.Error += OnError;
             WebSocket.Open += (s, e) =>
@@ -297,6 +301,26 @@ namespace QuantConnect.Brokerages.Binance
                     Period = period,
                     EndTime = Time.UnixMillisecondTimeStampToDateTime(kline.OpenTime + (long)period.TotalMilliseconds)
                 };
+            }
+        }
+
+        /// <summary>
+        /// Event invocator for the OrderFilled event
+        /// </summary>
+        /// <param name="e">The OrderEvent</param>
+        protected void OnOrderSubmit(BinanceOrderSubmitEventArgs e)
+        {
+            var brokerId = e.BrokerId;
+            var order = e.Order;
+            if (CachedOrderIDs.ContainsKey(order.Id))
+            {
+                CachedOrderIDs[order.Id].BrokerId.Clear();
+                CachedOrderIDs[order.Id].BrokerId.Add(brokerId);
+            }
+            else
+            {
+                order.BrokerId.Add(brokerId);
+                CachedOrderIDs.TryAdd(order.Id, order);
             }
         }
 
