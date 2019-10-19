@@ -17,8 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
@@ -148,6 +146,9 @@ namespace QuantConnect.Lean.Engine.RealTime
 
                     try
                     {
+                        // since we changed this event's next time, we need to resort all of them
+                        _sortingScheduledEventsRequired = true;
+
                         _isolatorLimitProvider.Consume(scheduledEvent, scheduledEvent.NextEventUtcTime);
                     }
                     catch (ScheduledEventException scheduledEventException)
@@ -163,9 +164,6 @@ namespace QuantConnect.Lean.Engine.RealTime
                         Algorithm.RunTimeError = scheduledEventException;
                     }
                 }
-
-                // since we changed this event's next time, we need to resort all of them
-                _sortingScheduledEventsRequired = true;
             }
         }
 

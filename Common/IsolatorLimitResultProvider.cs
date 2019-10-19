@@ -46,13 +46,13 @@ namespace QuantConnect
             }
 
             var timeProvider = RealTimeProvider.Instance;
-            isolatorLimitProvider.Consume(timeProvider, scheduledEvent.Name, () => scheduledEvent.Scan(scanTimeUtc));
+            isolatorLimitProvider.Consume(timeProvider, () => scheduledEvent.Scan(scanTimeUtc));
         }
 
         /// <summary>
         /// Executes the provided code block and while the code block is running, continually consume from
         /// the limit result provided one token each minute. This function allows the code to run for the
-        /// first full second without requesting additional time from the provider. Following that, every
+        /// first full minute without requesting additional time from the provider. Following that, every
         /// minute an additional one minute will be requested from the provider.
         /// </summary>
         /// <remarks>
@@ -63,7 +63,6 @@ namespace QuantConnect
         public static void Consume(
             this IIsolatorLimitResultProvider isolatorLimitProvider,
             ITimeProvider timeProvider,
-            string name,
             Action code
             )
         {

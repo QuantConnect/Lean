@@ -37,7 +37,6 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.Collections.Concurrent;
-using Python.Runtime;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Crypto;
 using QuantConnect.Algorithm.Framework.Alphas;

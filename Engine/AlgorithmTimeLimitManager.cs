@@ -74,7 +74,8 @@ namespace QuantConnect.Lean.Engine
 
             // maintains existing implementation behavior to reset the time to min value and then
             // when the isolator pings IsWithinLimit, invocation of CurrentTimeStepElapsed will cause
-            // it to update to the current time. IIRC, this was done to avoid a potential race
+            // it to update to the current time. This was done as a performance improvement and moved
+            // accessing DateTime.UtcNow from the algorithm manager thread to the isolator thread
             _currentTimeStepTime = DateTime.MinValue;
             Interlocked.Exchange(ref _additionalMinutes, 0L);
         }

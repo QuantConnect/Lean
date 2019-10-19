@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Common
             Task.Run(() =>
             {
                 var name = nameof(ConsumeRequestsAdditionalTimeAfterOneMinute);
-                provider.Consume(timeProvider, name, code);
+                provider.Consume(timeProvider, code);
                 consumeCompleted.Set();
             });
 
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Common
                 timeProvider.Advance(TimeSpan.FromMinutes(.99));
                 Thread.Sleep(5);
             };
-            provider.Consume(timeProvider, nameof(ConsumeDoesNotRequestAdditionalTimeBeforeOneMinute), code);
+            provider.Consume(timeProvider, code);
 
             Assert.IsEmpty(provider.Invocations);
         }
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Common
                 Thread.Sleep(15);
             };
 
-            provider.Consume(timeProvider, nameof(ConsumeDoesNotRequestAdditionalTimeBeforeOneMinute), code);
+            provider.Consume(timeProvider, code);
 
             Assert.AreEqual(3, provider.Invocations.Count);
             Assert.IsTrue(provider.Invocations.TrueForAll(invoc => invoc == 1));
