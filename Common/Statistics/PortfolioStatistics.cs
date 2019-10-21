@@ -234,7 +234,9 @@ namespace QuantConnect.Statistics
 
             TreynorRatio = Beta == 0 ? 0 : (annualPerformance - RiskFreeRate) / Beta;
 
-            ProbabilisticSharpeRatio = Statistics.ProbabilisticSharpeRatio(listPerformance, benchmarkSharpeRatio:1).SafeDecimalCast();
+            // deannualize a 1 sharpe ratio
+            var benchmarkSharpeRatio = 1.0d / Math.Sqrt(252);
+            ProbabilisticSharpeRatio = Statistics.ProbabilisticSharpeRatio(listPerformance, benchmarkSharpeRatio).SafeDecimalCast();
         }
 
         /// <summary>
