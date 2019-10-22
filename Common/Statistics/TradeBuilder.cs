@@ -79,7 +79,13 @@ namespace QuantConnect.Statistics
         /// </summary>
         public List<Trade> ClosedTrades
         {
-            get { return _closedTrades; }
+            get
+            {
+                lock (_closedTrades)
+                {
+                    return new List<Trade>(_closedTrades);
+                }
+            }
         }
 
         /// <summary>
@@ -474,24 +480,26 @@ namespace QuantConnect.Statistics
         /// </summary>
         private void AddNewTrade(Trade trade)
         {
-            _closedTrades.Add(trade);
-
-            // Due to memory constraints in live mode, we cap the number of trades
-            if (!_liveMode)
-                return;
-
-            // maximum number of trades
-            if (_closedTrades.Count > LiveModeMaxTradeCount)
+            lock (_closedTrades)
             {
-                _closedTrades.RemoveRange(0, _closedTrades.Count - LiveModeMaxTradeCount);
-            }
+                _closedTrades.Add(trade);
 
-            // maximum age of trades
-            while (_closedTrades.Count > 0 && _closedTrades[0].ExitTime.Date.AddMonths(LiveModeMaxTradeAgeMonths) < DateTime.Today)
-            {
-                _closedTrades.RemoveAt(0);
+                // Due to memory constraints in live mode, we cap the number of trades
+                if (!_liveMode)
+                    return;
+
+                // maximum number of trades
+                if (_closedTrades.Count > LiveModeMaxTradeCount)
+                {
+                    _closedTrades.RemoveRange(0, _closedTrades.Count - LiveModeMaxTradeCount);
+                }
+
+                // maximum age of trades
+                while (_closedTrades.Count > 0 && _closedTrades[0].ExitTime.Date.AddMonths(LiveModeMaxTradeAgeMonths) < DateTime.Today)
+                {
+                    _closedTrades.RemoveAt(0);
+                }
             }
         }
-
     }
 }
