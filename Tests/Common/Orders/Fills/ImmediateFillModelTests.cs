@@ -46,7 +46,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
@@ -73,7 +74,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
@@ -100,7 +102,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
@@ -137,7 +140,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
@@ -174,7 +178,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 100m));
@@ -223,7 +228,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
@@ -272,7 +278,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101m));
@@ -313,7 +320,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 102m));
@@ -355,7 +363,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             var time = reference;
@@ -404,7 +413,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             var time = reference;
@@ -490,7 +500,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, noon, 101.123m));
@@ -527,7 +538,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, noon, 101.123m));
@@ -565,7 +577,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
@@ -620,7 +633,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
@@ -675,7 +689,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
 
@@ -727,7 +742,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));

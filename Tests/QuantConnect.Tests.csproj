@@ -330,6 +330,7 @@
     <Compile Include="Common\Securities\Options\OptionSymbolTests.cs" />
     <Compile Include="Common\Securities\ProcessVolatilityHistoryRequirementsTests.cs" />
     <Compile Include="Common\Securities\DynamicSecurityDataTests.cs" />
+    <Compile Include="Common\Securities\SecurityCacheProviderTests.cs" />
     <Compile Include="Common\Securities\SecurityHoldingTests.cs" />
     <Compile Include="Common\Securities\SecurityServiceTests.cs" />
     <Compile Include="Common\Securities\TestAccountCurrencyProvider.cs" />

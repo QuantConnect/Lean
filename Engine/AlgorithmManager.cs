@@ -148,11 +148,6 @@ namespace QuantConnect.Lean.Engine
             var hasOnDataDelistings = AddMethodInvoker<Delistings>(algorithm, methodInvokers);
             var hasOnDataSymbolChangedEvents = AddMethodInvoker<SymbolChangedEvents>(algorithm, methodInvokers);
 
-            // Algorithm 3.0 data accessors
-            var hasOnDataSlice = algorithm.GetType().GetMethods()
-                .Where(x => x.Name == "OnData" && x.GetParameters().Length == 1 && x.GetParameters()[0].ParameterType == typeof (Slice))
-                .FirstOrDefault(x => x.DeclaringType == algorithm.GetType()) != null;
-
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
             foreach (var config in algorithm.SubscriptionManager.Subscriptions)
             {
@@ -274,11 +269,8 @@ namespace QuantConnect.Lean.Engine
                     foreach (var security in timeSlice.SecurityChanges.AddedSecurities)
                     {
                         security.IsTradable = true;
-                        if (!algorithm.Securities.ContainsKey(security.Symbol))
-                        {
-                            // add the new security
-                            algorithm.Securities.Add(security);
-                        }
+                        // uses TryAdd, so don't need to worry about duplicates here
+                        algorithm.Securities.Add(security);
                     }
 
                     var activeSecurities = algorithm.UniverseManager.ActiveSecurities;
@@ -297,17 +289,8 @@ namespace QuantConnect.Lean.Engine
                 foreach (var update in timeSlice.SecuritiesUpdateData)
                 {
                     var security = update.Target;
-                    security.Update(update.Data, update.DataType, update.ContainsFillForwardData);
 
-                    // set custom derivative data in the underlying's cache
-                    if (security.Symbol.SecurityType == SecurityType.Base && security.Symbol.HasUnderlying)
-                    {
-                        Security underlyingSecurity;
-                        if (algorithm.Securities.TryGetValue(security.Symbol.Underlying, out underlyingSecurity))
-                        {
-                            underlyingSecurity.Cache.StoreData(update.Data, update.DataType);
-                        }
-                    }
+                    security.Update(update.Data, update.DataType, update.ContainsFillForwardData);
 
                     if (!update.IsInternalConfig)
                     {

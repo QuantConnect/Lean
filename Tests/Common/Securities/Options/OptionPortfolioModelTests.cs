@@ -43,7 +43,8 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 cash,
                 new OptionSymbolProperties(SymbolProperties.GetDefault("EUR")),
                 portfolio.CashBook,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             option.Underlying = security;
             security.SetMarketPrice(new Tick { Value = 1000 });
@@ -77,7 +78,8 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetMarketPrice(new Tick { Value = 100 });
             var timeKeeper = new TimeKeeper(reference);

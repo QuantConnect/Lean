@@ -95,7 +95,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             security.SetLeverage(10m);
             securities.Add(CASH, security);
@@ -208,7 +209,7 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add(usdJwbSecurity);
             securities.Add(mchUsdSecurity);
 
-            var securityService = new SecurityService(portfolio.CashBook, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), dataManager.Algorithm, RegisteredSecurityDataTypesProvider.Null);
+            var securityService = new SecurityService(portfolio.CashBook, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), dataManager.Algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(portfolio));
 
             portfolio.CashBook.EnsureCurrencyDataFeeds(securities, subscriptions, DefaultBrokerageModel.DefaultMarketMap, SecurityChanges.None, securityService);
 
@@ -284,7 +285,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             var security = securities[Symbols.AAPL];
@@ -403,7 +405,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities[Symbols.AAPL].SetLeverage(2m);
@@ -470,7 +473,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
 
@@ -503,7 +507,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     new SymbolProperties("", Currencies.USD, 50, 0.01m, 1),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
 
@@ -536,7 +541,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     new SymbolProperties("", Currencies.USD, 50, 0.01m, 1),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
 
@@ -569,7 +575,8 @@ namespace QuantConnect.Tests.Common.Securities
                     portfolio.CashBook["EUR"],
                     SymbolProperties.GetDefault("EUR"),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
 
@@ -603,7 +610,8 @@ namespace QuantConnect.Tests.Common.Securities
                     portfolio.CashBook["EUR"],
                     SymbolProperties.GetDefault("EUR"),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities[Symbols.DE30EUR].SettlementModel = new AccountCurrencyImmediateSettlementModel();
@@ -643,7 +651,8 @@ namespace QuantConnect.Tests.Common.Securities
                     portfolio.CashBook["EUR"],
                     SymbolProperties.GetDefault("EUR"),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
 
@@ -676,7 +685,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
 
@@ -703,7 +713,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities[Symbols.AAPL].Holdings.SetHoldings(100, 100);
@@ -731,7 +742,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities[Symbols.AAPL].Holdings.SetHoldings(100, -100);
@@ -895,7 +907,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             var security = securities[Symbols.AAPL];
@@ -963,7 +976,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             var security = securities[Symbols.AAPL];
@@ -1034,7 +1048,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1096,7 +1111,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1157,7 +1173,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1219,7 +1236,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1282,7 +1300,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1343,7 +1362,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1412,7 +1432,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1477,7 +1498,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1542,7 +1564,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1603,7 +1626,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1663,7 +1687,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1724,7 +1749,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1786,7 +1812,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1847,7 +1874,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1909,7 +1937,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -1973,7 +2002,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -2039,7 +2069,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -2105,7 +2136,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             securities.Add(
@@ -2240,7 +2272,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 )
             );
             Assert.Throws<InvalidOperationException>(() => portfolio.SetAccountCurrency(Currencies.USD));

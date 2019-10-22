@@ -40,7 +40,8 @@ namespace QuantConnect.Tests.Common.Securities.Cryptos
                 cash,
                 SymbolProperties.GetDefault(quote),
                 portfolio.CashBook,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
 
             Assert.AreEqual(symbol.Value.RemoveFromEnd(quote), crypto.BaseCurrencySymbol);
@@ -70,7 +71,8 @@ namespace QuantConnect.Tests.Common.Securities.Cryptos
                 cash,
                 SymbolProperties.GetDefault(quote),
                 portfolio.CashBook,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
 
             Assert.AreEqual(symbol.Value.RemoveFromEnd(quote), crypto.BaseCurrencySymbol);

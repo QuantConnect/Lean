@@ -57,7 +57,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 marketHoursDatabase,
                 symbolPropertiesDataBase,
                 algorithm,
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCacheProvider(algorithm.Portfolio));
             algorithm.Securities.SetSecurityService(securityService);
             var dataManager = new DataManager(feed,
                 new UniverseSelection(algorithm, securityService),

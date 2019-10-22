@@ -78,12 +78,13 @@ namespace QuantConnect.Securities.Cfd
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypes)
+            IRegisteredSecurityDataTypesProvider registeredTypes,
+            SecurityCache securityCache)
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
                 new CfdExchange(exchangeHours),
-                new CfdCache(),
+                securityCache,
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new ConstantFeeModel(0),

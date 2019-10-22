@@ -139,7 +139,8 @@ namespace QuantConnect.Lean.Engine
                         marketHoursDatabase,
                         symbolPropertiesDatabase,
                         algorithm,
-                        registeredTypesProvider);
+                        registeredTypesProvider,
+                        new SecurityCacheProvider(algorithm.Portfolio));
 
                     algorithm.Securities.SetSecurityService(securityService);
 

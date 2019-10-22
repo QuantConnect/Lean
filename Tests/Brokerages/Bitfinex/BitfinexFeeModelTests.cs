@@ -47,7 +47,8 @@ namespace QuantConnect.Tests.Brokerages.Bitfinex
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 );
                 security.SetMarketPrice(new Tick(DateTime.UtcNow, Symbol, LowPrice, HighPrice));
 

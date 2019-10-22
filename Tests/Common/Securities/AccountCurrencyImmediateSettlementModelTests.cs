@@ -41,7 +41,8 @@ namespace QuantConnect.Tests.Common.Securities
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
 
             portfolio.SetCash(1000);
@@ -82,7 +83,8 @@ namespace QuantConnect.Tests.Common.Securities
                 portfolio.CashBook["EUR"],
                 SymbolProperties.GetDefault("EUR"),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
 
             Assert.AreEqual(1000, portfolio.Cash);

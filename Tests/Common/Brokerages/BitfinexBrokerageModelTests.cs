@@ -45,7 +45,8 @@ namespace QuantConnect.Tests.Common.Brokerages
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 );
             }
         }
@@ -84,7 +85,8 @@ namespace QuantConnect.Tests.Common.Brokerages
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
 
             var model = new BitfinexBrokerageModel();
@@ -109,7 +111,8 @@ namespace QuantConnect.Tests.Common.Brokerages
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
 
             var model = new BitfinexBrokerageModel();

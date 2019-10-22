@@ -87,7 +87,12 @@ namespace QuantConnect.Jupyter
 
                 var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
                 var registeredTypes = new RegisteredSecurityDataTypesProvider();
-                var securityService = new SecurityService(Portfolio.CashBook, MarketHoursDatabase, symbolPropertiesDataBase, this, registeredTypes);
+                var securityService = new SecurityService(Portfolio.CashBook,
+                    MarketHoursDatabase,
+                    symbolPropertiesDataBase,
+                    this,
+                    registeredTypes,
+                    new SecurityCacheProvider(Portfolio));
                 Securities.SetSecurityService(securityService);
                 SubscriptionManager.SetDataManager(
                     new DataManager(new NullDataFeed(),

@@ -85,10 +85,10 @@ namespace QuantConnect.Tests.Common
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    Thread.Sleep(15);
                     timeProvider.AdvanceSeconds(45);
+                    // give the monitoring task time to request more time
+                    Thread.Sleep(20);
                 }
-                Thread.Sleep(15);
             };
 
             provider.Consume(timeProvider, code);

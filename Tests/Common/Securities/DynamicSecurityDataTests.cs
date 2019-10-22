@@ -26,49 +26,77 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class DynamicSecurityDataTests
     {
+        private SecurityCache _cache;
+        private RegisteredSecurityDataTypesProvider _dataTypesProvider;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _cache = new SecurityCache();
+            _dataTypesProvider = new RegisteredSecurityDataTypesProvider();
+            _dataTypesProvider.RegisterType(typeof(TradeBar));
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _cache.Reset();
+        }
+
         [Test]
         public void StoreData_UsesTypeName_AsKey()
         {
-            var data = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
-            data.StoreData(typeof(int), new[] {1});
+            var data = new DynamicSecurityData(_dataTypesProvider, _cache);
+            _cache.StoreData(new List<TradeBar>
+            {
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 15m, 10000)
+            }, typeof(TradeBar));
 
-            Assert.IsTrue(data.HasProperty(typeof(int).Name));
+            Assert.IsTrue(data.HasProperty(typeof(TradeBar).Name));
 
-            var arr = (IReadOnlyList<int>) data.GetProperty(typeof(int).Name);
+            var arr = (IReadOnlyList<TradeBar>)data.GetProperty(typeof(TradeBar).Name);
             Assert.AreEqual(1, arr.Count);
-            Assert.AreEqual(1, arr[0]);
+            Assert.AreEqual(15, arr[0].Close);
         }
 
         [Test]
         public void Get_UsesTypeName_AsKey_And_ReturnsLastItem()
         {
-            var data = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
-            data.StoreData(typeof(int), new[] {1, 2, 3});
+            var data = new DynamicSecurityData(_dataTypesProvider, _cache);
+            _cache.StoreData(new List<TradeBar> {
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000),
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 2, 10000),
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 3, 10000)
+            }, typeof(TradeBar));
 
-            var item = data.Get<int>();
-            Assert.AreEqual(3, item);
+            var item = data.Get<TradeBar>();
+            Assert.AreEqual(3, item.Close);
         }
 
         [Test]
         public void GetAll_UsesTypeName_AsKey()
         {
-            var data = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
-            data.SetProperty(typeof(int).Name, new Lazy<object>(() => new[] { 1 }));
+            var data = new DynamicSecurityData(_dataTypesProvider, _cache);
+            _cache.StoreData(new List<TradeBar> {
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000),
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 2, 10000),
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 3, 10000)
+            }, typeof(TradeBar));
 
-            var arr = data.GetAll<int>();
-            Assert.AreEqual(1, arr.Count);
-            Assert.AreEqual(1, arr[0]);
+            var arr = data.GetAll<TradeBar>();
+            Assert.AreEqual(3, arr.Count);
+            Assert.AreEqual(1, arr[0].Close);
         }
 
         [Test]
         public void AccessesDataDynamically()
         {
-            var securityData = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
-            var data = new List<TradeBar>
-            {
-                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 15m, 10000)
-            };
-            securityData.StoreData(typeof(TradeBar), data);
+            var securityData = new DynamicSecurityData(_dataTypesProvider, _cache);
+            _cache.StoreData(new List<TradeBar> {
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000),
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 2, 10000),
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 3, 10000)
+            }, typeof(TradeBar));
 
             dynamic dynamicSecurityData = securityData;
             var tradeBars = dynamicSecurityData.TradeBar;
@@ -76,11 +104,25 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void DataCanNotBeSetDynamically()
+        {
+            var securityData = new DynamicSecurityData(_dataTypesProvider, _cache);
+            var data = new List<TradeBar> {
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
+            };
+
+            dynamic dynamicSecurityData = securityData;
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                dynamicSecurityData.TradeBar = data;
+            });
+        }
+
+        [Test]
         public void AccessingPropertyThatDoesNotExists_ThrowsKeyNotFoundException_WhenNotIncludedInRegisteredTypes()
         {
             var registeredTypes = new RegisteredSecurityDataTypesProvider();
-            registeredTypes.RegisterType(typeof(TradeBar));
-            dynamic securityData = new DynamicSecurityData(registeredTypes);
+            dynamic securityData = new DynamicSecurityData(registeredTypes, _cache);
 
             Assert.Throws<KeyNotFoundException>(() =>
             {
@@ -93,7 +135,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var registeredTypes = new RegisteredSecurityDataTypesProvider();
             registeredTypes.RegisterType(typeof(TradeBar));
-            dynamic securityData = new DynamicSecurityData(registeredTypes);
+            dynamic securityData = new DynamicSecurityData(registeredTypes, _cache);
 
             var tradeBars = securityData.TradeBar;
             Assert.IsInstanceOf<List<TradeBar>>(tradeBars);
@@ -103,8 +145,11 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void Py_StoreData_GetProperty()
         {
-            var data = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
-            data.StoreData(typeof(int), new[] { 1 });
+            var data = new DynamicSecurityData(_dataTypesProvider, _cache);
+            _cache.StoreData(new List<TradeBar>
+            {
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
+            }, typeof(TradeBar));
 
             using (Py.GIL())
             {
@@ -112,15 +157,14 @@ namespace QuantConnect.Tests.Common.Securities
                     @"
 from clr import AddReference
 AddReference(""QuantConnect.Common"")
-AddReference(""System"")
-from System import *
 from QuantConnect import *
+from QuantConnect.Data.Market import *
 
 def Test(dynamicData):
-    data = dynamicData.GetProperty(""Int32"")
+    data = dynamicData.GetProperty(""TradeBar"")
     if len(data) != 1:
         raise Exception('Unexpected length')
-    if data[0] != 1:
+    if data[0].Close != 1:
         raise Exception('Unexpected value')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(data));
@@ -130,8 +174,11 @@ def Test(dynamicData):
         [Test]
         public void Py_StoreData_HasProperty()
         {
-            var data = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
-            data.StoreData(typeof(int), new[] { 1 });
+            var data = new DynamicSecurityData(_dataTypesProvider, _cache);
+            _cache.StoreData(new List<TradeBar>
+            {
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
+            }, typeof(TradeBar));
 
             using (Py.GIL())
             {
@@ -139,12 +186,11 @@ def Test(dynamicData):
                     @"
 from clr import AddReference
 AddReference(""QuantConnect.Common"")
-AddReference(""System"")
-from System import *
 from QuantConnect import *
+from QuantConnect.Data.Market import *
 
 def Test(dynamicData):
-    data = dynamicData.HasProperty(""Int32"")
+    data = dynamicData.HasProperty(""TradeBar"")
     if not data:
         raise Exception('Unexpected HasProperty result')").GetAttr("Test");
 
@@ -155,8 +201,11 @@ def Test(dynamicData):
         [Test]
         public void Py_StoreData_Get_UsesTypeName()
         {
-            var data = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
-            data.StoreData(typeof(int), new[] { 1 });
+            var data = new DynamicSecurityData(_dataTypesProvider, _cache);
+            _cache.StoreData(new List<TradeBar>
+            {
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
+            }, typeof(TradeBar));
 
             using (Py.GIL())
             {
@@ -164,23 +213,26 @@ def Test(dynamicData):
                     @"
 from clr import AddReference
 AddReference(""QuantConnect.Common"")
-AddReference(""System"")
-from System import *
 from QuantConnect import *
+from QuantConnect.Data.Market import *
 
 def Test(dynamicData):
-    data = dynamicData.Get(Int32)
-    if data != 1:
+    data = dynamicData.Get(TradeBar)
+    if data.Close != 1:
         raise Exception('Unexpected value')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(data));
             }
         }
 
-        [Test] public void Py_StoreData_GetAll_UsesTypeName()
+        [Test]
+        public void Py_StoreData_GetAll_UsesTypeName()
         {
-            var data = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
-            data.StoreData(typeof(int), new[] { 1 });
+            var data = new DynamicSecurityData(_dataTypesProvider, _cache);
+            _cache.StoreData(new List<TradeBar>
+            {
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000)
+            }, typeof(TradeBar));
 
             using (Py.GIL())
             {
@@ -188,15 +240,14 @@ def Test(dynamicData):
                     @"
 from clr import AddReference
 AddReference(""QuantConnect.Common"")
-AddReference(""System"")
-from System import *
 from QuantConnect import *
+from QuantConnect.Data.Market import *
 
 def Test(dynamicData):
-    data = dynamicData.GetAll(Int32)
+    data = dynamicData.GetAll(TradeBar)
     if len(data) != 1:
         raise Exception('Unexpected length')
-    if data[0] != 1:
+    if data[0].Close != 1:
         raise Exception('Unexpected value')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(data));
@@ -206,8 +257,12 @@ def Test(dynamicData):
         [Test]
         public void Py_Get_UsesTypeName_AsKey_And_ReturnsLastItem()
         {
-            var data = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
-            data.StoreData(typeof(int), new[] { 1, 2, 3 });
+            var data = new DynamicSecurityData(_dataTypesProvider, _cache);
+            _cache.StoreData(new List<TradeBar>
+            {
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 1, 10000),
+                new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 3, 10000)
+            }, typeof(TradeBar));
 
             using (Py.GIL())
             {
@@ -215,13 +270,12 @@ def Test(dynamicData):
                     @"
 from clr import AddReference
 AddReference(""QuantConnect.Common"")
-AddReference(""System"")
-from System import *
 from QuantConnect import *
+from QuantConnect.Data.Market import *
 
 def Test(dynamicData):
-    data = dynamicData.Get(Int32)
-    if data != 3:
+    data = dynamicData.Get(TradeBar)
+    if data.Close != 3:
         raise Exception('Unexpected value')").GetAttr("Test");
 
                 Assert.DoesNotThrow(() => test(data));
@@ -231,12 +285,12 @@ def Test(dynamicData):
         [Test]
         public void Py_GetAll_TradeBar()
         {
-            var securityData = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
+            var securityData = new DynamicSecurityData(_dataTypesProvider, _cache);
             var data = new List<TradeBar>
             {
                 new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 15m, 10000)
             };
-            securityData.StoreData(typeof(TradeBar), data);
+            _cache.StoreData(data, typeof(TradeBar));
 
             using (Py.GIL())
             {
@@ -259,12 +313,12 @@ def Test(dynamicData):
         [Test]
         public void Py_Get_TradeBar()
         {
-            var securityData = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
+            var securityData = new DynamicSecurityData(_dataTypesProvider, _cache);
             var data = new List<TradeBar>
             {
                 new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 15m, 10000)
             };
-            securityData.StoreData(typeof(TradeBar), data);
+            _cache.StoreData(data, typeof(TradeBar));
 
             using (Py.GIL())
             {
@@ -287,12 +341,12 @@ def Test(dynamicData):
         [Test]
         public void Py_Get_TradeBarArray()
         {
-            var securityData = new DynamicSecurityData(RegisteredSecurityDataTypesProvider.Null);
-            var data = new []
+            var securityData = new DynamicSecurityData(_dataTypesProvider, _cache);
+            var data = new[]
             {
                 new TradeBar(DateTime.UtcNow, Symbols.SPY, 10m, 20m, 5m, 15m, 10000)
             };
-            securityData.StoreData(typeof(TradeBar), data);
+            _cache.StoreData(data, typeof(TradeBar));
 
             using (Py.GIL())
             {
@@ -316,7 +370,7 @@ def Test(dynamicData):
         public void Py_GetTypeThatDoesNotExists_ThrowsKeyNotFoundException_WhenNotIncludedInRegisteredTypes()
         {
             var registeredTypes = new RegisteredSecurityDataTypesProvider();
-            dynamic securityData = new DynamicSecurityData(registeredTypes);
+            dynamic securityData = new DynamicSecurityData(registeredTypes, _cache);
 
             using (Py.GIL())
             {
@@ -340,7 +394,7 @@ def Test(dynamicData):
         {
             var registeredTypes = new RegisteredSecurityDataTypesProvider();
             registeredTypes.RegisterType(typeof(TradeBar));
-            dynamic securityData = new DynamicSecurityData(registeredTypes);
+            dynamic securityData = new DynamicSecurityData(registeredTypes, _cache);
 
             using (Py.GIL())
             {

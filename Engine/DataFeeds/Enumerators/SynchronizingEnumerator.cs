@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
@@ -200,7 +199,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private static IEnumerator<BaseData> GetBruteForceMethod(IEnumerator<BaseData>[] enumerators)
         {
             var ticks = DateTime.MaxValue.Ticks;
-            var collection = new ConcurrentDictionary<IEnumerator<BaseData>, int>();
+            var collection = new HashSet<IEnumerator<BaseData>>();
             foreach (var enumerator in enumerators)
             {
                 if (enumerator.MoveNext())
@@ -209,7 +208,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     {
                         ticks = Math.Min(ticks, enumerator.Current.EndTime.Ticks);
                     }
-                    collection.TryAdd(enumerator, 0);
+                    collection.Add(enumerator);
                 }
                 else
                 {
@@ -218,13 +217,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             }
 
             var frontier = new DateTime(ticks);
-            while (!collection.IsEmpty)
+            var toRemove = new List<IEnumerator<BaseData>>();
+            while (collection.Count > 0)
             {
                 var nextFrontierTicks = DateTime.MaxValue.Ticks;
-                foreach (var kvp in collection)
+                foreach (var enumerator in collection)
                 {
-                    var enumerator = kvp.Key;
-
                     while (enumerator.Current == null || enumerator.Current.EndTime <= frontier)
                     {
                         if (enumerator.Current != null)
@@ -233,8 +231,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                         }
                         if (!enumerator.MoveNext())
                         {
-                            int value;
-                            collection.TryRemove(enumerator, out value);
+                            toRemove.Add(enumerator);
                             break;
                         }
                         if (enumerator.Current == null)
@@ -247,6 +244,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     {
                         nextFrontierTicks = Math.Min(nextFrontierTicks, enumerator.Current.EndTime.Ticks);
                     }
+                }
+
+                if (toRemove.Count > 0)
+                {
+                    foreach (var enumerator in toRemove)
+                    {
+                        collection.Remove(enumerator);
+                    }
+                    toRemove.Clear();
                 }
 
                 frontier = new DateTime(nextFrontierTicks);

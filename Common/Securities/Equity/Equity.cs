@@ -45,12 +45,13 @@ namespace QuantConnect.Securities.Equity
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypes)
+            IRegisteredSecurityDataTypesProvider registeredTypes,
+            SecurityCache securityCache)
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
                 new EquityExchange(exchangeHours),
-                new EquityCache(),
+                securityCache,
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),

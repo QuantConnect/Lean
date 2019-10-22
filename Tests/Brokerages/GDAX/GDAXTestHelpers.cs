@@ -34,7 +34,8 @@ namespace QuantConnect.Tests.Brokerages.GDAX
                 new Cash(Currencies.USD, 1000, price),
                 new SymbolProperties("BTCUSD", Currencies.USD, 1, 1, 0.01m),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
         }
 

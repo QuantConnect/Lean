@@ -96,13 +96,14 @@ namespace QuantConnect.Securities.Future
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
-            IRegisteredSecurityDataTypesProvider registeredTypes
+            IRegisteredSecurityDataTypesProvider registeredTypes,
+            SecurityCache securityCache
             )
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
                 new FutureExchange(exchangeHours),
-                new FutureCache(),
+                securityCache,
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
                 new InteractiveBrokersFeeModel(),

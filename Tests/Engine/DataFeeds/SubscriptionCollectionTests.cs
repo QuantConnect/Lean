@@ -50,7 +50,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new Cash(Currencies.USD, 0, 1),
                 SymbolProperties.GetDefault(Currencies.USD),
                 ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
             );
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
             var enumerator = new EnqueueableEnumerator<BaseData>();
@@ -362,7 +363,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     new Cash(Currencies.USD, 0, 1),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 );
             }
             else if (type == SecurityType.Option)
@@ -376,7 +378,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     new Cash(Currencies.USD, 0, 1),
                     new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 );
             }
             else if (type == SecurityType.Future)
@@ -388,7 +391,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     new Cash(Currencies.USD, 0, 1),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
                 );
             }
             else

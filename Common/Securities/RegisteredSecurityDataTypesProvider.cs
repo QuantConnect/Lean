@@ -30,7 +30,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public static readonly IRegisteredSecurityDataTypesProvider Null = new RegisteredSecurityDataTypesProvider();
 
-        private readonly Dictionary<string, Type> _types = new Dictionary<string, Type>();
+        private readonly Dictionary<string, Type> _types = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Registers the specified type w/ the provider
