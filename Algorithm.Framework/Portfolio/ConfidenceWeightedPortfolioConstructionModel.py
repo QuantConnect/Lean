@@ -28,11 +28,11 @@ class ConfidenceWeightedPortfolioConstructionModel(InsightWeightingPortfolioCons
     percent holdings proportionally so the sum is 1.
     It will ignore Insight that have no Insight.Confidence value.'''
 
-    def __init__(self, resolution = Resolution.Daily):
+    def __init__(self, rebalancingParam = Resolution.Daily):
         '''Initialize a new instance of ConfidenceWeightedPortfolioConstructionModel
         Args:
-            resolution: Rebalancing frequency'''
-        super().__init__(resolution)
+            rebalancingParam: Rebalancing parameter. It can be a function, timedelta or Resolution'''
+        super().__init__(rebalancingParam)
 
     def ShouldCreateTargetForInsight(self, insight):
         '''Method that will determine if the portfolio construction model should create a

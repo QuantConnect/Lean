@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
@@ -31,6 +32,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class InsightWeightingPortfolioConstructionModel : EqualWeightingPortfolioConstructionModel
     {
+        /// <summary>
+        /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingFunc">Rebalancing function</param>
+        public InsightWeightingPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc)
+            : base(rebalancingFunc)
+        {
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="timeSpan">Rebalancing frequency</param>
+        public InsightWeightingPortfolioConstructionModel(TimeSpan timeSpan)
+            : base(timeSpan)
+        {
+        }
+
         /// <summary>
         /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
         /// </summary>

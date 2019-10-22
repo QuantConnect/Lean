@@ -326,6 +326,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             Assert.AreEqual(0, actualTargets.Count());
         }
 
+        [Test]
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void DoesNotThrowWithAlternativeOverloads(Language language)
+        {
+            Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, TimeSpan.FromDays(1)));
+            Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, Expiry.EndOfWeek));
+        }
 
         private Security GetSecurity(Symbol symbol)
         {
@@ -372,6 +380,36 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var changes = SecurityChanges.Added(_algorithm.Securities.Values.ToArray());
             algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
+        }
+
+        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm, TimeSpan span)
+        {
+            algorithm.SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(span));
+            if (language == Language.Python)
+            {
+                using (Py.GIL())
+                {
+                    var name = nameof(EqualWeightingPortfolioConstructionModel);
+                    var instance = Py.Import(name).GetAttr(name).Invoke(span.ToPython());
+                    var model = new PortfolioConstructionModelPythonWrapper(instance);
+                    algorithm.SetPortfolioConstruction(model);
+                }
+            }
+        }
+
+        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm, Func<DateTime, DateTime> func)
+        {
+            algorithm.SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(func));
+            if (language == Language.Python)
+            {
+                using (Py.GIL())
+                {
+                    var name = nameof(EqualWeightingPortfolioConstructionModel);
+                    var instance = Py.Import(name).GetAttr(name).Invoke(func.ToPython());
+                    var model = new PortfolioConstructionModelPythonWrapper(instance);
+                    algorithm.SetPortfolioConstruction(model);
+                }
+            }
         }
 
         private void SetUtcTime(DateTime dateTime)
