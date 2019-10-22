@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             Schedule.TrainingNow(() => Thread.Sleep(TimeSpan.FromMinutes(2.5)));
         }
 
-        public bool CanRunLocally => true;
+        public bool CanRunLocally => false;
         public Language[] Languages => new[] {Language.CSharp};
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>();
     }

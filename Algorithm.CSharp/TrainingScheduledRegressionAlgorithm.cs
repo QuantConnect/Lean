@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
             });
         }
 
-        public bool CanRunLocally => true;
+        public bool CanRunLocally => false;
         public Language[] Languages => new[] {Language.CSharp};
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>();
     }
