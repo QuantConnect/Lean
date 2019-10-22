@@ -20,6 +20,7 @@ using System.Linq;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests
 {
@@ -43,11 +44,37 @@ namespace QuantConnect.Tests
                 Config.Set("symbol-tick-limit", "100");
             }
 
-            AlgorithmRunner.RunLocalBacktest(parameters.Algorithm, parameters.Statistics, parameters.AlphaStatistics, parameters.Language);
+            if (parameters.Algorithm == "TrainingInitializeRegressionAlgorithm" ||
+                parameters.Algorithm == "TrainingOnDataRegressionAlgorithm")
+            {
+                // limit time loop to 90 seconds and set leaky bucket capacity to one minute w/ zero refill
+                Config.Set("algorithm-manager-time-loop-maximum", "1.5");
+                Config.Set("scheduled-event-leaky-bucket-capacity", "1");
+                Config.Set("scheduled-event-leaky-bucket-refill-amount", "0");
+            }
+
+            var algorithmManager = AlgorithmRunner.RunLocalBacktest(
+                parameters.Algorithm,
+                parameters.Statistics,
+                parameters.AlphaStatistics,
+                parameters.Language,
+                parameters.ExpectedFinalStatus
+            );
+
+            if (parameters.Algorithm == "TrainingOnDataRegressionAlgorithm")
+            {
+                // this training algorithm should have consumed the only minute available in the bucket
+                Assert.AreEqual(0, algorithmManager.TimeLimit.AdditionalTimeBucket.AvailableTokens);
+            }
         }
 
         private static TestCaseData[] GetRegressionTestParameters()
         {
+            var nonDefaultStatuses = new Dictionary<string, AlgorithmStatus>
+            {
+                {"TrainingInitializeRegressionAlgorithm", AlgorithmStatus.RuntimeError}
+            };
+
             // find all regression algorithms in Algorithm.CSharp
             return (
                 from type in typeof(BasicTemplateAlgorithm).Assembly.GetTypes()
@@ -55,9 +82,10 @@ namespace QuantConnect.Tests
                 where !type.IsAbstract                          // non-abstract
                 where type.GetConstructor(new Type[0]) != null  // has default ctor
                 let instance = (IRegressionAlgorithmDefinition) Activator.CreateInstance(type)
+                let status = nonDefaultStatuses.GetValueOrDefault(type.Name, AlgorithmStatus.Completed)
                 where instance.CanRunLocally                   // open source has data to run this algorithm
                 from language in instance.Languages
-                select new AlgorithmStatisticsTestParameters(type.Name, instance.ExpectedStatistics, language)
+                select new AlgorithmStatisticsTestParameters(type.Name, instance.ExpectedStatistics, language, status)
             )
             .OrderBy(x => x.Language).ThenBy(x => x.Algorithm)
             // generate test cases from test parameters
@@ -71,12 +99,19 @@ namespace QuantConnect.Tests
             public readonly Dictionary<string, string> Statistics;
             public readonly AlphaRuntimeStatistics AlphaStatistics;
             public readonly Language Language;
+            public readonly AlgorithmStatus ExpectedFinalStatus;
 
-            public AlgorithmStatisticsTestParameters(string algorithm, Dictionary<string, string> statistics, Language language)
+            public AlgorithmStatisticsTestParameters(
+                string algorithm,
+                Dictionary<string, string> statistics,
+                Language language,
+                AlgorithmStatus expectedFinalStatus
+                )
             {
                 Algorithm = algorithm;
                 Statistics = statistics;
                 Language = language;
+                ExpectedFinalStatus = expectedFinalStatus;
             }
         }
     }

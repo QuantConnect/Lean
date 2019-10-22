@@ -27,6 +27,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data.Fundamental;
 using System.Linq;
 using QuantConnect.Brokerages;
+using QuantConnect.Scheduling;
 using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm
@@ -1027,6 +1028,26 @@ namespace QuantConnect.Algorithm
         public IDataConsolidator Consolidate(Symbol symbol, Func<DateTime, CalendarInfo> calendarType, PyObject handler)
         {
             return Consolidate(symbol, calendarType, null, handler);
+        }
+
+        /// <summary>
+        /// Schedules the provided training code to execute immediately
+        /// </summary>
+        /// <param name="trainingCode">The training code to be invoked</param>
+        public ScheduledEvent Train(PyObject trainingCode)
+        {
+            return Schedule.TrainingNow(trainingCode);
+        }
+
+        /// <summary>
+        /// Schedules the training code to run using the specified date and time rules
+        /// </summary>
+        /// <param name="dateRule">Specifies what dates the event should run</param>
+        /// <param name="timeRule">Specifies the times on those dates the event should run</param>
+        /// <param name="trainingCode">The training code to be invoked</param>
+        public ScheduledEvent Train(IDateRule dateRule, ITimeRule timeRule, PyObject trainingCode)
+        {
+            return Schedule.Training(dateRule, timeRule, trainingCode);
         }
 
         /// <summary>

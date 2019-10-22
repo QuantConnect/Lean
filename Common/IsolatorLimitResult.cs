@@ -44,8 +44,8 @@ namespace QuantConnect
         /// <param name="errorMessage">The error message or an empty string if no error on the current time step</param>
         public IsolatorLimitResult(TimeSpan currentTimeStepElapsed, string errorMessage)
         {
-            CurrentTimeStepElapsed = currentTimeStepElapsed;
             ErrorMessage = errorMessage;
+            CurrentTimeStepElapsed = currentTimeStepElapsed;
         }
     }
 }

@@ -281,7 +281,7 @@ namespace QuantConnect.Tests.Engine
             }
 
             public bool IsActive { get; }
-            public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api)
+            public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api, IIsolatorLimitResultProvider isolatorLimitProvider)
             {
             }
 

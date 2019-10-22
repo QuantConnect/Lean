@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,17 +24,17 @@ namespace QuantConnect.Scheduling
     /// </summary>
     public class FuncDateRule : IDateRule
     {
-        private readonly Func<DateTime, DateTime, IEnumerable<DateTime>> _getDatesFuntion;
+        private readonly Func<DateTime, DateTime, IEnumerable<DateTime>> _getDatesFunction;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuncDateRule"/> class
         /// </summary>
         /// <param name="name">The name of this rule</param>
-        /// <param name="getDatesFuntion">The time applicator function</param>
-        public FuncDateRule(string name, Func<DateTime, DateTime, IEnumerable<DateTime>> getDatesFuntion)
+        /// <param name="getDatesFunction">The time applicator function</param>
+        public FuncDateRule(string name, Func<DateTime, DateTime, IEnumerable<DateTime>> getDatesFunction)
         {
             Name = name;
-            _getDatesFuntion = getDatesFuntion;
+            _getDatesFunction = getDatesFunction;
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace QuantConnect.Scheduling
         /// <returns>All dates in the interval matching this date rule</returns>
         public IEnumerable<DateTime> GetDates(DateTime start, DateTime end)
         {
-            return _getDatesFuntion(start, end);
+            return _getDatesFunction(start, end);
         }
     }
 }

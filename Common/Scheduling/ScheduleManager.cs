@@ -53,7 +53,7 @@ namespace QuantConnect.Scheduling
         public ScheduleManager(SecurityManager securities, DateTimeZone timeZone)
         {
             _securities = securities;
-            DateRules = new DateRules(securities);
+            DateRules = new DateRules(securities, timeZone);
             TimeRules = new TimeRules(securities, timeZone);
 
             // used for storing any events before the event schedule is set
@@ -228,6 +228,63 @@ namespace QuantConnect.Scheduling
         public IFluentSchedulingDateSpecifier Event(string name)
         {
             return new FluentScheduledEventBuilder(this, _securities, name);
+        }
+
+        #endregion
+
+        #region Training Events
+
+        /// <summary>
+        /// Schedules the provided training code to execute immediately
+        /// </summary>
+        public ScheduledEvent TrainingNow(Action trainingCode)
+        {
+            return On($"Training: Now: {_securities.UtcTime:O}", DateRules.Today, TimeRules.Now, trainingCode);
+        }
+
+        /// <summary>
+        /// Schedules the provided training code to execute immediately
+        /// </summary>
+        public ScheduledEvent TrainingNow(PyObject trainingCode)
+        {
+            return On($"Training: Now: {_securities.UtcTime:O}", DateRules.Today, TimeRules.Now, trainingCode);
+        }
+
+        /// <summary>
+        /// Schedules the training code to run using the specified date and time rules
+        /// </summary>
+        /// <param name="dateRule">Specifies what dates the event should run</param>
+        /// <param name="timeRule">Specifies the times on those dates the event should run</param>
+        /// <param name="trainingCode">The training code to be invoked</param>
+        public ScheduledEvent Training(IDateRule dateRule, ITimeRule timeRule, Action trainingCode)
+        {
+            var name = $"{dateRule.Name}: {timeRule.Name}";
+            return On(name, dateRule, timeRule, (n, time) => trainingCode());
+        }
+
+
+        /// <summary>
+        /// Schedules the training code to run using the specified date and time rules
+        /// </summary>
+        /// <param name="dateRule">Specifies what dates the event should run</param>
+        /// <param name="timeRule">Specifies the times on those dates the event should run</param>
+        /// <param name="trainingCode">The training code to be invoked</param>
+        public ScheduledEvent Training(IDateRule dateRule, ITimeRule timeRule, PyObject trainingCode)
+        {
+            var name = $"{dateRule.Name}: {timeRule.Name}";
+            return On(name, dateRule, timeRule, (n, time) => { using (Py.GIL()) trainingCode.Invoke(); });
+        }
+
+        /// <summary>
+        /// Schedules the training code to run using the specified date and time rules
+        /// </summary>
+        /// <param name="dateRule">Specifies what dates the event should run</param>
+        /// <param name="timeRule">Specifies the times on those dates the event should run</param>
+        /// <param name="trainingCode">The training code to be invoked</param>
+        public ScheduledEvent Training(IDateRule dateRule, ITimeRule timeRule, Action<DateTime> trainingCode)
+        {
+            var name = $"{dateRule.Name}: {timeRule.Name}";
+            return On(name, dateRule, timeRule, (n, time) => trainingCode(time));
         }
 
         #endregion

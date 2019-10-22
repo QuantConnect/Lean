@@ -266,7 +266,7 @@ namespace QuantConnect.Tests.Common.Scheduling
                     RegisteredSecurityDataTypesProvider.Null
                 )
             );
-            var rules = new DateRules(manager);
+            var rules = new DateRules(manager, TimeZones.NewYork);
             return rules;
         }
     }
