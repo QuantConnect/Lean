@@ -16,7 +16,7 @@
 
 namespace QuantConnect.Data.Custom.Fred
 {
-    public static partial class FredSeries
+    public partial class Fred
     {
         /// <summary>
         /// Wilshire Indexes help clients, investment professionals and researchers accurately measure and better understand the market. The Wilshire Index family leverages more than 40 years of Wilshire performance measurement expertise and employs unbiased construction rules.
@@ -30,7 +30,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSSmallCapValuePrice => "WILLSMLCAPVALPR";
+            public static string USSmallCapValuePrice => "WILLSMLCAPVALPR";
 
             ///<summary>
             /// Wilshire 2500 Price Index (in Index)
@@ -39,7 +39,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string Wilshire2500Price => "WILL2500PR";
+            public static string Price2500 => "WILL2500PR";
 
             ///<summary>
             /// Wilshire 4500 Price Index (in Index)
@@ -48,7 +48,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string Wilshire4500Price => "WILL4500PR";
+            public static string Price4500 => "WILL4500PR";
 
             ///<summary>
             /// Wilshire 2500 Value Price Index (in Index)
@@ -57,7 +57,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string Wilshire2500ValuePrice => "WILL2500PRVAL";
+            public static string ValuePrice2500 => "WILL2500PRVAL";
 
             ///<summary>
             /// Wilshire 2500 Growth Price Index (in Index)
@@ -66,7 +66,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string Wilshire2500GrowthPrice => "WILL2500PRGR";
+            public static string GrowthPrice2500 => "WILL2500PRGR";
 
             ///<summary>
             /// Wilshire US Small-Cap Price Index (in Index)
@@ -75,7 +75,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSSmallCapPrice => "WILLSMLCAPPR";
+            public static string USSmallCapPrice => "WILLSMLCAPPR";
 
             ///<summary>
             /// Wilshire 5000 Price Index (in Index)
@@ -84,7 +84,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string Wilshire5000Price => "WILL5000PR";
+            public static string Price5000 => "WILL5000PR";
 
             ///<summary>
             /// Wilshire US Small-Cap Growth Price Index (in Index)
@@ -93,7 +93,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSSmallCapGrowthPrice => "WILLSMLCAPGRPR";
+            public static string USSmallCapGrowthPrice => "WILLSMLCAPGRPR";
 
             ///<summary>
             /// Wilshire US Mid-Cap Value Price Index (in Index)
@@ -102,7 +102,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSMidCapValuePrice => "WILLMIDCAPVALPR";
+            public static string USMidCapValuePrice => "WILLMIDCAPVALPR";
 
             ///<summary>
             /// Wilshire US Real Estate Securities Price Index (Wilshire US RESI) (in Index)
@@ -111,7 +111,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSRealEstateSecuritiesPrice => "WILLRESIPR";
+            public static string USRealEstateSecuritiesPrice => "WILLRESIPR";
 
             ///<summary>
             /// Wilshire US Large-Cap Price Index (in Index)
@@ -120,7 +120,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSLargeCapPrice => "WILLLRGCAPPR";
+            public static string USLargeCapPrice => "WILLLRGCAPPR";
 
             ///<summary>
             /// Wilshire US Mid-Cap Price Index (in Index)
@@ -129,7 +129,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSMidCapPrice => "WILLMIDCAPPR";
+            public static string USMidCapPrice => "WILLMIDCAPPR";
 
             ///<summary>
             /// Wilshire US Mid-Cap Growth Price Index (in Index)
@@ -138,7 +138,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSMidCapGrowthPrice => "WILLMIDCAPGRPR";
+            public static string USMidCapGrowthPrice => "WILLMIDCAPGRPR";
 
             ///<summary>
             /// Wilshire US Micro-Cap Price Index (in Index)
@@ -147,7 +147,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSMicroCapPrice => "WILLMICROCAPPR";
+            public static string USMicroCapPrice => "WILLMICROCAPPR";
 
             ///<summary>
             /// Wilshire US Real Estate Investment Trust Price Index (Wilshire US REIT) (in Index)
@@ -156,7 +156,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSRealEstateInvestmentTrustPrice => "WILLREITPR";
+            public static string USRealEstateInvestmentTrustPrice => "WILLREITPR";
 
             ///<summary>
             /// Wilshire US Large-Cap Value Price Index (in Index)
@@ -165,7 +165,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSLargeCapValuePrice => "WILLLRGCAPVALPR";
+            public static string USLargeCapValuePrice => "WILLLRGCAPVALPR";
 
             ///<summary>
             /// Wilshire US Large-Cap Growth Price Index (in Index)
@@ -174,7 +174,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSLargeCapGrowthPrice => "WILLLRGCAPGRPR";
+            public static string USLargeCapGrowthPrice => "WILLLRGCAPGRPR";
 
             ///<summary>
             /// Wilshire 5000 Full Cap Price Index (in Index)
@@ -183,7 +183,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The price indexes are price returns, which do not reinvest dividends. The designation Full Cap for an index signifies a float adjusted market capitalization that includes shares of stock not considered available to "ordinary" investors. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string Wilshire5000FullCapPrice => "WILL5000PRFC";
+            public static string FullCapPrice5000 => "WILL5000PRFC";
 
             ///<summary>
             /// Wilshire US Mid-Cap Value Total Market Index (in Index)
@@ -192,7 +192,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSMidCapValue => "WILLMIDCAPVAL";
+            public static string USMidCapValue => "WILLMIDCAPVAL";
 
             ///<summary>
             /// Wilshire US Mid-Cap Growth Total Market Index (in Index)
@@ -201,7 +201,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSMidCapGrowth => "WILLMIDCAPGR";
+            public static string USMidCapGrowth => "WILLMIDCAPGR";
 
             ///<summary>
             /// Wilshire US Mid-Cap Total Market Index (in Index)
@@ -210,7 +210,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSMidCap => "WILLMIDCAP";
+            public static string USMidCap => "WILLMIDCAP";
 
             ///<summary>
             /// Wilshire US Real Estate Securities Total Market Index (Wilshire US RESI) (in Index)
@@ -219,7 +219,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSRealEstateSecurities => "WILLRESIND";
+            public static string USRealEstateSecurities => "WILLRESIND";
 
             ///<summary>
             /// Wilshire 4500 Total Market Index (in Index)
@@ -228,7 +228,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string Wilshire4500 => "WILL4500IND";
+            public static string Index4500 => "WILL4500IND";
 
             ///<summary>
             /// Wilshire 5000 Total Market Index (in Index)
@@ -237,7 +237,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string Wilshire5000 => "WILL5000IND";
+            public static string Index5000 => "WILL5000IND";
 
             ///<summary>
             /// Wilshire US Large-Cap Growth Total Market Index (in Index)
@@ -246,7 +246,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSLargeCapGrowth => "WILLLRGCAPGR";
+            public static string USLargeCapGrowth => "WILLLRGCAPGR";
 
             ///<summary>
             /// Wilshire US Micro-Cap Total Market Index (in Index)
@@ -255,7 +255,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSMicroCap => "WILLMICROCAP";
+            public static string USMicroCap => "WILLMICROCAP";
 
             ///<summary>
             /// Wilshire 2500 Value Total Market Index (in Index)
@@ -264,7 +264,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string Wilshire2500Value => "WILL2500INDVAL";
+            public static string Value2500 => "WILL2500INDVAL";
 
             ///<summary>
             /// Wilshire US Small-Cap Growth Total Market Index (in Index)
@@ -273,7 +273,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSSmallCapGrowth => "WILLSMLCAPGR";
+            public static string USSmallCapGrowth => "WILLSMLCAPGR";
 
             ///<summary>
             /// Wilshire US Small-Cap Value Total Market Index (in Index)
@@ -282,7 +282,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSSmallCapValue => "WILLSMLCAPVAL";
+            public static string USSmallCapValue => "WILLSMLCAPVAL";
 
             ///<summary>
             /// Wilshire US Large-Cap Value Total Market Index (in Index)
@@ -291,7 +291,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSLargeCapValue => "WILLLRGCAPVAL";
+            public static string USLargeCapValue => "WILLLRGCAPVAL";
 
             ///<summary>
             /// Wilshire US Real Estate Investment Trust Total Market Index (Wilshire US REIT) (in Index)
@@ -300,7 +300,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSRealEstateInvestmentTrust => "WILLREITIND";
+            public static string USRealEstateInvestmentTrust => "WILLREITIND";
 
             ///<summary>
             /// Wilshire 2500 Total Market Index (in Index)
@@ -309,7 +309,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string Wilshire2500 => "WILL2500IND";
+            public static string Index2500 => "WILL2500IND";
 
             ///<summary>
             /// Wilshire US Small-Cap Total Market Index (in Index)
@@ -318,7 +318,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSSmallCap => "WILLSMLCAP";
+            public static string USSmallCap => "WILLSMLCAP";
 
             ///<summary>
             /// Wilshire US Large-Cap Total Market Index (in Index)
@@ -327,7 +327,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string WilshireUSLargeCap => "WILLLRGCAP";
+            public static string USLargeCap => "WILLLRGCAP";
 
             ///<summary>
             /// Wilshire 2500 Growth Total Market Index (in Index)
@@ -336,7 +336,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. More information about the various indexes from Wilshire Associates can be found at http://www.wilshire.com/Indexes/.
             /// </remarks>
-            public static string Wilshire2500Growth => "WILL2500INDGR";
+            public static string Growth2500 => "WILL2500INDGR";
 
             ///<summary>
             /// Wilshire 5000 Total Market Full Cap Index (in Index)
@@ -345,7 +345,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// <remarks>
             /// The total market indexes are total market returns, which do include reinvested dividends. The designation Full Cap for an index signifies a float adjusted market capitalization that includes shares of stock not considered available to "ordinary" investors. Copyright, 2016, Wilshire Associates Incorporated. Reprinted with permission. For more information about the various indexes, visit Wilshire Associates (http://www.wilshire.com/Indexes/).
             /// </remarks>
-            public static string Wilshire5000TotalMarketFullCap => "WILL5000INDFC";
+            public static string TotalMarketFullCap5000 => "WILL5000INDFC";
         }
     }
 }

@@ -19,7 +19,7 @@ using System.IO;
 
 namespace QuantConnect.Data.Custom.Fred
 {
-    public class Fred : BaseData
+    public partial class Fred : BaseData
     {
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream

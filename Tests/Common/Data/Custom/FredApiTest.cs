@@ -28,14 +28,14 @@ namespace QuantConnect.Tests.Common.Data.Custom
     public class FredApiTest
     {
         [Test]
-        public void FredApiParsesdataCorrectly()
+        public void FredApiParsesDataCorrectly()
         {
             // Arrange
             var fileInfo = new FileInfo("./TestData/FredVixData.json");
             var content = File.ReadAllText(fileInfo.FullName);
 
-            var sid = SecurityIdentifier.GenerateBase(typeof(BaseData), FredSeries.CBOE.VIX, QuantConnect.Market.USA, false);
-            var symbol = new Symbol(sid, FredSeries.CBOE.VIX);
+            var sid = SecurityIdentifier.GenerateBase(typeof(BaseData), Fred.CBOE.VIX, QuantConnect.Market.USA, false);
+            var symbol = new Symbol(sid, Fred.CBOE.VIX);
             var subscriptionDataConfig = new SubscriptionDataConfig(typeof(BaseData), symbol, Resolution.Daily,
                 DateTimeZone.Utc, DateTimeZone.Utc, false, false, false, true);
 

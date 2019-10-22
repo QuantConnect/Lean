@@ -16,7 +16,7 @@
 
 namespace QuantConnect.Data.Custom.Fred
 {
-    public static partial class FredSeries
+    public partial class Fred
     {
         public static class CBOE
         {

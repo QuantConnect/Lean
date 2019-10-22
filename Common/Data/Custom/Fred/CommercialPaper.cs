@@ -16,7 +16,7 @@
 
 namespace QuantConnect.Data.Custom.Fred
 {
-    public static partial class FredSeries
+    public partial class Fred
     {
         /// <summary>
         /// Commercial paper (CP) consists of short-term, promissory notes issued primarily by corporations. Maturities range up to 270 days but average about 30 days. Many companies use CP to raise cash needed for current transactions, and many find it to be a lower-cost alternative to bank loans.
