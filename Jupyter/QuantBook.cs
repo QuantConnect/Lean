@@ -92,7 +92,7 @@ namespace QuantConnect.Jupyter
                     symbolPropertiesDataBase,
                     this,
                     registeredTypes,
-                    new SecurityCacheProvider(Securities));
+                    new SecurityCacheProvider(Portfolio));
                 Securities.SetSecurityService(securityService);
                 SubscriptionManager.SetDataManager(
                     new DataManager(new NullDataFeed(),

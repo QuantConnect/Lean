@@ -61,7 +61,7 @@ namespace QuantConnect.Tests.Engine
                         symbolPropertiesDataBase,
                         algorithm,
                         RegisteredSecurityDataTypesProvider.Null,
-                        new SecurityCacheProvider(algorithm.Securities))),
+                        new SecurityCacheProvider(algorithm.Portfolio))),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,

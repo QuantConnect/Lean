@@ -33,14 +33,16 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
                 new Cash(Currencies.USD, 0, 0),
                 SymbolProperties.GetDefault(Currencies.USD),
                 new IdentityCurrencyConverter(Currencies.USD),
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
 
             var customSecurity = new Security(Symbol.CreateBase(typeof(TradeBar), Symbols.SPY, QuantConnect.Market.USA),
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new Cash(Currencies.USD, 0, 0),
                 SymbolProperties.GetDefault(Currencies.USD),
                 new IdentityCurrencyConverter(Currencies.USD),
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
 
             var changes = new SecurityChanges(new List<Security> { security, customSecurity },
                 new List<Security> { security, customSecurity });
@@ -60,14 +62,16 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
                 new Cash(Currencies.USD, 0, 0),
                 SymbolProperties.GetDefault(Currencies.USD),
                 new IdentityCurrencyConverter(Currencies.USD),
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
 
             var customSecurity = new Security(Symbol.CreateBase(typeof(TradeBar), Symbols.SPY, QuantConnect.Market.USA),
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 new Cash(Currencies.USD, 0, 0),
                 SymbolProperties.GetDefault(Currencies.USD),
                 new IdentityCurrencyConverter(Currencies.USD),
-                RegisteredSecurityDataTypesProvider.Null);
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
 
             var changes = new SecurityChanges(new List<Security> { security, customSecurity },
                 new List<Security> { security, customSecurity });

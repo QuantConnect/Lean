@@ -16,7 +16,6 @@
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities;
 using System;
@@ -100,7 +99,7 @@ namespace QuantConnect.Tests.Algorithm
                         symbolPropertiesDatabase,
                         algorithm,
                         RegisteredSecurityDataTypesProvider.Null,
-                        new SecurityCacheProvider(algorithm.Securities))),
+                        new SecurityCacheProvider(algorithm.Portfolio))),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -113,7 +112,7 @@ namespace QuantConnect.Tests.Algorithm
                 symbolPropertiesDatabase,
                 algorithm,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCacheProvider(algorithm.Securities));
+                new SecurityCacheProvider(algorithm.Portfolio));
 
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             algorithm.Securities.SetSecurityService(securityService);

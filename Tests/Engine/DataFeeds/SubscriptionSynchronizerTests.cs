@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 symbolPropertiesDataBase,
                 algorithm,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCacheProvider(algorithm.Securities));
+                new SecurityCacheProvider(algorithm.Portfolio));
             algorithm.Securities.SetSecurityService(securityService);
             var dataManager = new DataManager(feed,
                 new UniverseSelection(algorithm, securityService),

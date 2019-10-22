@@ -199,7 +199,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private static IEnumerator<BaseData> GetBruteForceMethod(IEnumerator<BaseData>[] enumerators)
         {
             var ticks = DateTime.MaxValue.Ticks;
-            var collection = new Dictionary<IEnumerator<BaseData>, int>();
+            var collection = new HashSet<IEnumerator<BaseData>>();
             foreach (var enumerator in enumerators)
             {
                 if (enumerator.MoveNext())
@@ -208,7 +208,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     {
                         ticks = Math.Min(ticks, enumerator.Current.EndTime.Ticks);
                     }
-                    collection.Add(enumerator, 0);
+                    collection.Add(enumerator);
                 }
                 else
                 {
@@ -221,10 +221,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             while (collection.Count > 0)
             {
                 var nextFrontierTicks = DateTime.MaxValue.Ticks;
-                foreach (var kvp in collection)
+                foreach (var enumerator in collection)
                 {
-                    var enumerator = kvp.Key;
-
                     while (enumerator.Current == null || enumerator.Current.EndTime <= frontier)
                     {
                         if (enumerator.Current != null)

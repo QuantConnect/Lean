@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     symbolPropertiesDatabase,
                     algorithm,
                     RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCacheProvider(algorithm.Securities)))
+                    new SecurityCacheProvider(algorithm.Portfolio)))
         {
         }
 

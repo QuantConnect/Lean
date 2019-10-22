@@ -140,7 +140,7 @@ namespace QuantConnect.Lean.Engine
                         symbolPropertiesDatabase,
                         algorithm,
                         registeredTypesProvider,
-                        new SecurityCacheProvider(algorithm.Securities));
+                        new SecurityCacheProvider(algorithm.Portfolio));
 
                     algorithm.Securities.SetSecurityService(securityService);
 

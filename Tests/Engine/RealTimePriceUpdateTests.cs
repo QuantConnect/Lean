@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Engine
             var dataManager = new DataManager(_liveTradingDataFeed,
                 new UniverseSelection(
                     algo,
-                    new SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algo, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(algo.Securities))),
+                    new SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algo, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(algo.Portfolio))),
                 algo,
                 algo.TimeKeeper,
                 marketHoursDatabase,

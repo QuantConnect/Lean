@@ -26,7 +26,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Common.Securities
 {
     [TestFixture]
-    public class SecurityCacheProviderTests
+    public class SecurityCacheProviderTests : ISecurityProvider
     {
         private SecurityCacheProvider _cacheProvider;
         private Dictionary<Symbol, Security> _securities;
@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void Setup()
         {
             _securities = new Dictionary<Symbol, Security>();
-            _cacheProvider = new SecurityCacheProvider(_securities);
+            _cacheProvider = new SecurityCacheProvider(this);
         }
 
         [Test]
@@ -118,6 +118,16 @@ namespace QuantConnect.Tests.Common.Securities
 
             // the data should also be in the underlying cache
             Assert.AreEqual(newData, underlyingCache.GetAll<Quandl>());
+        }
+
+        public Security GetSecurity(Symbol symbol)
+        {
+            if (_securities.ContainsKey(symbol))
+            {
+                return _securities[symbol];
+            }
+
+            return null;
         }
     }
 }

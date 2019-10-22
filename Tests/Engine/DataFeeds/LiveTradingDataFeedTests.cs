@@ -872,7 +872,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 symbolPropertiesDataBase,
                 algorithm,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCacheProvider(algorithm.Securities));
+                new SecurityCacheProvider(algorithm.Portfolio));
             algorithm.Securities.SetSecurityService(securityService);
             var dataManager = new DataManager(feed,
                 new UniverseSelection(algorithm, securityService),
@@ -1113,7 +1113,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var fileProvider = new DefaultDataProvider();
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
-            var securityService = new SecurityService(_algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, _algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(_algorithm.Securities));
+            var securityService = new SecurityService(_algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, _algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(_algorithm.Portfolio));
             _algorithm.Securities.SetSecurityService(securityService);
             _dataManager = new DataManager(feed,
                 new UniverseSelection(_algorithm, securityService),
@@ -1410,7 +1410,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 symbolPropertiesDataBase,
                 algorithm,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCacheProvider(algorithm.Securities));
+                new SecurityCacheProvider(algorithm.Portfolio));
             algorithm.Securities.SetSecurityService(securityService);
             var dataManager = new DataManager(feed,
                 new UniverseSelection(algorithm, securityService),

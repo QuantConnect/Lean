@@ -101,9 +101,18 @@ namespace QuantConnect.Securities
         {
             var nonFillForwardData = data;
             // maintaining regression requires us to NOT cache FF data
-            if (!containsFillForwardData.HasValue || containsFillForwardData.Value)
+            if (containsFillForwardData != false)
             {
-                nonFillForwardData = data.Where(baseData => !baseData.IsFillForward).ToList();
+                var dataFiltered = new List<BaseData>(data.Count);
+                for (var i = 0; i < data.Count; i++)
+                {
+                    var dataPoint = data[i];
+                    if (!dataPoint.IsFillForward)
+                    {
+                        dataFiltered.Add(dataPoint);
+                    }
+                }
+                nonFillForwardData = dataFiltered;
             }
             if (nonFillForwardData.Count != 0)
             {

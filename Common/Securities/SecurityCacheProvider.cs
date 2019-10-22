@@ -15,7 +15,6 @@
 */
 
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
@@ -28,17 +27,17 @@ namespace QuantConnect.Securities
     /// This is used to directly access custom data types through their underlying</remarks>
     public class SecurityCacheProvider
     {
-        private readonly ConcurrentDictionary<SecurityIdentifier, ConcurrentBag<Symbol>> _relatedSymbols;
-        private readonly IDictionary<Symbol, Security> _securityProvider;
+        private readonly ConcurrentDictionary<Symbol, ConcurrentBag<Symbol>> _relatedSymbols;
+        private readonly ISecurityProvider _securityProvider;
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="securityProvider">The security provider to use</param>
-        public SecurityCacheProvider(IDictionary<Symbol, Security> securityProvider)
+        public SecurityCacheProvider(ISecurityProvider securityProvider)
         {
             _securityProvider = securityProvider;
-            _relatedSymbols = new ConcurrentDictionary<SecurityIdentifier, ConcurrentBag<Symbol>>();
+            _relatedSymbols = new ConcurrentDictionary<Symbol, ConcurrentBag<Symbol>>();
         }
 
         /// <summary>
@@ -53,8 +52,8 @@ namespace QuantConnect.Securities
             var securityCache = new SecurityCache();
             if (symbol.SecurityType == SecurityType.Base && symbol.HasUnderlying)
             {
-                Security underlyingSecurity;
-                if(_securityProvider.TryGetValue(symbol.Underlying, out underlyingSecurity))
+                var underlyingSecurity = _securityProvider.GetSecurity(symbol.Underlying);
+                if(underlyingSecurity != null)
                 {
                     // we found the underlying, lets use its data type cache
                     SecurityCache.ShareTypeCacheInstance(underlyingSecurity.Cache, securityCache);
@@ -63,26 +62,22 @@ namespace QuantConnect.Securities
                 {
                     // we didn't find the underlying, lets keep track of the underlying symbol which might get added in the future.
                     // else when it is added, we would have to go through existing Securities and find any which use it as underlying
-                    if (_relatedSymbols.ContainsKey(symbol.Underlying.ID))
-                    {
-                        _relatedSymbols[symbol.Underlying.ID].Add(symbol);
-                    }
-                    else
-                    {
-                        _relatedSymbols[symbol.Underlying.ID] = new ConcurrentBag<Symbol> { symbol };
-                    }
+                    _relatedSymbols.AddOrUpdate(symbol.Underlying,
+                        id => new ConcurrentBag<Symbol> { symbol },
+                        (id, bag) => { bag.Add(symbol); return bag; }
+                    );
                 }
             }
-            else if(_relatedSymbols.ContainsKey(symbol.ID))
+            else
             {
-                // if we are here it means we added a symbol which is an underlying of some existing custom symbols
                 ConcurrentBag<Symbol> customSymbols;
-                if (_relatedSymbols.TryRemove(symbol.ID, out customSymbols))
+                if (_relatedSymbols.TryRemove(symbol, out customSymbols))
                 {
+                    // if we are here it means we added a symbol which is an underlying of some existing custom symbols
                     foreach (var customSymbol in customSymbols)
                     {
-                        Security customSecurity;
-                        if (_securityProvider.TryGetValue(customSymbol, out customSecurity))
+                        var customSecurity = _securityProvider.GetSecurity(customSymbol);
+                        if (customSecurity != null)
                         {
                             // we make each existing custom security cache, use the new instance data type cache
                             // note that if any data already existed in the custom cache it will be passed

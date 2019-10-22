@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataManager = new DataManager(feed,
                 new UniverseSelection(
                     algorithm,
-                    new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(algorithm.Securities))),
+                    new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(algorithm.Portfolio))),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,

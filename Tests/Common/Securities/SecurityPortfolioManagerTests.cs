@@ -209,7 +209,7 @@ namespace QuantConnect.Tests.Common.Securities
             securities.Add(usdJwbSecurity);
             securities.Add(mchUsdSecurity);
 
-            var securityService = new SecurityService(portfolio.CashBook, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), dataManager.Algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(securities));
+            var securityService = new SecurityService(portfolio.CashBook, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), dataManager.Algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(portfolio));
 
             portfolio.CashBook.EnsureCurrencyDataFeeds(securities, subscriptions, DefaultBrokerageModel.DefaultMarketMap, SecurityChanges.None, securityService);
 
