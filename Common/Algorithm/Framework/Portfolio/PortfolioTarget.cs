@@ -93,7 +93,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             // Factoring in FreePortfolioValuePercentage.
-            var adjustedPercent = percent * (1 - algorithm.Settings.FreePortfolioValuePercentage);
+            var adjustedPercent = percent * (algorithm.Portfolio.TotalPortfolioValue - algorithm.Settings.FreePortfolioValue)
+                                  / algorithm.Portfolio.TotalPortfolioValue;
 
             var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(
                 new GetMaximumOrderQuantityForTargetValueParameters(algorithm.Portfolio, security, adjustedPercent)

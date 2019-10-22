@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders.Fills;
+using QuantConnect.Securities;
 
 namespace QuantConnect
 {
@@ -53,6 +54,13 @@ namespace QuantConnect
         /// Gets/sets the SetHoldings buffers value.
         /// The buffer is used for orders not to be rejected due to volatility when using SetHoldings and CalculateOrderQuantity
         /// </summary>
+        public decimal FreePortfolioValue { get; set; }
+
+        /// <summary>
+        /// Gets/sets the SetHoldings buffers value percentage.
+        /// This percentage will be used to set the <see cref="FreePortfolioValue"/>
+        /// based on the <see cref="SecurityPortfolioManager.TotalPortfolioValue"/>
+        /// </summary>
         public decimal FreePortfolioValuePercentage { get; set; }
 
         /// <summary>
@@ -79,6 +87,7 @@ namespace QuantConnect
             // default is unlimited
             DataSubscriptionLimit = int.MaxValue;
             LiquidateEnabled = true;
+            FreePortfolioValue = 250;
             FreePortfolioValuePercentage = 0.0025m;
             StalePriceTimeSpan = Time.OneHour;
             MaxAbsolutePortfolioTargetPercentage = 1000000000;

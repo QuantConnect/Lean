@@ -49,6 +49,18 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void ReturnsMinimumOrderValueReason()
+        {
+            var algorithm = GetAlgorithm();
+            var security = InitAndGetSecurity(algorithm, 0);
+            var model = new SecurityMarginModel();
+            var result = model.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, 0.00000001m);
+            Assert.AreEqual(0m, result.Quantity);
+            Assert.IsFalse(result.IsError);
+            Assert.IsTrue(result.Reason.Contains("is less than the minimum"));
+        }
+
+        [Test]
         public void ZeroTargetWithNonZeroHoldingsReturnsNegativeOfQuantity()
         {
             var algorithm = GetAlgorithm();
@@ -85,6 +97,9 @@ namespace QuantConnect.Tests.Common.Securities
             algorithm.Portfolio.SetCash(Currencies.USD, 0, 0.88m);
             var security = InitAndGetSecurity(algorithm, 5);
 
+            algorithm.Settings.FreePortfolioValue =
+                algorithm.Portfolio.TotalPortfolioValue * algorithm.Settings.FreePortfolioValuePercentage;
+
             var actual = algorithm.CalculateOrderQuantity(_symbol, 1m * security.BuyingPowerModel.GetLeverage(security));
             // (10000 * 2 * 0.9975 setHoldingsBuffer) / 25 * 0.88 conversion rate - 5 USD fee * 0.88 conversion rate ~=906m
             Assert.AreEqual(906m, actual);
@@ -120,6 +135,9 @@ namespace QuantConnect.Tests.Common.Securities
             algorithm.Portfolio.SetCash(Currencies.USD, 1000, 0.88m);
             var security = InitAndGetSecurity(algorithm, 5);
 
+            algorithm.Settings.FreePortfolioValue =
+                algorithm.Portfolio.TotalPortfolioValue * algorithm.Settings.FreePortfolioValuePercentage;
+
             var actual = algorithm.CalculateOrderQuantity(_symbol, 1m * security.BuyingPowerModel.GetLeverage(security));
             // ((10000 + 1000 USD * 0.88 rate) * 2 * 0.9975 setHoldingsBuffer) / 25 * 0.88 rate - 5 USD fee * 0.88 rate ~=986m
             Assert.AreEqual(986m, actual);
@@ -148,6 +166,9 @@ namespace QuantConnect.Tests.Common.Securities
             algorithm.Portfolio.SetCash(Currencies.USD, 0, 0.88m);
             var security = InitAndGetSecurity(algorithm, 5);
 
+            algorithm.Settings.FreePortfolioValue =
+                algorithm.Portfolio.TotalPortfolioValue * algorithm.Settings.FreePortfolioValuePercentage;
+
             var actual = algorithm.CalculateOrderQuantity(_symbol, 1m * security.BuyingPowerModel.GetLeverage(security) + 0.1m);
             // (10000 * 2.1 * 0.9975 setHoldingsBuffer) / 25 * 0.88 conversion rate - 5 USD fee * 0.88 conversion rate ~=951m
             Assert.AreEqual(951m, actual);
@@ -175,6 +196,9 @@ namespace QuantConnect.Tests.Common.Securities
             algorithm.Portfolio.SetCash(Currencies.USD, 0, 0.88m);
             var security = InitAndGetSecurity(algorithm, 5);
 
+            algorithm.Settings.FreePortfolioValue =
+                algorithm.Portfolio.TotalPortfolioValue * algorithm.Settings.FreePortfolioValuePercentage;
+
             var actual = algorithm.CalculateOrderQuantity(_symbol, - 1m * security.BuyingPowerModel.GetLeverage(security));
             // (10000 * - 2 * 0.9975 setHoldingsBuffer) / 25 * 0.88 conversion rate - 5 USD fee * 0.88 conversion rate ~=906m
             Assert.AreEqual(-906m, actual);
@@ -190,6 +214,9 @@ namespace QuantConnect.Tests.Common.Securities
             algorithm.Portfolio.SetCash(10000);
             algorithm.Portfolio.SetCash(Currencies.USD, 1000, 0.88m);
             var security = InitAndGetSecurity(algorithm, 5);
+
+            algorithm.Settings.FreePortfolioValue =
+                algorithm.Portfolio.TotalPortfolioValue * algorithm.Settings.FreePortfolioValuePercentage;
 
             var actual = algorithm.CalculateOrderQuantity(_symbol, -1m * security.BuyingPowerModel.GetLeverage(security));
             // ((10000 + 1000 * 0.88)* - 2 * 0.9975 setHoldingsBuffer) / 25 * 0.88 conversion rate - 5 USD fee * 0.88 conversion rate ~=986m
@@ -217,6 +244,9 @@ namespace QuantConnect.Tests.Common.Securities
             algorithm.Portfolio.SetCash(10000);
             algorithm.Portfolio.SetCash(Currencies.USD, 0, 0.88m);
             var security = InitAndGetSecurity(algorithm, 5);
+
+            algorithm.Settings.FreePortfolioValue =
+                algorithm.Portfolio.TotalPortfolioValue * algorithm.Settings.FreePortfolioValuePercentage;
 
             var actual = algorithm.CalculateOrderQuantity(_symbol, -1m * security.BuyingPowerModel.GetLeverage(security) - 0.1m);
             // (10000 * - 2.1 * 0.9975 setHoldingsBuffer) / 25 * 0.88 conversion rate - 5 USD fee * 0.88 conversion rate ~=951m
