@@ -13,16 +13,9 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using QuantConnect;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.SmartInsider;
-using QuantConnect.Data.Fundamental;
-using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Indicators;
 
 namespace QuantConnect.Algorithm.CSharp
 {

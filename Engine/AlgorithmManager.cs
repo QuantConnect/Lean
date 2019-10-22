@@ -436,8 +436,14 @@ namespace QuantConnect.Lean.Engine
                 {
                     try
                     {
-                        algorithm.OnSecuritiesChanged(timeSlice.SecurityChanges);
-                        algorithm.OnFrameworkSecuritiesChanged(timeSlice.SecurityChanges);
+                        var algorithmSecurityChanges = new SecurityChanges(timeSlice.SecurityChanges)
+                        {
+                            // by default for user code we want to filter out custom securities
+                            FilterCustomSecurities = true
+                        };
+
+                        algorithm.OnSecuritiesChanged(algorithmSecurityChanges);
+                        algorithm.OnFrameworkSecuritiesChanged(algorithmSecurityChanges);
                     }
                     catch (Exception err)
                     {

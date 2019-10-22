@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            foreach (var r in changes.RemovedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Equity))
+            foreach (var r in changes.RemovedSecurities)
             {
                 // If removed from the universe, liquidate and remove the custom data from the algorithm
                 Liquidate(r.Symbol);
