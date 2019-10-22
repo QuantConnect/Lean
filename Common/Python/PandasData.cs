@@ -19,6 +19,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Util;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -33,23 +34,22 @@ namespace QuantConnect.Python
         private static dynamic _pandas;
         private static dynamic _remapperFactory;
         private readonly static HashSet<string> _baseDataProperties = typeof(BaseData).GetProperties().ToHashSet(x => x.Name.ToLowerInvariant());
+        private readonly static ConcurrentDictionary<Type, List<MemberInfo>> _membersByType = new ConcurrentDictionary<Type, List<MemberInfo>>();
 
-        private readonly int _levels;
-        private readonly bool _isCustomData;
         private readonly Symbol _symbol;
         private readonly Dictionary<string, Tuple<List<DateTime>, List<object>>> _series;
 
-        private readonly IEnumerable<MemberInfo> _members;
+        private readonly List<MemberInfo> _members;
 
         /// <summary>
         /// Gets true if this is a custom data request, false for normal QC data
         /// </summary>
-        public bool IsCustomData => _isCustomData;
+        public bool IsCustomData { get; }
 
         /// <summary>
         /// Implied levels of a multi index pandas.Series (depends on the security type)
         /// </summary>
-        public int Levels => _levels;
+        public int Levels { get; } = 2;
 
         /// <summary>
         /// Initializes an instance of <see cref="PandasData"/>
@@ -246,53 +246,59 @@ class Remapper(wrapt.ObjectProxy):
             }
 
             var type = data.GetType();
-            var dataMarketNamespace = typeof(Bar).Namespace;
-            _isCustomData = type.Namespace != dataMarketNamespace;
-            _members = Enumerable.Empty<MemberInfo>();
-            _symbol = (data as IBaseData)?.Symbol;
+            IsCustomData = type.Namespace != typeof(Bar).Namespace;
+            _members = new List<MemberInfo>();
+            _symbol = ((IBaseData)data).Symbol;
 
-            _levels = 2;
-            if (_symbol.SecurityType == SecurityType.Future) _levels = 3;
-            if (_symbol.SecurityType == SecurityType.Option) _levels = 5;
+            if (_symbol.SecurityType == SecurityType.Future) Levels = 3;
+            if (_symbol.SecurityType == SecurityType.Option) Levels = 5;
 
-            var columns = new List<string>
+            var columns = new HashSet<string>
             {
                    "open",    "high",    "low",    "close", "lastprice",  "volume",
                 "askopen", "askhigh", "asklow", "askclose",  "askprice", "asksize", "quantity", "suspicious",
                 "bidopen", "bidhigh", "bidlow", "bidclose",  "bidprice", "bidsize", "exchange", "openinterest"
             };
 
-            if (_isCustomData)
+            if (IsCustomData)
             {
-                var keys = (data as DynamicData)?.GetStorageDictionary().Select(x => x.Key);
+                var keys = (data as DynamicData)?.GetStorageDictionary().ToHashSet(x => x.Key);
 
                 // C# types that are not DynamicData type
                 if (keys == null)
                 {
-                    var members = type.GetMembers().Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property);
-
-                    var duplicateKeys = members.GroupBy(x => x.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
-                    foreach (var duplicateKey in duplicateKeys)
+                    if (_membersByType.TryGetValue(type, out _members))
                     {
-                        throw new ArgumentException($"PandasData.ctor(): More than one \'{duplicateKey}\' member was found in \'{type.FullName}\' class.");
+                        keys = _members.ToHashSet(x => x.Name.ToLowerInvariant());
                     }
+                    else
+                    {
+                        var members = type.GetMembers().Where(x => x.MemberType == MemberTypes.Field || x.MemberType == MemberTypes.Property).ToList();
 
-                    // If the custom data derives from a Market Data (e.g. Tick, TradeBar, QuoteBar), exclude its keys
-                    var baseType = type.BaseType;
-                    var inheritedProperties = baseType != null && baseType.Namespace == dataMarketNamespace
-                        ? baseType.GetProperties().ToHashSet(x => x.Name.ToLowerInvariant())
-                        : _baseDataProperties;
+                        var duplicateKeys = members.GroupBy(x => x.Name.ToLowerInvariant()).Where(x => x.Count() > 1).Select(x => x.Key);
+                        foreach (var duplicateKey in duplicateKeys)
+                        {
+                            throw new ArgumentException($"PandasData.ctor(): More than one \'{duplicateKey}\' member was found in \'{type.FullName}\' class.");
+                        }
 
-                    keys = members.Select(x => x.Name.ToLowerInvariant()).Except(inheritedProperties).Concat(new[] {"value"});
+                        // If the custom data derives from a Market Data (e.g. Tick, TradeBar, QuoteBar), exclude its keys
+                        keys = members.ToHashSet(x => x.Name.ToLowerInvariant());
+                        keys.ExceptWith(_baseDataProperties);
+                        keys.ExceptWith(GetPropertiesNames(typeof(QuoteBar), type));
+                        keys.ExceptWith(GetPropertiesNames(typeof(TradeBar), type));
+                        keys.ExceptWith(GetPropertiesNames(typeof(Tick), type));
+                        keys.Add("value");
 
-                    _members = members.Where(x => keys.Contains(x.Name.ToLowerInvariant()));
+                        _members = members.Where(x => keys.Contains(x.Name.ToLowerInvariant())).ToList();
+                        _membersByType.TryAdd(type, _members);
+                    }
                 }
 
                 columns.Add("value");
-                columns.AddRange(keys);
+                columns.UnionWith(keys);
             }
 
-            _series = columns.Distinct().ToDictionary(k => k, v => Tuple.Create(new List<DateTime>(), new List<object>()));
+            _series = columns.ToDictionary(k => k, v => Tuple.Create(new List<DateTime>(), new List<object>()));
         }
 
         /// <summary>
@@ -304,7 +310,7 @@ class Remapper(wrapt.ObjectProxy):
             foreach (var member in _members)
             {
                 var key = member.Name.ToLowerInvariant();
-                var endTime = (baseData as IBaseData).EndTime;
+                var endTime = ((IBaseData) baseData).EndTime;
                 AddToSeries(key, endTime, (member as FieldInfo)?.GetValue(baseData));
                 AddToSeries(key, endTime, (member as PropertyInfo)?.GetValue(baseData));
             }
@@ -312,8 +318,8 @@ class Remapper(wrapt.ObjectProxy):
             var storage = (baseData as DynamicData)?.GetStorageDictionary();
             if (storage != null)
             {
-                var endTime = (baseData as IBaseData).EndTime;
-                var value = (baseData as IBaseData).Value;
+                var endTime = ((IBaseData) baseData).EndTime;
+                var value = ((IBaseData) baseData).Value;
                 AddToSeries("value", endTime, value);
 
                 foreach (var kvp in storage)
@@ -496,6 +502,19 @@ class Remapper(wrapt.ObjectProxy):
             {
                 throw new ArgumentException($"PandasData.AddToSeries(): {key} key does not exist in series dictionary.");
             }
+        }
+
+        /// <summary>
+        /// Get the lower-invariant name of properties of the type that a another type is assignable from 
+        /// </summary>
+        /// <param name="baseType">The type that is assignable from</param>
+        /// <param name="type">The type that is assignable by</param>
+        /// <returns>List of string. Empty list if not assignable from</returns>
+        private static IEnumerable<string> GetPropertiesNames(Type baseType, Type type)
+        {
+            return baseType.IsAssignableFrom(type)
+                ? baseType.GetProperties().Select(x => x.Name.ToLowerInvariant())
+                : Enumerable.Empty<string>();
         }
 
         /// <summary>

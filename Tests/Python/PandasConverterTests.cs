@@ -26,7 +26,6 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Data.Custom.CBOE;
 using QuantConnect.Tests.ToolBox;
 using QuantConnect.ToolBox;
 using QuantConnect.Util;
@@ -951,21 +950,22 @@ def Test(dataFrame, symbol):
         }
 
         [Test]
-        public void HandlesCustomDataBarsInheritsFromTradeBar()
+        [TestCase(typeof(SubTradeBar), "SubProperty")]
+        [TestCase(typeof(SubSubTradeBar), "SubSubProperty")]
+        public void HandlesCustomDataBarsInheritsFromTradeBar(Type type, string propertyName)
         {
             var converter = new PandasConverter();
             var symbol = Symbols.LTCUSD;
 
             var config = GetSubscriptionDataConfig<Quandl>(symbol, Resolution.Daily);
-            var custom = new CBOE();
-            var type = custom.GetType();
+            dynamic custom = Activator.CreateInstance(type);
 
             var rawBars = Enumerable
                 .Range(0, 10)
                 .Select(i =>
                 {
-                    var line = $"{DateTime.UtcNow.AddDays(i).ToStringInvariant("yyyy-MM-dd")},{i + 101},{i + 102},{i + 100},{i + 101},{i + 101}";
-                    return custom.Reader(config, line, DateTime.UtcNow.AddDays(i), false);
+                    var line = $"{DateTime.UtcNow.AddDays(i).ToStringInvariant("yyyyMMdd HH:mm")},{i + 101},{i + 102},{i + 100},{i + 101},{i + 101}";
+                    return custom.Reader(config, line, DateTime.UtcNow.AddDays(i), false) as BaseData;
                 })
                 .ToArray();
 
@@ -987,6 +987,10 @@ def Test(dataFrame, symbol):
                     var index = subDataFrame.index[i];
                     var value = subDataFrame.loc[index].value.AsManagedObject(typeof(decimal));
                     Assert.AreEqual(rawBars[i].Value, value);
+
+                    var transactions = subDataFrame.loc[index][propertyName.ToLowerInvariant()].AsManagedObject(typeof(decimal));
+                    var expected = type.GetProperty(propertyName)?.GetValue(rawBars[i]);
+                    Assert.AreEqual(expected, transactions);
                 }
             }
 
@@ -1120,6 +1124,30 @@ def Test(dataFrame, symbol):
                 .Select(i => new Tick(symbol, $"1440{i:D2}00,167{i:D2}00,1{i:D2},T,T,0", new DateTime(2013, 10, 7)))
                 .ToArray();
             return converter.GetDataFrame(rawBars);
+        }
+
+        internal class SubTradeBar : TradeBar
+        {
+            public decimal SubProperty => Value;
+
+            public SubTradeBar() { }
+
+            public SubTradeBar(TradeBar tradeBar) : base(tradeBar) { }
+
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode) =>
+                new SubTradeBar((TradeBar) base.Reader(config, line, date, isLiveMode));
+        }
+
+        internal class SubSubTradeBar : SubTradeBar
+        {
+            public decimal SubSubProperty => Value;
+
+            public SubSubTradeBar() { }
+
+            public SubSubTradeBar(TradeBar tradeBar) : base(tradeBar) { }
+
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode) =>
+                new SubSubTradeBar((TradeBar) base.Reader(config, line, date, isLiveMode));
         }
     }
 }
