@@ -61,11 +61,13 @@ namespace QuantConnect.Data.Custom.Fred
         {
             var csv = line.Split(',');
 
+            var parsedDate = Parse.DateTimeExact(csv[0], "yyyyMMdd");
             return new Fred
             {
                 Symbol = config.Symbol,
                 Value = Parse.Decimal(csv[1]),
-                Time = Parse.DateTimeExact(csv[0], "yyyyMMdd")
+                Time = parsedDate,
+                EndTime = parsedDate + TimeSpan.FromDays(1)
             };
         }
 
@@ -79,7 +81,8 @@ namespace QuantConnect.Data.Custom.Fred
             {
                 Symbol = Symbol,
                 Value = Value,
-                Time = Time
+                Time = Time,
+                EndTime = EndTime
             };
         }
 

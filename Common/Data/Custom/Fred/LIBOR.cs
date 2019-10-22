@@ -22,9 +22,9 @@ namespace QuantConnect.Data.Custom.Fred
         {
             ///<summary>
             /// Spot Next London Interbank Offered Rate (LIBOR), based on Swiss Franc (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHFONTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHFONTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -36,9 +36,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// Spot Next London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPYONTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPYONTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -50,9 +50,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 6-Month London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPY6MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPY6MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -64,9 +64,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 3-Month London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPY3MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPY3MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -78,9 +78,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 6-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USD6MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USD6MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -92,9 +92,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 1-Month London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPY1MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPY1MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -106,9 +106,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 12-Month London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPY12MD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPY12MD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -120,9 +120,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 12-Month London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBP12MD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBP12MD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -134,9 +134,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 1-Month London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBP1MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBP1MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -148,9 +148,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 1-Week London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBP1WKD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBP1WKD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -162,9 +162,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 2-Month London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBP2MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBP2MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -176,9 +176,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 3-Month London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBP3MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBP3MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -190,9 +190,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 1-Week London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPY1WKD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPY1WKD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -204,9 +204,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 2-Month London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPY2MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/JPY2MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -218,9 +218,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 6-Month London Interbank Offered Rate (LIBOR), based on Swiss Franc (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHF6MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHF6MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -232,9 +232,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 3-Month London Interbank Offered Rate (LIBOR), based on Swiss Franc (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHF3MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHF3MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -246,9 +246,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 1-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USD1MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USD1MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -260,9 +260,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 12-Month London Interbank Offered Rate (LIBOR), based on Swiss Franc (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHF12MD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHF12MD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -274,9 +274,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 12-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USD12MD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USD12MD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -288,9 +288,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 1-Month London Interbank Offered Rate (LIBOR), based on Swiss Franc (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHF1MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHF1MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -302,9 +302,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 1-Week London Interbank Offered Rate (LIBOR), based on Swiss Franc (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHF1WKD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHF1WKD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -316,9 +316,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 2-Month London Interbank Offered Rate (LIBOR), based on Swiss Franc (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHF2MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/CHF2MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -330,9 +330,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 12-Month London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EUR12MD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EUR12MD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -344,9 +344,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 6-Month London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBP6MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBP6MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -358,9 +358,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 1-Month London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EUR1MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EUR1MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -372,9 +372,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 2-Month London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EUR2MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EUR2MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -386,9 +386,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 3-Month London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EUR3MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EUR3MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -400,9 +400,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 6-Month London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EUR6MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EUR6MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -414,9 +414,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// Overnight London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EURONTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EURONTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -428,9 +428,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 1-Week London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USD1WKD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USD1WKD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -442,9 +442,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 2-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USD2MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USD2MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -456,9 +456,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 3-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USD3MTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USD3MTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -470,9 +470,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// Overnight London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USDONTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/USDONTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -484,9 +484,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// 1-Week London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EUR1WKD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EUR1WKD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
@@ -498,9 +498,9 @@ namespace QuantConnect.Data.Custom.Fred
 
             ///<summary>
             /// Overnight London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
-            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBPONTD156N
             /// </summary>
             /// <remarks>
+            /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GBPONTD156N
             /// The data series is lagged by one week due to an agreement with the source.
             /// London Interbank Offered Rate is the average interest rate at which leading banks borrow funds of a sizeable amount from other banks in the London market. Libor is the most widely used "benchmark" or reference rate for short term interest rates
             /// In consideration for ICE Benchmark Administration Limited ("IBA") coordinating and the Libor Contributor Banks supplying the data from which ICE LIBOR is compiled, the subscriber acknowledges and agrees that, to the fullest extent permitted by law, none of the IBA or the LIBOR Contributor Banks:
