@@ -66,7 +66,7 @@ namespace QuantConnect.Data.Custom.Fred
             public static string VIXOnAmazon => "VXAZNCLS";
 
             ///<summary>
-            /// CBOE S&P 100 Volatility Index: VXO (in Index)
+            /// CBOE S&amp;P 100 Volatility Index: VXO (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXOCLS
             /// </summary>
             /// <remarks>
@@ -102,7 +102,7 @@ namespace QuantConnect.Data.Custom.Fred
             public static string RVX => "RVXCLS";
 
             ///<summary>
-            /// CBOE S&P 500 3-Month Volatility Index (in Index)
+            /// CBOE S&amp;P 500 3-Month Volatility Index (in Index)
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXVCLS
             /// </summary>
             /// <remarks>

@@ -132,13 +132,13 @@ namespace QuantConnect.Data.Custom.Fred
             foreach (var observation in series)
             {
                 decimal value;
-                if (decimal.TryParse(observation.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
+                if (Parse.TryParse(observation.Value, NumberStyles.Any, out value))
                 {
                     objectList.Add(new FredApi
                     {
                         Symbol = config.Symbol,
-                        Time = observation.Date - TimeSpan.FromDays(1),
-                        EndTime = observation.Date,
+                        Time = observation.Date,
+                        EndTime = observation.Date + TimeSpan.FromDays(1),
                         Value = value
                     });
                 }
