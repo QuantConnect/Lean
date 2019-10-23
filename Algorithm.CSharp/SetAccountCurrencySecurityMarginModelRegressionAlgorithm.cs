@@ -99,7 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void UpdateExpectedOrderQuantity(decimal target)
         {
-            _expectedOrderQuantity = (Portfolio.TotalPortfolioValue * target * (1 - Settings.FreePortfolioValuePercentage) - _spy.Holdings.HoldingsValue)
+            _expectedOrderQuantity = ((Portfolio.TotalPortfolioValue - Settings.FreePortfolioValue) * target - _spy.Holdings.HoldingsValue)
                 / (_spy.Price * _spy.QuoteCurrency.ConversionRate);
             _expectedOrderQuantity--; // minus 1 per fees
             _expectedOrderQuantity -= _expectedOrderQuantity % _spy.SymbolProperties.LotSize;

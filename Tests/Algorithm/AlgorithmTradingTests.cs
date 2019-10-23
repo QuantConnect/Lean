@@ -785,6 +785,9 @@ namespace QuantConnect.Tests.Algorithm
             //Price rises to $50.
             Update(msft, 50);
 
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
+
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k.
             //Calculate the new holdings for 50% MSFT::
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
@@ -808,6 +811,9 @@ namespace QuantConnect.Tests.Algorithm
 
             //Price rises to $50.
             Update(msft, 50);
+
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
 
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k.
             //Calculate the new holdings for 50% MSFT::
@@ -833,6 +839,9 @@ namespace QuantConnect.Tests.Algorithm
             //Price rises to $50.
             Update(msft, 50);
 
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
+
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k.
             //Calculate the new holdings for 50% MSFT::
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
@@ -857,6 +866,9 @@ namespace QuantConnect.Tests.Algorithm
             //Price rises to $50.
             Update(msft, 50);
 
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
+
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k. MSFT is already 66% of holdings.
             //Calculate the order for 75% MSFT:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.75m);
@@ -880,6 +892,9 @@ namespace QuantConnect.Tests.Algorithm
             //Price rises to $50.
             Update(msft, 50);
 
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
+
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k. MSFT is already 66% of holdings.
             //Calculate the order for 75% MSFT:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.75m);
@@ -902,6 +917,9 @@ namespace QuantConnect.Tests.Algorithm
 
             //Price rises to $50.
             Update(msft, 50);
+
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
 
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k. MSFT is already 66% of holdings.
             //Calculate the order for 75% MSFT:
@@ -927,6 +945,9 @@ namespace QuantConnect.Tests.Algorithm
             //Price rises to $50.
             Update(msft, 50);
 
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
+
             //Now: 3000 * 50 = $150k Holdings, $25k Cash: $175k. MSFT is 86% of holdings.
             //Calculate the order for 50% MSFT:
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
@@ -950,6 +971,9 @@ namespace QuantConnect.Tests.Algorithm
             //Price rises to $50.
             Update(msft, 50);
 
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
+
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k. MSFT is 66% of holdings.
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, -0.5m);
 
@@ -971,6 +995,9 @@ namespace QuantConnect.Tests.Algorithm
 
             //Price rises to $50.
             Update(msft, 50);
+
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
 
             // Cash: 150k
             // MSFT: -(2000*50) = -100K
@@ -999,6 +1026,9 @@ namespace QuantConnect.Tests.Algorithm
             //Price rises to $50: holdings now worthless.
             Update(msft, 50m);
 
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
+
             //Now: 2000 * 50 = $0k Net Holdings, $50k Cash: $50k. MSFT is 0% of holdings.
             var actual = algo.CalculateOrderQuantity(Symbols.MSFT, 0.5m);
 
@@ -1020,6 +1050,9 @@ namespace QuantConnect.Tests.Algorithm
 
             //Price rises to $50
             Update(msft, 50m);
+
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
 
             // Cash: 150k
             // MSFT: -50*2000=100k
@@ -1052,6 +1085,9 @@ namespace QuantConnect.Tests.Algorithm
             algo.Portfolio[Symbols.MSFT].SetHoldings(25, -2000);
 
             Update(msft, 12.5m);
+
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
 
             // Cash: 150k
             // MSFT: -25k

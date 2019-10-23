@@ -376,6 +376,9 @@ namespace QuantConnect.Tests.Algorithm
 
             Assert.AreEqual(150000, algo.Portfolio.TotalPortfolioValue);
 
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
+
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k.
             //Calculate the new holdings for 50% security::
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
@@ -399,6 +402,9 @@ namespace QuantConnect.Tests.Algorithm
 
             //Price rises to $50.
             Update(algo.Portfolio.CashBook, security, 50);
+
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
 
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k.
             //Calculate the new holdings for 50% security::
@@ -424,6 +430,9 @@ namespace QuantConnect.Tests.Algorithm
             //Price rises to $50.
             Update(algo.Portfolio.CashBook, security, 50);
 
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
+
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k.
             //Calculate the new holdings for 50% security::
             var actual = algo.CalculateOrderQuantity(_symbol, 0.5m);
@@ -446,6 +455,9 @@ namespace QuantConnect.Tests.Algorithm
 
             //Price rises to $50.
             Update(algo.Portfolio.CashBook, security, 50);
+
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
 
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k. security is already 66% of holdings.
             //Calculate the order for 75% security:
@@ -470,6 +482,9 @@ namespace QuantConnect.Tests.Algorithm
             //Price rises to $50.
             Update(algo.Portfolio.CashBook, security, 50);
 
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
+
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k. security is already 66% of holdings.
             //Calculate the order for 75% security:
             var actual = algo.CalculateOrderQuantity(_symbol, 0.75m);
@@ -492,6 +507,9 @@ namespace QuantConnect.Tests.Algorithm
 
             //Price rises to $50.
             Update(algo.Portfolio.CashBook, security, 50);
+
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
 
             //Now: 2000 * 50 = $100k Holdings, $50k Cash: $150k. security is already 66% of holdings.
             //Calculate the order for 75% security:
@@ -516,6 +534,9 @@ namespace QuantConnect.Tests.Algorithm
 
             //Price rises to $50.
             Update(algo.Portfolio.CashBook, security, 50);
+
+            algo.Settings.FreePortfolioValue =
+                algo.Portfolio.TotalPortfolioValue * algo.Settings.FreePortfolioValuePercentage;
 
             //Now: 3000 * 50 = $150k Holdings, $25k Cash: $175k. security is 86% of holdings.
             //Calculate the order for 50% security:

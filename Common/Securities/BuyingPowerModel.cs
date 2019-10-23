@@ -148,6 +148,7 @@ namespace QuantConnect.Securities
 
             var orderValue = parameters.Order.GetValue(parameters.Security)
                 * GetInitialMarginRequirement(parameters.Security);
+
             return orderValue + Math.Sign(orderValue) * feesInAccountCurrency;
         }
 
@@ -342,6 +343,13 @@ namespace QuantConnect.Securities
                 var reason = $"The price of the {parameters.Security.Symbol.Value} security is zero because it does not have any market " +
                     "data yet. When the security price is set this security will be ready for trading.";
                 return new GetMaximumOrderQuantityForTargetValueResult(0, reason);
+            }
+
+            var minimumValue = unitPrice * parameters.Security.SymbolProperties.LotSize;
+            if (minimumValue > targetOrderValue)
+            {
+                var reason = $"The target order value {targetOrderValue} is less than the minimum {minimumValue}.";
+                return new GetMaximumOrderQuantityForTargetValueResult(0, reason, false);
             }
 
             // calculate the total margin available

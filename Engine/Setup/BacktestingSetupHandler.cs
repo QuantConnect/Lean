@@ -212,6 +212,10 @@ namespace QuantConnect.Lean.Engine.Setup
             BaseSetupHandler.SetupCurrencyConversions(algorithm, parameters.UniverseSelection);
             StartingPortfolioValue = algorithm.Portfolio.Cash;
 
+            // we set the free portfolio value based on the initial total value and the free percentage value
+            algorithm.Settings.FreePortfolioValue =
+                algorithm.Portfolio.TotalPortfolioValue * algorithm.Settings.FreePortfolioValuePercentage;
+
             //Max Orders: 10k per backtest:
             if (job.UserPlan == UserPlan.Free)
             {
