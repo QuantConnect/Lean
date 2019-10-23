@@ -29,7 +29,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AAAAEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEM1BRRAAA2ACRPITRIV";
+            public static string AAAAEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEM1BRRAAA2ACRPITRIV";
 
             ///<summary>
             /// ICE BofAML AAA-A US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -40,7 +40,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AAAAUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEM1RAAA2ALCRPIUSTRIV";
+            public static string AAAAUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEM1RAAA2ALCRPIUSTRIV";
 
             ///<summary>
             /// ICE BofAML Asia Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -51,7 +51,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AsiaEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMRACRPIASIATRIV";
+            public static string AsiaEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMRACRPIASIATRIV";
 
             ///<summary>
             /// ICE BofAML Asia US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -62,7 +62,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AsiaUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMALLCRPIASIAUSTRIV";
+            public static string AsiaUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMALLCRPIASIAUSTRIV";
 
             ///<summary>
             /// ICE BofAML B and Lower Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -73,7 +73,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BandLowerEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEM4BRRBLCRPITRIV";
+            public static string BandLowerEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEM4BRRBLCRPITRIV";
 
             ///<summary>
             /// ICE BofAML B and Lower US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -84,7 +84,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BandLowerUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEM4RBLLCRPIUSTRIV";
+            public static string BandLowerUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEM4RBLLCRPIUSTRIV";
 
             ///<summary>
             /// ICE BofAML BB Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -95,7 +95,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEM3BRRBBCRPITRIV";
+            public static string BBEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEM3BRRBBCRPITRIV";
 
             ///<summary>
             /// ICE BofAML BB US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -106,7 +106,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEM3RBBLCRPIUSTRIV";
+            public static string BBUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEM3RBBLCRPIUSTRIV";
 
             ///<summary>
             /// ICE BofAML BBB Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -117,7 +117,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBBEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEM2BRRBBBCRPITRIV";
+            public static string BBBEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEM2BRRBBBCRPITRIV";
 
             ///<summary>
             /// ICE BofAML BBB US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -128,7 +128,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBBUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEM2RBBBLCRPIUSTRIV";
+            public static string BBBUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEM2RBBBLCRPIUSTRIV";
 
             ///<summary>
             /// ICE BofAML Crossover Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -139,7 +139,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string CrossoverEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEM5BCOCRPITRIV";
+            public static string CrossoverEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEM5BCOCRPITRIV";
 
             ///<summary>
             /// ICE BofAML Crossover US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -150,7 +150,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string CrossoverUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMXOCOLCRPIUSTRIV";
+            public static string CrossoverUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMXOCOLCRPIUSTRIV";
 
             ///<summary>
             /// ICE BofAML Emerging Markets Corporate Plus Index Total Return Index Value (in Index)
@@ -165,7 +165,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EmergingMarketsCorporatePlusIndexTotalReturnIndexValue => "BAMLEMCBPITRIV";
+            public static string EmergingMarketsCorporatePlusIndexTotalReturnIndexValue = "BAMLEMCBPITRIV";
 
             ///<summary>
             /// ICE BofAML Euro Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -176,7 +176,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EuroEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMEBCRPIETRIV";
+            public static string EuroEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMEBCRPIETRIV";
 
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -187,7 +187,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EMEAEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMRECRPIEMEATRIV";
+            public static string EMEAEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMRECRPIEMEATRIV";
 
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -198,7 +198,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EMEAUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMELLCRPIEMEAUSTRIV";
+            public static string EMEAUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMELLCRPIEMEAUSTRIV";
 
             ///<summary>
             /// ICE BofAML Financial Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -209,7 +209,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string FinancialEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMFSFCRPITRIV";
+            public static string FinancialEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMFSFCRPITRIV";
 
             ///<summary>
             /// ICE BofAML Financial US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -220,7 +220,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string FinancialUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMFLFLCRPIUSTRIV";
+            public static string FinancialUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMFLFLCRPIUSTRIV";
 
             ///<summary>
             /// ICE BofAML High Grade Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -231,7 +231,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighGradeEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMIBHGCRPITRIV";
+            public static string HighGradeEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMIBHGCRPITRIV";
 
             ///<summary>
             /// ICE BofAML High Grade US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -242,7 +242,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighGradeUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMHGHGLCRPIUSTRIV";
+            public static string HighGradeUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMHGHGLCRPIUSTRIV";
 
             ///<summary>
             /// ICE BofAML High Yield Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -253,7 +253,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighYieldEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMHBHYCRPITRIV";
+            public static string HighYieldEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMHBHYCRPITRIV";
 
             ///<summary>
             /// ICE BofAML High Yield US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -264,7 +264,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighYieldUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMHYHYLCRPIUSTRIV";
+            public static string HighYieldUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMHYHYLCRPIUSTRIV";
 
             ///<summary>
             /// ICE BofAML Latin America Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -275,7 +275,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string LatinAmericaEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMRLCRPILATRIV";
+            public static string LatinAmericaEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMRLCRPILATRIV";
 
             ///<summary>
             /// ICE BofAML Latin America US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -286,7 +286,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string LatinAmericaUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMLLLCRPILAUSTRIV";
+            public static string LatinAmericaUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMLLLCRPILAUSTRIV";
 
             ///<summary>
             /// ICE BofAML Non-Financial Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -297,7 +297,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string NonFinancialEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMNSNFCRPITRIV";
+            public static string NonFinancialEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMNSNFCRPITRIV";
 
             ///<summary>
             /// ICE BofAML Non-Financial US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -308,7 +308,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string NonFinancialUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMNFNFLCRPIUSTRIV";
+            public static string NonFinancialUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMNFNFLCRPIUSTRIV";
 
             ///<summary>
             /// ICE BofAML US Corporate Master Option-Adjusted Spread (in Percent)
@@ -332,7 +332,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateMasterOptionAdjustedSpread => "BAMLC0A0CM";
+            public static string USCorporateMasterOptionAdjustedSpread = "BAMLC0A0CM";
 
             ///<summary>
             /// ICE BofAML US High Yield Master II Option-Adjusted Spread (in Percent)
@@ -347,7 +347,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldMasterIIOptionAdjustedSpread => "BAMLH0A0HYM2";
+            public static string USHighYieldMasterIIOptionAdjustedSpread = "BAMLH0A0HYM2";
 
             ///<summary>
             /// ICE BofAML US Corporate 1-3 Year Option-Adjusted Spread (in Percent)
@@ -358,7 +358,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate1To3YearOptionAdjustedSpread => "BAMLC1A0C13Y";
+            public static string USCorporate1To3YearOptionAdjustedSpread = "BAMLC1A0C13Y";
 
             ///<summary>
             /// ICE BofAML US Corporate 10-15 Year Option-Adjusted Spread (in Percent)
@@ -369,7 +369,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate10To15YearOptionAdjustedSpread => "BAMLC7A0C1015Y";
+            public static string USCorporate10To15YearOptionAdjustedSpread = "BAMLC7A0C1015Y";
 
             ///<summary>
             /// ICE BofAML US Corporate 15+ Year Option-Adjusted Spread (in Percent)
@@ -380,7 +380,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateMoreThan15YearOptionAdjustedSpread => "BAMLC8A0C15PY";
+            public static string USCorporateMoreThan15YearOptionAdjustedSpread = "BAMLC8A0C15PY";
 
             ///<summary>
             /// ICE BofAML US Corporate 3-5 Year Option-Adjusted Spread (in Percent)
@@ -391,7 +391,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate3To5YearOptionAdjustedSpread => "BAMLC2A0C35Y";
+            public static string USCorporate3To5YearOptionAdjustedSpread = "BAMLC2A0C35Y";
 
             ///<summary>
             /// ICE BofAML US Corporate 5-7 Year Option-Adjusted Spread (in Percent)
@@ -402,7 +402,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate5To7YearOptionAdjustedSpread => "BAMLC3A0C57Y";
+            public static string USCorporate5To7YearOptionAdjustedSpread = "BAMLC3A0C57Y";
 
             ///<summary>
             /// ICE BofAML US Corporate 7-10 Year Option-Adjusted Spread (in Percent)
@@ -413,7 +413,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate7To10YearOptionAdjustedSpread => "BAMLC4A0C710Y";
+            public static string USCorporate7To10YearOptionAdjustedSpread = "BAMLC4A0C710Y";
 
             ///<summary>
             /// ICE BofAML Public Sector Issuers US Emerging Markets Liquid Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -424,7 +424,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string PublicSectorIssuersUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMPUPUBSLCRPIUSTRIV";
+            public static string PublicSectorIssuersUSEmergingMarketsLiquidCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMPUPUBSLCRPIUSTRIV";
 
             ///<summary>
             /// ICE BofAML US Emerging Markets Corporate Plus Sub-Index Total Return Index Value (in Index)
@@ -435,7 +435,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue => "BAMLEMUBCRPIUSTRIV";
+            public static string USEmergingMarketsCorporatePlusSubIndexTotalReturnIndexValue = "BAMLEMUBCRPIUSTRIV";
 
             ///<summary>
             /// ICE BofAML US Emerging Markets Liquid Corporate Plus Index Total Return Index Value (in Index)
@@ -449,7 +449,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USEmergingMarketsLiquidCorporatePlusIndexTotalReturnIndexValue => "BAMLEMCLLCRPIUSTRIV";
+            public static string USEmergingMarketsLiquidCorporatePlusIndexTotalReturnIndexValue = "BAMLEMCLLCRPIUSTRIV";
 
             ///<summary>
             /// ICE BofAML Euro High Yield Index Total Return Index Value (in Index)
@@ -463,7 +463,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EuroHighYieldIndexTotalReturnIndexValue => "BAMLHE00EHYITRIV";
+            public static string EuroHighYieldIndexTotalReturnIndexValue = "BAMLHE00EHYITRIV";
 
             ///<summary>
             /// ICE BofAML US Corp 1-3yr Total Return Index Value (in Index)
@@ -474,7 +474,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorp1To3YearsTotalReturnIndexValue => "BAMLCC1A013YTRIV";
+            public static string USCorp1To3YearsTotalReturnIndexValue = "BAMLCC1A013YTRIV";
 
             ///<summary>
             /// ICE BofAML US Corp 10-15yr Total Return Index Value (in Index)
@@ -485,7 +485,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorp10To15TotalReturnIndexValue => "BAMLCC7A01015YTRIV";
+            public static string USCorp10To15TotalReturnIndexValue = "BAMLCC7A01015YTRIV";
 
             ///<summary>
             /// ICE BofAML US Corp 15+yr Total Return Index Value (in Index)
@@ -496,7 +496,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorpMoreThan15YearsTotalReturnIndexValue => "BAMLCC8A015PYTRIV";
+            public static string USCorpMoreThan15YearsTotalReturnIndexValue = "BAMLCC8A015PYTRIV";
 
             ///<summary>
             /// ICE BofAML US Corp 3-5yr Total Return Index Value (in Index)
@@ -507,7 +507,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorpeTo5YearsTotalReturnIndexValue => "BAMLCC2A035YTRIV";
+            public static string USCorpeTo5YearsTotalReturnIndexValue = "BAMLCC2A035YTRIV";
 
             ///<summary>
             /// ICE BofAML US Corp 5-7yr Total Return Index Value (in Index)
@@ -518,7 +518,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorp5To7YearsTotalReturnIndexValue => "BAMLCC3A057YTRIV";
+            public static string USCorp5To7YearsTotalReturnIndexValue = "BAMLCC3A057YTRIV";
 
             ///<summary>
             /// ICE BofAML US Corporate 7-10yr Total Return Index Value (in Index)
@@ -529,7 +529,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate7To10YearsTotalReturnIndexValue => "BAMLCC4A0710YTRIV";
+            public static string USCorporate7To10YearsTotalReturnIndexValue = "BAMLCC4A0710YTRIV";
 
             ///<summary>
             /// ICE BofAML US Corp A Total Return Index Value (in Index)
@@ -540,7 +540,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorpATotalReturnIndexValue => "BAMLCC0A3ATRIV";
+            public static string USCorpATotalReturnIndexValue = "BAMLCC0A3ATRIV";
 
             ///<summary>
             /// ICE BofAML US Corp AA Total Return Index Value (in Index)
@@ -551,7 +551,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorpAATotalReturnIndexValue => "BAMLCC0A2AATRIV";
+            public static string USCorpAATotalReturnIndexValue = "BAMLCC0A2AATRIV";
 
             ///<summary>
             /// ICE BofAML US Corp AAA Total Return Index Value (in Index)
@@ -562,7 +562,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorpAAATotalReturnIndexValue => "BAMLCC0A1AAATRIV";
+            public static string USCorpAAATotalReturnIndexValue = "BAMLCC0A1AAATRIV";
 
             ///<summary>
             /// ICE BofAML US High Yield B Total Return Index Value (in Index)
@@ -573,7 +573,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldBTotalReturnIndexValue => "BAMLHYH0A2BTRIV";
+            public static string USHighYieldBTotalReturnIndexValue = "BAMLHYH0A2BTRIV";
 
             ///<summary>
             /// ICE BofAML US High Yield BB Total Return Index Value (in Index)
@@ -584,7 +584,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldBBTotalReturnIndexValue => "BAMLHYH0A1BBTRIV";
+            public static string USHighYieldBBTotalReturnIndexValue = "BAMLHYH0A1BBTRIV";
 
             ///<summary>
             /// ICE BofAML US Corp BBB Total Return Index Value (in Index)
@@ -595,7 +595,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorpBBBTotalReturnIndexValue => "BAMLCC0A4BBBTRIV";
+            public static string USCorpBBBTotalReturnIndexValue = "BAMLCC0A4BBBTRIV";
 
             ///<summary>
             /// ICE BofAML US High Yield CCC or Below Total Return Index Value (in Index)
@@ -606,7 +606,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldCCCorBelowTotalReturnIndexValue => "BAMLHYH0A3CMTRIV";
+            public static string USHighYieldCCCorBelowTotalReturnIndexValue = "BAMLHYH0A3CMTRIV";
 
             ///<summary>
             /// ICE BofAML US Corp Master Total Return Index Value (in Index)
@@ -621,7 +621,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorpMasterTotalReturnIndexValue => "BAMLCC0A0CMTRIV";
+            public static string USCorpMasterTotalReturnIndexValue = "BAMLCC0A0CMTRIV";
 
             ///<summary>
             /// ICE BofAML US High Yield Master II Total Return Index Value (in Index)
@@ -635,7 +635,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldMasterIITotalReturnIndexValue => "BAMLHYH0A0HYM2TRIV";
+            public static string USHighYieldMasterIITotalReturnIndexValue = "BAMLHYH0A0HYM2TRIV";
 
             ///<summary>
             /// ICE BofAML AAA-A Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -647,7 +647,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AAAAEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEM1BRRAAA2ACRPIOAS";
+            public static string AAAAEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEM1BRRAAA2ACRPIOAS";
 
             ///<summary>
             /// ICE BofAML AAA-A US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -659,7 +659,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AAAAUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEM1RAAA2ALCRPIUSOAS";
+            public static string AAAAUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEM1RAAA2ALCRPIUSOAS";
 
             ///<summary>
             /// ICE BofAML Asia Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -671,7 +671,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AsiaEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMRACRPIASIAOAS";
+            public static string AsiaEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMRACRPIASIAOAS";
 
             ///<summary>
             /// ICE BofAML Asia US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -683,7 +683,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AsiaUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMALLCRPIASIAUSOAS";
+            public static string AsiaUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMALLCRPIASIAUSOAS";
 
             ///<summary>
             /// ICE BofAML B and Lower Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -695,7 +695,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BandLowerEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEM4BRRBLCRPIOAS";
+            public static string BandLowerEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEM4BRRBLCRPIOAS";
 
             ///<summary>
             /// ICE BofAML B and Lower US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -707,7 +707,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BandLowerUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEM4RBLLCRPIUSOAS";
+            public static string BandLowerUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEM4RBLLCRPIUSOAS";
 
             ///<summary>
             /// ICE BofAML BB Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -719,7 +719,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEM3BRRBBCRPIOAS";
+            public static string BBEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEM3BRRBBCRPIOAS";
 
             ///<summary>
             /// ICE BofAML BB US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -731,7 +731,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEM3RBBLCRPIUSOAS";
+            public static string BBUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEM3RBBLCRPIUSOAS";
 
             ///<summary>
             /// ICE BofAML BBB Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -743,7 +743,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBBEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEM2BRRBBBCRPIOAS";
+            public static string BBBEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEM2BRRBBBCRPIOAS";
 
             ///<summary>
             /// ICE BofAML BBB US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -755,7 +755,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBBUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEM2RBBBLCRPIUSOAS";
+            public static string BBBUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEM2RBBBLCRPIUSOAS";
 
             ///<summary>
             /// ICE BofAML Crossover Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -767,7 +767,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string CrossoverEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEM5BCOCRPIOAS";
+            public static string CrossoverEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEM5BCOCRPIOAS";
 
             ///<summary>
             /// ICE BofAML Crossover US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -779,7 +779,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string CrossoverUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMXOCOLCRPIUSOAS";
+            public static string CrossoverUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMXOCOLCRPIUSOAS";
 
             ///<summary>
             /// ICE BofAML Emerging Markets Corporate Plus Index Option-Adjusted Spread (in Percent)
@@ -794,7 +794,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EmergingMarketsCorporatePlusIndexOptionAdjustedSpread => "BAMLEMCBPIOAS";
+            public static string EmergingMarketsCorporatePlusIndexOptionAdjustedSpread = "BAMLEMCBPIOAS";
 
             ///<summary>
             /// ICE BofAML Euro Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -806,7 +806,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EuroEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMEBCRPIEOAS";
+            public static string EuroEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMEBCRPIEOAS";
 
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -818,7 +818,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EMEAEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMRECRPIEMEAOAS";
+            public static string EMEAEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMRECRPIEMEAOAS";
 
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -830,7 +830,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EMEAUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMELLCRPIEMEAUSOAS";
+            public static string EMEAUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMELLCRPIEMEAUSOAS";
 
             ///<summary>
             /// ICE BofAML Financial Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -842,7 +842,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string FinancialEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMFSFCRPIOAS";
+            public static string FinancialEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMFSFCRPIOAS";
 
             ///<summary>
             /// ICE BofAML Financial US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -854,7 +854,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string FinancialUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMFLFLCRPIUSOAS";
+            public static string FinancialUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMFLFLCRPIUSOAS";
 
             ///<summary>
             /// ICE BofAML High Grade Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -866,7 +866,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighGradeEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMIBHGCRPIOAS";
+            public static string HighGradeEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMIBHGCRPIOAS";
 
             ///<summary>
             /// ICE BofAML High Grade US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -878,7 +878,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighGradeUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMHGHGLCRPIUSOAS";
+            public static string HighGradeUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMHGHGLCRPIUSOAS";
 
             ///<summary>
             /// ICE BofAML High Yield Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -890,7 +890,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighYieldEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMHBHYCRPIOAS";
+            public static string HighYieldEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMHBHYCRPIOAS";
 
             ///<summary>
             /// ICE BofAML High Yield US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -902,7 +902,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighYieldUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMHYHYLCRPIUSOAS";
+            public static string HighYieldUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMHYHYLCRPIUSOAS";
 
             ///<summary>
             /// ICE BofAML Latin America Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -914,7 +914,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string LatinAmericaEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMRLCRPILAOAS";
+            public static string LatinAmericaEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMRLCRPILAOAS";
 
             ///<summary>
             /// ICE BofAML Latin America US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -926,7 +926,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string LatinAmericaUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMLLLCRPILAUSOAS";
+            public static string LatinAmericaUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMLLLCRPILAUSOAS";
 
             ///<summary>
             /// ICE BofAML Non-Financial Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -938,7 +938,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string NonFinancialEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMNSNFCRPIOAS";
+            public static string NonFinancialEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMNSNFCRPIOAS";
 
             ///<summary>
             /// ICE BofAML Non-Financial US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -950,7 +950,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string NonFinancialUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMNFNFLCRPIUSOAS";
+            public static string NonFinancialUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMNFNFLCRPIUSOAS";
 
             ///<summary>
             /// ICE BofAML Public Sector Issuers US Emerging Markets Liquid Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -962,7 +962,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string PublicSectorIssuersUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMPUPUBSLCRPIUSOAS";
+            public static string PublicSectorIssuersUSEmergingMarketsLiquidCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMPUPUBSLCRPIUSOAS";
 
             ///<summary>
             /// ICE BofAML US Emerging Markets Corporate Plus Sub-Index Option-Adjusted Spread (in Percent)
@@ -974,7 +974,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread => "BAMLEMUBCRPIUSOAS";
+            public static string USEmergingMarketsCorporatePlusSubIndexOptionAdjustedSpread = "BAMLEMUBCRPIUSOAS";
 
             ///<summary>
             /// ICE BofAML US Emerging Markets Liquid Corporate Plus Index Option-Adjusted Spread (in Percent)
@@ -988,7 +988,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USEmergingMarketsLiquidCorporatePlusIndexOptionAdjustedSpread => "BAMLEMCLLCRPIUSOAS";
+            public static string USEmergingMarketsLiquidCorporatePlusIndexOptionAdjustedSpread = "BAMLEMCLLCRPIUSOAS";
 
             ///<summary>
             /// ICE BofAML Euro High Yield Index Option-Adjusted Spread (in Percent)
@@ -1003,7 +1003,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EuroHighYieldIndexOptionAdjustedSpread => "BAMLHE00EHYIOAS";
+            public static string EuroHighYieldIndexOptionAdjustedSpread = "BAMLHE00EHYIOAS";
 
             ///<summary>
             /// ICE BofAML US Corporate A Option-Adjusted Spread (in Percent)
@@ -1015,7 +1015,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateAOptionAdjustedSpread => "BAMLC0A3CA";
+            public static string USCorporateAOptionAdjustedSpread = "BAMLC0A3CA";
 
             ///<summary>
             /// ICE BofAML US Corporate AA Option-Adjusted Spread (in Percent)
@@ -1027,7 +1027,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateAAOptionAdjustedSpread => "BAMLC0A2CAA";
+            public static string USCorporateAAOptionAdjustedSpread = "BAMLC0A2CAA";
 
             ///<summary>
             /// ICE BofAML US Corporate AAA Option-Adjusted Spread (in Percent)
@@ -1039,7 +1039,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateAAAOptionAdjustedSpread => "BAMLC0A1CAAA";
+            public static string USCorporateAAAOptionAdjustedSpread = "BAMLC0A1CAAA";
 
             ///<summary>
             /// ICE BofAML US High Yield B Option-Adjusted Spread (in Percent)
@@ -1051,7 +1051,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldBOptionAdjustedSpread => "BAMLH0A2HYB";
+            public static string USHighYieldBOptionAdjustedSpread = "BAMLH0A2HYB";
 
             ///<summary>
             /// ICE BofAML US High Yield BB Option-Adjusted Spread (in Percent)
@@ -1063,7 +1063,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldBBOptionAdjustedSpread => "BAMLH0A1HYBB";
+            public static string USHighYieldBBOptionAdjustedSpread = "BAMLH0A1HYBB";
 
             ///<summary>
             /// ICE BofAML US Corporate BBB Option-Adjusted Spread (in Percent)
@@ -1075,7 +1075,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateBBBOptionAdjustedSpread => "BAMLC0A4CBBB";
+            public static string USCorporateBBBOptionAdjustedSpread = "BAMLC0A4CBBB";
 
             ///<summary>
             /// ICE BofAML US High Yield CCC or Below Option-Adjusted Spread (in Percent)
@@ -1087,7 +1087,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldCCCorBelowOptionAdjustedSpread => "BAMLH0A3HYC";
+            public static string USHighYieldCCCorBelowOptionAdjustedSpread = "BAMLH0A3HYC";
 
             ///<summary>
             /// ICE BofAML AAA-A Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1098,7 +1098,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AAAAEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEM1BRRAAA2ACRPIEY";
+            public static string AAAAEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEM1BRRAAA2ACRPIEY";
 
             ///<summary>
             /// ICE BofAML AAA-A US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1109,7 +1109,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AAAAUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield => "BAMLEM1RAAA2ALCRPIUSEY";
+            public static string AAAAUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield = "BAMLEM1RAAA2ALCRPIUSEY";
 
             ///<summary>
             /// ICE BofAML Asia Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1120,7 +1120,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AsiaEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEMRACRPIASIAEY";
+            public static string AsiaEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEMRACRPIASIAEY";
 
             ///<summary>
             /// ICE BofAML Asia US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1131,7 +1131,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AsiaUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield => "BAMLEMALLCRPIASIAUSEY";
+            public static string AsiaUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield = "BAMLEMALLCRPIASIAUSEY";
 
             ///<summary>
             /// ICE BofAML B and Lower Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1142,7 +1142,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BandLowerEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEM4BRRBLCRPIEY";
+            public static string BandLowerEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEM4BRRBLCRPIEY";
 
             ///<summary>
             /// ICE BofAML B and Lower US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1153,7 +1153,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BandLowerUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield => "BAMLEM4RBLLCRPIUSEY";
+            public static string BandLowerUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield = "BAMLEM4RBLLCRPIUSEY";
 
             ///<summary>
             /// ICE BofAML BB Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1164,7 +1164,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEM3BRRBBCRPIEY";
+            public static string BBEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEM3BRRBBCRPIEY";
 
             ///<summary>
             /// ICE BofAML BB US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1175,7 +1175,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield => "BAMLEM3RBBLCRPIUSEY";
+            public static string BBUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield = "BAMLEM3RBBLCRPIUSEY";
 
             ///<summary>
             /// ICE BofAML BBB Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1186,7 +1186,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBBEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEM2BRRBBBCRPIEY";
+            public static string BBBEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEM2BRRBBBCRPIEY";
 
             ///<summary>
             /// ICE BofAML BBB US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1197,7 +1197,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBBUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield => "BAMLEM2RBBBLCRPIUSEY";
+            public static string BBBUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield = "BAMLEM2RBBBLCRPIUSEY";
 
             ///<summary>
             /// ICE BofAML Crossover Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1208,7 +1208,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string CrossoverEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEM5BCOCRPIEY";
+            public static string CrossoverEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEM5BCOCRPIEY";
 
             ///<summary>
             /// ICE BofAML Crossover US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1219,7 +1219,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string CrossoverUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield => "BAMLEMXOCOLCRPIUSEY";
+            public static string CrossoverUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield = "BAMLEMXOCOLCRPIUSEY";
 
             ///<summary>
             /// ICE BofAML Emerging Markets Corporate Plus Index Effective Yield (in Percent)
@@ -1233,7 +1233,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EmergingMarketsCorporatePlusIndexEffectiveYield => "BAMLEMCBPIEY";
+            public static string EmergingMarketsCorporatePlusIndexEffectiveYield = "BAMLEMCBPIEY";
 
             ///<summary>
             /// ICE BofAML Euro Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1244,7 +1244,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EuroEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEMEBCRPIEEY";
+            public static string EuroEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEMEBCRPIEEY";
 
             ///<summary>
             /// ICE BofAML Euro High Yield Index Effective Yield (in Percent)
@@ -1258,7 +1258,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EuroHighYieldIndexEffectiveYield => "BAMLHE00EHYIEY";
+            public static string EuroHighYieldIndexEffectiveYield = "BAMLHE00EHYIEY";
 
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1269,7 +1269,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EMEAEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEMRECRPIEMEAEY";
+            public static string EMEAEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEMRECRPIEMEAEY";
 
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1280,7 +1280,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EMEAUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield => "BAMLEMELLCRPIEMEAUSEY";
+            public static string EMEAUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield = "BAMLEMELLCRPIEMEAUSEY";
 
             ///<summary>
             /// ICE BofAML Financial Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1291,7 +1291,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string FinancialEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEMFSFCRPIEY";
+            public static string FinancialEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEMFSFCRPIEY";
 
             ///<summary>
             /// ICE BofAML Financial US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1302,7 +1302,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string FinancialUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield => "BAMLEMFLFLCRPIUSEY";
+            public static string FinancialUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield = "BAMLEMFLFLCRPIUSEY";
 
             ///<summary>
             /// ICE BofAML High Grade Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1313,7 +1313,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighGradeEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEMIBHGCRPIEY";
+            public static string HighGradeEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEMIBHGCRPIEY";
 
             ///<summary>
             /// ICE BofAML High Grade US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1324,7 +1324,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighGradeUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield => "BAMLEMHGHGLCRPIUSEY";
+            public static string HighGradeUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield = "BAMLEMHGHGLCRPIUSEY";
 
             ///<summary>
             /// ICE BofAML High Yield Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1335,7 +1335,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighYieldEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEMHBHYCRPIEY";
+            public static string HighYieldEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEMHBHYCRPIEY";
 
             ///<summary>
             /// ICE BofAML High Yield US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1346,7 +1346,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighYieldUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield => "BAMLEMHYHYLCRPIUSEY";
+            public static string HighYieldUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield = "BAMLEMHYHYLCRPIUSEY";
 
             ///<summary>
             /// ICE BofAML Latin America Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1357,7 +1357,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string LatinAmericaEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEMRLCRPILAEY";
+            public static string LatinAmericaEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEMRLCRPILAEY";
 
             ///<summary>
             /// ICE BofAML Latin America US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1368,7 +1368,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string LatinAmericaUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield => "BAMLEMLLLCRPILAUSEY";
+            public static string LatinAmericaUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield = "BAMLEMLLLCRPILAUSEY";
 
             ///<summary>
             /// ICE BofAML Non-Financial Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1379,7 +1379,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string NonFinancialEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEMNSNFCRPIEY";
+            public static string NonFinancialEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEMNSNFCRPIEY";
 
             ///<summary>
             /// ICE BofAML Non-Financial US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1390,7 +1390,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string NonFinancialUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield => "BAMLEMNFNFLCRPIUSEY";
+            public static string NonFinancialUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield = "BAMLEMNFNFLCRPIUSEY";
 
             ///<summary>
             /// ICE BofAML Public Sector Issuers US Emerging Markets Liquid Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1401,7 +1401,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string PublicSectorIssuersUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield => "BAMLEMPUPUBSLCRPIUSEY";
+            public static string PublicSectorIssuersUSEmergingMarketsLiquidCorporatePlusSubIndexEffectiveYield = "BAMLEMPUPUBSLCRPIUSEY";
 
             ///<summary>
             /// ICE BofAML US Corporate 1-3 Year Effective Yield (in Percent)
@@ -1412,7 +1412,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate1ThreeYearEffectiveYield => "BAMLC1A0C13YEY";
+            public static string USCorporate1ThreeYearEffectiveYield = "BAMLC1A0C13YEY";
 
             ///<summary>
             /// ICE BofAML US Corporate 10-15 Year Effective Yield (in Percent)
@@ -1423,7 +1423,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate10To15YearEffectiveYield => "BAMLC7A0C1015YEY";
+            public static string USCorporate10To15YearEffectiveYield = "BAMLC7A0C1015YEY";
 
             ///<summary>
             /// ICE BofAML US Corporate 15+ Year Effective Yield (in Percent)
@@ -1434,7 +1434,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateMoreThan15YearEffectiveYield => "BAMLC8A0C15PYEY";
+            public static string USCorporateMoreThan15YearEffectiveYield = "BAMLC8A0C15PYEY";
 
             ///<summary>
             /// ICE BofAML US Corporate 3-5 Year Effective Yield (in Percent)
@@ -1445,7 +1445,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate3To5YearEffectiveYield => "BAMLC2A0C35YEY";
+            public static string USCorporate3To5YearEffectiveYield = "BAMLC2A0C35YEY";
 
             ///<summary>
             /// ICE BofAML US Corporate 5-7 Year Effective Yield (in Percent)
@@ -1456,7 +1456,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate5To7YearEffectiveYield => "BAMLC3A0C57YEY";
+            public static string USCorporate5To7YearEffectiveYield = "BAMLC3A0C57YEY";
 
             ///<summary>
             /// ICE BofAML US Corporate 7-10 Year Effective Yield (in Percent)
@@ -1467,7 +1467,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate7To10YearEffectiveYield => "BAMLC4A0C710YEY";
+            public static string USCorporate7To10YearEffectiveYield = "BAMLC4A0C710YEY";
 
             ///<summary>
             /// ICE BofAML US Corporate A Effective Yield (in Percent)
@@ -1478,7 +1478,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateAEffectiveYield => "BAMLC0A3CAEY";
+            public static string USCorporateAEffectiveYield = "BAMLC0A3CAEY";
 
             ///<summary>
             /// ICE BofAML US Corporate AA Effective Yield (in Percent)
@@ -1489,7 +1489,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateAAEffectiveYield => "BAMLC0A2CAAEY";
+            public static string USCorporateAAEffectiveYield = "BAMLC0A2CAAEY";
 
             ///<summary>
             /// ICE BofAML US Corporate AAA Effective Yield (in Percent)
@@ -1500,7 +1500,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateAAAEffectiveYield => "BAMLC0A1CAAAEY";
+            public static string USCorporateAAAEffectiveYield = "BAMLC0A1CAAAEY";
 
             ///<summary>
             /// ICE BofAML US High Yield B Effective Yield (in Percent)
@@ -1511,7 +1511,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldBEffectiveYield => "BAMLH0A2HYBEY";
+            public static string USHighYieldBEffectiveYield = "BAMLH0A2HYBEY";
 
             ///<summary>
             /// ICE BofAML US High Yield BB Effective Yield (in Percent)
@@ -1522,7 +1522,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldBBEffectiveYield => "BAMLH0A1HYBBEY";
+            public static string USHighYieldBBEffectiveYield = "BAMLH0A1HYBBEY";
 
             ///<summary>
             /// ICE BofAML US Corporate BBB Effective Yield (in Percent)
@@ -1533,7 +1533,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateBBBEffectiveYield => "BAMLC0A4CBBBEY";
+            public static string USCorporateBBBEffectiveYield = "BAMLC0A4CBBBEY";
 
             ///<summary>
             /// ICE BofAML US High Yield CCC or Below Effective Yield (in Percent)
@@ -1544,7 +1544,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldCCCorBelowEffectiveYield => "BAMLH0A3HYCEY";
+            public static string USHighYieldCCCorBelowEffectiveYield = "BAMLH0A3HYCEY";
 
             ///<summary>
             /// ICE BofAML US Corporate Master Effective Yield (in Percent)
@@ -1558,7 +1558,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateMasterEffectiveYield => "BAMLC0A0CMEY";
+            public static string USCorporateMasterEffectiveYield = "BAMLC0A0CMEY";
 
             ///<summary>
             /// ICE BofAML US Emerging Markets Corporate Plus Sub-Index Effective Yield (in Percent)
@@ -1569,7 +1569,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USEmergingMarketsCorporatePlusSubIndexEffectiveYield => "BAMLEMUBCRPIUSEY";
+            public static string USEmergingMarketsCorporatePlusSubIndexEffectiveYield = "BAMLEMUBCRPIUSEY";
 
             ///<summary>
             /// ICE BofAML US Emerging Markets Liquid Corporate Plus Index Effective Yield (in Percent)
@@ -1583,7 +1583,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USEmergingMarketsLiquidCorporatePlusIndexEffectiveYield => "BAMLEMCLLCRPIUSEY";
+            public static string USEmergingMarketsLiquidCorporatePlusIndexEffectiveYield = "BAMLEMCLLCRPIUSEY";
 
             ///<summary>
             /// ICE BofAML US High Yield Master II Effective Yield (in Percent)
@@ -1597,7 +1597,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldMasterIIEffectiveYield => "BAMLH0A0HYM2EY";
+            public static string USHighYieldMasterIIEffectiveYield = "BAMLH0A0HYM2EY";
 
             ///<summary>
             /// ICE BofAML AAA-A Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1609,7 +1609,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AAAAEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEM1BRRAAA2ACRPISYTW";
+            public static string AAAAEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEM1BRRAAA2ACRPISYTW";
 
             ///<summary>
             /// ICE BofAML AAA-A US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1621,7 +1621,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AAAAUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEM1RAAA2ALCRPIUSSYTW";
+            public static string AAAAUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEM1RAAA2ALCRPIUSSYTW";
 
             ///<summary>
             /// ICE BofAML Asia Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1633,7 +1633,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AsiaEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMRACRPIASIASYTW";
+            public static string AsiaEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMRACRPIASIASYTW";
 
             ///<summary>
             /// ICE BofAML Asia US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1645,7 +1645,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string AsiaUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMALLCRPIASIAUSSYTW";
+            public static string AsiaUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMALLCRPIASIAUSSYTW";
 
             ///<summary>
             /// ICE BofAML B and Lower Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1657,7 +1657,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BandLowerEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEM4BRRBLCRPISYTW";
+            public static string BandLowerEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEM4BRRBLCRPISYTW";
 
             ///<summary>
             /// ICE BofAML B and Lower US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1669,7 +1669,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BandLowerUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEM4RBLLCRPIUSSYTW";
+            public static string BandLowerUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEM4RBLLCRPIUSSYTW";
 
             ///<summary>
             /// ICE BofAML BB Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1681,7 +1681,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEM3BRRBBCRPISYTW";
+            public static string BBEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEM3BRRBBCRPISYTW";
 
             ///<summary>
             /// ICE BofAML BB US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1693,7 +1693,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEM3RBBLCRPIUSSYTW";
+            public static string BBUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEM3RBBLCRPIUSSYTW";
 
             ///<summary>
             /// ICE BofAML BBB Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1705,7 +1705,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBBEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEM2BRRBBBCRPISYTW";
+            public static string BBBEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEM2BRRBBBCRPISYTW";
 
             ///<summary>
             /// ICE BofAML BBB US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1717,7 +1717,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string BBBUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEM2RBBBLCRPIUSSYTW";
+            public static string BBBUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEM2RBBBLCRPIUSSYTW";
 
             ///<summary>
             /// ICE BofAML Crossover Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1729,7 +1729,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string CrossoverEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEM5BCOCRPISYTW";
+            public static string CrossoverEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEM5BCOCRPISYTW";
 
             ///<summary>
             /// ICE BofAML Crossover US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1741,7 +1741,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string CrossoverUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMXOCOLCRPIUSSYTW";
+            public static string CrossoverUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMXOCOLCRPIUSSYTW";
 
             ///<summary>
             /// ICE BofAML Emerging Markets Corporate Plus Index Semi-Annual Yield to Worst (in Percent)
@@ -1755,7 +1755,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EmergingMarketsCorporatePlusIndexSemiAnnualYieldtoWorst => "BAMLEMCBPISYTW";
+            public static string EmergingMarketsCorporatePlusIndexSemiAnnualYieldtoWorst = "BAMLEMCBPISYTW";
 
             ///<summary>
             /// ICE BofAML Euro Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1767,7 +1767,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EuroEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMEBCRPIESYTW";
+            public static string EuroEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMEBCRPIESYTW";
 
             ///<summary>
             /// ICE BofAML Euro High Yield Index Semi-Annual Yield to Worst (in Percent)
@@ -1782,7 +1782,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EuroHighYieldIndexSemiAnnualYieldtoWorst => "BAMLHE00EHYISYTW";
+            public static string EuroHighYieldIndexSemiAnnualYieldtoWorst = "BAMLHE00EHYISYTW";
 
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1794,7 +1794,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EMEAEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMRECRPIEMEASYTW";
+            public static string EMEAEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMRECRPIEMEASYTW";
 
             ///<summary>
             /// ICE BofAML Europe, the Middle East, and Africa (EMEA) US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1806,7 +1806,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string EMEAUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMELLCRPIEMEAUSSYTW";
+            public static string EMEAUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMELLCRPIEMEAUSSYTW";
 
             ///<summary>
             /// ICE BofAML Financial Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1818,7 +1818,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string FinancialEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMFSFCRPISYTW";
+            public static string FinancialEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMFSFCRPISYTW";
 
             ///<summary>
             /// ICE BofAML Financial US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1830,7 +1830,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string FinancialUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMFLFLCRPIUSSYTW";
+            public static string FinancialUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMFLFLCRPIUSSYTW";
 
             ///<summary>
             /// ICE BofAML High Grade Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1842,7 +1842,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighGradeEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMIBHGCRPISYTW";
+            public static string HighGradeEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMIBHGCRPISYTW";
 
             ///<summary>
             /// ICE BofAML High Grade US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1854,7 +1854,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighGradeUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMHGHGLCRPIUSSYTW";
+            public static string HighGradeUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMHGHGLCRPIUSSYTW";
 
             ///<summary>
             /// ICE BofAML High Yield Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1866,7 +1866,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighYieldEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMHBHYCRPISYTW";
+            public static string HighYieldEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMHBHYCRPISYTW";
 
             ///<summary>
             /// ICE BofAML High Yield US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1878,7 +1878,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string HighYieldUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMHYHYLCRPIUSSYTW";
+            public static string HighYieldUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMHYHYLCRPIUSSYTW";
 
             ///<summary>
             /// ICE BofAML Latin America Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1890,7 +1890,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string LatinAmericaEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMRLCRPILASYTW";
+            public static string LatinAmericaEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMRLCRPILASYTW";
 
             ///<summary>
             /// ICE BofAML Latin America US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1902,7 +1902,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string LatinAmericaUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMLLLCRPILAUSSYTW";
+            public static string LatinAmericaUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMLLLCRPILAUSSYTW";
 
             ///<summary>
             /// ICE BofAML Non-Financial Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1914,7 +1914,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string NonFinancialEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMNSNFCRPISYTW";
+            public static string NonFinancialEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMNSNFCRPISYTW";
 
             ///<summary>
             /// ICE BofAML Non-Financial US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1926,7 +1926,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string NonFinancialUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMNFNFLCRPIUSSYTW";
+            public static string NonFinancialUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMNFNFLCRPIUSSYTW";
 
             ///<summary>
             /// ICE BofAML Private Sector Issuers Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1938,7 +1938,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string PrivateSectorIssuersEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMPTPRVICRPISYTW";
+            public static string PrivateSectorIssuersEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMPTPRVICRPISYTW";
 
             ///<summary>
             /// ICE BofAML Private Sector Issuers US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1950,7 +1950,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string PrivateSectorIssuersUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMPVPRIVSLCRPIUSSYTW";
+            public static string PrivateSectorIssuersUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMPVPRIVSLCRPIUSSYTW";
 
             ///<summary>
             /// ICE BofAML Public Sector Issuers Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1962,7 +1962,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string PublicSectorIssuersEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMPBPUBSICRPISYTW";
+            public static string PublicSectorIssuersEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMPBPUBSICRPISYTW";
 
             ///<summary>
             /// ICE BofAML Public Sector Issuers US Emerging Markets Liquid Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -1974,7 +1974,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string PublicSectorIssuersUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMPUPUBSLCRPIUSSYTW";
+            public static string PublicSectorIssuersUSEmergingMarketsLiquidCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMPUPUBSLCRPIUSSYTW";
 
             ///<summary>
             /// ICE BofAML US Corporate 1-3 Year Semi-Annual Yield to Worst (in Percent)
@@ -1986,7 +1986,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate1To3YearSemiAnnualYieldtoWorst => "BAMLC1A0C13YSYTW";
+            public static string USCorporate1To3YearSemiAnnualYieldtoWorst = "BAMLC1A0C13YSYTW";
 
             ///<summary>
             /// ICE BofAML US Corporate 10-15 Year Semi-Annual Yield to Worst (in Percent)
@@ -1998,7 +1998,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate10To15YearSemiAnnualYieldtoWorst => "BAMLC7A0C1015YSYTW";
+            public static string USCorporate10To15YearSemiAnnualYieldtoWorst = "BAMLC7A0C1015YSYTW";
 
             ///<summary>
             /// ICE BofAML US Corporate 15+ Year Semi-Annual Yield to Worst (in Percent)
@@ -2010,7 +2010,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateMoreThan15YearSemiAnnualYieldtoWorst => "BAMLC8A0C15PYSYTW";
+            public static string USCorporateMoreThan15YearSemiAnnualYieldtoWorst = "BAMLC8A0C15PYSYTW";
 
             ///<summary>
             /// ICE BofAML US Corporate 3-5 Year Semi-Annual Yield to Worst (in Percent)
@@ -2022,7 +2022,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate3To5YearSemiAnnualYieldtoWorst => "BAMLC2A0C35YSYTW";
+            public static string USCorporate3To5YearSemiAnnualYieldtoWorst = "BAMLC2A0C35YSYTW";
 
             ///<summary>
             /// ICE BofAML US Corporate 5-7 Year Semi-Annual Yield to Worst (in Percent)
@@ -2034,7 +2034,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate5To7YearSemiAnnualYieldtoWorst => "BAMLC3A0C57YSYTW";
+            public static string USCorporate5To7YearSemiAnnualYieldtoWorst = "BAMLC3A0C57YSYTW";
 
             ///<summary>
             /// ICE BofAML US Corporate 7-10 Year Semi-Annual Yield to Worst (in Percent)
@@ -2046,7 +2046,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporate7To10YearSemiAnnualYieldtoWorst => "BAMLC4A0C710YSYTW";
+            public static string USCorporate7To10YearSemiAnnualYieldtoWorst = "BAMLC4A0C710YSYTW";
 
             ///<summary>
             /// ICE BofAML US Corporate A Semi-Annual Yield to Worst (in Percent)
@@ -2058,7 +2058,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateASemiAnnualYieldtoWorst => "BAMLC0A3CASYTW";
+            public static string USCorporateASemiAnnualYieldtoWorst = "BAMLC0A3CASYTW";
 
             ///<summary>
             /// ICE BofAML US Corporate AA Semi-Annual Yield to Worst (in Percent)
@@ -2070,7 +2070,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateAASemiAnnualYieldtoWorst => "BAMLC0A2CAASYTW";
+            public static string USCorporateAASemiAnnualYieldtoWorst = "BAMLC0A2CAASYTW";
 
             ///<summary>
             /// ICE BofAML US Corporate AAA Semi-Annual Yield to Worst (in Percent)
@@ -2082,7 +2082,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateAAASemiAnnualYieldtoWorst => "BAMLC0A1CAAASYTW";
+            public static string USCorporateAAASemiAnnualYieldtoWorst = "BAMLC0A1CAAASYTW";
 
             ///<summary>
             /// ICE BofAML US High Yield B Semi-Annual Yield to Worst (in Percent)
@@ -2094,7 +2094,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldBSemiAnnualYieldtoWorst => "BAMLH0A2HYBSYTW";
+            public static string USHighYieldBSemiAnnualYieldtoWorst = "BAMLH0A2HYBSYTW";
 
             ///<summary>
             /// ICE BofAML US High Yield BB Semi-Annual Yield to Worst (in Percent)
@@ -2106,7 +2106,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldBBSemiAnnualYieldtoWorst => "BAMLH0A1HYBBSYTW";
+            public static string USHighYieldBBSemiAnnualYieldtoWorst = "BAMLH0A1HYBBSYTW";
 
             ///<summary>
             /// ICE BofAML US Corporate BBB Semi-Annual Yield to Worst (in Percent)
@@ -2118,7 +2118,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateBBBSemiAnnualYieldtoWorst => "BAMLC0A4CBBBSYTW";
+            public static string USCorporateBBBSemiAnnualYieldtoWorst = "BAMLC0A4CBBBSYTW";
 
             ///<summary>
             /// ICE BofAML US High Yield CCC or Below Semi-Annual Yield to Worst (in Percent)
@@ -2130,7 +2130,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldCCCorBelowSemiAnnualYieldtoWorst => "BAMLH0A3HYCSYTW";
+            public static string USHighYieldCCCorBelowSemiAnnualYieldtoWorst = "BAMLH0A3HYCSYTW";
 
             ///<summary>
             /// ICE BofAML US Corporate Master Semi-Annual Yield to Worst (in Percent)
@@ -2145,7 +2145,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USCorporateMasterSemiAnnualYieldtoWorst => "BAMLC0A0CMSYTW";
+            public static string USCorporateMasterSemiAnnualYieldtoWorst = "BAMLC0A0CMSYTW";
 
             ///<summary>
             /// ICE BofAML US Emerging Markets Corporate Plus Sub-Index Semi-Annual Yield to Worst (in Percent)
@@ -2157,7 +2157,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst => "BAMLEMUBCRPIUSSYTW";
+            public static string USEmergingMarketsCorporatePlusSubIndexSemiAnnualYieldtoWorst = "BAMLEMUBCRPIUSSYTW";
 
             ///<summary>
             /// ICE BofAML US Emerging Markets Liquid Corporate Plus Index Semi-Annual Yield to Worst (in Percent)
@@ -2171,7 +2171,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USEmergingMarketsLiquidCorporatePlusIndexSemiAnnualYieldtoWorst => "BAMLEMCLLCRPIUSSYTW";
+            public static string USEmergingMarketsLiquidCorporatePlusIndexSemiAnnualYieldtoWorst = "BAMLEMCLLCRPIUSSYTW";
 
             ///<summary>
             /// ICE BofAML US High Yield Master II Semi-Annual Yield to Worst (in Percent)
@@ -2185,7 +2185,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// The index data referenced herein is the property of ICE Data Indices, LLC, its affiliates, ("ICE") and/or its Third Party Suppliers and has been licensed for use by the Federal Reserve Bank of St. Louis. ICE, its affiliates and Third Party Suppliers accept no liability in connection with its use.
             /// Copyright, 2017, ICE Benchmark Administration. Reprinted with permission.
             /// </remarks>
-            public static string USHighYieldMasterIISemiAnnualYieldtoWorst => "BAMLH0A0HYM2SYTW";
+            public static string USHighYieldMasterIISemiAnnualYieldtoWorst = "BAMLH0A0HYM2SYTW";
         }
     }
 }

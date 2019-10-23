@@ -32,7 +32,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string SpotNextBasedOnSwissFranc => "CHFONTD156N";
+            public static string SpotNextBasedOnSwissFranc = "CHFONTD156N";
 
             ///<summary>
             /// Spot Next London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
@@ -46,7 +46,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string SpotNextBasedOnJapaneseYen => "JPYONTD156N";
+            public static string SpotNextBasedOnJapaneseYen = "JPYONTD156N";
 
             ///<summary>
             /// 6-Month London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
@@ -60,7 +60,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string SixMonthBasedOnJapaneseYen => "JPY6MTD156N";
+            public static string SixMonthBasedOnJapaneseYen = "JPY6MTD156N";
 
             ///<summary>
             /// 3-Month London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
@@ -74,7 +74,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string ThreeMonthBasedOnJapaneseYen => "JPY3MTD156N";
+            public static string ThreeMonthBasedOnJapaneseYen = "JPY3MTD156N";
 
             ///<summary>
             /// 6-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
@@ -88,7 +88,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string SixMonthBasedOnUSD => "USD6MTD156N";
+            public static string SixMonthBasedOnUSD = "USD6MTD156N";
 
             ///<summary>
             /// 1-Month London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
@@ -102,7 +102,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string OneMonthBasedOnJapaneseYen => "JPY1MTD156N";
+            public static string OneMonthBasedOnJapaneseYen = "JPY1MTD156N";
 
             ///<summary>
             /// 12-Month London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
@@ -116,7 +116,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string TwelveMonthBasedOnJapaneseYen => "JPY12MD156N";
+            public static string TwelveMonthBasedOnJapaneseYen = "JPY12MD156N";
 
             ///<summary>
             /// 12-Month London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
@@ -130,7 +130,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string TwelveMonthBasedOnBritishPound => "GBP12MD156N";
+            public static string TwelveMonthBasedOnBritishPound = "GBP12MD156N";
 
             ///<summary>
             /// 1-Month London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
@@ -144,7 +144,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string OneMonthBasedOnBritishPound => "GBP1MTD156N";
+            public static string OneMonthBasedOnBritishPound = "GBP1MTD156N";
 
             ///<summary>
             /// 1-Week London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
@@ -158,7 +158,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string OneWeekBasedOnBritishPound => "GBP1WKD156N";
+            public static string OneWeekBasedOnBritishPound = "GBP1WKD156N";
 
             ///<summary>
             /// 2-Month London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
@@ -172,7 +172,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string TwoMonthBasedOnBritishPound => "GBP2MTD156N";
+            public static string TwoMonthBasedOnBritishPound = "GBP2MTD156N";
 
             ///<summary>
             /// 3-Month London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
@@ -186,7 +186,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string ThreeMonthBasedOnBritishPound => "GBP3MTD156N";
+            public static string ThreeMonthBasedOnBritishPound = "GBP3MTD156N";
 
             ///<summary>
             /// 1-Week London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
@@ -200,7 +200,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string OneWeekBasedOnJapaneseYen => "JPY1WKD156N";
+            public static string OneWeekBasedOnJapaneseYen = "JPY1WKD156N";
 
             ///<summary>
             /// 2-Month London Interbank Offered Rate (LIBOR), based on Japanese Yen (in Percent)
@@ -214,7 +214,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string TwoMonthBasedOnJapaneseYen => "JPY2MTD156N";
+            public static string TwoMonthBasedOnJapaneseYen = "JPY2MTD156N";
 
             ///<summary>
             /// 6-Month London Interbank Offered Rate (LIBOR), based on Swiss Franc (in Percent)
@@ -228,7 +228,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string SixMonthBasedOnSwissFranc => "CHF6MTD156N";
+            public static string SixMonthBasedOnSwissFranc = "CHF6MTD156N";
 
             ///<summary>
             /// 3-Month London Interbank Offered Rate (LIBOR), based on Swiss Franc (in Percent)
@@ -242,7 +242,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string ThreeMonthBasedOnSwissFranc => "CHF3MTD156N";
+            public static string ThreeMonthBasedOnSwissFranc = "CHF3MTD156N";
 
             ///<summary>
             /// 1-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
@@ -256,7 +256,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string OneMonthBasedOnUSD => "USD1MTD156N";
+            public static string OneMonthBasedOnUSD = "USD1MTD156N";
 
             ///<summary>
             /// 12-Month London Interbank Offered Rate (LIBOR), based on Swiss Franc (in Percent)
@@ -270,7 +270,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string TwelveMonthBasedOnSwissFranc => "CHF12MD156N";
+            public static string TwelveMonthBasedOnSwissFranc = "CHF12MD156N";
 
             ///<summary>
             /// 12-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
@@ -284,7 +284,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string TwelveMonthBasedOnUSD => "USD12MD156N";
+            public static string TwelveMonthBasedOnUSD = "USD12MD156N";
 
             ///<summary>
             /// 1-Month London Interbank Offered Rate (LIBOR), based on Swiss Franc (in Percent)
@@ -298,7 +298,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string OneMonthBasedOnSwissFranc => "CHF1MTD156N";
+            public static string OneMonthBasedOnSwissFranc = "CHF1MTD156N";
 
             ///<summary>
             /// 1-Week London Interbank Offered Rate (LIBOR), based on Swiss Franc (in Percent)
@@ -312,7 +312,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string OneWeekBasedOnSwissFranc => "CHF1WKD156N";
+            public static string OneWeekBasedOnSwissFranc = "CHF1WKD156N";
 
             ///<summary>
             /// 2-Month London Interbank Offered Rate (LIBOR), based on Swiss Franc (in Percent)
@@ -326,7 +326,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string TwoMonthBasedOnSwissFranc => "CHF2MTD156N";
+            public static string TwoMonthBasedOnSwissFranc = "CHF2MTD156N";
 
             ///<summary>
             /// 12-Month London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
@@ -340,7 +340,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string TwelveMonthBasedOnEuro => "EUR12MD156N";
+            public static string TwelveMonthBasedOnEuro = "EUR12MD156N";
 
             ///<summary>
             /// 6-Month London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
@@ -354,7 +354,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string SixMonthBasedOnBritishPound => "GBP6MTD156N";
+            public static string SixMonthBasedOnBritishPound = "GBP6MTD156N";
 
             ///<summary>
             /// 1-Month London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
@@ -368,7 +368,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string OneMonthBasedOnEuro => "EUR1MTD156N";
+            public static string OneMonthBasedOnEuro = "EUR1MTD156N";
 
             ///<summary>
             /// 2-Month London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
@@ -382,7 +382,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string TwoMonthBasedOnEuro => "EUR2MTD156N";
+            public static string TwoMonthBasedOnEuro = "EUR2MTD156N";
 
             ///<summary>
             /// 3-Month London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
@@ -396,7 +396,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string ThreeMonthBasedOnEuro => "EUR3MTD156N";
+            public static string ThreeMonthBasedOnEuro = "EUR3MTD156N";
 
             ///<summary>
             /// 6-Month London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
@@ -410,7 +410,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string SixMonthBasedOnEuro => "EUR6MTD156N";
+            public static string SixMonthBasedOnEuro = "EUR6MTD156N";
 
             ///<summary>
             /// Overnight London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
@@ -424,7 +424,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string OvernightBasedOnEuro => "EURONTD156N";
+            public static string OvernightBasedOnEuro = "EURONTD156N";
 
             ///<summary>
             /// 1-Week London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
@@ -438,7 +438,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string OneWeekBasedOnUSD => "USD1WKD156N";
+            public static string OneWeekBasedOnUSD = "USD1WKD156N";
 
             ///<summary>
             /// 2-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
@@ -452,7 +452,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string TwoMonthBasedOnUSD => "USD2MTD156N";
+            public static string TwoMonthBasedOnUSD = "USD2MTD156N";
 
             ///<summary>
             /// 3-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
@@ -466,7 +466,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string ThreeMonthBasedOnUSD => "USD3MTD156N";
+            public static string ThreeMonthBasedOnUSD = "USD3MTD156N";
 
             ///<summary>
             /// Overnight London Interbank Offered Rate (LIBOR), based on U.S. Dollar (in Percent)
@@ -480,7 +480,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string OvernightBasedOnUSD => "USDONTD156N";
+            public static string OvernightBasedOnUSD = "USDONTD156N";
 
             ///<summary>
             /// 1-Week London Interbank Offered Rate (LIBOR), based on Euro (in Percent)
@@ -494,7 +494,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string OneWeekBasedOnEuro => "EUR1WKD156N";
+            public static string OneWeekBasedOnEuro = "EUR1WKD156N";
 
             ///<summary>
             /// Overnight London Interbank Offered Rate (LIBOR), based on British Pound (in Percent)
@@ -508,7 +508,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// (2) shall be liable for any loss of business or profits nor any direct, indirect or consequential loss or damage resulting from any such irregularity, inaccuracy or use of the Information.
             /// Copyright, 2016, ICE Benchmark Administration.
             /// </remarks>
-            public static string OvernightBasedOnBritishPound => "GBPONTD156N";
+            public static string OvernightBasedOnBritishPound = "GBPONTD156N";
         }
     }
 }
