@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.Fred;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -214,6 +215,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         // we're not using the SubscriptionDataReader, so be sure to set the auth token here
                         USEnergyAPI.SetAuthCode(Config.Get("us-energy-information-auth-token"));
+                    }
+
+                    if (!FredApi.IsAuthCodeSet)
+                    {
+                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
+                        FredApi.SetAuthCode(Config.Get("fred-auth-token"));
                     }
 
                     var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);

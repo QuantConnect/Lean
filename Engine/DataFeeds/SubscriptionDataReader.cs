@@ -22,6 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.Fred;
 using QuantConnect.Data.Custom.Tiingo;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
@@ -205,6 +206,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (!USEnergyAPI.IsAuthCodeSet)
                 {
                     USEnergyAPI.SetAuthCode(Config.Get("us-energy-information-auth-token"));
+                }
+            }
+
+            // If Fred data, set the access token in data factory
+            var fred = _dataFactory as FredApi;
+            if (fred != null)
+            {
+                if (!FredApi.IsAuthCodeSet)
+                {
+                    FredApi.SetAuthCode(Config.Get("fred-auth-token"));
                 }
             }
 
