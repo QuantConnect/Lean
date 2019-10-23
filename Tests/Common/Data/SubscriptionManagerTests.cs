@@ -184,6 +184,40 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(TradeBar), false)]
         [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(QuoteBar), false)]
         [TestCase(SecurityType.Future, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(OpenInterest), true)]
+
+        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(TradeBar), true)]
+        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(QuoteBar), false)]
+        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(OpenInterest), false)]
+        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(TradeBar), false)]
+        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(QuoteBar), true)]
+        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(OpenInterest), false)]
+        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(TradeBar), false)]
+        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(QuoteBar), false)]
+        [TestCase(SecurityType.Option, Resolution.Tick, typeof(Tick), TickType.OpenInterest, typeof(OpenInterest), true)]
+
+        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(TradeBar), true)]
+        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(QuoteBar), false)]
+        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(OpenInterest), false)]
+        [TestCase(SecurityType.Equity, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(RenkoBar), true)]
+
+        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(TradeBar), false)]
+        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(QuoteBar), true)]
+        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(OpenInterest), false)]
+        [TestCase(SecurityType.Forex, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(RenkoBar), true)]
+
+        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(TradeBar), false)]
+        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(QuoteBar), true)]
+        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(OpenInterest), false)]
+        [TestCase(SecurityType.Cfd, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(RenkoBar), true)]
+
+        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(TradeBar), true)]
+        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(QuoteBar), false)]
+        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(OpenInterest), false)]
+        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Trade, typeof(RenkoBar), true)]
+        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(TradeBar), false)]
+        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(QuoteBar), true)]
+        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(OpenInterest), false)]
+        [TestCase(SecurityType.Crypto, Resolution.Tick, typeof(Tick), TickType.Quote, typeof(RenkoBar), true)]
         public void ValidatesSubscriptionTickTypesForConsolidators(
             SecurityType securityType,
             Resolution subscriptionResolution,

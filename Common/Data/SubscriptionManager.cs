@@ -255,9 +255,13 @@ namespace QuantConnect.Data
         /// <returns>true if the subscription is valid for the consolidator</returns>
         public static bool IsSubscriptionValidForConsolidator(SubscriptionDataConfig subscription, IDataConsolidator consolidator)
         {
-            if (subscription.Type == typeof(Tick))
+            if (subscription.Type == typeof(Tick) &&
+                LeanData.IsCommonLeanDataType(consolidator.OutputType))
             {
-                var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(consolidator.OutputType, subscription.Symbol.SecurityType);
+                var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(
+                    consolidator.OutputType,
+                    subscription.Symbol.SecurityType);
+
                 return subscription.TickType == tickType;
             }
 
