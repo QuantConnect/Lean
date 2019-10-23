@@ -32,7 +32,8 @@ class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstruc
     def __init__(self, rebalancingParam = Resolution.Daily):
         '''Initialize a new instance of InsightWeightingPortfolioConstructionModel
         Args:
-            rebalancingParam: Rebalancing parameter. It can be a function, timedelta or Resolution'''
+            rebalancingParam: Rebalancing parameter. If it is a timedelta or Resolution, it will be converted into a function.
+                              The function returns the next expected rebalance time for a given algorithm UTC DateTime'''
         super().__init__(rebalancingParam)
 
     def ShouldCreateTargetForInsight(self, insight):

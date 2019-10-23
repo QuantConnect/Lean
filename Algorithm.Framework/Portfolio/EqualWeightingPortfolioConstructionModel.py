@@ -32,7 +32,8 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     def __init__(self, rebalancingParam = Resolution.Daily):
         '''Initialize a new instance of EqualWeightingPortfolioConstructionModel
         Args:
-            rebalancingParam: Rebalancing parameter. It can be a function, timedelta or Resolution'''
+            rebalancingParam: Rebalancing parameter. If it is a timedelta or Resolution, it will be converted into a function.
+                              The function returns the next expected rebalance time for a given algorithm UTC DateTime'''
         self.insightCollection = InsightCollection()
         self.removedSymbols = []
         self.nextExpiryTime = UTCMIN
@@ -42,7 +43,7 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         # If the argument is an instance if Resolution or Timedelta
         # Redefine self.rebalancingFunc
         if isinstance(rebalancingParam, int):
-            self.rebalancingFunc = lambda dt: dt + Extensions.ToTimeSpan(rebalancingParam)
+            rebalancingParam = Extensions.ToTimeSpan(rebalancingParam)
         if isinstance(rebalancingParam, timedelta):
             self.rebalancingFunc = lambda dt: dt + rebalancingParam
 

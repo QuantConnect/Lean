@@ -359,6 +359,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python)]
         public void DoesNotThrowWithAlternativeOverloads(Language language)
         {
+            Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, Resolution.Minute));
             Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, TimeSpan.FromDays(1)));
             Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, Expiry.EndOfWeek));
         }
@@ -385,15 +386,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return insight;
         }
 
-        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm)
+        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm, dynamic paramenter = null)
         {
-            algorithm.SetPortfolioConstruction(new ConfidenceWeightedPortfolioConstructionModel());
+            paramenter = paramenter ?? Resolution.Daily;
+            algorithm.SetPortfolioConstruction(new ConfidenceWeightedPortfolioConstructionModel(paramenter));
             if (language == Language.Python)
             {
                 using (Py.GIL())
                 {
                     var name = nameof(ConfidenceWeightedPortfolioConstructionModel);
-                    var instance = Py.Import(name).GetAttr(name).Invoke();
+                    var instance = Py.Import(name).GetAttr(name).Invoke(((object)paramenter).ToPython());
                     var model = new PortfolioConstructionModelPythonWrapper(instance);
                     algorithm.SetPortfolioConstruction(model);
                 }
@@ -408,36 +410,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var changes = SecurityChanges.Added(_algorithm.Securities.Values.ToArray());
             algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
-        }
-
-        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm, TimeSpan span)
-        {
-            algorithm.SetPortfolioConstruction(new ConfidenceWeightedPortfolioConstructionModel(span));
-            if (language == Language.Python)
-            {
-                using (Py.GIL())
-                {
-                    var name = nameof(ConfidenceWeightedPortfolioConstructionModel);
-                    var instance = Py.Import(name).GetAttr(name).Invoke(span.ToPython());
-                    var model = new PortfolioConstructionModelPythonWrapper(instance);
-                    algorithm.SetPortfolioConstruction(model);
-                }
-            }
-        }
-
-        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm, Func<DateTime, DateTime> func)
-        {
-            algorithm.SetPortfolioConstruction(new ConfidenceWeightedPortfolioConstructionModel(func));
-            if (language == Language.Python)
-            {
-                using (Py.GIL())
-                {
-                    var name = nameof(ConfidenceWeightedPortfolioConstructionModel);
-                    var instance = Py.Import(name).GetAttr(name).Invoke(func.ToPython());
-                    var model = new PortfolioConstructionModelPythonWrapper(instance);
-                    algorithm.SetPortfolioConstruction(model);
-                }
-            }
         }
 
         private void SetUtcTime(DateTime dateTime)

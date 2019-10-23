@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
         /// </summary>
-        /// <param name="rebalancingFunc">Rebalancing function</param>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
         public InsightWeightingPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc)
             : base(rebalancingFunc)
         {
