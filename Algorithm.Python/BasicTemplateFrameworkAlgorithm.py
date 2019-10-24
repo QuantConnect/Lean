@@ -58,7 +58,15 @@ class BasicTemplateFrameworkAlgorithm(QCAlgorithm):
         # set algorithm framework models
         self.SetUniverseSelection(ManualUniverseSelectionModel(symbols))
         self.SetAlpha(ConstantAlphaModel(InsightType.Price, InsightDirection.Up, timedelta(minutes = 20), 0.025, None))
-        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel())
+
+        # We can define who often the EWPCM will rebalance if no new insight is submitted using:
+        # Resolution Enum:
+        self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel(Resolution.Daily))
+        # timedelta
+        # self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel(timedelta(2)))
+        # A lamdda datetime -> datetime. In this case, we can use the pre-defined func at Expiry helper class
+        # self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel(Expiry.EndOfWeek))
+
         self.SetExecution(ImmediateExecutionModel())
         self.SetRiskManagement(MaximumDrawdownPercentPerSecurity(0.01))
 

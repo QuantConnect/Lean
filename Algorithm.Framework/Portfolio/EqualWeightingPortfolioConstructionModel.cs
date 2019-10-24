@@ -29,8 +29,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class EqualWeightingPortfolioConstructionModel : PortfolioConstructionModel
     {
+        private readonly Func<DateTime, DateTime> _rebalancingFunc;
         private DateTime _rebalancingTime;
-        private readonly TimeSpan _rebalancingPeriod;
         private List<Symbol> _removedSymbols;
         private readonly InsightCollection _insightCollection = new InsightCollection();
         private DateTime? _nextExpiryTime;
@@ -38,10 +38,28 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
         /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
+        public EqualWeightingPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc)
+        {
+            _rebalancingFunc = rebalancingFunc;
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="timeSpan">Rebalancing frequency</param>
+        public EqualWeightingPortfolioConstructionModel(TimeSpan timeSpan)
+            : this(dt => dt.Add(timeSpan))
+        {
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
+        /// </summary>
         /// <param name="resolution">Rebalancing frequency</param>
         public EqualWeightingPortfolioConstructionModel(Resolution resolution = Resolution.Daily)
+            : this(resolution.ToTimeSpan())
         {
-            _rebalancingPeriod = resolution.ToTimeSpan();
         }
 
         /// <summary>
@@ -140,7 +158,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             targets.AddRange(expiredTargets);
 
             _nextExpiryTime = _insightCollection.GetNextExpiryTime();
-            _rebalancingTime = algorithm.UtcTime.Add(_rebalancingPeriod);
+            _rebalancingTime = _rebalancingFunc(algorithm.UtcTime);
 
             return targets;
         }

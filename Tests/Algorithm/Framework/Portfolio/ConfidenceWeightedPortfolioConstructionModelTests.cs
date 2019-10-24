@@ -354,6 +354,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             AssertTargets(actualTargets, new[] {new PortfolioTarget(Symbols.SPY, 0)});
         }
 
+        [Test]
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void DoesNotThrowWithAlternativeOverloads(Language language)
+        {
+            Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, Resolution.Minute));
+            Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, TimeSpan.FromDays(1)));
+            Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, Expiry.EndOfWeek));
+        }
+
         private Security GetSecurity(Symbol symbol)
         {
             var config = SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc);
@@ -377,15 +387,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return insight;
         }
 
-        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm)
+        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm, dynamic paramenter = null)
         {
-            algorithm.SetPortfolioConstruction(new ConfidenceWeightedPortfolioConstructionModel());
+            paramenter = paramenter ?? Resolution.Daily;
+            algorithm.SetPortfolioConstruction(new ConfidenceWeightedPortfolioConstructionModel(paramenter));
             if (language == Language.Python)
             {
                 using (Py.GIL())
                 {
                     var name = nameof(ConfidenceWeightedPortfolioConstructionModel);
-                    var instance = Py.Import(name).GetAttr(name).Invoke();
+                    var instance = Py.Import(name).GetAttr(name).Invoke(((object)paramenter).ToPython());
                     var model = new PortfolioConstructionModelPythonWrapper(instance);
                     algorithm.SetPortfolioConstruction(model);
                 }

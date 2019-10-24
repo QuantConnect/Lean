@@ -29,15 +29,23 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     For insights of direction InsightDirection.Up, long targets are returned and
     for insights of direction InsightDirection.Down, short targets are returned.'''
 
-    def __init__(self, resolution = Resolution.Daily):
+    def __init__(self, rebalancingParam = Resolution.Daily):
         '''Initialize a new instance of EqualWeightingPortfolioConstructionModel
         Args:
-            resolution: Rebalancing frequency'''
+            rebalancingParam: Rebalancing parameter. If it is a timedelta or Resolution, it will be converted into a function.
+                              The function returns the next expected rebalance time for a given algorithm UTC DateTime'''
         self.insightCollection = InsightCollection()
         self.removedSymbols = []
         self.nextExpiryTime = UTCMIN
         self.rebalancingTime = UTCMIN
-        self.rebalancingPeriod = Extensions.ToTimeSpan(resolution)
+        self.rebalancingFunc = rebalancingParam
+
+        # If the argument is an instance if Resolution or Timedelta
+        # Redefine self.rebalancingFunc
+        if isinstance(rebalancingParam, int):
+            rebalancingParam = Extensions.ToTimeSpan(rebalancingParam)
+        if isinstance(rebalancingParam, timedelta):
+            self.rebalancingFunc = lambda dt: dt + rebalancingParam
 
     def ShouldCreateTargetForInsight(self, insight):
         '''Method that will determine if the portfolio construction model should create a
@@ -119,7 +127,7 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         if self.nextExpiryTime is None:
             self.nextExpiryTime = UTCMIN
 
-        self.rebalancingTime = algorithm.UtcTime + self.rebalancingPeriod
+        self.rebalancingTime = self.rebalancingFunc(algorithm.UtcTime)
 
         return targets
 
