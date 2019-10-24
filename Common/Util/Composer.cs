@@ -258,21 +258,33 @@ namespace QuantConnect.Util
         /// </summary>
         public IEnumerable<T> GetExportedValues<T>()
         {
-            lock (_exportedValuesLockObject)
+            try
             {
-                IEnumerable values;
-                if (_exportedValues.TryGetValue(typeof (T), out values))
+                lock (_exportedValuesLockObject)
                 {
+                    IEnumerable values;
+                    if (_exportedValues.TryGetValue(typeof (T), out values))
+                    {
+                        return values.OfType<T>();
+                    }
+
+                    if (!_composableParts.IsCompleted)
+                    {
+                        _composableParts.Wait();
+                    }
+                    values = _compositionContainer.GetExportedValues<T>().ToList();
+                    _exportedValues[typeof (T)] = values;
                     return values.OfType<T>();
                 }
-
-                if (!_composableParts.IsCompleted)
+            }
+            catch (ReflectionTypeLoadException err)
+            {
+                foreach (var exception in err.LoaderExceptions)
                 {
-                    _composableParts.Wait();
+                    Log.Error(exception);
                 }
-                values = _compositionContainer.GetExportedValues<T>().ToList();
-                _exportedValues[typeof (T)] = values;
-                return values.OfType<T>();
+
+                throw;
             }
         }
 
