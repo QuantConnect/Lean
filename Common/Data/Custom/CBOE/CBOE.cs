@@ -25,11 +25,6 @@ namespace QuantConnect.Data.Custom.CBOE
     public class CBOE : TradeBar
     {
         /// <summary>
-        /// Market data type
-        /// </summary>
-        public new MarketDataType DataType;
-
-        /// <summary>
         /// Creates a new instance of the object
         /// </summary>
         public CBOE()

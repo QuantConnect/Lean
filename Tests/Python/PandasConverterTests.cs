@@ -914,6 +914,7 @@ def Test(dataFrame, symbol):
                     var index = subDataFrame.index[i];
                     var value = subDataFrame.loc[index].value.AsManagedObject(typeof(decimal));
                     Assert.AreEqual(rawBars[i].Value, value);
+
                     var transactions = subDataFrame.loc[index].transactions.AsManagedObject(typeof(decimal));
                     var expected = (rawBars[i] as DynamicData)?.GetProperty("transactions");
                     expected = expected ?? type.GetProperty("Transactions")?.GetValue(rawBars[i]);
@@ -944,6 +945,74 @@ def Test(dataFrame, symbol):
                     var expected = (rawBars[i] as DynamicData)?.GetProperty("transactions");
                     expected = expected ?? type.GetProperty("Transactions")?.GetValue(rawBars[i]);
                     Assert.AreEqual(expected, transactions);
+                }
+            }
+        }
+
+        [Test]
+        [TestCase(typeof(SubTradeBar), "SubProperty")]
+        [TestCase(typeof(SubSubTradeBar), "SubSubProperty")]
+        public void HandlesCustomDataBarsInheritsFromTradeBar(Type type, string propertyName)
+        {
+            var converter = new PandasConverter();
+            var symbol = Symbols.LTCUSD;
+
+            var config = GetSubscriptionDataConfig<Quandl>(symbol, Resolution.Daily);
+            dynamic custom = Activator.CreateInstance(type);
+
+            var rawBars = Enumerable
+                .Range(0, 10)
+                .Select(i =>
+                {
+                    var line = $"{DateTime.UtcNow.AddDays(i).ToStringInvariant("yyyyMMdd HH:mm")},{i + 101},{i + 102},{i + 100},{i + 101},{i + 101}";
+                    return custom.Reader(config, line, DateTime.UtcNow.AddDays(i), false) as BaseData;
+                })
+                .ToArray();
+
+            // GetDataFrame with argument of type IEnumerable<BaseData>
+            dynamic dataFrame = converter.GetDataFrame(rawBars);
+
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var subDataFrame = dataFrame.loc[symbol];
+                Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(count, 10);
+
+                for (var i = 0; i < count; i++)
+                {
+                    var index = subDataFrame.index[i];
+                    var value = subDataFrame.loc[index].value.AsManagedObject(typeof(decimal));
+                    Assert.AreEqual(rawBars[i].Value, value);
+
+                    var transactions = subDataFrame.loc[index][propertyName.ToLowerInvariant()].AsManagedObject(typeof(decimal));
+                    var expected = type.GetProperty(propertyName)?.GetValue(rawBars[i]);
+                    Assert.AreEqual(expected, transactions);
+                }
+            }
+
+            // GetDataFrame with argument of type IEnumerable<BaseData>
+            var history = GetHistory(symbol, Resolution.Daily, rawBars);
+            dataFrame = converter.GetDataFrame(history);
+
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var subDataFrame = dataFrame.loc[symbol];
+                Assert.IsFalse(subDataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var count = subDataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(10, count);
+
+                for (var i = 0; i < count; i++)
+                {
+                    var index = subDataFrame.index[i];
+                    var value = subDataFrame.loc[index].value.AsManagedObject(typeof(decimal));
+                    Assert.AreEqual(rawBars[i].Value, value);
                 }
             }
         }
@@ -1056,6 +1125,30 @@ def Test(dataFrame, symbol):
                 .Select(i => new Tick(symbol, $"1440{i:D2}00,167{i:D2}00,1{i:D2},T,T,0", new DateTime(2013, 10, 7)))
                 .ToArray();
             return converter.GetDataFrame(rawBars);
+        }
+
+        internal class SubTradeBar : TradeBar
+        {
+            public decimal SubProperty => Value;
+
+            public SubTradeBar() { }
+
+            public SubTradeBar(TradeBar tradeBar) : base(tradeBar) { }
+
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode) =>
+                new SubTradeBar((TradeBar) base.Reader(config, line, date, isLiveMode));
+        }
+
+        internal class SubSubTradeBar : SubTradeBar
+        {
+            public decimal SubSubProperty => Value;
+
+            public SubSubTradeBar() { }
+
+            public SubSubTradeBar(TradeBar tradeBar) : base(tradeBar) { }
+
+            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode) =>
+                new SubSubTradeBar((TradeBar) base.Reader(config, line, date, isLiveMode));
         }
     }
 }
