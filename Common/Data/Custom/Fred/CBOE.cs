@@ -27,7 +27,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXGOGCLS
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string VIXOnGoogle => "VXGOGCLS";
+            public static string VIXOnGoogle = "VXGOGCLS";
 
             ///<summary>
             /// CBOE DJIA Volatility Index (in Index)
@@ -36,7 +36,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXDCLS
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string VXD => "VXDCLS";
+            public static string VXD = "VXDCLS";
 
             ///<summary>
             /// CBOE Equity VIX on Goldman Sachs (in Index)
@@ -45,7 +45,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXGSCLS
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string VIXOnGoldmanSachs => "VXGSCLS";
+            public static string VIXOnGoldmanSachs = "VXGSCLS";
 
             ///<summary>
             /// CBOE Equity VIX on IBM (in Index)
@@ -54,7 +54,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXIBMCLS
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string VIXOnIBM => "VXIBMCLS";
+            public static string VIXOnIBM = "VXIBMCLS";
 
             ///<summary>
             /// CBOE Equity VIX on Amazon (in Index)
@@ -63,7 +63,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXAZNCLS
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string VIXOnAmazon => "VXAZNCLS";
+            public static string VIXOnAmazon = "VXAZNCLS";
 
             ///<summary>
             /// CBOE S&amp;P 100 Volatility Index: VXO (in Index)
@@ -72,7 +72,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXOCLS
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string VXO => "VXOCLS";
+            public static string VXO = "VXOCLS";
 
             ///<summary>
             /// CBOE NASDAQ 100 Volatility Index (in Index)
@@ -81,7 +81,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXNCLS
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string VXN => "VXNCLS";
+            public static string VXN = "VXNCLS";
 
             ///<summary>
             /// CBOE 10-Year Treasury Note Volatility Futures (in Index)
@@ -90,7 +90,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXTYN
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string TenYearTreasuryNoteVolatilityFutures => "VXTYN";
+            public static string TenYearTreasuryNoteVolatilityFutures = "VXTYN";
 
             ///<summary>
             /// CBOE Russell 2000 Volatility Index (in Index)
@@ -99,7 +99,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/RVXCLS
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string RVX => "RVXCLS";
+            public static string RVX = "RVXCLS";
 
             ///<summary>
             /// CBOE S&amp;P 500 3-Month Volatility Index (in Index)
@@ -108,7 +108,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXVCLS
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string SP500ThreeMonthVolatilityIndex => "VXVCLS";
+            public static string SP500ThreeMonthVolatilityIndex = "VXVCLS";
 
             ///<summary>
             /// CBOE Equity VIX on Apple (in Index)
@@ -117,7 +117,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXAPLCLS
             /// Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string VIXOnApple => "VXAPLCLS";
+            public static string VIXOnApple = "VXAPLCLS";
 
             ///<summary>
             /// CBOE Gold Miners ETF Volatility Index (in Index)
@@ -126,7 +126,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXGDXCLS
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string GoldMinersETFVolatilityIndex => "VXGDXCLS";
+            public static string GoldMinersETFVolatilityIndex = "VXGDXCLS";
 
             ///<summary>
             /// CBOE China ETF Volatility Index (in Index)
@@ -135,7 +135,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXFXICLS
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string ChinaETFVolatilityIndex => "VXFXICLS";
+            public static string ChinaETFVolatilityIndex = "VXFXICLS";
 
             ///<summary>
             /// CBOE Brazil ETF Volatility Index (in Index)
@@ -144,7 +144,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXEWZCLS
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string BrazilETFVolatilityIndex => "VXEWZCLS";
+            public static string BrazilETFVolatilityIndex = "VXEWZCLS";
 
             ///<summary>
             /// CBOE Emerging Markets ETF Volatility Index (in Index)
@@ -153,7 +153,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXEEMCLS
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string EmergingMarketsETFVolatilityIndex => "VXEEMCLS";
+            public static string EmergingMarketsETFVolatilityIndex = "VXEEMCLS";
 
             ///<summary>
             /// CBOE EuroCurrency ETF Volatility Index (in Index)
@@ -162,7 +162,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/EVZCLS
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string EuroCurrencyETFVolatilityIndex => "EVZCLS";
+            public static string EuroCurrencyETFVolatilityIndex = "EVZCLS";
 
             ///<summary>
             /// CBOE Gold ETF Volatility Index (in Index)
@@ -171,7 +171,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/GVZCLS
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string GoldETFVolatilityIndex => "GVZCLS";
+            public static string GoldETFVolatilityIndex = "GVZCLS";
 
             ///<summary>
             /// CBOE Crude Oil ETF Volatility Index (in Index)
@@ -180,7 +180,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/OVXCLS
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string CrudeOilETFVolatilityIndex => "OVXCLS";
+            public static string CrudeOilETFVolatilityIndex = "OVXCLS";
 
             ///<summary>
             /// CBOE Silver ETF Volatility Index (in Index)
@@ -189,7 +189,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXSLVCLS
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string SilverETFVolatilityIndex => "VXSLVCLS";
+            public static string SilverETFVolatilityIndex = "VXSLVCLS";
 
             ///<summary>
             /// CBOE Energy Sector ETF Volatility Index (in Index)
@@ -198,7 +198,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VXXLECLS
             /// Exchange Traded Funds (ETFs) are shares of trusts that hold portfolios of stocks designed to closely track the price performance and yield of specific indices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string EnergySectorETFVolatilityIndex => "VXXLECLS";
+            public static string EnergySectorETFVolatilityIndex = "VXXLECLS";
 
             ///<summary>
             /// CBOE Volatility Index: VIX (in Index)
@@ -207,7 +207,7 @@ namespace QuantConnect.Data.Custom.Fred
             /// Retrieved from FRED, Federal Reserve Bank of St. Louis; https://fred.stlouisfed.org/series/VIXCLS
             /// VIX measures market expectation of near term volatility conveyed by stock index option prices. Copyright, 2016, Chicago Board Options Exchange, Inc. Reprinted with permission.
             /// </remarks>
-            public static string VIX => "VIXCLS";
+            public static string VIX = "VIXCLS";
         }
     }
 }

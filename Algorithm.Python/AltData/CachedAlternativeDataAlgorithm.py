@@ -23,6 +23,7 @@ from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Custom.CBOE import *
+from QuantConnect.Data.Custom.Fred import *
 from QuantConnect.Data.Custom.USEnergy import *
 
 class CachedAlternativeDataAlgorithm(QCAlgorithm):
@@ -38,6 +39,8 @@ class CachedAlternativeDataAlgorithm(QCAlgorithm):
         self.cboeVix = self.AddData(CBOE, "VIX").Symbol
         # United States EIA data: https://eia.gov/
         self.usEnergy = self.AddData(USEnergy, USEnergy.Petroleum.UnitedStates.WeeklyGrossInputsIntoRefineries).Symbol
+        # FRED data
+        self.fredPeakToTrough = self.AddData(Fred, Fred.OECDRecessionIndicators.UnitedStatesFromPeakThroughTheTrough).Symbol
 
     def OnData(self, data):
         if data.ContainsKey(self.cboeVix):
@@ -47,4 +50,8 @@ class CachedAlternativeDataAlgorithm(QCAlgorithm):
         if data.ContainsKey(self.usEnergy):
             inputIntoRefineries = data.Get(USEnergy, self.usEnergy)
             self.Log(f"U.S. Input Into Refineries: {inputIntoRefineries}")
+
+        if data.ContainsKey(self.fredPeakToTrough):
+            peakToTrough = data.Get(Fred, self.fredPeakToTrough)
+            self.Log(f"OECD based Recession Indicator for the United States from the Peak through the Trough: {peakToTrough}")
 
