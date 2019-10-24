@@ -53,7 +53,15 @@ namespace QuantConnect.Algorithm.CSharp
             // set algorithm framework models
             SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)));
             SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
-            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
+
+            // We can define who often the EWPCM will rebalance if no new insight is submitted using:
+            // Resolution Enum:
+            SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(Resolution.Daily));
+            // TimeSpan
+            // SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(TimeSpan.FromDays(2)));
+            // A Func<DateTime, DateTime>. In this case, we can use the pre-defined func at Expiry helper class
+            // SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(Expiry.EndOfWeek));
+
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.01m));
         }
