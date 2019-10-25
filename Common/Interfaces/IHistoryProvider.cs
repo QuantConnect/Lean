@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using NodaTime;
@@ -26,28 +25,8 @@ namespace QuantConnect.Interfaces
     /// Provides historical data to an algorithm at runtime
     /// </summary>
     [InheritedExport(typeof(IHistoryProvider))]
-    public interface IHistoryProvider
+    public interface IHistoryProvider : IDataProviderEvents
     {
-        /// <summary>
-        /// Event fired when an invalid configuration has been detected
-        /// </summary>
-        event EventHandler<InvalidConfigurationDetectedEventArgs> InvalidConfigurationDetected;
-
-        /// <summary>
-        /// Event fired when the numerical precision in the factor file has been limited
-        /// </summary>
-        event EventHandler<NumericalPrecisionLimitedEventArgs> NumericalPrecisionLimited;
-
-        /// <summary>
-        /// Event fired when there was an error downloading a remote file
-        /// </summary>
-        event EventHandler<DownloadFailedEventArgs> DownloadFailed;
-
-        /// <summary>
-        /// Event fired when there was an error reading the data
-        /// </summary>
-        event EventHandler<ReaderErrorDetectedEventArgs> ReaderErrorDetected;
-
         /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>

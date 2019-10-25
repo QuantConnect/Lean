@@ -23,8 +23,6 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
-using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Engine
 {
@@ -49,29 +47,32 @@ namespace QuantConnect.Tests.Engine
 
         public TestResultHandler(Action<Packet> packetHandler = null)
         {
-            _packetHandler = packetHandler ?? (packet => { });
             Messages = new ConcurrentQueue<Packet>();
-            Task.Run(() =>
+            _packetHandler = packetHandler;
+            if (_packetHandler != null)
             {
-                try
+                Task.Run(() =>
                 {
-                    IsActive = true;
-                    while (!_cancellationTokenSource.IsCancellationRequested)
+                    try
                     {
-                        Packet packet;
-                        if (Messages.TryDequeue(out packet))
+                        IsActive = true;
+                        while (!_cancellationTokenSource.IsCancellationRequested)
                         {
-                            _packetHandler(packet);
-                        }
+                            Packet packet;
+                            if (Messages.TryDequeue(out packet))
+                            {
+                                _packetHandler(packet);
+                            }
 
-                        Thread.Sleep(1);
+                            Thread.Sleep(1);
+                        }
                     }
-                }
-                finally
-                {
-                    IsActive = false;
-                }
-            });
+                    finally
+                    {
+                        IsActive = false;
+                    }
+                });
+            }
         }
 
         public void Initialize(AlgorithmNodePacket job,

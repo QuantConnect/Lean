@@ -482,12 +482,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void DebugMessage(string message)
         {
             Messages.Enqueue(new DebugPacket(_projectId, JobId, CompileId, message));
-
-            //Save last message sent:
-            if (Algorithm != null)
-            {
-                _log.Add(Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message);
-            }
+            AddToLogStore(message);
         }
 
         /// <summary>
@@ -497,12 +492,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void SystemDebugMessage(string message)
         {
             Messages.Enqueue(new SystemDebugPacket(_projectId, JobId, CompileId, message));
-
-            //Save last message sent:
-            if (Algorithm != null)
-            {
-                _log.Add(Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message);
-            }
+            AddToLogStore(message);
         }
 
         /// <summary>
@@ -512,10 +502,21 @@ namespace QuantConnect.Lean.Engine.Results
         public void LogMessage(string message)
         {
             Messages.Enqueue(new LogPacket(JobId, message));
+            AddToLogStore(message);
+        }
 
-            if (Algorithm != null)
+        private void AddToLogStore(string message)
+        {
+            lock (_log)
             {
-                _log.Add(Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message);
+                if (Algorithm != null)
+                {
+                    _log.Add(Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message);
+                }
+                else
+                {
+                    _log.Add("Algorithm Initialization: " + message);
+                }
             }
         }
 
@@ -702,8 +703,13 @@ namespace QuantConnect.Lean.Engine.Results
             // Only process the logs once
             if (!_exitTriggered)
             {
+                List<string> copy;
+                lock (_log)
+                {
+                    copy = _log.ToList();
+                }
                 ProcessSynchronousEvents(true);
-                var logLocation = SaveLogs(_algorithmId, _log);
+                var logLocation = SaveLogs(_algorithmId, copy);
                 SystemDebugMessage("Your log was successfully created and can be retrieved from: " + logLocation);
             }
 

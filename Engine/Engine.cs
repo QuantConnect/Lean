@@ -486,7 +486,15 @@ namespace QuantConnect.Lean.Engine
             {
                 historyProvider = Config.Get("history-provider", "SubscriptionDataReaderHistoryProvider");
             }
-            return Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProvider);
+            var provider = Composer.Instance.GetExportedValueByTypeName<IHistoryProvider>(historyProvider);
+
+            provider.InvalidConfigurationDetected += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message); };
+            provider.NumericalPrecisionLimited += (sender, args) => { AlgorithmHandlers.Results.DebugMessage(args.Message); };
+            provider.StartDateLimited += (sender, args) => { AlgorithmHandlers.Results.DebugMessage(args.Message); };
+            provider.DownloadFailed += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message, args.StackTrace); };
+            provider.ReaderErrorDetected += (sender, args) => { AlgorithmHandlers.Results.RuntimeError(args.Message, args.StackTrace); };
+
+            return provider;
         }
 
         /// <summary>
