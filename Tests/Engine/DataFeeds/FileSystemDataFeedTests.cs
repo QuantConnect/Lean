@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     var elapsed = stopwatch.Elapsed.TotalSeconds;
                     var thousands = count / 1000d;
-                    Console.WriteLine($"{DateTime.Now} - Time: {timeSlice.Time}: KPS: {thousands/elapsed}");
+                    Console.WriteLine($"{DateTime.Now} - Time: {timeSlice.Time}: KPS: {thousands / elapsed}");
                     lastMonth = timeSlice.Time.Month;
                 }
                 count++;
@@ -81,7 +81,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             stopwatch.Stop();
             feed.Exit();
             dataManager.RemoveAllSubscriptions();
-            Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}   KPS: {count/1000d/stopwatch.Elapsed.TotalSeconds}");
+            Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
         }
 
         [Test]
@@ -129,6 +129,37 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             stopwatch.Stop();
             enumerator.Dispose();
             Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}   KPS: {count / 1000d / stopwatch.Elapsed.TotalSeconds}");
+        }
+
+        [Test]
+        public void ChecksMapFileFirstDate()
+        {
+            var algorithm = PerformanceBenchmarkAlgorithms.SingleSecurity_Second;
+            algorithm.Initialize();
+            algorithm.PostInitialize();
+
+            var dataProvider = new DefaultDataProvider();
+            var resultHandler = new TestResultHandler();
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            var factorFileProvider = new LocalDiskFactorFileProvider(mapFileProvider);
+            var factory = new SubscriptionDataReaderSubscriptionEnumeratorFactory(resultHandler, mapFileProvider, factorFileProvider, dataProvider, true);
+
+            var universe = algorithm.UniverseManager.Single().Value;
+            var security = algorithm.AddEquity("AAA", Resolution.Daily);
+            var securityConfig = security.Subscriptions.First();
+            // start date is before the first date in the map file
+            var subscriptionRequest = new SubscriptionRequest(false, universe, security, securityConfig, new DateTime(2001, 12, 1),
+                new DateTime(2016, 11, 1));
+            var enumerator = factory.CreateEnumerator(subscriptionRequest, dataProvider);
+            // should initialize the data source reader
+            enumerator.MoveNext();
+
+            enumerator.Dispose();
+            resultHandler.Exit();
+
+            var message = ((DebugPacket) resultHandler.Messages.Single()).Message;
+            Assert.IsTrue(message.Equals(
+                "The starting date for symbol AAA, 2001-11-30, has been adjusted to match map file first date 2002-05-22."));
         }
     }
 }

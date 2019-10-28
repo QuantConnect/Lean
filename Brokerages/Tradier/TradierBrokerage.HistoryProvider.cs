@@ -52,6 +52,11 @@ namespace QuantConnect.Brokerages.Tradier
         public event EventHandler<ReaderErrorDetectedEventArgs> ReaderErrorDetected;
 
         /// <summary>
+        /// Event fired when the start date has been limited
+        /// </summary>
+        public event EventHandler<StartDateLimitedEventArgs> StartDateLimited;
+
+        /// <summary>
         /// Gets the total number of data points emitted by this history provider
         /// </summary>
         public int DataPointCount { get; private set; }

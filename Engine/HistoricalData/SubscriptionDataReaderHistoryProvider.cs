@@ -125,10 +125,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 _dataCacheProvider
                 );
 
-            dataReader.InvalidConfigurationDetected += (sender, args) => { OnInvalidConfigurationDetected(new InvalidConfigurationDetectedEventArgs(args.Message)); };
-            dataReader.NumericalPrecisionLimited += (sender, args) => { OnNumericalPrecisionLimited(new NumericalPrecisionLimitedEventArgs(args.Message)); };
-            dataReader.DownloadFailed += (sender, args) => { OnDownloadFailed(new DownloadFailedEventArgs(args.Message, args.StackTrace)); };
-            dataReader.ReaderErrorDetected += (sender, args) => { OnReaderErrorDetected(new ReaderErrorDetectedEventArgs(args.Message, args.StackTrace)); };
+            dataReader.InvalidConfigurationDetected += (sender, args) => { OnInvalidConfigurationDetected(args); };
+            dataReader.NumericalPrecisionLimited += (sender, args) => { OnNumericalPrecisionLimited(args); };
+            dataReader.StartDateLimited += (sender, args) => { OnStartDateLimited(args); };
+            dataReader.DownloadFailed += (sender, args) => { OnDownloadFailed(args); };
+            dataReader.ReaderErrorDetected += (sender, args) => { OnReaderErrorDetected(args); };
 
             var reader = CorporateEventEnumeratorFactory.CreateEnumerators(
                 dataReader,

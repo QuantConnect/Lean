@@ -299,13 +299,14 @@
     <Compile Include="Data\IndexedBasedData.cs" />
     <Compile Include="Data\SubscriptionDataConfigExtensions.cs" />
     <Compile Include="Expiry.cs" />
-    <Compile Include="HistoryProviderEvents.cs" />
+    <Compile Include="DataProviderEvents.cs" />
     <Compile Include="IIsolatorLimitResultProvider.cs" />
     <Compile Include="Indicators\IIndicatorWarmUpPeriodProvider.cs" />
     <Compile Include="Interfaces\IAccountCurrencyProvider.cs" />
     <Compile Include="Interfaces\IAlgorithmSubscriptionManager.cs" />
     <Compile Include="Interfaces\IBrokerageCashSynchronizer.cs" />
     <Compile Include="Interfaces\IBusyCollection.cs" />
+    <Compile Include="Interfaces\IDataProviderEvents.cs" />
     <Compile Include="Interfaces\IDownloadProvider.cs" />
     <Compile Include="Interfaces\IHistoryProvider.cs" />
     <Compile Include="Interfaces\IOptionPrice.cs" />

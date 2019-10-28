@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
@@ -34,8 +35,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Subscription data reader is a wrapper on the stream reader class to download, unpack and iterate over a data file.
     /// </summary>
-    /// <remarks>The class accepts any subscription configuration and automatically makes it availble to enumerate</remarks>
-    public class SubscriptionDataReader : IEnumerator<BaseData>, ITradableDatesNotifier
+    /// <remarks>The class accepts any subscription configuration and automatically makes it available to enumerate</remarks>
+    public class SubscriptionDataReader : IEnumerator<BaseData>, ITradableDatesNotifier, IDataProviderEvents
     {
         private bool _initialized;
 
@@ -87,6 +88,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Event fired when the numerical precision in the factor file has been limited
         /// </summary>
         public event EventHandler<NumericalPrecisionLimitedEventArgs> NumericalPrecisionLimited;
+
+        /// <summary>
+        /// Event fired when the start date has been limited
+        /// </summary>
+        public event EventHandler<StartDateLimitedEventArgs> StartDateLimited;
 
         /// <summary>
         /// Event fired when there was an error downloading a remote file
@@ -254,6 +260,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                             $"The starting date has been set to {_factorFile.FactorFileMinimumDate.Value.ToShortDateString()}."));
                                 }
                             }
+                        }
+
+                        if (_periodStart < mapFile.FirstDate)
+                        {
+                            var originalStart = _periodStart;
+                            _periodStart = mapFile.FirstDate;
+
+                            OnStartDateLimited(
+                                new StartDateLimitedEventArgs(
+                                    $"The starting date for symbol {_config.Symbol.Value}," +
+                                    $" {originalStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}, has been adjusted to match map file first date" +
+                                    $" {mapFile.FirstDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}."));
                         }
                     }
                 }
@@ -595,6 +613,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected virtual void OnNumericalPrecisionLimited(NumericalPrecisionLimitedEventArgs e)
         {
             NumericalPrecisionLimited?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Event invocator for the <see cref="StartDateLimited"/> event
+        /// </summary>
+        /// <param name="e">Event arguments for the <see cref="StartDateLimited"/> event</param>
+        protected virtual void OnStartDateLimited(StartDateLimitedEventArgs e)
+        {
+            StartDateLimited?.Invoke(this, e);
         }
 
         /// <summary>
