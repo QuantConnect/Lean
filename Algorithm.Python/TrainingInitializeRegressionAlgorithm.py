@@ -40,4 +40,13 @@ class TrainingInitializeRegressionAlgorithm(QCAlgorithm):
         # this should cause the algorithm to fail
         # the regression test sets the time limit to 30 seconds and there's one extra
         # minute in the bucket, so a two minute sleep should result in RuntimeError
-        self.Schedule.TrainingNow(lambda: sleep(150))
+        self.Train(lambda: sleep(150))
+
+        # DateRules.Tomorrow combined with TimeRules.Midnight enforces that this event schedule will
+        # have exactly one time, which will fire between the first data point and the next day at
+        # midnight. So after the first data point, it will run this event and sleep long enough to
+        # exceed the static max algorithm time loop time and begin to consume from the leaky bucket
+        # the regression test sets the "algorithm-manager-time-loop-maximum" value to 30 seconds
+        self.Train(self.DateRules.Tomorrow, self.TimeRules.Midnight, lambda: sleep(60))
+                    # this will consume the single 'minute' available in the leaky bucket
+                    # and the regression test will confirm that the leaky bucket is empty
