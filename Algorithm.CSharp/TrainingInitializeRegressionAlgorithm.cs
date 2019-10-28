@@ -38,7 +38,19 @@ namespace QuantConnect.Algorithm.CSharp
             // this should cause the algorithm to fail
             // the regression test sets the time limit to 30 seconds and there's one extra
             // minute in the bucket, so a two minute sleep should result in RuntimeError
-            Schedule.TrainingNow(() => Thread.Sleep(TimeSpan.FromMinutes(2.5)));
+            Train(() => Thread.Sleep(TimeSpan.FromMinutes(2.5)));
+
+            // DateRules.Tomorrow combined with TimeRules.Midnight enforces that this event schedule will
+            // have exactly one time, which will fire between the first data point and the next day at
+            // midnight. So after the first data point, it will run this event and sleep long enough to
+            // exceed the static max algorithm time loop time and begin to consume from the leaky bucket
+            // the regression test sets the "algorithm-manager-time-loop-maximum" value to 30 seconds
+            Train(DateRules.Tomorrow, TimeRules.Midnight, () =>
+            {
+                // this will consume the single 'minute' available in the leaky bucket
+                // and the regression test will confirm that the leaky bucket is empty
+                Thread.Sleep(TimeSpan.FromMinutes(1));
+            });
         }
 
         public bool CanRunLocally => false;
