@@ -144,6 +144,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Indicates if there is support for mapping
         /// </summary>
+        /// <remarks>Relies on the <see cref="Symbol"/> property value</remarks>
         /// <returns>True indicates mapping should be used</returns>
         public virtual bool RequiresMapping()
         {
@@ -153,11 +154,23 @@ namespace QuantConnect.Data
         /// <summary>
         /// Indicates that the data set is expected to be sparse
         /// </summary>
+        /// <remarks>Relies on the <see cref="Symbol"/> property value</remarks>
         /// <returns>True if the data set represented by this type is expected to be sparse</returns>
         public virtual bool IsSparseData()
         {
             // by default, we'll assume all custom data is sparse data
             return Symbol.SecurityType == SecurityType.Base;
+        }
+
+        /// <summary>
+        /// Will adjust the requested resolution to match a supported one
+        /// for the current data and security type
+        /// </summary>
+        /// <remarks>Relies on the <see cref="Symbol"/> property value</remarks>
+        /// <param name="resolution">The resolution to check support</param>
+        public virtual Resolution AdjustResolution(Resolution resolution)
+        {
+            return Symbol.SecurityType == SecurityType.Option ? Resolution.Minute : resolution;
         }
 
         /// <summary>

@@ -26,10 +26,12 @@ namespace QuantConnect.Python
     public class PythonData : DynamicData
     {
         private readonly dynamic _pythonData;
+        private readonly dynamic _adjustResolution;
         private readonly bool _requiresMapping;
+        private readonly bool _isSparseData;
 
         /// <summary>
-        /// Constructor for initialising the PythonData class
+        /// Constructor for initializing the PythonData class
         /// </summary>
         public PythonData()
         {
@@ -37,7 +39,7 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Constructor for initialising the PythonData class with wrapped PyObject
+        /// Constructor for initializing the PythonData class with wrapped PyObject
         /// </summary>
         /// <param name="pythonData"></param>
         public PythonData(PyObject pythonData)
@@ -49,6 +51,12 @@ namespace QuantConnect.Python
                 {
                     _requiresMapping = _pythonData.RequiresMapping();
                 }
+                if (pythonData.HasAttr("IsSparseData"))
+                {
+                    _isSparseData = _pythonData.IsSparseData();
+                }
+
+                _adjustResolution = pythonData.GetPythonMethod("AdjustResolution");
             }
         }
 
@@ -72,7 +80,7 @@ namespace QuantConnect.Python
         /// Generic Reader Implementation for Python Custom Data.
         /// </summary>
         /// <param name="config">Subscription configuration</param>
-        /// <param name="line">CSV line of data from the souce</param>
+        /// <param name="line">CSV line of data from the source</param>
         /// <param name="date">Date of the requested line</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns></returns>
@@ -92,6 +100,36 @@ namespace QuantConnect.Python
         public override bool RequiresMapping()
         {
             return _requiresMapping;
+        }
+
+        /// <summary>
+        /// Indicates that the data set is expected to be sparse
+        /// </summary>
+        /// <remarks>Relies on the <see cref="Symbol"/> property value</remarks>
+        /// <returns>True if the data set represented by this type is expected to be sparse</returns>
+        public override bool IsSparseData()
+        {
+            return _isSparseData;
+        }
+
+        /// <summary>
+        /// Asserts the current data type supports the given resolution.
+        /// If the resolution is not supported this method throws an
+        /// <see cref="ArgumentException"/>
+        /// </summary>
+        /// <remarks>Relies on the <see cref="Symbol"/> property value</remarks>
+        /// <param name="resolution">The resolution to check support</param>
+        public override Resolution AdjustResolution(Resolution resolution)
+        {
+            if (_adjustResolution == null)
+            {
+                // if '_pythonData' does not override AdjustResolution we use our base impl
+                return base.AdjustResolution(resolution);
+            }
+            using (Py.GIL())
+            {
+                return _pythonData.AdjustResolution(resolution);
+            }
         }
 
         /// <summary>

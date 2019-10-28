@@ -38,8 +38,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         }
 
-        public DataManagerStub(IAlgorithm algorithm, IDataFeed dataFeed)
-            : this(dataFeed, algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork))
+        public DataManagerStub(IAlgorithm algorithm, IDataFeed dataFeed, bool liveMode = false)
+            : this(dataFeed, algorithm, new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork), liveMode)
         {
 
         }
@@ -62,30 +62,31 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         }
 
-        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper)
-            : this(dataFeed, algorithm, timeKeeper, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder())
+        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, bool liveMode = false)
+            : this(dataFeed, algorithm, timeKeeper, MarketHoursDatabase.FromDataFolder(), SymbolPropertiesDatabase.FromDataFolder(), liveMode)
         {
 
         }
 
-        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase)
-            : this(dataFeed, algorithm, timeKeeper, marketHoursDatabase, symbolPropertiesDatabase,
+        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, bool liveMode = false)
+            : this(dataFeed, algorithm, timeKeeper, marketHoursDatabase,
                 new SecurityService(algorithm.Portfolio.CashBook,
                     marketHoursDatabase,
                     symbolPropertiesDatabase,
                     algorithm,
                     RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCacheProvider(algorithm.Portfolio)))
+                    new SecurityCacheProvider(algorithm.Portfolio)),
+                liveMode)
         {
         }
 
-        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase, SymbolPropertiesDatabase symbolPropertiesDatabase, SecurityService securityService)
+        public DataManagerStub(IDataFeed dataFeed, IAlgorithm algorithm, ITimeKeeper timeKeeper, MarketHoursDatabase marketHoursDatabase, SecurityService securityService, bool liveMode = false)
             : base(dataFeed,
                 new UniverseSelection(algorithm, securityService),
                 algorithm,
                 timeKeeper,
                 marketHoursDatabase,
-                false,
+                liveMode,
                 RegisteredSecurityDataTypesProvider.Null)
         {
             SecurityService = securityService;

@@ -376,7 +376,7 @@ namespace QuantConnect.Tests.Engine.Setup
             public TestAlgorithm(Action beforePostInitializeAction = null)
             {
                 _beforePostInitializeAction = beforePostInitializeAction;
-                SubscriptionManager.SetDataManager(new DataManagerStub(this, new MockDataFeed()));
+                SubscriptionManager.SetDataManager(new DataManagerStub(this, new MockDataFeed(), liveMode:true));
             }
 
             public override void Initialize() { }

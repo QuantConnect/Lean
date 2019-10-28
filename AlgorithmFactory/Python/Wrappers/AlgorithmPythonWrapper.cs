@@ -44,9 +44,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         private readonly dynamic _algorithm;
         private readonly dynamic _onData;
         private readonly dynamic _onOrderEvent;
+        private readonly dynamic _onMarginCall;
         private readonly IAlgorithm _baseAlgorithm;
-        private readonly bool _isOnDataDefined;
-        private readonly bool _isOnMaginCallDefined;
 
         /// <summary>
         /// <see cref = "AlgorithmPythonWrapper"/> constructor.
@@ -85,14 +84,12 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 
                             // determines whether OnData method was defined or inherits from QCAlgorithm
                             // If it is not, OnData from the base class will not be called
-                            _onData = (_algorithm as PyObject).GetAttr("OnData");
-                            var onDataPythonType = _onData.GetPythonType();
-                            _isOnDataDefined = onDataPythonType.Repr().Equals("<class \'method\'>");
+                            var pyAlgorithm = _algorithm as PyObject;
+                            _onData = pyAlgorithm.GetPythonMethod("OnData");
 
-                            var onMarginCallPythonType = _algorithm.OnMarginCall.GetPythonType();
-                            _isOnMaginCallDefined = onMarginCallPythonType.Repr().Equals("<class \'method\'>");
+                            _onMarginCall = pyAlgorithm.GetPythonMethod("OnMarginCall");
 
-                            _onOrderEvent = (_algorithm as PyObject).GetAttr("OnOrderEvent");
+                            _onOrderEvent = pyAlgorithm.GetAttr("OnOrderEvent");
                         }
                         attr.Dispose();
                     }
@@ -545,7 +542,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="slice">The current slice of data</param>
         public void OnData(Slice slice)
         {
-            if (_isOnDataDefined)
+            if (_onData != null)
             {
                 using (Py.GIL())
                 {
@@ -642,7 +639,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             {
                 var result = _algorithm.OnMarginCall(requests);
 
-                if (_isOnMaginCallDefined)
+                if (_onMarginCall != null)
                 {
                     var pyRequests = result as PyObject;
                     // If the method does not return or returns a non-iterable PyObject, throw an exception

@@ -39,6 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly ITimeKeeper _timeKeeper;
         private readonly bool _liveMode;
+        private readonly IAlgorithm _algorithm;
         private readonly IRegisteredSecurityDataTypesProvider _registeredTypesProvider;
 
         /// There is no ConcurrentHashSet collection in .NET,
@@ -77,6 +78,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _marketHoursDatabase = marketHoursDatabase;
             _liveMode = liveMode;
             _registeredTypesProvider = registeredTypesProvider;
+            _algorithm = algorithm;
 
             // wire ourselves up to receive notifications when universes are added/removed
             algorithm.UniverseManager.CollectionChanged += (sender, args) =>
@@ -404,6 +406,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var dataTypes = subscriptionDataTypes ??
                 LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution, symbol.IsCanonical());
+
+            // only adjust resolution in backtesting, live can use other data sources
+            // for example minute data for options
+            if (!_liveMode)
+            {
+                foreach (var typeTuple in dataTypes)
+                {
+                    var baseInstance = typeTuple.Item1.GetBaseDataInstance();
+                    baseInstance.Symbol = symbol;
+                    var newResolution = baseInstance.AdjustResolution(resolution);
+                    if (newResolution != resolution)
+                    {
+                        // resolution was adjusted, lets advice the user
+                        if (symbol.SecurityType == SecurityType.Base)
+                        {
+                            _algorithm.Debug($"Warning: {resolution.ToStringInvariant()} resolution for type {typeTuple.Item1.Name}" +
+                                             $" is not supported and has been adjusted to {newResolution.ToStringInvariant()}.");
+                        }
+                        else
+                        {
+                            _algorithm.Debug($"Warning: {resolution.ToStringInvariant()} resolution for Security Type {symbol.SecurityType.ToStringInvariant()}" +
+                                             $" is not supported and has been adjusted to {newResolution.ToStringInvariant()}.");
+                        }
+                    }
+                    resolution = newResolution;
+                }
+            }
 
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;

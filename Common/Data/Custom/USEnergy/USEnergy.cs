@@ -110,5 +110,16 @@ namespace QuantConnect.Data.Custom.USEnergy
         {
             return $"{Symbol} - {Value}";
         }
+
+        /// <summary>
+        /// Will adjust the requested resolution to match a supported one
+        /// for the current data and security type
+        /// </summary>
+        /// <remarks>Relies on the <see cref="Symbol"/> property value</remarks>
+        /// <param name="resolution">The resolution to check support</param>
+        public override Resolution AdjustResolution(Resolution resolution)
+        {
+            return Resolution.Daily;
+        }
     }
 }

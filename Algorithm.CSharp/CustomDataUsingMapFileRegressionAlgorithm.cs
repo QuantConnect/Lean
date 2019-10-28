@@ -47,7 +47,15 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 07, 02);
 
             var foxa = QuantConnect.Symbol.Create("FOXA", SecurityType.Equity, Market.USA);
-            _symbol = AddData<CustomDataUsingMapping>(foxa).Symbol;
+            _symbol = AddData<CustomDataUsingMapping>(foxa, Resolution.Tick).Symbol;
+
+            foreach (var config in SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_symbol))
+            {
+                if (config.Resolution != Resolution.Minute)
+                {
+                    throw new Exception("Expected resolution to be adjust to Minute");
+                }
+            }
         }
 
         /// <summary>
@@ -163,6 +171,11 @@ namespace QuantConnect.Algorithm.CSharp
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
             {
                 return ParseEquity(config, line, date);
+            }
+
+            public override Resolution AdjustResolution(Resolution resolution)
+            {
+                return Resolution.Minute;
             }
         }
     }

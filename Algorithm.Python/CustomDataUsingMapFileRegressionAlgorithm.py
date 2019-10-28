@@ -44,7 +44,11 @@ class CustomDataUsingMapFileRegressionAlgorithm(QCAlgorithm):
         self.initialMapping = False
         self.executionMapping = False
         self.foxa = Symbol.Create("FOXA", SecurityType.Equity, Market.USA)
-        self.symbol = self.AddData(CustomDataUsingMapping, self.foxa).Symbol
+        self.symbol = self.AddData(CustomDataUsingMapping, self.foxa, Resolution.Tick).Symbol
+
+        for config in self.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(self.symbol):
+            if config.Resolution != Resolution.Minute:
+                raise ValueError("Expected resolution to be adjust to Minute")
 
     def OnData(self, slice):
         date = self.Time.date()
@@ -87,3 +91,7 @@ class CustomDataUsingMapping(PythonData):
     def RequiresMapping(self):
         '''True indicates mapping should be done'''
         return True
+
+    def AdjustResolution(self, resolution):
+        '''Adjust resolution'''
+        return Resolution.Minute

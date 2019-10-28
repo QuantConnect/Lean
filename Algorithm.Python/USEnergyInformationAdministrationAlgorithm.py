@@ -46,7 +46,7 @@ class USEnergyInformationAdministrationAlgorithm(QCAlgorithm):
         self.tiingoTicker = "AAPL"
         self.energyTicker = "NUC_STATUS.OUT.US.D"
         self.tiingoSymbol = self.AddData(TiingoDailyData, self.tiingoTicker, Resolution.Daily).Symbol
-        self.energySymbol = self.AddData(USEnergyAPI, self.energyTicker).Symbol
+        self.energySymbol = self.AddData(USEnergyAPI, self.energyTicker, Resolution.Hour).Symbol
 
 
         self.emaFast = self.EMA(self.tiingoSymbol, 5)
