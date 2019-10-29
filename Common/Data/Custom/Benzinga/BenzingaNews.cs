@@ -180,11 +180,38 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <returns>A clone of the instance</returns>
         public override BaseData Clone()
         {
-            var clone = JsonConvert.DeserializeObject<BenzingaNews>(JsonConvert.SerializeObject(this));
-            clone.Symbol = Symbol;
-            clone.Time = Time;
+            var metadataClone = new BenzingaMetadata {
+                FirstRun = Metadata.FirstRun,
+                IsPro = Metadata.IsPro,
+                Kind = Metadata.Kind
+            };
+            var symbolsClone = new List<BenzingaSymbolData>();
+            foreach (var symbolData in Symbols)
+            {
+                symbolsClone.Add(new BenzingaSymbolData
+                {
+                    Exchange = symbolData.Exchange,
+                    Sentiment = symbolData.Sentiment,
+                    Symbol = symbolData.Symbol
+                });
+            }
 
-            return clone;
+            return new BenzingaNews
+            {
+                Title = Title,
+                Contents = Contents,
+                PublicationDate = PublicationDate,
+                Author = Author,
+                Category = Category,
+                Id = Id,
+                RevisionId = RevisionId,
+                Symbols = symbolsClone,
+                RevisionDate = RevisionDate,
+                Metadata = metadataClone,
+
+                Symbol = Symbol,
+                Time = Time,
+            };
         }
 
         /// <summary>
