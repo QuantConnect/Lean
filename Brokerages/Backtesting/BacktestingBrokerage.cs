@@ -290,6 +290,21 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
+                    if (order.Type == OrderType.MarketOnOpen)
+                    {
+                        // This is a performance improvement:
+                        // Since MOO should never fill on the same bar or on stale data (see FillModel)
+                        // the order can remain unfilled for multiple 'scans', so we want to avoid
+                        // margin and portfolio calculations since they are expensive
+                        var currentBar = security.GetLastData();
+                        var localOrderTime = order.Time.ConvertFromUtc(security.Exchange.TimeZone);
+                        if (currentBar == null || localOrderTime >= currentBar.EndTime)
+                        {
+                            stillNeedsScan = true;
+                            continue;
+                        }
+                    }
+
                     // check if the time in force handler allows fills
                     if (order.TimeInForce.IsOrderExpired(security, order))
                     {

@@ -958,7 +958,8 @@ namespace QuantConnect.Algorithm
             //Calculate total unfilled quantity for open market orders
             var marketOrdersQuantity =
                 (from order in Transactions.GetOpenOrders(
-                        order => order.Symbol == symbol && order.Type == OrderType.Market)
+                        order => order.Symbol == symbol
+                                 && (order.Type == OrderType.Market || order.Type == OrderType.MarketOnOpen))
                  select Transactions.GetOrderTicket(order.Id)
                  into ticket
                  where ticket != null
