@@ -27,17 +27,6 @@ from QuantConnect.Data.UniverseSelection import *
 class BenzingaNewsAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.words = {
-            "bad": -0.5, "good": 0.5,
-            "negative": -0.5, "great": 0.5,
-            "growth": 0.5, "fail": -0.5,
-            "failed": -0.5, "success": 0.5,
-            "nailed": 0.5, "beat": 0.5,
-            "missed": -0.5, "slipped": -0.5,
-            "outperforming": 0.5, "underperforming": -0.5,
-            "outperform": 0.5, "underperform": -0.5
-        }
-
         self.SetStartDate(2018, 10, 12)
         self.SetEndDate(2018, 11, 25)
         self.SetCash(100000)
@@ -55,21 +44,35 @@ class BenzingaNewsAlgorithm(QCAlgorithm):
         return symbols
 
     def OnData(self, data):
+        # Get all Benzinga data and loop over it
         for article in data.Get(BenzingaNews).Values:
-            # Split the article into words in all lowercase
-            articleWords = article.Contents.lower().split(" ")
+            selectedSymbol = None
 
-            # Get the list of matching words we have sentiment definitions for
-            intersection = set(self.words.keys()).intersection(articleWords)
+            # Use loop instead of list comprehension for clarity purposes
 
-            # Get the sentiment score
-            sentimentScore = sum([self.words[i] for i in intersection])
+            # Select the same Symbol we're getting a data point for
+            # from the articles list so that we can get the sentiment of the article
+            # We use the underlying Symbol because the Symbols included in the `Symbols` property
+            # are equity Symbols.
+            for x in article.Symbols:
+                if x.Symbol == article.Symbol.Underlying:
+                    selectedSymbol = x
+                    break
+
+            if selectedSymbol is None:
+                continue
+
+            # Sometimes sentiment is not included with the article by Benzinga.
+            # We have to check for null values before using it.
+            sentimentScore = selectedSymbol = selectedSymbol.Sentiment
+            if sentimentScore is None:
+                continue
 
             # Set holdings equal to 1/10th of the sentiment score we get
             self.SetHoldings(article.Symbol.Underlying, sentimentScore / 10.0)
 
     def OnSecuritiesChanged(self, changes):
-        for r in [i for i in changes.RemovedSecurities if i.Symbol.SecurityType == SecurityType.Equity]:
+        for r in changes.RemovedSecurities:
             # If removed from the universe, liquidate and remove the custom data from the algorithm
             self.Liquidate(r.Symbol)
             self.RemoveSecurity(Symbol.CreateBase(BenzingaNews, r.Symbol, Market.USA))

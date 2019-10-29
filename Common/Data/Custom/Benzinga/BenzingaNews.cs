@@ -61,13 +61,13 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// Unique ID assigned to the article by Benzinga
         /// </summary>
         [JsonProperty("bz:id")]
-        public string Id { get; set; }
+        public int Id { get; set; }
 
         /// <summary>
         /// Unique ID assigned to the article after a revision by Benzinga
         /// </summary>
         [JsonProperty("bz:revisionid")]
-        public string RevisionId { get; set; }
+        public int RevisionId { get; set; }
 
         /// <summary>
         /// Symbols that this news article applies to

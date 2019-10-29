@@ -24,20 +24,6 @@ namespace QuantConnect.Algorithm.CSharp
 {
     public class BenzingaNewsAlgorithm : QCAlgorithm
     {
-        // Predefine a dictionary of words with scores to scan for in the description
-        // of the news article
-        private readonly Dictionary<string, double> _words = new Dictionary<string, double>()
-        {
-            {"bad", -0.5}, {"good", 0.5},
-            {"negative", -0.5}, {"great", 0.5},
-            {"growth", 0.5}, {"fail", -0.5},
-            {"failed", -0.5}, {"success", 0.5},
-            {"nailed", 0.5}, {"beat", 0.5},
-            {"missed", -0.5}, {"slipped", -0.5},
-            {"outperforming", 0.5}, {"underperforming", -0.5},
-            {"outperform", 0.5}, {"underperform", -0.5}
-        };
-
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -71,22 +57,32 @@ namespace QuantConnect.Algorithm.CSharp
             // Get all Benzinga data and loop over it
             foreach (var article in data.Get<BenzingaNews>().Values)
             {
-                // Get the list of matching words we have sentiment definitions for
-                var intersection = article.Contents.ToLowerInvariant()
-                    .Split(' ')
-                    .Intersect(_words.Keys);
+                // Select the same Symbol we're getting a data point for
+                // from the articles list so that we can get the sentiment of the article.
+                // We use the underlying Symbol because the Symbols included in the `Symbols` property
+                // are equity Symbols.
+                var selectedSymbol = article.Symbols.SingleOrDefault(x => x.Symbol == article.Symbol.Underlying);
+                if (selectedSymbol == null)
+                {
+                    continue;
+                }
 
-                // Get the sentiment score
-                var sentimentScore = intersection.Select(x => _words[x]).Sum();
+                // Sometimes sentiment is not included with the article by Benzinga.
+                // We have to check for null values before using it.
+                var sentimentScore = selectedSymbol.Sentiment;
+                if (sentimentScore == null)
+                {
+                    continue;
+                }
 
                 // Set holdings equal to 1/10th of the sentiment score we get
-                SetHoldings(article.Symbol.Underlying, sentimentScore / 10);
+                SetHoldings(article.Symbol.Underlying, sentimentScore.Value / 10);
             }
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            foreach (var r in changes.RemovedSecurities.Where(x => x.Symbol.SecurityType == SecurityType.Equity))
+            foreach (var r in changes.RemovedSecurities)
             {
                 // If removed from the universe, liquidate and remove the custom data from the algorithm
                 Liquidate(r.Symbol);
