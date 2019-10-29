@@ -15,15 +15,19 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Configuration;
 using QuantConnect.Data.Custom.Benzinga;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Linq;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.ToolBox.Benzinga
 {
@@ -31,6 +35,8 @@ namespace QuantConnect.ToolBox.Benzinga
     {
         private readonly DirectoryInfo _sourceDirectory;
         private readonly DirectoryInfo _destinationDirectory;
+        private readonly IMapFileProvider _mapFileProvider;
+        private readonly MapFileResolver _mapFileResolver;
         private readonly bool _isWindows;
         private readonly HashSet<string> _forbiddenTickers = new HashSet<string>()
         {
@@ -69,6 +75,9 @@ namespace QuantConnect.ToolBox.Benzinga
             _destinationDirectory = destinationDirectory;
             _destinationDirectory.Create();
             _isWindows = OS.IsWindows;
+
+            _mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
+            _mapFileResolver = _mapFileProvider.Get(Market.USA);
         }
 
         public bool Convert(DateTime date)
@@ -92,8 +101,7 @@ namespace QuantConnect.ToolBox.Benzinga
         /// <summary>
         /// Process the data to BenzingaNews instances
         /// </summary>
-        /// <param name="parentSourceDirectory">Source directory to read files from</param>
-        /// <param name="date"></param>
+        /// <param name="dateDirectory">Directory for a given date, e.g. ./root/2018/12/27/</param>
         /// <returns></returns>
         private IEnumerable<BenzingaNews> Process(DirectoryInfo dateDirectory)
         {
@@ -150,11 +158,24 @@ namespace QuantConnect.ToolBox.Benzinga
                         continue;
                     }
 
+                    // Tickers with dots in them like BRK.A and BRK.B appear as BRK-A and BRK-B in Benzinga data.
+                    var symbolTicker = ticker["#text"].ToString().Trim().Replace('-', '.');
+                    var mappedSymbol = _mapFileResolver.ResolveMapFile(symbolTicker, instance.PublicationDate).GetMappedSymbol(instance.PublicationDate);
+
+                    if (string.IsNullOrWhiteSpace(mappedSymbol))
+                    {
+                        Log.Error($"BenzingaDataConverter.Process(): Failed to map old ticker {symbolTicker}. New ticker is null");
+                        continue;
+                    }
+
                     instance.Symbols.Add(new BenzingaSymbolData()
                     {
                         Exchange = exchange,
                         Sentiment = sentiment,
-                        Symbol = new Symbol(SecurityIdentifier.GenerateEquity(ticker["#text"].ToString().Trim(), Market.USA, mapSymbol: false), ticker["#text"].ToString().Trim())
+                        Symbol = new Symbol(
+                            SecurityIdentifier.GenerateEquity(symbolTicker, Market.USA, mapSymbol: true, mapFileProvider: _mapFileProvider, mappingResolveDate: instance.PublicationDate),
+                            mappedSymbol
+                        )
                     });
                 }
 
@@ -169,6 +190,9 @@ namespace QuantConnect.ToolBox.Benzinga
         /// <param name="date">Date to convert for</param>
         private void WriteToFile(IEnumerable<BenzingaNews> news, DateTime date)
         {
+            var finalDirectory = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, "content", $"{date:yyyMMdd}"));
+            finalDirectory.Create();
+
             foreach (var article in news)
             {
                 var createdReference = false;
@@ -182,9 +206,12 @@ namespace QuantConnect.ToolBox.Benzinga
                         Log.Trace($"BenzingaDataConverter.WriteToFile(): Ticker {ticker.Symbol.Value} contains invalid character ':'. Skipping");
                         continue;
                     }
-                    if (ticker.Exchange != "NASDAQ" && ticker.Exchange != "NYSE")
+                    // ETFs have a special exchange tag associated with them.
+                    // Sometimes, we have an empty exchange for some tickers. Let's try and map them first before giving up on them.
+                    // Example: SPOT (Spotify) on 2018-10-01 has a missing exchange even though it has already IPO'd
+                    if (ticker.Exchange != "NASDAQ" && ticker.Exchange != "NYSE" && ticker.Exchange != "ETF" && !string.IsNullOrEmpty(ticker.Exchange))
                     {
-                        Log.Trace($"BenzingaDataConverter.WriteToFile(): Ticker {ticker.Symbol.Value} is not in NYSE or NASDAQ. Skipping");
+                        Log.Trace($"BenzingaDataConverter.WriteToFile(): Ticker {ticker.Symbol.Value} is not in NYSE, NASDAQ, or is not an ETF. Skipping");
                         continue;
                     }
                     // We can't write these tickers in Windows, so we'll skip them
@@ -213,7 +240,7 @@ namespace QuantConnect.ToolBox.Benzinga
                     var existingReferenceFileBackupPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
 
                     Log.Trace($"BenzingaDataConverter.WriteToFile(): Creating reference temp file: {referenceFileTemp}");
-                    File.WriteAllLines(referenceFileTemp, tickerReferences);
+                    File.WriteAllLines(referenceFileTemp, tickerReferences.OrderBy(x => x));
 
                     if (finalFileExists)
                     {
@@ -251,9 +278,6 @@ namespace QuantConnect.ToolBox.Benzinga
                     continue;
                 }
 
-                var finalDirectory = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, "content", $"{date:yyyMMdd}"));
-                finalDirectory.Create();
-
                 var finalArticleFile = Path.Combine(finalDirectory.FullName, $"{article.Id}.json");
                 var tempArticleFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
                 var backupArticleFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
@@ -286,7 +310,6 @@ namespace QuantConnect.ToolBox.Benzinga
             }
 
             // Now compress all of the data we have for a given day
-            var finalDataDirectory = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, "content", date.ToStringInvariant(DateFormat.EightCharacter)));
             var compressedFinal = new FileInfo(Path.Combine(_destinationDirectory.FullName, "content", $"{date:yyyyMMdd}.zip"));
             var compressedFinalBackup = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip"));
 
@@ -299,7 +322,8 @@ namespace QuantConnect.ToolBox.Benzinga
 
             try
             {
-                Compression.ZipDirectory(finalDataDirectory.FullName, compressedFinal.FullName, includeRootInZip: false);
+                Log.Trace($"BenzingaDataConverter.WriteToFile(): Compressing {finalDirectory.Name} to {compressedFinal.FullName}");
+                Compression.ZipDirectory(finalDirectory.FullName, compressedFinal.FullName, includeRootInZip: false);
             }
             catch (Exception e)
             {
@@ -313,8 +337,9 @@ namespace QuantConnect.ToolBox.Benzinga
             }
             finally
             {
+                Log.Trace($"BenzingaDataConverter.WriteTOFile(): Deleting temp data in directory: {finalDirectory.Name}");
                 // Clean up after ourselves
-                Directory.Delete(finalDataDirectory.FullName, true);
+                Directory.Delete(finalDirectory.FullName, true);
             }
         }
     }
