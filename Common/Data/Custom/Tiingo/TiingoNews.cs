@@ -132,12 +132,8 @@ namespace QuantConnect.Data.Custom.Tiingo
         {
             if (isLiveMode)
             {
-                var tiingoTicker = TiingoSymbolMapper.GetTiingoTicker(config.Symbol);
-                var url = Invariant($"https://api.tiingo.com/tiingo/news?tickers={tiingoTicker}&startDate={date:yyyy-MM-dd}&token={Tiingo.AuthCode}&sortBy=crawlDate");
-
-                return new SubscriptionDataSource(url,
-                    SubscriptionTransportMedium.Rest,
-                    FileFormat.Collection);
+                // this data type is streamed in live mode
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
             }
 
             var source = Path.Combine(
