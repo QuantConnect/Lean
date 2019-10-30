@@ -15,6 +15,7 @@
 
 using QuantConnect.Data.Market;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -126,14 +127,19 @@ namespace QuantConnect.Data.Custom.CBOE
         }
 
         /// <summary>
-        /// Will adjust the requested resolution to match a supported one
-        /// for the current data and security type
+        /// Gets the default resolution for this data and security type
         /// </summary>
-        /// <remarks>Relies on the <see cref="Symbol"/> property value</remarks>
-        /// <param name="resolution">The resolution to check support</param>
-        public override Resolution AdjustResolution(Resolution resolution)
+        public override Resolution DefaultResolution()
         {
             return Resolution.Daily;
+        }
+
+        /// <summary>
+        /// Gets the supported resolution for this data and security type
+        /// </summary>
+        public override List<Resolution> SupportedResolutions()
+        {
+            return DailyResolution;
         }
     }
 }

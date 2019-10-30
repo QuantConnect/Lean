@@ -29,9 +29,9 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This regression algorithm tests the performance related GH issue 3772, AssertResolution
+    /// This regression algorithm tests the performance related GH issue 3772
     /// </summary>
-    public class AdjustResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class DefaultResolutionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -53,27 +53,49 @@ namespace QuantConnect.Algorithm.CSharp
 
             foreach (var type in types)
             {
-                var custom = AddData(type, spy, Resolution.Hour, null);
+                var custom = AddData(type, spy);
+
                 if (SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(custom.Symbol)
                     .Any(config => config.Resolution != Resolution.Daily))
                 {
-                    throw new Exception("Was expecting resolution to be adjusted to Daily");
+                    throw new Exception("Was expecting resolution to be set to Daily");
+                }
+
+                try
+                {
+                    AddData(type, spy, Resolution.Tick);
+                    throw new Exception("Was expecting an ArgumentException to be thrown");
+                }
+                catch (ArgumentException)
+                {
+                    // expected, these custom types don't support tick resolution
                 }
             }
 
-            var security = AddData<USEnergyAPI>(spy, Resolution.Tick, null);
+            var security = AddData<USEnergyAPI>(spy);
             if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(security.Symbol)
                 .Any(config => config.Resolution != Resolution.Hour))
             {
-                throw new Exception("Was expecting resolution to be adjusted to Hour");
+                throw new Exception("Was expecting resolution to be set to Hour");
             }
 
-            var option = AddOption("AAPL", Resolution.Daily);
+            try
+            {
+
+                AddOption("AAPL", Resolution.Daily);
+                throw new Exception("Was expecting an ArgumentException to be thrown");
+            }
+            catch (ArgumentException)
+            {
+                // expected, options only support minute resolution
+            }
+
+            var option = AddOption("AAPL");
             if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(option.Symbol)
                 .Any(config => config.Resolution != Resolution.Minute))
             {
-                throw new Exception("Was expecting resolution to be adjusted to Minute");
+                throw new Exception("Was expecting resolution to be set to Minute");
             }
 
             Quit();

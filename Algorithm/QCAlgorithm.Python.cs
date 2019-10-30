@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm
         /// <param name="ticker">Key/Ticker for data</param>
         /// <param name="resolution">Resolution of the data</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(PyObject type, string ticker, Resolution resolution = Resolution.Minute)
+        public Security AddData(PyObject type, string ticker, Resolution? resolution = null)
         {
             return AddData(type, ticker, resolution, null, false, 1m);
         }
@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm
         /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
         /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
         /// </remarks>
-        public Security AddData(PyObject type, Symbol underlying, Resolution resolution = Resolution.Minute)
+        public Security AddData(PyObject type, Symbol underlying, Resolution? resolution = null)
         {
             return AddData(type, underlying, resolution, null, false, 1m);
         }
@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(PyObject type, string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(PyObject type, string ticker, Resolution? resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             return AddData(type.CreateType(), ticker, resolution, timeZone, fillDataForward, leverage);
         }
@@ -121,7 +121,7 @@ namespace QuantConnect.Algorithm
         /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
         /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
         /// </remarks>
-        public Security AddData(PyObject type, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(PyObject type, Symbol underlying, Resolution? resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             return AddData(type.CreateType(), underlying, resolution, timeZone, fillDataForward, leverage);
         }
@@ -138,7 +138,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        public Security AddData(Type dataType, string ticker, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(Type dataType, string ticker, Resolution? resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             // NOTE: Invoking methods on BaseData w/out setting the symbol may provide unexpected behavior
             var baseInstance = dataType.GetBaseDataInstance();
@@ -182,7 +182,7 @@ namespace QuantConnect.Algorithm
         /// Adding the three unused parameters makes it choose the correct method when using a string or Symbol. This is
         /// due to pythonnet's method precedence, as viewable here: https://github.com/QuantConnect/pythonnet/blob/9e29755c54e6008cb016e3dd9d75fbd8cd19fcf7/src/runtime/methodbinder.cs#L215
         /// </remarks>
-        public Security AddData(Type dataType, Symbol underlying, Resolution resolution, DateTimeZone timeZone, bool fillDataForward = false, decimal leverage = 1.0m)
+        public Security AddData(Type dataType, Symbol underlying, Resolution? resolution = null, DateTimeZone timeZone = null, bool fillDataForward = false, decimal leverage = 1.0m)
         {
             var symbol = QuantConnect.Symbol.CreateBase(dataType, underlying, Market.USA);
             return AddDataImpl(dataType, symbol, resolution, timeZone, fillDataForward, leverage);
@@ -200,7 +200,7 @@ namespace QuantConnect.Algorithm
         /// <param name="fillDataForward">When no data available on a tradebar, return the last data that was generated</param>
         /// <param name="leverage">Custom leverage per security</param>
         /// <returns>The new <see cref="Security"/></returns>
-        private Security AddDataImpl(Type dataType, Symbol symbol, Resolution resolution, DateTimeZone timeZone, bool fillDataForward, decimal leverage)
+        private Security AddDataImpl(Type dataType, Symbol symbol, Resolution? resolution, DateTimeZone timeZone, bool fillDataForward, decimal leverage)
         {
             var alias = symbol.ID.Symbol;
             SymbolCache.Set(alias, symbol);

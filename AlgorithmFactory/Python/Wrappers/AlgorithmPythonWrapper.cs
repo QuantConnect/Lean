@@ -395,12 +395,12 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// </summary>
         /// <param name="securityType">SecurityType Enum: Equity, Commodity, FOREX or Future</param>
         /// <param name="symbol">Symbol Representation of the MarketType, e.g. AAPL</param>
-        /// <param name="resolution">Resolution of the MarketType required: MarketData, Second or Minute</param>
+        /// <param name="resolution">The <see cref="Resolution"/> of market data, Tick, Second, Minute, Hour, or Daily.</param>
         /// <param name="market">The market the requested security belongs to, such as 'usa' or 'fxcm'</param>
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice.</param>
         /// <param name="leverage">leverage for this security</param>
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
-        public Security AddSecurity(SecurityType securityType, string symbol, Resolution resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
+        public Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillDataForward, decimal leverage, bool extendedMarketHours)
             => _baseAlgorithm.AddSecurity(securityType, symbol, resolution, market, fillDataForward, leverage, extendedMarketHours);
 
         /// <summary>
@@ -411,7 +411,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Future"/> security</returns>
-        public Future AddFutureContract(Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 0m)
+        public Future AddFutureContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = 0m)
             => _baseAlgorithm.AddFutureContract(symbol, resolution, fillDataForward, leverage);
 
         /// <summary>
@@ -422,7 +422,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="fillDataForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <returns>The new <see cref="Option"/> security</returns>
-        public Option AddOptionContract(Symbol symbol, Resolution resolution = Resolution.Minute, bool fillDataForward = true, decimal leverage = 0m)
+        public Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillDataForward = true, decimal leverage = 0m)
             => _baseAlgorithm.AddOptionContract(symbol, resolution, fillDataForward, leverage);
 
         /// <summary>

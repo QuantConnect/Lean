@@ -16,6 +16,7 @@
 using Python.Runtime;
 using QuantConnect.Data;
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Python
 {
@@ -26,9 +27,10 @@ namespace QuantConnect.Python
     public class PythonData : DynamicData
     {
         private readonly dynamic _pythonData;
-        private readonly dynamic _adjustResolution;
-        private readonly bool _requiresMapping;
-        private readonly bool _isSparseData;
+        private readonly dynamic _defaultResolution;
+        private readonly dynamic _supportedResolutions;
+        private readonly dynamic _isSparseData;
+        private readonly dynamic _requiresMapping;
 
         /// <summary>
         /// Constructor for initializing the PythonData class
@@ -47,16 +49,11 @@ namespace QuantConnect.Python
             _pythonData = pythonData;
             using (Py.GIL())
             {
-                if (pythonData.HasAttr("RequiresMapping"))
-                {
-                    _requiresMapping = _pythonData.RequiresMapping();
-                }
-                if (pythonData.HasAttr("IsSparseData"))
-                {
-                    _isSparseData = _pythonData.IsSparseData();
-                }
-
-                _adjustResolution = pythonData.GetPythonMethod("AdjustResolution");
+                // these methods rely on the Symbol so we can call them yet but we can get them
+                _requiresMapping = pythonData.GetPythonMethod("RequiresMapping");
+                _isSparseData = pythonData.GetPythonMethod("IsSparseData");
+                _defaultResolution = pythonData.GetPythonMethod("DefaultResolution");
+                _supportedResolutions = pythonData.GetPythonMethod("SupportedResolutions");
             }
         }
 
@@ -99,7 +96,14 @@ namespace QuantConnect.Python
         /// <returns>True indicates mapping should be used</returns>
         public override bool RequiresMapping()
         {
-            return _requiresMapping;
+            if (_requiresMapping == null)
+            {
+                return base.RequiresMapping();
+            }
+            using (Py.GIL())
+            {
+                return _requiresMapping();
+            }
         }
 
         /// <summary>
@@ -109,26 +113,47 @@ namespace QuantConnect.Python
         /// <returns>True if the data set represented by this type is expected to be sparse</returns>
         public override bool IsSparseData()
         {
-            return _isSparseData;
-        }
-
-        /// <summary>
-        /// Asserts the current data type supports the given resolution.
-        /// If the resolution is not supported this method throws an
-        /// <see cref="ArgumentException"/>
-        /// </summary>
-        /// <remarks>Relies on the <see cref="Symbol"/> property value</remarks>
-        /// <param name="resolution">The resolution to check support</param>
-        public override Resolution AdjustResolution(Resolution resolution)
-        {
-            if (_adjustResolution == null)
+            if (_isSparseData == null)
             {
-                // if '_pythonData' does not override AdjustResolution we use our base impl
-                return base.AdjustResolution(resolution);
+                return base.IsSparseData();
             }
             using (Py.GIL())
             {
-                return _pythonData.AdjustResolution(resolution);
+                return _isSparseData();
+            }
+        }
+
+        /// <summary>
+        /// Gets the default resolution for this data and security type
+        /// </summary>
+        /// <remarks>This is a method and not a property so that python
+        /// custom data types can override it</remarks>
+        public override Resolution DefaultResolution()
+        {
+            if (_defaultResolution == null)
+            {
+                return base.DefaultResolution();
+            }
+            using (Py.GIL())
+            {
+                return _defaultResolution();
+            }
+        }
+
+        /// <summary>
+        /// Gets the supported resolution for this data and security type
+        /// </summary>
+        /// <remarks>This is a method and not a property so that python
+        /// custom data types can override it</remarks>
+        public override List<Resolution> SupportedResolutions()
+        {
+            if (_supportedResolutions == null)
+            {
+                return base.SupportedResolutions();
+            }
+            using (Py.GIL())
+            {
+                return _supportedResolutions();
             }
         }
 

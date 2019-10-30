@@ -31,6 +31,22 @@ namespace QuantConnect.Data
         private decimal _value;
 
         /// <summary>
+        /// A list of all <see cref="Resolution"/>
+        /// </summary>
+        protected static readonly List<Resolution> AllResolutions =
+            Enum.GetValues(typeof(Resolution)).Cast<Resolution>().ToList();
+
+        /// <summary>
+        /// A list of <see cref="Resolution.Daily"/>
+        /// </summary>
+        protected static readonly List<Resolution> DailyResolution = new List<Resolution> { Resolution.Daily };
+
+        /// <summary>
+        /// A list of <see cref="Resolution.Minute"/>
+        /// </summary>
+        protected static readonly List<Resolution> MinuteResolution = new List<Resolution> { Resolution.Minute };
+
+        /// <summary>
         /// Market Data Type of this data - does it come in individual price packets or is it grouped into OHLC.
         /// </summary>
         /// <remarks>Data is classed into two categories - streams of instantaneous prices and groups of OHLC data.</remarks>
@@ -155,6 +171,8 @@ namespace QuantConnect.Data
         /// Indicates that the data set is expected to be sparse
         /// </summary>
         /// <remarks>Relies on the <see cref="Symbol"/> property value</remarks>
+        /// <remarks>This is a method and not a property so that python
+        /// custom data types can override it</remarks>
         /// <returns>True if the data set represented by this type is expected to be sparse</returns>
         public virtual bool IsSparseData()
         {
@@ -163,14 +181,29 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Will adjust the requested resolution to match a supported one
-        /// for the current data and security type
+        /// Gets the default resolution for this data and security type
+        /// </summary>
+        /// <remarks>This is a method and not a property so that python
+        /// custom data types can override it</remarks>
+        public virtual Resolution DefaultResolution()
+        {
+            return Resolution.Minute;
+        }
+
+        /// <summary>
+        /// Gets the supported resolution for this data and security type
         /// </summary>
         /// <remarks>Relies on the <see cref="Symbol"/> property value</remarks>
-        /// <param name="resolution">The resolution to check support</param>
-        public virtual Resolution AdjustResolution(Resolution resolution)
+        /// <remarks>This is a method and not a property so that python
+        /// custom data types can override it</remarks>
+        public virtual List<Resolution> SupportedResolutions()
         {
-            return Symbol.SecurityType == SecurityType.Option ? Resolution.Minute : resolution;
+            if (Symbol.SecurityType == SecurityType.Option)
+            {
+                return MinuteResolution;
+            }
+
+            return AllResolutions;
         }
 
         /// <summary>

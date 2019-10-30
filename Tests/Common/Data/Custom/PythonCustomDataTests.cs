@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using NUnit.Framework;
 using Python.Runtime;
 
@@ -21,32 +22,8 @@ namespace QuantConnect.Tests.Common.Data.Custom
     [TestFixture]
     public class PythonCustomDataTests
     {
-        [TestCase("True", true)]
-        [TestCase("False", false)]
-        public void OverridesIsSparseData(string value, bool booleanValue)
-        {
-            dynamic instance;
-            using (Py.GIL())
-            {
-                PyObject test = PythonEngine.ModuleFromString("testModule",
-                    @"
-from clr import AddReference
-AddReference(""System"")
-AddReference(""QuantConnect.Common"")
-
-from QuantConnect.Python import *
-
-class Test(PythonData):
-    def IsSparseData(self):
-        return " + $"{value}").GetAttr("Test");
-                instance = test.CreateType().GetBaseDataInstance();
-            }
-
-            Assert.AreEqual(booleanValue, instance.IsSparseData());
-        }
-
         [Test]
-        public void OverridesAdjustResolution()
+        public void IsSparseDataDefaultValue()
         {
             dynamic instance;
             using (Py.GIL())
@@ -61,12 +38,87 @@ from QuantConnect import *
 from QuantConnect.Python import *
 
 class Test(PythonData):
-    def AdjustResolution(self, resolution):
+    def Pepe(self):
+        return 1").GetAttr("Test");
+                instance = test.CreateType().GetBaseDataInstance();
+                instance.Symbol = Symbol.CreateBase(typeof(decimal), Symbols.SPY, QuantConnect.Market.USA);
+            }
+
+            Assert.IsTrue(instance.IsSparseData());
+        }
+
+        [TestCase("True", true)]
+        [TestCase("False", false)]
+        public void OverridesIsSparseData(string value, bool booleanValue)
+        {
+            dynamic instance;
+            using (Py.GIL())
+            {
+                PyObject test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""System"")
+AddReference(""QuantConnect.Common"")
+
+from QuantConnect import *
+from QuantConnect.Python import *
+
+class Test(PythonData):
+    def IsSparseData(self):
+        return " + $"{value}").GetAttr("Test");
+                instance = test.CreateType().GetBaseDataInstance();
+            }
+
+            Assert.AreEqual(booleanValue, instance.IsSparseData());
+        }
+
+        [Test]
+        public void OverridesDefaultResolution()
+        {
+            dynamic instance;
+            using (Py.GIL())
+            {
+                PyObject test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""System"")
+AddReference(""QuantConnect.Common"")
+
+from QuantConnect import *
+from QuantConnect.Python import *
+
+class Test(PythonData):
+    def DefaultResolution(self):
         return Resolution.Tick").GetAttr("Test");
                 instance = test.CreateType().GetBaseDataInstance();
             }
 
-            Assert.AreEqual(Resolution.Tick, instance.AdjustResolution(Resolution.Daily));
+            Assert.AreEqual(Resolution.Tick, instance.DefaultResolution());
+        }
+
+        [Test]
+        public void OverridesSupportedResolutions()
+        {
+            dynamic instance;
+            using (Py.GIL())
+            {
+                PyObject test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""System"")
+AddReference(""QuantConnect.Common"")
+
+from QuantConnect import *
+from QuantConnect.Python import *
+
+class Test(PythonData):
+    def SupportedResolutions(self):
+        return [ Resolution.Tick, Resolution.Daily ]").GetAttr("Test");
+                instance = test.CreateType().GetBaseDataInstance();
+            }
+
+            var res = instance.SupportedResolutions();
+            Assert.AreEqual(new List<Resolution> { Resolution.Tick, Resolution.Daily }, res);
         }
     }
 }

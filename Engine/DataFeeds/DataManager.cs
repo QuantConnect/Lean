@@ -373,7 +373,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public SubscriptionDataConfig Add(
             Type dataType,
             Symbol symbol,
-            Resolution resolution,
+            Resolution? resolution = null,
             bool fillForward = true,
             bool extendedMarketHours = false,
             bool isFilteredSubscription = true,
@@ -394,9 +394,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public List<SubscriptionDataConfig> Add(
             Symbol symbol,
-            Resolution resolution,
-            bool fillForward,
-            bool extendedMarketHours,
+            Resolution? resolution = null,
+            bool fillForward = true,
+            bool extendedMarketHours = false,
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
             bool isCustomData = false,
@@ -405,32 +405,47 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             )
         {
             var dataTypes = subscriptionDataTypes ??
-                LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution, symbol.IsCanonical());
+                LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution ?? Resolution.Minute, symbol.IsCanonical());
 
-            // only adjust resolution in backtesting, live can use other data sources
-            // for example minute data for options
-            if (!_liveMode)
+            if (!dataTypes.Any())
             {
-                foreach (var typeTuple in dataTypes)
+                throw new ArgumentNullException(nameof(dataTypes), "At least one type needed to create new subscriptions");
+            }
+
+            var resolutionWasProvided = resolution.HasValue;
+            foreach (var typeTuple in dataTypes)
+            {
+                var baseInstance = typeTuple.Item1.GetBaseDataInstance();
+                baseInstance.Symbol = symbol;
+                if (!resolutionWasProvided)
                 {
-                    var baseInstance = typeTuple.Item1.GetBaseDataInstance();
-                    baseInstance.Symbol = symbol;
-                    var newResolution = baseInstance.AdjustResolution(resolution);
-                    if (newResolution != resolution)
+                    var defaultResolution = baseInstance.DefaultResolution();
+                    if (resolution.HasValue && resolution != defaultResolution)
                     {
-                        // resolution was adjusted, lets advice the user
-                        if (symbol.SecurityType == SecurityType.Base)
-                        {
-                            _algorithm.Debug($"Warning: {resolution.ToStringInvariant()} resolution for type {typeTuple.Item1.Name}" +
-                                             $" is not supported and has been adjusted to {newResolution.ToStringInvariant()}.");
-                        }
-                        else
-                        {
-                            _algorithm.Debug($"Warning: {resolution.ToStringInvariant()} resolution for Security Type {symbol.SecurityType.ToStringInvariant()}" +
-                                             $" is not supported and has been adjusted to {newResolution.ToStringInvariant()}.");
-                        }
+                        // we are here because there are multiple 'dataTypes'.
+                        // if we get different default resolutions lets throw, this shouldn't happen
+                        throw new InvalidOperationException(
+                            $"Different data types ({string.Join(",", dataTypes.Select(tuple => tuple.Item1))})" +
+                            $" provided different default resolutions {defaultResolution} and {resolution}, this is an unexpected invalid operation.");
                     }
-                    resolution = newResolution;
+                    resolution = defaultResolution;
+                }
+                else
+                {
+                    // only assert resolution in backtesting, live can use other data source
+                    // for example daily data for options
+                    if (!_liveMode)
+                    {
+                        var supportedResolutions = baseInstance.SupportedResolutions();
+                        if (supportedResolutions.Contains(resolution.Value))
+                        {
+                            continue;
+                        }
+
+                        throw new ArgumentException($"Sorry {resolution.ToStringInvariant()} is not a supported resolution for {typeTuple.Item1.Name}" +
+                                                    $" and SecurityType.{symbol.SecurityType.ToStringInvariant()}." +
+                                                    $" Please change your AddData to use one of the supported resolutions ({string.Join(",", supportedResolutions)}).");
+                    }
                 }
             }
 
@@ -453,18 +468,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     "ExchangeTimeZone is a required parameter for new subscriptions. Set to the time zone the security exchange resides in.");
             }
 
-            if (!dataTypes.Any())
-            {
-                throw new ArgumentNullException(nameof(dataTypes), "At least one type needed to create new subscriptions");
-            }
-
             var result = (from subscriptionDataType in dataTypes
                 let dataType = subscriptionDataType.Item1
                 let tickType = subscriptionDataType.Item2
                 select new SubscriptionDataConfig(
                     dataType,
                     symbol,
-                    resolution,
+                    resolution.Value,
                     marketHoursDbEntry.DataTimeZone,
                     exchangeHours.TimeZone,
                     fillForward,
