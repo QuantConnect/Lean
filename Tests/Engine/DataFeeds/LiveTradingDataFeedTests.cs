@@ -25,7 +25,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.PsychSignal;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -1270,8 +1270,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // x2 because counting trades and quotes
             new TestCaseData(Symbols.SPY_C_192_Feb19_2016, Resolution.Tick, 1, (7 - 1) * 2, 0, 0, 0),
 
-            // Custom (streaming not supported yet)
-            new TestCaseData(Symbol.Create("CUSTOM", SecurityType.Base, Market.USA), Resolution.Daily, 4, 0, 0, 0, 0)
+            // Custom data (streaming)
+            new TestCaseData(Symbol.CreateBase(typeof(PsychSignalSentiment), Symbols.AAPL, Market.USA), Resolution.Hour, 1, 0, 0, 0, 0, 24 * 2),
+            new TestCaseData(Symbol.CreateBase(typeof(PsychSignalSentiment), Symbols.AAPL, Market.USA), Resolution.Minute, 1, 0, 0, 0, 0, 60 * 2),
+            new TestCaseData(Symbol.CreateBase(typeof(PsychSignalSentiment), Symbols.AAPL, Market.USA), Resolution.Tick, 1, 0, 0, 0, 0, 24)
         };
 
         [TestCaseSource(nameof(DataTypeTestCases))]
@@ -1282,7 +1284,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             int expectedTicksReceived,
             int expectedTradeBarsReceived,
             int expectedQuoteBarsReceived,
-            int expectedAuxPointsReceived)
+            int expectedAuxPointsReceived,
+            int expectedCustomPointsReceived = 0)
         {
             // startDate and endDate are in algorithm time zone
             var startDate = new DateTime(2019, 6, 3);
@@ -1323,7 +1326,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                 if (symbol.SecurityType == SecurityType.Base)
                 {
-                    var dataPoint = new Quandl
+                    var dataPoint = new PsychSignalSentiment
                     {
                         Symbol = symbol,
                         EndTime = exchangeTime,
@@ -1433,7 +1436,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             switch (symbol.SecurityType)
             {
                 case SecurityType.Base:
-                    security = algorithm.AddData<Quandl>(symbol.Value, resolution, fillDataForward: false);
+                    algorithm.AddEquity(symbol.Underlying.Value, resolution, symbol.ID.Market, fillDataForward: false);
+                    security = algorithm.AddData<PsychSignalSentiment>(symbol.Value, resolution, fillDataForward: false);
                     break;
 
                 case SecurityType.Future:
@@ -1463,6 +1467,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var actualTradeBarsReceived = 0;
             var actualQuoteBarsReceived = 0;
             var actualAuxPointsReceived = 0;
+            var actualCustomPointsReceived = 0;
             var sliceCount = 0;
             foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
             {
@@ -1491,6 +1496,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                         ConsoleWriteLine($"{algorithm.Time} - Dividend received, value: {timeSlice.Slice.Dividends[symbol].Value} (count: {actualAuxPointsReceived})");
                     }
+
+                    var customDataCount = timeSlice.Slice.Get<PsychSignalSentiment>().Count;
+                    if (customDataCount > 0)
+                    {
+                        actualCustomPointsReceived += customDataCount;
+
+                        ConsoleWriteLine($"{algorithm.Time} - Custom received, value: {timeSlice.Slice.Get<PsychSignalSentiment>().First().Value} (count: {actualCustomPointsReceived})");
+                    }
                 }
                 else
                 {
@@ -1513,6 +1526,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         actualQuoteBarsReceived++;
 
                         ConsoleWriteLine($"{algorithm.Time} - QuoteBar received, value: {timeSlice.Slice.QuoteBars[symbol].Value} (count: {actualQuoteBarsReceived})");
+                    }
+
+                    var customDataCount = timeSlice.Slice.Get<PsychSignalSentiment>().Count;
+                    if (customDataCount > 0)
+                    {
+                        actualCustomPointsReceived += customDataCount;
+
+                        ConsoleWriteLine($"{algorithm.Time} - Custom received, value: {timeSlice.Slice.Get<PsychSignalSentiment>().First().Value} (count: {actualCustomPointsReceived})");
                     }
                 }
 
@@ -1566,12 +1587,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Log.Trace($"SliceCount:{sliceCount} - PriceData: Enqueued:{actualPricePointsEnqueued} TradeBarsReceived:{actualTradeBarsReceived}");
             Log.Trace($"SliceCount:{sliceCount} - PriceData: Enqueued:{actualPricePointsEnqueued} QuoteBarsReceived:{actualQuoteBarsReceived}");
             Log.Trace($"SliceCount:{sliceCount} - AuxData: Enqueued:{actualAuxPointsEnqueued} Received:{actualAuxPointsReceived}");
+            Log.Trace($"SliceCount:{sliceCount} - AuxData: Enqueued:{actualPricePointsEnqueued} Received:{actualCustomPointsReceived}");
 
             Assert.IsTrue(actualPricePointsEnqueued > 0);
 
             if (resolution == Resolution.Tick)
             {
-                Assert.IsTrue(actualTicksReceived > 0);
+                if (symbol.SecurityType == SecurityType.Base)
+                {
+                    Assert.IsTrue(actualTicksReceived == 0);
+                }
+                else
+                {
+                    Assert.IsTrue(actualTicksReceived > 0);
+                }
             }
             else
             {
@@ -1592,6 +1621,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Assert.IsTrue(actualTradeBarsReceived > 0);
                         Assert.IsTrue(actualQuoteBarsReceived > 0);
                         break;
+
+                    case SecurityType.Base:
+                        Assert.IsTrue(actualCustomPointsReceived > 0);
+                        break;
                 }
             }
 
@@ -1599,6 +1632,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(expectedTradeBarsReceived, actualTradeBarsReceived);
             Assert.AreEqual(expectedQuoteBarsReceived, actualQuoteBarsReceived);
             Assert.AreEqual(expectedAuxPointsReceived, actualAuxPointsReceived);
+            Assert.AreEqual(expectedCustomPointsReceived, actualCustomPointsReceived);
 
             dataManager.RemoveAllSubscriptions();
         }

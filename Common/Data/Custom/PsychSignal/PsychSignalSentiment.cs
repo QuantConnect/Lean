@@ -82,6 +82,12 @@ namespace QuantConnect.Data.Custom.PsychSignal
         /// <returns></returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
+            if (isLiveMode)
+            {
+                // this data type is streamed in live mode
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
+            }
+
             return new SubscriptionDataSource(
                 Path.Combine(
                     Globals.DataFolder,

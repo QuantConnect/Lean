@@ -102,6 +102,12 @@ namespace QuantConnect.Data.Custom.Tiingo
         /// <returns>The <see cref="SubscriptionDataSource"/> instance to use</returns>
         public override SubscriptionDataSource GetSourceForAnIndex(SubscriptionDataConfig config, DateTime date, string index, bool isLiveMode)
         {
+            if (isLiveMode)
+            {
+                // this data type is streamed in live mode
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
+            }
+
             var source = Path.Combine(
                 Globals.DataFolder,
                 "alternative",
