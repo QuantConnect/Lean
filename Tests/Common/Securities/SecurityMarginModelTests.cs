@@ -34,6 +34,69 @@ namespace QuantConnect.Tests.Common.Securities
         private static readonly string _cashSymbol = Currencies.USD;
         private static FakeOrderProcessor _fakeOrderProcessor;
 
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(50)]
+        public void MarginRemainingForLeverage(decimal leverage)
+        {
+            var algorithm = GetAlgorithm();
+            algorithm.SetCash(1000);
+
+            var spy = InitAndGetSecurity(algorithm, 0);
+            spy.Holdings.SetHoldings(25, 100);
+            spy.SetLeverage(leverage);
+
+            var spyMarginAvailable = spy.Holdings.HoldingsValue - spy.Holdings.HoldingsValue * (1 / leverage);
+
+            var marginRemaining = algorithm.Portfolio.MarginRemaining;
+            Assert.AreEqual(1000 + spyMarginAvailable, marginRemaining);
+        }
+
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(50)]
+        public void MarginUsedForPositionWhenPriceDrops(decimal leverage)
+        {
+            var algorithm = GetAlgorithm();
+
+            // (1000 * 20) = 20k
+            // Initial and maintenance margin = (1000 * 20) / leverage = X
+            var spy = InitAndGetSecurity(algorithm, 0);
+            spy.Holdings.SetHoldings(20, 1000);
+            spy.SetLeverage(leverage);
+
+            // Drop 40% price from $20 to $12
+            // 1000 * 12 = 12k
+            Update(spy, 12);
+
+            var marginForPosition = spy.BuyingPowerModel.GetReservedBuyingPowerForPosition(
+                new ReservedBuyingPowerForPositionParameters(spy)).Value;
+            Assert.AreEqual(1000 * 12 / leverage, marginForPosition);
+        }
+
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(50)]
+        public void MarginUsedForPositionWhenPriceIncreases(decimal leverage)
+        {
+            var algorithm = GetAlgorithm();
+            algorithm.SetCash(1000);
+
+            // (1000 * 20) = 20k
+            // Initial and maintenance margin = (1000 * 20) / leverage = X
+            var spy = InitAndGetSecurity(algorithm, 0);
+            spy.Holdings.SetHoldings(25, 1000);
+            spy.SetLeverage(leverage);
+
+            // Increase from $20 to $40
+            // 1000 * 40 = 400000
+            Update(spy, 40);
+
+            var marginForPosition = spy.BuyingPowerModel.GetReservedBuyingPowerForPosition(
+                new ReservedBuyingPowerForPositionParameters(spy)).Value;
+            Assert.AreEqual(1000 * 40 / leverage, marginForPosition);
+        }
+
         [Test]
         public void ZeroTargetWithZeroHoldingsIsNotAnError()
         {
@@ -593,11 +656,11 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             security.FeeModel = new ConstantFeeModel(fee);
-            Update(algo.Portfolio.CashBook, security, 25);
+            Update(security, 25);
             return security;
         }
 
-        private static void Update(CashBook cashBook, Security security, decimal close)
+        private static void Update(Security security, decimal close)
         {
             security.SetMarketPrice(new TradeBar
             {
