@@ -104,8 +104,7 @@ namespace QuantConnect.Data.Custom.Tiingo
         {
             if (isLiveMode)
             {
-                // this data type is streamed in live mode
-                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
+                throw new NotSupportedException($"Calling {nameof(GetSourceForAnIndex)} is not supported in live mode.");
             }
 
             var source = Path.Combine(
@@ -132,6 +131,16 @@ namespace QuantConnect.Data.Custom.Tiingo
         {
             if (isLiveMode)
             {
+                if (Tiingo.IsAuthCodeSet)
+                {
+                    var tiingoTicker = TiingoSymbolMapper.GetTiingoTicker(config.Symbol);
+                    var url = Invariant($"https://api.tiingo.com/tiingo/news?tickers={tiingoTicker}&startDate={date:yyyy-MM-dd}&token={Tiingo.AuthCode}&sortBy=crawlDate");
+
+                    return new SubscriptionDataSource(url,
+                        SubscriptionTransportMedium.Rest,
+                        FileFormat.Collection);
+                }
+
                 // this data type is streamed in live mode
                 return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
             }

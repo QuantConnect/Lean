@@ -102,6 +102,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _universeSelection = subscriptionManager.UniverseSelection;
 
+            SetCustomDataApiTokens();
+
             // run the exchanges
             Task.Run(() => _exchange.Start(_cancellationTokenSource.Token));
             Task.Run(() => _customExchange.Start(_cancellationTokenSource.Token));
@@ -201,30 +203,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 IEnumerator<BaseData> enumerator;
                 if (request.Configuration.IsCustomData && !isStreamingType)
                 {
-                    if (!Quandl.IsAuthCodeSet)
-                    {
-                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
-                        Quandl.SetAuthCode(Config.Get("quandl-auth-token"));
-                    }
-
-                    if (!Tiingo.IsAuthCodeSet)
-                    {
-                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
-                        Tiingo.SetAuthCode(Config.Get("tiingo-auth-token"));
-                    }
-
-                    if (!USEnergyAPI.IsAuthCodeSet)
-                    {
-                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
-                        USEnergyAPI.SetAuthCode(Config.Get("us-energy-information-auth-token"));
-                    }
-
-                    if (!FredApi.IsAuthCodeSet)
-                    {
-                        // we're not using the SubscriptionDataReader, so be sure to set the auth token here
-                        FredApi.SetAuthCode(Config.Get("fred-auth-token"));
-                    }
-
                     var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
                     var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
@@ -406,6 +384,33 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return subscription;
+        }
+
+        private static void SetCustomDataApiTokens()
+        {
+            if (!Quandl.IsAuthCodeSet)
+            {
+                // we're not using the SubscriptionDataReader, so be sure to set the auth token here
+                Quandl.SetAuthCode(Config.Get("quandl-auth-token"));
+            }
+
+            if (!Tiingo.IsAuthCodeSet)
+            {
+                // we're not using the SubscriptionDataReader, so be sure to set the auth token here
+                Tiingo.SetAuthCode(Config.Get("tiingo-auth-token"));
+            }
+
+            if (!USEnergyAPI.IsAuthCodeSet)
+            {
+                // we're not using the SubscriptionDataReader, so be sure to set the auth token here
+                USEnergyAPI.SetAuthCode(Config.Get("us-energy-information-auth-token"));
+            }
+
+            if (!FredApi.IsAuthCodeSet)
+            {
+                // we're not using the SubscriptionDataReader, so be sure to set the auth token here
+                FredApi.SetAuthCode(Config.Get("fred-auth-token"));
+            }
         }
 
         /// <summary>
