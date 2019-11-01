@@ -19,7 +19,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -318,29 +317,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="algorithm">The algorithm instance</param>
         public IEnumerable<IPortfolioTarget> OrderByMarginImpact(IAlgorithm algorithm)
         {
-            return _targets
-                .Select(x => x.Value)
-                .Where(x => {
-                    var security = algorithm.Securities[x.Symbol];
-                    return security.HasData
-                            && Math.Abs(OrderSizing.GetUnorderedQuantity(algorithm, x)) >= security.SymbolProperties.LotSize;
-                })
-                .Select(x => new {
-                    PortfolioTarget = x,
-                    TargetQuantity = x.Quantity,
-                    ExistingQuantity = algorithm.Portfolio[x.Symbol].Quantity
-                                       + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
-                                           .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
-                    Price = algorithm.Securities[x.Symbol].Price
-                })
-                .Select(x => new {
-                    PortfolioTarget = x.PortfolioTarget,
-                    OrderValue = Math.Abs((x.TargetQuantity - x.ExistingQuantity) * x.Price),
-                    IsReducingPosition = x.ExistingQuantity != 0 && Math.Abs(x.TargetQuantity) < Math.Abs(x.ExistingQuantity)
-                })
-                .OrderByDescending(x => x.IsReducingPosition)
-                .ThenByDescending(x => x.OrderValue)
-                .Select(x => x.PortfolioTarget);
+            return this.OrderTargetsByMarginImpact(algorithm);
         }
     }
 }

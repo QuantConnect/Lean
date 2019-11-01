@@ -308,7 +308,7 @@ namespace QuantConnect.Securities
         /// <returns>List of open orders.</returns>
         public List<Order> GetOpenOrders(Symbol symbol)
         {
-            return GetOpenOrders(x => x.Symbol == symbol).ToList();
+            return GetOpenOrders(x => x.Symbol == symbol);
         }
 
         /// <summary>

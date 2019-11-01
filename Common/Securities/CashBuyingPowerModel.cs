@@ -226,7 +226,14 @@ namespace QuantConnect.Securities
             orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
             if (orderQuantity == 0)
             {
-                return new GetMaximumOrderQuantityForTargetValueResult(0, Invariant($"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} and has been rounded to zero."), false);
+                string reason = null;
+                if (!parameters.SilenceNonErrorReasons)
+                {
+                    reason = Invariant(
+                        $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} and has been rounded to zero."
+                    );
+                }
+                return new GetMaximumOrderQuantityForTargetValueResult(0, reason, false);
             }
 
             // Just in case...

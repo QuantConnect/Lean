@@ -172,6 +172,7 @@
     <Compile Include="FreePortfolioValueRegressionAlgorithm.cs" />
     <Compile Include="LeveragePrecedenceRegressionAlgorithm.cs" />
     <Compile Include="MarginRemainingRegressionAlgorithm.cs" />
+    <Compile Include="SetHoldingsMultipleTargetsRegressionAlgorithm.cs" />
     <Compile Include="SmartInsiderDataAlgorithm.cs" />
     <Compile Include="BasicTemplateAlgorithm.cs" />
     <Compile Include="Benchmarks\StatefulCoarseUniverseSelectionBenchmark.cs" />

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using static QuantConnect.StringExtensions;
@@ -82,7 +83,17 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return null;
             }
 
-            var security = algorithm.Securities[symbol];
+            Security security;
+            try
+            {
+                security = algorithm.Securities[symbol];
+            }
+            catch (KeyNotFoundException)
+            {
+                algorithm.Error(Invariant($"{symbol} not found in portfolio. Request this data when initializing the algorithm."));
+                return null;
+            }
+
             if (security.Price == 0)
             {
                 algorithm.Error(Invariant(
@@ -97,7 +108,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                                   / algorithm.Portfolio.TotalPortfolioValue;
 
             var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(
-                new GetMaximumOrderQuantityForTargetValueParameters(algorithm.Portfolio, security, adjustedPercent)
+                new GetMaximumOrderQuantityForTargetValueParameters(algorithm.Portfolio, security, adjustedPercent, silenceNonErrorReasons:true)
             );
 
             if (result.IsError)
