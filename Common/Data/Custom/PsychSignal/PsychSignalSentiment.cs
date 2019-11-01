@@ -84,8 +84,7 @@ namespace QuantConnect.Data.Custom.PsychSignal
         {
             if (isLiveMode)
             {
-                // this data type is streamed in live mode
-                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
+                throw new InvalidOperationException();
             }
 
             return new SubscriptionDataSource(

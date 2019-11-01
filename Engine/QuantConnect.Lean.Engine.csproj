@@ -172,6 +172,8 @@
     <Compile Include="DataFeeds\CachingFutureChainProvider.cs" />
     <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
     <Compile Include="DataFeeds\CurrencySubscriptionDataConfigManager.cs" />
+    <Compile Include="DataFeeds\DataChannelProvider.cs" />
+    <Compile Include="DataFeeds\IDataChannelProvider.cs" />
     <Compile Include="DataFeeds\IndexSubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\DataManager.cs" />
     <Compile Include="DataFeeds\Enumerators\DelistingEventProvider.cs" />

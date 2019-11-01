@@ -35,6 +35,7 @@ namespace QuantConnect.Queues
         private const string PaperBrokerageTypeName = "PaperBrokerage";
         private const string DefaultHistoryProvider = "SubscriptionDataReaderHistoryProvider";
         private const string DefaultDataQueueHandler = "LiveDataQueue";
+        private const string DefaultDataChannelProvider = "DataChannelProvider";
         private bool _liveMode = Config.GetBool("live-mode");
         private static readonly string AccessToken = Config.Get("api-access-token");
         private static readonly int UserId = Config.GetInt("job-user-id", 0);
@@ -119,6 +120,7 @@ namespace QuantConnect.Queues
                     Brokerage = Config.Get("live-mode-brokerage", PaperBrokerageTypeName),
                     HistoryProvider = Config.Get("history-provider", DefaultHistoryProvider),
                     DataQueueHandler = Config.Get("data-queue-handler", DefaultDataQueueHandler),
+                    DataChannelProvider = Config.Get("data-channel-provider", DefaultDataChannelProvider),
                     Channel = AccessToken,
                     UserToken = AccessToken,
                     UserId = UserId,

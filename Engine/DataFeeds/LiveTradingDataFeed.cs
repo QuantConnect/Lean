@@ -58,6 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private SubscriptionCollection _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private UniverseSelection _universeSelection;
+        private IDataChannelProvider _channelProvider;
 
         /// <summary>
         /// Public flag indicator that the thread is still busy.
@@ -92,6 +93,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _timeProvider = dataFeedTimeProvider.TimeProvider;
             _dataQueueHandler = GetDataQueueHandler();
             _dataProvider = dataProvider;
+            _channelProvider = GetDataChannelProvider();
 
             _frontierTimeProvider = dataFeedTimeProvider.FrontierTimeProvider;
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};
@@ -125,8 +127,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (subscription != null)
             {
                 // send the subscription for the new symbol through to the data queuehandler
-                // unless it is non-streaming custom data, which is retrieved using the same as backtest
-                if (!subscription.Configuration.IsCustomData || IsStreamingType(request.Configuration))
+                if (_channelProvider.ShouldStreamSubscription(subscription.Configuration))
                 {
                     _dataQueueHandler.Subscribe(_job, new[] { request.Security.Symbol });
                 }
@@ -144,7 +145,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var symbol = subscription.Configuration.Symbol;
 
             // remove the subscriptions
-            if (subscription.Configuration.IsCustomData && !IsStreamingType(subscription.Configuration))
+            if (!_channelProvider.ShouldStreamSubscription(subscription.Configuration))
             {
                 _customExchange.RemoveEnumerator(symbol);
                 _customExchange.RemoveDataHandler(symbol);
@@ -184,6 +185,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Gets the <see cref="IDataChannelProvider"/> to use. By default this will try to load
+        /// the type specified in the configuration via the 'data-channel-provider'
+        /// </summary>
+        /// <returns>The loaded <see cref="IDataChannelProvider"/></returns>
+        protected virtual IDataChannelProvider GetDataChannelProvider()
+        {
+            Log.Trace($"LiveTradingDataFeed.GetDataChannelProvider(): will use {_job.DataChannelProvider}");
+            return Composer.Instance.GetExportedValueByTypeName<IDataChannelProvider>(_job.DataChannelProvider);
+        }
+
+        /// <summary>
         /// Creates a new subscription for the specified security
         /// </summary>
         /// <param name="request">The subscription request</param>
@@ -196,10 +208,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.Security.Exchange.TimeZone);
                 var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
-                var isStreamingType = IsStreamingType(request.Configuration);
-
                 IEnumerator<BaseData> enumerator;
-                if (request.Configuration.IsCustomData && !isStreamingType)
+                if (!_channelProvider.ShouldStreamSubscription(request.Configuration))
                 {
                     if (!Quandl.IsAuthCodeSet)
                     {
@@ -368,11 +378,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     }
                                     else
                                     {
-                                        if (data.DataType == MarketDataType.Auxiliary || isStreamingType)
-                                        {
-                                            tickEnumerator.Enqueue(data);
-                                            subscription.OnNewDataAvailable();
-                                        }
+                                        tickEnumerator.Enqueue(data);
+                                        subscription.OnNewDataAvailable();
                                     }
                                 });
 
@@ -620,17 +627,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 time => time.Hour < 23 && time.Hour > 5 && time.DayOfWeek != DayOfWeek.Saturday);
 
             return new FrontierAwareEnumerator(enumerator, stepTimeProvider, tzOffsetProvider);
-        }
-
-        /// <summary>
-        /// Returns true if the data type for the given subscription configuration supports streaming
-        /// </summary>
-        private static bool IsStreamingType(SubscriptionDataConfig configuration)
-        {
-            var dataTypeInstance = Activator.CreateInstance(configuration.Type) as BaseData;
-            return dataTypeInstance?
-                .GetSource(configuration, DateTime.UtcNow, true)
-                .TransportMedium == SubscriptionTransportMedium.Streaming;
         }
 
         /// <summary>

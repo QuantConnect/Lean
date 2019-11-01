@@ -102,12 +102,6 @@ namespace QuantConnect.Data.Custom.Tiingo
         /// <returns>The <see cref="SubscriptionDataSource"/> instance to use</returns>
         public override SubscriptionDataSource GetSourceForAnIndex(SubscriptionDataConfig config, DateTime date, string index, bool isLiveMode)
         {
-            if (isLiveMode)
-            {
-                // this data type is streamed in live mode
-                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
-            }
-
             var source = Path.Combine(
                 Globals.DataFolder,
                 "alternative",
@@ -132,8 +126,17 @@ namespace QuantConnect.Data.Custom.Tiingo
         {
             if (isLiveMode)
             {
-                // this data type is streamed in live mode
-                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
+                if (!Tiingo.IsAuthCodeSet)
+                {
+                    throw new InvalidOperationException("TiingoNews API token has to be set using Tiingo.SetAuthCode(). See https://api.tiingo.com/about/pricing");
+                }
+
+                var tiingoTicker = TiingoSymbolMapper.GetTiingoTicker(config.Symbol);
+                var url = Invariant($"https://api.tiingo.com/tiingo/news?tickers={tiingoTicker}&startDate={date:yyyy-MM-dd}&token={Tiingo.AuthCode}&sortBy=crawlDate");
+
+                return new SubscriptionDataSource(url,
+                    SubscriptionTransportMedium.Rest,
+                    FileFormat.Collection);
             }
 
             var source = Path.Combine(
