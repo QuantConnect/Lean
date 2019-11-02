@@ -104,7 +104,18 @@ namespace QuantConnect.Algorithm.Framework.Selection
                     {"UVXY", new DateTime(2011, 10, 4)},
                     {"EEMV", new DateTime(2011, 10, 20)},
                     {"EFAV", new DateTime(2011, 10, 20)},
-                    {"USMV", new DateTime(2011, 10, 20)}
+                    {"USMV", new DateTime(2011, 10, 20)},
+		    
+		    //Sp500 Sectors:
+		    {"XLB", new DateTime(1998, 12, 22)},
+                    {"XLE", new DateTime(1998, 12, 22)},
+                    {"XLF", new DateTime(1998, 12, 22)},
+                    {"XLI", new DateTime(1998, 12, 22)},
+                    {"XLK", new DateTime(1998, 12, 22)},
+                    {"XLP", new DateTime(1998, 12, 22)},
+                    {"XLU", new DateTime(1998, 12, 22)},
+                    {"XLV", new DateTime(1998, 12, 22)},
+                    {"XLY", new DateTime(1998, 12, 22)}
                 }
             )
         {
