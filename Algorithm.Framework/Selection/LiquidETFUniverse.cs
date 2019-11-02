@@ -32,7 +32,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 new Dictionary<string, DateTime>()
                 {
                     // Energy
-                    {"XLE", new DateTime(1998, 12, 22)},
                     {"VDE", new DateTime(2004, 9, 29)},
                     {"USO", new DateTime(2006, 4, 10)},
                     {"XES", new DateTime(2006, 6, 22)},
@@ -65,7 +64,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
                     {"JDST", new DateTime(2013, 10, 3)},
 
                     // Technology
-                    {"XLK", new DateTime(1998, 12, 22)},
                     {"QQQ", new DateTime(1999, 3, 10)},
                     {"IGV", new DateTime(2001, 7, 13)},
                     {"QTEC", new DateTime(2006, 4, 25)},
