@@ -139,6 +139,7 @@
     <Compile Include="Risk\MaximumUnrealizedProfitPercentPerSecurity.cs" />
     <Compile Include="Risk\TrailingStopRiskManagementModel.cs" />
     <Compile Include="Selection\CoarseFundamentalUniverseSelectionModel.cs" />
+    <Compile Include="Selection\LiquidETFUniverse.cs" />
     <Compile Include="Selection\FineFundamentalUniverseSelectionModel.cs" />
     <Compile Include="Selection\FundamentalUniverseSelectionModel.cs" />
     <Compile Include="Selection\EmaCrossUniverseSelectionModel.cs" />
