@@ -22,13 +22,13 @@ using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
-using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Securities;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine
 {
@@ -142,17 +142,6 @@ namespace QuantConnect.Tests.Engine
             var subscriptionRequest = new SubscriptionRequest(false, null, security, _config, DateTime.MinValue, DateTime.MaxValue);
             var subscription = new Subscription(subscriptionRequest, null, new TimeZoneOffsetProviderNeverOpen());
             Assert.IsTrue(_liveTradingDataFeed.UpdateRealTimePrice(subscription, new TimeZoneOffsetProviderAlwaysOpen(), _exchangeHours));
-        }
-
-        class TestableLiveTradingDataFeed : LiveTradingDataFeed
-        {
-            public bool UpdateRealTimePrice(
-                Subscription subscription,
-                TimeZoneOffsetProvider timeZoneOffsetProvider,
-                SecurityExchangeHours exchangeHours)
-            {
-                return UpdateSubscriptionRealTimePrice(subscription, timeZoneOffsetProvider, exchangeHours, new Tick());
-            }
         }
 
         class TimeZoneOffsetProviderNeverOpen : TimeZoneOffsetProvider
