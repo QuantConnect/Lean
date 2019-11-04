@@ -16,7 +16,7 @@
 
 using System;
 using QuantConnect.Data.Market;
-
+using Python.Runtime;
 namespace QuantConnect.Data.Consolidators
 {
     /// <summary>
@@ -86,6 +86,17 @@ namespace QuantConnect.Data.Consolidators
         protected PeriodCountConsolidatorBase(Func<DateTime, CalendarInfo> func)
             : this(new FuncPeriodSpecification(func))
         {
+            _period = Time.OneSecond;
+        }
+
+        /// <summary>
+        /// Creates a consolidator to produce a new <typeparamref name="TConsolidated"/> instance representing the last count pieces of data or the period, whichever comes first
+        /// </summary>
+        /// <param name="funcpyobj">Python function object that defines the start time of a consolidated data</param>
+        protected PeriodCountConsolidatorBase(PyObject funcpyobj)
+        {
+            Func<DateTime, CalendarInfo> func = funcpyobj.ConvertToDelegate<Func<DateTime, CalendarInfo>>();
+            _periodSpecification = new FuncPeriodSpecification(func);
             _period = Time.OneSecond;
         }
 
