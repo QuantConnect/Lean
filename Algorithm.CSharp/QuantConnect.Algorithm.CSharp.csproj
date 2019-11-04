@@ -170,6 +170,7 @@
     <Compile Include="ConfidenceWeightedFrameworkAlgorithm.cs" />
     <Compile Include="FreePortfolioValueRegressionAlgorithm.cs" />
     <Compile Include="MarginRemainingRegressionAlgorithm.cs" />
+    <Compile Include="TimeRulesDefaultTimeZoneRegressionAlgorithm.cs" />
     <Compile Include="SmartInsiderDataAlgorithm.cs" />
     <Compile Include="BasicTemplateAlgorithm.cs" />
     <Compile Include="Benchmarks\StatefulCoarseUniverseSelectionBenchmark.cs" />
