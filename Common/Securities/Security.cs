@@ -49,6 +49,13 @@ namespace QuantConnect.Securities
         protected readonly ConcurrentBag<SubscriptionDataConfig> SubscriptionsBag;
 
         /// <summary>
+        /// A null security leverage value
+        /// </summary>
+        /// <remarks>This value is used to determine when the
+        /// <see cref="SecurityInitializer"/> leverage is used</remarks>
+        public const decimal NullLeverage = 0;
+
+        /// <summary>
         /// Gets all the subscriptions for this security
         /// </summary>
         public IEnumerable<SubscriptionDataConfig> Subscriptions => SubscriptionsBag;

@@ -169,6 +169,7 @@
     <Compile Include="DynamicSecurityDataAlgorithm.cs" />
     <Compile Include="ConfidenceWeightedFrameworkAlgorithm.cs" />
     <Compile Include="FreePortfolioValueRegressionAlgorithm.cs" />
+    <Compile Include="LeveragePrecedenceRegressionAlgorithm.cs" />
     <Compile Include="MarginRemainingRegressionAlgorithm.cs" />
     <Compile Include="SmartInsiderDataAlgorithm.cs" />
     <Compile Include="BasicTemplateAlgorithm.cs" />
