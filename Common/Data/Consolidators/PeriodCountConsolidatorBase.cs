@@ -94,10 +94,8 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="funcpyobj">Python function object that defines the start time of a consolidated data</param>
         protected PeriodCountConsolidatorBase(PyObject funcpyobj)
+            :this(funcpyobj.ConvertToDelegate<Func<DateTime, CalendarInfo>>())
         {
-            Func<DateTime, CalendarInfo> func = funcpyobj.ConvertToDelegate<Func<DateTime, CalendarInfo>>();
-            _periodSpecification = new FuncPeriodSpecification(func);
-            _period = Time.OneSecond;
         }
 
         /// <summary>

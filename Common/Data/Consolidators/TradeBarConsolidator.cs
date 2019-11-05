@@ -16,6 +16,7 @@
 
 using System;
 using QuantConnect.Data.Market;
+using Python.Runtime;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -72,6 +73,15 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="func">Func that defines the start time of a consolidated data</param>
         public TradeBarConsolidator(Func<DateTime, CalendarInfo> func)
             : base(func)
+        {
+        }
+
+        /// <summary>
+        /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first
+        /// </summary>
+        /// <param name="pyfuncobj">Python function object that defines the start time of a consolidated data</param>
+        public TradeBarConsolidator(PyObject pyfuncobj)
+            : base(pyfuncobj)
         {
         }
 

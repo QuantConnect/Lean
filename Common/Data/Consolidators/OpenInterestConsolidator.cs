@@ -19,6 +19,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using QuantConnect.Data.Market;
+using Python.Runtime;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -64,6 +65,24 @@ namespace QuantConnect.Data.Consolidators
             : base(maxCount, period)
         {
         }
+
+        /// <summary>
+        /// Creates a consolidator to produce a new 'OpenInterest' 
+        /// </summary>
+        /// <param name="func">Func that defines the start time of a consolidated data</param>
+        public OpenInterestConsolidator(Func<DateTime, CalendarInfo> func)
+            : base(func)
+        {
+        }
+        /// <summary>
+        /// Creates a consolidator to produce a new 'OpenInterest' 
+        /// </summary>
+        /// <param name="pyfuncobj">Python function object that defines the start time of a consolidated data</param>
+        public OpenInterestConsolidator(PyObject pyfuncobj)
+            : base(pyfuncobj)
+        {
+        }
+
 
         /// <summary>
         /// Determines whether or not the specified data should be processd
