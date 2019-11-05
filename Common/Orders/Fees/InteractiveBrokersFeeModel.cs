@@ -33,11 +33,6 @@ namespace QuantConnect.Orders.Fees
         private readonly Dictionary<string, Func<decimal, decimal, CashAmount>> _optionFee =
             new Dictionary<string, Func<decimal, decimal, CashAmount>>();
 
-        private readonly Dictionary<string, EquityFee> _equityFee =
-            new Dictionary<string, EquityFee> {
-                { Market.USA, new EquityFee("USD", feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m) }
-            };
-
         private readonly Dictionary<string, CashAmount> _futureFee =
             //                                                               IB fee + exchange fee
             new Dictionary<string, CashAmount> { { Market.USA, new CashAmount(0.85m + 1, "USD") } };
@@ -126,9 +121,13 @@ namespace QuantConnect.Orders.Fees
 
                 case SecurityType.Equity:
                     EquityFee equityFee;
-                    if (!_equityFee.TryGetValue(market, out equityFee))
+                    switch (market)
                     {
-                        throw new KeyNotFoundException($"InteractiveBrokersFeeModel(): unexpected equity Market {market}");
+                        case Market.USA:
+                            equityFee = new EquityFee("USD", feePerShare: 0.005m, minimumFee: 1, maximumFeeRate: 0.005m);
+                            break;
+                        default:
+                            throw new KeyNotFoundException($"InteractiveBrokersFeeModel(): unexpected equity Market {market}");
                     }
                     var tradeValue = Math.Abs(order.GetValue(security));
 

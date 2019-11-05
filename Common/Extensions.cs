@@ -50,6 +50,24 @@ namespace QuantConnect
             = new Dictionary<IntPtr, PythonActivator>();
 
         /// <summary>
+        /// Gets a python method by name
+        /// </summary>
+        /// <param name="instance">The object instance to search the method in</param>
+        /// <param name="name">The name of the method</param>
+        /// <returns>The python method or null if not defined or CSharp implemented</returns>
+        public static dynamic GetPythonMethod(this PyObject instance, string name)
+        {
+            using (Py.GIL())
+            {
+                var method = instance.GetAttr(name);
+                var pythonType = method.GetPythonType();
+                var isPythonDefined = pythonType.Repr().Equals("<class \'method\'>");
+
+                return isPythonDefined ? method : null;
+            }
+        }
+
+        /// <summary>
         /// Given a type will create a new instance using the parameterless constructor
         /// and assert the type implements <see cref="BaseData"/>
         /// </summary>

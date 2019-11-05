@@ -164,8 +164,8 @@ namespace QuantConnect.Tests.Algorithm
             var symbol2 = Symbol.CreateOption(testHistoryProvider.underlyingSymbol, Market.USA, OptionStyle.American,
                 OptionRight.Put, 1, new DateTime(2015, 12, 24));
 
-            var optionContract = qcAlgorithm.AddOptionContract(symbol, Resolution.Daily);
-            var optionContract2 = qcAlgorithm.AddOptionContract(symbol2, Resolution.Minute);
+            var optionContract = qcAlgorithm.AddOptionContract(symbol);
+            var optionContract2 = qcAlgorithm.AddOptionContract(symbol2);
 
             qcAlgorithm.OnEndOfTimeStep();
             var data = qcAlgorithm.Securities[testHistoryProvider.underlyingSymbol].GetLastData();
@@ -394,7 +394,7 @@ namespace QuantConnect.Tests.Algorithm
             var qcAlgorithm = new QCAlgorithm();
             qcAlgorithm.SubscriptionManager.SetDataManager(new DataManagerStub(qcAlgorithm));
 
-            var asset = qcAlgorithm.AddOption(ticker, Resolution.Daily);
+            var asset = qcAlgorithm.AddOption(ticker);
 
             // Dummy here is meant to try to corrupt the SymbolCache. Ideally, SymbolCache should return non-custom data types with higher priority
             // in case we want to add two custom data types, but still have them associated with the equity from the cache if we're using it.
@@ -427,7 +427,7 @@ namespace QuantConnect.Tests.Algorithm
             var qcAlgorithm = new QCAlgorithm();
             qcAlgorithm.SubscriptionManager.SetDataManager(new DataManagerStub(qcAlgorithm));
 
-            var asset = qcAlgorithm.AddOption(ticker, Resolution.Daily);
+            var asset = qcAlgorithm.AddOption(ticker);
 
             // Dummy here is meant to try to corrupt the SymbolCache. Ideally, SymbolCache should return non-custom data types with higher priority
             // in case we want to add two custom data types, but still have them associated with the equity from the cache if we're using it.
@@ -458,7 +458,7 @@ namespace QuantConnect.Tests.Algorithm
             var qcAlgorithm = new QCAlgorithm();
             qcAlgorithm.SubscriptionManager.SetDataManager(new DataManagerStub(qcAlgorithm));
 
-            var asset = qcAlgorithm.AddOption(ticker, Resolution.Daily);
+            var asset = qcAlgorithm.AddOption(ticker);
 
             // Dummy here is meant to try to corrupt the SymbolCache. Ideally, SymbolCache should return non-custom data types with higher priority
             // in case we want to add two custom data types, but still have them associated with the equity from the cache if we're using it.

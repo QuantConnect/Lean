@@ -34,7 +34,7 @@ namespace QuantConnect.Interfaces
         SubscriptionDataConfig Add(
             Type dataType,
             Symbol symbol,
-            Resolution resolution,
+            Resolution? resolution = null,
             bool fillForward = true,
             bool extendedMarketHours = false,
             bool isFilteredSubscription = true,
@@ -50,7 +50,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         List<SubscriptionDataConfig> Add(
             Symbol symbol,
-            Resolution resolution,
+            Resolution? resolution = null,
             bool fillForward = true,
             bool extendedMarketHours = false,
             bool isFilteredSubscription = true,

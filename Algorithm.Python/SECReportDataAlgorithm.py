@@ -37,8 +37,8 @@ class SECReportDataAlgorithm(QCAlgorithm):
         self.SetCash(100000)
 
         self.ticker = "AAPL"
-        self.symbol = self.AddData(SECReport10Q, self.ticker).Symbol
-        self.AddData(SECReport8K, self.ticker)
+        self.symbol = self.AddData(SECReport10Q, self.ticker, Resolution.Daily).Symbol
+        self.AddData(SECReport8K, self.ticker, Resolution.Daily)
 
     def OnData(self, slice):
         # OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
