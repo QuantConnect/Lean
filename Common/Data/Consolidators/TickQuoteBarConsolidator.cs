@@ -16,6 +16,7 @@
 
 using System;
 using QuantConnect.Data.Market;
+using Python.Runtime;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -58,6 +59,15 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="func">Func that defines the start time of a consolidated data</param>
         public TickQuoteBarConsolidator(Func<DateTime, CalendarInfo> func)
             : base(func)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TickQuoteBarConsolidator"/> class
+        /// </summary>
+        /// <param name="pyfuncobj">Python function object that defines the start time of a consolidated data</param>
+        public TickQuoteBarConsolidator(PyObject pyfuncobj)
+            : base(pyfuncobj)
         {
         }
 
