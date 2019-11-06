@@ -39,7 +39,7 @@ type BasicTemplateAlgorithm() =
             this.SetCash(100000)
             this.SetStartDate(2013, 10, 07)
             this.SetEndDate(2013, 10, 11)
-            this.AddSecurity(SecurityType.Equity, "SPY", Resolution.Second) |> ignore
+            this.AddSecurity(SecurityType.Equity, "SPY", Nullable Resolution.Second) |> ignore
 
         //TradeBars Data Event
         member this.OnData(bar:TradeBars) =
