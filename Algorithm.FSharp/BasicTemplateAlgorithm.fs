@@ -20,12 +20,9 @@ namespace QuantConnect.Securities
 namespace QuantConnect.Algorithm.FSharp
 
 open System
-open System.Collections.Generic
 open QuantConnect
-open QuantConnect.Securities
 open QuantConnect.Data.Market
 open QuantConnect.Algorithm
-open QuantConnect.Orders
 
 
 // Declare algorithm name
