@@ -18,7 +18,6 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
@@ -49,7 +48,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var eventProvider = new DelistingEventProvider();
             eventProvider.Initialize(_config,
                 null,
-                null);
+                null,
+                DateTime.UtcNow);
 
             var enumerator = eventProvider.GetEvents(
                 new NewTradableDateEventArgs(
@@ -84,8 +84,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var eventProvider = new DelistingEventProvider();
             eventProvider.Initialize(_config,
                 null,
-                null);
-
+                null,
+                DateTime.UtcNow);
 
             // should NOT emit
             var enumerator = eventProvider.GetEvents(
@@ -125,7 +125,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var eventProvider = new DelistingEventProvider();
             eventProvider.Initialize(_config,
                 null,
-                null);
+                null,
+                DateTime.UtcNow);
 
             // should emit warning
             var enumerator = eventProvider.GetEvents(

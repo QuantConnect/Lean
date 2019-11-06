@@ -137,7 +137,8 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 _factorFileProvider,
                 dataReader,
                 mapFileResolver,
-                false);
+                false,
+                start);
 
             // has to be initialized after adding all the enumerators since it will execute a MoveNext
             dataReader.Initialize();
