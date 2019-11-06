@@ -956,14 +956,11 @@ namespace QuantConnect.Algorithm
             }
 
             //Calculate total unfilled quantity for open market orders
-            var marketOrdersQuantity =
-                (from order in Transactions.GetOpenOrders(
-                        order => order.Symbol == symbol
-                                 && (order.Type == OrderType.Market || order.Type == OrderType.MarketOnOpen))
-                 select Transactions.GetOrderTicket(order.Id)
-                 into ticket
-                 where ticket != null
-                 select ticket.Quantity - ticket.QuantityFilled).Sum();
+            var marketOrdersQuantity = Transactions.GetOpenOrderTickets(
+                    ticket => ticket.Symbol == symbol
+                              && (ticket.OrderType == OrderType.Market
+                                  || ticket.OrderType == OrderType.MarketOnOpen))
+                .Aggregate(0m, (d, ticket) => d + ticket.Quantity - ticket.QuantityFilled);
 
             //Only place trade if we've got > 1 share to order.
             var quantity = orderQuantity - marketOrdersQuantity;

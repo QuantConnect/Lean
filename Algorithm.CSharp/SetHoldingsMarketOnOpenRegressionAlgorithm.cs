@@ -15,9 +15,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -41,12 +43,30 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings(_aapl, 1);
+                if (Securities[_aapl].HasData)
+                {
+                    SetHoldings(_aapl, 1);
+                    var orderTicket = Transactions.GetOpenOrderTickets(_aapl).Single();
+                }
             }
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
+            if (orderEvent.Status == OrderStatus.Submitted)
+            {
+                var orderTickets = Transactions.GetOpenOrderTickets(_aapl).Single();
+            }
+            else
+            {
+                // should be filled
+                var orderTickets = Transactions.GetOpenOrderTickets(_aapl).ToList(ticket => ticket);
+                if (!orderTickets.IsNullOrEmpty())
+                {
+                    throw new Exception($"We don't expect any open order tickets: {orderTickets[0]}");
+                }
+            }
+
             if (orderEvent.OrderId > 1)
             {
                 throw new Exception($"We only expect 1 order to be placed: {orderEvent}");
