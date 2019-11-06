@@ -62,8 +62,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             {
                 var history = _brokerage.GetHistory(request);
                 var subscription = CreateSubscription(request, history);
-
-                subscription.MoveNext(); // prime pump
                 subscriptions.Add(subscription);
             }
 

@@ -236,6 +236,7 @@
     <Compile Include="DataFeeds\SubscriptionCollection.cs" />
     <Compile Include="DataFeeds\SubscriptionData.cs" />
     <Compile Include="DataFeeds\LiveSynchronizer.cs" />
+    <Compile Include="DataFeeds\SubscriptionUtils.cs" />
     <Compile Include="DataFeeds\Synchronizer.cs" />
     <Compile Include="DataFeeds\TextSubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\CreateStreamReaderErrorEventArgs.cs" />

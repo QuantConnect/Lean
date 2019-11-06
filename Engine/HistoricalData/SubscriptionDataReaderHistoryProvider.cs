@@ -66,8 +66,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             foreach (var request in requests)
             {
                 var subscription = CreateSubscription(request, request.StartTimeUtc, request.EndTimeUtc);
-
-                subscription.MoveNext(); // prime pump
                 subscriptions.Add(subscription);
             }
 
@@ -139,9 +137,6 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 mapFileResolver,
                 false);
 
-            // has to be initialized after adding all the enumerators since it will execute a MoveNext
-            dataReader.Initialize();
-
             // optionally apply fill forward behavior
             if (request.FillForwardResolution.HasValue)
             {
@@ -152,7 +147,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 }
 
                 var readOnlyRef = Ref.CreateReadOnly(() => request.FillForwardResolution.Value.ToTimeSpan());
-                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, security.IsExtendedMarketHours, end, config.Increment, config.DataTimeZone, start);
+                reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, request.IncludeExtendedMarketHours, end, config.Increment, config.DataTimeZone, start);
             }
 
             // since the SubscriptionDataReader performs an any overlap condition on the trade bar's entire
@@ -170,11 +165,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 // filter out data before the start
                 return data.EndTime > start;
             });
+            var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
 
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, start, end);
-            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, reader);
-            var subscriptionRequest = new SubscriptionRequest(false, null, security, config, start, end);
-            return new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
+            return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader, 0, int.MaxValue);
         }
 
         private class FilterEnumerator<T> : IEnumerator<T>
