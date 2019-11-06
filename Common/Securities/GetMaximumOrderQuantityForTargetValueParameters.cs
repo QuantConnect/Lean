@@ -36,16 +36,25 @@ namespace QuantConnect.Securities
         public decimal Target { get; }
 
         /// <summary>
+        /// True enables the <see cref="IBuyingPowerModel"/> to skip setting <see cref="GetMaximumOrderQuantityForTargetValueResult.Reason"/>
+        /// for non error situations, for performance
+        /// </summary>
+        public bool SilenceNonErrorReasons { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForTargetValueParameters"/> class
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security</param>
         /// <param name="target">The target percentage holdings</param>
-        public GetMaximumOrderQuantityForTargetValueParameters(SecurityPortfolioManager portfolio, Security security, decimal target)
+        /// <param name="silenceNonErrorReasons">True will not return <see cref="GetMaximumOrderQuantityForTargetValueResult.Reason"/>
+        /// set for non error situation, this is for performance</param>
+        public GetMaximumOrderQuantityForTargetValueParameters(SecurityPortfolioManager portfolio, Security security, decimal target, bool silenceNonErrorReasons = false)
         {
             Portfolio = portfolio;
             Security = security;
             Target = target;
+            SilenceNonErrorReasons = silenceNonErrorReasons;
         }
     }
 }
