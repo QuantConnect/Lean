@@ -47,7 +47,7 @@ namespace QuantConnect.Data.Custom.PsychSignal
         /// Time it takes for data to become available on the PsychSignal API after
         /// the time advances to the next minute
         /// </summary>
-        public static TimeSpan FixedLiveOffset { get; set; } = TimeSpan.FromSeconds(0);
+        public static TimeSpan FixedLiveOffset { get; set; } = TimeSpan.FromSeconds(15);
 
         /// <summary>
         /// Bullish intensity as reported by psychsignal
