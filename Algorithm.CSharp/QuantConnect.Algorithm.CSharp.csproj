@@ -171,6 +171,7 @@
     <Compile Include="ConfidenceWeightedFrameworkAlgorithm.cs" />
     <Compile Include="FreePortfolioValueRegressionAlgorithm.cs" />
     <Compile Include="LeveragePrecedenceRegressionAlgorithm.cs" />
+    <Compile Include="LiquidETFUniverseFrameworkAlgorithm.cs" />
     <Compile Include="MarginRemainingRegressionAlgorithm.cs" />
     <Compile Include="SetHoldingsMultipleTargetsRegressionAlgorithm.cs" />
     <Compile Include="SmartInsiderDataAlgorithm.cs" />
