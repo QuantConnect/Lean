@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Selection;
@@ -20,7 +21,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Custom.Benzinga;
 using QuantConnect.Data.UniverseSelection;
 
-namespace QuantConnect.Algorithm.CSharp
+namespace QuantConnect.Algorithm.CSharp.AltData
 {
     public class BenzingaNewsAlgorithm : QCAlgorithm
     {
@@ -42,7 +43,8 @@ namespace QuantConnect.Algorithm.CSharp
             // Add Benzinga news data from the filtered coarse selection
             var symbols = coarse.Where(x => x.HasFundamentalData && x.DollarVolume > 50000000)
                 .Select(x => x.Symbol)
-                .Take(10);
+                .Take(10)
+                .ToList();
 
             foreach (var symbol in symbols)
             {
@@ -64,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var selectedSymbol = article.Symbols.SingleOrDefault(x => x.Symbol == article.Symbol.Underlying);
                 if (selectedSymbol == null)
                 {
-                    continue;
+                    throw new Exception($"Could not find current Symbol {article.Symbol.Underlying} even though it should exist");
                 }
 
                 // Sometimes sentiment is not included with the article by Benzinga.

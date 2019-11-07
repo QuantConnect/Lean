@@ -60,7 +60,7 @@ class BenzingaNewsAlgorithm(QCAlgorithm):
                     break
 
             if selectedSymbol is None:
-                continue
+                raise Exception(f"Could not find current Symbol {article.Symbol.Underlying} even though it should exist")
 
             # Sometimes sentiment is not included with the article by Benzinga.
             # We have to check for null values before using it.
