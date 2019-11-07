@@ -19,16 +19,14 @@ AddReference("QuantConnect.Common")
 
 from System import *
 from QuantConnect import *
-from QuantConnect.Orders import *
-from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Execution import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
-from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Selection import *
+from QuantConnect.Brokerages import *
+from QuantConnect.Data import *
+from QuantConnect.Data.UniverseSelection import *
 from datetime import timedelta
-import numpy as np
 
 ### <summary>
 ### Basic template framework algorithm uses framework components to define the algorithm.
@@ -50,7 +48,6 @@ class LiquidETFUniverseFrameworkAlgorithm(QCAlgorithm):
         self.SetCash(1000000)
 
         # Add a relevant benchmark, with the default being SPY
-        self.AddEquity('SPY')
         self.SetBenchmark('SPY')
 
         # Use the Alpha Streams Brokerage Model, developed in conjunction with
@@ -70,25 +67,24 @@ class LiquidETFUniverseFrameworkAlgorithm(QCAlgorithm):
         self.symbols = []
 
     def OnData(self, slice):
-        
+
         if all([self.Portfolio[x].Invested for x in self.symbols]):
             return
-        
+
         # Emit insights
         insights = [Insight.Price(x, timedelta(1), InsightDirection.Up)
             for x in self.symbols if self.Securities[x].Price > 0]
-            
+
         if len(insights) > 0:
             self.EmitInsights(insights)
 
     def OnSecuritiesChanged(self, changes):
-        
+
         # Set symbols as the Inverse Energy ETFs
-        self.symbols.clear()
         for security in changes.AddedSecurities:
             if security.Symbol in LiquidETFUniverse.Energy.Inverse:
                 self.symbols.append(security.Symbol)
-        
+
         # Print out the information about the groups
         self.Log(f'Energy: {LiquidETFUniverse.Energy}')
         self.Log(f'Metals: {LiquidETFUniverse.Metals}')

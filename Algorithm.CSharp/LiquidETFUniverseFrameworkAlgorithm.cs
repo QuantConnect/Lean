@@ -49,7 +49,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(1000000);
 
             // Add a relevant benchmark, with the default being SPY
-            AddEquity("SPY");
             SetBenchmark("SPY");
 
             // Use the Alpha Streams Brokerage Model, developed in conjunction with
@@ -86,7 +85,6 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             // Set symbols as the Inverse Energy ETFs
-            _symbols.Clear();
             foreach (var security in changes.AddedSecurities)
             {
                 if (LiquidETFUniverse.Energy.Inverse.Contains(security.Symbol))
