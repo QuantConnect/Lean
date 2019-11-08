@@ -17,7 +17,7 @@ AddReference("QuantConnect.Algorithm.Framework")
 
 from QuantConnect import Resolution
 from QuantConnect.Algorithm.Framework.Alphas import *
-from EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel, PortfolioBias
 
 class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that generates percent targets based on the
@@ -29,15 +29,16 @@ class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstruc
     percent holdings proportionally so the sum is 1.
     It will ignore Insight that have no Insight.Weight value.'''
 
-    def __init__(self, rebalancingParam = Resolution.Daily):
+    def __init__(self, rebalancingParam = Resolution.Daily, portfolioBias = PortfolioBias.LongShort):
         '''Initialize a new instance of InsightWeightingPortfolioConstructionModel
         Args:
             rebalancingParam: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
                               If None will be ignored.
                               The function returns the next expected rebalance time for a given algorithm UTC DateTime.
                               The function returns null if unknown, in which case the function will be called again in the
-                              next loop. Returning current time will trigger rebalance.'''
-        super().__init__(rebalancingParam)
+                              next loop. Returning current time will trigger rebalance.
+            portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)'''
+        super().__init__(rebalancingParam, portfolioBias)
 
     def ShouldCreateTargetForInsight(self, insight):
         '''Method that will determine if the portfolio construction model should create a
@@ -54,12 +55,12 @@ class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstruc
         result = {}
 
         # We will adjust weights proportionally in case the sum is > 1 so it sums to 1.
-        weightSums = sum(self.GetValue(insight) for insight in activeInsights)
+        weightSums = sum(self.GetValue(insight) for insight in activeInsights if self.RespectPortfolioBias(insight))
         weightFactor = 1.0
         if weightSums > 1:
             weightFactor = 1 / weightSums
         for insight in activeInsights:
-            result[insight] = insight.Direction * self.GetValue(insight) * weightFactor
+            result[insight] = (insight.Direction if self.RespectPortfolioBias(insight) else InsightDirection.Flat) * self.GetValue(insight) * weightFactor
         return result
 
     def GetValue(self, insight):

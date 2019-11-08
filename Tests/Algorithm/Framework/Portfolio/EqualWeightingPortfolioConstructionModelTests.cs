@@ -19,7 +19,6 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,9 +28,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     [TestFixture]
     public class EqualWeightingPortfolioConstructionModelTests : BaseWeightingPortfolioConstructionModelTests
     {
-        private const double _weight = 0.01;
-
         public override double? Weight => Algorithm.Securities.Count == 0 ? default(double) : 1d / Algorithm.Securities.Count;
+
+        public virtual PortfolioBias PortfolioBias => PortfolioBias.LongShort;
 
         [TestFixtureSetUp]
         public override void SetUp()
@@ -65,6 +64,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             SetPortfolioConstruction(language);
 
+            if (PortfolioBias != PortfolioBias.LongShort && (int)direction != (int)PortfolioBias)
+            {
+                direction = InsightDirection.Flat;
+            }
+
             // Let's create a position for SPY
             var insights = new[] { GetInsight(Symbols.SPY, direction, Algorithm.UtcTime) };
 
@@ -74,12 +78,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 holding.SetHoldings(holding.Price, target.Quantity);
                 Algorithm.Portfolio.SetCash(StartingCash - holding.HoldingsValue);
             }
-
             SetUtcTime(Algorithm.UtcTime.AddDays(2));
 
             // Equity will be divided by all securities minus 1, since SPY is already invested and we want to remove it
             var amount = Algorithm.Portfolio.TotalPortfolioValue / (decimal)(1 / Weight - 1) *
-                (1 - Algorithm.Settings.FreePortfolioValuePercentage);
+                         (1 - Algorithm.Settings.FreePortfolioValuePercentage);
             var expectedTargets = Algorithm.Securities.Select(x =>
             {
                 // Expected target quantity for SPY is zero, since it will be removed
@@ -106,6 +109,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public override void DelistedSecurityEmitsFlatTargetWithNewInsights(Language language, InsightDirection direction)
         {
             SetPortfolioConstruction(language);
+
+            if (PortfolioBias != PortfolioBias.LongShort && (int)direction != (int)PortfolioBias)
+            {
+                direction = InsightDirection.Flat;
+            }
 
             var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Down, Algorithm.UtcTime) };
             var targets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights).ToList();
@@ -146,6 +154,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             SetPortfolioConstruction(language);
 
+            if (PortfolioBias != PortfolioBias.LongShort && (int)direction != (int)PortfolioBias)
+            {
+                direction = InsightDirection.Flat;
+            }
+
             // Equity, minus $1 for fees, will be divided by all securities minus 1, since its insight will have flat direction
             var amount = (Algorithm.Portfolio.TotalPortfolioValue - 1 * (Algorithm.Securities.Count - 1)) * 1 /
                          (decimal)((1 / Weight) - 1) * (1 - Algorithm.Settings.FreePortfolioValuePercentage);
@@ -179,6 +192,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             SetPortfolioConstruction(language);
 
+            if (PortfolioBias != PortfolioBias.LongShort && (int)direction != (int)PortfolioBias)
+            {
+                direction = InsightDirection.Flat;
+            }
             // Equity will be divided by all securities
             var amount = Algorithm.Portfolio.TotalPortfolioValue * (decimal)Weight *
                 (1 - Algorithm.Settings.FreePortfolioValuePercentage);
@@ -191,10 +208,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             AssertTargets(expectedTargets, actualTargets);
         }
 
-        public override Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double? weight = _weight)
+        public override Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double? weight = 0.01)
         {
             period = period ?? TimeSpan.FromDays(1);
-            var insight = Insight.Price(symbol, period.Value, direction, weight: Math.Max(_weight, Algorithm.Securities.Count));
+            var insight = Insight.Price(symbol, period.Value, direction, weight: Math.Max(0.01, Algorithm.Securities.Count));
             insight.GeneratedTimeUtc = generatedTimeUtc;
             insight.CloseTimeUtc = generatedTimeUtc.Add(period.Value);
             return insight;

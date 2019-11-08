@@ -326,7 +326,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="insights">The insight collection to filter</param>
         /// <returns>Returns a new array of insights removing invalid ones</returns>
-        public static Insight[] FilterInvalidInsightMagnitude(IAlgorithm algorithm, Insight[] insights)
+        protected static Insight[] FilterInvalidInsightMagnitude(IAlgorithm algorithm, Insight[] insights)
         {
             var result = insights.Where(insight =>
             {
