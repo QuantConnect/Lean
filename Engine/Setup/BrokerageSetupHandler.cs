@@ -311,6 +311,8 @@ namespace QuantConnect.Lean.Engine.Setup
                 Log.Trace("BrokerageSetupHandler.Setup(): Fetching holdings from brokerage...");
                 try
                 {
+                    var utcNow = DateTime.UtcNow;
+
                     // populate the algorithm with the account's current holdings
                     var holdings = brokerage.GetAccountHoldings();
 
@@ -332,10 +334,13 @@ namespace QuantConnect.Lean.Engine.Setup
 
                         AddUnrequestedSecurity(algorithm, holding.Symbol, minResolution.Value);
 
-                        algorithm.Portfolio[holding.Symbol].SetHoldings(holding.AveragePrice, holding.Quantity);
-                        algorithm.Securities[holding.Symbol].SetMarketPrice(new TradeBar
+                        var security = algorithm.Securities[holding.Symbol];
+                        var exchangeTime = utcNow.ConvertFromUtc(security.Exchange.TimeZone);
+
+                        security.Holdings.SetHoldings(holding.AveragePrice, holding.Quantity);
+                        security.SetMarketPrice(new TradeBar
                         {
-                            Time = DateTime.Now,
+                            Time = exchangeTime,
                             Open = holding.MarketPrice,
                             High = holding.MarketPrice,
                             Low = holding.MarketPrice,
