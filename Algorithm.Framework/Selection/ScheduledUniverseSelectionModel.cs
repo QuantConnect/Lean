@@ -114,7 +114,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
             yield return new ScheduledUniverse(
-                _timeZone ?? algorithm.TimeZone,
+                // by default ITimeRule yields in UTC
+                _timeZone ?? TimeZones.Utc,
                 _dateRule,
                 _timeRule,
                 _selector,
