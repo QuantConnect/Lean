@@ -756,7 +756,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestData\FredVixData.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="TestData\fxVolumeDaily.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
