@@ -66,7 +66,7 @@ namespace QuantConnect.Data.Consolidators
         /// Creates a consolidator to produce a new 'TradeBar' representing the last count pieces of data or the period, whichever comes first
         /// </summary>
         /// <param name="pyfuncobj">Python function object that defines the start time of a consolidated data</param>
-        protected TickConsolidator(PyObject pyfuncobj)
+        public TickConsolidator(PyObject pyfuncobj)
             : base(pyfuncobj)
         {
         }

@@ -15,6 +15,7 @@
 
 using System;
 using NUnit.Framework;
+using Python.Runtime;
 
 namespace QuantConnect.Tests
 {
@@ -37,7 +38,8 @@ namespace QuantConnect.Tests
                 "../../../Algorithm/Selection",
                 "../../../Algorithm.Framework",
                 "../../../Algorithm.Framework/Selection",
-                "../../../Algorithm.Python");
+                "../../../Algorithm.Python",
+                "./Python/Common/Data");
 
             Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath);
         }
