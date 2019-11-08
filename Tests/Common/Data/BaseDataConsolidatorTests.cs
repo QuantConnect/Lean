@@ -1,16 +1,17 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
 using System;
@@ -18,7 +19,6 @@ using NUnit.Framework;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
-using Python.Runtime;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -278,31 +278,7 @@ namespace QuantConnect.Tests.Common.Data
                 consolidator.Update(new Tick(time.AddMinutes(i - 1), Symbols.SPY, i, i, i));
             }
         }
-        [Test]
-        public void ConstructorWithPyObject()
-        {
-            TradeBar consolidated = null;
-            PythonEngine.Initialize();
-            BaseDataConsolidator consolidator = null;
-            //Now check using code from python module
-            using (Py.GIL())
-            {
-                PyObject modobject = Py.Import("BaseDataConsolidatorTests");
-                PyObject funcobject = modobject.GetAttr("BaseDataConsolidatorTests").GetAttr("Func");
-                consolidator = new BaseDataConsolidator(funcobject);
-            }
-            consolidator.DataConsolidated += (sender, bar) =>
-            {
-                consolidated = bar;
-            };
 
-            DateTime reference = new DateTime(2015, 04, 13);
-            consolidator.Update(new Tick { Time = reference });
-            Assert.IsNull(consolidated);
-
-            consolidator.Update(new Tick { Time = reference.AddHours(17) });
-            Assert.IsNotNull(consolidated);
-        }
         private SimpleMovingAverage indicator;
 
         private void OnFiveMinutes(object sender, TradeBar e)
@@ -326,13 +302,5 @@ namespace QuantConnect.Tests.Common.Data
                 indicator.Update(consolidated.EndTime, consolidated.Value);
             };
         }
-        private static PyObject AssetCode(string code)
-        {
-            using (Py.GIL())
-            {
-                return null;// PythonEngine.ImportModuleModuleFromString(Guid.NewGuid().ToString(), code);
-            }
-        }
-
     }
 }

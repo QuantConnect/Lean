@@ -38,8 +38,7 @@ namespace QuantConnect.Tests
                 "../../../Algorithm/Selection",
                 "../../../Algorithm.Framework",
                 "../../../Algorithm.Framework/Selection",
-                "../../../Algorithm.Python",
-                "./Python/Common/Data");
+                "../../../Algorithm.Python");
 
             Environment.SetEnvironmentVariable("PYTHONPATH", pythonPath);
         }
