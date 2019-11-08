@@ -43,8 +43,8 @@ namespace QuantConnect.Tests
     /// </summary>
     public static class AlgorithmRunner
     {
-        public static void RunLocalBacktest(
-                string algorithm,
+        public static AlgorithmManager RunLocalBacktest(
+            string algorithm,
             Dictionary<string, string> expectedStatistics,
             AlphaRuntimeStatistics expectedAlphaStatistics,
             Language language,

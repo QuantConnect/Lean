@@ -48,20 +48,22 @@ namespace QuantConnect.Tests.Common.Packets
                     { "Loss Rate", "0%"},
                     { "Win Rate", "0%"},
                     { "Profit-Loss Ratio", "0"},
-                    { "Alpha", "0.028"},
+                    { "Alpha", "0.026"},
                     { "Beta", "0.942"},
                     { "Annual Standard Deviation", "0.3"},
                     { "Annual Variance", "0.09"},
-                    { "Information Ratio", "0.413"},
+                    { "Information Ratio", "0.347"},
                     { "Tracking Error", "0.042"},
                     { "Treynor Ratio", "0.219"},
                     { "Total Fees", "$6.62"} },
-                Language.CSharp);
+                Language.CSharp,
+                AlgorithmStatus.Completed);
 
             AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
                 parameter.Statistics,
                 parameter.AlphaStatistics,
                 parameter.Language,
+                parameter.ExpectedFinalStatus,
                 startDate: new DateTime(2008, 10, 10),
                 endDate: new DateTime(2010, 10, 10));
         }
