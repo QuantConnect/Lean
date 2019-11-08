@@ -15,23 +15,35 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Specialized;
 
 namespace QuantConnect.Util
 {
     /// <summary>
     /// Provides a thread-safe set collection that mimics the behavior of <see cref="HashSet{T}"/>
+    /// and will be keep insertion order
     /// </summary>
     /// <typeparam name="T">The item type</typeparam>
     public class ConcurrentSet<T> : ISet<T>
     {
-        private readonly ConcurrentDictionary<T, T> _set = new ConcurrentDictionary<T, T>();
+        private readonly OrderedDictionary _set = new OrderedDictionary();
+        // for performance we will keep a enumerator list which we will refresh only if required
+        private readonly List<T> _enumerator = new List<T>();
+        private bool _refreshEnumerator;
 
         /// <summary>Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
         /// <returns>The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.</returns>
-        public int Count => _set.Count;
+        public int Count
+        {
+            get
+            {
+                lock (_set)
+                {
+                    return _set.Count;
+                }
+            }
+        }
 
         /// <summary>Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</summary>
         /// <returns>true if the <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only; otherwise, false.</returns>
@@ -47,7 +59,10 @@ namespace QuantConnect.Util
                 throw new ArgumentNullException(nameof(item));
             }
 
-            _set.TryAdd(item, item);
+            lock (_set)
+            {
+                AddImpl(item);
+            }
         }
 
         /// <summary>Modifies the current set so that it contains all elements that are present in either the current set or the specified collection.</summary>
@@ -56,10 +71,15 @@ namespace QuantConnect.Util
         /// <paramref name="other" /> is null.</exception>
         public void UnionWith(IEnumerable<T> other)
         {
-            foreach (var item in other)
+            var otherSet = other.ToHashSet();
+
+            lock (_set)
             {
-                // don't overwrite existing references of same key
-                _set.TryAdd(item, item);
+                foreach (var item in otherSet)
+                {
+                    // wont overwrite existing references of same key
+                    AddImpl(item);
+                }
             }
         }
 
@@ -71,13 +91,16 @@ namespace QuantConnect.Util
         {
             var otherSet = other.ToHashSet();
 
-            // remove items in '_set' that are not in 'other'
-            foreach (var kvp in _set)
+            lock (_set)
             {
-                if (!otherSet.Contains(kvp.Key))
+                // remove items in '_set' that are not in 'other'
+                // enumerating this and not '_set' so its safe to modify
+                foreach (var item in this)
                 {
-                    T value;
-                    _set.TryRemove(kvp.Key, out value);
+                    if (!otherSet.Contains(item))
+                    {
+                        RemoveImpl(item);
+                    }
                 }
             }
         }
@@ -88,11 +111,15 @@ namespace QuantConnect.Util
         /// <paramref name="other" /> is null.</exception>
         public void ExceptWith(IEnumerable<T> other)
         {
-            // remove items from 'other'
-            foreach (var item in other)
+            var otherSet = other.ToHashSet();
+
+            lock (_set)
             {
-                T value;
-                _set.TryRemove(item, out value);
+                // remove items from 'other'
+                foreach (var item in otherSet)
+                {
+                    RemoveImpl(item);
+                }
             }
         }
 
@@ -104,14 +131,15 @@ namespace QuantConnect.Util
         {
             var otherSet = other.ToHashSet();
 
-            foreach (var item in otherSet)
+            lock (_set)
             {
-                T value;
-                // remove items in both collections
-                if (!_set.TryRemove(item, out value))
+                foreach (var item in otherSet)
                 {
-                    // add items only in 'other'
-                    _set[item] = item;
+                    if (!AddImpl(item))
+                    {
+                        // remove items in both collections
+                        RemoveImpl(item);
+                    }
                 }
             }
         }
@@ -123,17 +151,20 @@ namespace QuantConnect.Util
         /// <paramref name="other" /> is null.</exception>
         public bool IsSubsetOf(IEnumerable<T> other)
         {
-            var keys = _set.Keys.ToHashSet();
-            foreach (var item in other)
+            var otherSet = other.ToHashSet();
+            lock (_set)
             {
-                if (!_set.ContainsKey(item))
+                foreach (var item in otherSet)
                 {
-                    return false;
+                    if (!_set.Contains(item))
+                    {
+                        return false;
+                    }
                 }
-            }
 
-            // non-strict subset can be equal
-            return keys.Count == 0;
+                // non-strict subset can be equal
+                return _set.Keys.Count == 0;
+            }
         }
 
         /// <summary>Determines whether the current set is a superset of a specified collection.</summary>
@@ -144,11 +175,14 @@ namespace QuantConnect.Util
         public bool IsSupersetOf(IEnumerable<T> other)
         {
             var otherSet = other.ToHashSet();
-            foreach (var kvp in _set)
+            lock (_set)
             {
-                if (!otherSet.Remove(kvp.Key))
+                foreach (DictionaryEntry item in _set)
                 {
-                    return false;
+                    if (!otherSet.Remove((T)item.Key))
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -165,14 +199,17 @@ namespace QuantConnect.Util
         {
             var hasOther = false;
             var otherSet = other.ToHashSet();
-            foreach (var kvp in _set)
+            lock (_set)
             {
-                if (!otherSet.Remove(kvp.Key))
+                foreach (DictionaryEntry item in _set)
                 {
-                    return false;
-                }
+                    if (!otherSet.Remove((T)item.Key))
+                    {
+                        return false;
+                    }
 
-                hasOther = true;
+                    hasOther = true;
+                }
             }
 
             // to be a strict superset, _set must contain extra elements and contain all of other
@@ -187,19 +224,22 @@ namespace QuantConnect.Util
         public bool IsProperSubsetOf(IEnumerable<T> other)
         {
             var hasOther = false;
-            var keys = _set.Keys.ToHashSet();
-            foreach (var item in other)
+            var otherSet = other.ToHashSet();
+            lock (_set)
             {
-                if (!_set.ContainsKey(item))
+                foreach (var item in otherSet)
                 {
-                    return false;
+                    if (!_set.Contains(item))
+                    {
+                        return false;
+                    }
+
+                    hasOther = true;
                 }
 
-                hasOther = true;
+                // to be a strict subset, other must contain extra elements and _set must contain all of other
+                return hasOther && _set.Keys.Count == 0;
             }
-
-            // to be a strict subset, other must contain extra elements and _set must contain all of other
-            return hasOther && keys.Count == 0;
         }
 
         /// <summary>Determines whether the current set overlaps with the specified collection.</summary>
@@ -209,11 +249,16 @@ namespace QuantConnect.Util
         /// <paramref name="other" /> is null.</exception>
         public bool Overlaps(IEnumerable<T> other)
         {
-            foreach (var item in other)
+            var otherSet = other.ToHashSet();
+
+            lock (_set)
             {
-                if (_set.ContainsKey(item))
+                foreach (var item in otherSet)
                 {
-                    return true;
+                    if (_set.Contains(item))
+                    {
+                        return true;
+                    }
                 }
             }
 
@@ -228,11 +273,14 @@ namespace QuantConnect.Util
         public bool SetEquals(IEnumerable<T> other)
         {
             var otherSet = other.ToHashSet();
-            foreach (var kvp in _set)
+            lock (_set)
             {
-                if (!otherSet.Remove(kvp.Key))
+                foreach (DictionaryEntry item in _set)
                 {
-                    return false;
+                    if (!otherSet.Remove((T) item.Key))
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -244,14 +292,21 @@ namespace QuantConnect.Util
         /// <param name="item">The element to add to the set.</param>
         bool ISet<T>.Add(T item)
         {
-            return _set.TryAdd(item, item);
+            lock (_set)
+            {
+                return AddImpl(item);
+            }
         }
 
         /// <summary>Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
         /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only. </exception>
         public void Clear()
         {
-            _set.Clear();
+            lock (_set)
+            {
+                _refreshEnumerator = true;
+                _set.Clear();
+            }
         }
 
         /// <summary>Determines whether the <see cref="T:System.Collections.Generic.ICollection`1" /> contains a specific value.</summary>
@@ -259,7 +314,10 @@ namespace QuantConnect.Util
         /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
         public bool Contains(T item)
         {
-            return _set.ContainsKey(item);
+            lock (_set)
+            {
+                return item != null && _set.Contains(item);
+            }
         }
 
         /// <summary>Copies the elements of the <see cref="T:System.Collections.Generic.ICollection`1" /> to an <see cref="T:System.Array" />, starting at a particular <see cref="T:System.Array" /> index.</summary>
@@ -272,9 +330,12 @@ namespace QuantConnect.Util
         /// <exception cref="T:System.ArgumentException">The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1" /> is greater than the available space from <paramref name="arrayIndex" /> to the end of the destination <paramref name="array" />.</exception>
         public void CopyTo(T[] array, int arrayIndex)
         {
-            foreach (var kvp in _set)
+            lock (_set)
             {
-                array[arrayIndex++] = kvp.Key;
+                foreach (DictionaryEntry item in _set)
+                {
+                    array[arrayIndex++] = (T) item.Key;
+                }
             }
         }
 
@@ -284,24 +345,64 @@ namespace QuantConnect.Util
         /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</exception>
         public bool Remove(T item)
         {
-            T value;
-            return _set.TryRemove(item, out value);
+            lock (_set)
+            {
+                if (item != null && _set.Contains(item))
+                {
+                    RemoveImpl(item);
+                    return true;
+                }
+                return false;
+            }
         }
 
         /// <summary>Returns an enumerator that iterates through the collection.</summary>
+        /// <remarks>For thread safety will return a snapshot of the collection</remarks>
         /// <returns>A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.</returns>
         /// <filterpriority>1</filterpriority>
         public IEnumerator<T> GetEnumerator()
         {
-            return _set.Select(kvp => kvp.Key).GetEnumerator();
+            lock (_set)
+            {
+                if (_refreshEnumerator)
+                {
+                    _enumerator.Clear();
+                    foreach (DictionaryEntry item in _set)
+                    {
+                        _enumerator.Add((T)item.Key);
+                    }
+
+                    _refreshEnumerator = false;
+                }
+                return _enumerator.GetEnumerator();
+            }
         }
 
         /// <summary>Returns an enumerator that iterates through a collection.</summary>
+        /// <remarks>For thread safety will return a snapshot of the collection</remarks>
         /// <returns>An <see cref="T:System.Collections.IEnumerator" /> object that can be used to iterate through the collection.</returns>
         /// <filterpriority>2</filterpriority>
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        private bool AddImpl(T item)
+        {
+            if (!_set.Contains(item))
+            {
+                _refreshEnumerator = true;
+                _set.Add(item, item);
+                return true;
+            }
+
+            return false;
+        }
+
+        private void RemoveImpl(T item)
+        {
+            _refreshEnumerator = true;
+            _set.Remove(item);
         }
     }
 }
