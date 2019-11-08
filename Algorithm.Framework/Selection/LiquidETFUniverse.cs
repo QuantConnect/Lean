@@ -30,9 +30,9 @@ namespace QuantConnect.Algorithm.Framework.Selection
             new[]
             {
                 "VDE", "USO", "XES", "XOP", "UNG", "ICLN", "ERX",
-                "UCO", "AMJ", "BNO", "AMLP", "DGAZ", "TAN"
+                "UCO", "AMJ", "BNO", "AMLP", "UGAZ", "TAN"
             },
-            new[] {"ERY", "SCO", "UGAZ"}
+            new[] {"ERY", "SCO", "DGAZ" }
         );
 
         /// <summary>
@@ -57,18 +57,18 @@ namespace QuantConnect.Algorithm.Framework.Selection
         public static Grouping Treasuries = new Grouping(
             new[]
             {
-                "IEF", "SHY", "TLT", "IEI", "SHV", "TLH", "BIL", "SPTL",
-                "TBT", "TMF", "TBF", "SCHO", "SCHR", "SPTS", "GOVT"
+                "IEF", "SHY", "TLT", "IEI", "TLH", "BIL", "SPTL",
+                "TMF", "SCHO", "SCHR", "SPTS", "GOVT"
             },
-            new[] { "TMV" }
+            new[] {"SHV", "TBT", "TBF", "TMV"}
         );
 
         /// <summary>
         /// Represents the Volatility ETF Category which can be used to access the list of Long and Inverse symbols
         /// </summary>
         public static Grouping Volatility = new Grouping(
-            new[] {"VIXY", "SPLV", "UVXY", "EEMV", "EFAV", "USMV"},
-            new[] {"TVIX", "SVXY"}
+            new[] {"TVIX", "VIXY", "SPLV", "UVXY", "EEMV", "EFAV", "USMV"},
+            new[] {"SVXY"}
         );
 
         /// <summary>
