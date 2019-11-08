@@ -702,6 +702,9 @@
     <Content Include="Jupyter\RegressionScripts\Test_QuantBookHistory.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Python\Common\Data\BaseDataConsolidatorTests.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python\Indicators\IndicatorExtensionsTests.py" />
     <Content Include="RegressionAlgorithms\Test_AlgorithmPythonWrapper.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
