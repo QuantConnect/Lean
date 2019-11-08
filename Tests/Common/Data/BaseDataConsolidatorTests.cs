@@ -282,28 +282,8 @@ namespace QuantConnect.Tests.Common.Data
         public void ConstructorWithPyObject()
         {
             TradeBar consolidated = null;
-            //First check by converting C# function to PyObject
-            Func<DateTime, CalendarInfo> func = (DateTime dt) =>
-            {
-                DateTime dtstarttime = new DateTime(dt.Year, dt.Month, dt.Day, 17, 0, 0);
-                if (dtstarttime > dt)
-                    dtstarttime = dtstarttime.AddDays(-1);
-                return new CalendarInfo(dtstarttime, new TimeSpan(1,0, 0, 0));
-            };
             PythonEngine.Initialize();
-            var consolidator = new BaseDataConsolidator(func.ToPython());
-            consolidator.DataConsolidated += (sender, bar) =>
-            {
-                consolidated = bar;
-            };
-
-            var reference = new DateTime(2015, 04, 13);
-            consolidator.Update(new Tick { Time = reference });
-            Assert.IsNull(consolidated);
-
-            consolidator.Update(new Tick { Time = reference.AddHours(17) });
-            Assert.IsNotNull(consolidated);
-
+            BaseDataConsolidator consolidator = null;
             //Now check using code from python module
             using (Py.GIL())
             {
@@ -311,13 +291,12 @@ namespace QuantConnect.Tests.Common.Data
                 PyObject funcobject = modobject.GetAttr("BaseDataConsolidatorTests").GetAttr("Func");
                 consolidator = new BaseDataConsolidator(funcobject);
             }
-            consolidated = null;
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
             };
 
-            reference = new DateTime(2015, 04, 13);
+            DateTime reference = new DateTime(2015, 04, 13);
             consolidator.Update(new Tick { Time = reference });
             Assert.IsNull(consolidated);
 
