@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Securities;
 using QuantConnect.Logging;
-using System.Linq;
 using Python.Runtime;
 
 namespace QuantConnect.Scheduling
@@ -194,19 +193,14 @@ namespace QuantConnect.Scheduling
             var scheduledEvent = new ScheduledEvent(name, eventTimes, callback);
             Add(scheduledEvent);
 
-            var exampleTimes = eventTimes.Take(3)
-                    .Select(x => x.ToStringInvariant())
-                    .ToArray();
-
-            if (exampleTimes.Length > 0)
+            // ScheduledEvent constructor will prime the scheduled event
+            if (scheduledEvent.NextEventUtcTime != DateTime.MaxValue)
             {
-                Log.Trace("Event Name \"{0}\", scheduled to run at {1} (UTC){2}",
-                        scheduledEvent.Name, string.Join(", ", exampleTimes),
-                        exampleTimes.Length > 1? "..." : "");
+                Log.Trace($"Event Name \"{scheduledEvent.Name}\", scheduled to run at {scheduledEvent.NextEventUtcTime} (UTC)...");
             }
             else
             {
-                Log.Trace("Event Name \"{0}\", scheduled to run, but no event times were selected", scheduledEvent.Name);
+                Log.Error($"Event Name \"{scheduledEvent.Name}\", scheduled to run, but no event times were selected");
             }
 
             return scheduledEvent;

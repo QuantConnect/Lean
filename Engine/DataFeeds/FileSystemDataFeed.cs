@@ -101,60 +101,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
             enumerator = ConfigureEnumerator(request, false, enumerator);
 
-            var enqueueable = new EnqueueableEnumerator<SubscriptionData>(true);
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
-            var subscription = new Subscription(request, enqueueable, timeZoneOffsetProvider);
-
-            // add this enumerator to our exchange
-            ScheduleEnumerator(subscription,
+            return SubscriptionUtils.CreateAndScheduleWorker(request,
                 enumerator,
-                enqueueable,
                 GetLowerThreshold(request.Configuration.Resolution),
-                GetUpperThreshold(request.Configuration.Resolution),
-                request.Security.Exchange.Hours);
-
-            return subscription;
-        }
-
-        private void ScheduleEnumerator(Subscription subscription, IEnumerator<BaseData> enumerator, EnqueueableEnumerator<SubscriptionData> enqueueable,
-            int lowerThreshold, int upperThreshold, SecurityExchangeHours exchangeHours, int firstLoopCount = 5)
-        {
-            Action produce = () =>
-            {
-                var count = 0;
-                while (enumerator.MoveNext())
-                {
-                    // subscription has been removed, no need to continue enumerating
-                    if (enqueueable.HasFinished)
-                    {
-                        enumerator.Dispose();
-                        return;
-                    }
-
-                    var subscriptionData = SubscriptionData.Create(subscription.Configuration, exchangeHours, subscription.OffsetProvider, enumerator.Current);
-
-                    // drop the data into the back of the enqueueable
-                    enqueueable.Enqueue(subscriptionData);
-
-                    count++;
-
-                    // stop executing if we have more data than the upper threshold in the enqueueable
-                    if (count > upperThreshold)
-                    {
-                        // we use local count for the outside if, for performance, and adjust here
-                        count = enqueueable.Count;
-                        if (count > upperThreshold)
-                        {
-                            return;
-                        }
-                    }
-                }
-
-                // we made it here because MoveNext returned false, stop the enqueueable
-                enqueueable.Stop();
-            };
-
-            enqueueable.SetProducer(produce, lowerThreshold);
+                GetUpperThreshold(request.Configuration.Resolution));
         }
 
         /// <summary>
@@ -189,26 +139,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // define our data enumerator
             var enumerator = GetEnumeratorFactory(request).CreateEnumerator(request, _dataProvider);
 
-            var firstLoopCount = 5;
             var lowerThreshold = GetLowerThreshold(config.Resolution);
             var upperThreshold = GetUpperThreshold(config.Resolution);
             if (config.Type == typeof (CoarseFundamental))
             {
-                firstLoopCount = 2;
                 // the lower threshold will be when we start the worker again, if he is stopped
                 lowerThreshold = 200;
                 // the upper threshold will stop the worker from loading more data. This is roughly 1 GB
                 upperThreshold = 500;
             }
 
-            var enqueueable = new EnqueueableEnumerator<SubscriptionData>(true);
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
-            var subscription = new Subscription(request, enqueueable, timeZoneOffsetProvider);
-
-            // add this enumerator to our exchange
-            ScheduleEnumerator(subscription, enumerator, enqueueable, lowerThreshold, upperThreshold, request.Security.Exchange.Hours, firstLoopCount);
-
-            return subscription;
+            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, lowerThreshold, upperThreshold);
         }
 
         /// <summary>

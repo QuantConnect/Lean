@@ -126,6 +126,11 @@ namespace QuantConnect.Data.Custom.Tiingo
         {
             if (isLiveMode)
             {
+                if (!Tiingo.IsAuthCodeSet)
+                {
+                    throw new InvalidOperationException("TiingoNews API token has to be set using Tiingo.SetAuthCode(). See https://api.tiingo.com/about/pricing");
+                }
+
                 var tiingoTicker = TiingoSymbolMapper.GetTiingoTicker(config.Symbol);
                 var url = Invariant($"https://api.tiingo.com/tiingo/news?tickers={tiingoTicker}&startDate={date:yyyy-MM-dd}&token={Tiingo.AuthCode}&sortBy=crawlDate");
 

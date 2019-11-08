@@ -862,11 +862,30 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Sets holdings for a collection of targets.
+        /// The implementation will order the provided targets executing first those that
+        /// reduce a position, freeing margin.
+        /// </summary>
+        /// <param name="targets">The portfolio desired quantities as percentages</param>
+        /// <param name="liquidateExistingHoldings">True will liquidate existing holdings</param>
+        /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
+        public void SetHoldings(List<PortfolioTarget> targets, bool liquidateExistingHoldings = false)
+        {
+            foreach (var portfolioTarget in targets
+                // we need to create targets with quantities for OrderTargetsByMarginImpact
+                .Select(target => new PortfolioTarget(target.Symbol, CalculateOrderQuantity(target.Symbol, target.Quantity)))
+                .OrderTargetsByMarginImpact(this, targetIsDelta:true))
+            {
+                SetHoldingsImpl(portfolioTarget.Symbol, portfolioTarget.Quantity, liquidateExistingHoldings);
+            }
+        }
+
+        /// <summary>
         /// Alias for SetHoldings to avoid the M-decimal errors.
         /// </summary>
         /// <param name="symbol">string symbol we wish to hold</param>
         /// <param name="percentage">double percentage of holdings desired</param>
-        /// <param name="liquidateExistingHoldings">liquidate existing holdings if neccessary to hold this stock</param>
+        /// <param name="liquidateExistingHoldings">liquidate existing holdings if necessary to hold this stock</param>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
         public void SetHoldings(Symbol symbol, double percentage, bool liquidateExistingHoldings = false)
         {
@@ -878,7 +897,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">string symbol we wish to hold</param>
         /// <param name="percentage">float percentage of holdings desired</param>
-        /// <param name="liquidateExistingHoldings">bool liquidate existing holdings if neccessary to hold this stock</param>
+        /// <param name="liquidateExistingHoldings">bool liquidate existing holdings if necessary to hold this stock</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
         public void SetHoldings(Symbol symbol, float percentage, bool liquidateExistingHoldings = false, string tag = "")
@@ -891,7 +910,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">string symbol we wish to hold</param>
         /// <param name="percentage">float percentage of holdings desired</param>
-        /// <param name="liquidateExistingHoldings">bool liquidate existing holdings if neccessary to hold this stock</param>
+        /// <param name="liquidateExistingHoldings">bool liquidate existing holdings if necessary to hold this stock</param>
         /// <param name="tag">Tag the order with a short string.</param>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
         public void SetHoldings(Symbol symbol, int percentage, bool liquidateExistingHoldings = false, string tag = "")
@@ -912,14 +931,14 @@ namespace QuantConnect.Algorithm
         /// <seealso cref="MarketOrder(QuantConnect.Symbol,decimal,bool,string)"/>
         public void SetHoldings(Symbol symbol, decimal percentage, bool liquidateExistingHoldings = false, string tag = "")
         {
-            //Initialize Requirements:
-            Security security;
-            if (!Securities.TryGetValue(symbol, out security))
-            {
-                Error($"{symbol} not found in portfolio. Request this data when initializing the algorithm.");
-                return;
-            }
+            SetHoldingsImpl(symbol, CalculateOrderQuantity(symbol, percentage), liquidateExistingHoldings, tag);
+        }
 
+        /// <summary>
+        /// Set holdings implementation, which uses order quantities (delta) not percentage nor target final quantity
+        /// </summary>
+        private void SetHoldingsImpl(Symbol symbol, decimal orderQuantity, bool liquidateExistingHoldings = false, string tag = "")
+        {
             //If they triggered a liquidate
             if (liquidateExistingHoldings)
             {
@@ -937,18 +956,23 @@ namespace QuantConnect.Algorithm
             }
 
             //Calculate total unfilled quantity for open market orders
-            var marketOrdersQuantity =
-                (from order in Transactions.GetOpenOrders(symbol)
-                 where order.Type == OrderType.Market
-                 select Transactions.GetOrderTicket(order.Id)
-                 into ticket
-                 where ticket != null
-                 select ticket.Quantity - ticket.QuantityFilled).Sum();
+            var marketOrdersQuantity = Transactions.GetOpenOrderTickets(
+                    ticket => ticket.Symbol == symbol
+                              && (ticket.OrderType == OrderType.Market
+                                  || ticket.OrderType == OrderType.MarketOnOpen))
+                .Aggregate(0m, (d, ticket) => d + ticket.Quantity - ticket.QuantityFilled);
 
             //Only place trade if we've got > 1 share to order.
-            var quantity = CalculateOrderQuantity(symbol, percentage) - marketOrdersQuantity;
+            var quantity = orderQuantity - marketOrdersQuantity;
             if (Math.Abs(quantity) > 0)
             {
+                Security security;
+                if (!Securities.TryGetValue(symbol, out security))
+                {
+                    Error($"{symbol} not found in portfolio. Request this data when initializing the algorithm.");
+                    return;
+                }
+
                 //Check whether the exchange is open to send a market order. If not, send a market on open order instead
                 if (security.Exchange.ExchangeOpen)
                 {

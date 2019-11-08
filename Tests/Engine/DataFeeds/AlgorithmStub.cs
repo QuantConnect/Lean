@@ -23,7 +23,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
     /// <summary>
-    /// This type allows tests to easily create an algorith that is mostly initialized in one line
+    /// This type allows tests to easily create an algorithm that is mostly initialized in one line
     /// </summary>
     internal class AlgorithmStub : QCAlgorithm
     {

@@ -35,7 +35,7 @@ class USTreasuryYieldCurveDataAlgorithm(QCAlgorithm):
         self.SetCash(100000)
 
         # Define the symbol and "type" of our generic data:
-        self.symbol = self.AddData(USTreasuryYieldCurveRate, "USTYC").Symbol
+        self.symbol = self.AddData(USTreasuryYieldCurveRate, "USTYC", Resolution.Daily).Symbol
 
     def OnData(self, slice):
         if not slice.ContainsKey(self.symbol):

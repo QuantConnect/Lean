@@ -82,6 +82,11 @@ namespace QuantConnect.Data.Custom.PsychSignal
         /// <returns></returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
+            if (isLiveMode)
+            {
+                throw new InvalidOperationException();
+            }
+
             return new SubscriptionDataSource(
                 Path.Combine(
                     Globals.DataFolder,

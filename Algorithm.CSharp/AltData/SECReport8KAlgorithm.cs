@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Request underlying equity data.
             var ibm = AddEquity("IBM", Resolution.Minute).Symbol;
             // Add SEC report 10-Q data for the underlying IBM asset
-            var earningsFiling = AddData<SECReport10Q>(ibm).Symbol;
+            var earningsFiling = AddData<SECReport10Q>(ibm, Resolution.Daily).Symbol;
             // Request 120 days of history with the SECReport10Q IBM custom data Symbol.
             var history = History<SECReport10Q>(earningsFiling, 120, Resolution.Daily);
 

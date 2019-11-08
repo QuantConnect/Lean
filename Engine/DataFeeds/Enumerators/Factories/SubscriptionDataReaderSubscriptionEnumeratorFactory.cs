@@ -100,7 +100,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 _factorFileProvider,
                 dataReader,
                 mapFileResolver,
-                _includeAuxiliaryData);
+                _includeAuxiliaryData,
+                request.StartTimeLocal);
 
             return result;
         }

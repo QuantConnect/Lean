@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
 
             // Since yield data isn't associated with any ticker, we must put a placeholder ticker
-            AddData<USTreasuryYieldCurveRate>("USTYC");
+            AddData<USTreasuryYieldCurveRate>("USTYC", Resolution.Daily);
         }
 
         public override void OnData(Slice slice)

@@ -348,7 +348,11 @@ namespace QuantConnect.Securities
             var minimumValue = unitPrice * parameters.Security.SymbolProperties.LotSize;
             if (minimumValue > targetOrderValue)
             {
-                var reason = $"The target order value {targetOrderValue} is less than the minimum {minimumValue}.";
+                string reason = null;
+                if (!parameters.SilenceNonErrorReasons)
+                {
+                    reason = $"The target order value {targetOrderValue} is less than the minimum {minimumValue}.";
+                }
                 return new GetMaximumOrderQuantityForTargetValueResult(0, reason, false);
             }
 
@@ -370,8 +374,12 @@ namespace QuantConnect.Securities
             orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
             if (orderQuantity == 0)
             {
-                var reason = $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} " +
-                    "and has been rounded to zero.";
+                string reason = null;
+                if (!parameters.SilenceNonErrorReasons)
+                {
+                    reason = $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} " +
+                             "and has been rounded to zero.";
+                }
                 return new GetMaximumOrderQuantityForTargetValueResult(0, reason, false);
             }
 

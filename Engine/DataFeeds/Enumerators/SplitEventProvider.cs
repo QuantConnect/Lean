@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Auxiliary;
@@ -39,10 +40,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="config">The <see cref="SubscriptionDataConfig"/></param>
         /// <param name="factorFile">The factor file to use</param>
         /// <param name="mapFile">The <see cref="MapFile"/> to use</param>
+        /// <param name="startTime">Start date for the data request</param>
         public void Initialize(
             SubscriptionDataConfig config,
             FactorFile factorFile,
-            MapFile mapFile)
+            MapFile mapFile,
+            DateTime startTime)
         {
             _mapFile = mapFile;
             _factorFile = factorFile;

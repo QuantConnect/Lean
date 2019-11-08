@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             USEnergyAPI.SetAuthCode("my-us-energy-information-api-token");
 
             _tiingoSymbol = AddData<TiingoPrice>(tiingoTicker, Resolution.Daily).Symbol;
-            _energySymbol = AddData<USEnergyAPI>(energyTicker).Symbol;
+            _energySymbol = AddData<USEnergyAPI>(energyTicker, Resolution.Hour).Symbol;
 
             _emaFast = EMA(_tiingoSymbol, 5);
             _emaSlow = EMA(_tiingoSymbol, 10);

@@ -16,6 +16,7 @@
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.UniverseSelection;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -28,6 +29,7 @@ namespace QuantConnect.Data.Custom
     /// </summary>
     public class USEnergyAPI : BaseData
     {
+        private static readonly List<Resolution> _supportedResolutions = new List<Resolution> { Resolution.Hour, Resolution.Daily };
         private TimeSpan _period = TimeSpan.Zero;
         private string _previousContent = string.Empty;
         private DateTime _previousDate = DateTime.MinValue;
@@ -226,6 +228,22 @@ namespace QuantConnect.Data.Custom
             _period = dates[1] - dates[0];
 
             return dates[1];
+        }
+
+        /// <summary>
+        /// Gets the default resolution for this data and security type
+        /// </summary>
+        public override Resolution DefaultResolution()
+        {
+            return Resolution.Hour;
+        }
+
+        /// <summary>
+        /// Gets the supported resolution for this data and security type
+        /// </summary>
+        public override List<Resolution> SupportedResolutions()
+        {
+            return _supportedResolutions;
         }
     }
 }

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace QuantConnect.Data.Custom.USEnergy
@@ -109,6 +110,22 @@ namespace QuantConnect.Data.Custom.USEnergy
         public override string ToString()
         {
             return $"{Symbol} - {Value}";
+        }
+
+        /// <summary>
+        /// Gets the default resolution for this data and security type
+        /// </summary>
+        public override Resolution DefaultResolution()
+        {
+            return Resolution.Daily;
+        }
+
+        /// <summary>
+        /// Gets the supported resolution for this data and security type
+        /// </summary>
+        public override List<Resolution> SupportedResolutions()
+        {
+            return DailyResolution;
         }
     }
 }

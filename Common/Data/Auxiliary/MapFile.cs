@@ -122,7 +122,7 @@ namespace QuantConnect.Data.Auxiliary
 
             if (date < FirstDate || date > DelistingDate)
             {
-                // don't even bother checking the disk if the map files state we don't have ze dataz
+                // don't even bother checking the disk if the map files state we don't have the data
                 return false;
             }
             return true;

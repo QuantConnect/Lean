@@ -46,6 +46,10 @@ class CustomDataUsingMapFileRegressionAlgorithm(QCAlgorithm):
         self.foxa = Symbol.Create("FOXA", SecurityType.Equity, Market.USA)
         self.symbol = self.AddData(CustomDataUsingMapping, self.foxa).Symbol
 
+        for config in self.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(self.symbol):
+            if config.Resolution != Resolution.Minute:
+                raise ValueError("Expected resolution to be set to Minute")
+
     def OnData(self, slice):
         date = self.Time.date()
         if slice.SymbolChangedEvents.ContainsKey(self.symbol):
@@ -53,7 +57,7 @@ class CustomDataUsingMapFileRegressionAlgorithm(QCAlgorithm):
             self.Log("{0} - Ticker changed from: {1} to {2}".format(str(self.Time), mappingEvent.OldSymbol, mappingEvent.NewSymbol))
 
             if date == datetime(2013, 6, 27).date():
-                # initial mapping event since we added FOXA and it's currently NWSA - GH issue 3327
+                # we should Not receive the initial mapping event
                 if mappingEvent.NewSymbol != "NWSA" or mappingEvent.OldSymbol != "FOXA":
                     raise Exception("Unexpected mapping event mappingEvent")
                 self.initialMapping = True
@@ -65,8 +69,8 @@ class CustomDataUsingMapFileRegressionAlgorithm(QCAlgorithm):
                 self.executionMapping = True
 
     def OnEndOfAlgorithm(self):
-        if not self.initialMapping:
-            raise Exception("The ticker did not generate the initial rename event")
+        if self.initialMapping:
+            raise Exception("The ticker generated the initial rename event")
         if not self.executionMapping:
             raise Exception("The ticker did not rename throughout the course of its life even though it should have")
 
@@ -87,3 +91,15 @@ class CustomDataUsingMapping(PythonData):
     def RequiresMapping(self):
         '''True indicates mapping should be done'''
         return True
+
+    def IsSparseData(self):
+        '''Indicates that the data set is expected to be sparse'''
+        return True
+
+    def DefaultResolution(self):
+        '''Gets the default resolution for this data and security type'''
+        return Resolution.Minute
+
+    def SupportedResolutions(self):
+        '''Gets the supported resolution for this data and security type'''
+        return [ Resolution.Minute ]

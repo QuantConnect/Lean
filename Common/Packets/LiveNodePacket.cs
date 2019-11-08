@@ -49,6 +49,12 @@ namespace QuantConnect.Packets
         public string DataQueueHandler = "";
 
         /// <summary>
+        /// String name of the DataChannelProvider we're running with
+        /// </summary>
+        [JsonProperty(PropertyName = "sDataChannelProvider")]
+        public string DataChannelProvider = "";
+
+        /// <summary>
         /// Gets flag indicating whether or not the message should be acknowledged and removed from the queue
         /// </summary>
         [JsonProperty(PropertyName = "DisableAcknowledgement")]
