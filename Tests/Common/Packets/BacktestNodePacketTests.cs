@@ -16,9 +16,11 @@
 
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Tests.Common.Packets
 {
@@ -66,6 +68,39 @@ namespace QuantConnect.Tests.Common.Packets
                 parameter.ExpectedFinalStatus,
                 startDate: new DateTime(2008, 10, 10),
                 endDate: new DateTime(2010, 10, 10));
+        }
+
+        [Test]
+        public void RoundTripNullJobDates()
+        {
+            var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(BacktestNodePacketTests)}.Pepe");
+
+            var serialized = JsonConvert.SerializeObject(job);
+            var job2 = JsonConvert.DeserializeObject<BacktestNodePacket>(serialized);
+
+            Assert.AreEqual(job.BacktestId, job2.BacktestId);
+            Assert.AreEqual(job.Name, job2.Name);
+            Assert.IsNull(job.PeriodFinish);
+            Assert.IsNull(job.PeriodStart);
+            Assert.AreEqual(job.PeriodFinish, job2.PeriodFinish);
+            Assert.AreEqual(job.PeriodStart, job2.PeriodStart);
+            Assert.AreEqual(job.ProjectId, job2.ProjectId);
+            Assert.AreEqual(job.SessionId, job2.SessionId);
+            Assert.AreEqual(job.Language, job2.Language);
+        }
+
+        [Test]
+        public void RoundTripWithJobDates()
+        {
+            var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(BacktestNodePacketTests)}.Pepe");
+            job.PeriodStart = new DateTime(2019, 1, 1);
+            job.PeriodFinish = new DateTime(2020, 1, 1);
+
+            var serialized = JsonConvert.SerializeObject(job);
+            var job2 = JsonConvert.DeserializeObject<BacktestNodePacket>(serialized);
+
+            Assert.AreEqual(job.PeriodStart, job2.PeriodStart);
+            Assert.AreEqual(job.PeriodFinish, job2.PeriodFinish);
         }
     }
 }
