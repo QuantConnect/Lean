@@ -140,6 +140,71 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
+        public void GetOpenOrderTicketsDoesWorksCorrectly()
+        {
+            //Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
+
+            // Creates the order
+            var security = _algorithm.Securities[Ticker];
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1000, 0, 0, DateTime.Now, "");
+
+            // Mock the the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act
+            var orderTicket = transactionHandler.Process(orderRequest);
+            var newTicket = transactionHandler.GetOpenOrderTickets(ticket => ticket.Symbol == security.Symbol).Single();
+            Assert.IsTrue(orderTicket.Status == OrderStatus.New);
+            Assert.AreEqual(newTicket, orderTicket);
+
+            transactionHandler.HandleOrderRequest(orderRequest);
+
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsFalse(orderRequest.Response.IsError);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
+
+            var processedTicket = transactionHandler.GetOpenOrderTickets(ticket => ticket.Symbol == security.Symbol).ToList();
+            Assert.IsNotEmpty(processedTicket);
+        }
+
+        [Test]
+        public void GetOpenOrderTicketsDoesNotReturnInvalidatedOrder()
+        {
+            //Initializes the transaction handler
+            var transactionHandler = new TestBrokerageTransactionHandler();
+            transactionHandler.Initialize(_algorithm, new BacktestingBrokerage(_algorithm), new BacktestingResultHandler());
+
+            // Creates the order
+            var security = _algorithm.Securities[Ticker];
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 600, 0, 0, DateTime.Now, "");
+
+            // Mock the the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act
+            var orderTicket = transactionHandler.Process(orderRequest);
+            var newTicket = transactionHandler.GetOpenOrderTickets(ticket => ticket.Symbol == security.Symbol).Single();
+            Assert.IsTrue(orderTicket.Status == OrderStatus.New);
+            Assert.AreEqual(newTicket, orderTicket);
+
+            transactionHandler.HandleOrderRequest(orderRequest);
+
+            // 600 after round off becomes 0 -> order is not placed
+            Assert.IsTrue(orderRequest.Response.IsProcessed);
+            Assert.IsTrue(orderRequest.Response.IsError);
+            Assert.IsTrue(orderTicket.Status == OrderStatus.Invalid);
+
+            var processedTicket = transactionHandler.GetOpenOrderTickets(ticket => ticket.Symbol == security.Symbol).ToList();
+            Assert.IsEmpty(processedTicket);
+        }
+
+        [Test]
         public void LimitOrderPriceIsRounded()
         {
             //Initializes the transaction handler
