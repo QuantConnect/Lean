@@ -29,7 +29,7 @@ namespace QuantConnect.Data.Custom.Benzinga
         public bool IsPro { get; set; }
 
         /// <summary>
-        /// Is the article a first run
+        ///
         /// </summary>
         [JsonProperty("@firstrun")]
         public bool FirstRun { get; set; }

@@ -73,8 +73,7 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// Symbols that this news article applies to
         /// </summary>
         /// <remarks>
-        /// Initialize this outside of the JSON deserialization process since we're unable to
-        /// choose how we want the tickers referenced in the articles as (mapped or unmapped)
+        /// Initialize this outside of the JSON deserialization process
         /// </remarks>
         [JsonProperty("articleSymbols")]
         public List<BenzingaSymbolData> Symbols { get; set; }
@@ -88,7 +87,7 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <summary>
         /// Metadata associated with the article
         /// </summary>
-        /// <remarks>Initialize separately, same as <see cref="Symbols" />
+        /// <remarks>Initialize separately, same as <see cref="Symbols" /></remarks>
         [JsonProperty("articleMetadata")]
         public BenzingaMetadata Metadata { get; set; }
 
@@ -121,7 +120,7 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <param name="config">Configuration object</param>
         /// <param name="date">Date of this source file</param>
         /// <param name="isLiveMode">Is live mode</param>
-        /// <returns></returns>
+        /// <returns>SubscriptionDataSource indicating where data is located and how it's stored</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             return new SubscriptionDataSource(
@@ -220,7 +219,7 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <returns>Article title and contents</returns>
         public override string ToString()
         {
-            return $"{Symbol} - Article title: {Title}\nArticle contents:\n{Contents}";
+            return $"{Time} {Symbol} - Article title: {Title}\nArticle contents:\n{Contents}";
         }
     }
 }

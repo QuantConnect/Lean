@@ -111,8 +111,6 @@ namespace QuantConnect.ToolBox.Benzinga
                 document.LoadXml(File.ReadAllText(publication.FullName));
 
                 var item = JsonConvert.DeserializeObject<JObject>(JsonConvert.SerializeXmlNode(document))["rss"]["channel"]["item"];
-                // Benzinga complies with RSS standards and uses RFC 822 for DateTime
-                var publicationDate = Parse.DateTime(item["pubDate"].ToString());
 
                 var tickers = new List<JToken>();
 
@@ -144,7 +142,7 @@ namespace QuantConnect.ToolBox.Benzinga
                 instance.Metadata = new BenzingaMetadata()
                 {
                     IsPro = item["bz:type"]["@pro"].ToString() == "1",
-                    FirstRun = item["bz:type"]["@pro"].ToString() == "1",
+                    FirstRun = item["bz:type"]["@firstrun"].ToString() == "1",
                     Kind = item["bz:type"]["#text"].ToString()
                 };
 
@@ -196,13 +194,14 @@ namespace QuantConnect.ToolBox.Benzinga
             foreach (var article in news)
             {
                 var createdReference = false;
-
+                var symbolsToRemove = new List<Symbol>();
                 // For each ticker, add a reference to the article we're going to store under the "content" folder
                 foreach (var ticker in article.Symbols)
                 {
                     // Invalid character in path
                     if (ticker.Symbol.Value.Contains(":"))
                     {
+                        symbolsToRemove.Add(ticker.Symbol);
                         Log.Trace($"BenzingaDataConverter.WriteToFile(): Ticker {ticker.Symbol.Value} contains invalid character ':'. Skipping");
                         continue;
                     }
@@ -211,12 +210,14 @@ namespace QuantConnect.ToolBox.Benzinga
                     // Example: SPOT (Spotify) on 2018-10-01 has a missing exchange even though it has already IPO'd
                     if (ticker.Exchange != "NASDAQ" && ticker.Exchange != "NYSE" && ticker.Exchange != "ETF" && !string.IsNullOrEmpty(ticker.Exchange))
                     {
+                        symbolsToRemove.Add(ticker.Symbol);
                         Log.Trace($"BenzingaDataConverter.WriteToFile(): Ticker {ticker.Symbol.Value} is not in NYSE, NASDAQ, or is not an ETF. Skipping");
                         continue;
                     }
                     // We can't write these tickers in Windows, so we'll skip them
                     if (_isWindows && _forbiddenTickers.Contains(ticker.Symbol.Value))
                     {
+                        symbolsToRemove.Add(ticker.Symbol);
                         Log.Trace($"BenzingaDataConverter.WriteToFile(): Ticker {ticker.Symbol.Value} is invalid in Windows. Skipping");
                         continue;
                     }
@@ -270,6 +271,11 @@ namespace QuantConnect.ToolBox.Benzinga
                     File.Delete(existingReferenceFileBackupPath);
 
                     createdReference = true;
+                }
+
+                foreach (var symbolToRemove in symbolsToRemove)
+                {
+                    article.Symbols = article.Symbols.Where(x => x.Symbol != symbolToRemove).ToList();
                 }
 
                 if (!createdReference)
