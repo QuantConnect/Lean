@@ -203,8 +203,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         {
             var files = new List<FileInfo>();
 
-            var command = OS.IsLinux ? "ls" : "dir";
-            var arguments = OS.IsWindows ? "/b /a-d" : string.Empty;
+            var command = OS.IsLinux ? "ls" : "cmd.exe";
+            var arguments = OS.IsWindows ? "/c dir /b /a-d" : string.Empty;
 
             var processStartInfo = new ProcessStartInfo(command, arguments)
             {

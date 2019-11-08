@@ -463,6 +463,10 @@ namespace QuantConnect.Securities
                 foreach (var kvp in Securities)
                 {
                     var security = kvp.Value;
+                    if (security.Holdings.Quantity == 0)
+                    {
+                        continue;
+                    }
                     var context = new ReservedBuyingPowerForPositionParameters(security);
                     var reservedBuyingPower = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(context);
                     sum += reservedBuyingPower.Value;

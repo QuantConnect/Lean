@@ -40,8 +40,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2019, 1, 31);
             SetCash(100000);
 
-            _symbol = AddData<SECReport10Q>(Ticker).Symbol;
-            AddData<SECReport8K>(Ticker);
+            _symbol = AddData<SECReport10Q>(Ticker, Resolution.Daily).Symbol;
+            AddData<SECReport8K>(Ticker, Resolution.Daily);
         }
 
         public override void OnData(Slice slice)

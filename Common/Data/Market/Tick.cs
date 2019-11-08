@@ -377,8 +377,8 @@ namespace QuantConnect.Data.Market
         {
             if (isLiveMode)
             {
-                // Currently ticks aren't sourced through GetSource in live mode
-                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.LocalFile);
+                // this data type is streamed in live mode
+                return new SubscriptionDataSource(string.Empty, SubscriptionTransportMedium.Streaming);
             }
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);

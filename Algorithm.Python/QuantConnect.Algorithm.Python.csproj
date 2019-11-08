@@ -84,6 +84,8 @@
     <Content Include="KerasNeuralNetworkAlgorithm.py" />
     <None Include="PsychSignalSentimentRegressionAlgorithm.py" />
     <Content Include="CustomDataUsingMapFileRegressionAlgorithm.py" />
+    <Content Include="LiquidETFUniverseFrameworkAlgorithm.py" />
+    <Content Include="SetHoldingsMultipleTargetsRegressionAlgorithm.py" />
     <Content Include="TradingEconomicsCalendarIndicatorAlgorithm.py" />
     <Content Include="OnEndOfDayRegressionAlgorithm.py" />
     <Content Include="SECReportDataAlgorithm.py" />

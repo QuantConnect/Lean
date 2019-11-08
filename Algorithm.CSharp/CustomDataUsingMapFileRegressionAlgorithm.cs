@@ -48,6 +48,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             var foxa = QuantConnect.Symbol.Create("FOXA", SecurityType.Equity, Market.USA);
             _symbol = AddData<CustomDataUsingMapping>(foxa).Symbol;
+
+            foreach (var config in SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_symbol))
+            {
+                if (config.Resolution != Resolution.Minute)
+                {
+                    throw new Exception("Expected resolution to be set to Minute");
+                }
+            }
         }
 
         /// <summary>
@@ -70,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     _initialMapping = true;
                 }
-                else if(Time.Date == new DateTime(2013, 06, 29))
+                else if (Time.Date == new DateTime(2013, 06, 29))
                 {
                     if (mappingEvent.NewSymbol != "FOXA"
                         || mappingEvent.OldSymbol != "NWSA")
@@ -163,6 +171,26 @@ namespace QuantConnect.Algorithm.CSharp
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
             {
                 return ParseEquity(config, line, date);
+            }
+
+            /// <summary>
+            /// Gets the default resolution for this data and security type
+            /// </summary>
+            /// <remarks>This is a method and not a property so that python
+            /// custom data types can override it</remarks>
+            public override Resolution DefaultResolution()
+            {
+                return Resolution.Minute;
+            }
+
+            /// <summary>
+            /// Gets the supported resolution for this data and security type
+            /// </summary>
+            /// <remarks>This is a method and not a property so that python
+            /// custom data types can override it</remarks>
+            public override List<Resolution> SupportedResolutions()
+            {
+                return new List<Resolution> { Resolution.Minute };
             }
         }
     }

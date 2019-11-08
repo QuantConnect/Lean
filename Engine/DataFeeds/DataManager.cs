@@ -39,6 +39,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly ITimeKeeper _timeKeeper;
         private readonly bool _liveMode;
+        private readonly IAlgorithm _algorithm;
         private readonly IRegisteredSecurityDataTypesProvider _registeredTypesProvider;
 
         /// There is no ConcurrentHashSet collection in .NET,
@@ -77,6 +78,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _marketHoursDatabase = marketHoursDatabase;
             _liveMode = liveMode;
             _registeredTypesProvider = registeredTypesProvider;
+            _algorithm = algorithm;
 
             // wire ourselves up to receive notifications when universes are added/removed
             algorithm.UniverseManager.CollectionChanged += (sender, args) =>
@@ -371,7 +373,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public SubscriptionDataConfig Add(
             Type dataType,
             Symbol symbol,
-            Resolution resolution,
+            Resolution? resolution = null,
             bool fillForward = true,
             bool extendedMarketHours = false,
             bool isFilteredSubscription = true,
@@ -392,9 +394,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public List<SubscriptionDataConfig> Add(
             Symbol symbol,
-            Resolution resolution,
-            bool fillForward,
-            bool extendedMarketHours,
+            Resolution? resolution = null,
+            bool fillForward = true,
+            bool extendedMarketHours = false,
             bool isFilteredSubscription = true,
             bool isInternalFeed = false,
             bool isCustomData = false,
@@ -403,7 +405,49 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             )
         {
             var dataTypes = subscriptionDataTypes ??
-                LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution, symbol.IsCanonical());
+                LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution ?? Resolution.Minute, symbol.IsCanonical());
+
+            if (!dataTypes.Any())
+            {
+                throw new ArgumentNullException(nameof(dataTypes), "At least one type needed to create new subscriptions");
+            }
+
+            var resolutionWasProvided = resolution.HasValue;
+            foreach (var typeTuple in dataTypes)
+            {
+                var baseInstance = typeTuple.Item1.GetBaseDataInstance();
+                baseInstance.Symbol = symbol;
+                if (!resolutionWasProvided)
+                {
+                    var defaultResolution = baseInstance.DefaultResolution();
+                    if (resolution.HasValue && resolution != defaultResolution)
+                    {
+                        // we are here because there are multiple 'dataTypes'.
+                        // if we get different default resolutions lets throw, this shouldn't happen
+                        throw new InvalidOperationException(
+                            $"Different data types ({string.Join(",", dataTypes.Select(tuple => tuple.Item1))})" +
+                            $" provided different default resolutions {defaultResolution} and {resolution}, this is an unexpected invalid operation.");
+                    }
+                    resolution = defaultResolution;
+                }
+                else
+                {
+                    // only assert resolution in backtesting, live can use other data source
+                    // for example daily data for options
+                    if (!_liveMode)
+                    {
+                        var supportedResolutions = baseInstance.SupportedResolutions();
+                        if (supportedResolutions.Contains(resolution.Value))
+                        {
+                            continue;
+                        }
+
+                        throw new ArgumentException($"Sorry {resolution.ToStringInvariant()} is not a supported resolution for {typeTuple.Item1.Name}" +
+                                                    $" and SecurityType.{symbol.SecurityType.ToStringInvariant()}." +
+                                                    $" Please change your AddData to use one of the supported resolutions ({string.Join(",", supportedResolutions)}).");
+                    }
+                }
+            }
 
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
@@ -424,18 +468,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     "ExchangeTimeZone is a required parameter for new subscriptions. Set to the time zone the security exchange resides in.");
             }
 
-            if (!dataTypes.Any())
-            {
-                throw new ArgumentNullException(nameof(dataTypes), "At least one type needed to create new subscriptions");
-            }
-
             var result = (from subscriptionDataType in dataTypes
                 let dataType = subscriptionDataType.Item1
                 let tickType = subscriptionDataType.Item2
                 select new SubscriptionDataConfig(
                     dataType,
                     symbol,
-                    resolution,
+                    resolution.Value,
                     marketHoursDbEntry.DataTimeZone,
                     exchangeHours.TimeZone,
                     fillForward,

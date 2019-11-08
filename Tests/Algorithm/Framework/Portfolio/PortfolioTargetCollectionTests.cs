@@ -114,6 +114,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void OrderByMarginImpactDoesNotReturnTargetsWithNoData()
         {
             var algorithm = new FakeAlgorithm();
+            algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
             algorithm.AddEquity(symbol);
 

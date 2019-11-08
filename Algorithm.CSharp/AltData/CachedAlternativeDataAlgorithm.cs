@@ -35,11 +35,11 @@ namespace QuantConnect.Algorithm.CSharp.AltData
             // QuantConnect caches a small subset of alternative data for easy consumption for the community.
             // You can use this in your algorithm as demonstrated below:
 
-            _cboeVix = AddData<CBOE>("VIX").Symbol;
+            _cboeVix = AddData<CBOE>("VIX", Resolution.Daily).Symbol;
             // United States EIA data: https://eia.gov/
-            _usEnergy = AddData<USEnergy>(USEnergy.Petroleum.UnitedStates.WeeklyGrossInputsIntoRefineries).Symbol;
+            _usEnergy = AddData<USEnergy>(USEnergy.Petroleum.UnitedStates.WeeklyGrossInputsIntoRefineries, Resolution.Daily).Symbol;
             // FRED data
-            _fredPeakToTrough = AddData<Fred>(Fred.OECDRecessionIndicators.UnitedStatesFromPeakThroughTheTrough).Symbol;
+            _fredPeakToTrough = AddData<Fred>(Fred.OECDRecessionIndicators.UnitedStatesFromPeakThroughTheTrough, Resolution.Daily).Symbol;
         }
 
         public override void OnData(Slice data)

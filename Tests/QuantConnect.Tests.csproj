@@ -300,6 +300,7 @@
     <Compile Include="Common\Data\BaseDataTests.cs" />
     <Compile Include="Common\Data\CalendarConsolidatorsTests.cs" />
     <Compile Include="Common\Data\Custom\FredApiTest.cs" />
+    <Compile Include="Common\Data\Custom\PythonCustomDataTests.cs" />
     <Compile Include="Common\Data\Custom\SECReportTests.cs" />
     <Compile Include="Common\Data\Custom\SmartInsiderTests.cs" />
     <Compile Include="Common\Data\Custom\EstimizeTests.cs" />
@@ -320,6 +321,7 @@
     <Compile Include="Common\Orders\Fees\InteractiveBrokersFeeModelTests.cs" />
     <Compile Include="Common\Orders\Fees\OrderFeesTests.cs" />
     <Compile Include="Common\Orders\Fills\BackwardsCompatibilityFillModelsTests.cs" />
+    <Compile Include="Common\OrderTargetsByMarginImpactTests.cs" />
     <Compile Include="Common\Packets\BreakpointTests.cs" />
     <Compile Include="Common\Securities\CashAmountTests.cs" />
     <Compile Include="Common\Data\Custom\QuandlTests.cs" />
