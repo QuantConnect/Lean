@@ -34,8 +34,8 @@ namespace QuantConnect.Data.Custom.PsychSignal
         /// the time it should be emitted in backtesting/live trading
         /// </summary>
         public override DateTime EndTime {
-            get { return Time + Period + FixedLiveOffset; }
-            set { Time = value - Period; }
+            get { return Time.Add(Period).Add(FixedLiveOffset); }
+            set { Time = value.Subtract(Period); }
         }
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace QuantConnect.Data.Custom.PsychSignal
         {
             return new PsychSignalSentiment
             {
-                EndTime = EndTime,
+                Time = Time,
                 Symbol = Symbol,
                 BullIntensity = BullIntensity,
                 BearIntensity = BearIntensity,
