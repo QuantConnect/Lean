@@ -358,6 +358,7 @@
     <Compile Include="Engine\DataFeeds\Enumerators\DelistingEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\Factories\FuturesChainUniverseSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\AuxiliaryDataEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\Enumerators\MappingEventProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\PriceScaleFactorEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\IndexSubscriptionDataSourceReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\LiveCoarseUniverseTests.cs" />

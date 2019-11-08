@@ -57,7 +57,7 @@ class CustomDataUsingMapFileRegressionAlgorithm(QCAlgorithm):
             self.Log("{0} - Ticker changed from: {1} to {2}".format(str(self.Time), mappingEvent.OldSymbol, mappingEvent.NewSymbol))
 
             if date == datetime(2013, 6, 27).date():
-                # initial mapping event since we added FOXA and it's currently NWSA - GH issue 3327
+                # we should Not receive the initial mapping event
                 if mappingEvent.NewSymbol != "NWSA" or mappingEvent.OldSymbol != "FOXA":
                     raise Exception("Unexpected mapping event mappingEvent")
                 self.initialMapping = True
@@ -69,8 +69,8 @@ class CustomDataUsingMapFileRegressionAlgorithm(QCAlgorithm):
                 self.executionMapping = True
 
     def OnEndOfAlgorithm(self):
-        if not self.initialMapping:
-            raise Exception("The ticker did not generate the initial rename event")
+        if self.initialMapping:
+            raise Exception("The ticker generated the initial rename event")
         if not self.executionMapping:
             raise Exception("The ticker did not rename throughout the course of its life even though it should have")
 

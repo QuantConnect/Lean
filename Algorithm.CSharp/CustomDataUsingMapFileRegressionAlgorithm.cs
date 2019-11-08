@@ -69,13 +69,12 @@ namespace QuantConnect.Algorithm.CSharp
                 Log($"{Time} - Ticker changed from: {mappingEvent.OldSymbol} to {mappingEvent.NewSymbol}");
                 if (Time.Date == new DateTime(2013, 06, 27))
                 {
-                    // initial mapping event since we added FOXA and it's currently NWSA - GH issue 3327
+                    // we should Not receive the initial mapping event
                     if (mappingEvent.NewSymbol != "NWSA"
                         || mappingEvent.OldSymbol != "FOXA")
                     {
                         throw new Exception($"Unexpected mapping event {mappingEvent}");
                     }
-
                     _initialMapping = true;
                 }
                 else if (Time.Date == new DateTime(2013, 06, 29))
@@ -97,9 +96,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnEndOfAlgorithm()
         {
-            if (!_initialMapping)
+            if (_initialMapping)
             {
-                throw new Exception("The ticker did not generate the initial rename event");
+                throw new Exception("The ticker generated the initial rename event");
             }
             if (!_executionMapping)
             {

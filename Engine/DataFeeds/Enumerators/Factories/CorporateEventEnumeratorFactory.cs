@@ -41,6 +41,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="mapFileResolver">Used for resolving the correct map files</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
+        /// <param name="startTime">Start date for the data request</param>
         /// <returns>The new auxiliary data enumerator</returns>
         public static IEnumerator<BaseData> CreateEnumerators(
             IEnumerator<BaseData> rawDataEnumerator,
@@ -48,7 +49,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             IFactorFileProvider factorFileProvider,
             ITradableDatesNotifier tradableDayNotifier,
             MapFileResolver mapFileResolver,
-            bool includeAuxiliaryData)
+            bool includeAuxiliaryData,
+            DateTime startTime)
         {
             var lazyFactorFile =
                 new Lazy<FactorFile>(() => GetFactorFileToUse(config, factorFileProvider));
@@ -65,7 +67,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     new DelistingEventProvider()
                 },
                 tradableDayNotifier,
-                includeAuxiliaryData);
+                includeAuxiliaryData,
+                startTime);
 
             var priceScaleFactorEnumerator = new PriceScaleFactorEnumerator(
                 rawDataEnumerator,

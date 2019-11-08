@@ -42,13 +42,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="tradableDateEventProviders">The tradable dates event providers</param>
         /// <param name="tradableDayNotifier">Tradable dates provider</param>
         /// <param name="includeAuxiliaryData">True to emit auxiliary data</param>
+        /// <param name="startTime">Start date for the data request</param>
         public AuxiliaryDataEnumerator(
             SubscriptionDataConfig config,
             Lazy<FactorFile> factorFile,
             Lazy<MapFile> mapFile,
             ITradableDateEventProvider []tradableDateEventProviders,
             ITradableDatesNotifier tradableDayNotifier,
-            bool includeAuxiliaryData)
+            bool includeAuxiliaryData,
+            DateTime startTime)
         {
             _auxiliaryData = new Queue<BaseData>();
 
@@ -56,7 +58,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             {
                 if (!_initialized)
                 {
-                    Initialize(config, factorFile, mapFile, tradableDateEventProviders);
+                    Initialize(config, factorFile, mapFile, tradableDateEventProviders, startTime);
                 }
 
                 foreach (var tradableDateEventProvider in tradableDateEventProviders)
@@ -83,14 +85,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private void Initialize(SubscriptionDataConfig config,
             Lazy<FactorFile> factorFile,
             Lazy<MapFile> mapFile,
-            ITradableDateEventProvider[] tradableDateEventProviders)
+            ITradableDateEventProvider[] tradableDateEventProviders,
+            DateTime startTime)
         {
             foreach (var tradableDateEventProvider in tradableDateEventProviders)
             {
                 tradableDateEventProvider.Initialize(
                     config,
                     factorFile?.Value,
-                    mapFile?.Value);
+                    mapFile?.Value,
+                    startTime);
             }
             _initialized = true;
         }
