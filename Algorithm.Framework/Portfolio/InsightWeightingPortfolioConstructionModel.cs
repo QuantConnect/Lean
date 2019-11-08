@@ -33,11 +33,39 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     public class InsightWeightingPortfolioConstructionModel : EqualWeightingPortfolioConstructionModel
     {
         /// <summary>
+        /// Creates a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/> with Long portfolio bias.
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
+        public static InsightWeightingPortfolioConstructionModel LongOnly(Func<DateTime, DateTime> rebalancingFunc)
+        {
+            return new InsightWeightingPortfolioConstructionModel(rebalancingFunc, PortfolioBias.Long);
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/> with Long portfolio bias.
+        /// </summary>
+        /// <param name="timeSpan">Rebalancing frequency</param>
+        public static InsightWeightingPortfolioConstructionModel LongOnly(TimeSpan timeSpan)
+        {
+            return new InsightWeightingPortfolioConstructionModel(timeSpan, PortfolioBias.Long);
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/> with Long portfolio bias.
+        /// </summary>
+        /// <param name="resolution">Rebalancing frequency</param>
+        public static InsightWeightingPortfolioConstructionModel LongOnly(Resolution resolution = Resolution.Daily)
+        {
+            return new InsightWeightingPortfolioConstructionModel(resolution, PortfolioBias.Long);
+        }
+
+        /// <summary>
         /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
         /// </summary>
         /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
-        public InsightWeightingPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc)
-            : base(rebalancingFunc)
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        public InsightWeightingPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc, PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : base(rebalancingFunc, portfolioBias)
         {
         }
 
@@ -45,8 +73,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
         /// </summary>
         /// <param name="timeSpan">Rebalancing frequency</param>
-        public InsightWeightingPortfolioConstructionModel(TimeSpan timeSpan)
-            : base(timeSpan)
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        public InsightWeightingPortfolioConstructionModel(TimeSpan timeSpan, PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : base(timeSpan, portfolioBias)
         {
         }
 
@@ -54,8 +83,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
         /// </summary>
         /// <param name="resolution">Rebalancing frequency</param>
-        public InsightWeightingPortfolioConstructionModel(Resolution resolution = Resolution.Daily)
-            : base(resolution)
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        public InsightWeightingPortfolioConstructionModel(Resolution resolution = Resolution.Daily, PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : base(resolution, portfolioBias)
         {
         }
 

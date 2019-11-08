@@ -17,7 +17,7 @@ AddReference("QuantConnect.Algorithm.Framework")
 
 from QuantConnect import Resolution
 from QuantConnect.Algorithm.Framework.Alphas import *
-from EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel
+from EqualWeightingPortfolioConstructionModel import EqualWeightingPortfolioConstructionModel, PortfolioBias
 
 class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that generates percent targets based on the
@@ -29,12 +29,17 @@ class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstruc
     percent holdings proportionally so the sum is 1.
     It will ignore Insight that have no Insight.Weight value.'''
 
-    def __init__(self, rebalancingParam = Resolution.Daily):
+    def __init__(self, rebalancingParam = Resolution.Daily, portfolioBias = PortfolioBias.LongShort):
         '''Initialize a new instance of InsightWeightingPortfolioConstructionModel
         Args:
             rebalancingParam: Rebalancing parameter. If it is a timedelta or Resolution, it will be converted into a function.
-                              The function returns the next expected rebalance time for a given algorithm UTC DateTime'''
-        super().__init__(rebalancingParam)
+                              The function returns the next expected rebalance time for a given algorithm UTC DateTime
+            portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)'''
+        super().__init__(rebalancingParam, portfolioBias)
+
+    @staticmethod
+    def LongOnly(rebalancingParam = Resolution.Daily):
+        return InsightWeightingPortfolioConstructionModel(rebalancingParam, PortfolioBias.Long)
 
     def ShouldCreateTargetForInsight(self, insight):
         '''Method that will determine if the portfolio construction model should create a

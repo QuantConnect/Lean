@@ -154,6 +154,7 @@
     <Compile Include="IndexUniverseDefinitions.cs" />
     <Compile Include="DollarVolumeUniverseDefinitions.cs" />
     <Compile Include="INotifiedSecurityChanges.cs" />
+    <Compile Include="Portfolio\PortfolioBias.cs" />
     <Compile Include="Portfolio\IPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\IPortfolioOptimizer.cs" />
     <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />

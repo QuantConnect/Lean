@@ -29,16 +29,18 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     For insights of direction InsightDirection.Up, long targets are returned and
     for insights of direction InsightDirection.Down, short targets are returned.'''
 
-    def __init__(self, rebalancingParam = Resolution.Daily):
+    def __init__(self, rebalancingParam = Resolution.Daily, portfolioBias = PortfolioBias.LongShort):
         '''Initialize a new instance of EqualWeightingPortfolioConstructionModel
         Args:
             rebalancingParam: Rebalancing parameter. If it is a timedelta or Resolution, it will be converted into a function.
-                              The function returns the next expected rebalance time for a given algorithm UTC DateTime'''
+                              The function returns the next expected rebalance time for a given algorithm UTC DateTime
+            portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)'''
         self.insightCollection = InsightCollection()
         self.removedSymbols = []
         self.nextExpiryTime = UTCMIN
         self.rebalancingTime = UTCMIN
         self.rebalancingFunc = rebalancingParam
+        self.portfolioBias = portfolioBias
 
         # If the argument is an instance if Resolution or Timedelta
         # Redefine self.rebalancingFunc
@@ -46,6 +48,10 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
             rebalancingParam = Extensions.ToTimeSpan(rebalancingParam)
         if isinstance(rebalancingParam, timedelta):
             self.rebalancingFunc = lambda dt: dt + rebalancingParam
+
+    @staticmethod
+    def LongOnly(rebalancingParam = Resolution.Daily):
+        return EqualWeightingPortfolioConstructionModel(rebalancingParam, PortfolioBias.Long)
 
     def ShouldCreateTargetForInsight(self, insight):
         '''Method that will determine if the portfolio construction model should create a
@@ -66,6 +72,15 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         for insight in activeInsights:
             result[insight] = insight.Direction * percent
         return result
+
+
+    def RespectPortfolioBias(self, insight):
+        '''Method that will determine if a given insight respects the portfolio bias
+        Args:
+            insight: The insight to create a target for
+        '''
+        return self.portfolioBias == PortfolioBias.LongShort or insight.Direction == self.portfolioBias
+
 
     def CreateTargets(self, algorithm, insights):
         '''Create portfolio targets from the specified insights
@@ -101,12 +116,17 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         for symbol, g in groupby(activeInsights, lambda x: x.Symbol):
             lastActiveInsights.append(sorted(g, key = lambda x: x.GeneratedTimeUtc)[-1])
 
-        # Determine target percent for the given insights
-        percents = self.DetermineTargetPercent(lastActiveInsights)
+        # Determine target percent for the given insights that respect the portfolio bias
+        percents = self.DetermineTargetPercent(list(filter(self.RespectPortfolioBias, lastActiveInsights)))
 
         errorSymbols = {}
         for insight in lastActiveInsights:
-            target = PortfolioTarget.Percent(algorithm, insight.Symbol, percents[insight])
+
+            # If the insight is not in percents, it doesn't respect the portfolio bias.
+            # Consequently, the target percent is zero
+            percent = percents.pop(insight, 0)
+
+            target = PortfolioTarget.Percent(algorithm, insight.Symbol, percent)
             if not target is None:
                 targets.append(target)
             else:
