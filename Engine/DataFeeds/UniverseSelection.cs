@@ -61,8 +61,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _currencySubscriptionDataConfigManager = new CurrencySubscriptionDataConfigManager(algorithm.Portfolio.CashBook,
                 algorithm.Securities,
                 algorithm.SubscriptionManager,
-                _securityService,
-                algorithm.BrokerageModel);
+                _securityService);
         }
 
         /// <summary>
@@ -399,7 +398,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            if (_currencySubscriptionDataConfigManager.UpdatePendingSubscriptionDataConfigs())
+            if (_currencySubscriptionDataConfigManager.UpdatePendingSubscriptionDataConfigs(_algorithm.BrokerageModel))
             {
                 foreach (var subscriptionDataConfig in _currencySubscriptionDataConfigManager
                     .GetPendingSubscriptionDataConfigs())
@@ -422,7 +421,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void EnsureCurrencyDataFeeds(SecurityChanges securityChanges)
         {
-            _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(securityChanges);
+            _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(securityChanges, _algorithm.BrokerageModel);
         }
 
         private void RemoveSecurityFromUniverse(

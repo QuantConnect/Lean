@@ -2173,7 +2173,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             var securityType = ConvertSecurityType(contract);
             var ibSymbol = securityType == SecurityType.Forex ? contract.Symbol + contract.Currency : contract.Symbol;
-            var market = securityType == SecurityType.Forex ? Market.FXCM : Market.USA;
+            var market = securityType == SecurityType.Forex ? Market.Oanda : Market.USA;
 
             if (securityType == SecurityType.Future)
             {
@@ -2479,7 +2479,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             return
                 (securityType == SecurityType.Equity && market == Market.USA) ||
-                (securityType == SecurityType.Forex && market == Market.FXCM) ||
+                (securityType == SecurityType.Forex && market == Market.Oanda) ||
                 (securityType == SecurityType.Option && market == Market.USA) ||
                 (securityType == SecurityType.Future);
         }
