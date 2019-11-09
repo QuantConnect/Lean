@@ -818,7 +818,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapters\" />
-    <Folder Include="Python\Common\Data\" />
     <Folder Include="Tasks\" />
   </ItemGroup>
   <ItemGroup>
