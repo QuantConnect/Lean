@@ -451,6 +451,38 @@ namespace QuantConnect.Securities.Future
                     return closestWednesday.Add(new TimeSpan(20, 0, 0));
                 })
             },
+            // MicroSP500EMini (ES): http://www.cmegroup.com/trading/equity-index/us-index/micro-e-mini-sandp500_contract_specifications.html
+            {Futures.Indices.MicroSP500EMini, (time =>
+                {
+                    // Trading can occur up to 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    return thirdFriday.Add(new TimeSpan(13,30,0));
+                })
+            },
+            // MicroNASDAQ100EMini (NQ): http://www.cmegroup.com/trading/equity-index/us-index/micro-e-mini-nasdaq-100_contract_specifications.html
+            {Futures.Indices.MicroNASDAQ100EMini, (time =>
+                {
+                    // Trading can occur up to 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    return thirdFriday.Add(new TimeSpan(13,30,0));
+                })
+            },
+            // MicroDow30EMini (YM): http://www.cmegroup.com/trading/equity-index/us-index/micro-e-mini-dow_contract_specifications.html
+            {Futures.Indices.MicroDow30EMini, (time =>
+                {
+                    // Trading can occur up to 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    return thirdFriday.Add(new TimeSpan(13,30,0));
+                })
+            },
+            // MicroRussell2000EMini (RTY): https://www.cmegroup.com/trading/equity-index/us-index/micro-e-mini-russell-2000_contract_specifications.html
+            {Futures.Indices.MicroRussell2000EMini, (time =>
+                {
+                    // Trading can occur up to 9:30 a.m. Eastern Time (ET) on the 3rd Friday of the contract month
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time);
+                    return thirdFriday.Add(new TimeSpan (13,30,0));
+                })
+            },
             // Grains And OilSeeds Group
             // Wheat (ZW): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/wheat_contract_specifications.html
             {Futures.Grains.Wheat, (time =>
