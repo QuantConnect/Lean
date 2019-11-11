@@ -756,6 +756,30 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string USDDenominatedIbovespa = "IBV";
+
+            /// <summary>
+            /// Micro E-mini S&amp;P 500 Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string SP500EMini = "MES";
+
+            /// <summary>
+            /// Micro E-mini NASDAQ 100 Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string NASDAQ100EMini = "MNQ";
+
+            /// <summary>
+            /// Micro E-mini Dow Indu 30 Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Dow30EMini = "MYM";
+
+            /// <summary>
+            /// Micro E-mini Russell 2000 Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Russell2000EMini = "M2K";
         }
 
         /// <summary>
