@@ -228,6 +228,10 @@ usa,YO,future,,USD,112000,0.0001,1
 usa,CC,future,,USD,10,1,1
 usa,VX,future,,USD,1000,0.05,1
 usa,[*],future,,USD,1,0.01,1
+usa,MES,future,,USD,5,0.25,1
+usa,MNQ,future,,USD,2,0.25,1
+usa,MYM,future,,USD,0.5,1,1
+usa,M2K,future,,USD,5,0.1,1
 
 fxcm,AUDCAD,forex,,CAD,1,0.00001,1000
 fxcm,AUDCHF,forex,,CHF,1,0.00001,1000
