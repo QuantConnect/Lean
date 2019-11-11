@@ -48,8 +48,9 @@ namespace QuantConnect.Tests
             Dictionary<string, string> expectedStatistics,
             AlphaRuntimeStatistics expectedAlphaStatistics,
             Language language,
-            AlgorithmStatus expectedFinalStatus
-            )
+            AlgorithmStatus expectedFinalStatus,
+            DateTime? startDate = null,
+            DateTime? endDate = null)
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
@@ -104,8 +105,10 @@ namespace QuantConnect.Tests
                         try
                         {
                             string algorithmPath;
-                            var job = systemHandlers.JobQueue.NextJob(out algorithmPath);
-                            ((BacktestNodePacket)job).BacktestId = algorithm;
+                            var job = (BacktestNodePacket)systemHandlers.JobQueue.NextJob(out algorithmPath);
+                            job.BacktestId = algorithm;
+                            job.PeriodStart = startDate;
+                            job.PeriodFinish = endDate;
                             algorithmManager = new AlgorithmManager(false, job);
 
                             systemHandlers.LeanManager.Initialize(systemHandlers, algorithmHandlers, job, algorithmManager);

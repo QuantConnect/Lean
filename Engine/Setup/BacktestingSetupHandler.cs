@@ -162,7 +162,6 @@ namespace QuantConnect.Lean.Engine.Setup
                 try
                 {
                     parameters.ResultHandler.SendStatusUpdate(AlgorithmStatus.Initializing, "Initializing algorithm...");
-
                     //Set our parameters
                     algorithm.SetParameters(job.Parameters);
 
@@ -181,6 +180,16 @@ namespace QuantConnect.Lean.Engine.Setup
                     //Initialise the algorithm, get the required data:
                     algorithm.Initialize();
 
+                    // set start and end date if present in the job
+                    if (job.PeriodStart.HasValue)
+                    {
+                        algorithm.SetStartDate(job.PeriodStart.Value);
+                    }
+                    if (job.PeriodFinish.HasValue)
+                    {
+                        algorithm.SetEndDate(job.PeriodFinish.Value);
+                    }
+
                     // finalize initialization
                     algorithm.PostInitialize();
                 }
@@ -196,12 +205,8 @@ namespace QuantConnect.Lean.Engine.Setup
             //Before continuing, detect if this is ready:
             if (!initializeComplete) return false;
 
-            // TODO: Refactor the BacktestResultHandler to use algorithm not job to set times
-            job.PeriodStart = algorithm.StartDate;
-            job.PeriodFinish = algorithm.EndDate;
-
             //Calculate the max runtime for the strategy
-            MaximumRuntime = GetMaximumRuntime(job.PeriodStart, job.PeriodFinish, algorithm.SubscriptionManager, algorithm.UniverseManager, parameters.AlgorithmNodePacket.Controls);
+            MaximumRuntime = GetMaximumRuntime(algorithm.StartDate, algorithm.EndDate, algorithm.SubscriptionManager, algorithm.UniverseManager, parameters.AlgorithmNodePacket.Controls);
 
             // Python takes forever; lets give it 10x longer to finish.
             if (job.Language == Language.Python)
@@ -233,14 +238,13 @@ namespace QuantConnect.Lean.Engine.Setup
             algorithm.SetMaximumOrders(MaxOrders);
 
             //Starting date of the algorithm:
-            StartingDate = job.PeriodStart;
+            StartingDate = algorithm.StartDate;
 
             //Put into log for debugging:
             Log.Trace("SetUp Backtesting: User: " + job.UserId + " ProjectId: " + job.ProjectId + " AlgoId: " + job.AlgorithmId);
-            Log.Trace($"Dates: Start: {job.PeriodStart.ToStringInvariant("d")} " +
-                $"End: {job.PeriodFinish.ToStringInvariant("d")} " +
-                $"Cash: {StartingPortfolioValue.ToStringInvariant("C")}"
-            );
+            Log.Trace($"Dates: Start: {algorithm.StartDate.ToStringInvariant("d")} " +
+                      $"End: {algorithm.EndDate.ToStringInvariant("d")} " +
+                      $"Cash: {StartingPortfolioValue.ToStringInvariant("C")}");
 
             if (Errors.Count > 0)
             {
