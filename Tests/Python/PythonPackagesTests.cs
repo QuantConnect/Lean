@@ -588,6 +588,55 @@ def RunTest():
             );
         }
 
+        [Test]
+        public void NltkTest()
+        {
+            AssetCode(
+                @"
+import nltk.data
+
+def RunTest():
+    text = '''
+    Punkt knows that the periods in Mr. Smith and Johann S. Bach
+    do not mark sentence boundaries.  And sometimes sentences
+    can start with non-capitalized words.  i is a good variable
+    name.
+    '''
+    sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
+    return '\n-----\n'.join(sent_detector.tokenize(text.strip()))"
+            );
+        }
+
+        [Test]
+        public void MlfinlabTest()
+        {
+            AssetCode(
+                @"
+from mlfinlab.portfolio_optimization.hrp import HierarchicalRiskParity
+from mlfinlab.portfolio_optimization.mean_variance import MeanVarianceOptimisation
+import numpy as np
+import pandas as pd
+import os
+
+def RunTest():
+# Read in data
+    data_file = os.getcwd() + '/TestData/stock_prices.csv'
+    stock_prices = pd.read_csv(data_file, parse_dates=True, index_col='Date') # The date column may be named differently for your input.
+
+    # Compute HRP weights
+    hrp = HierarchicalRiskParity()
+    hrp.allocate(asset_prices=stock_prices, resample_by='B')
+    hrp_weights = hrp.weights.sort_values(by=0, ascending=False, axis=1)
+
+    # Compute IVP weights
+    mvo = MeanVarianceOptimisation()
+    mvo.allocate(asset_prices=stock_prices, solution='inverse_variance', resample_by='B')
+    ivp_weights = mvo.weights.sort_values(by=0, ascending=False, axis=1)
+    
+    return f'HRP: {hrp_weights} IVP: {ivp_weights}'"
+            );
+        }
+
         /// <summary>
         /// Simple test for modules that don't have short test example
         /// </summary>
