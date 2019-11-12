@@ -28,7 +28,7 @@ namespace QuantConnect.ToolBox.BinanceDownloader
         /// <summary>
         /// Primary entry point to the program.
         /// </summary>
-        public static void BinanceDownloader(IList<string> tickers, string resolution, DateTime fromDate, DateTime toDate)
+        public static void DataDownloader(IList<string> tickers, string resolution, DateTime fromDate, DateTime toDate)
         {
             if (resolution.IsNullOrEmpty() || tickers.IsNullOrEmpty())
             {
@@ -78,6 +78,15 @@ namespace QuantConnect.ToolBox.BinanceDownloader
             {
                 Log.Error(err);
             }
+        }
+
+        /// <summary>
+        /// Endpoint for downloading exchange info
+        /// </summary>
+        public static void ExchangeInfoDownloader()
+        {
+            new ExchangeInfoUpdater(new BinanceExchangeInfoDownloader())
+                .Run();
         }
     }
 }
