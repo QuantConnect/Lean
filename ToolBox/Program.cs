@@ -129,7 +129,7 @@ namespace QuantConnect.ToolBox
                         break;
                     case "mbxdl":
                     case "binancedownloader":
-                        BinanceDownloaderProgram.BinanceDownloader(tickers, resolution, fromDate, toDate);
+                        BinanceDownloaderProgram.DataDownloader(tickers, resolution, fromDate, toDate);
                         break;
                     case "secdl":
                     case "secdownloader":
@@ -187,6 +187,19 @@ namespace QuantConnect.ToolBox
                             toDate);
                         break;
 
+                    default:
+                        PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
+                        break;
+                }
+            }
+            else if (targetApp.Contains("updater") || targetApp.EndsWith("spu"))
+            {
+                switch (targetApp)
+                {
+                    case "mbxspu":
+                    case "binancesymbolpropertiesupdater":
+                        BinanceDownloaderProgram.ExchangeInfoDownloader();
+                        break;
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
                         break;
