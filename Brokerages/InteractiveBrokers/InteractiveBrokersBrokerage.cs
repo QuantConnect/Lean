@@ -79,10 +79,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private string _ibServerName;
         private Region _ibServerRegion = Region.America;
 
+        // Existing orders created in TWS can *only* be cancelled/modified when connected with ClientId = 0
+        private const int ClientId = 0;
+
         // next valid order id for this client
         private int _nextValidId;
-        // next valid client id for the gateway/tws
-        private static int _nextClientId;
         // next valid request id for queries
         private int _nextRequestId;
         private int _nextTickerId;
@@ -92,7 +93,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private readonly string _account;
         private readonly string _host;
         private readonly string _ibDirectory;
-        private readonly int _clientId;
         private readonly IAlgorithm _algorithm;
         private readonly IOrderProvider _orderProvider;
         private readonly ISecurityProvider _securityProvider;
@@ -262,7 +262,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _host = host;
             _port = port;
             _ibDirectory = ibDirectory;
-            _clientId = IncrementClientId();
             _agentDescription = agentDescription;
 
             Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Starting IB Automater...");
@@ -438,6 +437,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The open orders returned from IB</returns>
         public override List<Order> GetOpenOrders()
         {
+            // If client 0 invokes reqOpenOrders, it will cause currently open orders placed from TWS manually to be 'bound',
+            // i.e. assigned an order ID so that they can be modified or cancelled by the API client 0.
+            GetOpenOrdersInternal(false);
+
+            // return all open orders (including those placed from TWS, which will have a negative order id)
+            return GetOpenOrdersInternal(true);
+        }
+
+        private List<Order> GetOpenOrdersInternal(bool all)
+        {
             var orders = new List<Order>();
 
             var manualResetEvent = new ManualResetEvent(false);
@@ -468,7 +477,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             CheckRateLimiting();
 
-            _client.ClientSocket.reqAllOpenOrders();
+            if (all)
+            {
+                _client.ClientSocket.reqAllOpenOrders();
+            }
+            else
+            {
+                _client.ClientSocket.reqOpenOrders();
+            }
 
             // wait for our end signal
             var timedOut = !manualResetEvent.WaitOne(15000);
@@ -571,7 +587,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var filter = new ExecutionFilter
             {
                 AcctCode = _account,
-                ClientId = _clientId,
+                ClientId = ClientId,
                 Exchange = exchange,
                 SecType = type ?? IB.SecurityType.Undefined,
                 Symbol = symbol,
@@ -653,7 +669,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     }
 
                     // we're going to try and connect several times, if successful break
-                    _client.ClientSocket.eConnect(_host, _port, _clientId);
+                    _client.ClientSocket.eConnect(_host, _port, ClientId);
 
                     // create the message processing thread
                     var reader = new EReader(_client.ClientSocket, _signal);
@@ -1608,7 +1624,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             var ibOrder = new IBApi.Order
             {
-                ClientId = _clientId,
+                ClientId = ClientId,
                 OrderId = ibOrderId,
                 Account = _account,
                 Action = ConvertOrderDirection(order.Direction),
@@ -2221,14 +2237,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private int GetNextTickerId()
         {
             return Interlocked.Increment(ref _nextTickerId);
-        }
-
-        /// <summary>
-        /// Increments the client ID for communication with the gateway
-        /// </summary>
-        private static int IncrementClientId()
-        {
-            return Interlocked.Increment(ref _nextClientId);
         }
 
         /// <summary>
