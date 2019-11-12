@@ -808,6 +808,20 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetDateTime(DateTime time) => _baseAlgorithm.SetDateTime(time);
 
         /// <summary>
+        /// Set the start date for the backtest
+        /// </summary>
+        /// <param name="start">Datetime Start date for backtest</param>
+        /// <remarks>Must be less than end date and within data available</remarks>
+        public void SetStartDate(DateTime start) => _baseAlgorithm.SetStartDate(start);
+
+        /// <summary>
+        /// Set the end date for a backtest.
+        /// </summary>
+        /// <param name="end">Datetime value for end date</param>
+        /// <remarks>Must be greater than the start date</remarks>
+        public void SetEndDate(DateTime end) => _baseAlgorithm.SetEndDate(end);
+
+        /// <summary>
         /// Set the runtime error
         /// </summary>
         /// <param name="exception">Represents error that occur during execution</param>

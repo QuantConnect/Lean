@@ -1125,7 +1125,8 @@ namespace QuantConnect.Lean.Engine.Results
                                 // we haven't gotten data yet so just spoof a tick to push through the system to start with
                                 if (price > 0)
                                 {
-                                    security.SetMarketPrice(new Tick(time, symbol, price, 0, 0) { TickType = TickType.Trade });
+                                    var exchangeTime = time.ConvertFromUtc(security.Exchange.TimeZone);
+                                    security.SetMarketPrice(new Tick(exchangeTime, symbol, price, 0, 0) { TickType = TickType.Trade });
                                 }
                             }
 

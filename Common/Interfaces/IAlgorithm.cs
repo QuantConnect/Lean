@@ -494,6 +494,20 @@ namespace QuantConnect.Interfaces
         void SetDateTime(DateTime time);
 
         /// <summary>
+        /// Set the start date for the backtest
+        /// </summary>
+        /// <param name="start">Datetime Start date for backtest</param>
+        /// <remarks>Must be less than end date and within data available</remarks>
+        void SetStartDate(DateTime start);
+
+        /// <summary>
+        /// Set the end date for a backtest.
+        /// </summary>
+        /// <param name="end">Datetime value for end date</param>
+        /// <remarks>Must be greater than the start date</remarks>
+        void SetEndDate(DateTime end);
+
+        /// <summary>
         /// Set the algorithm Id for this backtest or live run. This can be used to identify the order and equity records.
         /// </summary>
         /// <param name="algorithmId">unique 32 character identifier for backtest or live server</param>

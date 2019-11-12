@@ -168,16 +168,18 @@ namespace QuantConnect.Packets
         /// </summary>
         /// <param name="job">Job that started this request</param>
         /// <param name="results">Results class for the Backtest job</param>
+        /// <param name="endDate">The algorithms backtest end date</param>
+        /// <param name="startDate">The algorithms backtest start date</param>
         /// <param name="progress">Progress of the packet. For the packet we assume progess of 100%.</param>
-        public BacktestResultPacket(BacktestNodePacket job, BacktestResult results, decimal progress = 1m)
+        public BacktestResultPacket(BacktestNodePacket job, BacktestResult results, DateTime endDate, DateTime startDate, decimal progress = 1m)
             : base(PacketType.BacktestResult)
         {
             try
             {
                 Progress = Math.Round(progress, 3);
                 SessionId = job.SessionId;
-                PeriodFinish = job.PeriodFinish;
-                PeriodStart = job.PeriodStart;
+                PeriodFinish = endDate;
+                PeriodStart = startDate;
                 CompileId = job.CompileId;
                 Channel = job.Channel;
                 BacktestId = job.BacktestId;
