@@ -290,7 +290,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     var security = update.Target;
 
-                    security.Update(update.Data, update.DataType, update.ContainsFillForwardData);
+                    security.Update(update.DataType, update.Data, update.NonFillForwardData);
 
                     if (!update.IsInternalConfig)
                     {

@@ -50,7 +50,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the data used to update securities
         /// </summary>
-        public List<UpdateData<ISecurityPrice>> SecuritiesUpdateData { get; }
+        public List<SecuritiesUpdateData> SecuritiesUpdateData { get; }
 
         /// <summary>
         /// Gets the data used to update the consolidators
@@ -84,7 +84,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             int dataPointCount,
             Slice slice,
             List<DataFeedPacket> data,
-            List<UpdateData<ISecurityPrice>> securitiesUpdateData,
+            List<SecuritiesUpdateData> securitiesUpdateData,
             List<UpdateData<SubscriptionDataConfig>> consolidatorUpdateData,
             List<UpdateData<ISecurityPrice>> customData,
             SecurityChanges securityChanges,

@@ -388,7 +388,7 @@ namespace QuantConnect.Tests.Engine
             private readonly List<UpdateData<SubscriptionDataConfig>> _consolidatorUpdateData = new List<UpdateData<SubscriptionDataConfig>>();
             private readonly List<TimeSlice> _timeSlices = new List<TimeSlice>();
             private readonly TimeSpan _frontierStepSize = TimeSpan.FromSeconds(1);
-            private readonly List<UpdateData<ISecurityPrice>> _securitiesUpdateData = new List<UpdateData<ISecurityPrice>>();
+            private readonly List<SecuritiesUpdateData> _securitiesUpdateData = new List<SecuritiesUpdateData>();
             public int Count => _timeSlices.Count;
 
             public NullSynchronizer(IAlgorithm algorithm)
@@ -398,14 +398,14 @@ namespace QuantConnect.Tests.Engine
                 foreach (var kvp in algorithm.Securities)
                 {
                     var security = kvp.Value;
-                    var tick = new Tick
+                    BaseData tick = new Tick
                     {
                         Symbol = security.Symbol,
                         EndTime = _frontierUtc.ConvertFromUtc(security.Exchange.TimeZone)
                     };
                     _data.Add(tick);
-                    _securitiesUpdateData.Add(new UpdateData<ISecurityPrice>(security, typeof(Tick), new BaseData[] { tick }, false));
-                    _consolidatorUpdateData.Add(new UpdateData<SubscriptionDataConfig>(security.Subscriptions.First(), typeof(Tick), new BaseData[] { tick }, false));
+                    _securitiesUpdateData.Add(new SecuritiesUpdateData(security, typeof(Tick), new[] {tick}, new[] {tick}, false));
+                    _consolidatorUpdateData.Add(new UpdateData<SubscriptionDataConfig>(security.Subscriptions.First(), typeof(Tick), new[] { tick }, false));
                 }
 
                 _timeSlices.AddRange(GenerateTimeSlices().Take(int.MaxValue / 1000));

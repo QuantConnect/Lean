@@ -596,14 +596,12 @@ namespace QuantConnect.Securities
         /// Updates all of the security properties, such as price/OHLCV/bid/ask based
         /// on the data provided. Data is also stored into the security's data cache
         /// </summary>
-        /// <param name="data">The security update data</param>
         /// <param name="dataType">The data type</param>
-        /// <param name="containsFillForwardData">Flag indicating whether
-        /// <paramref name="data"/> contains any fill forward bar or not</param>
-        public void Update(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null)
+        /// <param name="data">Contains all data for this security at the current time step</param>
+        /// <param name="nonFillForwardData">Contains all non-fill-forward data for this security at the current time step</param>
+        public void Update(Type dataType, IReadOnlyList<BaseData> data, IReadOnlyList<BaseData> nonFillForwardData)
         {
-            Cache.AddDataList(data, dataType, containsFillForwardData);
-
+            Cache.AddDataList(dataType, data, nonFillForwardData);
             UpdateConsumersMarketPrice(data[data.Count - 1]);
         }
 

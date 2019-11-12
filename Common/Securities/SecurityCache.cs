@@ -97,23 +97,8 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Internally uses <see cref="AddData"/> using the last data point of the provided list
         /// and it stores by type the non fill forward points using <see cref="StoreData"/></remarks>
-        public void AddDataList(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null)
+        public void AddDataList(Type dataType, IReadOnlyList<BaseData> data, IReadOnlyList<BaseData> nonFillForwardData)
         {
-            var nonFillForwardData = data;
-            // maintaining regression requires us to NOT cache FF data
-            if (containsFillForwardData != false)
-            {
-                var dataFiltered = new List<BaseData>(data.Count);
-                for (var i = 0; i < data.Count; i++)
-                {
-                    var dataPoint = data[i];
-                    if (!dataPoint.IsFillForward)
-                    {
-                        dataFiltered.Add(dataPoint);
-                    }
-                }
-                nonFillForwardData = dataFiltered;
-            }
             if (nonFillForwardData.Count != 0)
             {
                 StoreData(nonFillForwardData, dataType);

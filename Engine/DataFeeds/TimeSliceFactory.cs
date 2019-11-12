@@ -90,7 +90,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Dictionary<Universe, BaseDataCollection> universeData)
         {
             int count = 0;
-            var security = new List<UpdateData<ISecurityPrice>>(data.Count);
+            var security = new List<SecuritiesUpdateData>(data.Count);
             List<UpdateData<ISecurityPrice>> custom = null;
             var consolidator = new List<UpdateData<SubscriptionDataConfig>>(data.Count);
             var allDataForAlgorithm = new List<BaseData>(data.Count);
@@ -169,6 +169,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 var securityUpdate = new List<BaseData>(list.Count);
+                var nonFillForwardSecurityUpdate = new List<BaseData>(list.Count);
                 var consolidatorUpdate = new List<BaseData>(list.Count);
                 var containsFillForwardData = false;
                 for (var i = 0; i < list.Count; i++)
@@ -301,6 +302,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (tick != null && tick.Suspicious) continue;
 
                         securityUpdate.Add(baseData);
+                        if (!baseData.IsFillForward)
+                        {
+                            nonFillForwardSecurityUpdate.Add(baseData);
+                        }
 
                         // option underlying security update
                         if (!packet.Configuration.IsInternalFeed
@@ -350,7 +355,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 if (securityUpdate.Count > 0)
                 {
-                    security.Add(new UpdateData<ISecurityPrice>(packet.Security, packet.Configuration.Type, securityUpdate, packet.Configuration.IsInternalFeed, containsFillForwardData));
+                    security.Add(new SecuritiesUpdateData(packet.Security, packet.Configuration.Type, securityUpdate, nonFillForwardSecurityUpdate, packet.Configuration.IsInternalFeed, containsFillForwardData));
                 }
                 if (consolidatorUpdate.Count > 0)
                 {
