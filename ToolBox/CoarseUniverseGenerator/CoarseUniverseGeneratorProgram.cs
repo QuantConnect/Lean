@@ -75,7 +75,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 
             do
             {
-                ProcessEquityDirectories(dataDirectory, ignoreMaplessSymbols);
+                ProcessEquityDirectories(dataDirectory, ignoreMaplessSymbols).ToList();
             }
             while (WaitUntilTimeInUpdateMode(updateMode, updateTime));
         }
