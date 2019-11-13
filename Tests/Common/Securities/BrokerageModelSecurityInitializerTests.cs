@@ -73,7 +73,8 @@ namespace QuantConnect.Tests.Common.Securities
                     new SingleEntryDataCacheProvider(new DefaultDataProvider()),
                     new LocalDiskMapFileProvider(),
                     new LocalDiskFactorFileProvider(),
-                    null
+                    null,
+                    true
                 )
             );
 

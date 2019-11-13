@@ -41,6 +41,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private IDataCacheProvider _dataCacheProvider;
+        private bool _liveMode;
 
         /// <summary>
         /// Initializes this history provider to work for the specified job
@@ -51,6 +52,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             _mapFileProvider = parameters.MapFileProvider;
             _factorFileProvider = parameters.FactorFileProvider;
             _dataCacheProvider = parameters.DataCacheProvider;
+            _liveMode = parameters.LiveMode;
         }
 
         /// <summary>
@@ -168,6 +170,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             });
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
 
+            if (_liveMode)
+            {
+                // for live mode we wont use workers due to their resource consumption, specifically ram
+                return SubscriptionUtils.Create(subscriptionRequest, reader);
+            }
             return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader);
         }
 

@@ -41,7 +41,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 new ZipDataCacheProvider(new DefaultDataProvider()), 
                 new LocalDiskMapFileProvider(),
                 new LocalDiskFactorFileProvider(),
-                null));
+                null,
+                false));
             var symbol = Symbol.CreateOption(
                 "FOXA",
                 Market.USA,
@@ -91,7 +92,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 new ZipDataCacheProvider(new DefaultDataProvider()),
                 new LocalDiskMapFileProvider(),
                 new LocalDiskFactorFileProvider(),
-                null));
+                null,
+                false));
             var symbol = Symbol.Create("WM",SecurityType.Equity,Market.USA);
 
             var result = historyProvider.GetHistory(

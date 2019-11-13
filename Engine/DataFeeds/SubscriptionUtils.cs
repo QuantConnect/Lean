@@ -29,6 +29,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public static class SubscriptionUtils
     {
         /// <summary>
+        /// Creates a new <see cref="Subscription"/> which will directly consume the provided enumerator
+        /// </summary>
+        /// <param name="request">The subscription data request</param>
+        /// <param name="enumerator">The data enumerator stack</param>
+        /// <returns>A new subscription instance ready to consume</returns>
+        public static Subscription Create(
+            SubscriptionRequest request,
+            IEnumerator<BaseData> enumerator)
+        {
+            var exchangeHours = request.Security.Exchange.Hours;
+            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
+            var dataEnumerator = new SubscriptionDataEnumerator(
+                request.Configuration,
+                exchangeHours,
+                timeZoneOffsetProvider,
+                enumerator
+            );
+            return new Subscription(request, dataEnumerator, timeZoneOffsetProvider);
+        }
+
+
+        /// <summary>
         /// Setups a new <see cref="Subscription"/> which will consume a blocking <see cref="EnqueueableEnumerator{T}"/>
         /// that will be feed by a worker task
         /// </summary>

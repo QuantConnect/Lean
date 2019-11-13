@@ -198,7 +198,8 @@ namespace QuantConnect.Lean.Engine
                                     AlgorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History,
                                         Invariant($"Processing history {progress}%..."));
                                 }
-                            }
+                            },
+                            _liveMode
                         )
                     );
 
