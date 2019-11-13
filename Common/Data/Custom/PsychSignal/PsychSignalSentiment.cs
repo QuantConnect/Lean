@@ -33,9 +33,10 @@ namespace QuantConnect.Data.Custom.PsychSignal
         /// The EndTime of the bar represents the time the data ended and
         /// the time it should be emitted in backtesting/live trading
         /// </summary>
-        public override DateTime EndTime {
-            get { return Time.Add(Period).Add(FixedLiveOffset); }
-            set { Time = value.Subtract(Period); }
+        public override DateTime EndTime
+        {
+            get { return Time + Period + FixedLiveOffset; }
+            set { Time = value - Period; }
         }
 
         /// <summary>
@@ -47,7 +48,7 @@ namespace QuantConnect.Data.Custom.PsychSignal
         /// Time it takes for data to become available on the PsychSignal API after
         /// the time advances to the next minute
         /// </summary>
-        public static TimeSpan FixedLiveOffset { get; set; } = TimeSpan.FromSeconds(15);
+        private static readonly TimeSpan FixedLiveOffset = TimeSpan.FromSeconds(15);
 
         /// <summary>
         /// Bullish intensity as reported by psychsignal
