@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -81,38 +82,46 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var firstLoop = Ref.Create(true);
             Action produce = () =>
             {
-                var count = 0;
-                while (enumerator.MoveNext())
+                try
                 {
-                    // subscription has been removed, no need to continue enumerating
-                    if (enqueueable.HasFinished)
+                    var count = 0;
+                    while (enumerator.MoveNext())
                     {
-                        enumerator.Dispose();
-                        return;
-                    }
-
-                    var subscriptionData = SubscriptionData.Create(subscription.Configuration, exchangeHours, subscription.OffsetProvider, enumerator.Current);
-
-                    // drop the data into the back of the enqueueable
-                    enqueueable.Enqueue(subscriptionData);
-
-                    count++;
-
-                    // stop executing if we have more data than the upper threshold in the enqueueable, we don't want to fill the ram
-                    if (count > upperThreshold || count > 50 && firstLoop.Value)
-                    {
-                        // we use local count for the outside if, for performance, and adjust here
-                        count = enqueueable.Count;
-                        if (count > upperThreshold || firstLoop.Value)
+                        // subscription has been removed, no need to continue enumerating
+                        if (enqueueable.HasFinished)
                         {
-                            firstLoop.Value = false;
-                            // we will be re scheduled to run by the consumer, see EnqueueableEnumerator
+                            enumerator.Dispose();
                             return;
+                        }
+
+                        var subscriptionData = SubscriptionData.Create(subscription.Configuration, exchangeHours,
+                            subscription.OffsetProvider, enumerator.Current);
+
+                        // drop the data into the back of the enqueueable
+                        enqueueable.Enqueue(subscriptionData);
+
+                        count++;
+
+                        // stop executing if we have more data than the upper threshold in the enqueueable, we don't want to fill the ram
+                        if (count > upperThreshold || count > 50 && firstLoop.Value)
+                        {
+                            // we use local count for the outside if, for performance, and adjust here
+                            count = enqueueable.Count;
+                            if (count > upperThreshold || firstLoop.Value)
+                            {
+                                firstLoop.Value = false;
+                                // we will be re scheduled to run by the consumer, see EnqueueableEnumerator
+                                return;
+                            }
                         }
                     }
                 }
+                catch (Exception exception)
+                {
+                    Log.Error(exception, $"Subscription worker task exception {request.Configuration}.");
+                }
 
-                // we made it here because MoveNext returned false, stop the enqueueable
+                // we made it here because MoveNext returned false or we exploded, stop the enqueueable
                 enqueueable.Stop();
                 // we have to dispose of the enumerator
                 enumerator.Dispose();

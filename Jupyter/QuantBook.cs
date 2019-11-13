@@ -114,7 +114,7 @@ namespace QuantConnect.Jupyter
                         mapFileProvider,
                         algorithmHandlers.FactorFileProvider,
                         null,
-                        false
+                        true
                     )
                 );
 

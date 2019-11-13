@@ -199,7 +199,8 @@ namespace QuantConnect.Lean.Engine
                                         Invariant($"Processing history {progress}%..."));
                                 }
                             },
-                            _liveMode
+                            // disable parallel history requests for live trading
+                            parallelHistoryRequestsEnabled: !_liveMode
                         )
                     );
 

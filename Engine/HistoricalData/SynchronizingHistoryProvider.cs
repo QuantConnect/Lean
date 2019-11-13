@@ -151,11 +151,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 reader = new FillForwardEnumerator(reader, security.Exchange, readOnlyRef, request.IncludeExtendedMarketHours, end, config.Increment, config.DataTimeZone, start);
             }
 
-            var timeZoneOffsetProvider = new TimeZoneOffsetProvider(security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
-            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, reader);
-
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
-            return new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
+
+            return SubscriptionUtils.Create(subscriptionRequest, reader);
         }
     }
 }

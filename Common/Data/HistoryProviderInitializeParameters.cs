@@ -60,9 +60,11 @@ namespace QuantConnect.Data
         public Action<int> StatusUpdateAction { get; }
 
         /// <summary>
-        /// True is live mode
+        /// True if parallel history requests are enabled
         /// </summary>
-        public bool LiveMode { get; }
+        /// <remarks>Parallel history requests are faster but require more ram and cpu usage
+        /// and are not compatible with some <see cref="IDataCacheProvider"/></remarks>
+        public bool ParallelHistoryRequestsEnabled { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoryProviderInitializeParameters"/> class from the specified parameters
@@ -74,7 +76,7 @@ namespace QuantConnect.Data
         /// <param name="mapFileProvider">Provider used to get a map file resolver to handle equity mapping</param>
         /// <param name="factorFileProvider">Provider used to get factor files to handle equity price scaling</param>
         /// <param name="statusUpdateAction">Function used to send status updates</param>
-        /// <param name="liveMode">True if live mode</param>
+        /// <param name="parallelHistoryRequestsEnabled">True if parallel history requests are enabled</param>
         public HistoryProviderInitializeParameters(
             AlgorithmNodePacket job,
             IApi api,
@@ -83,7 +85,7 @@ namespace QuantConnect.Data
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             Action<int> statusUpdateAction,
-            bool liveMode)
+            bool parallelHistoryRequestsEnabled)
         {
             Job = job;
             Api = api;
@@ -92,7 +94,7 @@ namespace QuantConnect.Data
             MapFileProvider = mapFileProvider;
             FactorFileProvider = factorFileProvider;
             StatusUpdateAction = statusUpdateAction;
-            LiveMode = liveMode;
+            ParallelHistoryRequestsEnabled = parallelHistoryRequestsEnabled;
         }
     }
 }
