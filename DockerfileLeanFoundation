@@ -1,5 +1,5 @@
 #
-#   LEAN Foundation Docker Container 20191009
+#   LEAN Foundation Docker Container 20191113
 #   Cross platform deployment for multiple brokerages
 #   Intended to be used in conjunction with Dockerfile. This is just the foundation common OS+Dependencies required.
 #
@@ -48,70 +48,103 @@ RUN wget https://cdn.quantconnect.com/miniconda/${CONDA} && \
     ln -s /opt/miniconda3/lib/libpython3.6m.so /usr/lib/libpython3.6m.so
 
 # Install supported third party python packages
+# Updates conda and pip
 RUN conda update -y conda pip
-RUN conda install -y python=3.6.8   \
-    beautifulsoup4=4.8.0            \
-    blaze=0.11.3                    \
-    cvxopt=1.2.0                    \
+
+# Sets python version to 3.6.8
+RUN conda install -y python=3.6.8
+RUN conda clean -y --all
+
+# Install essencial packages
+RUN conda install -y                \
     cython=0.29.11                  \
+    numpy=1.17.3                    \
+    pandas=0.23.4                   \
+    wrapt=1.11.2
+
+# Install non-math packages
+RUN conda install -y                \
+    beautifulsoup4=4.8.0            \
     dill=0.2.9                      \
-    gensim=3.8.0                    \
     jsonschema=3.0.1                \
-    keras=2.2.4                     \
-    lightgbm=2.2.3                  \
     lxml=4.3.4                      \
     msgpack-python=0.5.6            \
+    setuptools-git=1.2
+
+# Install math/ML packages
+RUN conda install -y                \
+    blaze=0.11.3                    \
+    cvxopt=1.2.0                    \
+    gensim=3.8.0                    \
+    keras=2.2.4                     \
+    lightgbm=2.2.3                  \
     nltk=3.4.3                      \
-    numpy=1.17.2                    \
-    pandas=0.23.4                   \
     pomegranate=0.10.0              \
+    scipy==1.3.1                    \
     tensorflow=1.13.1               \
-    setuptools-git>=1.2             \
-    wrapt=1.11.2    
+    xarray=0.13.0
+
+# Install math/ML from conda-forge
 RUN conda install -y -c conda-forge \
     fbprophet=0.5                   \
     pulp=1.6.8                      \
     pymc3=3.7                       \
     rauth=0.7.3                     \
+    scikit-learn==0.21.3            \
     scikit-multiflow=0.4.1          \
     scikit-optimize=0.5.2           \
     theano=1.0.4                    \
     tsfresh=0.12.0
+
+# Install math/ML from pytorch
 RUN conda install -y -c pytorch     \
     pytorch=1.1.0                   \
     torchvision=0.3.0
+
+# Install math/ML from fastai
 RUN conda install -y -c fastai      \
     nvidia-ml-py3=7.352.0           \
     fastai=1.0.54
+
+# Clean up before pip installs
 RUN conda clean -y --all
 
+# Updates conda and pip
 RUN pip install --upgrade pip
+
+# Install from PIP I
 RUN pip install gym==0.13.1         \
     arch==4.8.1                     \
     copulalib==1.1.0                \
     copulas==0.2.1                  \
     creme==0.3.0                    \
-    cvxpy==1.0.24                   \
-    deap==1.3.0                     \
+    cvxpy==1.0.24
+
+# Install from PIP II
+RUN pip install deap==1.3.0         \
+    mlfinlab==0.4.1                 \
     pykalman==0.9.5                 \
     pyportfolioopt==0.4.3           \
     pyramid-arima==0.9.0            \
-    pyro-ppl==0.3.3                 \
-    QuantLib-Python==1.15           \
-    sklearn==0.0                    \
+    pyro-ppl==0.3.3
+
+# Install from PIP III
+RUN pip install sklearn==0.0        \
     stable-baselines==2.6.0         \
     statistics==1.0.3.5             \
     tensorforce==0.4.3              \
+    QuantLib-Python==1.15           \
     xgboost==0.90
+
 RUN pip install --upgrade hmmlearn==0.2.2
-RUN python -c "import nltk; nltk.download('punkt')"
+RUN python -m nltk.downloader -d /usr/share/nltk_data punkt
 RUN conda clean -y --all
 
 # Install TA-lib for python
 RUN wget http://cdn.quantconnect.com/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -zxvf ta-lib-0.4.0-src.tar.gz && cd ta-lib && \
     ./configure --prefix=/usr && make && make install && \
-    pip install TA-lib
+    pip install TA-lib && cd .. && rm -irf ta-lib
 
 # Install DX Analytics
 RUN wget https://cdn.quantconnect.com/dx/dx-master-ffe19a6.zip && \
@@ -132,6 +165,13 @@ RUN wget https://cdn.quantconnect.com/fastText/fastText-master-9479e4e.zip && \
 RUN wget https://cdn.quantconnect.com/odo/odo-master-9fce669.zip && \ 
     unzip -q odo-master-9fce669.zip && cd odo-master && \
     python setup.py install && cd .. && rm -irf odo-master
+
+# Delete temporary zip files
+RUN rm -irf *.zip *.gz
+
+# Remove black-listed packages
+RUN conda remove --force-remove -y s3transfer   # Installed by gensim
+RUN conda clean -y --all
 
 # List all packages
 RUN conda list
