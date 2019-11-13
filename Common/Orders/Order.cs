@@ -275,7 +275,7 @@ namespace QuantConnect.Orders
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"OrderId: {Id} {Status} {Type} order for {Quantity} unit{(Quantity == 1 ? "" : "s")} of {Symbol}");
+            return Invariant($"OrderId: {Id} (BrokerId: {string.Join(",", BrokerId)}) {Status} {Type} order for {Quantity} unit{(Quantity == 1 ? "" : "s")} of {Symbol}");
         }
 
         /// <summary>
