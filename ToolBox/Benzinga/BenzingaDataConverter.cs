@@ -38,6 +38,15 @@ namespace QuantConnect.ToolBox.Benzinga
         private readonly IMapFileProvider _mapFileProvider;
         private readonly MapFileResolver _mapFileResolver;
         private readonly bool _isWindows;
+
+        // These exchanges appear in Benzinga news data. We use the exchange
+        // as a way to filter for U.S. equities since we currently
+        // don't support international markets. We can expand our
+        // supported markets by adding to this collection.
+        private static readonly IReadOnlyCollection<string> _supportedExchanges = new List<string>
+        {
+            "NYSE", "NASDAQ", "ETF"
+        };
         private readonly HashSet<string> _forbiddenTickers = new HashSet<string>()
         {
             "CON",
@@ -112,13 +121,13 @@ namespace QuantConnect.ToolBox.Benzinga
 
                 var item = JsonConvert.DeserializeObject<JObject>(JsonConvert.SerializeXmlNode(document))["rss"]["channel"]["item"];
 
-                var tickers = new List<JToken>();
-
                 // Only process articles that contain tickers to disk
                 if (item["bz:ticker"] == null)
                 {
                     continue;
                 }
+
+                var tickers = new List<JToken>();
 
                 // Check for only a single ticker before we try to iterate
                 if (item["bz:ticker"].Type == JTokenType.Object)
@@ -127,37 +136,34 @@ namespace QuantConnect.ToolBox.Benzinga
                 }
                 else
                 {
-                    foreach (var tickerData in JArray.Parse(item["bz:ticker"].ToString()))
-                    {
-                        tickers.Add(tickerData);
-                    }
+                    tickers.AddRange(JArray.Parse(item["bz:ticker"].ToString()));
                 }
 
-                var instance = JsonConvert.DeserializeObject<BenzingaNews>(item.ToString());
+                var instance = item.ToObject<BenzingaNews>();
 
                 // Strip all HTML tags from the article, then convert HTML entities to their string representation
                 // e.g. "<html><p>Apple&#39;s Earnings</p></html>" would become "Apple's Earnings"
                 instance.Contents = WebUtility.HtmlDecode(Regex.Replace(instance.Contents, @"<[^>]*>", " "));
                 instance.Symbols = new List<BenzingaSymbolData>();
-                instance.Metadata = new BenzingaMetadata()
+                instance.Metadata = new BenzingaMetadata
                 {
-                    IsPro = item["bz:type"]["@pro"].ToString() == "1",
-                    FirstRun = item["bz:type"]["@firstrun"].ToString() == "1",
-                    Kind = item["bz:type"]["#text"].ToString()
+                    IsPro = item["bz:type"].Value<string>("@pro") == "1",
+                    FirstRun = item["bz:type"].Value<string>("@firstrun") == "1",
+                    Kind = item["bz:type"].Value<string>("#text")
                 };
 
                 foreach (var ticker in tickers)
                 {
-                    var sentiment = ticker["@sentiment"] == null ? (decimal?)null : Parse.Decimal(ticker["@sentiment"].ToString());
-                    var exchange = ticker["@exchange"] == null ? string.Empty : ticker["@exchange"].ToString();
-
                     if (ticker["#text"] == null)
                     {
                         continue;
                     }
 
+                    var sentiment = ticker["@sentiment"] == null ? (decimal?)null : Parse.Decimal(ticker.Value<string>("@sentiment"));
+                    var exchange = ticker["@exchange"] == null ? string.Empty : ticker.Value<string>("@exchange");
+
                     // Tickers with dots in them like BRK.A and BRK.B appear as BRK-A and BRK-B in Benzinga data.
-                    var symbolTicker = ticker["#text"].ToString().Trim().Replace('-', '.');
+                    var symbolTicker = ticker.Value<string>("#text").Trim().Replace('-', '.');
                     var mappedSymbol = _mapFileResolver.ResolveMapFile(symbolTicker, instance.PublicationDate).GetMappedSymbol(instance.PublicationDate);
 
                     if (string.IsNullOrWhiteSpace(mappedSymbol))
@@ -205,10 +211,12 @@ namespace QuantConnect.ToolBox.Benzinga
                         Log.Trace($"BenzingaDataConverter.WriteToFile(): Ticker {ticker.Symbol.Value} contains invalid character ':'. Skipping");
                         continue;
                     }
-                    // ETFs have a special exchange tag associated with them.
                     // Sometimes, we have an empty exchange for some tickers. Let's try and map them first before giving up on them.
                     // Example: SPOT (Spotify) on 2018-10-01 has a missing exchange even though it has already IPO'd
-                    if (ticker.Exchange != "NASDAQ" && ticker.Exchange != "NYSE" && ticker.Exchange != "ETF" && !string.IsNullOrEmpty(ticker.Exchange))
+                    var attemptRecovery = string.IsNullOrEmpty(ticker.Exchange);
+
+                    // Remove Symbol from news article if we can't find the ticker in the exchange and we don't want to attempt a recovery of the ticker
+                    if (!_supportedExchanges.Contains(ticker.Exchange) && !attemptRecovery)
                     {
                         symbolsToRemove.Add(ticker.Symbol);
                         Log.Trace($"BenzingaDataConverter.WriteToFile(): Ticker {ticker.Symbol.Value} is not in NYSE, NASDAQ, or is not an ETF. Skipping");
@@ -222,16 +230,15 @@ namespace QuantConnect.ToolBox.Benzinga
                         continue;
                     }
 
-                    var tickerPath = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, ticker.Symbol.Value.ToLowerInvariant()));
-                    tickerPath.Create();
-
+                    var tickerPath = _destinationDirectory.CreateSubdirectory(ticker.Symbol.Value.ToLowerInvariant());
                     var referenceFilePath = Path.Combine(tickerPath.FullName, $"{date:yyyMMdd}.csv");
                     var tickerReferences = new HashSet<string>();
 
                     if (File.Exists(referenceFilePath))
                     {
-                        tickerReferences = File.ReadAllLines(referenceFilePath)
-                            .ToHashSet();
+                        // Use HashSet to get rid of any duplicates that may exist. This allows us to run
+                        // processing again and guarantee that all entries remain unique.
+                        tickerReferences = File.ReadAllLines(referenceFilePath).ToHashSet();
                     }
 
                     tickerReferences.Add($"{article.Id}.json");
@@ -241,6 +248,7 @@ namespace QuantConnect.ToolBox.Benzinga
                     var existingReferenceFileBackupPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
 
                     Log.Trace($"BenzingaDataConverter.WriteToFile(): Creating reference temp file: {referenceFileTemp}");
+                    // Order before writing since HashSet doesn't guarantee order of elements
                     File.WriteAllLines(referenceFileTemp, tickerReferences.OrderBy(x => x));
 
                     if (finalFileExists)
@@ -254,9 +262,9 @@ namespace QuantConnect.ToolBox.Benzinga
                         Log.Trace($"BenzingaDataConverter.WriteToFile(): Writing reference to {referenceFilePath}");
                         File.Move(referenceFileTemp, referenceFilePath);
                     }
-                    catch (Exception e)
+                    catch (Exception error)
                     {
-                        Log.Error(e, $"BenzingaDataConverter.WriteToFile(): Failed to move file to: {referenceFilePath} - Skipping...");
+                        Log.Error(error, $"BenzingaDataConverter.WriteToFile(): Failed to move file to: {referenceFilePath} - Skipping...");
 
                         if (finalFileExists)
                         {
@@ -290,7 +298,13 @@ namespace QuantConnect.ToolBox.Benzinga
                 var articleExists = File.Exists(finalArticleFile);
 
                 Log.Trace($"BenzingaDataConverter.WriteToFile(): Writing article contents to temp: {tempArticleFile}");
-                File.WriteAllText(tempArticleFile, JsonConvert.SerializeObject(article, Newtonsoft.Json.Formatting.None));
+
+                // Make sure we write the dates as UTC, otherwise it'll default to local time.
+                // No formatting is applied so that it can be read in `Reader` in one go
+                File.WriteAllText(tempArticleFile, JsonConvert.SerializeObject(article, Newtonsoft.Json.Formatting.None, new JsonSerializerSettings
+                {
+                    DateTimeZoneHandling = DateTimeZoneHandling.Utc
+                }));
 
                 if (articleExists)
                 {
@@ -343,7 +357,7 @@ namespace QuantConnect.ToolBox.Benzinga
             }
             finally
             {
-                Log.Trace($"BenzingaDataConverter.WriteTOFile(): Deleting temp data in directory: {finalDirectory.Name}");
+                Log.Trace($"BenzingaDataConverter.WriteToFile(): Deleting temp data in directory: {finalDirectory.Name}");
                 // Clean up after ourselves
                 Directory.Delete(finalDirectory.FullName, true);
             }

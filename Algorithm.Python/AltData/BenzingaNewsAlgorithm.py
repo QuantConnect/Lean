@@ -24,6 +24,10 @@ from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Data.Custom.Benzinga import *
 from QuantConnect.Data.UniverseSelection import *
 
+### <summary>
+### Benzinga is a provider of news data. Their news is made in-house
+### and covers stock related news such as corporate events.
+### </summary>
 class BenzingaNewsAlgorithm(QCAlgorithm):
 
     def Initialize(self):
@@ -68,7 +72,8 @@ class BenzingaNewsAlgorithm(QCAlgorithm):
             if sentimentScore is None:
                 continue
 
-            # Set holdings equal to 1/10th of the sentiment score we get
+            # Set holdings equal to 1/10th of the sentiment score we get.
+            # The sentimentScore value ranges from -1.0 to 1.0
             self.SetHoldings(article.Symbol.Underlying, sentimentScore / 10.0)
 
     def OnSecuritiesChanged(self, changes):

@@ -23,6 +23,10 @@ using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp.AltData
 {
+    /// <summary>
+    /// Benzinga is a provider of news data. Their news is made in-house
+    /// and covers stock related news such as corporate events.
+    /// </summary>
     public class BenzingaNewsAlgorithm : QCAlgorithm
     {
         /// <summary>
@@ -77,7 +81,8 @@ namespace QuantConnect.Algorithm.CSharp.AltData
                     continue;
                 }
 
-                // Set holdings equal to 1/10th of the sentiment score we get
+                // Set holdings equal to 1/10th of the sentiment score we get.
+                // The sentimentScore value ranges from -1.0 to 1.0
                 SetHoldings(article.Symbol.Underlying, sentimentScore.Value / 10);
             }
         }

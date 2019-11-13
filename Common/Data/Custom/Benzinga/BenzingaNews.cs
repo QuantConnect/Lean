@@ -14,19 +14,26 @@
 */
 
 using Newtonsoft.Json;
+using NodaTime;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Custom.Benzinga
 {
     /// <summary>
-    /// News data powered by Benzinga - https://benzinga.com/
+    /// News data powered by Benzinga - https://docs.benzinga.io/benzinga/newsfeed-v2.html
     /// </summary>
     [JsonObject(MemberSerialization.OptIn)]
     public class BenzingaNews : IndexedBaseData
     {
+        /// <summary>
+        /// Emit time of the data. This should be equal to the publication date
+        /// </summary>
+        public override DateTime EndTime { get; set; }
+
         /// <summary>
         /// Title of the article published
         /// </summary>
@@ -107,7 +114,7 @@ namespace QuantConnect.Data.Custom.Benzinga
                     "alternative",
                     "benzinga",
                     "content",
-                    $"{date:yyyyMMdd}.zip#{index}"
+                    $"{date.ToStringInvariant(DateFormat.EightCharacter)}.zip#{index}"
                 ),
                 SubscriptionTransportMedium.LocalFile,
                 FileFormat.Csv
@@ -129,7 +136,7 @@ namespace QuantConnect.Data.Custom.Benzinga
                     "alternative",
                     "benzinga",
                     config.Symbol.Value.ToLowerInvariant(),
-                    $"{date:yyyyMMdd}.csv"
+                    $"{date.ToStringInvariant(DateFormat.EightCharacter)}.csv"
                 ),
                 SubscriptionTransportMedium.LocalFile,
                 FileFormat.Index
@@ -146,9 +153,14 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <returns>New instance of <see cref="BenzingaNews"/></returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var article = JsonConvert.DeserializeObject<BenzingaNews>(line);
+            // Make sure we parse as UTC since we also store as UTC. Otherwise, the time will be set as Local.
+            var article = JsonConvert.DeserializeObject<BenzingaNews>(line, new JsonSerializerSettings
+            {
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc
+            });
             article.Symbol = config.Symbol;
             article.Time = article.PublicationDate;
+            article.EndTime = article.PublicationDate;
 
             return article;
         }
@@ -171,6 +183,15 @@ namespace QuantConnect.Data.Custom.Benzinga
         public override bool RequiresMapping()
         {
             return true;
+        }
+
+        /// <summary>
+        /// Set the data time zone to UTC
+        /// </summary>
+        /// <returns>Time zone as UTC</returns>
+        public override DateTimeZone DataTimeZone()
+        {
+            return TimeZones.Utc;
         }
 
         /// <summary>
@@ -210,6 +231,7 @@ namespace QuantConnect.Data.Custom.Benzinga
 
                 Symbol = Symbol,
                 Time = Time,
+                EndTime = EndTime
             };
         }
 
@@ -219,7 +241,7 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <returns>Article title and contents</returns>
         public override string ToString()
         {
-            return $"{Time} {Symbol} - Article title: {Title}\nArticle contents:\n{Contents}";
+            return $"{EndTime} {Symbol} - Article title: {Title}\nArticle contents:\n{Contents}";
         }
     }
 }
