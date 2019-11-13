@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alphas;
@@ -63,6 +64,7 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextSample;
         private IApi _api;
         private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly bool _debugMode;
 
         /// <summary>
         /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
@@ -112,6 +114,7 @@ namespace QuantConnect.Lean.Engine.Results
             ResamplePeriod = TimeSpan.FromSeconds(2);
             NotificationPeriod = TimeSpan.FromSeconds(1);
             SetNextStatusUpdate();
+            _debugMode = Config.GetBool("debug-mode");
         }
 
         /// <summary>
@@ -668,7 +671,9 @@ namespace QuantConnect.Lean.Engine.Results
         {
             // don't send stockplots for internal feeds
             Security security;
-            if (Algorithm.Securities.TryGetValue(symbol, out security) && !security.IsInternalFeed() && value > 0)
+            if (_debugMode
+                && Algorithm.Securities.TryGetValue(symbol, out security)
+                && !security.IsInternalFeed() && value > 0)
             {
                 var now = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone);
                 if (security.Exchange.Hours.IsOpen(now, security.IsExtendedMarketHours))
