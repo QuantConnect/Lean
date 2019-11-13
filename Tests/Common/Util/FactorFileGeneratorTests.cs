@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Common.Util
             Assert.IsTrue(factorFile.Permtick == _symbol.Value);
         }
 
-        [Test, Ignore("Fix me - GH issue 3435")]
+        [Test]
         public void FactorFiles_CanBeGenerated_Accurately()
         {
             // Arrange
