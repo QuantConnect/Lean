@@ -217,12 +217,6 @@ namespace QuantConnect.Lean.Engine.Results
         void SendStatusUpdate(AlgorithmStatus status, string message = "");
 
         /// <summary>
-        /// Set the chart name:
-        /// </summary>
-        /// <param name="symbol">Symbol of the chart we want.</param>
-        void SetChartSubscription(string symbol);
-
-        /// <summary>
         /// Set a dynamic runtime statistic to show in the (live) algorithm header
         /// </summary>
         /// <param name="key">Runtime headline statistic name</param>

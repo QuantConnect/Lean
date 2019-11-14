@@ -52,6 +52,23 @@ namespace QuantConnect
             = new Dictionary<IntPtr, PythonActivator>();
 
         /// <summary>
+        /// Returns true if the specified <see cref="Series"/> instance holds no <see cref="ChartPoint"/>
+        /// </summary>
+        public static bool IsEmpty(this Series series)
+        {
+            return series.Values.Count == 0;
+        }
+
+        /// <summary>
+        /// Returns if the specified <see cref="Chart"/> instance  holds no <see cref="Series"/>
+        /// or they are all empty <see cref="IsEmpty(Series)"/>
+        /// </summary>
+        public static bool IsEmpty(this Chart chart)
+        {
+            return chart.Series.Values.All(IsEmpty);
+        }
+
+        /// <summary>
         /// Gets a python method by name
         /// </summary>
         /// <param name="instance">The object instance to search the method in</param>

@@ -136,17 +136,20 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Holdings dictionary of algorithm holdings information
         /// </summary>
-        public IDictionary<string, Holding> Holdings = new Dictionary<string, Holding>();
+        [JsonProperty(PropertyName = "Holdings", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, Holding> Holdings;
 
         /// <summary>
         /// Cashbook for the algorithm's live results.
         /// </summary>
+        [JsonProperty(PropertyName = "Cash", NullValueHandling = NullValueHandling.Ignore)]
         public CashBook Cash;
 
         /// <summary>
         /// Server status information, including CPU/RAM usage, ect...
         /// </summary>
-        public IDictionary<string, string> ServerStatistics = new Dictionary<string, string>();
+        [JsonProperty(PropertyName = "ServerStatistics", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, string> ServerStatistics;
 
         /// <summary>
         /// Default Constructor
