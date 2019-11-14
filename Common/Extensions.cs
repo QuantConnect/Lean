@@ -616,6 +616,17 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Multiplies the provided <paramref name="timeSpan"/> by the specified <paramref name="multiplicand"/>
+        /// </summary>
+        /// <param name="timeSpan">The time span to be multiplied</param>
+        /// <param name="multiplicand">The scalar factor to multiply by</param>
+        /// <returns>A time span that has been scaled by the provided <paramref name="multiplicand"/></returns>
+        public static TimeSpan Times(this TimeSpan timeSpan, double multiplicand)
+        {
+            return TimeSpan.FromTicks((long) (timeSpan.Ticks * multiplicand));
+        }
+
+        /// <summary>
         /// Extension method to round a timeSpan to nearest timespan period.
         /// </summary>
         /// <param name="time">TimeSpan To Round</param>
@@ -637,7 +648,6 @@ namespace QuantConnect
                 )) * roundingInterval.Ticks
             );
         }
-
 
         /// <summary>
         /// Extension method to round timespan to nearest timespan period.
@@ -891,6 +901,36 @@ namespace QuantConnect
                 type = type.BaseType;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Searches the specified type for a constructor with zero parameters or for the constructor
+        /// with the fewest number of parameters that all have default values
+        /// </summary>
+        /// <param name="type">The type to search for a constructor</param>
+        /// <param name="parameterValues">Provides parameter names and values. These can fill some holes if a
+        /// ctor isn't found w/ all default parameter values</param>
+        /// <returns>A tuple containing a success flag and the constructor, if successful</returns>
+        public static Tuple<bool, ConstructorInfo> TryFindConstructor(this Type type, params Tuple<string, object>[] parameterValues)
+        {
+            parameterValues = parameterValues ?? new Tuple<string, object>[0];
+            const BindingFlags allConstructors = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            foreach (var ctor in type.GetConstructors(allConstructors).OrderBy(ctor => ctor.GetParameters().Length))
+            {
+                var parameters = ctor.GetParameters();
+                if (parameters.Length == 0)
+                {
+                    return Tuple.Create(true, ctor);
+                }
+
+                // require a default value or a provided parameter value
+                if (parameters.All(p => p.HasDefaultValue || parameterValues.Any(pv => pv.Item1 == p.Name)))
+                {
+                    return Tuple.Create(true, ctor);
+                }
+            }
+
+            return Tuple.Create<bool, ConstructorInfo>(false, null);
         }
 
         /// <summary>

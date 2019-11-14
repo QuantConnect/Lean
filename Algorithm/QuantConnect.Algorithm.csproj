@@ -149,6 +149,7 @@
     <Compile Include="Execution\IExecutionModel.cs" />
     <Compile Include="Execution\ImmediateExecutionModel.cs" />
     <Compile Include="Execution\NullExecutionModel.cs" />
+    <Compile Include="IncompatibleFrameworkModelsException.cs" />
     <Compile Include="IndexUniverseDefinitions.cs" />
     <Compile Include="DollarVolumeUniverseDefinitions.cs" />
     <Compile Include="INotifiedSecurityChanges.cs" />
@@ -156,6 +157,7 @@
     <Compile Include="Portfolio\IPortfolioOptimizer.cs" />
     <Compile Include="Portfolio\NullPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\PortfolioConstructionModelExtensions.cs" />
     <Compile Include="Portfolio\PortfolioConstructionModelPythonWrapper.cs" />
     <Compile Include="QCAlgorithm.Framework.Python.cs" />
     <Compile Include="Risk\CompositeRiskManagementModel.cs" />

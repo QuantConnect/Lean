@@ -21,7 +21,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
-    /// Provides a base class for alpha models.
+    /// Provides a base class for alpha models and is not intended to be instantiated directly by an algorithm.
     /// </summary>
     public class AlphaModel : IAlphaModel, INamedModel
     {
@@ -30,9 +30,21 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// </summary>
         public virtual string Name { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <seealso cref="AlphaModel"/> class
+        /// </summary>
         public AlphaModel()
         {
             Name = Guid.NewGuid().ToString();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <seealso cref="AlphaModel"/> class
+        /// </summary>
+        /// <param name="name">The name of this model.</param>
+        public AlphaModel(string name)
+        {
+            Name = name;
         }
 
         /// <summary>

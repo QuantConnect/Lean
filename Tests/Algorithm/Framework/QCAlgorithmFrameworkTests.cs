@@ -73,6 +73,8 @@ namespace QuantConnect.Tests.Algorithm.Framework
 
         class FakeAlpha : AlphaModel
         {
+            public override string Name { get; set; } = "Fake()";
+
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 yield return Insight.Price(Symbols.SPY, TimeSpan.FromDays(1), InsightDirection.Up, .5, .75);

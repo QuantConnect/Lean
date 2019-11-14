@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
@@ -27,7 +28,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// Provides an implementation of <see cref="IAlphaModel"/> that combines multiple alpha
     /// models into a single alpha model and properly sets each insights 'SourceModel' property.
     /// </summary>
-    public class CompositeAlphaModel : AlphaModel
+    public class CompositeAlphaModel : AlphaModel, IEnumerable<IAlphaModel>
     {
         private readonly List<IAlphaModel> _alphaModels = new List<IAlphaModel>();
 
@@ -134,6 +135,23 @@ namespace QuantConnect.Algorithm.Framework.Alphas
                 alphaModel = new AlphaModelPythonWrapper(pyAlphaModel);
             }
             _alphaModels.Add(alphaModel);
+        }
+
+        /// <summary>Returns an enumerator that iterates through the collection.</summary>
+        /// <returns>A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.</returns>
+        /// <filterpriority>1</filterpriority>
+        public IEnumerator<IAlphaModel> GetEnumerator()
+        {
+            // use generator syntax so we don't leak the actual array storage.
+            foreach (var model in _alphaModels)
+            {
+                yield return model;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

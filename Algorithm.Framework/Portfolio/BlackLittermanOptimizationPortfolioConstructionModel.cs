@@ -35,6 +35,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class BlackLittermanOptimizationPortfolioConstructionModel : PortfolioConstructionModel
     {
+        public override string Name => $"BlackLittermanOptimization({_lookback},{_period},{_resolution.ResolutionToLower()},{_riskFreeRate},{_delta},{_tau},{_optimizer.GetType().Name})";
+
         private readonly int _lookback;
         private readonly int _period;
         private readonly Resolution _resolution;

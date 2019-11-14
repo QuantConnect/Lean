@@ -99,6 +99,19 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Creates a new array of <typeparamref name="TResult"/> from the projected elements in the specified enumerable
+        /// </summary>
+        /// <typeparam name="T">The item type of the source enumerable</typeparam>
+        /// <typeparam name="TResult">The type of the items in the output <see cref="List{T}"/></typeparam>
+        /// <param name="enumerable">The items to be placed into the enumerable</param>
+        /// <param name="selector">Selects items from the enumerable to be placed into the array</param>
+        /// <returns>A new array of <typeparamref name="TResult"/></returns>
+        public static TResult[] ToArray<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> selector)
+        {
+            return enumerable.Select(selector).ToArray();
+        }
+
+        /// <summary>
         /// Produces the set difference of two sequences by using the default equality comparer to compare values.
         /// </summary>
         /// <typeparam name="T">The type of the elements of the input sequences.</typeparam>

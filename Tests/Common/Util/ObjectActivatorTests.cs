@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -78,6 +78,38 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(((TradeBar) data).Low, bar.Low);
             Assert.AreEqual(((TradeBar) data).Close, bar.Close);
             Assert.AreEqual(data.Price, bar.Price);
+        }
+
+        [Test]
+        public void ActivatesTypeUsingDefaultValues()
+        {
+            var activator = ObjectActivator.GetActivator(typeof(ClassWithConstructorWithDefaultValues));
+            var instance = (ClassWithConstructorWithDefaultValues)activator(new object[0]);
+            Assert.AreEqual(42, instance.IntValue);
+            Assert.AreEqual("42", instance.StringValue);
+        }
+
+        [Test]
+        public void ActivatesTypeUsingSpecifiedValuesAndDefaultValues()
+        {
+            var activator = ObjectActivator.CreateCustomActivator(
+                typeof(ClassWithConstructorWithDefaultValues),
+                Tuple.Create("stringValue", (object) "not-42")
+            );
+            var instance = (ClassWithConstructorWithDefaultValues)activator(new object[0]);
+            Assert.AreEqual(42, instance.IntValue);
+            Assert.AreEqual("not-42", instance.StringValue);
+        }
+
+        private class ClassWithConstructorWithDefaultValues
+        {
+            public int IntValue;
+            public string StringValue;
+            public ClassWithConstructorWithDefaultValues(int intValue = 42, string stringValue = "42")
+            {
+                IntValue = intValue;
+                StringValue = stringValue;
+            }
         }
 
         #region this was an original implementation which we'll compare against

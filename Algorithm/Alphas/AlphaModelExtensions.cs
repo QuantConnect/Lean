@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System.Linq;
+
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
@@ -32,6 +34,46 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             }
 
             return model.GetType().Name;
+        }
+
+
+        /// <summary>
+        /// Gets the alpha model with the provided name. If multiple models are found with the requested
+        /// name then an error is thrown. Each alpha model needs to have its own unique name if it will be
+        /// used by this function and other types that depend on the source model to identify the alpha model.
+        /// </summary>
+        /// <param name="model">The alpha model to check. This should likely be a <seealso cref="CompositeAlphaModel"/></param>
+        /// <param name="sourceModel">The requested source alpha model name</param>
+        /// <returns>The matching source alpha model</returns>
+        public static IAlphaModel GetByName(this IAlphaModel model, string sourceModel)
+        {
+            var modelName = model.GetModelName();
+            if (modelName == sourceModel)
+            {
+                return model;
+            }
+
+            var composite = model as CompositeAlphaModel;
+            if (composite == null)
+            {
+                throw new IncompatibleFrameworkModelsException(
+                    modelName,
+                    $"The configured models require the {nameof(CompositeAlphaModel)}. " +
+                    "Please use the 'AddAlpha' method instead of 'SetAlpha' to configure multiple alpha models."
+                );
+            }
+
+            var alphaModels = composite.Where(alpha => alpha.GetModelName() == sourceModel).ToList();
+            if (alphaModels.Count != 1)
+            {
+                throw new IncompatibleFrameworkModelsException(
+                    modelName,
+                    $"{modelName} found {alphaModels.Count} alpha models matching sourceModel='{sourceModel}'." +
+                    "The configured models require exactly one matching alpha model."
+                );
+            }
+
+            return alphaModels[0];
         }
     }
 }

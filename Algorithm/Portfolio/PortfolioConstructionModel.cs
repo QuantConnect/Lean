@@ -25,8 +25,31 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// <summary>
     /// Provides a base class for portfolio construction models
     /// </summary>
-    public class PortfolioConstructionModel : IPortfolioConstructionModel
+    public class PortfolioConstructionModel : IPortfolioConstructionModel, INamedModel
     {
+        /// <summary>
+        /// Defines a name for this model. This should be overriden in derived classes but is not required.
+        /// </summary>
+        public virtual string Name { get; protected set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <seealso cref="PortfolioConstructionModel"/> class.
+        /// The type's name is used as <seealso cref="INamedModel.Name"/>
+        /// </summary>
+        public PortfolioConstructionModel()
+        {
+            Name = GetType().Name;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <seealso cref="PortfolioConstructionModel"/> class.
+        /// </summary>
+        /// <param name="name">The name of the model</param>
+        public PortfolioConstructionModel(string name)
+        {
+            Name = name;
+        }
+
         /// <summary>
         /// Create portfolio targets from the specified insights
         /// </summary>

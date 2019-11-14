@@ -132,6 +132,7 @@
     <Compile Include="Portfolio\MinimumVariancePortfolioOptimizer.cs" />
     <Compile Include="Portfolio\EqualWeightingPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\ReturnsSymbolData.cs" />
+    <Compile Include="Portfolio\WalkForwardOptimizationPortfolioConstructionModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Risk\MaximumDrawdownPercentPortfolio.cs" />
     <Compile Include="Risk\MaximumDrawdownPercentPerSecurity.cs" />

@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using CloneExtensions;
 using Fasterflect;
 using QuantConnect.Logging;
@@ -41,6 +42,54 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Creates an activator using the provided parameter values and if a parameter value is not provided,
+        /// then the default value for that parameter is used from the constructor info. These activators are
+        /// NOT cached. If you need it to be cached, you can call <seealso cref="AddActivator"/>
+        /// </summary>
+        /// <param name="type">The type to create an activator for</param>
+        /// <param name="parameterValues">Parameters to use when instantiating the type</param>
+        /// <returns>An object activator or null if a usable constructor was found</returns>
+        public static Func<object[], object> CreateCustomActivator(
+            Type type,
+            params Tuple<string, object>[] parameterValues
+            )
+        {
+            var result = type.TryFindConstructor(parameterValues);
+            var success = result.Item1;
+            var ctor = result.Item2;
+            if (!success)
+            {
+                // no parameterless ctor and no ctor w/ all default values
+                return null;
+            }
+
+            var paramsInfo = ctor.GetParameters();
+
+            // lambda input -- object[]
+            var param = Expression.Parameter(typeof(object[]), "args");
+
+            // ctor arguments -- param indexes containing default  values
+            var argsExp = new Expression[paramsInfo.Length];
+
+            for (var i = 0; i < paramsInfo.Length; i++)
+            {
+                var parameterInfo = paramsInfo[i];
+
+                var parameterValue = parameterValues.FirstOrDefault(pv => pv.Item1 == parameterInfo.Name);
+
+                // use the parameter value if provider, if not, use the default value
+                argsExp[i] = parameterValue == null
+                    ? Expression.Constant(parameterInfo.DefaultValue, parameterInfo.ParameterType)
+                    : Expression.Constant(parameterValue, parameterInfo.ParameterType);
+            }
+
+            var newExp = Expression.New(ctor, argsExp);
+            var lambda = Expression.Lambda(typeof(Func<object[], object>), newExp, param);
+
+            return (Func<object[], object>)lambda.Compile();
+        }
+
+        /// <summary>
         /// Fast Object Creator from Generic Type:
         /// Modified from http://rogeralsing.com/2008/02/28/linq-expressions-creating-objects/
         /// </summary>
@@ -58,29 +107,8 @@ namespace QuantConnect.Util
                     return factory;
                 }
 
-                var ctor = dataType.GetConstructor(new Type[] {});
-
-                //User has forgotten to include a parameterless constructor:
-                if (ctor == null) return null;
-
-                var paramsInfo = ctor.GetParameters();
-
-                //create a single param of type object[]
-                var param = Expression.Parameter(typeof (object[]), "args");
-                var argsExp = new Expression[paramsInfo.Length];
-
-                for (var i = 0; i < paramsInfo.Length; i++)
-                {
-                    var index = Expression.Constant(i);
-                    var paramType = paramsInfo[i].ParameterType;
-                    var paramAccessorExp = Expression.ArrayIndex(param, index);
-                    var paramCastExp = Expression.Convert(paramAccessorExp, paramType);
-                    argsExp[i] = paramCastExp;
-                }
-
-                var newExp = Expression.New(ctor, argsExp);
-                var lambda = Expression.Lambda(typeof (Func<object[], object>), newExp, param);
-                factory = (Func<object[], object>) lambda.Compile();
+                // require a default, parameterless ctor or all optional parameters
+                factory = CreateCustomActivator(dataType, parameterValues: null);
 
                 // save it for later
                 _activatorsByType.Add(dataType, factory);

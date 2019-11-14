@@ -29,6 +29,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class EqualWeightingPortfolioConstructionModel : PortfolioConstructionModel
     {
+        public override string Name => $"EqualWeighting()";
+
         private readonly Func<DateTime, DateTime> _rebalancingFunc;
         private DateTime _rebalancingTime;
         private List<Symbol> _removedSymbols;
