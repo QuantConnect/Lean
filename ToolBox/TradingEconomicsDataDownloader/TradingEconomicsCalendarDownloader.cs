@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 {
@@ -38,6 +39,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         private readonly DateTime _fromDate;
         private readonly DateTime _toDate;
         private readonly RateGate _requestGate;
+        private readonly IEnumerable<string> _supportedCountries;
 
         public TradingEconomicsCalendarDownloader(string destinationFolder)
         {
@@ -46,6 +48,8 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
             _destinationFolder = Path.Combine(destinationFolder, "calendar");
             // Rate limits on Trading Economics is one request per second
             _requestGate = new RateGate(1, TimeSpan.FromSeconds(1));
+
+            _supportedCountries = Config.Get("trading-economics-supported-countries").Split(',');
 
             // Create the destination directory so that we don't error out in case there's no data
             Directory.CreateDirectory(_destinationFolder);
@@ -60,7 +64,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
             Log.Trace("TradingEconomicsCalendarDownloader.Run(): Begin downloading calendar data");
 
             var stopwatch = Stopwatch.StartNew();
-            var data = new List<TradingEconomicsCalendar>();
+
             var availableFiles = Directory.GetFiles(_destinationFolder, "*.zip", SearchOption.AllDirectories)
                 .Select(
                     x =>
@@ -78,56 +82,40 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                 .Where(x => x != DateTime.MinValue)
                 .ToHashSet();
 
+            var data = new List<TradingEconomicsCalendar>();
             var startUtc = _fromDate;
             while (startUtc < _toDate)
             {
+                var endUtc = startUtc.AddMonths(1).AddDays(-1);
+
+                Log.Trace($"TradingEconomicsCalendarDownloader.Run(): Collecting calendar data from {startUtc:yyyy-MM-dd} to {endUtc:yyyy-MM-dd}");
+
+                if (availableFiles.Contains(endUtc))
+                {
+                    Log.Trace($"TradingEconomicsCalendarDownloader.Run(): Skipping data because it already exists for month: {startUtc:MMMM}");
+                    startUtc = startUtc.AddMonths(1);
+                    continue;
+                }
+
                 try
                 {
-                    var endUtc = startUtc.AddMonths(1).AddDays(-1);
-
-                    Log.Trace($"TradingEconomicsCalendarDownloader.Run(): Collecting calendar data from {startUtc:yyyy-MM-dd} to {endUtc:yyyy-MM-dd}");
-
-                    if (availableFiles.Contains(endUtc))
-                    {
-                        Log.Trace($"TradingEconomicsCalendarDownloader.Run(): Skipping data because it already exists for month: {startUtc:MMMM}");
-                        startUtc = startUtc.AddMonths(1);
-                        continue;
-                    }
-
                     _requestGate.WaitToProceed(TimeSpan.FromSeconds(1));
 
-                    var content = Get(startUtc, endUtc).Result;
-                    var rawCollection = JsonConvert.DeserializeObject<JArray>(content);
-
-                    foreach (var rawData in rawCollection)
+                    if (_supportedCountries.IsNullOrEmpty())
                     {
-                        var inPercentage = rawData["Actual"].Value<string>().Contains("%");
-
-                        rawData["IsPercentage"] = inPercentage;
-                        rawData["Actual"] = ParseDecimal(rawData["Actual"].Value<string>(), inPercentage);
-                        rawData["Previous"] = ParseDecimal(rawData["Previous"].Value<string>(), inPercentage);
-                        rawData["Forecast"] = ParseDecimal(rawData["Forecast"].Value<string>(), inPercentage);
-                        rawData["TEForecast"] = ParseDecimal(rawData["TEForecast"].Value<string>(), inPercentage);
-                        rawData["Revised"] = ParseDecimal(rawData["Revised"].Value<string>(), inPercentage);
+                        var content = Get(startUtc, endUtc).Result;
+                        data.AddRange(ProcessRawContent(content));
                     }
-
-                    var collection = rawCollection.ToObject<List<TradingEconomicsCalendar>>();
-
-                    // Only write data that contains the "actual" field so that we get the final
-                    // piece of unchanging data in order to maintain backwards consistency with
-                    // the given data since we can't get historical snapshots of the data
-                    var onlyActual = collection
-                        .Where(x => x.Actual.HasValue)
-                        .ToList();
-
-                    var totalFiltered = collection.Count - onlyActual.Count;
-
-                    if (totalFiltered != 0)
+                    else
                     {
-                        Log.Trace($"TradingEconomicsCalendarDownloader.Run(): Filtering {totalFiltered}/{collection.Count} entries because they contain no 'actual' field");
+                        foreach (var supportedCountry in _supportedCountries)
+                        {
+                            Log.Trace($"TradingEconomicsCalendarDownloader.Run(): Collecting calendar data for {supportedCountry}...");
+                            var content = Get(supportedCountry.ToLowerInvariant(), startUtc, endUtc).Result;
+                            data.AddRange(ProcessRawContent(content));
+                            _requestGate.WaitToProceed(TimeSpan.FromSeconds(1));
+                        }
                     }
-
-                    data.AddRange(onlyActual);
 
                     startUtc = startUtc.AddMonths(1);
                 }
@@ -141,9 +129,58 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
             Log.Trace($"TradingEconomicsCalendarDownloader.Run(): {data.Count} calendar entries read in {stopwatch.Elapsed}");
 
             // Return status code. We default to `true` so that we can identify if an error occured during the loop
+            var status = ProcessData(data);
+
+            Log.Trace($"TradingEconomicsCalendarDownloader.Run(): Finished in {stopwatch.Elapsed}");
+            return status;
+        }
+
+        private static List<TradingEconomicsCalendar> ProcessRawContent(string content)
+        {
+            var rawCollection = JsonConvert.DeserializeObject<JArray>(content);
+
+            foreach (var rawData in rawCollection)
+            {
+                var inPercentage = rawData["Actual"].Value<string>().Contains("%");
+
+                rawData["IsPercentage"] = inPercentage;
+                rawData["Actual"] = ParseDecimal(rawData["Actual"].Value<string>(), inPercentage);
+                rawData["Previous"] = ParseDecimal(rawData["Previous"].Value<string>(), inPercentage);
+                rawData["Forecast"] = ParseDecimal(rawData["Forecast"].Value<string>(), inPercentage);
+                rawData["TEForecast"] = ParseDecimal(rawData["TEForecast"].Value<string>(), inPercentage);
+                rawData["Revised"] = ParseDecimal(rawData["Revised"].Value<string>(), inPercentage);
+            }
+
+            var collection = rawCollection.ToObject<List<TradingEconomicsCalendar>>();
+
+            // Only write data that contains the "actual" field so that we get the final
+            // piece of unchanging data in order to maintain backwards consistency with
+            // the given data since we can't get historical snapshots of the data
+            var onlyActual = collection
+                .Where(x => x.Actual.HasValue)
+                .ToList();
+
+            var totalFiltered = collection.Count - onlyActual.Count;
+
+            if (totalFiltered != 0)
+            {
+                Log.Trace($"TradingEconomicsCalendarDownloader.Run(): Filtering {totalFiltered}/{collection.Count} entries because they contain no 'actual' field");
+            }
+
+            return onlyActual;
+        }
+
+        /// <summary>
+        /// Processes the downloaded data.
+        /// </summary>
+        /// <param name="data">The data.</param>
+        /// <returns></returns>
+        private bool ProcessData(List<TradingEconomicsCalendar> data)
+        {
             var status = true;
 
-            Parallel.ForEach(data.GroupBy(x => GetTicker(x.Ticker, x.Category, x.Country)),
+            Parallel.ForEach(
+                data.GroupBy(x => GetTicker(x.Ticker, x.Category, x.Country)),
                 (kvp, state) =>
                 {
                     // Create the destination directory, otherwise we risk having it fail when we move
@@ -160,39 +197,38 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
 
                         if (File.Exists(finalZipPath))
                         {
-                            Log.Trace($"TradingEconomicsCalendarDownloader.Run(): {date} - Skipping file because it already exists: {finalZipPath}");
+                            Log.Trace($"TradingEconomicsCalendarDownloader.ProcessData(): {date} - Skipping file because it already exists: {finalZipPath}");
                             continue;
                         }
+
                         if (File.Exists(dataFolderZipPath))
                         {
-                            Log.Trace($"TradingEconomicsCalendarDownloader.Run(): {date} - Skipping file because it already exists: {dataFolderZipPath}");
+                            Log.Trace($"TradingEconomicsCalendarDownloader.ProcessData(): {date} - Skipping file because it already exists: {dataFolderZipPath}");
                             continue;
                         }
 
                         try
                         {
                             var contents = JsonConvert.SerializeObject(calendarDataByDate.ToList());
-                            Log.Trace($"TradingEconomicsCalendarDownloader.Run(): {date} - Writing file before compression: {tempPath}");
+                            Log.Trace($"TradingEconomicsCalendarDownloader.ProcessData(): {date} - Writing file before compression: {tempPath}");
                             File.WriteAllText(tempPath, contents);
 
-                            Log.Trace($"TradingEconomicsCalendarDownloader.Run(): {date} - Compressing to: {tempZipPath}");
+                            Log.Trace($"TradingEconomicsCalendarDownloader.ProcessData(): {date} - Compressing to: {tempZipPath}");
                             // Write out this data string to a zip file
                             Compression.Zip(tempPath, tempZipPath, $"{date}.json", true);
 
-                            Log.Trace($"TradingEconomicsCalendarDownloader.Run(): {date} - Moving temp file: {tempZipPath} to {finalZipPath}");
+                            Log.Trace($"TradingEconomicsCalendarDownloader.ProcessData(): {date} - Moving temp file: {tempZipPath} to {finalZipPath}");
                             File.Move(tempZipPath, finalZipPath);
                         }
                         catch (Exception e)
                         {
-                            Log.Error(e, $"TradingEconomicsCalendarDownloader.Run(): {date} - Error creating zip file for ticker: {kvp.Key}");
+                            Log.Error(e, $"TradingEconomicsCalendarDownloader.ProcessData(): {date} - Error creating zip file for ticker: {kvp.Key}");
                             status = false;
                             state.Stop();
                         }
                     }
                 }
             );
-
-            Log.Trace($"TradingEconomicsCalendarDownloader.Run(): Finished in {stopwatch.Elapsed}");
             return status;
         }
 
@@ -205,6 +241,19 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
         public override Task<string> Get(DateTime startUtc, DateTime endUtc)
         {
             var url = $"/calendar/country/all/{startUtc.ToStringInvariant("yyyy-MM-dd")}/{endUtc.ToStringInvariant("yyyy-MM-dd")}";
+            return HttpRequester(url);
+        }
+
+        /// <summary>
+        /// Get Trading Economics Calendar data for a given this start and end times(in UTC).
+        /// </summary>
+        /// <param name="country"></param>
+        /// <param name="startUtc">Start time of the data in UTC</param>
+        /// <param name="endUtc">End time of the data in UTC</param>
+        /// <returns>String representing data for this date range</returns>
+        public Task<string> Get(string country, DateTime startUtc, DateTime endUtc)
+        {
+            var url = $"/calendar/country/{country}/{startUtc.ToStringInvariant("yyyy-MM-dd")}/{endUtc.ToStringInvariant("yyyy-MM-dd")}";
             return HttpRequester(url);
         }
 
