@@ -56,7 +56,6 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextStatusUpdate;
         private readonly object _statusUpdateLock;
         private int _lastOrderId;
-        private string _subscription;
 
         //Log Message Store:
         private readonly object _logStoreLock;
@@ -65,6 +64,8 @@ namespace QuantConnect.Lean.Engine.Results
         private IApi _api;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly bool _debugMode;
+        private readonly int _streamedChartLimit;
+        private readonly int _streamedChartGroupSize;
 
         /// <summary>
         /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
@@ -102,7 +103,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public LiveTradingResultHandler()
         {
-            _subscription = "Strategy Equity";
             _logStoreLock = new object();
             _statusUpdateLock = new object();
             _logStore = new List<LogEntry>();
@@ -115,6 +115,8 @@ namespace QuantConnect.Lean.Engine.Results
             NotificationPeriod = TimeSpan.FromSeconds(1);
             SetNextStatusUpdate();
             _debugMode = Config.GetBool("debug-mode");
+            _streamedChartLimit = Config.GetInt("streamed-chart-limit", 12);
+            _streamedChartGroupSize = Config.GetInt("streamed-chart-group-size", 3);
         }
 
         /// <summary>
@@ -222,9 +224,14 @@ namespace QuantConnect.Lean.Engine.Results
                         //Get the updates since the last chart
                         foreach (var chart in Charts)
                         {
-                            // remove directory pathing characters from chart names
-                            var safeName = chart.Value.Name.Replace('/', '-');
-                            DictionarySafeAdd(deltaCharts, safeName, chart.Value.GetUpdates(), "deltaCharts");
+                            var chartUpdates = chart.Value.GetUpdates();
+                            // we only want to stream charts that have new updates
+                            if (!chartUpdates.IsEmpty())
+                            {
+                                // remove directory pathing characters from chart names
+                                var safeName = chart.Value.Name.Replace('/', '-');
+                                DictionarySafeAdd(deltaCharts, safeName, chartUpdates, "deltaCharts");
+                            }
 
                             if (AlgorithmPerformanceCharts.Contains(chart.Key))
                             {
@@ -466,40 +473,35 @@ namespace QuantConnect.Lean.Engine.Results
             Dictionary<string, string> serverStatistics)
         {
             // break the charts into groups
-
-            var groupSize = 3;
             var current = new Dictionary<string, Chart>();
             var chartPackets = new List<LiveResultPacket>();
 
             // First add send charts
 
             // Loop through all the charts, add them to packets to be sent.
-            // Group three charts to a packets, and add in the data to the chart depending on the subscription.
-
+            // Group three charts per packet
             foreach (var deltaChart in deltaCharts.Values)
             {
-                var chart = new Chart(deltaChart.Name);
-                current.Add(deltaChart.Name, chart);
+                current.Add(deltaChart.Name, deltaChart);
 
-                if (deltaChart.Name == _subscription || (_subscription == "*" && deltaChart.Name == "Strategy Equity"))
-                {
-                    chart.Series = deltaChart.Series;
-                }
-
-                // If there is room left in the group. add the subscription
-                // to the packet unless it is a wildcard subscription
-                if (current.Count >= groupSize && _subscription != "*")
+                if (current.Count >= _streamedChartGroupSize)
                 {
                     // Add the micro packet to transport.
                     chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
+
                     // Reset the carrier variable.
                     current = new Dictionary<string, Chart>();
+                    if (chartPackets.Count * _streamedChartGroupSize >= _streamedChartLimit)
+                    {
+                        // stream a maximum number of charts
+                        break;
+                    }
                 }
             }
 
             // Add whatever is left over here too
             // unless it is a wildcard subscription
-            if (current.Count > 0 && _subscription != "*")
+            if (current.Count > 0)
             {
                 chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
             }
@@ -1064,15 +1066,6 @@ namespace QuantConnect.Lean.Engine.Results
         protected virtual string CreateSafeChartName(string chartName)
         {
             return Uri.EscapeDataString(chartName);
-        }
-
-
-        /// <summary>
-        /// Set the chart name that we want data from.
-        /// </summary>
-        public void SetChartSubscription(string symbol)
-        {
-            _subscription = symbol;
         }
 
         /// <summary>

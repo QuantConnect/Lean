@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 
@@ -30,32 +31,38 @@ namespace QuantConnect
         /// <summary>
         /// Contains population averages scores over the life of the algorithm
         /// </summary>
+        [JsonProperty(PropertyName = "AlphaRuntimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
         public AlphaRuntimeStatistics AlphaRuntimeStatistics;
 
         /// <summary>
         /// Charts updates for the live algorithm since the last result packet
         /// </summary>
-        public IDictionary<string, Chart> Charts = new Dictionary<string, Chart>();
+        [JsonProperty(PropertyName = "Charts", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, Chart> Charts;
 
         /// <summary>
         /// Order updates since the last result packet
         /// </summary>
-        public IDictionary<int, Order> Orders = new Dictionary<int, Order>();
+        [JsonProperty(PropertyName = "Orders", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<int, Order> Orders;
 
         /// <summary>
         /// Trade profit and loss information since the last algorithm result packet
         /// </summary>
-        public IDictionary<DateTime, decimal> ProfitLoss = new Dictionary<DateTime, decimal>();
+        [JsonProperty(PropertyName = "ProfitLoss", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<DateTime, decimal> ProfitLoss;
 
         /// <summary>
         /// Statistics information sent during the algorithm operations.
         /// </summary>
         /// <remarks>Intended for update mode -- send updates to the existing statistics in the result GUI. If statistic key does not exist in GUI, create it</remarks>
-        public IDictionary<string, string> Statistics = new Dictionary<string, string>();
+        [JsonProperty(PropertyName = "Statistics", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, string> Statistics;
 
         /// <summary>
         /// Runtime banner/updating statistics in the title banner of the live algorithm GUI.
         /// </summary>
-        public IDictionary<string, string> RuntimeStatistics = new Dictionary<string, string>();
+        [JsonProperty(PropertyName = "RuntimeStatistics", NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, string> RuntimeStatistics;
     }
 }

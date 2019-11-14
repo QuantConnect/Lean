@@ -31,6 +31,44 @@ namespace QuantConnect.Tests.Common.Util
     public class ExtensionsTests
     {
         [Test]
+        public void SeriesIsNotEmpty()
+        {
+            var series = new Series("SadSeries")
+                { Values = new List<ChartPoint> { new ChartPoint(1, 1) } };
+
+            Assert.IsFalse(series.IsEmpty());
+        }
+
+        [Test]
+        public void SeriesIsEmpty()
+        {
+            Assert.IsTrue((new Series("Cat")).IsEmpty());
+        }
+
+        [Test]
+        public void ChartIsEmpty()
+        {
+            Assert.IsTrue((new Chart("HappyChart")).IsEmpty());
+        }
+
+        [Test]
+        public void ChartIsEmptyWithEmptySeries()
+        {
+            Assert.IsTrue((new Chart("HappyChart")
+                { Series = new Dictionary<string, Series> { { "SadSeries", new Series("SadSeries") } }}).IsEmpty());
+        }
+
+        [Test]
+        public void ChartIsNotEmptyWithNonEmptySeries()
+        {
+            var series = new Series("SadSeries")
+                { Values = new List<ChartPoint> { new ChartPoint(1, 1) } };
+
+            Assert.IsFalse((new Chart("HappyChart")
+                { Series = new Dictionary<string, Series> { { "SadSeries", series } } }).IsEmpty());
+        }
+
+        [Test]
         public void IsSubclassOfGenericWorksWorksForNonGenericType()
         {
             Assert.IsTrue(typeof(Derived2).IsSubclassOfGeneric(typeof(Derived1)));

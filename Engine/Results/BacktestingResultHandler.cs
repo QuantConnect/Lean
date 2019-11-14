@@ -768,14 +768,6 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Set the chart subscription we want data for. Not used in backtesting.
-        /// </summary>
-        public void SetChartSubscription(string symbol)
-        {
-            //NOP.
-        }
-
-        /// <summary>
         /// Process the synchronous result events, sampling and message reading.
         /// This method is triggered from the algorithm manager thread.
         /// </summary>
