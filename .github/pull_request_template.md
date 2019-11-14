@@ -24,6 +24,8 @@
 #### Types of changes
 <!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
 - [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] Refactor (non-breaking change which improves implementation)
+- [ ] Performance (non-breaking change which improves performance. Please add associated performance test and results)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to change)
 - [ ] Non-functional change (xml comments/documentation/etc)
