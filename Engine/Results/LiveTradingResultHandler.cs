@@ -64,6 +64,8 @@ namespace QuantConnect.Lean.Engine.Results
         private IApi _api;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly bool _debugMode;
+        private readonly int _streamedChartLimit;
+        private readonly int _streamedChartGroupSize;
 
         /// <summary>
         /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
@@ -113,6 +115,8 @@ namespace QuantConnect.Lean.Engine.Results
             NotificationPeriod = TimeSpan.FromSeconds(1);
             SetNextStatusUpdate();
             _debugMode = Config.GetBool("debug-mode");
+            _streamedChartLimit = Config.GetInt("streamed-chart-limit", 12);
+            _streamedChartGroupSize = Config.GetInt("streamed-chart-group-size", 3);
         }
 
         /// <summary>
@@ -469,8 +473,6 @@ namespace QuantConnect.Lean.Engine.Results
             Dictionary<string, string> serverStatistics)
         {
             // break the charts into groups
-
-            var groupSize = 3;
             var current = new Dictionary<string, Chart>();
             var chartPackets = new List<LiveResultPacket>();
 
@@ -482,16 +484,16 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 current.Add(deltaChart.Name, deltaChart);
 
-                if (current.Count >= groupSize)
+                if (current.Count >= _streamedChartGroupSize)
                 {
                     // Add the micro packet to transport.
                     chartPackets.Add(new LiveResultPacket(_job, new LiveResult { Charts = current }));
 
                     // Reset the carrier variable.
                     current = new Dictionary<string, Chart>();
-                    if (chartPackets.Count >= 4)
+                    if (chartPackets.Count * _streamedChartGroupSize >= _streamedChartLimit)
                     {
-                        // stream a maximum number of charts: 3 * 4 = 12
+                        // stream a maximum number of charts
                         break;
                     }
                 }
