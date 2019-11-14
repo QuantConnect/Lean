@@ -21,6 +21,7 @@ using System.Reflection;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -155,6 +156,34 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsFalse(res);
         }
 
+        [Test]
+        public void IndicatorMustBeEqualToItself()
+        {
+            var indicators = typeof(Indicator).Assembly.GetTypes()
+                .Where(t => t.BaseType.Name != "CandlestickPattern" && !t.Name.StartsWith("<"))
+                .OrderBy(t => t.Name)
+                .ToList();
+
+            var counter = 0;
+            object instantiatedIndicator;
+            foreach (var indicator in indicators)
+            {
+                try
+                {
+                    instantiatedIndicator = Activator.CreateInstance(indicator, new object[] {10});
+                    counter++;
+                }
+                catch (Exception e)
+                {
+                    // Some indicators will fail because they don't have a single-parameter constructor.
+                    continue;
+                }
+
+                Assert.IsTrue(instantiatedIndicator.Equals(instantiatedIndicator));
+            }
+            Log.Trace($"{counter} indicators from {indicators.Count} were tested.");
+        }
+        
         private static void TestComparisonOperators<TValue>()
         {
             var indicator = new TestIndicator();

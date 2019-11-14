@@ -16,6 +16,7 @@
 using System;
 using System.Diagnostics;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Indicators
@@ -184,7 +185,13 @@ namespace QuantConnect.Indicators
             // solely relying on reference semantics (think hashset/dictionary impls)
 
             if (ReferenceEquals(obj, null)) return false;
-            if (obj.GetType().IsSubclassOf(typeof (IndicatorBase<>))) return ReferenceEquals(this, obj);
+            var type = obj.GetType();   
+            if (type.IsSubclassOf(typeof(IndicatorBase<IndicatorDataPoint>))||
+                type.IsSubclassOf(typeof(IndicatorBase<IBaseDataBar>)) ||
+                type.IsSubclassOf(typeof(IndicatorBase<TradeBar>)))
+            {
+                return ReferenceEquals(this, obj);
+            }
 
             try
             {
