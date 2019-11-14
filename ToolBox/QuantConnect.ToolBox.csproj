@@ -240,8 +240,9 @@
     </When>
   </Choose>
   <ItemGroup>
+    <Compile Include="Benzinga\BenzingaNewsDataConverter.cs" />
     <Compile Include="Benzinga\BenzingaProgram.cs" />
-    <Compile Include="Benzinga\BenzingaDataConverter.cs" />
+    <Compile Include="Benzinga\BenzingaNewsDataDownloader.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDataDownloader.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDownloaderProgram.cs" />
     <Compile Include="CoinApiDataConverter\CoinApiDataConverterProgram.cs" />

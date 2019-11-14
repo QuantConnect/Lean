@@ -15,7 +15,6 @@
 
 using Newtonsoft.Json;
 using NodaTime;
-using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,9 +29,28 @@ namespace QuantConnect.Data.Custom.Benzinga
     public class BenzingaNews : IndexedBaseData
     {
         /// <summary>
-        /// Emit time of the data. This should be equal to the publication date
+        /// Unique ID assigned to the article by Benzinga
         /// </summary>
-        public override DateTime EndTime { get; set; }
+        [JsonProperty("id")]
+        public int Id { get; set; }
+
+        /// <summary>
+        /// Author of the article
+        /// </summary>
+        [JsonProperty("author")]
+        public string Author { get; set; }
+
+        /// <summary>
+        /// Date the article was published
+        /// </summary>
+        [JsonProperty("created")]
+        public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// Date that the article was revised on
+        /// </summary>
+        [JsonProperty("updated")]
+        public DateTime UpdatedAt { get; set; }
 
         /// <summary>
         /// Title of the article published
@@ -41,62 +59,55 @@ namespace QuantConnect.Data.Custom.Benzinga
         public string Title { get; set; }
 
         /// <summary>
+        /// Summary of the article's contents
+        /// </summary>
+        [JsonProperty("teaser")]
+        public string Teaser { get; set; }
+
+        /// <summary>
         /// Contents of the article
         /// </summary>
-        [JsonProperty("description")]
+        [JsonProperty("body")]
         public string Contents { get; set; }
 
         /// <summary>
-        /// Date the article was published
-        /// </summary>
-        [JsonProperty("pubDate")]
-        public DateTime PublicationDate { get; set; }
-
-        /// <summary>
-        /// Author of the article
-        /// </summary>
-        [JsonProperty("dc:creator")]
-        public string Author { get; set; }
-
-        /// <summary>
-        /// Categories that the article belongs to
-        /// </summary>
-        [JsonProperty("category"), JsonConverter(typeof(SingleValueListConverter<BenzingaCategory>))]
-        public List<BenzingaCategory> Category { get; set; }
-
-        /// <summary>
-        /// Unique ID assigned to the article by Benzinga
-        /// </summary>
-        [JsonProperty("bz:id")]
-        public int Id { get; set; }
-
-        /// <summary>
-        /// Unique ID assigned to the article after a revision by Benzinga
-        /// </summary>
-        [JsonProperty("bz:revisionid")]
-        public int RevisionId { get; set; }
-
-        /// <summary>
-        /// Symbols that this news article applies to
+        /// Categories that relate to the article
         /// </summary>
         /// <remarks>
-        /// Initialize this outside of the JSON deserialization process
+        /// We intentionally use a non-existing property from the data so that we can
+        /// lazily deserialize the object, and populate the values manually. From there,
+        /// we can serialize the object again during the processing stage and easily
+        /// deserialize the object going onwards in `Reader`
         /// </remarks>
-        [JsonProperty("articleSymbols")]
-        public List<BenzingaSymbolData> Symbols { get; set; }
+        [JsonProperty("channels")]
+        public List<string> Categories { get; set; }
 
         /// <summary>
-        /// Date that the article was revised on
+        /// Symbols that this news article mentions
         /// </summary>
-        [JsonProperty("bz:revisiondate")]
-        public DateTime RevisionDate { get; set; }
+        /// <remarks>
+        /// We intentionally use a non-existing property from the data so that we can
+        /// lazily deserialize the object, and populate the values manually. From there,
+        /// we can serialize the object again during the processing stage and easily
+        /// deserialize the object going onwards in `Reader`
+        /// </remarks>
+        [JsonProperty("stocks")]
+        public List<Symbol> Symbols { get; set; }
 
         /// <summary>
-        /// Metadata associated with the article
+        /// Additional tags that are not channels or categories, but are reoccuring
+        /// themes including, but not limited to; analyst names, bills being talked
+        /// about in Congress (Dodd-Frank), specific products (iPhone), politicians,
+        /// celebrities, stock movements (i.e. 'Mid-day Losers' &amp; 'Mid-day Gainers').
         /// </summary>
-        /// <remarks>Initialize separately, same as <see cref="Symbols" /></remarks>
-        [JsonProperty("articleMetadata")]
-        public BenzingaMetadata Metadata { get; set; }
+        /// <remarks>
+        /// We intentionally use a non-existing property from the data so that we can
+        /// lazily deserialize the object, and populate the values manually. From there,
+        /// we can serialize the object again during the processing stage and easily
+        /// deserialize the object going onwards in `Reader`
+        /// </remarks>
+        [JsonProperty("tags")]
+        public List<string> Tags { get; set; }
 
         /// <summary>
         /// Determines the actual source from an index contained within a ticker folder
@@ -154,13 +165,9 @@ namespace QuantConnect.Data.Custom.Benzinga
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             // Make sure we parse as UTC since we also store as UTC. Otherwise, the time will be set as Local.
-            var article = JsonConvert.DeserializeObject<BenzingaNews>(line, new JsonSerializerSettings
-            {
-                DateTimeZoneHandling = DateTimeZoneHandling.Utc
-            });
+            var article = JsonConvert.DeserializeObject<BenzingaNews>(line, new BenzingaNewsJsonConverter(config.Symbol));
             article.Symbol = config.Symbol;
-            article.Time = article.PublicationDate;
-            article.EndTime = article.PublicationDate;
+            article.EndTime = article.UpdatedAt;
 
             return article;
         }
@@ -195,42 +202,46 @@ namespace QuantConnect.Data.Custom.Benzinga
         }
 
         /// <summary>
+        /// Sets the default resolution to Second
+        /// </summary>
+        /// <returns>Resolution.Second</returns>
+        public override Resolution DefaultResolution()
+        {
+            return Resolution.Second;
+        }
+
+        /// <summary>
+        /// Gets a list of all the supported Resolutions
+        /// </summary>
+        /// <returns>All resolutions</returns>
+        public override List<Resolution> SupportedResolutions()
+        {
+            return AllResolutions;
+        }
+
+        /// <summary>
         /// Creates a clone of the instance
         /// </summary>
         /// <returns>A clone of the instance</returns>
         public override BaseData Clone()
         {
-            var metadataClone = new BenzingaMetadata {
-                FirstRun = Metadata.FirstRun,
-                IsPro = Metadata.IsPro,
-                Kind = Metadata.Kind
-            };
-            var symbolsClone = new List<BenzingaSymbolData>();
-            foreach (var symbolData in Symbols)
-            {
-                symbolsClone.Add(new BenzingaSymbolData
-                {
-                    Exchange = symbolData.Exchange,
-                    Sentiment = symbolData.Sentiment,
-                    Symbol = symbolData.Symbol
-                });
-            }
+            var newCategories = new List<string>(Categories);
+            var newTags = new List<string>(Tags);
 
             return new BenzingaNews
             {
-                Title = Title,
-                Contents = Contents,
-                PublicationDate = PublicationDate,
-                Author = Author,
-                Category = Category,
                 Id = Id,
-                RevisionId = RevisionId,
-                Symbols = symbolsClone,
-                RevisionDate = RevisionDate,
-                Metadata = metadataClone,
+                Author = Author,
+                CreatedAt = CreatedAt,
+                UpdatedAt = UpdatedAt,
+                Title = Title,
+                Teaser = Teaser,
+                Contents = Contents,
+                Categories = newCategories,
+                Symbols = Symbols,
+                Tags = newTags,
 
                 Symbol = Symbol,
-                Time = Time,
                 EndTime = EndTime
             };
         }

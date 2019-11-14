@@ -13,18 +13,30 @@
  * limitations under the License.
 */
 
+using System;
 using System.IO;
 
 namespace QuantConnect.ToolBox.Benzinga
 {
     public static class BenzingaProgram
     {
-        public static void BenzingaDataConverter(string source, string destination, string day)
+        public static void BenzingaNewsDataConverter(string source, string destination, string day)
         {
             var date = Parse.DateTimeExact(day, "yyyyMMdd");
-            var converter = new BenzingaDataConverter(new DirectoryInfo(source), new DirectoryInfo(destination));
+            var converter = new BenzingaNewsDataConverter(new DirectoryInfo(source), new DirectoryInfo(destination));
 
-            converter.Convert(date);
+            foreach (var dayOf in Time.EachDay(date, DateTime.UtcNow))
+            {
+                converter.Convert(dayOf);
+            }
+        }
+
+        public static void BenzingaNewsDataDownloader(DateTime fromDate, DateTime toDate, string destination, string apiKey)
+        {
+            var destinationDirectory = new DirectoryInfo(destination);
+            var downloader = new BenzingaNewsDataDownloader(destinationDirectory, apiKey);
+
+            downloader.Download(fromDate, toDate);
         }
     }
 }
