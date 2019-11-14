@@ -83,6 +83,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             {
                 _symbols = symbols.ToArray();
                 _insightPeriod = resolution.ToTimeSpan().Multiply(5);
+
+                Name = $"ForexTriangleArbitrage([{string.Join(",",_symbols.Select(s=>s.Value))}],{resolution.ResolutionToLower()})";
             }
 
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)

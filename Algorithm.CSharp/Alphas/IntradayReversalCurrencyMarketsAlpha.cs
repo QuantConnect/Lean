@@ -91,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 _periodSma = periodSma;
                 _resolution = resolution;
                 _cache = new Dictionary<Symbol, SymbolData>();
-                Name = "IntradayReversalAlphaModel";
+                Name = $"IntradayReversal({periodSma},{resolution.ResolutionToLower()})";
             }
 
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)

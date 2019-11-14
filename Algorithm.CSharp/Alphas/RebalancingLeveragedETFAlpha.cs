@@ -125,7 +125,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
         {
             _etfGroups = etfGroups;
             _date = DateTime.MinValue;
-            Name = "RebalancingLeveragedETFAlphaModel";
+
+            Name = $"RebalancingLeveragedETF({string.Join(",", etfGroups.Select(etf => etf.Underlying.Value))})";
         }
 
         /// <summary>

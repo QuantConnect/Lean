@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             _period = period;
             _resolution = resolution;
-            Name = $"{nameof(RsiAlphaModel)}({_period},{_resolution})";
+            Name = $"RSI({_period},{_resolution.ResolutionToLower()})";
         }
 
         /// <summary>

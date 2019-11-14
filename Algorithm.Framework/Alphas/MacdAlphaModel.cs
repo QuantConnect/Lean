@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _movingAverageType = movingAverageType;
             _resolution = resolution;
             _symbolData = new Dictionary<Symbol, SymbolData>();
-            Name = $"{nameof(MacdAlphaModel)}({fastPeriod},{slowPeriod},{signalPeriod},{movingAverageType},{resolution})";
+            Name = $"MACD({fastPeriod},{slowPeriod},{signalPeriod},{movingAverageType.ToLower()},{resolution.ResolutionToLower()})";
         }
 
         /// <summary>

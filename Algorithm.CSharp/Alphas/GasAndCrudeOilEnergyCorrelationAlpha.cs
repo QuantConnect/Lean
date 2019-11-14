@@ -110,6 +110,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 _differenceTrigger = differenceTrigger;
                 _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
                 _predictionInterval = resolution.ToTimeSpan().Multiply(lookback);
+
+                Name = $"GasAndCrudeOilEnergyPairs({historyDays},{resolution.ResolutionToLower()},{lookback},{differenceTrigger})";
             }
 
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)

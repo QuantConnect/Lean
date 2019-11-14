@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _pairs = new Dictionary<Tuple<Symbol, Symbol>, PairData>();
 
             Securities = new HashSet<Security>();
-            Name = Invariant($"{nameof(BasePairsTradingAlphaModel)}({_lookback},{_resolution},{_threshold.Normalize()})");
+            Name = Invariant($"BaseTradingPairs({_lookback},{_resolution.ResolutionToLower()},{_threshold.Normalize()})");
         }
 
         /// <summary>

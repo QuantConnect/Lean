@@ -24,6 +24,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// </summary>
     public class NullAlphaModel : AlphaModel
     {
+        public override string Name { get; set; } = "Null()";
+
         /// <summary>
         /// Updates this alpha model with the latest data from the algorithm.
         /// This is called each time the algorithm receives data for subscribed securities

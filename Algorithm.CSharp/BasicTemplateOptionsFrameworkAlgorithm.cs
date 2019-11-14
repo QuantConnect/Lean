@@ -95,6 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
             public ConstantOptionContractAlphaModel(InsightType type, InsightDirection direction, TimeSpan period)
                 : base(type, direction, period)
             {
+                Name = Name.Replace("Constant", "ConstantOptionContract");
             }
 
             protected override bool ShouldEmitInsight(DateTime utcTime, Symbol symbol)

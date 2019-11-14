@@ -91,6 +91,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             {
                 _predictionInterval = _resolution.ToTimeSpan().Multiply(lookback);
                 _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
+
+                Name = $"MeanReversionLunchBreak({lookback},{_resolution.ResolutionToLower()})";
             }
 
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)

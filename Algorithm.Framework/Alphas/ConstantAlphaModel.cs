@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _securities = new HashSet<Security>();
             _insightsTimeBySymbol = new Dictionary<Symbol, DateTime>();
 
-            Name = $"{nameof(ConstantAlphaModel)}({type},{direction},{period}";
+            Name = $"Constant({type},{direction},{period}";
             if (magnitude.HasValue)
             {
                 Name += Invariant($",{magnitude.Value}");

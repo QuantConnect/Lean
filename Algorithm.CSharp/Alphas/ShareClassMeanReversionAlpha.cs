@@ -89,6 +89,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 IEnumerable<Symbol> symbols,
                 Resolution resolution = Resolution.Minute)
             {
+                // ALWAYS materialize an IEnumerable if you're going to enumerate it more than once
+                symbols = symbols.ToList();
                 if (symbols.Count() != 2)
                 {
                     throw new ArgumentException("ShareClassMeanReversionAlphaModel: symbols parameter must contain 2 elements");
@@ -98,6 +100,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 _insightPeriod = resolution.ToTimeSpan().Multiply(5);
                 _sma = new SimpleMovingAverage(2);
                 _positionWindow = new RollingWindow<decimal>(2);
+
+                Name = $"ShareClassMeanReversion([{string.Join(",", symbols.Select(s => s.Value))}],{resolution.ResolutionToLower()})";
             }
 
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)

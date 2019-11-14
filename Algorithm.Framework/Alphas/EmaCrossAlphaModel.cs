@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _resolution = resolution;
             _predictionInterval = fastPeriod;
             _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
-            Name = $"{nameof(EmaCrossAlphaModel)}({fastPeriod},{slowPeriod},{resolution})";
+            Name = $"EmaCross({fastPeriod},{slowPeriod},{resolution.ResolutionToLower()})";
         }
 
         /// <summary>

@@ -121,6 +121,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
 
             // time for bars we make the calculations on
             _consolidatorTimeSpan = resolution.ToTimeSpan().Multiply(barsToConsolidate);
+
+            Name = $"DualThrust({k1.Normalize()},{k2.Normalize()},{rangePeriod},{resolution.ResolutionToLower()},{barsToConsolidate}";
         }
 
         /// <summary>

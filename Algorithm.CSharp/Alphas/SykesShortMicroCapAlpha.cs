@@ -109,6 +109,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
             {
                 _numberOfStocks = numberOfStocks;
                 _predictionInterval = resolution.ToTimeSpan().Multiply(lookback);
+
+                Name = $"SykesShortMicroCap({lookback},{numberOfStocks},{resolution.ResolutionToLower()})";
             }
 
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)

@@ -89,6 +89,8 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 _resolution = resolution;
                 _predictionInterval = resolution.ToTimeSpan().Multiply(lookback);
                 _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
+
+                Name = $"GreenBlatMagicFormulaRateOfChange({lookback},{resolution.ResolutionToLower()})";
             }
 
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)

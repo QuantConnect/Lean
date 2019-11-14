@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp.Alphas
                 _ultraLong = ultraLong;
                 _ultraShort = ultraShort;
 
-                Name = "RebalancingTripleLeveragedETFAlphaModel";
+                Name = $"RebalancingTripleLeveragedETF({ultraLong.Value},{ultraShort.Value},{Resolution.Daily.ResolutionToLower()})";
             }
 
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)

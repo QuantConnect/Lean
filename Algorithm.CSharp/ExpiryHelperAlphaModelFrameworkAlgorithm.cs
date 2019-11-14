@@ -66,6 +66,8 @@ namespace QuantConnect.Algorithm.CSharp
             private const InsightDirection _direction = InsightDirection.Up;
             private DateTime _nextUpdate = DateTime.MinValue;
 
+            public override string Name { get; set; } = "ExpiryHelper";
+
             public override IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
             {
                 if (_nextUpdate > algorithm.Time)

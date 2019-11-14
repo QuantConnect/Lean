@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
@@ -42,6 +43,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             }
 
             _alphaModels.AddRange(alphaModels);
+            Name = $"Composite({string.Join(",", alphaModels.Select(am => am.GetModelName()))})";
         }
 
         /// <summary>

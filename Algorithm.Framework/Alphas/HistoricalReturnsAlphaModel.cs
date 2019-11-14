@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             _resolution = resolution;
             _predictionInterval = _resolution.ToTimeSpan().Multiply(_lookback);
             _symbolDataBySymbol = new Dictionary<Symbol, SymbolData>();
-            Name = $"{nameof(HistoricalReturnsAlphaModel)}({lookback},{resolution})";
+            Name = $"HistoricalReturns({lookback},{resolution.ResolutionToLower()})";
         }
 
         /// <summary>
