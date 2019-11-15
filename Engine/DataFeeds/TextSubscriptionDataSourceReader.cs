@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -27,18 +28,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 {
     /// <summary>
     /// Provides an implementations of <see cref="ISubscriptionDataSourceReader"/> that uses the
-    /// <see cref="BaseData.Reader(QuantConnect.Data.SubscriptionDataConfig,string,System.DateTime,bool)"/>
+    /// <see cref="BaseData.Reader(SubscriptionDataConfig,string,DateTime,bool)"/>
     /// method to read lines of text from a <see cref="SubscriptionDataSource"/>
     /// </summary>
     public class TextSubscriptionDataSourceReader : BaseSubscriptionDataSourceReader
     {
+        private readonly bool _implementsStreamReader;
         private readonly BaseData _factory;
         private readonly DateTime _date;
         private readonly SubscriptionDataConfig _config;
         private bool _shouldCacheDataPoints;
         private static readonly MemoryCache BaseDataSourceCache = new MemoryCache("BaseDataSourceCache",
             // Cache can use up to 70% of the installed physical memory
-            new NameValueCollection{ { "physicalMemoryLimitPercentage", "70"} });
+            new NameValueCollection { { "physicalMemoryLimitPercentage", "70" } });
         private static readonly CacheItemPolicy CachePolicy = new CacheItemPolicy
         {
             // Cache entry should be evicted if it has not been accessed in given span of time:
@@ -53,7 +55,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         /// <summary>
         /// Event fired when an exception is thrown during a call to
-        /// <see cref="BaseData.Reader(QuantConnect.Data.SubscriptionDataConfig,string,System.DateTime,bool)"/>
+        /// <see cref="BaseData.Reader(SubscriptionDataConfig,string,DateTime,bool)"/>
         /// </summary>
         public event EventHandler<ReaderErrorEventArgs> ReaderError;
 
@@ -79,6 +81,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _shouldCacheDataPoints = !_config.IsCustomData && _config.Resolution >= Resolution.Hour
                 && _config.Type != typeof(FineFundamental) && _config.Type != typeof(CoarseFundamental)
                 && !DataCacheProvider.IsDataEphemeral;
+
+            var method = _config.Type.GetMethod("Reader",
+                new[] { typeof(SubscriptionDataConfig), typeof(StreamReader), typeof(DateTime), typeof(bool) });
+            if (method != null && method.DeclaringType == _config.Type)
+            {
+                _implementsStreamReader = true;
+            }
         }
 
         /// <summary>
@@ -108,16 +117,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // while the reader has data
                     while (!reader.EndOfStream)
                     {
-                        // read a line and pass it to the base data factory
-                        var line = reader.ReadLine();
                         BaseData instance = null;
+                        string line = null;
                         try
                         {
-                            instance = _factory.Reader(_config, line, _date, IsLiveMode);
+                            if (reader.StreamReader != null && _implementsStreamReader)
+                            {
+                                instance = _factory.Reader(_config, reader.StreamReader, _date, IsLiveMode);
+                            }
+                            else
+                            {
+                                // read a line and pass it to the base data factory
+                                line = reader.ReadLine();
+                                instance = _factory.Reader(_config, line, _date, IsLiveMode);
+                            }
                         }
                         catch (Exception err)
                         {
-                            OnReaderError(line, err);
+                            OnReaderError(line ?? "StreamReader", err);
                         }
 
                         if (instance != null && instance.EndTime != default(DateTime))

@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.IO;
 
 namespace QuantConnect.Interfaces
 {
@@ -37,6 +38,11 @@ namespace QuantConnect.Interfaces
         /// Gets the next line/batch of content from the stream
         /// </summary>
         string ReadLine();
+
+        /// <summary>
+        /// Direct access to the StreamReader instance
+        /// </summary>
+        StreamReader StreamReader { get; }
 
         /// <summary>
         /// Gets whether or not this stream reader should be rate limited
