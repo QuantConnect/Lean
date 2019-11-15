@@ -33,17 +33,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="request">The subscription data request</param>
         /// <param name="enumerator">The data enumerator stack</param>
-        /// <param name="lowerThreshold">The lower threshold for the worker task, for which the consumer will trigger the worker
-        /// if it has stopped <see cref="EnqueueableEnumerator{T}.TriggerProducer"/></param>
-        /// <param name="upperThreshold">The upper threshold for the worker task, after which it will stop producing until requested
-        /// by the consumer <see cref="EnqueueableEnumerator{T}.TriggerProducer"/></param>
         /// <returns>A new subscription instance ready to consume</returns>
         public static Subscription CreateAndScheduleWorker(
             SubscriptionRequest request,
-            IEnumerator<BaseData> enumerator,
-            int lowerThreshold,
-            int upperThreshold)
+            IEnumerator<BaseData> enumerator)
         {
+            var upperThreshold = GetUpperThreshold(request.Configuration.Resolution);
+            var lowerThreshold = GetLowerThreshold(request.Configuration.Resolution);
+            if (request.Configuration.Type == typeof(CoarseFundamental))
+            {
+                // the lower threshold will be when we start the worker again, if he is stopped
+                lowerThreshold = 200;
+                // the upper threshold will stop the worker from loading more data. This is roughly 1 GB
+                upperThreshold = 500;
+            }
+
             var exchangeHours = request.Security.Exchange.Hours;
             var enqueueable = new EnqueueableEnumerator<SubscriptionData>(true);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
@@ -90,6 +94,42 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             enqueueable.SetProducer(produce, lowerThreshold);
 
             return subscription;
+        }
+
+        private static int GetLowerThreshold(Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Tick:
+                    return 500;
+
+                case Resolution.Second:
+                case Resolution.Minute:
+                case Resolution.Hour:
+                case Resolution.Daily:
+                    return 250;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
+            }
+        }
+
+        private static int GetUpperThreshold(Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Resolution.Tick:
+                    return 10000;
+
+                case Resolution.Second:
+                case Resolution.Minute:
+                case Resolution.Hour:
+                case Resolution.Daily:
+                    return 5000;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
+            }
         }
     }
 }
