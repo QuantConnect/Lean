@@ -3025,8 +3025,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             if (!_messagingRateLimiter.WaitToProceed(TimeSpan.Zero))
             {
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "RateLimit",
-                    "The API request has been rate limited. To avoid this message, please reduce the frequency of API calls."));
+                Log.Trace("The IB API request has been rate limited.");
 
                 _messagingRateLimiter.WaitToProceed();
             }
