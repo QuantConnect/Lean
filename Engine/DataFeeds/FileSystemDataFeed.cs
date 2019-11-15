@@ -101,10 +101,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
             enumerator = ConfigureEnumerator(request, false, enumerator);
 
-            return SubscriptionUtils.CreateAndScheduleWorker(request,
-                enumerator,
-                GetLowerThreshold(request.Configuration.Resolution),
-                GetUpperThreshold(request.Configuration.Resolution));
+            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator);
         }
 
         /// <summary>
@@ -133,23 +130,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="request">The subscription request</param>
         private Subscription CreateUniverseSubscription(SubscriptionRequest request)
         {
-            // grab the relevant exchange hours
-            var config = request.Configuration;
-
             // define our data enumerator
             var enumerator = GetEnumeratorFactory(request).CreateEnumerator(request, _dataProvider);
 
-            var lowerThreshold = GetLowerThreshold(config.Resolution);
-            var upperThreshold = GetUpperThreshold(config.Resolution);
-            if (config.Type == typeof (CoarseFundamental))
-            {
-                // the lower threshold will be when we start the worker again, if he is stopped
-                lowerThreshold = 200;
-                // the upper threshold will stop the worker from loading more data. This is roughly 1 GB
-                upperThreshold = 500;
-            }
-
-            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, lowerThreshold, upperThreshold);
+            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator);
         }
 
         /// <summary>
@@ -249,42 +233,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return enumerator;
-        }
-
-        private static int GetLowerThreshold(Resolution resolution)
-        {
-            switch (resolution)
-            {
-                case Resolution.Tick:
-                    return 500;
-
-                case Resolution.Second:
-                case Resolution.Minute:
-                case Resolution.Hour:
-                case Resolution.Daily:
-                    return 250;
-
-                default:
-                    throw new ArgumentOutOfRangeException("resolution", resolution, null);
-            }
-        }
-
-        private static int GetUpperThreshold(Resolution resolution)
-        {
-            switch (resolution)
-            {
-                case Resolution.Tick:
-                    return 10000;
-
-                case Resolution.Second:
-                case Resolution.Minute:
-                case Resolution.Hour:
-                case Resolution.Daily:
-                    return 5000;
-
-                default:
-                    throw new ArgumentOutOfRangeException("resolution", resolution, null);
-            }
         }
     }
 }

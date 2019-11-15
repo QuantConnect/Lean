@@ -106,7 +106,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>Always true</returns>
         public virtual bool MoveNext()
         {
-            Current = _auxiliaryData.Any() ? _auxiliaryData.Dequeue() : null;
+            Current = _auxiliaryData.Count != 0 ? _auxiliaryData.Dequeue() : null;
             return true;
         }
 

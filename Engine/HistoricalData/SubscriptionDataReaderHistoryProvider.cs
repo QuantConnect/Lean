@@ -168,7 +168,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             });
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
 
-            return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader, 0, int.MaxValue);
+            return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader);
         }
 
         private class FilterEnumerator<T> : IEnumerator<T>
