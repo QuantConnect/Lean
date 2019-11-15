@@ -181,7 +181,7 @@ namespace QuantConnect.Tests.Indicators
 
                 Assert.IsTrue(instantiatedIndicator.Equals(instantiatedIndicator));
             }
-            Log.Trace($"{counter} indicators from {indicators.Count} were tested.");
+            Log.Trace($"{counter} indicators out of {indicators.Count} were tested.");
         }
         
         private static void TestComparisonOperators<TValue>()

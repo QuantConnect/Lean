@@ -185,14 +185,18 @@ namespace QuantConnect.Indicators
             // solely relying on reference semantics (think hashset/dictionary impls)
 
             if (ReferenceEquals(obj, null)) return false;
-            var type = obj.GetType();   
-            if (type.IsSubclassOf(typeof(IndicatorBase<IndicatorDataPoint>))||
-                type.IsSubclassOf(typeof(IndicatorBase<IBaseDataBar>)) ||
-                type.IsSubclassOf(typeof(IndicatorBase<TradeBar>)))
-            {
-                return ReferenceEquals(this, obj);
-            }
+            var type = obj.GetType();
 
+            while (type != null && type != typeof(object))
+            {
+                var cur = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+                if (typeof(IndicatorBase<>) == cur)
+                {
+                    return true;
+                }
+                type = type.BaseType;
+            }
+            
             try
             {
                 // the obj is not an indicator, so let's check for value types, try converting to decimal
