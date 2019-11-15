@@ -16,6 +16,7 @@
 using System;
 using System.Diagnostics;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Indicators
@@ -184,8 +185,18 @@ namespace QuantConnect.Indicators
             // solely relying on reference semantics (think hashset/dictionary impls)
 
             if (ReferenceEquals(obj, null)) return false;
-            if (obj.GetType().IsSubclassOf(typeof (IndicatorBase<>))) return ReferenceEquals(this, obj);
+            var type = obj.GetType();
 
+            while (type != null && type != typeof(object))
+            {
+                var cur = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+                if (typeof(IndicatorBase<>) == cur)
+                {
+                    return ReferenceEquals(this, obj);
+                }
+                type = type.BaseType;
+            }
+            
             try
             {
                 // the obj is not an indicator, so let's check for value types, try converting to decimal
