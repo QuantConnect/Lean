@@ -1032,11 +1032,11 @@ namespace QuantConnect.Lean.Engine.Results
             foreach (var kvp in result.Charts)
             {
                 var chart = kvp.Value;
-                var newChart = new Chart(chart.Name, chart.ChartType);
+                var newChart = new Chart(chart.Name);
                 charts.Add(kvp.Key, newChart);
                 foreach (var series in chart.Series.Values)
                 {
-                    var newSeries = new Series(series.Name, series.SeriesType);
+                    var newSeries = new Series(series.Name, series.SeriesType, series.Unit, series.Color);
                     newSeries.Values.AddRange(series.Values.Where(chartPoint => chartPoint.x >= unixDateStart && chartPoint.x <= unixDateStop));
                     newChart.AddSeries(newSeries);
                 }

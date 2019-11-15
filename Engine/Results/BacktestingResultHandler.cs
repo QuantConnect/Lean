@@ -234,7 +234,11 @@ namespace QuantConnect.Lean.Engine.Results
                     {
                         var chart = kvp.Value;
 
-                        deltaCharts.Add(chart.Name, chart.GetUpdates());
+                        var updates = chart.GetUpdates();
+                        if (!updates.IsEmpty())
+                        {
+                            deltaCharts.Add(chart.Name, updates);
+                        }
 
                         if (AlgorithmPerformanceCharts.Contains(kvp.Key))
                         {
@@ -303,12 +307,9 @@ namespace QuantConnect.Lean.Engine.Results
             var splitPackets = new List<BacktestResultPacket>();
             foreach (var chart in deltaCharts.Values)
             {
-                //Don't add packet if the series is empty:
-                if (chart.Series.Values.Aggregate(0, (i, x) => i + x.Values.Count) == 0) continue;
-
                 splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult
                 {
-                    Charts = new Dictionary<string, Chart>()
+                    Charts = new Dictionary<string, Chart>
                     {
                         {chart.Name, chart}
                     }
