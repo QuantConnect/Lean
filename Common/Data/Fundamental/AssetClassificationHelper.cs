@@ -165,7 +165,7 @@ namespace QuantConnect.Data.Fundamental
 
         /// <summary> Companies that provide communication services using fixed-line networks or
         /// those that provide wireless access and services. Also includes companies that provide
-        /// advertising & marketing services, entertainment content and services, as well as
+        /// advertising &amp; marketing services, entertainment content and services, as well as
         /// interactive media and content provider over internet or through software. </summary>
         public static int CommunicationServices = 308;
 
