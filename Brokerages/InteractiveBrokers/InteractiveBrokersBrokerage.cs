@@ -84,6 +84,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         // next valid order id for this client
         private int _nextValidId;
+        private readonly object _nextValidIdLocker = new object();
+
         // next valid request id for queries
         private int _nextRequestId;
         private int _nextTickerId;
@@ -303,13 +305,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // we need to wait until we receive the next valid id from the server
             _client.NextValidId += (sender, e) =>
             {
-                // only grab this id when we initialize, and we'll manually increment it here to avoid threading issues
-                if (_nextValidId == 0)
+                lock (_nextValidIdLocker)
                 {
+                    Log.Trace($"InteractiveBrokersBrokerage.HandleNextValidID(): updating nextValidId from {_nextValidId} to {e.OrderId}");
+
                     _nextValidId = e.OrderId;
                     _waitForNextValidId.Set();
                 }
-                Log.Trace("InteractiveBrokersBrokerage.HandleNextValidID(): " + e.OrderId);
             };
 
             // handle requests to restart the IB gateway
@@ -452,12 +454,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var manualResetEvent = new ManualResetEvent(false);
 
             Exception exception = null;
+            var lastOrderId = 0;
 
             // define our handlers
             EventHandler<IB.OpenOrderEventArgs> clientOnOpenOrder = (sender, args) =>
             {
                 try
                 {
+                    if (args.OrderId > lastOrderId)
+                    {
+                        lastOrderId = args.OrderId;
+                    }
+
                     // convert IB order objects returned from RequestOpenOrders
                     orders.Add(ConvertOrder(args.Order, args.Contract));
                 }
@@ -501,6 +509,22 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (timedOut)
             {
                 throw new TimeoutException("InteractiveBrokersBrokerage.GetOpenOrders(): Operation took longer than 15 seconds.");
+            }
+
+            if (all)
+            {
+                // https://interactivebrokers.github.io/tws-api/order_submission.html
+                // if the function reqAllOpenOrders is used by a client, subsequent orders placed by that client
+                // must have order IDs greater than the order IDs of all orders returned because of that function call.
+
+                lock (_nextValidIdLocker)
+                {
+                    if (lastOrderId >= _nextValidId)
+                    {
+                        Log.Trace($"InteractiveBrokersBrokerage.GetOpenOrders(): Updating nextValidId from {_nextValidId} to {lastOrderId + 1}");
+                        _nextValidId = lastOrderId + 1;
+                    }
+                }
             }
 
             return orders;
@@ -2222,11 +2246,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>The new IB ID</returns>
         private int GetNextBrokerageOrderId()
         {
-            // spin until we get a next valid id, this should only execute if we create a new instance
-            // and immediately try to place an order
-            while (_nextValidId == 0) { Thread.Yield(); }
-
-            return Interlocked.Increment(ref _nextValidId);
+            lock (_nextValidIdLocker)
+            {
+                // return the current value and increment
+                return _nextValidId++;
+            }
         }
 
         private int GetNextRequestId()
