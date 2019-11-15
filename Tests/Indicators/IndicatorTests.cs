@@ -180,6 +180,8 @@ namespace QuantConnect.Tests.Indicators
                 }
 
                 Assert.IsTrue(instantiatedIndicator.Equals(instantiatedIndicator));
+                var anotherInstantiatedIndicator = Activator.CreateInstance(indicator, new object[] { 10 });
+                Assert.IsFalse(instantiatedIndicator.Equals(anotherInstantiatedIndicator));
             }
             Log.Trace($"{counter} indicators out of {indicators.Count} were tested.");
         }

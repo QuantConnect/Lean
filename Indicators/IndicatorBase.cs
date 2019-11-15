@@ -192,7 +192,7 @@ namespace QuantConnect.Indicators
                 var cur = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
                 if (typeof(IndicatorBase<>) == cur)
                 {
-                    return true;
+                    return ReferenceEquals(this, obj);
                 }
                 type = type.BaseType;
             }
