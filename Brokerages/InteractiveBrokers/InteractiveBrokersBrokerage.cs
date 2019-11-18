@@ -444,7 +444,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             GetOpenOrdersInternal(false);
 
             // return all open orders (including those placed from TWS, which will have a negative order id)
-            return GetOpenOrdersInternal(true);
+            lock (_nextValidIdLocker)
+            {
+                return GetOpenOrdersInternal(true);
+            }
         }
 
         private List<Order> GetOpenOrdersInternal(bool all)
@@ -517,13 +520,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // if the function reqAllOpenOrders is used by a client, subsequent orders placed by that client
                 // must have order IDs greater than the order IDs of all orders returned because of that function call.
 
-                lock (_nextValidIdLocker)
+                if (lastOrderId >= _nextValidId)
                 {
-                    if (lastOrderId >= _nextValidId)
-                    {
-                        Log.Trace($"InteractiveBrokersBrokerage.GetOpenOrders(): Updating nextValidId from {_nextValidId} to {lastOrderId + 1}");
-                        _nextValidId = lastOrderId + 1;
-                    }
+                    Log.Trace($"InteractiveBrokersBrokerage.GetOpenOrders(): Updating nextValidId from {_nextValidId} to {lastOrderId + 1}");
+                    _nextValidId = lastOrderId + 1;
                 }
             }
 
