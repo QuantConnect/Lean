@@ -226,7 +226,11 @@ namespace QuantConnect.ToolBox
 
             TradeBar previousClosingPrice = FindPreviousTradableDayClosingPrice(eventDayData.Time);
 
-            var priceFactor = previousFactorFileRow.PriceFactor - (dividend.Value / ((previousClosingPrice.Close) * previousFactorFileRow.SplitFactor));
+            // adjust the dividend for both price and split factors (!)
+            var priceFactor = previousFactorFileRow.PriceFactor - dividend.Value *
+                              previousFactorFileRow.PriceFactor /
+                              previousClosingPrice.Close /
+                              previousFactorFileRow.SplitFactor;
 
             return new FactorFileRow(
                 previousClosingPrice.Time,
@@ -257,7 +261,7 @@ namespace QuantConnect.ToolBox
             return new FactorFileRow(
                     previousClosingPrice.Time,
                     previousFactorFileRow.PriceFactor,
-                    (previousFactorFileRow.SplitFactor * split.Value).RoundToSignificantDigits(6),
+                    (previousFactorFileRow.SplitFactor / split.Value).RoundToSignificantDigits(6),
                     previousClosingPrice.Close
                 );
         }
