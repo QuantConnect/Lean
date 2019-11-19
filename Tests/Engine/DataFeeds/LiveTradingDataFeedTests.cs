@@ -52,6 +52,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private LiveSynchronizer _synchronizer;
         private readonly DateTime _startDate = new DateTime(2018, 08, 1, 11, 0, 0);
         private DataManager _dataManager;
+        private readonly Dictionary<Type, BaseData> _instances = new Dictionary<Type, BaseData>
+        {
+            {typeof(BaseData), typeof(TradeBar).GetBaseDataInstance() },
+            {typeof(PsychSignalSentiment), typeof(PsychSignalSentiment).GetBaseDataInstance() },
+            {typeof(TiingoNews), typeof(TiingoNews).GetBaseDataInstance() },
+        };
 
         [SetUp]
         public void SetUp()
@@ -1219,71 +1225,71 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // Equity - Hourly resolution
             // We expect 7 hourly bars for 6.5 hours in open market hours
             // We expect only 1 dividend at midnight
-            new TestCaseData(Symbols.SPY, Resolution.Hour, 1, 0, 7, 0, 1, 0, false),
+            new TestCaseData(Symbols.SPY, Resolution.Hour, 1, 0, 7, 0, 1, 0, false, _instances[typeof(BaseData)]),
 
             // Equity - Minute resolution
             // We expect 30 minute bars for 0.5 hours in open market hours
-            new TestCaseData(Symbols.SPY, Resolution.Minute, 1, 0, (int)(0.5 * 60), 0, 0, 0, false),
+            new TestCaseData(Symbols.SPY, Resolution.Minute, 1, 0, (int)(0.5 * 60), 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Equity - Tick resolution
             // In this test we only emit ticks once per hour
             // We expect only 6 ticks -- the 4 PM tick is not received because it's outside market hours
             // We expect only 1 dividend at midnight
-            new TestCaseData(Symbols.SPY, Resolution.Tick, 1, 7 - 1, 0, 0, 1, 0, false),
+            new TestCaseData(Symbols.SPY, Resolution.Tick, 1, 7 - 1, 0, 0, 1, 0, false, _instances[typeof(BaseData)]),
 
             // Forex - FXCM
-            new TestCaseData(Symbols.EURUSD, Resolution.Hour, 1, 0, 0, 24, 0, 0, false),
-            new TestCaseData(Symbols.EURUSD, Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false),
-            new TestCaseData(Symbols.EURUSD, Resolution.Tick, 1, 24, 0, 0, 0, 0, false),
+            new TestCaseData(Symbols.EURUSD, Resolution.Hour, 1, 0, 0, 24, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.EURUSD, Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.EURUSD, Resolution.Tick, 1, 24, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Forex - Oanda
-            new TestCaseData(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Hour, 1, 0, 0, 24, 0, 0, false),
-            new TestCaseData(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false),
-            new TestCaseData(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Tick, 1, 24, 0, 0, 0, 0, false),
+            new TestCaseData(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Hour, 1, 0, 0, 24, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda), Resolution.Tick, 1, 24, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // CFD - FXCM
-            new TestCaseData(Symbols.DE30EUR, Resolution.Hour, 1, 0, 0, 14, 0, 0, false),
-            new TestCaseData(Symbols.DE30EUR, Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false),
-            new TestCaseData(Symbols.DE30EUR, Resolution.Tick, 1, 14, 0, 0, 0, 0, false),
+            new TestCaseData(Symbols.DE30EUR, Resolution.Hour, 1, 0, 0, 14, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.DE30EUR, Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.DE30EUR, Resolution.Tick, 1, 14, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // CFD - Oanda
-            new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda), Resolution.Hour, 1, 0, 0, 14, 0, 0, false),
-            new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda), Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false),
-            new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda), Resolution.Tick, 1, 14, 0, 0, 0, 0, false),
+            new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda), Resolution.Hour, 1, 0, 0, 14, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda), Resolution.Minute, 1, 0, 0, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda), Resolution.Tick, 1, 14, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Crypto
-            new TestCaseData(Symbols.BTCUSD, Resolution.Hour, 1, 0, 24, 24, 0, 0, false),
-            new TestCaseData(Symbols.BTCUSD, Resolution.Minute, 1, 0, 1 * 60, 1 * 60, 0, 0, false),
+            new TestCaseData(Symbols.BTCUSD, Resolution.Hour, 1, 0, 24, 24, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.BTCUSD, Resolution.Minute, 1, 0, 1 * 60, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
             // x2 because counting trades and quotes
-            new TestCaseData(Symbols.BTCUSD, Resolution.Tick, 1, 24 * 2, 0, 0, 0, 0, false),
+            new TestCaseData(Symbols.BTCUSD, Resolution.Tick, 1, 24 * 2, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Futures
             // ES has two session breaks totalling 1h 15m, so total trading hours = 22.75
-            new TestCaseData(Symbols.Future_ESZ18_Dec2018, Resolution.Hour, 1, 0, 23, 23, 0, 0, false),
-            new TestCaseData(Symbols.Future_ESZ18_Dec2018, Resolution.Minute, 1, 0, 1 * 60, 1 * 60, 0, 0, false),
+            new TestCaseData(Symbols.Future_ESZ18_Dec2018, Resolution.Hour, 1, 0, 23, 23, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.Future_ESZ18_Dec2018, Resolution.Minute, 1, 0, 1 * 60, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
             // x2 because counting trades and quotes
-            new TestCaseData(Symbols.Future_ESZ18_Dec2018, Resolution.Tick, 1, 23 * 2, 0, 0, 0, 0, false),
+            new TestCaseData(Symbols.Future_ESZ18_Dec2018, Resolution.Tick, 1, 23 * 2, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Options
-            new TestCaseData(Symbols.SPY_C_192_Feb19_2016, Resolution.Hour, 1, 0, 7, 7, 0, 0, false),
+            new TestCaseData(Symbols.SPY_C_192_Feb19_2016, Resolution.Hour, 1, 0, 7, 7, 0, 0, false, _instances[typeof(BaseData)]),
             // We expect 30 minute bars for 0.5 hours in open market hours
-            new TestCaseData(Symbols.SPY_C_192_Feb19_2016, Resolution.Minute, 1, 0, (int)(0.5 * 60), (int)(0.5 * 60), 0, 0, false),
+            new TestCaseData(Symbols.SPY_C_192_Feb19_2016, Resolution.Minute, 1, 0, (int)(0.5 * 60), (int)(0.5 * 60), 0, 0, false, _instances[typeof(BaseData)]),
             // x2 because counting trades and quotes
-            new TestCaseData(Symbols.SPY_C_192_Feb19_2016, Resolution.Tick, 1, (7 - 1) * 2, 0, 0, 0, 0, false),
+            new TestCaseData(Symbols.SPY_C_192_Feb19_2016, Resolution.Tick, 1, (7 - 1) * 2, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Custom data not supported
-            new TestCaseData(Symbol.CreateBase(typeof(PsychSignalSentiment), Symbols.AAPL, Market.USA), Resolution.Hour, 1, 0, 0, 0, 0, 24 * 2, true),
-            new TestCaseData(Symbol.CreateBase(typeof(PsychSignalSentiment), Symbols.AAPL, Market.USA), Resolution.Minute, 1, 0, 0, 0, 0, 60 * 2, true),
-            new TestCaseData(Symbol.CreateBase(typeof(PsychSignalSentiment), Symbols.AAPL, Market.USA), Resolution.Tick, 1, 0, 0, 0, 0, 24, true),
+            new TestCaseData(Symbol.CreateBase(typeof(PsychSignalSentiment), Symbols.AAPL, Market.USA), Resolution.Hour, 1, 0, 0, 0, 0, 24 * 2, true, _instances[typeof(PsychSignalSentiment)]),
+            new TestCaseData(Symbol.CreateBase(typeof(PsychSignalSentiment), Symbols.AAPL, Market.USA), Resolution.Minute, 1, 0, 0, 0, 0, 60 * 2, true, _instances[typeof(PsychSignalSentiment)]),
+            new TestCaseData(Symbol.CreateBase(typeof(PsychSignalSentiment), Symbols.AAPL, Market.USA), Resolution.Tick, 1, 0, 0, 0, 0, 24, true, _instances[typeof(PsychSignalSentiment)]),
 
             // Custom data streamed
-            new TestCaseData(Symbol.CreateBase(typeof(TiingoNews), Symbols.AAPL, Market.USA), Resolution.Hour, 1, 0, 0, 0, 0, 24 * 2, false),
-            new TestCaseData(Symbol.CreateBase(typeof(TiingoNews), Symbols.AAPL, Market.USA), Resolution.Minute, 1, 0, 0, 0, 0, 60 * 2, false),
-            new TestCaseData(Symbol.CreateBase(typeof(TiingoNews), Symbols.AAPL, Market.USA), Resolution.Tick, 1, 0, 0, 0, 0, 24, false)
+            new TestCaseData(Symbol.CreateBase(typeof(TiingoNews), Symbols.AAPL, Market.USA), Resolution.Hour, 1, 0, 0, 0, 0, 24 * 2, false, _instances[typeof(TiingoNews)]),
+            new TestCaseData(Symbol.CreateBase(typeof(TiingoNews), Symbols.AAPL, Market.USA), Resolution.Minute, 1, 0, 0, 0, 0, 60 * 2, false, _instances[typeof(TiingoNews)]),
+            new TestCaseData(Symbol.CreateBase(typeof(TiingoNews), Symbols.AAPL, Market.USA), Resolution.Tick, 1, 0, 0, 0, 0, 24, false, _instances[typeof(TiingoNews)])
         };
 
         [TestCaseSource(nameof(DataTypeTestCases))]
-        public void HandlesAllTypes(
+        public void HandlesAllTypes<T>(
             Symbol symbol,
             Resolution resolution,
             int days,
@@ -1292,7 +1298,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             int expectedQuoteBarsReceived,
             int expectedAuxPointsReceived,
             int expectedCustomPointsReceived,
-            bool shouldThrowException)
+            bool shouldThrowException,
+            T customDataType) where T : BaseData, new()
         {
             // startDate and endDate are in algorithm time zone
             var startDate = new DateTime(2019, 6, 3);
@@ -1335,12 +1342,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                 if (symbol.SecurityType == SecurityType.Base)
                 {
-                    var dataPoint = new PsychSignalSentiment
+                    BaseData dataPoint = null;
+                    dataPoints.Add(new T
                     {
                         Symbol = symbol,
                         EndTime = exchangeTime,
                         Value = actualPricePointsEnqueued++
-                    };
+                    });
 
                     dataPoints.Add(dataPoint);
 
@@ -1451,14 +1459,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 case SecurityType.Base:
                     algorithm.AddEquity(symbol.Underlying.Value, resolution, symbol.ID.Market,
                         fillDataForward: false);
-                    if (symbol.ToString().Contains("PsychSignal"))
+
+                    if (customDataType.RequiresMapping())
                     {
-                        security = algorithm.AddData<PsychSignalSentiment>(symbol.Value, resolution,
-                            fillDataForward: false);
-                    }
-                    else if (symbol.ToString().Contains("TiingoNews"))
-                    {
-                        security = algorithm.AddData<TiingoNews>(symbol.Value, resolution,
+                        security = algorithm.AddData<T>(symbol.Value, resolution,
                             fillDataForward: false);
                     }
                     else
@@ -1529,13 +1533,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                 $"{algorithm.Time} - Dividend received, value: {timeSlice.Slice.Dividends[symbol].Value} (count: {actualAuxPointsReceived})");
                         }
 
-                        var customDataCount = timeSlice.Slice.Get<PsychSignalSentiment>().Count;
+                        var customDataCount = timeSlice.Slice.Get<T>().Count;
                         if (customDataCount > 0)
                         {
                             actualCustomPointsReceived += customDataCount;
 
                             ConsoleWriteLine(
-                                $"{algorithm.Time} - Custom received, value: {timeSlice.Slice.Get<PsychSignalSentiment>().First().Value} (count: {actualCustomPointsReceived})");
+                                $"{algorithm.Time} - Custom received, value: {timeSlice.Slice.Get<T>().First().Value} (count: {actualCustomPointsReceived})");
                         }
                     }
                     else
@@ -1564,13 +1568,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                                 $"{algorithm.Time} - QuoteBar received, value: {timeSlice.Slice.QuoteBars[symbol].Value} (count: {actualQuoteBarsReceived})");
                         }
 
-                        var customDataCount = timeSlice.Slice.Get<PsychSignalSentiment>().Count;
-                        if (customDataCount > 0)
+                        if (symbol.SecurityType == SecurityType.Base)
                         {
-                            actualCustomPointsReceived += customDataCount;
+                            var customDataCount = timeSlice.Slice.Get<T>().Count;
+                            if (customDataCount > 0)
+                            {
+                                actualCustomPointsReceived += customDataCount;
 
-                            ConsoleWriteLine(
-                                $"{algorithm.Time} - Custom received, value: {timeSlice.Slice.Get<PsychSignalSentiment>().First().Value} (count: {actualCustomPointsReceived})");
+                                ConsoleWriteLine(
+                                    $"{algorithm.Time} - Custom received, value: {timeSlice.Slice.Get<T>().First().Value} (count: {actualCustomPointsReceived})");
+                            }
                         }
                     }
 
