@@ -160,7 +160,8 @@ namespace QuantConnect.Data.Auxiliary
             }
             // secondary search for exact mapping, find path than ends with symbol.csv
             MapFile mapFile;
-            if (!_mapFilesByPermtick.TryGetValue(symbol, out mapFile))
+            if (!_mapFilesByPermtick.TryGetValue(symbol, out mapFile)
+                || mapFile.FirstDate > date)
             {
                 return new MapFile(symbol, new List<MapFileRow>());
             }

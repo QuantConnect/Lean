@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using NUnit.Framework;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
 {
@@ -26,6 +27,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
     public class MapFileResolverTests
     {
         private readonly MapFileResolver _resolver = CreateMapFileResolver();
+
+        [Test]
+        public void ChecksFirstDate()
+        {
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            var mapFileResolver = mapFileProvider.Get(Market.USA);
+            // FB started trading on 20120518
+            var mapFile = mapFileResolver.ResolveMapFile("FB", new DateTime(2000, 1, 1));
+            Assert.IsTrue(mapFile.IsNullOrEmpty());
+
+            var mapFile2 = mapFileResolver.ResolveMapFile("FB", new DateTime(2015, 1, 1));
+            Assert.IsFalse(mapFile2.IsNullOrEmpty());
+        }
 
         [Test]
         public void InitializationSpeedTest()
