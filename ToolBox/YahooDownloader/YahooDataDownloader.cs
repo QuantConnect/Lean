@@ -105,7 +105,7 @@ namespace QuantConnect.ToolBox.YahooDownloader
                         parsed.Add(new Split
                         {
                             Time = Parse.DateTimeExact(values[0].Replace("-", string.Empty), DateFormat.EightCharacter),
-                            Value = 1/ParseAmount(values[1])
+                            Value = ParseAmount(values[1])
                         });
                     }
                     else
