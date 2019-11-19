@@ -38,6 +38,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         public bool ShouldBeRateLimited => false;
 
         /// <summary>
+        /// Direct access to the StreamReader instance
+        /// </summary>
+        public StreamReader StreamReader => _streamReader.StreamReader;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="RemoteFileSubscriptionStreamReader"/> class.
         /// </summary>
         /// <param name="dataCacheProvider">The <see cref="IDataCacheProvider"/> used to retrieve a stream of data</param>

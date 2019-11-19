@@ -232,6 +232,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ReaderWasCalled = true;
                 return base.Reader(config, line, date, isLiveMode);
             }
+            public override BaseData Reader(SubscriptionDataConfig config, StreamReader streamReader, DateTime date, bool isLiveMode)
+            {
+                ReaderWasCalled = true;
+                return base.Reader(config, streamReader, date, isLiveMode);
+            }
         }
 
         private class CustomEphemeralDataCacheProvider : IDataCacheProvider

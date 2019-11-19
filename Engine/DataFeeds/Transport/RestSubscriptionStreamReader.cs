@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using RestSharp;
@@ -36,6 +37,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// Gets whether or not this stream reader should be rate limited
         /// </summary>
         public bool ShouldBeRateLimited => _isLiveMode;
+
+        /// <summary>
+        /// Direct access to the StreamReader instance
+        /// </summary>
+        public StreamReader StreamReader => null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RestSubscriptionStreamReader"/> class.
