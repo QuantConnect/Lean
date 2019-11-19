@@ -25,10 +25,7 @@ namespace QuantConnect.ToolBox.Benzinga
             var date = Parse.DateTimeExact(day, "yyyyMMdd");
             var converter = new BenzingaNewsDataConverter(new DirectoryInfo(source), new DirectoryInfo(destination));
 
-            foreach (var dayOf in Time.EachDay(date, DateTime.UtcNow))
-            {
-                converter.Convert(dayOf);
-            }
+            converter.Convert(date);
         }
 
         public static void BenzingaNewsDataDownloader(DateTime fromDate, DateTime toDate, string destination, string apiKey)

@@ -207,7 +207,7 @@ namespace QuantConnect.ToolBox.Benzinga
                     article.Symbols = article.Symbols.Where(s => s != symbolToRemove).ToList();
                 }
 
-                // Batch all the articles so that we can parallelize and write all in one shot
+                // Batch all the articles so that we can write it all in one shot
                 articles[$"{article.Id}.json"] = JsonConvert.SerializeObject(article, Newtonsoft.Json.Formatting.None, new BenzingaNewsJsonConverter());
             }
 
@@ -223,7 +223,7 @@ namespace QuantConnect.ToolBox.Benzinga
                 // Make sure to create the directory, otherwise we won't be able to move files to it.
                 referenceFileDirectory.Create();
 
-                var referenceFileExists = referenceFile.Exists;
+                var referenceFileExisted = referenceFile.Exists;
                 var referenceFileTemp = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
                 var existingReferenceFileBackupPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
 
@@ -231,7 +231,7 @@ namespace QuantConnect.ToolBox.Benzinga
                 // Order before writing since HashSet doesn't guarantee order of elements
                 File.WriteAllLines(referenceFileTemp, indexCollection.Indexes.OrderBy(x => x));
 
-                if (referenceFileExists)
+                if (referenceFileExisted)
                 {
                     Log.Trace($"BenzingaDataConverter.WriteToFile(): Moving existing reference file to backup location: {existingReferenceFileBackupPath}");
                     File.Move(referenceFile.FullName, existingReferenceFileBackupPath);
@@ -258,7 +258,7 @@ namespace QuantConnect.ToolBox.Benzinga
 
                 // We moved the existing reference file to a temporary location if this is true.
                 // We don't need it anymore, so delete it, otherwise we risk running out of disk space.
-                if (referenceFileExists)
+                if (referenceFileExisted)
                 {
                     File.Delete(existingReferenceFileBackupPath);
                 }

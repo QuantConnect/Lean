@@ -32,6 +32,26 @@ namespace QuantConnect.Data.Custom.Benzinga
     public static class BenzingaNewsFactory
     {
         /// <summary>
+        /// Sometimes "Berkshire Hathaway" is mentioned as "BRK" in the raw data, although it is
+        /// separated into class A and B shares and should appear as BRK.A and BRK.B. Because our
+        /// map file system does not perform the conversion from BRK -> { BRK.A, BRK.B }, we must
+        /// provide them manually. Note that we don't dynamically try to locate class A and B shares
+        /// because there can exist companies with the same base ticker that class A and B shares have.
+        /// For example, CBS trades under "CBS" and "CBS.A", which means that if "CBS" appears, it will
+        /// be automatically mapped to CBS. However, if we dynamically selected "CBS.A" - we might select
+        /// a different company not associated with the ticker being referenced.
+        /// </summary>
+        public static readonly Dictionary<string, HashSet<string>> ShareClassMappedTickers = new Dictionary<string, HashSet<string>>
+        {
+            {"BRK", new HashSet<string>
+                {
+                    "BRK.A",
+                    "BRK.B"
+                }
+            }
+        };
+
+        /// <summary>
         /// Creates an instance of <see cref="BenzingaNews"/> from RSS data (historical)
         /// </summary>
         /// <param name="contents">Raw contents of the XML file</param>
@@ -97,17 +117,31 @@ namespace QuantConnect.Data.Custom.Benzinga
                 // Tickers with dots in them like BRK.A and BRK.B appear as BRK-A and BRK-B in Benzinga data.
                 var symbolTicker = ticker.Value<string>("#text").Trim().Replace('-', '.');
                 var mappedSymbol = mapFileResolver.ResolveMapFile(symbolTicker, instance.CreatedAt).GetMappedSymbol(instance.CreatedAt);
+                var mappableSymbol = ShareClassMappedTickers.ContainsKey(symbolTicker);
 
-                if (string.IsNullOrWhiteSpace(mappedSymbol))
+                if (!mappableSymbol && string.IsNullOrWhiteSpace(mappedSymbol))
                 {
                     Log.Error($"BenzingaFactory.CreateBenzingaNewsFromRSS(): Failed to map old ticker {symbolTicker}. New ticker is null");
                     continue;
                 }
 
-                tempSymbols.Add(new Symbol(
-                    SecurityIdentifier.GenerateEquity(symbolTicker, QuantConnect.Market.USA, mapSymbol: true, mapFileProvider: mapFileProvider, mappingResolveDate: instance.CreatedAt),
-                    mappedSymbol
-                ));
+                if (!mappableSymbol)
+                {
+                    tempSymbols.Add(new Symbol(
+                        SecurityIdentifier.GenerateEquity(symbolTicker, QuantConnect.Market.USA, mapSymbol: true, mapFileProvider: mapFileProvider, mappingResolveDate: instance.CreatedAt),
+                        mappedSymbol
+                    ));
+                }
+                else
+                {
+                    foreach (var mappedTicker in ShareClassMappedTickers[symbolTicker])
+                    {
+                        tempSymbols.Add(new Symbol(
+                            SecurityIdentifier.GenerateEquity(mappedTicker, QuantConnect.Market.USA, mapSymbol: true, mapFileProvider: mapFileProvider, mappingResolveDate: instance.CreatedAt),
+                            mappedTicker
+                        ));
+                    }
+                }
             }
 
             instance.Symbols.AddRange(tempSymbols);
@@ -118,7 +152,6 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// Creates <see cref="BenzingaNews"/> instance from JSON (API response)
         /// </summary>
         /// <param name="contents">Contents of the JSON file (article)</param>
-        /// <param name="mapFileProvider">Map file provider</param>
         /// <param name="mapFileResolver">Map file resolver</param>
         /// <returns>BenzingaNews instance</returns>
         /// <remarks>This method is provided to enable logging when deserializing Benzinga news data for debugging purposes</remarks>
@@ -146,7 +179,7 @@ namespace QuantConnect.Data.Custom.Benzinga
                     }
 
                     var mappedSymbol = mapFileResolver.ResolveMapFile(symbolTicker, instance.CreatedAt).GetMappedSymbol(instance.CreatedAt);
-                    if (string.IsNullOrWhiteSpace(mappedSymbol))
+                    if (string.IsNullOrWhiteSpace(mappedSymbol) && !ShareClassMappedTickers.ContainsKey(symbolTicker))
                     {
                         Log.Error($"BenzingaFactory.CreateBenzingaNewsFromJSON(): Failed to map old ticker {symbolTicker}. New ticker is null");
                         continue;

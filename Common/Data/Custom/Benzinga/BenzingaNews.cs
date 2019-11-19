@@ -73,12 +73,6 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <summary>
         /// Categories that relate to the article
         /// </summary>
-        /// <remarks>
-        /// We intentionally use a non-existing property from the data so that we can
-        /// lazily deserialize the object, and populate the values manually. From there,
-        /// we can serialize the object again during the processing stage and easily
-        /// deserialize the object going onwards in `Reader`
-        /// </remarks>
         [JsonProperty("channels")]
         public List<string> Categories { get; set; }
 
@@ -100,12 +94,6 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// about in Congress (Dodd-Frank), specific products (iPhone), politicians,
         /// celebrities, stock movements (i.e. 'Mid-day Losers' &amp; 'Mid-day Gainers').
         /// </summary>
-        /// <remarks>
-        /// We intentionally use a non-existing property from the data so that we can
-        /// lazily deserialize the object, and populate the values manually. From there,
-        /// we can serialize the object again during the processing stage and easily
-        /// deserialize the object going onwards in `Reader`
-        /// </remarks>
         [JsonProperty("tags")]
         public List<string> Tags { get; set; }
 
@@ -164,7 +152,6 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <returns>New instance of <see cref="BenzingaNews"/></returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            // Make sure we parse as UTC since we also store as UTC. Otherwise, the time will be set as Local.
             var article = JsonConvert.DeserializeObject<BenzingaNews>(line, new BenzingaNewsJsonConverter(config.Symbol));
             article.Symbol = config.Symbol;
             article.EndTime = article.UpdatedAt;

@@ -168,10 +168,24 @@ namespace QuantConnect.Data.Custom.Benzinga
                     continue;
                 }
 
-                tempSymbols.Add(new Symbol(
-                    SecurityIdentifier.GenerateEquity(symbolTicker, QuantConnect.Market.USA, mapSymbol: true, mappingResolveDate: instance.CreatedAt),
-                    symbolTicker
-                ));
+                if (!BenzingaNewsFactory.ShareClassMappedTickers.ContainsKey(symbolTicker))
+                {
+                    tempSymbols.Add(new Symbol(
+                        SecurityIdentifier.GenerateEquity(symbolTicker, QuantConnect.Market.USA, mapSymbol: true, mappingResolveDate: instance.CreatedAt),
+                        symbolTicker
+                    ));
+
+                }
+                else
+                {
+                    foreach (var mappedTicker in BenzingaNewsFactory.ShareClassMappedTickers[symbolTicker])
+                    {
+                        tempSymbols.Add(new Symbol(
+                            SecurityIdentifier.GenerateEquity(mappedTicker, QuantConnect.Market.USA, mapSymbol: true, mappingResolveDate: instance.CreatedAt),
+                            mappedTicker
+                        ));
+                    }
+                }
             }
 
             instance.Symbols.AddRange(tempSymbols);
