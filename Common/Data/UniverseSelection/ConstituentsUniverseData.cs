@@ -81,13 +81,13 @@ namespace QuantConnect.Data.UniverseSelection
                 var csv = line.Split(',');
                 var preselected = new ConstituentsUniverseData
                 {
-                    Symbol = new Symbol(SecurityIdentifier.Parse(csv[0]), csv[1]),
+                    Symbol = new Symbol(SecurityIdentifier.Parse(csv[1]), csv[0]),
                     Time = isLiveMode ? date.AddDays(-1) : date
                 };
 
                 return preselected;
             }
-            catch (Exception)
+            catch
             {
                 return null;
             }

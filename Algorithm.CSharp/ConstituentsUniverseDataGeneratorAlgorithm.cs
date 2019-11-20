@@ -75,15 +75,16 @@ namespace QuantConnect.Algorithm.CSharp
                 switch (step)
                 {
                     case 1:
+                    case 2:
                         return new[]
                         {
                             QuantConnect.Symbol.Create("QQQ", SecurityType.Equity, Market.USA),
                             QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA)
                         };
-                    case 2:
-                        return Enumerable.Empty<Symbol>();
                     case 3:
+                        return Enumerable.Empty<Symbol>();
                     case 4:
+                    case 5:
                         return new[]
                         {
                             QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA),
@@ -117,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
                     using (StreamWriter constituentsUniverseFile = new StreamWriter(path, append:true))
                     {
                         constituentsUniverseFile.WriteLine(
-                            $"{QuantConnect.Symbol.None.ID.ToString()},{QuantConnect.Symbol.None.Value}");
+                            $"{QuantConnect.Symbol.None.Value},{QuantConnect.Symbol.None.ID.ToString()}");
                     }
                 }
                 else
@@ -126,7 +127,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         using (StreamWriter constituentsUniverseFile = new StreamWriter(path, append: true))
                         {
-                            constituentsUniverseFile.WriteLine($"{symbol.ID.ToString()},{symbol.Value}");
+                            constituentsUniverseFile.WriteLine($"{symbol.Value},{symbol.ID.ToString()}");
                         }
                     }
                 }

@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
 
             foreach (var tradableDay in tradableDays)
             {
-                var dataPoint = reader.Reader(_config, "NONE 0,NONE", tradableDay, false);
+                var dataPoint = reader.Reader(_config, "NONE,NONE 0", tradableDay, false);
                 Assert.AreEqual(dataPoint.Time, tradableDay);
                 // emitted tomorrow
                 Assert.AreEqual(dataPoint.EndTime, tradableDay.AddDays(1));
@@ -109,7 +109,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
 
             var currentTime = DateTime.UtcNow;
 
-            var dataPoint = reader.Reader(_config, "NONE 0,NONE", currentTime, true);
+            var dataPoint = reader.Reader(_config, "NONE,NONE 0", currentTime, true);
             Assert.AreEqual(dataPoint.Time, currentTime.AddDays(-1));
             // emitted right away
             Assert.AreEqual(dataPoint.EndTime, currentTime);
