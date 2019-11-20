@@ -20,16 +20,69 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Data.Custom.Benzinga
 {
     /// <summary>
     /// Helper json converter class used to convert Benzinga news data
     /// into <see cref="BenzingaNews"/>
+    ///
+    /// An example schema of the data in a serialized format is provided
+    /// to help you better understand this converter.
     /// </summary>
+    /// <example>
+    /// {
+    ///     "id": int,
+    ///     "author": string,
+    ///     "created": DateTime (yyyy-MM-ddTHH:mm:ssZ),
+    ///     "updated": DateTime (yyyy-MM-ddTHH:mm:ssZ),
+    ///     "title": string,
+    ///     "teaser": string,
+    ///     "body": string,
+    ///     "channels": [
+    ///         {
+    ///             "name": string
+    ///         },
+    ///         ...
+    ///     ],
+    ///     "stocks": [
+    ///         {
+    ///             "name": string
+    ///         },
+    ///         ...
+    ///     ],
+    ///     "tags": [
+    ///         {
+    ///             "name": string
+    ///         },
+    ///         ...
+    ///     ]
+    /// }
+    /// </example>
     public class BenzingaNewsJsonConverter : JsonConverter
     {
         private readonly Symbol _symbol;
+
+        /// <summary>
+        /// Sometimes "Berkshire Hathaway" is mentioned as "BRK" in the raw data, although it is
+        /// separated into class A and B shares and should appear as BRK.A and BRK.B. Because our
+        /// map file system does not perform the conversion from BRK -> { BRK.A, BRK.B }, we must
+        /// provide them manually. Note that we don't dynamically try to locate class A and B shares
+        /// because there can exist companies with the same base ticker that class A and B shares have.
+        /// For example, CBS trades under "CBS" and "CBS.A", which means that if "CBS" appears, it will
+        /// be automatically mapped to CBS. However, if we dynamically selected "CBS.A" - we might select
+        /// a different company not associated with the ticker being referenced.
+        /// </summary>
+        public static readonly Dictionary<string, HashSet<string>> ShareClassMappedTickers = new Dictionary<string, HashSet<string>>
+        {
+            {"BRK", new HashSet<string>
+                {
+                    "BRK.A",
+                    "BRK.B"
+                }
+            }
+        };
 
         /// <summary>
         /// Creates a new instance of the json converter
@@ -54,6 +107,18 @@ namespace QuantConnect.Data.Custom.Benzinga
             var symbolTokens = new List<JObject>(article.Symbols.Count);
             var tagTokens = new List<JObject>(article.Tags.Count);
 
+            // In the loops below, we want to convert a List<T> to the following JSON structure:
+            // ...
+            // "channel/stock/tag": [
+            //     {
+            //         "name": string(T)
+            //     }
+            // ],
+            // ...
+            //
+            // We then replace the existing entries in the current `token` to be this JArray representation
+            // of the data contained within the List<T>. This is done to keep the data as close as possible
+            // to its original format and so we can deserialize the raw data gathered from the API.
             foreach (var category in article.Categories)
             {
                 var obj = new JObject();
@@ -82,6 +147,7 @@ namespace QuantConnect.Data.Custom.Benzinga
             token["stocks"].Replace(JArray.FromObject(symbolTokens));
             token["tags"].Replace(JArray.FromObject(tagTokens));
 
+            // Sends off the JToken object to be converted into a string
             token.WriteTo(writer);
         }
 
@@ -118,9 +184,10 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <summary>
         /// Helper method to deserialize a single json Benzinga news
         /// </summary>
-        /// <param name="token">The json token containing the Benzinga news to deserialize</param>
+        /// <param name="item">The json token containing the Benzinga news to deserialize</param>
+        /// <param name="enableLogging">true to enable logging (for debug purposes)</param>
         /// <returns>The deserialized <see cref="BenzingaNews"/> instance</returns>
-        public static BenzingaNews DeserializeNews(JToken item)
+        public static BenzingaNews DeserializeNews(JToken item, bool enableLogging = false)
         {
             var instance = new BenzingaNews
             {
@@ -165,20 +232,27 @@ namespace QuantConnect.Data.Custom.Benzinga
                 // Verified by observing and processing empty ticker
                 if (string.IsNullOrWhiteSpace(symbolTicker))
                 {
+                    if (enableLogging)
+                    {
+                        Log.Error($"BenzingaNewsJsonConverter.DeserializeNews(): Empty ticker was found in article with ID: {instance.Id}");
+                    }
                     continue;
                 }
 
-                if (!BenzingaNewsFactory.ShareClassMappedTickers.ContainsKey(symbolTicker))
+                if (!ShareClassMappedTickers.ContainsKey(symbolTicker))
                 {
                     tempSymbols.Add(new Symbol(
                         SecurityIdentifier.GenerateEquity(symbolTicker, QuantConnect.Market.USA, mapSymbol: true, mappingResolveDate: instance.CreatedAt),
                         symbolTicker
                     ));
-
                 }
                 else
                 {
-                    foreach (var mappedTicker in BenzingaNewsFactory.ShareClassMappedTickers[symbolTicker])
+                    if (enableLogging)
+                    {
+                        Log.Trace($"BenzingaNewsJsonConverter.DeserializeNews(): Ticker {symbolTicker} will be added as: {string.Join(",", ShareClassMappedTickers[symbolTicker])}");
+                    }
+                    foreach (var mappedTicker in ShareClassMappedTickers[symbolTicker])
                     {
                         tempSymbols.Add(new Symbol(
                             SecurityIdentifier.GenerateEquity(mappedTicker, QuantConnect.Market.USA, mapSymbol: true, mappingResolveDate: instance.CreatedAt),

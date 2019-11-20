@@ -57,7 +57,7 @@ class BenzingaNewsAlgorithm(QCAlgorithm):
         if (self.Time - self.lastTrade) < timedelta(days=5):
             return
 
-        # Get rid of our holdings after 10 days, and start fresh
+        # Get rid of our holdings after 5 days, and start fresh
         self.Liquidate()
 
         # Get all Benzinga data and loop over it

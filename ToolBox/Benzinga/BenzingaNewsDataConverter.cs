@@ -25,6 +25,7 @@ using System.IO;
 using System.Xml;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Auxiliary;
+using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.ToolBox.Benzinga
 {
@@ -86,11 +87,12 @@ namespace QuantConnect.ToolBox.Benzinga
 
         public bool Convert(DateTime date)
         {
-            var newsArticles = new DirectoryInfo(Path.Combine(
-                _sourceDirectory.FullName,
-                $"{date.Year}",
-                date.Month.ToStringInvariant().PadLeft(2, '0'),
-                date.Day.ToStringInvariant().PadLeft(2, '0')));
+            var newsArticles = new DirectoryInfo(
+                Path.Combine(
+                    _sourceDirectory.FullName,
+                    $"{date:yyyyMMdd}"
+                )
+            );
 
             if (!newsArticles.Exists)
             {
@@ -98,37 +100,31 @@ namespace QuantConnect.ToolBox.Benzinga
                 return false;
             }
 
-            WriteToFile(Process(newsArticles), date);
+            try
+            {
+                WriteToFile(Process(newsArticles), date);
+            }
+            catch (Exception error)
+            {
+                Log.Error(error, $"Failed to complete processing of Benzinga news data for {date:yyyy-MM-dd}");
+                return false;
+            }
+
             return true;
         }
 
         /// <summary>
-        /// Process the data to BenzingaNews instances. This will process both historical and API retrieved news data.
+        /// Convert the raw data to BenzingaNews instances.
         /// </summary>
-        /// <param name="dateDirectory">Directory for a given date, e.g. ./root/2018/12/27/</param>
-        /// <returns></returns>
+        /// <param name="dateDirectory">Directory for a given date, e.g. _sourceDirectory/20181227/</param>
+        /// <returns>Enumerable of <see cref="BenzingaNews"/> instances</returns>
         private IEnumerable<BenzingaNews> Process(DirectoryInfo dateDirectory)
         {
-            foreach (var publication in dateDirectory.GetFiles("*.xml", SearchOption.TopDirectoryOnly))
-            {
-                var document = new XmlDocument();
-                document.LoadXml(File.ReadAllText(publication.FullName));
-
-                var news = BenzingaNewsFactory.CreateBenzingaNewsFromRSS(JsonConvert.SerializeXmlNode(document), _mapFileProvider, _mapFileResolver);
-                if (news == null)
-                {
-                    continue;
-                }
-
-                yield return news;
-            }
-
             foreach (var publication in dateDirectory.GetFiles("*.json", SearchOption.TopDirectoryOnly))
             {
-                var news = BenzingaNewsFactory.CreateBenzingaNewsFromJSON(File.ReadAllText(publication.FullName), _mapFileResolver);
-                foreach (var article in news)
+                foreach (var article in JsonConvert.DeserializeObject<JArray>(File.ReadAllText(publication.FullName)))
                 {
-                    yield return article;
+                    yield return BenzingaNewsJsonConverter.DeserializeNews(article, enableLogging: true);
                 }
             }
         }
@@ -140,10 +136,25 @@ namespace QuantConnect.ToolBox.Benzinga
         /// <param name="date">Date to convert for</param>
         private void WriteToFile(IEnumerable<BenzingaNews> news, DateTime date)
         {
+            // Send off articles and indexes to be loaded with the necessary data to write to file
+            var filteredContents = FilterArticlesAndIndexes(news, date);
+            // Write the index file contents to disk
+            WriteIndexesToFile(filteredContents);
+            // Compress the data and write to disk under the `content` folder in the destination directory
+            CompressData(filteredContents);
+        }
+
+        /// <summary>
+        /// Filters and batches the articles so that they can be written to disk in one go
+        /// </summary>
+        /// <param name="news">Enumerable of BenzingaNews</param>
+        /// <param name="articles">Where serialized articles will be stored keyed by filename</param>
+        /// <param name="indexes">Indexes stored by Symbol</param>
+        private BenzingaNewsFiltered FilterArticlesAndIndexes(IEnumerable<BenzingaNews> news, DateTime date)
+        {
             // Create a local cache of indexes and articles in order to speed up the conversion process.
             // We will write files from memory to disk without the need of temporary files.
-            var articles = new Dictionary<string, string>();
-            var indexes = new Dictionary<Symbol, BenzingaIndexCollection>();
+            var filtered = new BenzingaNewsFiltered(date);
 
             foreach (var article in news)
             {
@@ -157,7 +168,7 @@ namespace QuantConnect.ToolBox.Benzinga
                     if (symbol.Value.Contains(":"))
                     {
                         symbolsToRemove.Add(symbol);
-                        Log.Error($"BenzingaDataConverter.WriteToFile(): Ticker {symbol.Value} contains invalid character ':'. Skipping");
+                        Log.Error($"BenzingaDataConverter.SerializeArticlesAndIndexes(): Ticker {symbol.Value} contains invalid character ':'. Skipping");
                         continue;
                     }
 
@@ -165,15 +176,15 @@ namespace QuantConnect.ToolBox.Benzinga
                     if (_isWindows && _forbiddenTickers.Contains(symbol.Value))
                     {
                         symbolsToRemove.Add(symbol);
-                        Log.Error($"BenzingaDataConverter.WriteToFile(): Ticker {symbol.Value} is invalid in Windows. Skipping");
+                        Log.Error($"BenzingaDataConverter.SerializeArticlesAndIndexes(): Ticker {symbol.Value} is invalid in Windows. Skipping");
                         continue;
                     }
 
                     BenzingaIndexCollection indexCollection;
-                    if (!indexes.TryGetValue(symbol, out indexCollection))
+                    if (!filtered.SymbolIndexes.TryGetValue(symbol, out indexCollection))
                     {
                         indexCollection = new BenzingaIndexCollection(date);
-                        indexes[symbol] = indexCollection;
+                        filtered.SymbolIndexes[symbol] = indexCollection;
                         // The reference file path is where the indexes pointing to an article live
                         var referenceFile = new FileInfo(Path.Combine(_processedFilesDirectory.FullName, symbol.Value.ToLowerInvariant(), $"{date:yyyMMdd}.csv"));
 
@@ -199,7 +210,7 @@ namespace QuantConnect.ToolBox.Benzinga
                 // Skip if we didn't create any references for an article
                 if (!createdReference)
                 {
-                    Log.Error($"BenzingaDataConverter.WriteToFile(): Skipping news article {article.Id} because no tickers are associated with it");
+                    Log.Error($"BenzingaDataConverter.SerializeArticlesAndIndexes(): Skipping news article {article.Id} because no tickers are associated with it");
                     continue;
                 }
 
@@ -209,12 +220,26 @@ namespace QuantConnect.ToolBox.Benzinga
                     article.Symbols = article.Symbols.Where(s => s != symbolToRemove).ToList();
                 }
 
+                // We could potentially have an article with no Symbols and still write it without this check
+                if (article.Symbols.Count == 0)
+                {
+                    Log.Error($"BenzingaDataConverter.FilterArticlesAndIndexes(): Skipping news article {article.Id} because there are no Symbols associated with this article");
+                    continue;
+                }
+
                 // Batch all the articles so that we can write it all in one shot
-                articles[$"{article.Id}.json"] = JsonConvert.SerializeObject(article, Newtonsoft.Json.Formatting.None, new BenzingaNewsJsonConverter());
+                filtered.ArticleContents[$"{article.Id}.json"] = JsonConvert.SerializeObject(article, Newtonsoft.Json.Formatting.None, new BenzingaNewsJsonConverter());
             }
 
-            // Write all the batched indexes from memory to disk
-            foreach (var kvp in indexes)
+            return filtered;
+        }
+
+        /// <summary>
+        /// Writes all the filtered indexes from memory to disk
+        /// </summary>
+        private void WriteIndexesToFile(BenzingaNewsFiltered filtered)
+        {
+            foreach (var kvp in filtered.SymbolIndexes)
             {
                 var symbol = kvp.Key;
                 var indexCollection = kvp.Value;
@@ -265,10 +290,16 @@ namespace QuantConnect.ToolBox.Benzinga
                     File.Delete(existingReferenceFileBackupPath);
                 }
             }
+        }
 
+        /// <summary>
+        /// Compresses the data to ZIP format and stores them in the <code>Path.Combine(_destinationDirectory.FullName, "content")</code> folder
+        /// </summary>
+        private void CompressData(BenzingaNewsFiltered filtered)
+        {
             // Now compress all of the data we have for a given day
             var compressedDirectory = new DirectoryInfo(Path.Combine(_destinationDirectory.FullName, "content"));
-            var compressedFinal = new FileInfo(Path.Combine(compressedDirectory.FullName, $"{date:yyyyMMdd}.zip"));
+            var compressedFinal = new FileInfo(Path.Combine(compressedDirectory.FullName, $"{filtered.Date:yyyyMMdd}.zip"));
             var compressedTemp = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip"));
             var compressedFinalExists = compressedFinal.Exists;
             var compressedFinalBackup = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip"));
@@ -277,7 +308,7 @@ namespace QuantConnect.ToolBox.Benzinga
 
             if (compressedFinalExists)
             {
-                Log.Trace($"BenzingaDataConverter.WriteToFile(): Moving existing zip file for {date:yyyyMMdd} to temp directory as: {compressedFinalBackup.Name}");
+                Log.Trace($"BenzingaDataConverter.WriteToFile(): Moving existing zip file for {filtered.Date:yyyyMMdd} to temp directory as: {compressedFinalBackup.Name}");
                 File.Move(compressedFinal.FullName, compressedFinalBackup.FullName);
                 compressedFinal.Refresh();
             }
@@ -285,7 +316,7 @@ namespace QuantConnect.ToolBox.Benzinga
             try
             {
                 Log.Trace($"BenzingaDataConverter.WriteToFile(): Compressing to temp file: {compressedTemp.FullName}");
-                Compression.ZipData(compressedTemp.FullName, articles);
+                Compression.ZipData(compressedTemp.FullName, filtered.ArticleContents);
 
                 Log.Trace($"BenzingaDataConverter.WriteToFile(): Moving compressed file to final location: {compressedFinal.FullName}");
                 File.Move(compressedTemp.FullName, compressedFinal.FullName);
@@ -333,6 +364,41 @@ namespace QuantConnect.ToolBox.Benzinga
             {
                 Date = date;
                 Indexes = new HashSet<string>();
+            }
+        }
+
+        /// <summary>
+        /// For filtered data before writing to file
+        /// </summary>
+        /// <remarks>
+        /// This was created to encapsulate the contents we plan on writing to files.
+        /// Another reason is to prevent pollution of the method signatures.
+        /// </remarks>
+        private class BenzingaNewsFiltered
+        {
+            /// <summary>
+            /// Date associated with the filtered contents
+            /// </summary>
+            public DateTime Date;
+
+            /// <summary>
+            /// Contents we want to write to file. Keyed by filename and value is contents to write
+            /// </summary>
+            public Dictionary<string, string> ArticleContents;
+
+            /// <summary>
+            /// Indexes to write to file per symbol
+            /// </summary>
+            public Dictionary<Symbol, BenzingaIndexCollection> SymbolIndexes;
+
+            /// <summary>
+            /// Creates an instance of BenzingaNewsFiltered.
+            /// </summary>
+            public BenzingaNewsFiltered(DateTime date)
+            {
+                Date = date;
+                ArticleContents = new Dictionary<string, string>();
+                SymbolIndexes = new Dictionary<Symbol, BenzingaIndexCollection>();
             }
         }
     }

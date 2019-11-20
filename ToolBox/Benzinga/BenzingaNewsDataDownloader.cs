@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.Benzinga;
@@ -82,9 +84,7 @@ namespace QuantConnect.ToolBox.Benzinga
                 var finalDateDirectory = new DirectoryInfo(
                     Path.Combine(
                         _destinationDirectory.FullName,
-                        date.ToStringInvariant("yyyy"),
-                        date.ToStringInvariant("MM"),
-                        date.ToStringInvariant("dd")
+                        date.ToStringInvariant("yyyyMMdd")
                     )
                 );
 
@@ -118,8 +118,10 @@ namespace QuantConnect.ToolBox.Benzinga
                                     break;
                                 }
 
-                                var finalEntry = BenzingaNewsFactory.CreateBenzingaNewsFromJSON(rawContents, _mapFileResolver)
-                                    .OrderBy(x => x.Id)
+                                // Convert the raw contents to a JArray and then deserialize each entry
+                                var finalEntry = JsonConvert.DeserializeObject<JArray>(rawContents)
+                                    .Select(rawArticle => BenzingaNewsJsonConverter.DeserializeNews(rawArticle, enableLogging: true))
+                                    .OrderBy(rawArticle => rawArticle.Id)
                                     .ToList();
 
                                 if (finalEntry.Count == 0)

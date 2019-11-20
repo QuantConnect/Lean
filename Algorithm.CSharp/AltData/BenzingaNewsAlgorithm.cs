@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp.AltData
             {"missed", -0.5}
         };
 
-        // Trade only every 10 days
+        // Trade only every 5 days
         private DateTime _lastTrade = DateTime.MinValue;
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp.AltData
                 return;
             }
 
-            // Get rid of our holdings after 10 days, and start fresh
+            // Get rid of our holdings after 5 days, and start fresh
             Liquidate();
 
             // Get all Benzinga data and loop over it
