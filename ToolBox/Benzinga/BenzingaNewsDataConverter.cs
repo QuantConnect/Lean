@@ -35,6 +35,7 @@ namespace QuantConnect.ToolBox.Benzinga
     {
         private readonly DirectoryInfo _sourceDirectory;
         private readonly DirectoryInfo _destinationDirectory;
+        private readonly DirectoryInfo _processedFilesDirectory;
         private readonly IMapFileProvider _mapFileProvider;
         private readonly MapFileResolver _mapFileResolver;
         private readonly bool _isWindows;
@@ -71,10 +72,11 @@ namespace QuantConnect.ToolBox.Benzinga
         /// </summary>
         /// <param name="sourceDirectory">Directory to read data from. This should be the Benzinga data folder (e.g. /Data/alternative/benzinga)</param>
         /// <param name="destinationDirectory">Directory to write data to. This should be the final Benzinga data folder (e.g. /Data/alternative/benzinga)</param>
-        public BenzingaNewsDataConverter(DirectoryInfo sourceDirectory, DirectoryInfo destinationDirectory)
+        public BenzingaNewsDataConverter(DirectoryInfo sourceDirectory, DirectoryInfo destinationDirectory, DirectoryInfo processedFilesDirectory)
         {
             _sourceDirectory = sourceDirectory;
             _destinationDirectory = destinationDirectory;
+            _processedFilesDirectory = processedFilesDirectory;
             _destinationDirectory.Create();
             _isWindows = OS.IsWindows;
 
@@ -173,7 +175,7 @@ namespace QuantConnect.ToolBox.Benzinga
                         indexCollection = new BenzingaIndexCollection(date);
                         indexes[symbol] = indexCollection;
                         // The reference file path is where the indexes pointing to an article live
-                        var referenceFile = new FileInfo(Path.Combine(_destinationDirectory.FullName, symbol.Value.ToLowerInvariant(), $"{date:yyyMMdd}.csv"));
+                        var referenceFile = new FileInfo(Path.Combine(_processedFilesDirectory.FullName, symbol.Value.ToLowerInvariant(), $"{date:yyyMMdd}.csv"));
 
                         if (referenceFile.Exists)
                         {

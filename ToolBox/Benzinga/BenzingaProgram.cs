@@ -20,10 +20,10 @@ namespace QuantConnect.ToolBox.Benzinga
 {
     public static class BenzingaProgram
     {
-        public static void BenzingaNewsDataConverter(string source, string destination, string day)
+        public static void BenzingaNewsDataConverter(string source, string destination, string processedFilesDirectory, string day)
         {
             var date = Parse.DateTimeExact(day, "yyyyMMdd");
-            var converter = new BenzingaNewsDataConverter(new DirectoryInfo(source), new DirectoryInfo(destination));
+            var converter = new BenzingaNewsDataConverter(new DirectoryInfo(source), new DirectoryInfo(destination), new DirectoryInfo(processedFilesDirectory));
 
             converter.Convert(date);
         }

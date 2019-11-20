@@ -285,6 +285,7 @@ namespace QuantConnect.ToolBox
                         BenzingaProgram.BenzingaNewsDataConverter(
                             GetParameterOrExit(optionsObject, "source-dir"),
                             GetParameterOrExit(optionsObject, "destination-dir"),
+                            GetParameterOrDefault(optionsObject, "source-meta-dir", Path.Combine(Globals.DataFolder, "alternative", "benzinga")),
                             GetParameterOrExit(optionsObject, "date"));
                         break;
 
