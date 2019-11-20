@@ -131,6 +131,7 @@
     <Compile Include="Portfolio\MeanVarianceOptimizationPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\MinimumVariancePortfolioOptimizer.cs" />
     <Compile Include="Portfolio\EqualWeightingPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\AccumulativeInsightPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\ReturnsSymbolData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Risk\MaximumDrawdownPercentPortfolio.cs" />
@@ -178,6 +179,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Portfolio\ConfidenceWeightedPortfolioConstructionModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Portfolio\AccumulativeInsightPortfolioConstructionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Portfolio\InsightWeightingPortfolioConstructionModel.py">
