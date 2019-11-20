@@ -2858,6 +2858,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 yield break;
             }
 
+            // only trades can be requested (except for FX/CFD)
+            if (request.Symbol.SecurityType != SecurityType.Forex &&
+                request.Symbol.SecurityType != SecurityType.Cfd &&
+                request.TickType != TickType.Trade)
+            {
+                yield break;
+            }
+
             // tick resolution not supported for now
             if (request.Resolution == Resolution.Tick)
             {
@@ -2919,7 +2927,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 yield return bar;
             }
 
-            Log.Trace("InteractiveBrokersBrokerage::GetHistory() Download completed");
+            Log.Trace($"InteractiveBrokersBrokerage::GetHistory(): Download completed: {request.Symbol.Value} ({contract})");
         }
 
         private IEnumerable<TradeBar> GetHistory(
@@ -2974,14 +2982,19 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                 EventHandler<IB.ErrorEventArgs> clientOnError = (sender, args) =>
                 {
-                    if (args.Code == 162 && args.Message.Contains("pacing violation"))
+                    if (args.Id == historicalTicker)
                     {
-                        // pacing violation happened
-                        pacing = true;
-                    }
-                    if (args.Code == 162 && args.Message.Contains("no data"))
-                    {
-                        dataDownloaded.Set();
+                        Log.Error($"InteractiveBrokersBrokerage::GetHistory(): OnError(): Id:{args.Id} Code:{args.Code} Message:{args.Message}");
+
+                        if (args.Code == 162 && args.Message.Contains("pacing violation"))
+                        {
+                            // pacing violation happened
+                            pacing = true;
+                        }
+                        else
+                        {
+                            dataDownloaded.Set();
+                        }
                     }
                 };
 
