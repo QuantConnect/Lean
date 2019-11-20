@@ -71,6 +71,13 @@ from clr import AddReference
 AddReference(""QuantConnect.Common"")
 from QuantConnect import *
 
+originalConcat = pandas.concat
+
+def PandasConcatWrapper(objs, axis=0, join='outer', join_axes=None, ignore_index=False, keys=None, levels=None, names=None, verify_integrity=False, sort=None, copy=True):
+    return Remapper(originalConcat(objs, axis, join, join_axes, ignore_index, keys, levels, names, verify_integrity, sort, copy))
+
+pandas.concat = PandasConcatWrapper
+
 class Remapper(wrapt.ObjectProxy):
     def __init__(self, wrapped):
         super(Remapper, self).__init__(wrapped)
@@ -148,10 +155,30 @@ class Remapper(wrapt.ObjectProxy):
         result = self.__wrapped__.unstack(level=level, fill_value=fill_value)
         return Remapper(result)
 
+    def join(self, other, on=None, how='left', lsuffix='', rsuffix='', sort=False):
+        result = self.__wrapped__.join(other=other, on=on, how=how, lsuffix=lsuffix, rsuffix=rsuffix, sort=sort)
+        return Remapper(result)
+
+    def append(self, other, ignore_index=False, verify_integrity=False, sort=None):
+        result = self.__wrapped__.append(other=other, ignore_index=ignore_index, verify_integrity=verify_integrity, sort=sort)
+        return Remapper(result)
+
+    def merge(self, right, how='inner', on=None, left_on=None, right_on=None, left_index=False, right_index=False, sort=False, suffixes=('_x', '_y'), copy=True, indicator=False, validate=None):
+        result = self.__wrapped__.merge(right=right, how=how, on=on, left_on=left_on, right_on=right_on, left_index=left_index, right_index=right_index, sort=sort, suffixes=suffixes, copy=copy, indicator=indicator, validate=validate)
+        return Remapper(result)
+
     # we wrap 'loc' to cover the: df.loc['SPY'] case
     @property
     def loc(self):
         return Remapper(self.__wrapped__.loc)
+
+    @property
+    def ix(self):
+        return Remapper(self.__wrapped__.ix)
+
+    @property
+    def iloc(self):
+        return Remapper(self.__wrapped__.iloc)
 
     @property
     def at(self):
