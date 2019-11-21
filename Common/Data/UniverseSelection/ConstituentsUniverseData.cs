@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -49,7 +50,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>String URL of source file.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var universe = config.MappedSymbol.Substring(config.MappedSymbol.LastIndexOf('-') + 1).ToLowerInvariant();
+            var universe = config.Symbol.ID.Symbol.Substring(config.MappedSymbol.LastIndexOf('-') + 1);
 
             if (isLiveMode)
             {
@@ -103,6 +104,36 @@ namespace QuantConnect.Data.UniverseSelection
         public override bool IsSparseData()
         {
             return true;
+        }
+
+        /// <summary>
+        /// Indicates if there is support for mapping
+        /// </summary>
+        /// <returns>True indicates mapping should be used</returns>
+        public override bool RequiresMapping()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Gets the default resolution for this data and security type
+        /// </summary>
+        /// <remarks>This is a method and not a property so that python
+        /// custom data types can override it</remarks>
+        public override Resolution DefaultResolution()
+        {
+            return Resolution.Daily;
+        }
+
+        /// <summary>
+        /// Gets the supported resolution for this data and security type
+        /// </summary>
+        /// <remarks>Relies on the <see cref="Symbol"/> property value</remarks>
+        /// <remarks>This is a method and not a property so that python
+        /// custom data types can override it</remarks>
+        public override List<Resolution> SupportedResolutions()
+        {
+            return DailyResolution;
         }
     }
 }

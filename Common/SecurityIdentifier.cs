@@ -20,6 +20,7 @@ using System.Linq;
 using System.Numerics;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -383,6 +384,22 @@ namespace QuantConnect
         public static SecurityIdentifier GenerateEquity(DateTime date, string symbol, string market)
         {
             return Generate(date, symbol, SecurityType.Equity, market);
+        }
+
+        /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a <see cref="ConstituentsUniverseData"/>.
+        /// Note that the symbol ticker is case sensitive here.
+        /// </summary>
+        /// <param name="symbol">The ticker to use for this constituent identifier</param>
+        /// <param name="securityType">The security type of this constituent universe</param>
+        /// <param name="market">The security's market</param>
+        /// <remarks>This method is special in the sense that it does not force the Symbol to be upper
+        /// which is required to determine the source file of the constituent
+        /// <see cref="ConstituentsUniverseData.GetSource(Data.SubscriptionDataConfig,DateTime,bool)"/></remarks>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified constituent universe</returns>
+        public static SecurityIdentifier GenerateConstituentIdentifier(string symbol, SecurityType securityType, string market)
+        {
+            return Generate(DefaultDate, symbol, securityType, market, forceSymbolToUpper: false);
         }
 
         /// <summary>

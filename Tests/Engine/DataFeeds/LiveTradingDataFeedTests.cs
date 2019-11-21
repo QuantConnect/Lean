@@ -869,17 +869,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // Note the date is a Tuesday
             _startDate = new DateTime(2013, 10, 07);
             var endDate = new DateTime(2013, 10, 10);
-            _manualTimeProvider.SetCurrentTimeUtc(_startDate.AddHours(23));
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate.AddHours(20));
             _algorithm.UniverseSettings.Resolution = Resolution.Daily;
             _algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
-            var yieldedData = false;
-            var yieldedData2 = false;
+            var yieldedSymbols = false;
+            var yieldedNoneSymbol = false;
             var feed = RunDataFeed();
 
             _algorithm.AddUniverse(new ConstituentsUniverse(
-                Symbol.Create("constituents-universe-qctest", SecurityType.Equity, Market.USA),
+                new Symbol(
+                    SecurityIdentifier.GenerateConstituentIdentifier(
+                        "constituents-universe-qctest",
+                        SecurityType.Equity,
+                        Market.USA),
+                    "constituents-universe-qctest"),
                 _algorithm.UniverseSettings));
-            ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(6), ts =>
             {
                 if (ts.UniverseData.Count > 0)
                 {
@@ -888,22 +893,22 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         Assert.AreEqual(1, data.Data.Count);
                         Assert.IsTrue(data.Data.Any(baseData => baseData.Symbol == Symbol.None));
-                        yieldedData2 = true;
+                        yieldedNoneSymbol = true;
                     }
                     else if (data.EndTime >= new DateTime(2013, 10, 08))
                     {
                         Assert.AreEqual(2, data.Data.Count);
                         Assert.IsTrue(data.Data.Any(baseData => baseData.Symbol == Symbols.AAPL));
                         Assert.IsTrue(data.Data.Any(baseData => baseData.Symbol == _qqq));
-                        yieldedData = true;
+                        yieldedSymbols = true;
                     }
                 }
-            }, secondsTimeStep: 60 * 60 * 8, // 8 hour time step
+            }, secondsTimeStep: 60 * 60 * 6, // 6 hour time step
                 alwaysInvoke:true,
                 endDate: endDate);
 
-            Assert.IsTrue(yieldedData);
-            Assert.IsTrue(yieldedData2);
+            Assert.IsTrue(yieldedSymbols, "Did not yielded Symbols");
+            Assert.IsTrue(yieldedNoneSymbol, "Did not yield NoneSymbol");
         }
 
         [Test]

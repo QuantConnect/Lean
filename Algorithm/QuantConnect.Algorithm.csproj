@@ -144,6 +144,7 @@
     <Compile Include="Alphas\INamedModel.cs" />
     <Compile Include="Alphas\NullAlphaModel.cs" />
     <Compile Include="CandlestickPatterns.cs" />
+    <Compile Include="ConstituentUniverseDefinitions.cs" />
     <Compile Include="Execution\ExecutionModel.cs" />
     <Compile Include="Execution\ExecutionModelPythonWrapper.cs" />
     <Compile Include="Execution\IExecutionModel.cs" />
