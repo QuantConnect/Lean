@@ -1083,7 +1083,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Log.Trace("InteractiveBrokersBrokerage.GetContractDetails(): clientOnContractDetails event: " + uniqueKey);
             };
 
+            EventHandler<IB.ErrorEventArgs> clientOnError = (sender, args) =>
+            {
+                if (args.Id == requestId)
+                {
+                    manualResetEvent.Set();
+                }
+            };
+
             _client.ContractDetails += clientOnContractDetails;
+            _client.Error += clientOnError;
 
             CheckRateLimiting();
 
@@ -1096,6 +1105,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // be sure to remove our event handlers
+            _client.Error -= clientOnError;
             _client.ContractDetails -= clientOnContractDetails;
 
             return details;
@@ -1127,14 +1137,33 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             var contractDetails = new List<ContractDetails>();
 
             // define our event handlers
-            EventHandler<IB.ContractDetailsEventArgs> clientOnContractDetails =
-                (sender, args) => contractDetails.Add(args.ContractDetails);
+            EventHandler<IB.ContractDetailsEventArgs> clientOnContractDetails = (sender, args) =>
+            {
+                if (args.RequestId == requestId)
+                {
+                    contractDetails.Add(args.ContractDetails);
+                }
+            };
 
-            EventHandler<IB.RequestEndEventArgs> clientOnContractDetailsEnd =
-                (sender, args) => manualResetEvent.Set();
+            EventHandler<IB.RequestEndEventArgs> clientOnContractDetailsEnd = (sender, args) =>
+            {
+                if (args.RequestId == requestId)
+                {
+                    manualResetEvent.Set();
+                }
+            };
+
+            EventHandler<IB.ErrorEventArgs> clientOnError = (sender, args) =>
+            {
+                if (args.Id == requestId)
+                {
+                    manualResetEvent.Set();
+                }
+            };
 
             _client.ContractDetails += clientOnContractDetails;
             _client.ContractDetailsEnd += clientOnContractDetailsEnd;
+            _client.Error += clientOnError;
 
             CheckRateLimiting();
 
@@ -1147,6 +1176,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
 
             // be sure to remove our event handlers
+            _client.Error -= clientOnError;
             _client.ContractDetailsEnd -= clientOnContractDetailsEnd;
             _client.ContractDetails -= clientOnContractDetails;
 
@@ -2984,8 +3014,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     if (args.Id == historicalTicker)
                     {
-                        Log.Error($"InteractiveBrokersBrokerage::GetHistory(): OnError(): Id:{args.Id} Code:{args.Code} Message:{args.Message}");
-
                         if (args.Code == 162 && args.Message.Contains("pacing violation"))
                         {
                             // pacing violation happened
