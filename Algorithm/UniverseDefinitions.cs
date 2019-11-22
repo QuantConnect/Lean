@@ -39,6 +39,11 @@ namespace QuantConnect.Algorithm
         public IndexUniverseDefinitions Index { get; private set; }
 
         /// <summary>
+        /// Gets a helper that provides methods for creating constituent universes
+        /// </summary>
+        public ConstituentUniverseDefinitions Constituent { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="UniverseDefinitions"/> class
         /// </summary>
         /// <param name="algorithm">The algorithm instance, used for obtaining the default <see cref="UniverseSettings"/></param>
@@ -46,6 +51,7 @@ namespace QuantConnect.Algorithm
         {
             DollarVolume = new DollarVolumeUniverseDefinitions(algorithm);
             Index = new IndexUniverseDefinitions(algorithm);
+            Constituent = new ConstituentUniverseDefinitions(algorithm);
         }
     }
 }

@@ -16,7 +16,6 @@
 using System;
 using System.IO;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {

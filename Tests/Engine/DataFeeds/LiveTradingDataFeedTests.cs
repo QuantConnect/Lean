@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private ManualTimeProvider _manualTimeProvider;
         private AlgorithmStub _algorithm;
         private LiveSynchronizer _synchronizer;
-        private readonly DateTime _startDate = new DateTime(2018, 08, 1, 11, 0, 0);
+        private DateTime _startDate;
         private DataManager _dataManager;
         private readonly Dictionary<Type, BaseData> _instances = new Dictionary<Type, BaseData>
         {
@@ -62,10 +62,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [SetUp]
         public void SetUp()
         {
-            CustomMockedFileBaseData.StartDate = _startDate;
             _manualTimeProvider = new ManualTimeProvider();
-            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
             _algorithm = new AlgorithmStub(false);
+            _startDate = new DateTime(2018, 08, 1, 11, 0, 0);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+            CustomMockedFileBaseData.StartDate = _startDate;
+
             TestCustomData.ReaderCallsCount = 0;
             TestCustomData.ReturnNull = false;
             TestCustomData.ThrowException = false;
@@ -857,6 +859,56 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.IsTrue(yieldedUniverseData, "No data points yielded.");
             Assert.IsTrue(dataReachedSelection, "Data did not reach universe selection.");
+        }
+
+        [Test]
+        public void ConstituentsUniverse()
+        {
+            var _qqq = Symbol.Create("QQQ", SecurityType.Equity, Market.USA);
+            // Set a date for which we have the test data.
+            // Note the date is a Tuesday
+            _startDate = new DateTime(2013, 10, 07);
+            var endDate = new DateTime(2013, 10, 10);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate.AddHours(20));
+            _algorithm.UniverseSettings.Resolution = Resolution.Daily;
+            _algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
+            var yieldedSymbols = false;
+            var yieldedNoneSymbol = false;
+            var feed = RunDataFeed();
+
+            _algorithm.AddUniverse(new ConstituentsUniverse(
+                new Symbol(
+                    SecurityIdentifier.GenerateConstituentIdentifier(
+                        "constituents-universe-qctest",
+                        SecurityType.Equity,
+                        Market.USA),
+                    "constituents-universe-qctest"),
+                _algorithm.UniverseSettings));
+            ConsumeBridge(feed, TimeSpan.FromSeconds(6), ts =>
+            {
+                if (ts.UniverseData.Count > 0)
+                {
+                    var data = ts.UniverseData.Values.First();
+                    if (data.EndTime >= new DateTime(2013, 10, 09))
+                    {
+                        Assert.AreEqual(1, data.Data.Count);
+                        Assert.IsTrue(data.Data.Any(baseData => baseData.Symbol == Symbol.None));
+                        yieldedNoneSymbol = true;
+                    }
+                    else if (data.EndTime >= new DateTime(2013, 10, 08))
+                    {
+                        Assert.AreEqual(2, data.Data.Count);
+                        Assert.IsTrue(data.Data.Any(baseData => baseData.Symbol == Symbols.AAPL));
+                        Assert.IsTrue(data.Data.Any(baseData => baseData.Symbol == _qqq));
+                        yieldedSymbols = true;
+                    }
+                }
+            }, secondsTimeStep: 60 * 60 * 6, // 6 hour time step
+                alwaysInvoke:true,
+                endDate: endDate);
+
+            Assert.IsTrue(yieldedSymbols, "Did not yielded Symbols");
+            Assert.IsTrue(yieldedNoneSymbol, "Did not yield NoneSymbol");
         }
 
         [Test]

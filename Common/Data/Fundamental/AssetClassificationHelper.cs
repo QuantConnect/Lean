@@ -71,8 +71,9 @@ namespace QuantConnect.Data.Fundamental
 
     /// <summary>
     /// Helper class for the AssetClassification's StyleBox field <see cref="AssetClassification.StyleBox"/>.
+    /// For stocks and stock funds, it classifies securities according to market capitalization and growth and value factor
     /// </summary>
-    /// <remarks>Please refer to https://www.morningstar.com/InvGlossary/morningstar_style_box.aspx</remarks>
+    /// <remarks>Please refer to https://www.morningstar.com/InvGlossary/morningstar_style_box.aspx </remarks>
     public static class StyleBox
     {
         public static int LargeValue = 1;

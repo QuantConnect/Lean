@@ -13,14 +13,12 @@
  * limitations under the License.
 */
 
-using QuantConnect.Data.UniverseSelection;
-
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Demonstration of how to estimate constituents of QC500 index based on the company fundamentals
-    /// The algorithm creates a default tradable and liquid universe containing 500 US equities 
-    /// which are chosen at the first trading day of each month.   
+    /// The algorithm creates a default tradable and liquid universe containing 500 US equities
+    /// which are chosen at the first trading day of each month.
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="universes" />

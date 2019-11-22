@@ -35,6 +35,11 @@ namespace QuantConnect
         public static readonly Symbol Empty = new Symbol(SecurityIdentifier.Empty, string.Empty);
 
         /// <summary>
+        /// Represents no symbol. This is intended to be used when no symbol is explicitly intended
+        /// </summary>
+        public static readonly Symbol None = new Symbol(SecurityIdentifier.None, "NONE");
+
+        /// <summary>
         /// Provides a convenience method for creating a Symbol for most security types.
         /// This method currently does not support Commodities
         /// </summary>

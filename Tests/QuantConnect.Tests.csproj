@@ -311,6 +311,7 @@
     <Compile Include="Common\Data\UniverseSelection\SecurityChangesTests.cs" />
     <Compile Include="Common\Data\UniverseSelection\UniverseTests.cs" />
     <Compile Include="Common\IsolatorLimitResultProviderTests.cs" />
+    <Compile Include="Common\Data\UniverseSelection\ConstituentsUniverseDataTests.cs" />
     <Compile Include="Common\IsolatorTests.cs" />
     <Compile Include="Common\Orders\Fees\AlphaStreamsFeeModelTests.cs" />
     <Compile Include="Common\Notifications\NotificationEmailTests.cs" />

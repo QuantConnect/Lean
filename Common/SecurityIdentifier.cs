@@ -20,6 +20,7 @@ using System.Linq;
 using System.Numerics;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -52,6 +53,11 @@ namespace QuantConnect
         /// Gets an instance of <see cref="SecurityIdentifier"/> that is empty, that is, one with no symbol specified
         /// </summary>
         public static readonly SecurityIdentifier Empty = new SecurityIdentifier(string.Empty, 0);
+
+        /// <summary>
+        /// Gets an instance of <see cref="SecurityIdentifier"/> that is explicitly no symbol
+        /// </summary>
+        public static readonly SecurityIdentifier None = new SecurityIdentifier("NONE", 0);
 
         /// <summary>
         /// Gets the date to be used when it does not apply.
@@ -381,6 +387,22 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Generates a new <see cref="SecurityIdentifier"/> for a <see cref="ConstituentsUniverseData"/>.
+        /// Note that the symbol ticker is case sensitive here.
+        /// </summary>
+        /// <param name="symbol">The ticker to use for this constituent identifier</param>
+        /// <param name="securityType">The security type of this constituent universe</param>
+        /// <param name="market">The security's market</param>
+        /// <remarks>This method is special in the sense that it does not force the Symbol to be upper
+        /// which is required to determine the source file of the constituent
+        /// <see cref="ConstituentsUniverseData.GetSource(Data.SubscriptionDataConfig,DateTime,bool)"/></remarks>
+        /// <returns>A new <see cref="SecurityIdentifier"/> representing the specified constituent universe</returns>
+        public static SecurityIdentifier GenerateConstituentIdentifier(string symbol, SecurityType securityType, string market)
+        {
+            return Generate(DefaultDate, symbol, securityType, market, forceSymbolToUpper: false);
+        }
+
+        /// <summary>
         /// Generates the <see cref="Symbol"/> property for <see cref="QuantConnect.SecurityType.Base"/> security identifiers
         /// </summary>
         /// <param name="dataType">The base data custom data type if namespacing is required, null otherwise</param>
@@ -673,7 +695,7 @@ namespace QuantConnect
         {
             exception = null;
 
-            if (string.IsNullOrWhiteSpace(value))
+            if (string.IsNullOrWhiteSpace(value) || value == " 0")
             {
                 identifier = Empty;
                 return true;
@@ -803,6 +825,7 @@ namespace QuantConnect
         public override string ToString()
         {
             var props = EncodeBase36(_properties);
+            props = props.Length == 0 ? "0" : props;
             if (HasUnderlying)
             {
                 return _symbol + ' ' + props + '|' + _underlying.SecurityIdentifier;

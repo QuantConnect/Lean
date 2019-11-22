@@ -549,7 +549,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 var factory = new LiveCustomDataSubscriptionEnumeratorFactory(_timeProvider);
                 var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
-                enumerator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, config.Symbol);
+                enumerator = new BaseDataCollectionAggregatorEnumerator(enumeratorStack, config.Symbol, liveMode:true);
 
                 var enqueueable = new EnqueueableEnumerator<BaseData>();
                 _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
