@@ -158,6 +158,7 @@
     <Compile Include="AltData\PsychSignalSentimentAlgorithm.cs" />
     <Compile Include="AltData\TradingEconomicsAlgorithm.cs" />
     <Compile Include="AltData\TiingoNewsAlgorithm.cs" />
+    <Compile Include="BasicTemplateConstituentUniverseAlgorithm.cs" />
     <Compile Include="DefaultResolutionRegressionAlgorithm.cs" />
     <Compile Include="BasicPythonIntegrationTemplateAlgorithm.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
