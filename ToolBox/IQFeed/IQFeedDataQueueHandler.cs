@@ -322,6 +322,16 @@ namespace QuantConnect.ToolBox.IQFeed
         {
             return _symbolUniverse.LookupSymbols(lookupName, securityType, securityCurrency, securityExchange);
         }
+
+        /// <summary>
+        /// Returns whether the symbol lookup can be performed at the current time
+        /// </summary>
+        /// <param name="securityType">The security type</param>
+        /// <returns>true if the lookup can be performed at the current time</returns>
+        public bool CanLookupSymbols(SecurityType securityType)
+        {
+            return _symbolUniverse.CanLookupSymbols(securityType);
+        }
     }
 
     /// <summary>

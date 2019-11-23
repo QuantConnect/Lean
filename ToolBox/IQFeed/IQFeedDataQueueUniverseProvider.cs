@@ -181,6 +181,16 @@ namespace QuantConnect.ToolBox.IQFeed
         }
 
         /// <summary>
+        /// Returns whether the symbol lookup can be performed at the current time
+        /// </summary>
+        /// <param name="securityType">The security type</param>
+        /// <returns>true if the lookup can be performed at the current time</returns>
+        public bool CanLookupSymbols(SecurityType securityType)
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Private method updates internal collections of the class with new data loaded on demand (usually options, futures)
         /// </summary>
         /// <param name="placeholderSymbolData">Old data that contained reference to the symbol cache file</param>
