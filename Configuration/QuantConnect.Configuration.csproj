@@ -77,6 +77,7 @@
     <Compile Include="ApplicationParser.cs" />
     <Compile Include="CommandLineOption.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="ReportArgumentParser.cs" />
     <Compile Include="LeanArgumentParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ToolboxArgumentParser.cs" />
