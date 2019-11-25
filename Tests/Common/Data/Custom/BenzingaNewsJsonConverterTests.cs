@@ -56,6 +56,8 @@ namespace QuantConnect.Tests.Common.Data.Custom
                 ]
             }";
 
+            // Put in a single line to avoid potential failure due to platform-specific behavior (\r\n vs. \n)
+            var expectedSerialized = @"{""id"":1,""author"":""Gerardo"",""created"":""2018-01-25T12:00:00Z"",""updated"":""2018-01-26T12:00:00Z"",""title"":""Unit Test Beats Expectations"",""teaser"":""The unit test beat reviewer's expectations, reporters say"",""body"":"" The unit test beat reviewer's expectations, reporters say - 'This is the best test I've ever seen' says Martin "",""channels"":[{""name"":""earnings""}],""stocks"":[{""name"":""AAPL""}],""tags"":[{""name"":""unit test""},{""name"":""testing""}]}";
             var expectedSymbol = new Symbol(
                 SecurityIdentifier.GenerateEquity(
                     "AAPL",
@@ -78,6 +80,10 @@ namespace QuantConnect.Tests.Common.Data.Custom
             );
 
             var result = JsonConvert.DeserializeObject<BenzingaNews>(content, new BenzingaNewsJsonConverter(symbol: expectedBaseSymbol, liveMode: false));
+            var serializedResult = JsonConvert.SerializeObject(result, Formatting.None, new BenzingaNewsJsonConverter(symbol: expectedBaseSymbol, liveMode: false));
+            var resultFromSerialized = JsonConvert.DeserializeObject<BenzingaNews>(serializedResult, new BenzingaNewsJsonConverter(symbol: expectedBaseSymbol, liveMode: false));
+
+            Assert.AreEqual(expectedSerialized, serializedResult);
 
             Assert.AreEqual(1, result.Id);
             Assert.AreEqual(
@@ -97,6 +103,18 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(new List<string> { "earnings" }, result.Categories);
             Assert.AreEqual(new List<string> { "unit test", "testing" }, result.Tags);
             Assert.AreEqual(new List<Symbol> { expectedSymbol }, result.Symbols);
+
+            // Now begin comparing the resultFromSerialized and result instances
+            Assert.AreEqual(result.Id, resultFromSerialized.Id);
+            Assert.AreEqual(result.Author, resultFromSerialized.Author);
+            Assert.AreEqual(result.CreatedAt, resultFromSerialized.CreatedAt);
+            Assert.AreEqual(result.UpdatedAt, resultFromSerialized.UpdatedAt);
+            Assert.AreEqual(result.Title, resultFromSerialized.Title);
+            Assert.AreEqual(result.Teaser, resultFromSerialized.Teaser);
+            Assert.AreEqual(result.Contents, resultFromSerialized.Contents);
+            Assert.AreEqual(result.Categories, resultFromSerialized.Categories);
+            Assert.AreEqual(result.Symbols, resultFromSerialized.Symbols);
+            Assert.AreEqual(result.Tags, resultFromSerialized.Tags);
         }
     }
 }
