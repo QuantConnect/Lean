@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
     public class BenzingaNewsJsonConverterTests
     {
         [Test]
-        public void DeserializeAndMapsCorrectly()
+        public void DeserializesCorrectly()
         {
             var content = @"{
                 ""id"": 1,
@@ -43,7 +43,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
                 ],
                 ""stocks"": [
                     {
-                        ""name"": ""WTW""
+                        ""name"": ""AAPL""
                     },
                 ],
                 ""tags"": [
@@ -58,23 +58,23 @@ namespace QuantConnect.Tests.Common.Data.Custom
 
             var expectedSymbol = new Symbol(
                 SecurityIdentifier.GenerateEquity(
-                    "WW",
+                    "AAPL",
                     QuantConnect.Market.USA,
                     true,
                     null,
                     new DateTime(2018, 1, 25)
                 ),
-                "WW"
+                "AAPL"
             );
             var expectedBaseSymbol = new Symbol(
                 SecurityIdentifier.GenerateBase(
                     typeof(BenzingaNews),
-                    "WW",
+                    "AAPL",
                     QuantConnect.Market.USA,
                     mapSymbol: true,
                     date: new DateTime(2018, 1, 25)
                 ),
-                "WW"
+                "AAPL"
             );
 
             var result = JsonConvert.DeserializeObject<BenzingaNews>(content, new BenzingaNewsJsonConverter(symbol: expectedBaseSymbol, liveMode: false));
