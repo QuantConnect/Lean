@@ -20,7 +20,6 @@ AddReference("QuantConnect.Common")
 from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Data.Custom.Benzinga import *
 
 from datetime import datetime, timedelta

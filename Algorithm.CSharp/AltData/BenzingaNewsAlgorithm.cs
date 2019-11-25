@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.Benzinga;
 using QuantConnect.Data.UniverseSelection;
@@ -30,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp.AltData
     public class BenzingaNewsAlgorithm : QCAlgorithm
     {
         // Predefine a dictionary of words with scores to scan for in the description
-        // of the Tiingo news article
+        // of the Benzinga news article
         private readonly Dictionary<string, double> _words = new Dictionary<string, double>()
         {
             {"bad", -0.5}, {"good", 0.5},

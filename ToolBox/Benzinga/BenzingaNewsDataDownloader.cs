@@ -37,8 +37,6 @@ namespace QuantConnect.ToolBox.Benzinga
         private const string _baseUrl = "https://api.benzinga.com/api/v2";
         private const int _retryMaxCount = 5;
 
-        private readonly IMapFileProvider _mapFileProvider;
-        private readonly MapFileResolver _mapFileResolver;
         private readonly DirectoryInfo _destinationDirectory;
         private readonly RateGate _rateGate;
         private readonly string _apiKey;
@@ -55,9 +53,6 @@ namespace QuantConnect.ToolBox.Benzinga
         /// <param name="apiKey">Key to access Benzinga's API</param>
         public BenzingaNewsDataDownloader(DirectoryInfo destinationDirectory, string apiKey)
         {
-            _mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
-            _mapFileResolver = _mapFileProvider.Get(Market.USA);
-
             _destinationDirectory = destinationDirectory;
             _apiKey = apiKey;
 
@@ -77,7 +72,6 @@ namespace QuantConnect.ToolBox.Benzinga
         {
             foreach (var date in Time.EachDay(startDate, endDate))
             {
-                var articles = new List<BenzingaNews>();
                 var finished = false;
                 var page = 0;
 

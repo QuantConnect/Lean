@@ -304,6 +304,7 @@
     <Compile Include="Common\Data\Custom\SECReportTests.cs" />
     <Compile Include="Common\Data\Custom\SmartInsiderTests.cs" />
     <Compile Include="Common\Data\Custom\EstimizeTests.cs" />
+    <Compile Include="Common\Data\Custom\BenzingaNewsJsonConverterTests.cs" />
     <Compile Include="Common\Data\DynamicDataTests.cs" />
     <Compile Include="Common\Data\Custom\TiingoNewsJsonConverterTests.cs" />
     <Compile Include="Common\Data\Fundamental\MultiPeriodFieldTests.cs" />

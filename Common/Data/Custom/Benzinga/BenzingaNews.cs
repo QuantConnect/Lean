@@ -18,7 +18,6 @@ using NodaTime;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Data.Custom.Benzinga
 {
@@ -79,17 +78,11 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <summary>
         /// Symbols that this news article mentions
         /// </summary>
-        /// <remarks>
-        /// We intentionally use a non-existing property from the data so that we can
-        /// lazily deserialize the object, and populate the values manually. From there,
-        /// we can serialize the object again during the processing stage and easily
-        /// deserialize the object going onwards in `Reader`
-        /// </remarks>
         [JsonProperty("stocks")]
         public List<Symbol> Symbols { get; set; }
 
         /// <summary>
-        /// Additional tags that are not channels or categories, but are reoccuring
+        /// Additional tags that are not channels/categories, but are reoccuring
         /// themes including, but not limited to; analyst names, bills being talked
         /// about in Congress (Dodd-Frank), specific products (iPhone), politicians,
         /// celebrities, stock movements (i.e. 'Mid-day Losers' &amp; 'Mid-day Gainers').
@@ -152,11 +145,7 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// <returns>New instance of <see cref="BenzingaNews"/></returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var article = JsonConvert.DeserializeObject<BenzingaNews>(line, new BenzingaNewsJsonConverter(config.Symbol));
-            article.Symbol = config.Symbol;
-            article.EndTime = article.UpdatedAt;
-
-            return article;
+            return JsonConvert.DeserializeObject<BenzingaNews>(line, new BenzingaNewsJsonConverter(config.Symbol));
         }
 
         /// <summary>

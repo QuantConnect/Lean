@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
@@ -63,6 +64,7 @@ namespace QuantConnect.Data.Custom.Benzinga
     public class BenzingaNewsJsonConverter : JsonConverter
     {
         private readonly Symbol _symbol;
+        private readonly bool _liveMode;
 
         /// <summary>
         /// Sometimes "Berkshire Hathaway" is mentioned as "BRK" in the raw data, although it is
@@ -89,9 +91,10 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// </summary>
         /// <param name="symbol">The <see cref="Symbol"/> instance associated with this news</param>
         /// <param name="liveMode">True if live mode, false for backtesting</param>
-        public BenzingaNewsJsonConverter(Symbol symbol = null)
+        public BenzingaNewsJsonConverter(Symbol symbol = null, bool liveMode = false)
         {
             _symbol = symbol;
+            _liveMode = liveMode;
         }
 
         /// <summary>
@@ -203,61 +206,72 @@ namespace QuantConnect.Data.Custom.Benzinga
                 Contents = WebUtility.HtmlDecode(Regex.Replace(item.Value<string>("body"), @"<[^>]*>", " ")),
                 Categories = new List<string>(),
                 Symbols = new List<Symbol>(),
-                // We won't have any Tags since they're not present in the old data
                 Tags = new List<string>(),
             };
 
             instance.Contents = WebUtility.HtmlDecode(Regex.Replace(instance.Contents, @"<[^>]*>", " "));
-            instance.Categories = new List<string>();
-            instance.Symbols = new List<Symbol>();
-            instance.Tags = new List<string>();
 
-            // Get the JSON from the "channels" key and iterate on the various categories that they provide
-            foreach (var category in JArray.Parse(item["channels"].ToString()))
+            if (item["channels"] != null)
             {
-                instance.Categories.Add(category.Value<string>("name"));
+                // Get the JSON from the "channels" key and iterate on the various categories that they provide
+                foreach (var category in JArray.Parse(item["channels"].ToString()))
+                {
+                    instance.Categories.Add(category.Value<string>("name"));
+                }
+            }
+
+            if (item["tags"] != null)
+            {
+                // Ge tthe JSON from the "tags" key and iterate on the various categories that they provide
+                foreach (var tag in JArray.Parse(item["tags"].ToString()))
+                {
+                    instance.Tags.Add(tag.Value<string>("name"));
+                }
             }
 
             // Use this collection to get rid of duplicate symbols (verified manually that this occurs rarely)
             var tempSymbols = new HashSet<Symbol>();
 
-            // Get the JSON from the "stocks" key and iterate on the various stocks that they provide
-            foreach (var ticker in JArray.Parse(item["stocks"].ToString()))
+            if (item["stocks"] != null)
             {
-                // Tickers with dots in them like BRK.A and BRK.B appear as BRK-A and BRK-B in Benzinga data.
-                // They can also appear as BRK/B or BRK/A in some instances.
-                var symbolTicker = ticker.Value<string>("name").Trim().Replace('-', '.').Replace('/', '.');
+                // Get the JSON from the "stocks" key and iterate on the various stocks that they provide
+                foreach (var ticker in JArray.Parse(item["stocks"].ToString()))
+                {
+                    // Tickers with dots in them like BRK.A and BRK.B appear as BRK-A and BRK-B in Benzinga data.
+                    // They can also appear as BRK/B or BRK/A in some instances.
+                    var symbolTicker = ticker.Value<string>("name").Trim().Replace('-', '.').Replace('/', '.');
 
-                // Tickers can be empty/null in Benzinga API responses.
-                // Verified by observing and processing empty ticker
-                if (string.IsNullOrWhiteSpace(symbolTicker))
-                {
-                    if (enableLogging)
+                    // Tickers can be empty/null in Benzinga API responses.
+                    // Verified by observing and processing empty ticker
+                    if (string.IsNullOrWhiteSpace(symbolTicker))
                     {
-                        Log.Error($"BenzingaNewsJsonConverter.DeserializeNews(): Empty ticker was found in article with ID: {instance.Id}");
+                        if (enableLogging)
+                        {
+                            Log.Error($"BenzingaNewsJsonConverter.DeserializeNews(): Empty ticker was found in article with ID: {instance.Id}");
+                        }
+                        continue;
                     }
-                    continue;
-                }
 
-                if (!ShareClassMappedTickers.ContainsKey(symbolTicker))
-                {
-                    tempSymbols.Add(new Symbol(
-                        SecurityIdentifier.GenerateEquity(symbolTicker, QuantConnect.Market.USA, mapSymbol: true, mappingResolveDate: instance.CreatedAt),
-                        symbolTicker
-                    ));
-                }
-                else
-                {
-                    if (enableLogging)
-                    {
-                        Log.Trace($"BenzingaNewsJsonConverter.DeserializeNews(): Ticker {symbolTicker} will be added as: {string.Join(",", ShareClassMappedTickers[symbolTicker])}");
-                    }
-                    foreach (var mappedTicker in ShareClassMappedTickers[symbolTicker])
+                    if (!ShareClassMappedTickers.ContainsKey(symbolTicker))
                     {
                         tempSymbols.Add(new Symbol(
-                            SecurityIdentifier.GenerateEquity(mappedTicker, QuantConnect.Market.USA, mapSymbol: true, mappingResolveDate: instance.CreatedAt),
-                            mappedTicker
+                            SecurityIdentifier.GenerateEquity(symbolTicker, QuantConnect.Market.USA, mapSymbol: true, mappingResolveDate: instance.CreatedAt),
+                            symbolTicker
                         ));
+                    }
+                    else
+                    {
+                        if (enableLogging)
+                        {
+                            Log.Trace($"BenzingaNewsJsonConverter.DeserializeNews(): Ticker {symbolTicker} will be added as: {string.Join(",", ShareClassMappedTickers[symbolTicker])}");
+                        }
+                        foreach (var mappedTicker in ShareClassMappedTickers[symbolTicker])
+                        {
+                            tempSymbols.Add(new Symbol(
+                                SecurityIdentifier.GenerateEquity(mappedTicker, QuantConnect.Market.USA, mapSymbol: true, mappingResolveDate: instance.CreatedAt),
+                                mappedTicker
+                            ));
+                        }
                     }
                 }
             }
