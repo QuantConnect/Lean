@@ -14,7 +14,6 @@
 */
 
 using Newtonsoft.Json;
-using QuantConnect.Configuration;
 using QuantConnect.Data.Custom.Benzinga;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -22,8 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using QuantConnect.Interfaces;
-using QuantConnect.Data.Auxiliary;
 using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.ToolBox.Benzinga
@@ -154,6 +151,7 @@ namespace QuantConnect.ToolBox.Benzinga
             // Create a local cache of indexes and articles in order to speed up the conversion process.
             // We will write files from memory to disk without the need of temporary files.
             var filteredCollection = new Dictionary<DateTime, BenzingaNewsFiltered>();
+            var contentsZip = new Dictionary<DateTime, Dictionary<string, string>>();
 
             foreach (var article in news)
             {
@@ -191,24 +189,44 @@ namespace QuantConnect.ToolBox.Benzinga
                     {
                         indexCollection = new BenzingaIndexCollection(article.UpdatedAt.Date);
                         filtered.SymbolIndexes[symbol] = indexCollection;
+
                         // The reference file path is where the indexes pointing to an article live
                         var referenceFile = new FileInfo(Path.Combine(_processedFilesDirectory.FullName, symbol.Value.ToLowerInvariant(), $"{article.UpdatedAt.Date:yyyyMMdd}.csv"));
 
                         if (referenceFile.Exists)
                         {
+                            Dictionary<string, string> compressedData;
+                            if (!contentsZip.TryGetValue(article.UpdatedAt.Date, out compressedData))
+                            {
+                                var zipFile = new FileInfo(Path.Combine(_processedFilesDirectory.FullName, "content", $"{article.UpdatedAt.Date:yyyyMMdd}.zip"));
+                                using (var reader = zipFile.OpenRead())
+                                {
+                                    var ms = new MemoryStream();
+                                    reader.CopyTo(ms);
+
+                                    Log.Trace($"BenzingaNewsDataConverter.FilterArticlesAndIndexes(): Opening {zipFile.FullName} to get existing index UpdatedAt time");
+
+                                    compressedData = Compression.UnzipData(ms.ToArray());
+                                    contentsZip[article.UpdatedAt.Date] = compressedData;
+                                }
+                            }
+
+                            var articlesUpdatedAt = compressedData
+                                .ToDictionary(kvp => kvp.Key, kvp => JsonConvert.DeserializeObject<BenzingaNews>(kvp.Value, new BenzingaNewsJsonConverter()).UpdatedAt);
+
                             foreach (var reference in File.ReadLines(referenceFile.FullName))
                             {
-                                // Because `indexCollection.Indexes` is a HashSet, we're guaranteed
-                                // to never have duplicate values after running the converter, even
-                                // if we somehow previously had duplicate values in the index file.
-                                indexCollection.Indexes.Add(reference);
+                                // If we have an index, we should also have an existing article for it.
+                                // Purposely allowing it to throw an OutOfBounds exception in the case
+                                // the article doesn't exist although we have the index for it
+                                indexCollection.Indexes[reference] = articlesUpdatedAt[reference];
                             }
                         }
                     }
 
                     // Add the article ID to the index collection so that we can batch
                     // write all of the indexes in one go per day
-                    indexCollection.Indexes.Add($"{article.Id}.json");
+                    indexCollection.Indexes[$"{article.Id}.json"] = article.UpdatedAt;
 
                     createdReference = true;
                 }
@@ -223,7 +241,7 @@ namespace QuantConnect.ToolBox.Benzinga
                 // Remove unwanted symbols from the article before we write to disk
                 foreach (var symbolToRemove in symbolsToRemove)
                 {
-                    article.Symbols = article.Symbols.Where(s => s != symbolToRemove).ToList();
+                    article.Symbols.Remove(symbolToRemove);
                 }
 
                 // We could potentially have an article with no Symbols and still write it without this check
@@ -261,8 +279,8 @@ namespace QuantConnect.ToolBox.Benzinga
                 var existingReferenceFileBackupPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
 
                 Log.Trace($"BenzingaDataConverter.WriteToFile(): Creating reference temp file: {referenceFileTemp}");
-                // Order before writing since HashSet doesn't guarantee order of elements
-                File.WriteAllLines(referenceFileTemp, indexCollection.Indexes.OrderBy(x => x));
+                // Order before writing since we need to order the indexes by the UpdatedAt date
+                File.WriteAllLines(referenceFileTemp, indexCollection.Indexes.OrderBy(x => x.Value).Select(x => x.Key));
 
                 if (referenceFileExisted)
                 {
@@ -334,15 +352,15 @@ namespace QuantConnect.ToolBox.Benzinga
                 // Create a new instance to preserve the original data in the collection.
                 // Since we are not passing by `ref` we are not mutating the original collection
                 var instance = new BenzingaNewsFiltered(filtered.Date);
-                var buf = new byte[compressedFinal.Length];
 
                 // Dispose of the handle before attempting to move the file, otherwise File.Move will throw
                 using (var zipFile = compressedFinal.OpenRead())
                 {
-                    zipFile.Read(buf, 0, (int)compressedFinal.Length);
+                    var ms = new MemoryStream();
+                    zipFile.CopyTo(ms);
+                    instance.ArticleContents = Compression.UnzipData(ms.ToArray());
                 }
 
-                instance.ArticleContents = Compression.UnzipData(buf);
                 instance.SymbolIndexes = filtered.SymbolIndexes;
 
                 // Add each missing article into the instance article contents dictionary
@@ -393,14 +411,14 @@ namespace QuantConnect.ToolBox.Benzinga
         private class BenzingaIndexCollection
         {
             /// <summary>
-            /// Date that the index applies to
+            /// Date that the indexes apply to
             /// </summary>
             public DateTime Date { get; private set; }
 
             /// <summary>
-            /// Indexes for the given `Date`
+            /// Indexes keyed by reference, with value as UpdatedAt time
             /// </summary>
-            public HashSet<string> Indexes { get; private set; }
+            public Dictionary<string, DateTime> Indexes { get; private set; }
 
             /// <summary>
             /// Creates an instance of <see cref="BenzingaIndexCollection"/>
@@ -409,7 +427,7 @@ namespace QuantConnect.ToolBox.Benzinga
             public BenzingaIndexCollection(DateTime date)
             {
                 Date = date;
-                Indexes = new HashSet<string>();
+                Indexes = new Dictionary<string, DateTime>();
             }
         }
 

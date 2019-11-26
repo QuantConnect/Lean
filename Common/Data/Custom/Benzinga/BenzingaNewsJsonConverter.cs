@@ -209,8 +209,6 @@ namespace QuantConnect.Data.Custom.Benzinga
                 Tags = new List<string>(),
             };
 
-            instance.Contents = WebUtility.HtmlDecode(Regex.Replace(instance.Contents, @"<[^>]*>", " "));
-
             if (item["channels"] != null)
             {
                 // Get the JSON from the "channels" key and iterate on the various categories that they provide

@@ -15,10 +15,7 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using QuantConnect.Configuration;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Custom.Benzinga;
-using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using System;
