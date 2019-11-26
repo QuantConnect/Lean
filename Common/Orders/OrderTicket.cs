@@ -278,11 +278,13 @@ namespace QuantConnect.Orders
         /// the ticket with tag specified in <paramref name="tag"/>
         /// </summary>
         /// <param name="tag"></param>
-        /// <returns></returns>
+        /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateTag(string tag)
         {
-            UpdateOrderFields fields = new UpdateOrderFields();
-            fields.Tag = tag;
+            var fields = new UpdateOrderFields()
+            {
+                Tag = tag
+            };
             return Update(fields);
         }
 
@@ -292,15 +294,14 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="quantity"></param>
         /// <param name="tag"></param>
-        /// <returns></returns>
+        /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateQuantity(decimal quantity, string tag = null)
         {
-            UpdateOrderFields fields = new UpdateOrderFields();
-            fields.Quantity = quantity;
-            if (tag != null)
+            var fields = new UpdateOrderFields()
             {
-                fields.Tag = tag;
-            }
+                Quantity = quantity,
+                Tag = tag
+            };
             return Update(fields);
         }
 
@@ -310,32 +311,31 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="limitPrice"></param>
         /// <param name="tag"></param>
-        /// <returns></returns>
+        /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateLimitPrice(decimal limitPrice, string tag = null)
         {
-            UpdateOrderFields fields = new UpdateOrderFields();
-            fields.LimitPrice = limitPrice;
-            if (tag != null)
+            var fields = new UpdateOrderFields()
             {
-                fields.Tag = tag;
-            }
+                LimitPrice = limitPrice,
+                Tag = tag
+            };
             return Update(fields);
         }
 
         /// <summary>
         /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
-        /// the ticker with stopprice specified in <paramref name="stopPrice"/> and with tag specified in <paramref name="quantity"/>        /// </summary>
+        /// the ticker with stopprice specified in <paramref name="stopPrice"/> and with tag specified in <paramref name="quantity"/>
+        /// </summary>
         /// <param name="stopPrice"></param>
         /// <param name="tag"></param>
-        /// <returns></returns>
+        /// <returns><see cref="OrderResponse"/> from updating the order</returns>
         public OrderResponse UpdateStopPrice(decimal stopPrice, string tag = null)
         {
-            UpdateOrderFields fields = new UpdateOrderFields();
-            fields.StopPrice = stopPrice;
-            if (tag != null)
+            var fields = new UpdateOrderFields()
             {
-                fields.Tag = tag;
-            }
+                StopPrice = stopPrice,
+                Tag = tag
+            };
             return Update(fields);
         }
 
