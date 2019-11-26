@@ -2810,12 +2810,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns></returns>
         public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, string securityCurrency = null, string securityExchange = null)
         {
-            if (!CanLookupSymbols(securityType))
-            {
-                // should never be called if we cannot lookup, safety check just in case
-                return Enumerable.Empty<Symbol>();
-            }
-
             // setting up exchange defaults and filters
             var exchangeSpecifier = securityType == SecurityType.Future ? securityExchange ?? "" : securityExchange ?? "Smart";
             var futuresExchanges = _futuresExchanges.Values.Reverse().ToArray();
@@ -2881,11 +2875,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Returns whether the symbol lookup can be performed at the current time
+        /// Returns whether the time can be advanced or not.
         /// </summary>
         /// <param name="securityType">The security type</param>
-        /// <returns>true if the lookup can be performed at the current time</returns>
-        public bool CanLookupSymbols(SecurityType securityType)
+        /// <returns>true if the time can be advanced</returns>
+        public bool CanAdvanceTime(SecurityType securityType)
         {
             if (securityType == SecurityType.Future)
             {

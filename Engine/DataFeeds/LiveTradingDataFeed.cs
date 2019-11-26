@@ -493,7 +493,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 });
 
-                enumerator = GetConfiguredFrontierAwareEnumerator(enqueable, tzOffsetProvider);
+                enumerator = GetConfiguredFrontierAwareEnumerator(enqueable, tzOffsetProvider,
+                    // advance time if before 23pm or after 5am and not on Saturdays
+                    time => time.Hour < 23 && time.Hour > 5 && time.DayOfWeek != DayOfWeek.Saturday);
             }
             else if (request.Universe is OptionChainUniverse)
             {
@@ -526,7 +528,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
-                enumerator = GetConfiguredFrontierAwareEnumerator(enumerator, tzOffsetProvider);
+                enumerator = GetConfiguredFrontierAwareEnumerator(enumerator, tzOffsetProvider,
+                    time => symbolUniverse.CanAdvanceTime(config.SecurityType));
             }
             else if (request.Universe is FuturesChainUniverse)
             {
@@ -541,7 +544,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
-                enumerator = GetConfiguredFrontierAwareEnumerator(enumerator, tzOffsetProvider);
+                enumerator = GetConfiguredFrontierAwareEnumerator(enumerator, tzOffsetProvider,
+                    time => symbolUniverse.CanAdvanceTime(config.SecurityType));
             }
             else
             {
@@ -619,12 +623,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <remarks>Won't advance time if now.Hour is bigger or equal than 23pm, less or equal than 5am or Saturday.
         /// This is done to prevent universe selection occurring in those hours so that the subscription changes
         /// are handled correctly.</remarks>
-        private IEnumerator<BaseData> GetConfiguredFrontierAwareEnumerator(IEnumerator<BaseData> enumerator,
-            TimeZoneOffsetProvider tzOffsetProvider)
+        private IEnumerator<BaseData> GetConfiguredFrontierAwareEnumerator(
+            IEnumerator<BaseData> enumerator,
+            TimeZoneOffsetProvider tzOffsetProvider,
+            Func<DateTime, bool> customStepEvaluator)
         {
-            var stepTimeProvider = new PredicateTimeProvider(_frontierTimeProvider,
-                // advance time if before 23pm or after 5am and not on Saturdays
-                time => time.Hour < 23 && time.Hour > 5 && time.DayOfWeek != DayOfWeek.Saturday);
+            var stepTimeProvider = new PredicateTimeProvider(_frontierTimeProvider, customStepEvaluator);
 
             return new FrontierAwareEnumerator(enumerator, stepTimeProvider, tzOffsetProvider);
         }

@@ -181,11 +181,11 @@ namespace QuantConnect.ToolBox.IQFeed
         }
 
         /// <summary>
-        /// Returns whether the symbol lookup can be performed at the current time
+        /// Returns whether the time can be advanced or not.
         /// </summary>
         /// <param name="securityType">The security type</param>
-        /// <returns>true if the lookup can be performed at the current time</returns>
-        public bool CanLookupSymbols(SecurityType securityType)
+        /// <returns>true if the time can be advanced</returns>
+        public bool CanAdvanceTime(SecurityType securityType)
         {
             return true;
         }
