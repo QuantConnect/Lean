@@ -124,7 +124,7 @@ namespace QuantConnect.Data.Consolidators
             }
             else if (symbol != data.Symbol)
             {
-                throw new InvalidOperationException($"Previous consolidated symbol ({symbol}) is not the same as in the current data ({data.Symbol})");
+                throw new InvalidOperationException($"Consolidators can only be used with a single symbol. The previous consolidated symbol ({symbol}) is not the same as in the current data ({data.Symbol}).");
             }
 
             if (!ShouldProcess(data))
