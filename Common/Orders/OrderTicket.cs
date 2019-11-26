@@ -274,6 +274,72 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
+        /// the ticket with tag specified in <paramref name="tag"/>
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <returns><see cref="OrderResponse"/> from updating the order</returns>
+        public OrderResponse UpdateTag(string tag)
+        {
+            var fields = new UpdateOrderFields()
+            {
+                Tag = tag
+            };
+            return Update(fields);
+        }
+
+        /// <summary>
+        /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
+        /// the ticket with quantity specified in <paramref name="quantity"/> and with tag specified in <paramref name="quantity"/>
+        /// </summary>
+        /// <param name="quantity"></param>
+        /// <param name="tag"></param>
+        /// <returns><see cref="OrderResponse"/> from updating the order</returns>
+        public OrderResponse UpdateQuantity(decimal quantity, string tag = null)
+        {
+            var fields = new UpdateOrderFields()
+            {
+                Quantity = quantity,
+                Tag = tag
+            };
+            return Update(fields);
+        }
+
+        /// <summary>
+        /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
+        /// the ticker with limitprice specified in <paramref name="limitPrice"/> and with tag specified in <paramref name="quantity"/>
+        /// </summary>
+        /// <param name="limitPrice"></param>
+        /// <param name="tag"></param>
+        /// <returns><see cref="OrderResponse"/> from updating the order</returns>
+        public OrderResponse UpdateLimitPrice(decimal limitPrice, string tag = null)
+        {
+            var fields = new UpdateOrderFields()
+            {
+                LimitPrice = limitPrice,
+                Tag = tag
+            };
+            return Update(fields);
+        }
+
+        /// <summary>
+        /// Submits an <see cref="UpdateOrderRequest"/> with the <see cref="SecurityTransactionManager"/> to update
+        /// the ticker with stopprice specified in <paramref name="stopPrice"/> and with tag specified in <paramref name="quantity"/>
+        /// </summary>
+        /// <param name="stopPrice"></param>
+        /// <param name="tag"></param>
+        /// <returns><see cref="OrderResponse"/> from updating the order</returns>
+        public OrderResponse UpdateStopPrice(decimal stopPrice, string tag = null)
+        {
+            var fields = new UpdateOrderFields()
+            {
+                StopPrice = stopPrice,
+                Tag = tag
+            };
+            return Update(fields);
+        }
+
+        /// <summary>
         /// Submits a new request to cancel this order
         /// </summary>
         public OrderResponse Cancel(string tag = null)
