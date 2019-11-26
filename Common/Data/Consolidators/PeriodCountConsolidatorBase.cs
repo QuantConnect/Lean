@@ -114,6 +114,7 @@ namespace QuantConnect.Data.Consolidators
         /// For example, if time span is 1 minute, we have [10:00, 10:01): so data at 10:01 is not 
         /// included in the bar starting at 10:00.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when multiple symbols are being consolidated.</exception>
         /// <param name="data">The new data for the consolidator</param>
         public override void Update(T data)
         {
@@ -123,7 +124,7 @@ namespace QuantConnect.Data.Consolidators
             }
             else if (symbol != data.Symbol)
             {
-                throw new Exception($"Previous consolidated symbol ({symbol}) is not the same as in the current data ({data.Symbol})");
+                throw new InvalidOperationException($"Previous consolidated symbol ({symbol}) is not the same as in the current data ({data.Symbol})");
             }
 
             if (!ShouldProcess(data))

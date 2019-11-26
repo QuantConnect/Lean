@@ -218,7 +218,7 @@ namespace QuantConnect.Tests.Common.Data
 
             consolidator.Update(bar1);
 
-            Exception ex = Assert.Throws<Exception>(() => consolidator.Update(bar2));
+            Exception ex = Assert.Throws<InvalidOperationException>(() => consolidator.Update(bar2));
             Assert.That(ex.Message, Is.StringContaining("is not the same"));
         }
     }
