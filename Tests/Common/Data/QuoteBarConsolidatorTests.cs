@@ -183,5 +183,43 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(1, quoteBar.Value);
                         
         }
+
+        [Test]
+        public void DoesNotConsolidateDifferentSymbols()
+        {
+            var consolidator = new QuoteBarConsolidator(2);
+
+            var time = DateTime.Today;
+            var period = TimeSpan.FromMinutes(1);
+
+            var bar1 = new QuoteBar
+            {
+                Symbol = Symbols.AAPL,
+                Time = time,
+                Bid = new Bar(1, 2, 0.75m, 1.25m),
+                LastBidSize = 3,
+                Ask = null,
+                LastAskSize = 0,
+                Value = 1,
+                Period = period
+            };
+
+            var bar2 = new QuoteBar
+            {
+                Symbol = Symbols.ZNGA,
+                Time = time,
+                Bid = new Bar(1, 2, 0.75m, 1.25m),
+                LastBidSize = 3,
+                Ask = null,
+                LastAskSize = 0,
+                Value = 1,
+                Period = period
+            };
+
+            consolidator.Update(bar1);
+
+            Exception ex = Assert.Throws<InvalidOperationException>(() => consolidator.Update(bar2));
+            Assert.That(ex.Message, Is.StringContaining("is not the same"));
+        }
     }
 }

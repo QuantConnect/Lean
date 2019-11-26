@@ -86,6 +86,35 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
+        public void DoesNotConsolidateDifferentSymbols()
+        {
+            var consolidator = new BaseDataConsolidator(2);
+
+            var reference = DateTime.Today;
+
+            var tb1 = new Tick
+            {
+                Symbol = Symbols.AAPL,
+                Time = reference,
+                Value = 5,
+                Quantity = 10
+            };
+
+            var tb2 = new Tick
+            {
+                Symbol = Symbols.ZNGA,
+                Time = reference,
+                Value = 2,
+                Quantity = 5
+            };
+
+            consolidator.Update(tb1);
+
+            Exception ex = Assert.Throws<InvalidOperationException>(() => consolidator.Update(tb2));
+            Assert.That(ex.Message, Is.StringContaining("is not the same"));
+        }
+
+        [Test]
         public void AggregatesTradeBarsProperly()
         {
             TradeBar newTradeBar = null;

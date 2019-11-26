@@ -195,6 +195,41 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
+        public void DoesNotConsolidateDifferentSymbols()
+        {
+            // verifies that the TradeBarConsolidator does not consolidate data with different symbols
+
+            var consolidator = new TradeBarConsolidator(2);
+
+            var tb1 = new TradeBar
+            {
+                Symbol = Symbols.AAPL,
+                Open = 10,
+                High = 100,
+                Low = 1,
+                Close = 50,
+                Volume = 75,
+                DataType = MarketDataType.TradeBar
+            };
+
+            var tb2 = new TradeBar
+            {
+                Symbol = Symbols.ZNGA,
+                Open = 50,
+                High = 123,
+                Low = 35,
+                Close = 75,
+                Volume = 100,
+                DataType = MarketDataType.TradeBar
+            };
+
+            consolidator.Update(tb1);
+
+            Exception ex = Assert.Throws<InvalidOperationException>(() => consolidator.Update(tb2));
+            Assert.That(ex.Message, Is.StringContaining("is not the same"));
+        }
+
+        [Test]
         public void ConsolidatedTimeIsFromBeginningOfBar()
         {
             // verifies that the consolidated bar uses the time from the beginning of the first bar
