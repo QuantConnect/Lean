@@ -240,6 +240,7 @@
     <Compile Include="Data\Auxiliary\MappingExtensions.cs" />
     <Compile Include="Data\Consolidators\CalendarType.cs" />
     <Compile Include="Data\Consolidators\FilteredIdentityDataConsolidator.cs" />
+    <Compile Include="Data\Custom\Benzinga\BenzingaNewsJsonConverter.cs" />
     <Compile Include="Data\Custom\CBOE\CBOE.cs" />
     <Compile Include="Data\Custom\Fred\CBOE.cs" />
     <Compile Include="Data\Custom\Fred\CentralBankInterventions.cs" />
@@ -251,6 +252,7 @@
     <Compile Include="Data\Custom\Fred\OECDRecessionIndicators.cs" />
     <Compile Include="Data\Custom\Fred\TradeWeightedIndexes.cs" />
     <Compile Include="Data\Custom\Fred\Wilshire.cs" />
+    <Compile Include="Data\Custom\Benzinga\BenzingaNews.cs" />
     <Compile Include="Data\Custom\FxcmVolume.cs" />
     <Compile Include="Data\Custom\SEC\ISECReport.cs" />
     <Compile Include="Data\Custom\SEC\SECReportBusinessAddress.cs" />
