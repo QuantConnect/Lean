@@ -54,7 +54,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
             var subscription = new Subscription(request, enqueueable, timeZoneOffsetProvider);
 
-            var fistLoop = Ref.Create(true);
+            // The first loop of a backtest can load hundreds of subscription feeds, resulting in long delays while the thresholds
+            // for the buffer are reached. For the first loop start up with just 50 items in the buffer.
+            var firstLoop = Ref.Create(true);
             Action produce = () =>
             {
                 var count = 0;
@@ -75,13 +77,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     count++;
 
                     // stop executing if we have more data than the upper threshold in the enqueueable, we don't want to fill the ram
-                    if (count > upperThreshold || count > 50 && fistLoop.Value)
+                    if (count > upperThreshold || count > 50 && firstLoop.Value)
                     {
                         // we use local count for the outside if, for performance, and adjust here
                         count = enqueueable.Count;
-                        if (count > upperThreshold || fistLoop.Value)
+                        if (count > upperThreshold || firstLoop.Value)
                         {
-                            fistLoop.Value = false;
+                            firstLoop.Value = false;
                             // we will be re scheduled to run by the consumer, see EnqueueableEnumerator
                             return;
                         }
