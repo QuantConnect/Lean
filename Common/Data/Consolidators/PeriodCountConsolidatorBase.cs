@@ -244,7 +244,7 @@ namespace QuantConnect.Data.Consolidators
         protected TimeSpan? Period => _period;
 
         /// <summary>
-        /// Determines whether or not the specified data should be processd
+        /// Determines whether or not the specified data should be processed
         /// </summary>
         /// <param name="data">The data to check</param>
         /// <returns>True if the consolidator should process this data, false otherwise</returns>
@@ -336,7 +336,7 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Special case for bars which open time is defined by a function
+        /// Special case for bars where the open time is defined by a function
         /// </summary>
         private class FuncPeriodSpecification : IPeriodSpecification
         {
