@@ -18,7 +18,13 @@ import pandas as pd
 from base64 import b64encode
 from datetime import date, datetime, timedelta
 from pandas.plotting import register_matplotlib_converters
+from clr import AddReference
+AddReference("System")
+from System import *
+
 register_matplotlib_converters()
+
+
 
 matplotlib.use('Agg')
 font = {'family': 'DejaVu Sans'}
@@ -89,9 +95,21 @@ class ReportCharts:
         plt.close('all')
         return base64
 
-    def GetCumulativeReturns(self, data = [[],[],[]], live_data = [[],[],[]],
+    def GetCumulativeReturns(self, data = None, live_data = None, benchmark_symbol = 'SPY',
                                  name = "cumulative-return.png", width = 11.5, height = 2.5, live_color = "#ff9914",
                                  backtest_color = "#71c3fc", gray = "#b3bcc0"):
+        '''
+        data: [ [strategyTime], [strategyPoints], [benchTime], [benchResults] ]
+        live_data: [ [strategyTime], [strategyPoints], [benchTime], [benchResults] ]
+        '''
+
+        # Initialize lists here instead of method signature to avoid
+        # unintended behavior when calling this method twice
+        if data is None:
+            data = [[],[],[],[]]
+        if live_data is None:
+            live_data = [[],[],[],[]]
+
         if len(data[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
@@ -104,20 +122,47 @@ class ReportCharts:
         plt.figure()
         ax = plt.gca()
         labels = ['Backtest', 'Benchmark']
+        labels_removed = []
+
         rectangles = []
         colors = [backtest_color, gray]
-        values = [data[1], data[2]]
+        values = [[data[0], data[1]], [data[2], data[3]]]
+
         for i, array in enumerate(values):
-            ax.plot(data[0], array, linewidth = 0.5, color = colors[i])
+            if any(array[0]):
+                ax.plot(array[0], array[1], linewidth=0.5, color=colors[i])
+            else:
+                # We have nothing for this graph. Wipe any mention of it
+                labels_removed.append(labels[i])
+
             rectangles.append(plt.Rectangle((0, 0), 1, 1, fc=colors[i]))
 
+        # Only get the labels we didn't remove (i.e. labels that have a graph, guaranteed)
+        labels = [label for label in labels if label not in labels_removed]
+
+        # Return if we don't have any valid labels
+        if not any(labels):
+            return ""
+
+        live_labels = []
+        live_labels_removed = []
+
         if len(live_data[0]) > 0:
-            colors =[live_color, gray]
-            labels.append('Live')
-            values = [live_data[1], live_data[2]]
+            colors = [live_color, '#ff2000']
+            live_labels.append('Live')
+            live_labels.append('Live Benchmark')
+            values = [[live_data[0], live_data[1]], [live_data[2], live_data[3]]]
+
             for i, array in enumerate(values):
-                ax.plot(live_data[0], array, linewidth=0.5, color=colors[i])
-                rectangles.append(plt.Rectangle((0, 0), 1, 1, fc=colors[i]))
+                if any(array[0]):
+                    ax.plot(array[0], array[1], linewidth=0.5, color=colors[i])
+                    rectangles.append(plt.Rectangle((0, 0), 1, 1, fc=colors[i]))
+                else:
+                    live_labels_removed.append(live_labels[i])
+
+            # Only get the labels we didn't remove (i.e. labels that have a graph, guaranteed)
+            live_labels = [live_label for live_label in live_labels if live_label not in live_labels_removed]
+            labels += live_labels
 
         ax.legend(rectangles, labels, handlelength=0.8, handleheight=0.8,
                   frameon=False, fontsize=8, ncol=len(labels))
@@ -127,6 +172,9 @@ class ReportCharts:
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
         ax.yaxis.set_major_formatter(FormatStrFormatter('%.0f'))
         ax.yaxis.set_major_locator(MaxNLocator(6))
+        # Convert the raw numbers to numbers with a percentage sign.
+        # This means that '25' would become '25%'
+        ax.set_yticklabels(['{0:g}%'.format(i) for i in ax.get_yticks()])
         plt.axhline(y=0, color='#d5d5d5', zorder=1)
         plt.setp(ax.spines.values(), color='#d5d5d5')
         ax.spines['right'].set_visible(False)
@@ -194,16 +242,18 @@ class ReportCharts:
         height = 5
         name = "monthly-returns.png"
         months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        print(returns)
 
-        returns = dict(returns)
-
+        # Populate the list with np.nan so that we can successfully 
+        # convert this dict into a DataFrame
+        for k in returns.keys():
+            while len(returns[k]) != 12:
+                returns[k].append(np.nan)
 
         if len(returns) == 0:
             print("No monthly returns found")
             fig = plt.figure()
             fig.set_size_inches(width, height)
-            base64 = fig_to_base64(name, fig)
+            base64 = self.fig_to_base64(name, fig)
             plt.cla()
             plt.clf()
             plt.close('all')
@@ -272,12 +322,10 @@ class ReportCharts:
             plt.yticks(range(len(returns.index.values)), returns.index.values, fontsize=8)
             plt.xticks(range(12), ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
             for (j, i), label in np.ndenumerate(returns):
-                if j == 0:
-                    plt.text(i, j + 0.1, round(label, 1), ha='center', va='top', fontsize=7)
-                elif j == (returns.shape[0] - 1):
-                    plt.text(i, j - 0.1, round(label, 1), ha='center', va='bottom', fontsize=7)
+                if np.isnan(label):
+                    plt.text(i, j, "", ha='center', va='center', fontsize=7)
                 else:
-                    plt.text(i, j, round(label, 1), ha='center', va='center', fontsize=7)
+                    plt.text(i, j, str(round(label, 1)), ha='center', va='center', fontsize=7)
 
         fig.set_size_inches(width, height)
         base64 = self.fig_to_base64(name, fig)

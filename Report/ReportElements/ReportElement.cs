@@ -79,5 +79,22 @@ namespace QuantConnect.Report.ReportElements
             }
             return returns;
         }
+
+        /// <summary>
+        /// Gets the points of the benchmark
+        /// </summary>
+        /// <param name="result">Backtesting or live results</param>
+        /// <returns>Sorted list keyed by date and value</returns>
+        public SortedList<DateTime, double> BenchmarkPoints(Result result)
+        {
+            var points = new SortedList<DateTime, double>();
+
+            foreach (var point in result.Charts["Benchmark"].Series["Benchmark"].Values)
+            {
+                points[Time.UnixTimeStampToDateTime(point.x)] = Convert.ToDouble(point.y);
+            }
+
+            return points;
+        }
     }
 }

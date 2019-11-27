@@ -20,32 +20,32 @@ namespace QuantConnect.Report
     /// </summary>
     internal static class ReportKey
     {
-        public const string StrategyName = "{{$TEXT-STRATEGY-NAME}}";
-        public const string StrategyDescription = "{{$TEXT-STRATEGY-DESCRIPTION}}";
-        public const string StrategyVersion = "{{$TEXT-STRATEGY-VERSION}}";
+        public const string StrategyName = @"{{$TEXT-STRATEGY-NAME}}";
+        public const string StrategyDescription = @"{{$TEXT-STRATEGY-DESCRIPTION}}";
+        public const string StrategyVersion = @"{{$TEXT-STRATEGY-VERSION}}";
 
-        public const string CAGR = "{{$KPI-CAGR}}";
-        public const string Turnover = "{{$KPI-TURNOVER}}";
-        public const string MaxDrawdown = "{{$KPI-DRAWDOWN}}";
-        public const string KellyEstimate = "{{$KPI-KELLY-ESTIMATE}}";
-        public const string SharpeRatio = "{{$KPI-SHARPE}}";
-        public const string EstimatedCapacity = "{{$KPI-CAPACITY}}";
-        public const string InformationRatio = "{{$KPI-INFORMATION-RATIO}}";
-        public const string TradesPerDay = "{{$KPI-TRADES-PER-DAY}}";
-        public const string Markets = "{{$KPI-MARKETS}}";
-        public const string PSR = "{{$KPI-PSR}}";
+        public const string CAGR = @"{{$KPI-CAGR}}";
+        public const string Turnover = @"{{$KPI-TURNOVER}}";
+        public const string MaxDrawdown = @"{{$KPI-DRAWDOWN}}";
+        public const string KellyEstimate = @"{{$KPI-KELLY-ESTIMATE}}";
+        public const string SharpeRatio = @"{{$KPI-SHARPE}}";
+        public const string EstimatedCapacity = @"{{$KPI-CAPACITY}}";
+        public const string InformationRatio = @"{{$KPI-INFORMATION-RATIO}}";
+        public const string TradesPerDay = @"{{$KPI-TRADES-PER-DAY}}";
+        public const string Markets = @"{{$KPI-MARKETS}}";
+        public const string PSR = @"{{$KPI-PSR}}";
 
-        public const string MonthlyReturns = "{{$PLOT-MONTHLY-RETURNS}}";
-        public const string CumulativeReturns = "{{$PLOT-CUMULATIVE-RETURNS}}";
-        public const string AnnualReturns = "{{$PLOT-ANNUAL-RETURNS}}";
-        public const string ReturnsPerTrade = "{{$PLOT-RETURNS-PER-TRADE}}";
-        public const string AssetAllocation = "{{$PLOT-ASSET-ALLOCATION}}";
-        public const string Drawdown = "{{$PLOT-DRAWDOWN}}";
-        public const string DailyReturns = "{{$PLOT-DAILY-RETURNS}}";
-        public const string RollingBeta = "{{$PLOT-BETA}}";
-        public const string RollingSharpe = "{{$PLOT-SHARPE}}";
-        public const string LeverageUtilization = "{{$PLOT-LEVERAGE}}";
-        public const string Exposure = "{{$PLOT-EXPOSURE}}";
-        public const string CrisisPlots = "{{$HTML-CRISIS-PLOTS}}";
+        public const string MonthlyReturns = @"{{$PLOT-MONTHLY-RETURNS}}";
+        public const string CumulativeReturns = @"{{$PLOT-CUMULATIVE-RETURNS}}";
+        public const string AnnualReturns = @"{{$PLOT-ANNUAL-RETURNS}}";
+        public const string ReturnsPerTrade = @"{{$PLOT-RETURNS-PER-TRADE}}";
+        public const string AssetAllocation = @"{{$PLOT-ASSET-ALLOCATION}}";
+        public const string Drawdown = @"{{$PLOT-DRAWDOWN}}";
+        public const string DailyReturns = @"{{$PLOT-DAILY-RETURNS}}";
+        public const string RollingBeta = @"{{$PLOT-BETA}}";
+        public const string RollingSharpe = @"{{$PLOT-SHARPE}}";
+        public const string LeverageUtilization = @"{{$PLOT-LEVERAGE}}";
+        public const string Exposure = @"{{$PLOT-EXPOSURE}}";
+        public const string CrisisPlots = @"{{$HTML-CRISIS-PLOTS}}";
     }
 }

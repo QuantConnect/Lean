@@ -71,7 +71,12 @@ namespace QuantConnect.Report.ReportElements
             var base64 = "";
             using (Py.GIL())
             {
-                base64 = Charting.GetMonthlyReturns(result);
+                var pyDict = new PyDict();
+                foreach (var kvp in result)
+                {
+                    pyDict.SetItem(kvp.Key.ToPython(), kvp.Value.ToPython());
+                }
+                base64 = Charting.GetMonthlyReturns(pyDict);
             }
 
             return base64;

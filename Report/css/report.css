@@ -529,3 +529,7 @@ p#strategy-description {
         margin: 0;
     }
 }
+
+#monthly-returns-plot {
+    width: 100% !important;
+}

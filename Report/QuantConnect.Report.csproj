@@ -111,7 +111,7 @@
     </When>
   </Choose>
   <ItemGroup>
-    <Compile Include="PyConverter.cs" />
+    <Compile Include="ReportElements\CumulativeReturnsReportElement.cs" />
     <Compile Include="ReportElements\MonthlyReturnsReportElement.cs" />
     <Compile Include="ReportElements\KellyEstimateReportElement.cs" />
     <Compile Include="ReportElements\ChartReportElement.cs" />

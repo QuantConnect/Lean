@@ -16,15 +16,15 @@ result = charts.GetReturnsPerTrade(backtest, live)
 time = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2012-10-01T00:00:00', periods=365)]
 strategy = np.linspace(1, 25, 365)
 benchmark = np.linspace(2, 26, 365)
-backtest = [time, strategy, benchmark]
+backtest = [time, strategy, time, benchmark]
 
 time = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2013-10-01T00:00:00', periods=50)]
 strategy = np.linspace(25, 29, 50)
 benchmark = np.linspace(26, 30, 50)
-live = [time, strategy, benchmark]
-empty = [[], [], []]
-result = charts.GetCumulativeReturns(empty, empty)
-result = charts.GetCumulativeReturns(backtest, empty)
+live = [time, strategy, time, benchmark]
+
+result = charts.GetCumulativeReturns()
+result = charts.GetCumulativeReturns(backtest)
 result = charts.GetCumulativeReturns(backtest, live)
 
 ## Test GetDailyReturnsPlot

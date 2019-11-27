@@ -58,7 +58,7 @@ namespace QuantConnect.Report
 
                 // Generate and insert plots MonthlyReturnsReportElement
                 new MonthlyReturnsReportElement("monthly return plot", ReportKey.MonthlyReturns, backtest, live),
-
+                new CumulativeReturnsReportElement("cumulative returns", ReportKey.CumulativeReturns, backtest, live),
                 // Array of Crisis Plots:
                 new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live)
             };
