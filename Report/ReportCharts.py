@@ -581,7 +581,7 @@ class ReportCharts:
         plt.close('all')
         return base64
 
-    def GetAssetAlloction(self, data = [[],[]], live_data = [[],[]],
+    def GetAssetAllocation(self, data = [[],[]], live_data = [[],[]],
                               width = 7, height = 5):
         if len(data[0]) == 0:
             fig = plt.figure()

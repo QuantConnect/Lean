@@ -130,9 +130,9 @@ result = charts.GetRollingSharpeRatio(backtest, live)
 backtest = [['SPY', 'IBM', 'NFLX', 'AAPL'], [0.50, 0.25, 0.125, 0.125]]
 live = [['SPY', 'IBM', 'AAPL'], [0.4, 0.4, 0.2]]
 empty = [[], []]
-result = charts.GetAssetAlloction(empty, empty)
-result = charts.GetAssetAlloction(backtest, empty)
-result = charts.GetAssetAlloction(backtest, live)
+result = charts.GetAssetAllocation(empty, empty)
+result = charts.GetAssetAllocation(backtest, empty)
+result = charts.GetAssetAllocation(backtest, live)
 
 ## Test GetLeveragePlot
 backtest = [[pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2014-10-01', periods=365)],
