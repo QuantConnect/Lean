@@ -28,7 +28,7 @@ namespace QuantConnect.Report.ReportElements
         private BacktestResult _backtest;
 
         /// <summary>
-        /// Create a new array of crisis event plots
+        /// Create a new array of cumulative percentage return of strategy and benchmark
         /// </summary>
         /// <param name="name">Name of the widget</param>
         /// <param name="key">Location of injection</param>
@@ -43,7 +43,8 @@ namespace QuantConnect.Report.ReportElements
         }
 
         /// <summary>
-        /// Generate the monthly returns plot using the python libraries.
+        /// Generate the cumulative return of the backtest, benchmark, and live
+        /// strategy using the ReportCharts.py python library
         /// </summary>
         public override string Render()
         {

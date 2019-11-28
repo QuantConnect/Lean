@@ -62,8 +62,8 @@ strategy = list(np.random.normal(0.5, 1.5, 2))
 live = [time, strategy]
 
 empty = [[], []]
-result = charts.GetAnnualReturns(empty, empty)
-result = charts.GetAnnualReturns(backtest, empty)
+result = charts.GetAnnualReturns()
+result = charts.GetAnnualReturns(backtest)
 result = charts.GetAnnualReturns(backtest, live)
 
 ## Test GetDrawdownPlot

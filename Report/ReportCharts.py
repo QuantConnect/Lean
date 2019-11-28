@@ -334,7 +334,13 @@ class ReportCharts:
         plt.close('all')
         return base64
 
-    def GetAnnualReturns(self, data = [[],[]], live_data = [[],[]], name = "annual-returns.png",width = 3.5*2, height = 2.5*2):
+    def GetAnnualReturns(self, data = None, live_data = None, name = "annual-returns.png",width = 3.5*2, height = 2.5*2):
+
+        if data is None:
+            data = [[], []]
+        if live_data is None:
+            live_data = [[], []]
+
         if len(data[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
@@ -344,17 +350,23 @@ class ReportCharts:
             plt.close('all')
             return base64
 
-        time = data[0] + live_data[0]
-        returns = data[1] + live_data[1]
+        # Cast to list since the data might come in numpy arrays
+        time = list(data[0]) + list(live_data[0])
+        returns = list(data[1]) + list(live_data[1])
 
         plt.figure()
         ax = plt.gca()
-        ax.barh(time, returns, color = ["#428BCA"])
+        # Prevent value speculation on the y-axis ticks by
+        # converting to string before plotting.
+        ax.barh([str(i) for i in time], returns, color = ["#428BCA"])
+        # Add a percentage sign at the end of each x-axis tick
+        ax.set_xticklabels(["{0:g}%".format(i) for i in ax.get_xticks()])
+
         fig = ax.get_figure()
         plt.xticks(rotation=0, ha='center', fontsize=8)
         plt.yticks(fontsize=8)
         plt.axvline(x=0, color='#d5d5d5', linewidth=0.5)
-        vline = plt.axvline(x=np.mean(returns), color="red", ls="dashed", label="mean", linewidth=0.5)
+        vline = plt.axvline(x=np.mean(returns), color="red", ls="dashed", label="mean", linewidth=1)
         plt.legend([vline], ["mean"], loc='upper right', frameon=False, fontsize=8)
         plt.setp(ax.spines.values(), color='#d5d5d5')
         plt.setp([ax.get_xticklines(), ax.get_yticklines()], color='#d5d5d5')
