@@ -384,7 +384,10 @@ class ReportCharts:
 
     def GetDrawdown(self, data = [[],[]], live_data = [[],[]], worst = {}, name = "drawdowns.png",
                         width = 11.5, height = 2.5, gray = "#b3bcc0"):
-        if (len(data[0]) == 0) or (len(worst) == 0):
+        if len(worst) == 0:
+            worst = self.GetDrawdownPeriods(data, live_data)
+
+        if len(data[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
             base64 = self.fig_to_base64(name, fig)
@@ -393,8 +396,11 @@ class ReportCharts:
             plt.close('all')
             return base64
 
-        time = data[0]
-        drawdown = data[1]
+        df, _, __ = self.GetDrawdownPlot(list(data), list(live_data))
+
+        time = list(df.index)
+        drawdown = list(df['dd'].mul(-1).values)
+
         colors = ["#FFCCCCCC", "#FFE5CCCC", "#FFFFCCCC", "#E5FFCCCC", "#CCFFCCCC"]
         labels = ["1st Worst", "2nd Worst", "3rd Worst", "4th Worst", "5th Worst"]
         plt.figure()
@@ -404,23 +410,30 @@ class ReportCharts:
         # Backtest
         ax.plot(time, drawdown, color=gray, zorder=2)
         ax.fill_between(time, drawdown, 0, color=gray, zorder=3)
+
         for index, values in enumerate(worst):
             start = values['Begin']
             end = values['End']
-            if values['Begin'] == values['End']:
-                worst_point = values['Begin']
+
+            if start == end:
+                worst_point = start
             else:
-                sub_data = drawdown[time.index(values['Begin']):time.index(values['End'])]
+                sub_data = drawdown[time.index(start):time.index(end)]
                 worst_point = time[drawdown.index(min(sub_data))]
+
             plt.axvspan(start, end, 0, 0.95, color = colors[index], zorder = 1)
             plt.axvline(worst_point, 0, 0.95, ls = 'dashed', color = 'black', zorder = 4, linewidth = 0.5)
-            plt.text(worst_point, min(drawdown) * 0.75, labels[index], rotation = 90, zorder = 4)
+            ax.text(worst_point, min(drawdown) * 0.75, labels[index], rotation = 90, zorder = 4, va='bottom')
 
         # Live
         live_time = live_data[0]
         live_drawdown = live_data[1]
-        ax.plot(live_time[:min(len(live_drawdown), len(live_time))], live_drawdown, color = gray, zorder = 2)
-        ax.fill_between(live_time[:min(len(live_drawdown), len(live_time))], live_drawdown, 0, color = gray, zorder = 3)
+
+        # No need to draw the live mode stuff since we've already taken care of it
+
+        #ax.plot(live_time[:min(len(live_drawdown), len(live_time))], live_drawdown, color = gray, zorder = 2)
+        #ax.fill_between(live_time[:min(len(live_drawdown), len(live_time))], live_drawdown, 0, color = gray, zorder = 3)
+
         plt.axvline(live_time[0], 0, 0.95, ls='dotted', color='red', zorder=4) if len(live_time) > 0 else None
         plt.text(live_time[0], min(min(drawdown), min(live_drawdown)) * 0.75, "Live Trading", rotation=90, zorder=4, fontsize=7) if len(live_time) > 0 else None
 
@@ -441,6 +454,48 @@ class ReportCharts:
         plt.clf()
         plt.close('all')
         return base64
+
+    def GetDrawdownPlot(self, data, live_data):
+        # Solution taken from https://stackoverflow.com/questions/39058034/pandas-duration-of-drawdown/39080464
+        df = pd.DataFrame(list(data[1]) + list([i + data[1][-1] for i in live_data[1]]), index=(list(data[0] + list(live_data[0]))), columns=['close'])
+
+        df['ret'] = df.close/df.close[0]
+        df['modMax'] = df.ret.cummax()
+        df['dd'] = 1 - df.ret.div(df['modMax'])
+
+        groups = df.groupby(df['modMax'])
+        dd = groups['modMax','dd'].apply(lambda g: g[g['dd'] == g['dd'].max()])
+        top10dd = dd.sort_values('dd', ascending=False).head(10)
+
+        return (df, dd, top10dd)
+
+    def GetDrawdownPeriods(self, data, live_data):
+        # Solution taken from https://stackoverflow.com/questions/39058034/pandas-duration-of-drawdown/39080464
+        df, dd, top10dd = self.GetDrawdownPlot(data, live_data)
+
+        def drawdown_group(df,index_list):
+            group_max,dd_date = index_list
+            ddGroup = df[df['modMax'] == group_max]
+            group_length = len(ddGroup)
+            group_dd = ddGroup['dd'].max()
+            group_dd_length = len(ddGroup[ddGroup.index <= dd_date])
+            group_start = ddGroup[0:1].index[0]
+            group_end = ddGroup.tail(1).index[0]
+            group_rec = group_length - group_dd_length
+            return group_start,group_end,group_max,group_dd,dd_date,group_dd_length,group_rec,group_length
+
+        dd_col = ('start','end','peak', 'dd','dd_date','dd_length','dd_rec','tot_length')
+        df_dd = pd.DataFrame(columns = dd_col)
+        for i in range(1,10):
+            index_list = top10dd[i-1:i].index.tolist()[0]
+            start,end,peak,dd,dd_date,dd_length,dd_rec,tot_length = drawdown_group(df,index_list)
+            df_dd.loc[i-1] = drawdown_group(df,index_list)
+
+        worst = []
+        for idx, row in df_dd.drop_duplicates(['start', 'end']).head(n=5).iterrows():
+            worst.append({'Begin': row['start'], 'End': row['end'], 'Total': row['dd']})
+
+        return worst
 
     def GetCrisisEventsPlots(self, data = [[],[],[]], name = '', width = 7, height = 5,
                              backtest_color = "#71c3fc", gray = "#b3bcc0"):
