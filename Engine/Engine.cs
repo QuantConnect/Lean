@@ -198,7 +198,9 @@ namespace QuantConnect.Lean.Engine
                                     AlgorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History,
                                         Invariant($"Processing history {progress}%..."));
                                 }
-                            }
+                            },
+                            // disable parallel history requests for live trading
+                            parallelHistoryRequestsEnabled: !_liveMode
                         )
                     );
 

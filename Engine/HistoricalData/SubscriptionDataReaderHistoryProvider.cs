@@ -41,6 +41,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         private IMapFileProvider _mapFileProvider;
         private IFactorFileProvider _factorFileProvider;
         private IDataCacheProvider _dataCacheProvider;
+        private bool _parallelHistoryRequestsEnabled;
 
         /// <summary>
         /// Initializes this history provider to work for the specified job
@@ -51,6 +52,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             _mapFileProvider = parameters.MapFileProvider;
             _factorFileProvider = parameters.FactorFileProvider;
             _dataCacheProvider = parameters.DataCacheProvider;
+            _parallelHistoryRequestsEnabled = parameters.ParallelHistoryRequestsEnabled;
         }
 
         /// <summary>
@@ -168,7 +170,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             });
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
 
-            return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader);
+            if (_parallelHistoryRequestsEnabled)
+            {
+                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader);
+            }
+            return SubscriptionUtils.Create(subscriptionRequest, reader);
         }
 
         private class FilterEnumerator<T> : IEnumerator<T>
