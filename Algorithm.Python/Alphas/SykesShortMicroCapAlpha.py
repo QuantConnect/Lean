@@ -25,14 +25,12 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Portfolio import EqualWeightingPortfolioConstructionModel
 from Selection.FundamentalUniverseSelectionModel import FundamentalUniverseSelectionModel
 
-#
-# Identify "pumped" penny stocks and predict that the price of a "Pumped" penny stock reverts to mean
-#
-# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open sourced so the community and client funds can see an example of an alpha.
-#
 
 class SykesShortMicroCapAlpha(QCAlgorithm):
-    ''' Alpha Streams: Benchmark Alpha: Identify "pumped" penny stocks and predict that the price of a "pumped" penny stock reverts to mean'''
+    ''' Alpha Streams: Benchmark Alpha: Identify "pumped" penny stocks and predict that the price of a "pumped" penny stock reverts to mean
+
+    This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
+   sourced so the community and client funds can see an example of an alpha.'''
 
     def Initialize(self):
 
@@ -81,11 +79,11 @@ class SykesShortMicroCapAlphaModel(AlphaModel):
 
         # Rank penny stocks on one day price change and retrieve list of ten "pumped" penny stocks
         pumpedStocks = dict(sorted(symbolsRet.items(),
-                                   key = lambda kv: (-round(kv[1], 6), kv[0]))[0:self.numberOfStocks])
+                                   key = lambda kv: (-round(kv[1], 6), kv[0]))[:self.numberOfStocks])
 
         # Emit "down" insight for "pumped" penny stocks
-        for key,value in pumpedStocks.items():
-            insights.append(Insight.Price(key, self.predictionInterval, InsightDirection.Down, abs(value), None))
+        for symbol, value in pumpedStocks.items():
+            insights.append(Insight.Price(symbol, self.predictionInterval, InsightDirection.Down, abs(value), None))
 
         return insights
 
@@ -96,29 +94,22 @@ class PennyStockUniverseSelectionModel(FundamentalUniverseSelectionModel):
     The stock must have positive previous-day close price
     The stock must have volume between $1000000 and $10000 on the previous trading day
     The stock must cost less than $5'''
-
     def __init__(self):
         super().__init__(False)
 
         # Number of stocks in Coarse Universe
         self.numberOfSymbolsCoarse = 500
         self.lastMonth = -1
-        self.symbols = []
 
     def SelectCoarse(self, algorithm, coarse):
-
-        month = algorithm.Time.month
-        if month == self.lastMonth:
-            return self.symbols
-        self.lastMonth = month
-
-        filtered = [x for x in coarse if x.HasFundamentalData
-                                      and  1000000 > x.Volume > 10000
-                                      and 5 > x.Price > 0]
+        if algorithm.Time.month == self.lastMonth:
+            return Universe.Unchanged
+        self.lastMonth = algorithm.Time.month
 
         # sort the stocks by dollar volume and take the top 500
-        top = sorted(filtered, key=lambda x: x.DollarVolume, reverse=True)[:self.numberOfSymbolsCoarse]
+        top = sorted([x for x in coarse if x.HasFundamentalData
+                                       and 5 > x.Price > 0
+                                       and 1000000 > x.Volume > 10000],
+                    key=lambda x: x.DollarVolume, reverse=True)[:self.numberOfSymbolsCoarse]
 
-        self.symbols = [ i.Symbol for i in top ]
-
-        return self.symbols
+        return [x.Symbol for x in top]
