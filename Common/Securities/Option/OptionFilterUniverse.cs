@@ -281,7 +281,12 @@ namespace QuantConnect.Securities
             var maxPrice = _uniqueStrikes[indexMaxPrice];
 
             _allSymbols = _allSymbols
-                .Where(symbol => symbol.ID.StrikePrice >= minPrice && symbol.ID.StrikePrice <= maxPrice)
+                .Where(symbol =>
+                    {
+                        var price = symbol.ID.StrikePrice;
+                        return price >= minPrice && price <= maxPrice;
+                    }
+                )
                 .ToList();
 
             return this;

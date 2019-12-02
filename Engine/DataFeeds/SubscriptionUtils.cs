@@ -57,10 +57,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="request">The subscription data request</param>
         /// <param name="enumerator">The data enumerator stack</param>
+        /// <param name="firstLoopLimit">The first loop data point count for which the worker will stop</param>
         /// <returns>A new subscription instance ready to consume</returns>
         public static Subscription CreateAndScheduleWorker(
             SubscriptionRequest request,
-            IEnumerator<BaseData> enumerator)
+            IEnumerator<BaseData> enumerator,
+            int firstLoopLimit = 50)
         {
             var upperThreshold = GetUpperThreshold(request.Configuration.Resolution);
             var lowerThreshold = GetLowerThreshold(request.Configuration.Resolution);
@@ -90,7 +92,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // subscription has been removed, no need to continue enumerating
                         if (enqueueable.HasFinished)
                         {
-                            enumerator.Dispose();
+                            enumerator.DisposeSafely();
                             return;
                         }
 
@@ -103,7 +105,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         count++;
 
                         // stop executing if we have more data than the upper threshold in the enqueueable, we don't want to fill the ram
-                        if (count > upperThreshold || count > 50 && firstLoop.Value)
+                        if (count > upperThreshold || count > firstLoopLimit && firstLoop.Value)
                         {
                             // we use local count for the outside if, for performance, and adjust here
                             count = enqueueable.Count;
@@ -111,6 +113,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 firstLoop.Value = false;
                                 // we will be re scheduled to run by the consumer, see EnqueueableEnumerator
+
+                                // if the consumer is already waiting for us wake him up, he will rescheduled us if required
+                                enqueueable.CancellationTokenSource.Cancel();
                                 return;
                             }
                         }
@@ -124,7 +129,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // we made it here because MoveNext returned false or we exploded, stop the enqueueable
                 enqueueable.Stop();
                 // we have to dispose of the enumerator
-                enumerator.Dispose();
+                enumerator.DisposeSafely();
             };
 
             enqueueable.SetProducer(produce, lowerThreshold);
