@@ -259,11 +259,7 @@ class ReportCharts:
         plt.clf()
         return base64
 
-    def GetMonthlyReturns(self, returns = {}, live_returns = {}):
-        live_returns = {}
-        width = 7
-        height = 5
-        name = "monthly-returns.png"
+    def GetMonthlyReturns(self, returns = {}, live_returns = {}, width=7, height=5, name='monthly-returns.png'):
         months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
         # Populate the list with np.nan so that we can successfully 
@@ -560,7 +556,7 @@ class ReportCharts:
         plt.close('all')
         return base64
 
-    def GetRollingBeta(self, data = [[],[],[]], live_data = [[],[],[]], name = "rolling-portfolio-beta-to-equity.png",
+    def GetRollingBeta(self, data = [[],[],[],[]], live_data = [[],[],[],[]], name = "rolling-portfolio-beta-to-equity.png",
                            width = 11.5, height = 2.5):
         if len(data[0]) == 0:
             fig = plt.figure()
@@ -571,10 +567,18 @@ class ReportCharts:
             plt.close('all')
             return base64
 
+        # Data will come in the following format:
+        # [backtest time, backtest returns, benchmark time, benchmark returns]
+        
+
+        # TODO: Different asset classes can have different rolling window periods due to their trading
+        # days. Equities trade 252 days a year, whereas crypto and FOREX are closer to 365 days per year.
+        backtest_six_month_beta, backtest_twelve_month_beta = self.CalculateRollingBeta(data)
+        live_six_month_beta, live_twelve_month_beta = self.CalculateRollingBeta(live_data)
 
         labels = ['6 mo.', '12 mo.']
         rectangles = [plt.Rectangle((0, 0), 1, 1, fc="#71c3fc"), plt.Rectangle((0, 0), 1, 1, fc="#1d7dc1")]
-        if len(live_data[0]) > 0:
+        if len(live_six_month_beta) > 0:
             labels += ['Live 6 mo.', 'Live 12 mo.']
             rectangles += [plt.Rectangle((0, 0), 1, 1, fc="#ff9914"), plt.Rectangle((0, 0), 1, 1, fc="#ffd700")]
 
@@ -584,12 +588,15 @@ class ReportCharts:
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
 
         # Backtest
-        ax.plot(data[0][:min(len(data[0]),len(data[1]))], data[1], linewidth = 0.5, color = "#71c3fc")
-        ax.plot(data[0][:min(len(data[0]),len(data[2]))], data[2], linewidth = 0.5, color = "#1d7dc1")
+        ax.plot(backtest_six_month_beta.index, backtest_six_month_beta.values, linewidth = 0.5, color = "#71c3fc")
+        ax.plot(backtest_twelve_month_beta.index, backtest_twelve_month_beta.values, linewidth=0.5, color="#1d7dc1")
 
         # Live
-        ax.plot(live_data[0][:min(len(live_data[0]), len(live_data[1]))], live_data[1], linewidth=0.5, color="#ff9914")
-        ax.plot(live_data[0][:min(len(live_data[0]), len(live_data[2]))], live_data[2], linewidth=0.5, color="#ffd700")
+        if len(live_six_month_beta) > 0:
+            print(live_six_month_beta)
+
+            ax.plot(live_six_month_beta.index, live_six_month_beta.values, linewidth=0.5, color="#ff9914")
+            ax.plot(live_twelve_month_beta.index, live_twelve_month_beta.values, linewidth=0.5, color="#ffd700")
 
         leg = ax.legend(rectangles, labels, handlelength=0.8, handleheight=0.8,
                         frameon=False, fontsize=8, ncol=2)
@@ -610,6 +617,33 @@ class ReportCharts:
         plt.clf()
         plt.close('all')
         return base64
+
+    def CalculateRollingBeta(self, data):
+        if not any(data[0]):
+            return pd.Series(), pd.Series()
+
+        equity = pd.DataFrame(data[1], index=data[0], columns=['Strategy']).resample('D').sum()
+        benchmark = pd.DataFrame(data[3], index=data[2], columns=['Benchmark'])
+        benchmark.index = benchmark.index.date
+
+        returns = equity.join(benchmark).dropna()
+
+        six_month_corr = returns.rolling(22*6).corr()
+        six_month_corr = six_month_corr.dropna()['Benchmark'][::2]
+        portfolio_std = returns['Strategy'].rolling(22*6).std().dropna()
+        benchmark_std = returns['Benchmark'].rolling(22*6).std().dropna()
+
+        six_month_beta = six_month_corr.values * (portfolio_std / benchmark_std)
+
+        twelve_month_corr = returns.rolling(252).corr()
+        twelve_month_corr = twelve_month_corr.dropna()['Benchmark'][::2]
+        portfolio_std = returns['Strategy'].rolling(252).std().dropna()
+        benchmark_std = returns['Benchmark'].rolling(252).std().dropna()
+
+        twelve_month_beta = twelve_month_corr.values * (portfolio_std / benchmark_std)
+
+        return six_month_beta, twelve_month_beta
+
 
     def GetRollingSharpeRatio(self, data = [[],[]], live_data = [[],[]], name = "rolling-sharpe-ratio.png",
                                   width = 11.5, height = 2.5, live_color = "#ff9914", backtest_color = "#71c3fc"):
