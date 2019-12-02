@@ -29,6 +29,7 @@ register_matplotlib_converters()
 matplotlib.use('Agg')
 font = {'family': 'DejaVu Sans'}
 matplotlib.rc('font',**font)
+matplotlib.rc('axes', edgecolor='#d5d5d5')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.colors as mcolors
@@ -82,12 +83,15 @@ class ReportCharts:
             fig = plt.figure()
             plt.hist(returns_per_trade, bins=75, color=backtest_color)
             plt.xticks(fontsize=8)
+            plt.yticks(fontsize=8)
             plt.gca().spines['right'].set_visible(False)
             plt.gca().spines['top'].set_visible(False)
             plt.gca().axvline(x=np.median(returns_per_trade), color="red", ls="dashed", label="median", linewidth=0.5)
             plt.ylabel('')
 
-        plt.xlabel('')
+        # Set the x ticks as percentage to keep consistency
+        plt.xticks(ticks=plt.xticks()[0], labels=["{:.1f}%".format(tick * 100) for tick in plt.xticks()[0]])
+
         fig.set_size_inches(width, height)
         base64 = self.fig_to_base64(name, fig)
         plt.cla()
@@ -202,13 +206,31 @@ class ReportCharts:
             plt.close('all')
             return base64
 
+        returns[0] = list(returns[0])
+        returns[1] = list(returns[1])
+        live_returns[0] = list(live_returns[0])
+        live_returns[1] = list(live_returns[1])
+
         plt.figure()
         ax = plt.gca()
 
+        backtest_series = pd.Series(returns[1], index=returns[0])
+        live_series = pd.Series(live_returns[1], index=live_returns[0])
+
+        backtest_positive = backtest_series[backtest_series > 0]
+        backtest_negative = backtest_series[backtest_series < 0]
+        live_positive = live_series[live_series > 0]
+        live_negative = live_series[live_series < 0]
+
         # Backtest
-        ax.bar(returns[0][:min(len(returns[0]),len(returns[1]))], returns[1], color = backtest_color, zorder = 2)
+        #ax.bar(returns[0][:min(len(returns[0]),len(returns[1]))], returns[1], color=backtest_color,zorder=2)
+        ax.bar(backtest_positive.index, backtest_positive.values, color = backtest_color, zorder = 2)
+        ax.bar(backtest_negative.index, backtest_negative.values, color=gray, zorder=2)
+
         # Live
-        ax.bar(live_returns[0][:min(len(live_returns[0]),len(live_returns[1]))], live_returns[1], color=live_color,zorder=2)
+        #ax.bar(live_returns[0][:min(len(live_returns[0]),len(live_returns[1]))], live_returns[1], color=live_color,zorder=2)
+        ax.bar(live_positive.index, live_positive.values, color=live_color, zorder=2)
+        ax.bar(live_negative.index, live_negative.values, color=gray, zorder=2)
 
         # Need to handle this since we don't use a legend if it is only backtesting
         if len(live_returns[0]) > 0:
@@ -218,10 +240,11 @@ class ReportCharts:
 
         fig = ax.get_figure()
         ax.xaxis_date()
-        plt.xticks(rotation = 0,ha = 'center', fontsize = 8)
-        plt.yticks(fontsize = 8)
-        plt.ylabel("")
-        plt.xlabel("")
+        #ax.set_xticks(fontsize = 8)
+        #ax.set_yticks(fontsize = 8)
+        ax.set_ylabel("")
+        ax.set_xlabel("")
+        ax.set_xticklabels(['{0:g}%'.format(i) for i in ax.get_xticks()])
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
         plt.axhline(y = 0, color = '#d5d5d5')
         plt.setp(ax.spines.values(), color='#d5d5d5')

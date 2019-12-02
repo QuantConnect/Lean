@@ -62,6 +62,7 @@ namespace QuantConnect.Report
                 new AnnualReturnsReportElement("annual returns", ReportKey.AnnualReturns, backtest, live),
                 new ReturnsPerTradeReportElement("returns per trade", ReportKey.ReturnsPerTrade, backtest, live),
                 new DrawdownReportElement("drawdown plot", ReportKey.Drawdown, backtest, live),
+                new DailyReturnsReportElement("daily returns plot", ReportKey.DailyReturns, backtest, live),
 
                 // Array of Crisis Plots:
                 new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live)

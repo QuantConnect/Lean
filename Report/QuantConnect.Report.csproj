@@ -111,6 +111,7 @@
     </When>
   </Choose>
   <ItemGroup>
+    <Compile Include="ReportElements\DailyReturnsReportElement.cs" />
     <Compile Include="ReportElements\DrawdownReportElement.cs" />
     <Compile Include="ReportElements\ReturnsPerTradeReportElement.cs" />
     <Compile Include="ReportElements\AnnualReturnsReportElement.cs" />
