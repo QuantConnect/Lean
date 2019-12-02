@@ -11,19 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-'''
-    The motivating idea for this Alpha Model is that a large price gap (here we use true outliers --
-    price gaps that whose absolutely values are greater than 3 * Volatility) is due to rebound
-    back to an appropriate price or at least retreat from its brief extreme. Using a Coarse Universe selection
-    function, the algorithm selects the top x-companies by Dollar Volume (x can be any number you choose)
-    to trade with, and then uses the Standard Deviation of the 100 most-recent closing prices to determine
-    which price movements are outliers that warrant emitting insights.
-
-    This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
-    sourced so the community and client funds can see an example of an alpha.
-'''
-
 from clr import AddReference
 AddReference("System")
 AddReference("QuantConnect.Algorithm")
@@ -34,19 +21,25 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Indicators import *
-from QuantConnect.Data.Market import TradeBar
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Risk import *
 from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Orders.Fees import ConstantFeeModel
 from QuantConnect.Algorithm.Framework.Selection import *
 from QuantConnect.Algorithm.Framework.Execution import *
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioTarget, EqualWeightingPortfolioConstructionModel
+from QuantConnect.Algorithm.Framework.Portfolio import *
 
-import numpy as np
-from datetime import timedelta, datetime
 
 class PriceGapMeanReversionAlpha(QCAlgorithm):
+    '''The motivating idea for this Alpha Model is that a large price gap (here we use true outliers --
+    price gaps that whose absolutely values are greater than 3 * Volatility) is due to rebound
+    back to an appropriate price or at least retreat from its brief extreme. Using a Coarse Universe selection
+    function, the algorithm selects the top x-companies by Dollar Volume (x can be any number you choose)
+    to trade with, and then uses the Standard Deviation of the 100 most-recent closing prices to determine
+    which price movements are outliers that warrant emitting insights.
+
+    This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
+    sourced so the community and client funds can see an example of an alpha.'''
 
     def Initialize(self):
 
@@ -54,10 +47,7 @@ class PriceGapMeanReversionAlpha(QCAlgorithm):
         self.SetCash(100000)           #Set Strategy Cash
 
         ## Initialize variables to be used in controlling frequency of universe selection
-        self.week = None
-        self.symbols = None
-
-        self.SetWarmUp(100)
+        self.week = -1
 
         ## Manual Universe Selection
         self.UniverseSettings.Resolution = Resolution.Minute
@@ -82,21 +72,21 @@ class PriceGapMeanReversionAlpha(QCAlgorithm):
     def CoarseSelectionFunction(self, coarse):
         ## If it isn't a new week, return the same symbols
         current_week = self.Time.isocalendar()[1]
-        if  current_week == self.week:
-            return self.symbols
+        if current_week == self.week:
+            return Universe.Unchanged
         self.week = current_week
-        ## If its a new month, then re-filter stocks by Dollar Volume
+
+        ## If its a new week, then re-filter stocks by Dollar Volume
         sortedByDollarVolume = sorted(coarse, key=lambda x: x.DollarVolume, reverse=True)
 
-        self.symbols = [ x.Symbol for x in sortedByDollarVolume[:25] ]
-        return self.symbols
-
+        return [ x.Symbol for x in sortedByDollarVolume[:25] ]
 
 
 class PriceGapMeanReversionAlphaModel:
 
     def __init__(self, *args, **kwargs):
         ''' Initialize variables and dictionary for Symbol Data to support algorithm's function '''
+        self.lookback = 100
         self.resolution = kwargs['resolution'] if 'resolution' in kwargs else Resolution.Minute
         self.prediction_interval = Time.Multiply(Extensions.ToTimeSpan(self.resolution), 5) ## Arbitrary
         self.symbolDataBySymbol = {}
@@ -106,85 +96,61 @@ class PriceGapMeanReversionAlphaModel:
 
         ## Loop through all Symbol Data objects
         for symbol, symbolData in self.symbolDataBySymbol.items():
-            if symbol not in data.Keys:   ## Skip this slice if the data dictionary doesn't contain the symbol
+            ## Evaluate whether or not the price jump is expected to rebound
+            if not symbolData.IsTrend(data):
                 continue
 
-            security = algorithm.Securities[symbol]
-
-            ## Update the symbolData properties
-            if not symbolData.Update(data, security): return insights
-
-            ## Evaluate whether or not the price jump is expected to rebound up or return down, and emit insights accordingly
-            if symbolData.DownTrend:
-                insights.append(Insight(symbol, self.prediction_interval, InsightType.Price, InsightDirection.Down, symbolData.PriceJump, None))
-            elif symbolData.UpTrend:
-                insights.append(Insight(symbol, self.prediction_interval, InsightType.Price, InsightDirection.Up, symbolData.PriceJump, None))
-
+            ## Emit insights accordingly to the price jump sign
+            direction = InsightDirection.Down if symbolData.PriceJump > 0 else InsightDirection.Up
+            insights.append(Insight.Price(symbol, self.prediction_interval, direction, symbolData.PriceJump, None))
+            
         return insights
 
     def OnSecuritiesChanged(self, algorithm, changes):
-        for security in changes.RemovedSecurities:
-            if security.Symbol in self.symbolDataBySymbol.keys():
-                self.symbolDataBySymbol.pop(security.Symbol)
-                algorithm.Log(f'{security.Symbol.Value} removed from Universe')
-        
-        history_request_symbols = [ x.Symbol for x in changes.AddedSecurities ]
-        history_df = algorithm.History(history_request_symbols, 100, self.resolution)
+        # Clean up data for removed securities
+        for removed in changes.RemovedSecurities:
+            symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
+            if symbolData is not None:
+                symbolData.RemoveConsolidators(algorithm)
 
-        for security in changes.AddedSecurities:
-            algorithm.Log(f'{security.Symbol.Value} added to Universe')
-            if str(security.Symbol) not in history_df.index.get_level_values(0):
-                continue
-            history = history_df.loc[str(security.Symbol)]
+        symbols = [x.Symbol for x in changes.AddedSecurities
+            if x.Symbol not in self.symbolDataBySymbol]
 
-             ## Create and initialize SymbolData objects
-            symbolData = SymbolData(algorithm, security)
-            self.symbolDataBySymbol[security.Symbol] = symbolData
-            for tuple in history.itertuples():
-                bar = TradeBar(tuple.Index, security.Symbol, tuple.open, tuple.high, tuple.low, tuple.close, tuple.volume)
-                symbolData.Initialize(bar, security)
+        history = algorithm.History(symbols, self.lookback, self.resolution)
+        if history.empty: return
+
+        ## Create and initialize SymbolData objects
+        for symbol in symbols:
+            symbolData = SymbolData(algorithm, symbol, self.lookback, self.resolution)
+            symbolData.WarmUpIndicators(history.loc[symbol])
+            self.symbolDataBySymbol[symbol] = symbolData
+
 
 class SymbolData:
-    def __init__(self, algorithm, security):
-        self.symbol = security.Symbol
+    def __init__(self, algorithm, symbol, lookback, resolution):
+        self.symbol = symbol
         self.close = 0
         self.last_price = 0
-        self.volatility = algorithm.STD(self.symbol, 100)
-        self.price_jump = 0
+        self.PriceJump = 0
+        self.consolidator = algorithm.ResolveConsolidator(symbol, resolution)
+        self.volatility = StandardDeviation(f'{symbol}.STD({lookback})', lookback)
+        algorithm.RegisterIndicator(symbol, self.volatility, self.consolidator)
 
-    def Update(self, data, security):
+    def RemoveConsolidators(self, algorithm):
+        algorithm.SubscriptionManager.RemoveConsolidator(self.symbol, self.consolidator)
+
+    def WarmUpIndicators(self, history):
+        self.close = history.iloc[-1].close
+        for tuple in history.itertuples():
+            self.volatility.Update(tuple.Index, tuple.close)
+
+    def IsTrend(self, data):
 
         ## Check for any data events that would return a NoneBar in the Alpha Model Update() method
-        if not data.Bars.ContainsKey(self.symbol) or data.Bars[self.symbol].Close == 0:
+        if not data.Bars.ContainsKey(self.symbol):
             return False
 
-        price = data.Bars[self.symbol].Close
         self.last_price = self.close
-        self.close = price
-        self.price_jump = (self.close / self.last_price) - 1
-
-        return True
-
-    def Initialize(self, data, security):
-
-        self.volatility.Update(data.Time, data.Close)
-        price = data.Close
-        if self.last_price == 0:
-            self.last_price = price
-            self.close = price
-        else:
-            self.last_price = self.close
-            self.close = price
-
-
-    @property
-    def PriceJump(self):
-        return (self.close / self.last_price) - 1
-
-    @property
-    def DownTrend(self):
-        return (abs(100*self.price_jump) > 3*self.volatility.Current.Value) and (self.price_jump > 0)
-
-    @property
-    def UpTrend(self):
-        return (abs(100*self.price_jump) > 3*self.volatility.Current.Value) and (self.price_jump < 0)
+        self.close = data.Bars[self.symbol].Close
+        self.PriceJump = (self.close / self.last_price) - 1
+        return abs(100*self.PriceJump) > 3*self.volatility.Current.Value

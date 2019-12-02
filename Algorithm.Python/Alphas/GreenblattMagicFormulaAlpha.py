@@ -29,24 +29,21 @@ from datetime import timedelta, datetime
 from math import ceil
 from itertools import chain
 
-#
-# This alpha picks stocks according to Joel Greenblatt's Magic Formula.
-# First, each stock is ranked depending on the relative value of the ratio EV/EBITDA. For example, a stock
-# that has the lowest EV/EBITDA ratio in the security universe receives a score of one while a stock that has
-# the tenth lowest EV/EBITDA score would be assigned 10 points.
-#
-# Then, each stock is ranked and given a score for the second valuation ratio, Return on Capital (ROC).
-# Similarly, a stock that has the highest ROC value in the universe gets one score point.
-# The stocks that receive the lowest combined score are chosen for insights.
-#
-# Source: Greenblatt, J. (2010) The Little Book That Beats the Market
-#
-# This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
-# sourced so the community and client funds can see an example of an alpha.
-#
-
 class GreenblattMagicFormulaAlpha(QCAlgorithm):
-    ''' Alpha Streams: Benchmark Alpha: Pick stocks according to Joel Greenblatt's Magic Formula'''
+    ''' Alpha Streams: Benchmark Alpha: Pick stocks according to Joel Greenblatt's Magic Formula
+    This alpha picks stocks according to Joel Greenblatt's Magic Formula.
+    First, each stock is ranked depending on the relative value of the ratio EV/EBITDA. For example, a stock
+    that has the lowest EV/EBITDA ratio in the security universe receives a score of one while a stock that has
+    the tenth lowest EV/EBITDA score would be assigned 10 points.
+
+    Then, each stock is ranked and given a score for the second valuation ratio, Return on Capital (ROC).
+    Similarly, a stock that has the highest ROC value in the universe gets one score point.
+    The stocks that receive the lowest combined score are chosen for insights.
+
+    Source: Greenblatt, J. (2010) The Little Book That Beats the Market
+
+    This alpha is part of the Benchmark Alpha Series created by QuantConnect which are open
+    sourced so the community and client funds can see an example of an alpha.'''
 
     def Initialize(self):
 
@@ -96,36 +93,29 @@ class RateOfChangeAlphaModel(AlphaModel):
                 symbolData.RemoveConsolidators(algorithm)
 
         # initialize data for added securities
-        symbols = [ x.Symbol for x in changes.AddedSecurities ]
+        symbols = [ x.Symbol for x in changes.AddedSecurities
+            if x.Symbol not in self.symbolDataBySymbol]
+
         history = algorithm.History(symbols, self.lookback, self.resolution)
         if history.empty: return
 
-        tickers = history.index.levels[0]
-        for ticker in tickers:
-            symbol = SymbolCache.GetSymbol(ticker)
-
-            if symbol not in self.symbolDataBySymbol:
-                symbolData = SymbolData(symbol, self.lookback)
-                self.symbolDataBySymbol[symbol] = symbolData
-                symbolData.RegisterIndicators(algorithm, self.resolution)
-                symbolData.WarmUpIndicators(history.loc[ticker])
+        for symbol in symbols:
+            symbolData = SymbolData(algorithm, symbol, self.lookback, self.resolution)
+            self.symbolDataBySymbol[symbol] = symbolData
+            symbolData.WarmUpIndicators(history.loc[symbol])
 
 
 class SymbolData:
     '''Contains data specific to a symbol required by this model'''
-    def __init__(self, symbol, lookback):
-        self.Symbol = symbol
-        self.ROC = RateOfChange(f'{symbol}.ROC({lookback})', lookback)
-        self.Consolidator = None
+    def __init__(self, algorithm, symbol, lookback, resolution):
         self.previous = 0
-
-    def RegisterIndicators(self, algorithm, resolution):
-        self.Consolidator = algorithm.ResolveConsolidator(self.Symbol, resolution)
-        algorithm.RegisterIndicator(self.Symbol, self.ROC, self.Consolidator)
+        self.symbol = symbol
+        self.ROC = RateOfChange(f'{symbol}.ROC({lookback})', lookback)
+        self.consolidator = algorithm.ResolveConsolidator(symbol, resolution)
+        algorithm.RegisterIndicator(symbol, self.ROC, self.consolidator)
 
     def RemoveConsolidators(self, algorithm):
-        if self.Consolidator is not None:
-            algorithm.SubscriptionManager.RemoveConsolidator(self.Symbol, self.Consolidator)
+        algorithm.SubscriptionManager.RemoveConsolidator(self.symbol, self.consolidator)
 
     def WarmUpIndicators(self, history):
         for tuple in history.itertuples():
@@ -133,7 +123,7 @@ class SymbolData:
 
     @property
     def Return(self):
-        return float(self.ROC.Current.Value)
+        return self.ROC.Current.Value
 
     @property
     def CanEmit(self):
@@ -144,7 +134,7 @@ class SymbolData:
         return self.ROC.IsReady
 
     def __str__(self, **kwargs):
-        return '{}: {:.2%}'.format(self.ROC.Name, (1 + self.Return)**252 - 1)
+        return f'{self.ROC.Name}: {(1 + self.Return)**252 - 1:.2%}'
 
 
 class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionModel):
@@ -168,31 +158,22 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
 
         self.lastMonth = -1
         self.dollarVolumeBySymbol = {}
-        self.symbols = []
 
     def SelectCoarse(self, algorithm, coarse):
         '''Performs coarse selection for constituents.
-        The stocks must have fundamental data
-        The stock must have positive previous-day close price
-        The stock must have positive volume on the previous trading day'''
+        The stocks must have fundamental data'''
         month = algorithm.Time.month
         if month == self.lastMonth:
-            return self.symbols
-
+            return Universe.Unchanged
         self.lastMonth = month
 
-        # The stocks must have fundamental data
-        # The stock must have positive previous-day close price
-        # The stock must have positive volume on the previous trading day
-        filtered = [x for x in coarse if x.HasFundamentalData]
         # sort the stocks by dollar volume and take the top 1000
-        top = sorted(filtered, key=lambda x: x.DollarVolume, reverse=True)[:self.NumberOfSymbolsCoarse]
+        top = sorted([x for x in coarse if x.HasFundamentalData],
+                    key=lambda x: x.DollarVolume, reverse=True)[:self.NumberOfSymbolsCoarse]
 
         self.dollarVolumeBySymbol = { i.Symbol: i.DollarVolume for i in top }
 
-        self.symbols = list(self.dollarVolumeBySymbol.keys())
-
-        return self.symbols
+        return list(self.dollarVolumeBySymbol.keys())
 
 
     def SelectFine(self, algorithm, fine):
@@ -218,7 +199,7 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
         if count == 0: return []
 
         myDict = dict()
-        percent = float(self.NumberOfSymbolsFine / count)
+        percent = self.NumberOfSymbolsFine / count
 
         # select stocks with top dollar volume in every single sector
         for key in ["N", "M", "U", "T", "B", "I"]:
@@ -240,6 +221,4 @@ class GreenBlattMagicFormulaUniverseSelectionModel(FundamentalUniverseSelectionM
         sortedByROA = sorted(sortedByEVToEBITDA[:self.NumberOfSymbolsFine], key=lambda x: x.ValuationRatios.ForwardROA, reverse=False)
 
         # retrieve list of securites in portfolio
-        self.symbols = [f.Symbol for f in sortedByROA[:self.NumberOfSymbolsInPortfolio]]
-
-        return self.symbols
+        return [f.Symbol for f in sortedByROA[:self.NumberOfSymbolsInPortfolio]]
