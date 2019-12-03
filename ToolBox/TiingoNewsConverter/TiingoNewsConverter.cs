@@ -31,9 +31,11 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
         private const int TaskCountLimit = 200;
         private readonly DirectoryInfo _sourceDirectory;
         private readonly DirectoryInfo _rootDestinationDirectory;
+        private readonly DirectoryInfo _dataFolderDirectory;
         private readonly DirectoryInfo _contentDirectory;
         // date to process, if null will process all data
         private readonly DateTime? _date;
+        private bool _differentDayWarningWasLogged;
 
         /// <summary>
         /// Creates an instance of the converter
@@ -46,7 +48,10 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
             _date = date;
             _sourceDirectory = sourceDirectory;
             _rootDestinationDirectory = new DirectoryInfo(Path.Combine(destinationDirectory.FullName, "alternative", "tiingo"));
+            Log.Trace($"TiingoNewsConverter(): destination directory to use {_rootDestinationDirectory}");
             _contentDirectory = Directory.CreateDirectory(Path.Combine(_rootDestinationDirectory.FullName, "content"));
+            _dataFolderDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "alternative", "tiingo"));
+            Log.Trace($"TiingoNewsConverter(): data directory to use {_dataFolderDirectory}");
         }
 
         public bool Convert()
@@ -93,10 +98,10 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                         var singleNewsData = TiingoNewsJsonConverter.DeserializeNews(jNews);
                         var newsPublishDate = singleNewsData.PublishedDate.Date;
 
-                        if (_date.HasValue && newsPublishDate.Date != _date)
+                        if (_date.HasValue && newsPublishDate.Date != _date && !_differentDayWarningWasLogged)
                         {
-                            // skip news that were published another date than the one we want to process
-                            continue;
+                            _differentDayWarningWasLogged = true;
+                            Log.Trace("TiingoNewsConverter.Convert(): Warning news for a different date was found, it will be merged with existing files");
                         }
 
                         // we store the data after 1 day difference
@@ -188,8 +193,72 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
             Queue<Task> ioTasks)
         {
             var newsDateStr = date.ToStringInvariant(DateFormat.EightCharacter);
-
             var indexesToStore = indexesPerTicker.Where(index => index.Key.Date == date).ToList();
+            var contentPath = Path.Combine(_contentDirectory.FullName, $"{newsDateStr}.zip");
+            var rawNewsById = new Dictionary<string, string>();
+
+            if (newsForDate.Count > 0)
+            {
+                try
+                {
+                    rawNewsById = newsForDate.ToDictionary(article => article.ID, article => article.RawData);
+
+                    // If the content file exists, in the data folder, we will load existing articles and merge them just in case.
+                    // Because of this, we can't run this in multiple tasks, else we could have IO file conflicts
+                    var existingContentPath = Path.Combine(_dataFolderDirectory.FullName, "content", $"{newsDateStr}.zip");
+                    if (File.Exists(existingContentPath))
+                    {
+                        var contentBytes = File.ReadAllBytes(existingContentPath);
+                        if (contentBytes.Length > 0)
+                        {
+                            Log.Trace($"TiingoNewsConverter.Convert(): Content file {existingContentPath} already exists, will merge with new content data");
+
+                            var existingData = new Dictionary<string, string>();
+                            foreach (var line in Compression.UnzipData(contentBytes).Values)
+                            {
+                                var news = JsonConvert.DeserializeObject<List<TiingoNews>>(line,
+                                    new TiingoNewsJsonConverter()).Single();
+                                existingData[$"{news.ArticleID}.json"] = line;
+                            }
+
+                            // for logging purpose:
+                            // we check if there is at least 1 data point in the EXISTING content file that is not present
+                            // in the NEW content data
+                            var existingContentHoldsDifferentData =
+                                existingData.Any(pair => !rawNewsById.ContainsKey(pair.Key));
+
+                            // for logging purpose:
+                            // we check if there is at least 1 data point in the NEW content file that is not present
+                            // in the EXISTING content data
+                            var newContentHoldsDifferentData =
+                                rawNewsById.Any(pair => !existingData.ContainsKey(pair.Key));
+
+                            Log.Trace(
+                                $"TiingoNewsConverter.Convert(): New Content Holds Different Data: {newContentHoldsDifferentData}." +
+                                $" Existing Content Holds Different Data {existingContentHoldsDifferentData}");
+
+                            // we merge both dictionaries
+                            rawNewsById = rawNewsById
+                                .Union(existingData.Where(k => !rawNewsById.ContainsKey(k.Key)))
+                                .ToDictionary(k => k.Key, v => v.Value);
+                        }
+                    }
+                    else
+                    {
+                        Log.Trace($"TiingoNewsConverter.Convert(): Content file {existingContentPath} does NOT exists.");
+                    }
+
+                    if (!Compression.ZipData(contentPath, rawNewsById))
+                    {
+                        Log.Error($"TiingoNewsConverter.Convert(): Failed to store news: {contentPath}");
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Log.Error($"TiingoNewsConverter.Convert(): Failed to store content: {contentPath}", exception);
+                }
+            }
+
             foreach (var kvp in indexesToStore)
             {
                 var indexKey = kvp.Key;
@@ -198,23 +267,51 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                 {
                     try
                     {
-                        // we have to order the articles here when we are about to store them
-                        // by publish date
-                        var orderedArticles = kvp.Value.OrderBy(article => article.PublishDate).ToList();
-                        var data = string.Join(Environment.NewLine, orderedArticles.Select(article => article.ID));
-
+                        var ticker = indexKey.Ticker.ToLowerInvariant();
                         // the ticker directory
-                        var tickerDir = Directory.CreateDirectory(
-                                Path.Combine(_rootDestinationDirectory.FullName, indexKey.Ticker.ToLowerInvariant()));
+                        var tickerDir = Directory.CreateDirectory(Path.Combine(_rootDestinationDirectory.FullName, ticker));
+
+                        // check if the index file already exists in the data folder and merge its contents
+                        var existingIndexFile = Path.Combine(_dataFolderDirectory.FullName, ticker, $"{newsDateStr}.csv");
+                        if (File.Exists(existingIndexFile))
+                        {
+                            Log.Trace($"TiingoNewsConverter.Convert(): Warning index file already exists: {existingIndexFile}, will merge indexes");
+
+                            var addedExistingIndex = false;
+                            foreach (var articleId in File.ReadAllLines(existingIndexFile))
+                            {
+                                // only add article if not already present in collection to store
+                                if (kvp.Value.All(article => article.ID != articleId))
+                                {
+                                    addedExistingIndex = true;
+                                    string rawNewsData;
+                                    if (rawNewsById.TryGetValue(articleId, out rawNewsData))
+                                    {
+                                        var news = JsonConvert.DeserializeObject<List<TiingoNews>>(rawNewsData,
+                                            new TiingoNewsJsonConverter()).Single();
+                                        kvp.Value.Add(new Article(articleId, news.PublishedDate, rawNewsData));
+                                    }
+                                    else
+                                    {
+                                        Log.Error("TiingoNewsConverter.Convert(): Warning article ID from existing index was was not found");
+                                    }
+                                }
+                            }
+
+                            if (addedExistingIndex)
+                            {
+                                Log.Trace("TiingoNewsConverter.Convert(): Existing index file contained different indexes");
+                            }
+                        }
+                        // we have to order the articles here when we are about to store them by publish date
+                        var orderedArticles = kvp.Value
+                            .OrderBy(article => article.PublishDate)
+                            .Select(article => article.ID);
+
+                        var data = string.Join(Environment.NewLine, orderedArticles);
 
                         // the index file for that ticker for that date
                         var indexFile = Path.Combine(tickerDir.FullName, $"{newsDateStr}.csv");
-
-                        if (File.Exists(indexFile))
-                        {
-                            Log.Error($"TiingoNewsConverter.Convert(): Warning index file already exists: {indexFile}. Will overwrite...");
-                        }
-
                         File.WriteAllText(indexFile, data);
                     }
                     catch (Exception exception)
@@ -224,20 +321,6 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                 }));
 
                 indexesPerTicker.Remove(indexKey);
-            }
-
-            if (newsForDate.Count > 0)
-            {
-                // Store news for date: this is slow so send it to a task too
-                ioTasks.Enqueue(Task.Run(() =>
-                {
-                    var data = newsForDate.ToDictionary(article => article.ID, article => article.RawData);
-                    var contentPath = Path.Combine(_contentDirectory.FullName, $"{newsDateStr}.zip");
-                    if (!Compression.ZipData(contentPath, data))
-                    {
-                        Log.Error($"TiingoNewsConverter.Convert(): Failed to store news: {contentPath}");
-                    }
-                }));
             }
         }
 

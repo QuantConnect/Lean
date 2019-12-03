@@ -276,9 +276,15 @@ namespace QuantConnect.ToolBox
                         break;
                     case "tiinc":
                     case "tiingonewsconverter":
+                        var strDate = GetParameterOrDefault(optionsObject, "date", null);
+                        var date = strDate != null
+                            ? DateTime.ParseExact(strDate, "yyyyMMdd", CultureInfo.InvariantCulture)
+                            : (DateTime?) null;
+
                         TiingoNewsConverterProgram.TiingoNewsConverter(
                             GetParameterOrExit(optionsObject, "source-dir"),
-                            GetParameterOrExit(optionsObject, "destination-dir"));
+                            GetParameterOrExit(optionsObject, "destination-dir"),
+                            date);
                         break;
                     case "bzncv":
                     case "benzinganewsconverter":
