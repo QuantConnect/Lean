@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@
 
 using System;
 using QuantConnect.Data.Market;
+using Python.Runtime;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -89,6 +90,15 @@ namespace QuantConnect.Data.Consolidators
             : this(new FuncPeriodSpecification(func))
         {
             _period = Time.OneSecond;
+        }
+
+        /// <summary>
+        /// Creates a consolidator to produce a new <typeparamref name="TConsolidated"/> instance representing the last count pieces of data or the period, whichever comes first
+        /// </summary>
+        /// <param name="funcpyobj">Python function object that defines the start time of a consolidated data</param>
+        protected PeriodCountConsolidatorBase(PyObject funcpyobj)
+            :this(funcpyobj.ConvertToDelegate<Func<DateTime, CalendarInfo>>())
+        {
         }
 
         /// <summary>
