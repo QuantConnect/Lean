@@ -23,6 +23,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Logging;
+using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
@@ -125,5 +126,54 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 Assert.IsNotNull(enumerator.Current);
             }
         }
+
+
+        [Test]
+        public void RespectsScheduleIfProvided()
+        {
+            var dateStart = new DateTime(2014, 3, 26);
+            var dateEnd = new DateTime(2014, 3, 30);
+
+            var symbol = CoarseFundamental.CreateUniverseSymbol(Market.USA);
+            var config = new SubscriptionDataConfig(typeof(CoarseFundamental), symbol, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false, false, TickType.Trade, false);
+            var security = new Security(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                config,
+                new Cash(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+
+            var universeSettings = new UniverseSettings(Resolution.Daily, 2m, true, false, TimeSpan.FromDays(1));
+            universeSettings.Schedule.On(
+                new FuncDateRule("test",
+                    // a single schedule 2 days after start date
+                    (time, dateTime) => new List<DateTime> { dateStart.AddDays(2) }));
+
+            var securityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(), SecuritySeeder.Null);
+            var universe = new CoarseFundamentalUniverse(universeSettings, securityInitializer, x => new List<Symbol> { Symbols.AAPL });
+
+            var fileProvider = new DefaultDataProvider();
+
+            var factory = new BaseDataCollectionSubscriptionEnumeratorFactory();
+
+            var request = new SubscriptionRequest(true, universe, security, config, dateStart, dateEnd);
+
+            using (var enumerator = factory.CreateEnumerator(request, fileProvider))
+            {
+                Assert.IsTrue(enumerator.MoveNext());
+
+                var current = enumerator.Current as BaseDataCollection;
+                Assert.IsNotNull(current);
+                Assert.AreEqual(dateStart.AddDays(2), current.Time);
+                Assert.AreEqual(dateStart.AddDays(2), current.EndTime);
+
+                Assert.IsFalse(enumerator.MoveNext());
+                Assert.IsNotNull(enumerator.Current);
+            }
+        }
     }
 }
+;

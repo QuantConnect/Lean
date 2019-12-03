@@ -37,6 +37,158 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class LiveCoarseUniverseTests
     {
         [Test]
+        public void CoarseUniverseRespectsUniverseSettingsSchedule()
+        {
+            var startDate = new DateTime(2014, 3, 26);
+            var endDate = new DateTime(2014, 4, 2);
+
+            var timeProvider = new ManualTimeProvider(TimeZones.NewYork);
+            timeProvider.SetCurrentTime(startDate);
+            var coarseTimes = new List<DateTime>
+            {
+                new DateTime(2014, 3, 27, 1, 0, 0),
+                new DateTime(2014, 3, 28, 0, 0, 0),
+                new DateTime(2014, 5, 1, 1, 0, 0)
+            }.ToHashSet();
+
+            var coarseSymbols = new List<Symbol> { Symbols.SPY, Symbols.AAPL, Symbols.MSFT };
+            var coarseUsaSymbol = CoarseFundamental.CreateUniverseSymbol(Market.USA, false);
+
+            var coarseDataEmittedCount = 0;
+            var lastTime = DateTime.MinValue;
+            var dataQueueHandler = new FuncDataQueueHandler(fdqh =>
+            {
+                var time = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
+                if (time != lastTime)
+                {
+                    lastTime = time;
+
+                    if (coarseTimes.Contains(time))
+                    {
+                        // emit coarse data at selected times
+                        var coarseData = new BaseDataCollection { Symbol = coarseUsaSymbol, Time = time, EndTime = time };
+                        foreach (var symbol in coarseSymbols)
+                        {
+                            coarseData.Data.Add(
+                                new CoarseFundamental
+                                {
+                                    Symbol = symbol,
+                                    Time = time,
+                                    Market = Market.USA,
+                                    Value = 100
+                                });
+                        }
+                        coarseDataEmittedCount++;
+                        return new List<BaseData> { coarseData };
+                    }
+                }
+                return Enumerable.Empty<BaseData>();
+            });
+
+            var feed = new TestableLiveTradingDataFeed(dataQueueHandler);
+
+            var algorithm = new AlgorithmStub(feed);
+            algorithm.SetLiveMode(true);
+
+            var mock = new Mock<ITransactionHandler>();
+            mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
+            algorithm.Transactions.SetOrderProcessor(mock.Object);
+
+            var synchronizer = new TestableLiveSynchronizer(timeProvider);
+            synchronizer.Initialize(algorithm, algorithm.DataManager);
+
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
+                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(), algorithm.DataManager, synchronizer);
+
+            var symbolIndex = 0;
+            var coarseUniverseSelectionCount = 0;
+            var coarseTime = DateTime.MinValue;
+            var timeProviderTime = DateTime.MinValue;
+            algorithm.SetDateTime(startDate);
+            // we set the selection scheduled we want
+            algorithm.UniverseSettings.Schedule.On(algorithm.DateRules.MonthStart());
+            algorithm.AddUniverse(
+                coarse =>
+                {
+                    coarseTime = coarse.First().Time;
+                    timeProviderTime = timeProvider.GetUtcNow().ConvertFromUtc(algorithm.TimeZone);
+                    coarseUniverseSelectionCount++;
+                    Console.WriteLine($"CoarseTime {coarseTime}. TimeProviderTime {timeProviderTime}");
+
+                    // rotate single symbol in universe
+                    if (symbolIndex == coarseSymbols.Count) symbolIndex = 0;
+
+                    return new[] { coarseSymbols[symbolIndex++] };
+                });
+
+            algorithm.PostInitialize();
+
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            Exception exceptionThrown = null;
+
+            // create a timer to advance time much faster than realtime
+            var timerInterval = TimeSpan.FromMilliseconds(25);
+            var timer = Ref.Create<Timer>(null);
+            timer.Value = new Timer(state =>
+            {
+                try
+                {
+                    // stop the timer to prevent reentrancy
+                    timer.Value.Change(Timeout.Infinite, Timeout.Infinite);
+
+                    var currentTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork);
+
+                    if (currentTime.Date > endDate.Date)
+                    {
+                        feed.Exit();
+                        cancellationTokenSource.Cancel();
+                        return;
+                    }
+
+                    timeProvider.Advance(TimeSpan.FromHours(1));
+
+                    var activeSecuritiesCount = algorithm.ActiveSecurities.Count;
+
+                    Assert.That(activeSecuritiesCount <= 1);
+
+                    // restart the timer
+                    timer.Value.Change(timerInterval, timerInterval);
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception);
+                    exceptionThrown = exception;
+
+                    feed.Exit();
+                    cancellationTokenSource.Cancel();
+                }
+
+            }, null, TimeSpan.FromSeconds(1), timerInterval);
+
+            foreach (var _ in synchronizer.StreamData(cancellationTokenSource.Token)) { }
+
+            timer.Value.Dispose();
+
+            if (exceptionThrown != null)
+            {
+                throw new Exception("Exception in timer: ", exceptionThrown);
+            }
+
+            // one will not get emitted because if after the end
+            Assert.AreEqual(coarseTimes.Count - 1, coarseDataEmittedCount);
+            // we only expect 1 selection to have taken place, at the start of the month
+            Assert.AreEqual(1, coarseUniverseSelectionCount);
+            // it should have dropped previous data points and use the most recent available value
+            Assert.AreEqual(new DateTime(2014, 3, 28, 0, 0, 0), coarseTime);
+            // since time is advanced in a timer it could be later
+            Assert.IsTrue(new DateTime(2014, 4, 1, 0, 0, 0) <= timeProviderTime);
+
+            algorithm.DataManager.RemoveAllSubscriptions();
+        }
+
+        [Test]
         public void CoarseUniverseRotatesActiveSecurity()
         {
             var startDate = new DateTime(2014, 3, 24);

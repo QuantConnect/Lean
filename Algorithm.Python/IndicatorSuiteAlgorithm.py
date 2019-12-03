@@ -23,7 +23,7 @@ from QuantConnect import *
 from QuantConnect.Indicators import *
 from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
-from QuantConnect.Data.Custom import *
+from QuantConnect.Data.Custom import Quandl
 from QuantConnect.Algorithm import *
 
 ### <summary>

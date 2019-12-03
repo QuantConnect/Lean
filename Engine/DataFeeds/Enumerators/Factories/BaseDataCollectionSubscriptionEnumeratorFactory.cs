@@ -20,6 +20,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 {
@@ -47,28 +48,58 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 // we want the first selection to happen on the start time
                 // so we need the previous tradable day time, since coarse
                 // files are for each tradable date but emitted with next day time
-                var previousTradableDay = Time.GetStartTimeForTradeBars(
-                    request.Security.Exchange.Hours,
-                    request.StartTimeLocal,
-                    Time.OneDay,
-                    1,
-                    false);
+                var previousTradableDay = GetPreviousTradableDay(request.StartTimeLocal, request);
+
                 var tradableDays = new[] { previousTradableDay }.Concat(request.TradableDays);
+
+                // if the selection schedule was defined use it instead
+                var schedule = request.Universe.UniverseSettings.Schedule.Get(request.StartTimeLocal);
+                if (schedule != null)
+                {
+                    Log.Trace("BaseDataCollectionSubscriptionEnumeratorFactory.CreateEnumerator(): will use UniverseSettings.Schedule " +
+                              "instead of each tradable day.");
+                    tradableDays = schedule
+                        // we shift time 1 day before since coarse selection is emitted for the following day and will match the request time
+                        .Select(time => time.AddDays(-1))
+                        .Where(time => time <= request.EndTimeUtc);
+                }
 
                 // Behaves in the same way as in live trading
                 // (i.e. only emit coarse data on dates following a trading day)
                 // The shifting of dates is needed to ensure we never emit coarse data on the same date,
                 // because it would enable look-ahead bias.
-
-                foreach (var date in tradableDays)
+                foreach (var dateTime in tradableDays)
                 {
+                    var date = dateTime.Date;
+
+                    if (request.Universe.UniverseSettings.Schedule != null)
+                    {
+                        // if the schedule returned a non tradable date, lets get the previous tradable date
+                        // and use it to fetch the coarse data
+                        if (!request.Security.Exchange.Hours.IsDateOpen(date))
+                        {
+                            date = GetPreviousTradableDay(date, request);
+                        }
+                    }
+
                     var source = sourceFactory.GetSource(configuration, date, false);
                     var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, configuration, date, false);
                     var coarseFundamentalForDate = factory.Read(source);
+
                     //  shift all date of emitting the file forward one day to model emitting coarse midnight the next day.
-                    yield return new BaseDataCollection(date.AddDays(1), configuration.Symbol, coarseFundamentalForDate);
+                    yield return new BaseDataCollection(dateTime.Date.AddDays(1), configuration.Symbol, coarseFundamentalForDate);
                 }
             }
+        }
+
+        private DateTime GetPreviousTradableDay(DateTime time, SubscriptionRequest request)
+        {
+            return Time.GetStartTimeForTradeBars(
+                request.Security.Exchange.Hours,
+                time,
+                Time.OneDay,
+                1,
+                false);
         }
     }
 }

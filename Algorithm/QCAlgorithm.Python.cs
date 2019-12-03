@@ -263,22 +263,42 @@ namespace QuantConnect.Algorithm
         /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
         /// </summary>
         /// <param name="pycoarse">Defines an initial coarse selection</param>
-        /// <param name="pyfine">Defines a more detailed selection with access to more data</param>
-        public void AddUniverse(PyObject pycoarse, PyObject pyfine)
+        /// <param name="pyfineOrDateRule">Due to a python net limitation this could be either
+        /// a <see cref="FineFundamental"/> selection method or a <see cref="IDateRule"/> for <see cref="CoarseFundamental"/> selection</param>
+        /// <param name="dateRule">Date rule that will be used to set the <see cref="Data.UniverseSelection.UniverseSettings.Schedule"/></param>
+        public void AddUniverse(PyObject pycoarse, PyObject pyfineOrDateRule, IDateRule dateRule = null)
         {
+            Func<IEnumerable<FineFundamental>, object> fineFunc = null;
             Func<IEnumerable<CoarseFundamental>, object> coarseFunc;
-            Func<IEnumerable<FineFundamental>, object> fineFunc;
+            IDateRule dateRules = null;
 
-            if (pycoarse.TryConvertToDelegate(out coarseFunc) && pyfine.TryConvertToDelegate(out fineFunc))
+            try
             {
-                AddUniverse(coarseFunc.ConvertToUniverseSelectionSymbolDelegate(),
-                    fineFunc.ConvertToUniverseSelectionSymbolDelegate());
+                dateRules = pyfineOrDateRule.As<IDateRule>();
+            }
+            catch (InvalidCastException)
+            {
+                // pass
+            }
+
+            if(pycoarse.TryConvertToDelegate(out coarseFunc) && (dateRules != null || pyfineOrDateRule.TryConvertToDelegate(out fineFunc)))
+            {
+                if (dateRules != null)
+                {
+                    AddUniverse(coarseFunc.ConvertToUniverseSelectionSymbolDelegate(), dateRules);
+                }
+                else
+                {
+                    AddUniverse(coarseFunc.ConvertToUniverseSelectionSymbolDelegate(),
+                        fineFunc.ConvertToUniverseSelectionSymbolDelegate(),
+                        dateRule);
+                }
             }
             else
             {
                 using (Py.GIL())
                 {
-                    throw new ArgumentException($"QCAlgorithm.AddUniverse: {pycoarse.Repr()} or {pyfine.Repr()} is not a valid argument.");
+                    throw new ArgumentException($"QCAlgorithm.AddUniverse: {pycoarse.Repr()} or {pyfineOrDateRule.Repr()} is not a valid argument.");
                 }
             }
         }

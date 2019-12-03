@@ -19,6 +19,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -373,8 +374,15 @@ namespace QuantConnect.Algorithm
         /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
         /// </summary>
         /// <param name="selector">Defines an initial coarse selection</param>
-        public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
+        /// <param name="dateRule">Date rule that will be used to set the <see cref="Data.UniverseSelection.UniverseSettings.Schedule"/></param>
+        public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector,
+            IDateRule dateRule = null)
         {
+            if (dateRule != null)
+            {
+                UniverseSettings.Schedule.On(dateRule);
+            }
+
             AddUniverse(new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, selector));
         }
 
@@ -384,8 +392,16 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="coarseSelector">Defines an initial coarse selection</param>
         /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
-        public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector, Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
+        /// <param name="dateRule">Date rule that will be used to set the <see cref="Data.UniverseSelection.UniverseSettings.Schedule"/></param>
+        public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector,
+            Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector,
+            IDateRule dateRule = null)
         {
+            if (dateRule != null)
+            {
+                UniverseSettings.Schedule.On(dateRule);
+            }
+
             var coarse = new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, coarseSelector);
 
             AddUniverse(new FineFundamentalFilteredUniverse(coarse, fineSelector));

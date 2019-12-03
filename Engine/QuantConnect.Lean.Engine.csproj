@@ -173,6 +173,7 @@
     <Compile Include="DataFeeds\CachingOptionChainProvider.cs" />
     <Compile Include="DataFeeds\CurrencySubscriptionDataConfigManager.cs" />
     <Compile Include="DataFeeds\DataChannelProvider.cs" />
+    <Compile Include="DataFeeds\Enumerators\ScheduledEnumerator.cs" />
     <Compile Include="DataFeeds\IDataChannelProvider.cs" />
     <Compile Include="DataFeeds\IndexSubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\DataManager.cs" />

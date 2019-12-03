@@ -490,10 +490,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     enqueable.Enqueue(data);
 
                     subscription.OnNewDataAvailable();
-
                 });
 
                 enumerator = GetConfiguredFrontierAwareEnumerator(enqueable, tzOffsetProvider);
+
+                var schedule = request.Universe.UniverseSettings.Schedule.Get(request.StartTimeLocal);
+                if (schedule != null)
+                {
+                    enumerator = new ScheduledEnumerator(enumerator,
+                        schedule,
+                        _frontierTimeProvider,
+                        request.Configuration.ExchangeTimeZone);
+                }
             }
             else if (request.Universe is OptionChainUniverse)
             {

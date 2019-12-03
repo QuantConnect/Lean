@@ -19,7 +19,7 @@ AddReference("QuantConnect.Algorithm")
 from System import *
 from QuantConnect import *
 from QuantConnect.Orders import *
-from QuantConnect.Algorithm import QCAlgorithm
+from QuantConnect.Algorithm import *
 
 ### <summary>
 ### This algorithm demonstrates the runtime addition and removal of securities from your algorithm.
