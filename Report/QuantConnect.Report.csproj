@@ -111,6 +111,7 @@
     </When>
   </Choose>
   <ItemGroup>
+    <Compile Include="ReportElements\RollingSharpeReportElement.cs" />
     <Compile Include="ReportElements\RollingPortfolioBetaReportElement.cs" />
     <Compile Include="ReportElements\DailyReturnsReportElement.cs" />
     <Compile Include="ReportElements\DrawdownReportElement.cs" />

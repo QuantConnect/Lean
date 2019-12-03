@@ -593,8 +593,6 @@ class ReportCharts:
 
         # Live
         if len(live_six_month_beta) > 0:
-            print(live_six_month_beta)
-
             ax.plot(live_six_month_beta.index, live_six_month_beta.values, linewidth=0.5, color="#ff9914")
             ax.plot(live_twelve_month_beta.index, live_twelve_month_beta.values, linewidth=0.5, color="#ffd700")
 
@@ -658,19 +656,44 @@ class ReportCharts:
 
         labels = ['6 mo.']
         rectangles = [plt.Rectangle((0, 0), 1, 1, fc=backtest_color)]
-        if len(live_data[0]) > 0:  # Need to handle this...
-            rectangles += [plt.Rectangle((0, 0,), 1, 1, fc=live_color)]
-            labels += ["Live 6 mo."]
 
         plt.figure()
         ax = plt.gca()
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
 
+        backtest_rolling_sharpe = pd.DataFrame(data[1], index=data[0], columns=['returns']).resample('D').sum()
+        live_rolling_sharpe = pd.DataFrame(live_data[1], index=live_data[0], columns=['returns']).resample('D').sum()
+
+
+        backtest_rolling_sharpe['rolling_sharpe'] = [
+            self.CalculateAnnualizedSharpe(
+                backtest_rolling_sharpe.loc[date - pd.offsets.DateOffset(months=6):date, 'returns']
+            ) 
+            for date in backtest_rolling_sharpe.index
+        ]
+
+        live_rolling_sharpe['rolling_sharpe'] = [
+            self.CalculateAnnualizedSharpe(
+                live_rolling_sharpe.loc[date - pd.offsets.DateOffset(months=6):date, 'returns']
+            ) for date in live_rolling_sharpe.index
+        ]
+
+        if len(backtest_rolling_sharpe) > 0:
+            backtest_rolling_sharpe = backtest_rolling_sharpe.loc[backtest_rolling_sharpe.index[0] + pd.offsets.DateOffset(months=6):]
+        if len(live_rolling_sharpe) > 0:
+            live_rolling_sharpe = live_rolling_sharpe.loc[live_rolling_sharpe.index[0] + pd.offsets.DateOffset(months=6):]
+
+        # Check after the fact if we have any live values since we might not be far
+        # enough into live trading to generate the live rolling sharpe graph
+        if len(live_rolling_sharpe) > 0:
+            rectangles += [plt.Rectangle((0, 0,), 1, 1, fc=live_color)]
+            labels += ["Live 6 mo."]
+
         # Backtest
-        ax.plot(data[0][:min(len(data[0]),len(data[1]))], data[1], color = backtest_color, linewidth = 0.5, zorder = 2)
+        ax.plot(backtest_rolling_sharpe.index, backtest_rolling_sharpe['rolling_sharpe'].values, color=backtest_color, linewidth=0.5, zorder=2)
 
         # Live
-        ax.plot(live_data[0][:min(len(live_data[0]), len(live_data[1]))], live_data[1], color=live_color, linewidth=0.5, zorder=2)
+        ax.plot(live_rolling_sharpe.index, live_rolling_sharpe['rolling_sharpe'].values, color=live_color, linewidth=0.5, zorder=2)
 
         leg = ax.legend(rectangles, labels, handlelength=0.8, handleheight=0.8,
                         frameon=False, fontsize=8)
@@ -692,6 +715,9 @@ class ReportCharts:
         plt.clf()
         plt.close('all')
         return base64
+
+    def CalculateAnnualizedSharpe(self, df):
+        return np.sqrt(252) * (df.mean() / df.std())
 
     def GetAssetAllocation(self, data = [[],[]], live_data = [[],[]],
                               width = 7, height = 5):
