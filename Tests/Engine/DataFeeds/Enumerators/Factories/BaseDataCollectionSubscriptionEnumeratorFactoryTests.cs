@@ -124,3 +124,4 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         }
     }
 }
+;
