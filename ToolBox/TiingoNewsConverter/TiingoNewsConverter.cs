@@ -188,8 +188,45 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
             Queue<Task> ioTasks)
         {
             var newsDateStr = date.ToStringInvariant(DateFormat.EightCharacter);
-
             var indexesToStore = indexesPerTicker.Where(index => index.Key.Date == date).ToList();
+            var contentPath = Path.Combine(_contentDirectory.FullName, $"{newsDateStr}.zip");
+            var rawNewsById = new Dictionary<string, string>();
+
+            if (newsForDate.Count > 0)
+            {
+                try
+                {
+                    rawNewsById = newsForDate.ToDictionary(article => article.ID, article => article.RawData);
+
+                    // If the content file exists, we will load existing articles and merge them just in case.
+                    // Because of this, we can't run this in multiple tasks, else we could have IO file conflicts
+                    if (File.Exists(contentPath))
+                    {
+                        var contentBytes = File.ReadAllBytes(contentPath);
+                        if (contentBytes.Length > 0)
+                        {
+                            Log.Trace($"TiingoNewsConverter.Convert(): Content file {contentPath} already exists, will merge with new content data");
+                            foreach (var line in Compression.UnzipData(contentBytes).Values)
+                            {
+                                var news = JsonConvert.DeserializeObject<List<TiingoNews>>(line,
+                                    new TiingoNewsJsonConverter()).Single();
+
+                                rawNewsById[$"{news.ArticleID}.json"] = line;
+                            }
+                        }
+                    }
+
+                    if (!Compression.ZipData(contentPath, rawNewsById))
+                    {
+                        Log.Error($"TiingoNewsConverter.Convert(): Failed to store news: {contentPath}");
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Log.Error($"TiingoNewsConverter.Convert(): Failed to store content: {contentPath}", exception);
+                }
+            }
+
             foreach (var kvp in indexesToStore)
             {
                 var indexKey = kvp.Key;
@@ -198,22 +235,41 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                 {
                     try
                     {
-                        // we have to order the articles here when we are about to store them
-                        // by publish date
-                        var orderedArticles = kvp.Value.OrderBy(article => article.PublishDate).ToList();
-                        var data = string.Join(Environment.NewLine, orderedArticles.Select(article => article.ID));
-
                         // the ticker directory
                         var tickerDir = Directory.CreateDirectory(
                                 Path.Combine(_rootDestinationDirectory.FullName, indexKey.Ticker.ToLowerInvariant()));
 
                         // the index file for that ticker for that date
                         var indexFile = Path.Combine(tickerDir.FullName, $"{newsDateStr}.csv");
-
                         if (File.Exists(indexFile))
                         {
-                            Log.Error($"TiingoNewsConverter.Convert(): Warning index file already exists: {indexFile}. Will overwrite...");
+                            Log.Trace($"TiingoNewsConverter.Convert(): Warning index file already exists: {indexFile}, will merge indexes");
+
+                            foreach (var articleId in File.ReadAllLines(indexFile))
+                            {
+                                // only add article if not already present in collection to store
+                                if (kvp.Value.All(article => article.ID != articleId))
+                                {
+                                    string rawNewsData;
+                                    if (rawNewsById.TryGetValue(articleId, out rawNewsData))
+                                    {
+                                        var news = JsonConvert.DeserializeObject<List<TiingoNews>>(rawNewsData,
+                                            new TiingoNewsJsonConverter()).Single();
+                                        kvp.Value.Add(new Article(articleId, news.PublishedDate, rawNewsData));
+                                    }
+                                    else
+                                    {
+                                        Log.Error("TiingoNewsConverter.Convert(): Warning article ID from existing index was was not found");
+                                    }
+                                }
+                            }
                         }
+                        // we have to order the articles here when we are about to store them by publish date
+                        var orderedArticles = kvp.Value
+                            .OrderBy(article => article.PublishDate)
+                            .Select(article => article.ID);
+
+                        var data = string.Join(Environment.NewLine, orderedArticles);
 
                         File.WriteAllText(indexFile, data);
                     }
@@ -224,20 +280,6 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                 }));
 
                 indexesPerTicker.Remove(indexKey);
-            }
-
-            if (newsForDate.Count > 0)
-            {
-                // Store news for date: this is slow so send it to a task too
-                ioTasks.Enqueue(Task.Run(() =>
-                {
-                    var data = newsForDate.ToDictionary(article => article.ID, article => article.RawData);
-                    var contentPath = Path.Combine(_contentDirectory.FullName, $"{newsDateStr}.zip");
-                    if (!Compression.ZipData(contentPath, data))
-                    {
-                        Log.Error($"TiingoNewsConverter.Convert(): Failed to store news: {contentPath}");
-                    }
-                }));
             }
         }
 
