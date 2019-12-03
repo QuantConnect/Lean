@@ -233,6 +233,12 @@ namespace QuantConnect.ToolBox.TiingoNewsConverter
                 {
                     var data = newsForDate.ToDictionary(article => article.ID, article => article.RawData);
                     var contentPath = Path.Combine(_contentDirectory.FullName, $"{newsDateStr}.zip");
+
+                    if (File.Exists(contentPath))
+                    {
+                        Log.Error($"TiingoNewsConverter.Convert(): Warning content file already exists: {contentPath}. Will overwrite...");
+                    }
+
                     if (!Compression.ZipData(contentPath, data))
                     {
                         Log.Error($"TiingoNewsConverter.Convert(): Failed to store news: {contentPath}");
