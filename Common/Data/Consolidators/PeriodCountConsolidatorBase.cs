@@ -95,9 +95,9 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Creates a consolidator to produce a new <typeparamref name="TConsolidated"/> instance representing the last count pieces of data or the period, whichever comes first
         /// </summary>
-        /// <param name="funcpyobj">Python function object that defines the start time of a consolidated data</param>
-        protected PeriodCountConsolidatorBase(PyObject funcpyobj)
-            :this(funcpyobj.ConvertToDelegate<Func<DateTime, CalendarInfo>>())
+        /// <param name="pyObject">Python object that defines either a function object that defines the start time of a consolidated data or a timespan</param>
+        protected PeriodCountConsolidatorBase(PyObject pyObject)
+            : this(GetPeriodSpecificationFromPyObject(pyObject))
         {
         }
 
@@ -294,6 +294,25 @@ namespace QuantConnect.Data.Consolidators
         {
             base.OnDataConsolidated(e);
             DataConsolidated?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Gets the period specification from the PyObject that can either represent a function object that defines the start time of a consolidated data or a timespan.
+        /// </summary>
+        /// <param name="pyObject">Python object that defines either a function object that defines the start time of a consolidated data or a timespan</param>
+        /// <returns>IPeriodSpecification that represents the PyObject</returns>
+        private static IPeriodSpecification GetPeriodSpecificationFromPyObject(PyObject pyObject)
+        {
+            Func<DateTime, CalendarInfo> expiryFunc;
+            if (pyObject.TryConvertToDelegate(out expiryFunc))
+            {
+                return new FuncPeriodSpecification(expiryFunc);
+            }
+
+            using (Py.GIL())
+            {
+                return new TimeSpanPeriodSpecification(pyObject.As<TimeSpan>());
+            }
         }
 
         /// <summary>
