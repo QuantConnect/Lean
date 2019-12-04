@@ -27,13 +27,15 @@ namespace QuantConnect.Tests.Common.Data
     [TestFixture]
     public class CalendarConsolidatorsTests
     {
+        private Dictionary<Language, dynamic> _dailyFuncDictionary;
         private Dictionary<Language, dynamic> _weeklyFuncDictionary;
         private Dictionary<Language, dynamic> _monthlyFuncDictionary;
 
         [TestFixtureSetUp]
         public void SetUp()
         {
-            _weeklyFuncDictionary = new Dictionary<Language, dynamic> {{Language.CSharp, CalendarType.Weekly}};
+            _dailyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, TimeSpan.FromDays(1) } };
+            _weeklyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, CalendarType.Weekly } };
             _monthlyFuncDictionary = new Dictionary<Language, dynamic> {{Language.CSharp, CalendarType.Monthly}};
 
             using (Py.GIL())
@@ -45,6 +47,7 @@ from datetime import timedelta
 from clr import AddReference
 AddReference('QuantConnect.Common')
 from QuantConnect.Data.Consolidators import CalendarInfo
+oneday = timedelta(1)
 
 def Weekly(dt):
     value = 8 - dt.isoweekday()
@@ -59,6 +62,7 @@ def Monthly(dt):
     return CalendarInfo(start, end - start)"
                 );
 
+                _dailyFuncDictionary[Language.Python] = module.GetAttr("oneday");
                 _weeklyFuncDictionary[Language.Python] = module.GetAttr("Weekly");
                 _monthlyFuncDictionary[Language.Python] = module.GetAttr("Monthly");
             }
@@ -381,6 +385,53 @@ def Monthly(dt):
             Assert.AreEqual(ticks.Last().Value, consolidated.Close);
             Assert.AreEqual(0, consolidated.Volume);
         }
+
+        [Test]
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void AggregatesTradeBarToDailyTradeBarProperly(Language language)
+        {
+            // Monday
+            var reference = new DateTime(2019, 3, 18);
+            var bars = new List<TradeBar>
+            {
+                new TradeBar(reference.AddHours(6), Symbols.SPY, 9, 11, 8, 10, 100, Time.OneHour),
+                new TradeBar(reference.AddHours(12), Symbols.SPY, 10, 12, 8, 11, 100, Time.OneHour),
+                new TradeBar(reference.AddHours(18), Symbols.SPY, 11, 13, 9, 10, 100, Time.OneHour),
+                new TradeBar(reference.AddHours(21), Symbols.SPY, 11, 13, 9, 11, 100, Time.OneHour),
+                new TradeBar(reference.AddHours(25), Symbols.SPY, 11, 13, 9, 11, 100, Time.OneHour)
+            };
+
+            var dailyConsolidator = new TradeBarConsolidator(_dailyFuncDictionary[language]);
+            dailyConsolidator.DataConsolidated += (s, e) =>
+            {
+                AssertTradeBar(
+                    bars.Take(4),
+                    reference,
+                    reference.AddDays(1),
+                    Symbols.SPY,
+                    e);
+            };
+
+            foreach (var bar in bars)
+            {
+                dailyConsolidator.Update(bar);
+            }
+        }
+
+        private void AssertDailyTradeBar(IEnumerable<TradeBar> tradeBars, DateTime openTime, DateTime closeTime, Symbol symbol, TradeBar consolidated)
+        {
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(openTime, consolidated.Time);
+            Assert.AreEqual(closeTime, consolidated.EndTime);
+            Assert.AreEqual(symbol, consolidated.Symbol);
+            Assert.AreEqual(tradeBars.First().Open, consolidated.Open);
+            Assert.AreEqual(tradeBars.Max(x => x.High), consolidated.High);
+            Assert.AreEqual(tradeBars.Min(x => x.Low), consolidated.Low);
+            Assert.AreEqual(tradeBars.Last().Close, consolidated.Close);
+            Assert.AreEqual(tradeBars.Sum(x => x.Volume), consolidated.Volume);
+        }
+
 
         private SimpleMovingAverage indicator;
 
