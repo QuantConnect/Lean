@@ -1772,7 +1772,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var optionSymbol1 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 192m, new DateTime(2019, 12, 19));
             var optionSymbol2 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 192m, new DateTime(2019, 12, 19));
 
-            var futureSymbol1 = Symbol.CreateFuture("SPY", Market.USA, new DateTime(2016, 12, 19));
+            var futureSymbol1 = Symbol.CreateFuture("SPY", Market.USA, new DateTime(2019, 12, 19));
             var futureSymbol2 = Symbol.CreateFuture("SPY", Market.USA, new DateTime(2020, 3, 19));
 
             Symbol canonicalOptionSymbol = null;
@@ -1888,7 +1888,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 secType =>
                 {
                     var time = timeProvider.GetUtcNow().ConvertFromUtc(algorithmTimeZone);
-                    var result = true; // time.Hour >= 1 && time.Hour < 23;
+                    var result = time.Hour >= 1 && time.Hour < 23;
 
                     ConsoleWriteLine($"CanAdvanceTime() called at {time}, returning {result}");
 
@@ -1999,11 +1999,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
 
                 if (lastSecurityChangedTime != null &&
-                    timeSlice.Time > lastSecurityChangedTime.Value.AddMinutes(1))
+                    timeSlice.Time > lastSecurityChangedTime.Value.AddMinutes(30))
                 {
                     Assert.AreEqual(futureSymbols.Count, futureContractCount);
 
-                    if (securityType == SecurityType.Option && algorithm.IsMarketOpen(canonicalOptionSymbol))
+                    if (securityType == SecurityType.Option && timeSlice.Slice.OptionChains.Values.Count > 0)
                     {
                         Assert.AreEqual(optionSymbols.Count, optionContractCount);
                     }
@@ -2050,7 +2050,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
 
                 emittedData.Reset();
-                timeProvider.Advance(TimeSpan.FromMinutes(1));
+
+                // for faster testing
+                timeProvider.Advance(TimeSpan.FromMinutes(30));
 
                 // give enough time to the producer to emit
                 if (!emittedData.WaitOne(300))
