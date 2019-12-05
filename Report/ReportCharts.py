@@ -260,13 +260,16 @@ class ReportCharts:
         return base64
 
     def GetMonthlyReturns(self, returns = {}, live_returns = {}, width=7, height=5, name='monthly-returns.png'):
+        '''
+        Expects monthly returns in dictionary keyed by year containing a list of monthly returns (as percentage values, i.e. 1% is 1.0 in the list).
+        Example: {'2019': [10.0, 15.25, -20.05, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN]}
+        '''
         months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
         # Populate the list with np.nan so that we can successfully 
         # convert this dict into a DataFrame
-        for k in returns.keys():
-            while len(returns[k]) != 12:
-                returns[k].append(np.nan)
+        #for k in returns.keys(): while len(returns[k]) != 12:
+        #                   returns[k].append(np.nan)
 
         if len(returns) == 0:
             print("No monthly returns found")
@@ -401,10 +404,10 @@ class ReportCharts:
         plt.close('all')
         return base64
 
-    def GetDrawdown(self, data = [[],[]], live_data = [[],[]], worst = {}, name = "drawdowns.png",
+    def GetDrawdown(self, data = [[],[]], live_data = [[],[]], worst = [{}], name = "drawdowns.png",
                         width = 11.5, height = 2.5, gray = "#b3bcc0"):
-        if len(worst) == 0:
-            worst = self.GetDrawdownPeriods(data, live_data)
+        #if len(worst) == 0:
+        #    worst = self.GetDrawdownPeriods(data, live_data)
 
         if len(data[0]) == 0:
             fig = plt.figure()
@@ -415,10 +418,10 @@ class ReportCharts:
             plt.close('all')
             return base64
 
-        df, _, __ = self.GetDrawdownPlot(list(data), list(live_data))
+        #df, _, __ = self.GetDrawdownPlot(list(data), list(live_data))
 
-        time = list(df.index)
-        drawdown = list(df['dd'].mul(-1).values)
+        time = list(data[0]) + list(live_data[0])
+        drawdown = list(data[1]) + list(live_data[1])
 
         colors = ["#FFCCCCCC", "#FFE5CCCC", "#FFFFCCCC", "#E5FFCCCC", "#CCFFCCCC"]
         labels = ["1st Worst", "2nd Worst", "3rd Worst", "4th Worst", "5th Worst"]
@@ -474,48 +477,6 @@ class ReportCharts:
         plt.close('all')
         return base64
 
-    def GetDrawdownPlot(self, data, live_data):
-        # Solution taken from https://stackoverflow.com/questions/39058034/pandas-duration-of-drawdown/39080464
-        df = pd.DataFrame(list(data[1]) + list([i + data[1][-1] for i in live_data[1]]), index=(list(data[0] + list(live_data[0]))), columns=['close'])
-
-        df['ret'] = df.close/df.close[0]
-        df['modMax'] = df.ret.cummax()
-        df['dd'] = 1 - df.ret.div(df['modMax'])
-
-        groups = df.groupby(df['modMax'])
-        dd = groups['modMax','dd'].apply(lambda g: g[g['dd'] == g['dd'].max()])
-        top10dd = dd.sort_values('dd', ascending=False).head(10)
-
-        return (df, dd, top10dd)
-
-    def GetDrawdownPeriods(self, data, live_data):
-        # Solution taken from https://stackoverflow.com/questions/39058034/pandas-duration-of-drawdown/39080464
-        df, dd, top10dd = self.GetDrawdownPlot(data, live_data)
-
-        def drawdown_group(df,index_list):
-            group_max,dd_date = index_list
-            ddGroup = df[df['modMax'] == group_max]
-            group_length = len(ddGroup)
-            group_dd = ddGroup['dd'].max()
-            group_dd_length = len(ddGroup[ddGroup.index <= dd_date])
-            group_start = ddGroup[0:1].index[0]
-            group_end = ddGroup.tail(1).index[0]
-            group_rec = group_length - group_dd_length
-            return group_start,group_end,group_max,group_dd,dd_date,group_dd_length,group_rec,group_length
-
-        dd_col = ('start','end','peak', 'dd','dd_date','dd_length','dd_rec','tot_length')
-        df_dd = pd.DataFrame(columns = dd_col)
-        for i in range(1,10):
-            index_list = top10dd[i-1:i].index.tolist()[0]
-            start,end,peak,dd,dd_date,dd_length,dd_rec,tot_length = drawdown_group(df,index_list)
-            df_dd.loc[i-1] = drawdown_group(df,index_list)
-
-        worst = []
-        for idx, row in df_dd.drop_duplicates(['start', 'end']).head(n=5).iterrows():
-            worst.append({'Begin': row['start'], 'End': row['end'], 'Total': row['dd']})
-
-        return worst
-
     def GetCrisisEventsPlots(self, data = [[],[],[]], name = '', width = 7, height = 5,
                              backtest_color = "#71c3fc", gray = "#b3bcc0"):
         if len(data[0]) == 0:
@@ -556,7 +517,7 @@ class ReportCharts:
         plt.close('all')
         return base64
 
-    def GetRollingBeta(self, data = [[],[],[],[]], live_data = [[],[],[],[]], name = "rolling-portfolio-beta-to-equity.png",
+    def GetRollingBeta(self, data = [[],[],[],[],[],[],[],[]], live_data = [[],[],[],[],[],[]], name = "rolling-portfolio-beta-to-equity.png",
                            width = 11.5, height = 2.5):
         if len(data[0]) == 0:
             fig = plt.figure()
@@ -568,13 +529,14 @@ class ReportCharts:
             return base64
 
         # Data will come in the following format:
-        # [backtest time, backtest returns, benchmark time, benchmark returns]
+        # [backtest time, backtest returns, benchmark time, benchmark returns, six month rolling beta, twelve month rolling beta]
         
-
         # TODO: Different asset classes can have different rolling window periods due to their trading
         # days. Equities trade 252 days a year, whereas crypto and FOREX are closer to 365 days per year.
-        backtest_six_month_beta, backtest_twelve_month_beta = self.CalculateRollingBeta(data)
-        live_six_month_beta, live_twelve_month_beta = self.CalculateRollingBeta(live_data)
+        backtest_six_month_beta_dates, backtest_six_month_beta = (data[4], data[5])
+        backtest_twelve_month_beta_dates, backtest_twelve_month_beta = (data[6], data[7])
+        live_six_month_beta_dates, live_six_month_beta = (live_data[4], live_data[5])
+        live_twelve_month_beta_dates, live_twelve_month_beta = (live_data[6], live_data[7])
 
         labels = ['6 mo.', '12 mo.']
         rectangles = [plt.Rectangle((0, 0), 1, 1, fc="#71c3fc"), plt.Rectangle((0, 0), 1, 1, fc="#1d7dc1")]
@@ -588,13 +550,13 @@ class ReportCharts:
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
 
         # Backtest
-        ax.plot(backtest_six_month_beta.index, backtest_six_month_beta.values, linewidth = 0.5, color = "#71c3fc")
-        ax.plot(backtest_twelve_month_beta.index, backtest_twelve_month_beta.values, linewidth=0.5, color="#1d7dc1")
+        ax.plot(backtest_six_month_beta_dates, backtest_six_month_beta, linewidth = 0.5, color = "#71c3fc")
+        ax.plot(backtest_twelve_month_beta_dates, backtest_twelve_month_beta, linewidth=0.5, color="#1d7dc1")
 
         # Live
         if len(live_six_month_beta) > 0:
-            ax.plot(live_six_month_beta.index, live_six_month_beta.values, linewidth=0.5, color="#ff9914")
-            ax.plot(live_twelve_month_beta.index, live_twelve_month_beta.values, linewidth=0.5, color="#ffd700")
+            ax.plot(live_six_month_beta_dates, live_six_month_beta, linewidth=0.5, color="#ff9914")
+            ax.plot(live_twelve_month_beta_dates, live_twelve_month_beta, linewidth=0.5, color="#ffd700")
 
         leg = ax.legend(rectangles, labels, handlelength=0.8, handleheight=0.8,
                         frameon=False, fontsize=8, ncol=2)
@@ -661,27 +623,8 @@ class ReportCharts:
         ax = plt.gca()
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
 
-        backtest_rolling_sharpe = pd.DataFrame(data[1], index=data[0], columns=['returns']).resample('D').sum()
-        live_rolling_sharpe = pd.DataFrame(live_data[1], index=live_data[0], columns=['returns']).resample('D').sum()
-
-
-        backtest_rolling_sharpe['rolling_sharpe'] = [
-            self.CalculateAnnualizedSharpe(
-                backtest_rolling_sharpe.loc[date - pd.offsets.DateOffset(months=6):date, 'returns']
-            ) 
-            for date in backtest_rolling_sharpe.index
-        ]
-
-        live_rolling_sharpe['rolling_sharpe'] = [
-            self.CalculateAnnualizedSharpe(
-                live_rolling_sharpe.loc[date - pd.offsets.DateOffset(months=6):date, 'returns']
-            ) for date in live_rolling_sharpe.index
-        ]
-
-        if len(backtest_rolling_sharpe) > 0:
-            backtest_rolling_sharpe = backtest_rolling_sharpe.loc[backtest_rolling_sharpe.index[0] + pd.offsets.DateOffset(months=6):]
-        if len(live_rolling_sharpe) > 0:
-            live_rolling_sharpe = live_rolling_sharpe.loc[live_rolling_sharpe.index[0] + pd.offsets.DateOffset(months=6):]
+        backtest_rolling_sharpe_dates, backtest_rolling_sharpe = (data[0], data[1])
+        live_rolling_sharpe_dates, live_rolling_sharpe = (live_data[0], live_data[1])
 
         # Check after the fact if we have any live values since we might not be far
         # enough into live trading to generate the live rolling sharpe graph
@@ -690,10 +633,10 @@ class ReportCharts:
             labels += ["Live 6 mo."]
 
         # Backtest
-        ax.plot(backtest_rolling_sharpe.index, backtest_rolling_sharpe['rolling_sharpe'].values, color=backtest_color, linewidth=0.5, zorder=2)
+        ax.plot(backtest_rolling_sharpe_dates, backtest_rolling_sharpe, color=backtest_color, linewidth=0.5, zorder=2)
 
         # Live
-        ax.plot(live_rolling_sharpe.index, live_rolling_sharpe['rolling_sharpe'].values, color=live_color, linewidth=0.5, zorder=2)
+        ax.plot(live_rolling_sharpe_dates, live_rolling_sharpe, color=live_color, linewidth=0.5, zorder=2)
 
         leg = ax.legend(rectangles, labels, handlelength=0.8, handleheight=0.8,
                         frameon=False, fontsize=8)

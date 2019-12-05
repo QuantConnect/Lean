@@ -17,8 +17,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Deedle;
 using Python.Runtime;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Report.ReportElements
 {
@@ -28,7 +30,7 @@ namespace QuantConnect.Report.ReportElements
         private BacktestResult _backtest;
 
         /// <summary>
-        /// Create a new plot of annual returns
+        /// Create a new plot of the top N worst drawdown durations
         /// </summary>
         /// <param name="name">Name of the widget</param>
         /// <param name="key">Location of injection</param>
@@ -43,31 +45,46 @@ namespace QuantConnect.Report.ReportElements
         }
 
         /// <summary>
-        /// Generate the annual returns plot using the python libraries.
+        /// Generate the top N drawdown plot using the python libraries.
         /// </summary>
         public override string Render()
         {
-            var backtestReturns = EquityPoints(_backtest);
-            var liveReturns = EquityPoints(_live);
+            var backtestPoints = Calculations.EquityPoints(_backtest);
+            var livePoints = Calculations.EquityPoints(_live);
 
-            var backtestTime = backtestReturns.Keys.ToList();
-            var backtestStrategy = backtestReturns.Values.ToList();
+            var points = backtestPoints.Concat(livePoints.Where(kvp => !backtestPoints.Keys.Contains(kvp.Key))).ToList();
 
-            var liveTime = liveReturns.Keys.ToList();
-            var liveStrategy = liveReturns.Values.ToList();
+            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values);
+            var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values);
+            var series = new Series<DateTime, double>(points.Select(x => x.Key), points.Select(x => x.Value));
+
+            var backtestUnderwaterPlot = DrawdownCollection.GetUnderwater(backtestSeries);
+            var liveUnderwaterPlot = DrawdownCollection.GetUnderwater(liveSeries);
+            var drawdownCollection = DrawdownCollection.FromResult(_backtest, _live, periods: 5);
 
             var base64 = "";
             using (Py.GIL())
             {
                 var backtestList = new PyList();
-                backtestList.Append(backtestTime.ToPython());
-                backtestList.Append(backtestStrategy.ToPython());
+                backtestList.Append(backtestUnderwaterPlot.Keys.ToList().ToPython());
+                backtestList.Append(backtestUnderwaterPlot.Values.ToList().ToPython());
 
                 var liveList = new PyList();
-                liveList.Append(liveTime.ToPython());
-                liveList.Append(liveStrategy.ToPython());
+                liveList.Append(liveUnderwaterPlot.Keys.ToList().ToPython());
+                liveList.Append(liveUnderwaterPlot.Values.ToList().ToPython());
 
-                base64 = Charting.GetDrawdown(backtestList, liveList);
+                var worstList = new PyList();
+                foreach (var group in drawdownCollection.Drawdowns)
+                {
+                    var worst = new PyDict();
+                    worst.SetItem("Begin", group.Start.ToPython());
+                    worst.SetItem("End", group.End.ToPython());
+                    worst.SetItem("Total", group.PeakToTrough.ToPython());
+
+                    worstList.Append(worst);
+                }
+
+                base64 = Charting.GetDrawdown(backtestList, liveList, worstList);
             }
 
             return base64;

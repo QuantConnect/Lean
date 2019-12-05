@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Deedle;
 using Python.Runtime;
 using QuantConnect.Packets;
 
@@ -47,29 +48,31 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestReturns = EquityPoints(_backtest);
-            var liveReturns = EquityPoints(_live);
+            var backtestReturns = Calculations.EquityPoints(_backtest);
+            var liveReturns = Calculations.EquityPoints(_live);
 
-            var backtestTime = backtestReturns.Keys.ToList();
-            var backtestStrategy = backtestReturns.Values.ToList();
+            var backtestSeries = new Series<DateTime, double>(backtestReturns.Keys, backtestReturns.Values);
+            var liveSeries = new Series<DateTime, double>(liveReturns.Keys, liveReturns.Values);
 
-            var liveTime = liveReturns.Keys.ToList();
-            var liveStrategy = liveReturns.Values.ToList();
+            // The following two operations are equivalent to the Pandas `DataFrame.resample(...)` method
+            var backtestResampled = backtestSeries.PercentChange().ResampleEquivalence(date => date.Date, s => s.Sum()) * 100;
+            var liveResampled = liveSeries.PercentChange().ResampleEquivalence(date => date.Date, s => s.Sum()) * 100;
 
             var base64 = "";
             using (Py.GIL())
             {
                 var backtestList = new PyList();
-                var backtestResampled = Pandas.Series(backtestStrategy.ToPython(), backtestTime.ToPython()).pct_change().resample("D").sum().mul(100);
-                backtestList.Append(backtestResampled.index);
-                backtestList.Append(backtestResampled.values);
+                backtestList.Append(backtestResampled.Keys.ToList().ToPython());
+                backtestList.Append(backtestResampled.Values.ToList().ToPython());
 
                 var liveList = new PyList();
-                var liveResampled = Pandas.Series(liveStrategy.ToPython(), liveTime.ToPython()).pct_change().resample("D").sum().mul(100);
-                liveList.Append(liveResampled.index);
-                liveList.Append(liveResampled.values);
+                liveList.Append(liveResampled.Keys.ToList().ToPython());
+                liveList.Append(liveResampled.Values.ToList().ToPython());
 
                 base64 = Charting.GetDailyReturns(backtestList, liveList);
+
+                backtestList.Dispose();
+                liveList.Dispose();
             }
 
             return base64;

@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Deedle;
 using Python.Runtime;
 using QuantConnect.Packets;
 
@@ -47,10 +48,15 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestPoints = EquityPoints(_backtest);
-            var backtestBenchmarkPoints = BenchmarkPoints(_backtest);
-            var livePoints = EquityPoints(_live);
-            var liveBenchmarkPoints = BenchmarkPoints(_live);
+            var backtestPoints = Calculations.EquityPoints(_backtest);
+            var backtestBenchmarkPoints = Calculations.BenchmarkPoints(_backtest);
+            var livePoints = Calculations.EquityPoints(_live);
+            var liveBenchmarkPoints = Calculations.BenchmarkPoints(_live);
+
+            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values);
+            var backtestBenchmarkSeries = new Series<DateTime, double>(backtestBenchmarkPoints.Keys, backtestBenchmarkPoints.Values);
+            var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values);
+            var liveBenchmarkSeries = new Series<DateTime, double>(liveBenchmarkPoints.Keys, liveBenchmarkPoints.Values);
 
             var base64 = "";
             using (Py.GIL())
@@ -58,25 +64,33 @@ namespace QuantConnect.Report.ReportElements
                 var backtestList = new PyList();
                 var liveList = new PyList();
 
-                var backtestDates = backtestPoints.Keys.ToList();
-                var backtestPercentChange = Pandas.Series(backtestPoints.Values.ToList().ToPython(), backtestDates.ToPython()).pct_change().dropna();
-                var backtestBenchmarkDates = backtestBenchmarkPoints.Keys.ToList();
-                var backtestBenchmarkPercentChange = Pandas.Series(backtestBenchmarkPoints.Values.ToList().ToPython(), backtestBenchmarkDates.ToPython()).pct_change().dropna();
+                var backtestPercentChange = backtestSeries.PercentChange();
+                var backtestBenchmarkPercentChange = backtestBenchmarkSeries.PercentChange();
+                var backtestRollingBetaSixMonths = backtestSeries.RollingBeta(backtestBenchmarkSeries, windowSize: 22 * 6);
+                var backtestRollingBetaTwelveMonths = backtestSeries.RollingBeta(backtestBenchmarkSeries, windowSize: 252);
 
-                backtestList.Append(backtestPercentChange.index);
-                backtestList.Append(backtestPercentChange.values);
-                backtestList.Append(backtestBenchmarkPercentChange.index);
-                backtestList.Append(backtestBenchmarkPercentChange.values);
+                backtestList.Append(backtestPercentChange.Keys.ToList().ToPython());
+                backtestList.Append(backtestPercentChange.Values.ToList().ToPython());
+                backtestList.Append(backtestBenchmarkPercentChange.Keys.ToList().ToPython());
+                backtestList.Append(backtestBenchmarkPercentChange.Values.ToList().ToPython());
+                backtestList.Append(backtestRollingBetaSixMonths.Keys.ToList().ToPython());
+                backtestList.Append(backtestRollingBetaSixMonths.Values.ToList().ToPython());
+                backtestList.Append(backtestRollingBetaTwelveMonths.Keys.ToList().ToPython());
+                backtestList.Append(backtestRollingBetaTwelveMonths.Values.ToList().ToPython());
 
-                var liveDates = livePoints.Keys.ToList();
-                var livePercentChange = Pandas.Series(livePoints.Values.ToList().ToPython(), liveDates.ToPython()).pct_change().dropna();
-                var liveBenchmarkDates = liveBenchmarkPoints.Keys.ToList();
-                var liveBenchmarkPercentChange = Pandas.Series(liveBenchmarkPoints.Values.ToList().ToPython(), liveBenchmarkDates.ToPython()).pct_change().dropna();
+                var livePercentChange = liveSeries.PercentChange();
+                var liveBenchmarkPercentChange = liveBenchmarkSeries.PercentChange();
+                var liveRollingBetaSixMonths = liveSeries.RollingBeta(liveBenchmarkSeries, windowSize: 22 * 6);
+                var liveRollingBetaTwelveMonths = liveSeries.RollingBeta(liveBenchmarkSeries, windowSize: 252);
 
-                liveList.Append(livePercentChange.index);
-                liveList.Append(livePercentChange.values);
-                liveList.Append(liveBenchmarkPercentChange.index);
-                liveList.Append(liveBenchmarkPercentChange.values);
+                liveList.Append(livePercentChange.Keys.ToList().ToPython());
+                liveList.Append(livePercentChange.Values.ToList().ToPython());
+                liveList.Append(liveBenchmarkPercentChange.Keys.ToList().ToPython());
+                liveList.Append(liveBenchmarkPercentChange.Values.ToList().ToPython());
+                liveList.Append(liveRollingBetaSixMonths.Keys.ToList().ToPython());
+                liveList.Append(liveRollingBetaSixMonths.Values.ToList().ToPython());
+                liveList.Append(liveRollingBetaTwelveMonths.Keys.ToList().ToPython());
+                liveList.Append(liveRollingBetaTwelveMonths.Values.ToList().ToPython());
 
                 base64 = Charting.GetRollingBeta(backtestList, liveList);
             }

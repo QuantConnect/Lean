@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Deedle;
 using Python.Runtime;
 using QuantConnect.Packets;
 
@@ -47,8 +48,8 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestReturns = EquityPoints(_backtest);
-            var liveReturns = EquityPoints(_live);
+            var backtestReturns = Calculations.EquityPoints(_backtest);
+            var liveReturns = Calculations.EquityPoints(_live);
 
             var backtestTime = backtestReturns.Keys.ToList();
             var backtestStrategy = backtestReturns.Values.ToList();
@@ -63,23 +64,31 @@ namespace QuantConnect.Report.ReportElements
                 var liveList = new PyList();
 
                 // We need to set the datetime index first before we resample
-                var backtestSeries = Pandas.Series(backtestStrategy.ToPython());
-                backtestSeries.index = backtestTime.ToPython();
+                //var backtestSeries = Pandas.Series(backtestStrategy.ToPython());
+                var backtestSeries = new Series<DateTime, double>(backtestTime, backtestStrategy);
+
                 // Get the annual returns for the strategy
-                var backtestAnnualReturns = backtestSeries.pct_change().resample("AS").sum().mul(100);
-                var backtestRange = backtestAnnualReturns.index.year;
+                // ResampleEquivalence works similarly to Pandas' DataFrame.resample(...) method
+                // Here we transform the series to resample to the year's start, then we get the aggregate return from the year.
+                // Pandas equivalent:
+                //
+                // df.pct_change().resample('AS').sum().mul(100)
+                var backtestAnnualReturns = backtestSeries.PercentChange().ResampleEquivalence(date => new DateTime(date.Year, 1, 1), agg => agg.Sum() * 100);
 
                 // We need to set the datetime index first before we resample
-                var liveSeries = Pandas.Series(liveStrategy.ToPython());
-                liveSeries.index = liveTime.ToPython();
-                // Get the annual returns for the live strategy
-                var liveAnnualReturns = liveSeries.pct_change().resample("AS").sum().mul(100);
-                var liveRange = liveAnnualReturns.index.year;
+                var liveSeries = new Series<DateTime, double>(liveTime, liveStrategy);
 
-                backtestList.Append(backtestRange);
-                backtestList.Append(backtestAnnualReturns.values);
-                liveList.Append(liveRange);
-                liveList.Append(liveAnnualReturns.values);
+                // Get the annual returns for the live strategy.
+                // Same as above, this is equivalent to:
+                //
+                // df.pct_change().resample('AS').sum().mul(100)
+                var liveAnnualReturns = liveSeries.PercentChange().ResampleEquivalence(date => new DateTime(date.Year, 1, 1), agg => agg.Sum() * 100);
+
+                // Select only the year number and pass it to the plotting library
+                backtestList.Append(backtestAnnualReturns.Keys.Select(x => x.Year).ToList().ToPython());
+                backtestList.Append(backtestAnnualReturns.Values.ToList().ToPython());
+                liveList.Append(liveAnnualReturns.Keys.Select(x => x.Year).ToList().ToPython());
+                liveList.Append(liveAnnualReturns.Values.ToList().ToPython());
 
                 base64 = Charting.GetAnnualReturns(backtestList, liveList);
             }

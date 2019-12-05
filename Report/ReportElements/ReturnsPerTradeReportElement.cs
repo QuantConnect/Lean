@@ -44,7 +44,7 @@ namespace QuantConnect.Report.ReportElements
         }
 
         /// <summary>
-        /// Generate the annual returns plot using the python libraries.
+        /// Generate the returns per trade plot using the python libraries.
         /// </summary>
         public override string Render()
         {
@@ -53,7 +53,7 @@ namespace QuantConnect.Report.ReportElements
             {
                 if (trade.EntryPrice == 0m)
                 {
-                    Log.Trace($"ReturnsPerTradeReportElement.Render(): Encountered entry price of 0 in trade with entry time: {trade.EntryTime:yyyy-MM-dd HH:mm:ss} - Exit time: {trade.ExitTime:yyyy-MM-dd HH::mm:ss}");
+                    Log.Error($"ReturnsPerTradeReportElement.Render(): Encountered entry price of 0 in trade with entry time: {trade.EntryTime:yyyy-MM-dd HH:mm:ss} - Exit time: {trade.ExitTime:yyyy-MM-dd HH::mm:ss}");
                     continue;
                 }
 
@@ -65,6 +65,7 @@ namespace QuantConnect.Report.ReportElements
             var base64 = "";
             using (Py.GIL())
             {
+                // Charting library does not expect values to be in whole percentage values (i.e. not 1% == 1.0, but rather 1% == 0.01),
                 base64 = Charting.GetReturnsPerTrade(backtestPercentagePerTrade.ToPython());
             }
 

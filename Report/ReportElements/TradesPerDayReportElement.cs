@@ -45,7 +45,7 @@ namespace QuantConnect.Report.ReportElements
         {
             var orders = _backtest.Orders.Values.Union(_live.Orders.Values);
 
-            var equity = EquityPoints(_backtest).Select(x => x.Value);
+            var equity = Calculations.EquityPoints(_backtest).Select(x => x.Value);
 
             var days = 1;
 

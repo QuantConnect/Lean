@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Deedle;
 using Python.Runtime;
 using QuantConnect.Packets;
 
@@ -47,8 +48,11 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestPoints = EquityPoints(_backtest);
-            var livePoints = EquityPoints(_live);
+            var backtestPoints = Calculations.EquityPoints(_backtest);
+            var livePoints = Calculations.EquityPoints(_live);
+
+            var backtestRollingSharpe = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values).RollingSharpe(6);
+            var liveRollingSharpe = new Series<DateTime, double>(livePoints.Keys, livePoints.Values).RollingSharpe(6);
 
             var base64 = "";
             using (Py.GIL())
@@ -56,17 +60,11 @@ namespace QuantConnect.Report.ReportElements
                 var backtestList = new PyList();
                 var liveList = new PyList();
 
-                var backtestDates = backtestPoints.Keys.ToList();
-                var backtestPercentChange = Pandas.Series(backtestPoints.Values.ToList().ToPython(), backtestDates.ToPython()).pct_change().dropna();
+                backtestList.Append(backtestRollingSharpe.Keys.ToList().ToPython());
+                backtestList.Append(backtestRollingSharpe.Values.ToList().ToPython());
 
-                backtestList.Append(backtestPercentChange.index);
-                backtestList.Append(backtestPercentChange.values);
-
-                var liveDates = livePoints.Keys.ToList();
-                var livePercentChange = Pandas.Series(livePoints.Values.ToList().ToPython(), liveDates.ToPython()).pct_change().dropna();
-
-                liveList.Append(livePercentChange.index);
-                liveList.Append(livePercentChange.values);
+                liveList.Append(liveRollingSharpe.Keys.ToList().ToPython());
+                liveList.Append(liveRollingSharpe.Values.ToList().ToPython());
 
                 base64 = Charting.GetRollingSharpeRatio(backtestList, liveList);
             }

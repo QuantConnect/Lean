@@ -48,7 +48,7 @@ namespace QuantConnect.Report.ReportElements
         public override string Render()
         {
             var result = new Dictionary<string, List<double>>();
-            var backtestReturns = EquityReturns(EquityPoints(_backtest));
+            var backtestReturns = Calculations.EquityReturns(Calculations.EquityPoints(_backtest));
 
             var returnsByMonth = backtestReturns.Select(day => new {day.Key.Year, day.Key.Month, day.Value}).GroupBy(
                 y => new {y.Year, y.Month},
@@ -74,7 +74,12 @@ namespace QuantConnect.Report.ReportElements
                 var pyDict = new PyDict();
                 foreach (var kvp in result)
                 {
-                    pyDict.SetItem(kvp.Key.ToPython(), kvp.Value.ToPython());
+                    var values = kvp.Value;
+                    while (values.Count != 12)
+                    {
+                        values.Add(double.NaN);
+                    }
+                    pyDict.SetItem(kvp.Key.ToPython(), values.ToPython());
                 }
                 base64 = Charting.GetMonthlyReturns(pyDict);
             }
