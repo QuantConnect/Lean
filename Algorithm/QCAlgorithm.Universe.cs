@@ -371,37 +371,50 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// Creates a new universe and adds it to the algorithm. This is for coarse fundamental US Equity data and
-        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
+        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>)
         /// </summary>
         /// <param name="selector">Defines an initial coarse selection</param>
-        /// <param name="dateRule">Date rule that will be used to set the <see cref="Data.UniverseSelection.UniverseSettings.Schedule"/></param>
-        public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector,
-            IDateRule dateRule = null)
+        public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
         {
-            if (dateRule != null)
-            {
-                UniverseSettings.Schedule.On(dateRule);
-            }
-
             AddUniverse(new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, selector));
         }
 
         /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This is for coarse fundamental US Equity data and
+        /// will be executed based on the provided <see cref="IDateRule"/> in the NewYork time zone (<see cref="TimeZones.NewYork"/>)
+        /// </summary>
+        /// <param name="dateRule">Date rule that will be used to set the <see cref="Data.UniverseSelection.UniverseSettings.Schedule"/></param>
+        /// <param name="selector">Defines an initial coarse selection</param>
+        public void AddUniverse(IDateRule dateRule, Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> selector)
+        {
+            UniverseSettings.Schedule.On(dateRule);
+            AddUniverse(selector);
+        }
+
+        /// <summary>
         /// Creates a new universe and adds it to the algorithm. This is for coarse and fine fundamental US Equity data and
-        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
+        /// will be executed based on the provided <see cref="IDateRule"/> in the NewYork time zone (<see cref="TimeZones.NewYork"/>)
+        /// </summary>
+        /// <param name="dateRule">Date rule that will be used to set the <see cref="Data.UniverseSelection.UniverseSettings.Schedule"/></param>
+        /// <param name="coarseSelector">Defines an initial coarse selection</param>
+        /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
+        public void AddUniverse(IDateRule dateRule,
+            Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector,
+            Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
+        {
+            UniverseSettings.Schedule.On(dateRule);
+            AddUniverse(coarseSelector, fineSelector);
+        }
+
+        /// <summary>
+        /// Creates a new universe and adds it to the algorithm. This is for coarse and fine fundamental US Equity data and
+        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>)
         /// </summary>
         /// <param name="coarseSelector">Defines an initial coarse selection</param>
         /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>
-        /// <param name="dateRule">Date rule that will be used to set the <see cref="Data.UniverseSelection.UniverseSettings.Schedule"/></param>
         public void AddUniverse(Func<IEnumerable<CoarseFundamental>, IEnumerable<Symbol>> coarseSelector,
-            Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector,
-            IDateRule dateRule = null)
+            Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineSelector)
         {
-            if (dateRule != null)
-            {
-                UniverseSettings.Schedule.On(dateRule);
-            }
-
             var coarse = new CoarseFundamentalUniverse(UniverseSettings, SecurityInitializer, coarseSelector);
 
             AddUniverse(new FineFundamentalFilteredUniverse(coarse, fineSelector));
@@ -409,7 +422,7 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// Creates a new universe and adds it to the algorithm. This is for fine fundamental US Equity data and
-        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>
+        /// will be executed on day changes in the NewYork time zone (<see cref="TimeZones.NewYork"/>)
         /// </summary>
         /// <param name="universe">The universe to be filtered with fine fundamental selection</param>
         /// <param name="fineSelector">Defines a more detailed selection with access to more data</param>

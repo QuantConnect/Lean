@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.Resolution = Resolution.Daily;
 
             // Test use case A
-            AddUniverse(CoarseSelectionFunction_MonthStart, DateRules.MonthStart());
+            AddUniverse(DateRules.MonthStart(), CoarseSelectionFunction_MonthStart);
 
             // Test use case B
             var otherSettings = UniverseSettings.Clone();
@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverse(new CoarseFundamentalUniverse(otherSettings, SecurityInitializer, CoarseSelectionFunction_MonthEnd));
 
             // Test use case C
-            AddUniverse(CoarseSelectionFunction_MonthStart, FineSelectionFunction_MonthStart, DateRules.MonthStart());
+            AddUniverse(DateRules.MonthStart(), CoarseSelectionFunction_MonthStart, FineSelectionFunction_MonthStart);
         }
 
         public IEnumerable<Symbol> CoarseSelectionFunction_MonthStart(IEnumerable<CoarseFundamental> coarse)

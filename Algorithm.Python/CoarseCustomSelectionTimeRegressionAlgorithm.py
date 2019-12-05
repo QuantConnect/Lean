@@ -40,7 +40,7 @@ class CoarseCustomSelectionTimeRegressionAlgorithm(QCAlgorithm):
         self.UniverseSettings.Resolution = Resolution.Daily
 
         # Test use case A
-        self.AddUniverse(self.CoarseSelectionFunction_MonthStart, self.DateRules.MonthStart());
+        self.AddUniverse(self.DateRules.MonthStart(), self.CoarseSelectionFunction_MonthStart);
 
         # Test use case B
         otherSettings = self.UniverseSettings.Clone();
@@ -48,7 +48,7 @@ class CoarseCustomSelectionTimeRegressionAlgorithm(QCAlgorithm):
         self.AddUniverse(CoarseFundamentalUniverse(otherSettings, self.SecurityInitializer, self.CoarseSelectionFunction_MonthEnd));
 
         # Test use case C
-        self.AddUniverse(self.CoarseSelectionFunction_MonthStart, self.FineSelectionFunction_MonthStart, self.DateRules.MonthStart());
+        self.AddUniverse(self.DateRules.MonthStart(), self.CoarseSelectionFunction_MonthStart, self.FineSelectionFunction_MonthStart);
 
     def CoarseSelectionFunction_MonthStart(self, coarse):
         self._monthStartSelection += 1
