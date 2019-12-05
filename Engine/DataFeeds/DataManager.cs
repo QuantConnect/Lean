@@ -296,11 +296,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var config = _subscriptionManagerSubscriptions.GetOrAdd(newConfig, newConfig);
 
             // if the reference is not the same, means it was already there and we did not add anything new
-            if (!ReferenceEquals(config, newConfig) && Log.DebuggingEnabled)
+            if (!ReferenceEquals(config, newConfig))
             {
                 // for performance lets not create the message string if debugging is not enabled
                 // this can be executed many times and its in the algorithm thread
-                Log.Debug("DataManager.SubscriptionManagerGetOrAdd(): subscription already added: " + config);
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug("DataManager.SubscriptionManagerGetOrAdd(): subscription already added: " + config);
+                }
             }
             else
             {
