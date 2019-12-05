@@ -1754,9 +1754,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(SecurityType.Future)]
         public void HandlesFutureAndOptionChainUniverse(SecurityType securityType)
         {
+            Log.DebuggingEnabled = LogsEnabled;
+
             // startDate and endDate are in algorithm time zone
-            var startDate = new DateTime(2019, 11, 19, 12, 0, 0);
-            var endDate = startDate.AddDays(1);
+            var startDate = new DateTime(2019, 11, 19, 4, 0, 0);
+            var endDate = startDate.AddDays(2);
 
             var algorithmTimeZone = TimeZones.NewYork;
             DateTimeZone exchangeTimeZone = null;
@@ -1766,6 +1768,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var lastTime = DateTime.MinValue;
             var emittedData = new ManualResetEvent(false);
+
+            var optionSymbol1 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 192m, new DateTime(2019, 12, 19));
+            var optionSymbol2 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 192m, new DateTime(2019, 12, 19));
+
+            var futureSymbol1 = Symbol.CreateFuture("SPY", Market.USA, new DateTime(2016, 12, 19));
+            var futureSymbol2 = Symbol.CreateFuture("SPY", Market.USA, new DateTime(2020, 3, 19));
+
+            Symbol canonicalOptionSymbol = null;
 
             var futureSymbols = new HashSet<Symbol>();
             var optionSymbols = new HashSet<Symbol>();
@@ -1794,9 +1804,30 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             TickType = TickType.Trade,
                             Value = 100,
                             Quantity = 1
+                        },
+                        new Tick
+                        {
+                            Symbol = Symbols.EURUSD,
+                            Time = exchangeTime,
+                            EndTime = exchangeTime,
+                            TickType = TickType.Quote,
+                            Value = 100,
+                            Quantity = 1
                         }
                     };
 
+                    if (securityType == SecurityType.Option)
+                    {
+                        dataPoints.Add(new Tick
+                        {
+                            Symbol = canonicalOptionSymbol,
+                            Time = exchangeTime,
+                            EndTime = exchangeTime,
+                            TickType = TickType.Trade,
+                            Value = 100,
+                            Quantity = 1
+                        });
+                    }
 
                     dataPoints.AddRange(
                         futureSymbols.Select(
@@ -1841,13 +1872,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         case SecurityType.Option:
                             return time.Day == 19
-                                ? new List<Symbol> { Symbols.SPY_C_192_Feb19_2016 }
-                                : new List<Symbol> { Symbols.SPY_C_192_Feb19_2016, Symbols.SPY_P_192_Feb19_2016 };
+                                ? new List<Symbol> { optionSymbol1 }
+                                : new List<Symbol> { optionSymbol1, optionSymbol2 };
 
                         case SecurityType.Future:
                             return time.Day == 19
-                                ? new List<Symbol> { Symbols.Fut_SPY_Feb19_2016 }
-                                : new List<Symbol> { Symbols.Fut_SPY_Feb19_2016, Symbols.Fut_SPY_Mar19_2016 };
+                                ? new List<Symbol> { futureSymbol1 }
+                                : new List<Symbol> { futureSymbol1, futureSymbol2 };
                     }
 
                     return Enumerable.Empty<Symbol>();
@@ -1857,14 +1888,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 secType =>
                 {
                     var time = timeProvider.GetUtcNow().ConvertFromUtc(algorithmTimeZone);
-                    ConsoleWriteLine($"CanAdvanceTime() called at {time}");
-                    return time.Hour < 2 || time.Hour > 7;
+                    var result = true; // time.Hour >= 1 && time.Hour < 23;
+
+                    ConsoleWriteLine($"CanAdvanceTime() called at {time}, returning {result}");
+
+                    return result;
                 });
 
             var feed = new TestableLiveTradingDataFeed(dataQueueHandler);
 
             var algorithm = new QCAlgorithm();
             algorithm.SetDateTime(timeProvider.GetUtcNow());
+            algorithm.SetBenchmark(t => 0);
 
             var historyProvider = new Mock<IHistoryProvider>();
             historyProvider.Setup(
@@ -1899,16 +1934,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var synchronizer = new TestableLiveSynchronizer(timeProvider, TimeSpan.FromMilliseconds(25));
             synchronizer.Initialize(algorithm, dataManager);
 
+            algorithm.AddForex("EURUSD", Resolution.Minute, Market.FXCM);
+
             if (securityType == SecurityType.Option)
             {
-                algorithm.AddEquity("SPY");
-                var option = algorithm.AddOption("SPY", Resolution.Hour, Market.USA);
+                algorithm.AddEquity("SPY", Resolution.Minute);
+                var option = algorithm.AddOption("SPY", Resolution.Minute, Market.USA);
                 option.SetFilter(x => x);
                 exchangeTimeZone = option.Exchange.TimeZone;
+
+                canonicalOptionSymbol = option.Symbol;
             }
             else if (securityType == SecurityType.Future)
             {
-                var future = algorithm.AddFuture("SPY", Resolution.Hour, Market.USA);
+                var future = algorithm.AddFuture("SPY", Resolution.Minute, Market.USA);
                 future.SetFilter(x => x);
                 exchangeTimeZone = future.Exchange.TimeZone;
             }
@@ -1935,26 +1974,39 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     continue;
                 }
 
-                var optionContractCount = timeSlice.Slice.OptionChains.FirstOrDefault().Value?.Contracts.Count ?? 0;
-                var futureContractCount = timeSlice.Slice.FutureChains.FirstOrDefault().Value?.Contracts.Count ?? 0;
+                var futureContractCount = 0;
+                var optionContractCount = 0;
 
                 if (securityType == SecurityType.Future)
                 {
-                    ConsoleWriteLine($"{timeSlice.Time} - " +
-                                     $"future contracts: {futureContractCount}, " +
-                                     $"future symbols: {futureSymbols.Count}");
+                    foreach (var futureChain in timeSlice.Slice.FutureChains.Values)
+                    {
+                        var symbols = futureChain.Contracts.Values.Select(x => x.Symbol).ToList();
+                        futureContractCount += symbols.Count;
+                        ConsoleWriteLine($"{timeSlice.Time} - future contracts: {string.Join(",", symbols)}");
+                    }
+                    ConsoleWriteLine($"{timeSlice.Time} - future symbols: {string.Join(",", futureSymbols)}");
                 }
                 else if (securityType == SecurityType.Option)
                 {
-                    ConsoleWriteLine($"{timeSlice.Time} - " +
-                                     $"option contracts: {optionContractCount}, " +
-                                     $"option symbols: {optionSymbols.Count}");
+                    foreach (var optionChain in timeSlice.Slice.OptionChains.Values)
+                    {
+                        var symbols = optionChain.Contracts.Values.Select(x => x.Symbol).ToList();
+                        optionContractCount += symbols.Count;
+                        ConsoleWriteLine($"{timeSlice.Time} - option contracts: {string.Join(",", symbols)}");
+                    }
+                    ConsoleWriteLine($"{timeSlice.Time} - option symbols: {string.Join(",", optionSymbols)}");
                 }
 
-                if (lastSecurityChangedTime != null && timeSlice.Time > lastSecurityChangedTime.Value.AddHours(1))
+                if (lastSecurityChangedTime != null &&
+                    timeSlice.Time > lastSecurityChangedTime.Value.AddMinutes(1))
                 {
                     Assert.AreEqual(futureSymbols.Count, futureContractCount);
-                    Assert.AreEqual(optionSymbols.Count, optionContractCount);
+
+                    if (securityType == SecurityType.Option && algorithm.IsMarketOpen(canonicalOptionSymbol))
+                    {
+                        Assert.AreEqual(optionSymbols.Count, optionContractCount);
+                    }
                 }
 
                 foreach (var security in timeSlice.SecurityChanges.AddedSecurities)
@@ -1991,8 +2043,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                 algorithm.OnEndOfTimeStep();
 
+                foreach (var baseDataCollection in timeSlice.UniverseData.Values)
+                {
+                    var symbols = string.Join(",", baseDataCollection.Data.Select(x => x.Symbol));
+                    ConsoleWriteLine($"{timeSlice.Time} - universe data: {symbols}");
+                }
+
                 emittedData.Reset();
-                timeProvider.Advance(TimeSpan.FromMinutes(60));
+                timeProvider.Advance(TimeSpan.FromMinutes(1));
 
                 // give enough time to the producer to emit
                 if (!emittedData.WaitOne(300))
@@ -2004,8 +2062,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 algorithm.SetDateTime(currentTime);
 
                 ConsoleWriteLine($"{timeSlice.Time} - " +
-                                 $"Algorithm time set to {currentTime.ConvertFromUtc(algorithmTimeZone)}, " +
-                                 $"universe data: {timeSlice.UniverseData.Values.FirstOrDefault()?.Data.Count}");
+                                 $"Algorithm time set to {currentTime.ConvertFromUtc(algorithmTimeZone)}");
                 ConsoleWriteLine();
 
                 if (currentTime.ConvertFromUtc(algorithmTimeZone) > endDate)
