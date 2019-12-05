@@ -14,7 +14,6 @@
 */
 using MoreLinq;
 using System.Linq;
-using System.Runtime;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements

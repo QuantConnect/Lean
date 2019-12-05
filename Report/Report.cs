@@ -15,7 +15,6 @@
 
 using System.Collections.Generic;
 using System.IO;
-using Python.Runtime;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Report.ReportElements;

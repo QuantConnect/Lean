@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System.IO;
 using System.Linq;
 using QuantConnect.Packets;
 

@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System.Runtime.CompilerServices;
 using Python.Runtime;
 using QuantConnect.Python;
 
