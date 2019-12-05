@@ -1768,6 +1768,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var lastTime = DateTime.MinValue;
             var emittedData = new ManualResetEvent(false);
+            var isLookupSymbolsCalled = false;
 
             var optionSymbol1 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 192m, new DateTime(2019, 12, 19));
             var optionSymbol2 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 192m, new DateTime(2019, 12, 19));
@@ -1862,9 +1863,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // LookupSymbols
                 (lookupName, secType, securityCurrency, securityExchange) =>
                 {
+                    isLookupSymbolsCalled = true;
+
                     var time = timeProvider.GetUtcNow().ConvertFromUtc(algorithmTimeZone);
 
                     ConsoleWriteLine($"LookupSymbols() called at {time}");
+
+                    Assert.That(time.Hour >= 1 && time.Hour < 23);
 
                     time = timeProvider.GetUtcNow().ConvertFromUtc(exchangeTimeZone);
 
@@ -2001,11 +2006,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 if (lastSecurityChangedTime != null &&
                     timeSlice.Time > lastSecurityChangedTime.Value.AddMinutes(30))
                 {
-                    Assert.AreEqual(futureSymbols.Count, futureContractCount);
+                    if (securityType == SecurityType.Future)
+                    {
+                        Assert.AreEqual(futureSymbols.Count, futureContractCount);
+
+                        foreach (var symbol in futureSymbols)
+                        {
+                            Assert.IsTrue(timeSlice.Slice.ContainsKey(symbol));
+                        }
+                    }
 
                     if (securityType == SecurityType.Option && timeSlice.Slice.OptionChains.Values.Count > 0)
                     {
                         Assert.AreEqual(optionSymbols.Count, optionContractCount);
+
+                        foreach (var symbol in optionSymbols)
+                        {
+                            Assert.IsTrue(timeSlice.Slice.ContainsKey(symbol));
+                        }
                     }
                 }
 
@@ -2075,9 +2093,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             }
 
+            Assert.IsTrue(isLookupSymbolsCalled);
+
+            if (securityType == SecurityType.Future)
+            {
+                Assert.AreEqual(2, futureSymbols.Count);
+            }
+            else if (securityType == SecurityType.Option)
+            {
+                Assert.AreEqual(2, optionSymbols.Count);
+            }
+
             dataManager.RemoveAllSubscriptions();
         }
-
     }
 
     internal class TestableLiveTradingDataFeed : LiveTradingDataFeed
