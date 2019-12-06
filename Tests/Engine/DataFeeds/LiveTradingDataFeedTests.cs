@@ -1749,6 +1749,363 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
             }
         }
+
+        [TestCase(SecurityType.Option)]
+        [TestCase(SecurityType.Future)]
+        public void HandlesFutureAndOptionChainUniverse(SecurityType securityType)
+        {
+            Log.DebuggingEnabled = LogsEnabled;
+
+            // startDate and endDate are in algorithm time zone
+            var startDate = new DateTime(2019, 11, 19, 4, 0, 0);
+            var endDate = startDate.AddDays(2);
+
+            var algorithmTimeZone = TimeZones.NewYork;
+            DateTimeZone exchangeTimeZone = null;
+
+            var timeProvider = new ManualTimeProvider(algorithmTimeZone);
+            timeProvider.SetCurrentTime(startDate);
+
+            var lastTime = DateTime.MinValue;
+            var emittedData = new ManualResetEvent(false);
+            var isLookupSymbolsCalled = false;
+
+            var optionSymbol1 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 192m, new DateTime(2019, 12, 19));
+            var optionSymbol2 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Put, 192m, new DateTime(2019, 12, 19));
+
+            var futureSymbol1 = Symbol.CreateFuture("SPY", Market.USA, new DateTime(2019, 12, 19));
+            var futureSymbol2 = Symbol.CreateFuture("SPY", Market.USA, new DateTime(2020, 3, 19));
+
+            Symbol canonicalOptionSymbol = null;
+
+            var futureSymbols = new HashSet<Symbol>();
+            var optionSymbols = new HashSet<Symbol>();
+
+            var dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(
+                fdqh =>
+                {
+                    var utcTime = timeProvider.GetUtcNow();
+                    var exchangeTime = utcTime.ConvertFromUtc(exchangeTimeZone);
+                    if (exchangeTime == lastTime ||
+                        exchangeTime > endDate.ConvertTo(algorithmTimeZone, exchangeTimeZone))
+                    {
+                        emittedData.Set();
+                        return Enumerable.Empty<BaseData>();
+                    }
+
+                    lastTime = exchangeTime;
+
+                    var dataPoints = new List<BaseData>
+                    {
+                        new Tick
+                        {
+                            Symbol = Symbols.SPY,
+                            Time = exchangeTime,
+                            EndTime = exchangeTime,
+                            TickType = TickType.Trade,
+                            Value = 100,
+                            Quantity = 1
+                        },
+                        new Tick
+                        {
+                            Symbol = Symbols.EURUSD,
+                            Time = exchangeTime,
+                            EndTime = exchangeTime,
+                            TickType = TickType.Quote,
+                            Value = 100,
+                            Quantity = 1
+                        }
+                    };
+
+                    if (securityType == SecurityType.Option)
+                    {
+                        dataPoints.Add(new Tick
+                        {
+                            Symbol = canonicalOptionSymbol,
+                            Time = exchangeTime,
+                            EndTime = exchangeTime,
+                            TickType = TickType.Trade,
+                            Value = 100,
+                            Quantity = 1
+                        });
+                    }
+
+                    dataPoints.AddRange(
+                        futureSymbols.Select(
+                            symbol => new Tick
+                            {
+                                Symbol = symbol,
+                                Time = exchangeTime,
+                                EndTime = exchangeTime,
+                                TickType = TickType.Trade,
+                                Value = 100,
+                                Quantity = 1
+                            }));
+
+                    dataPoints.AddRange(
+                        optionSymbols.Select(
+                            symbol => new Tick
+                            {
+                                Symbol = symbol,
+                                Time = exchangeTime,
+                                EndTime = exchangeTime,
+                                TickType = TickType.Trade,
+                                Value = 100,
+                                Quantity = 1
+                            }));
+
+                    ConsoleWriteLine($"DQH: Emitting data point at {utcTime.ConvertFromUtc(algorithmTimeZone)}");
+
+                    emittedData.Set();
+                    return dataPoints;
+                },
+
+                // LookupSymbols
+                (lookupName, secType, securityCurrency, securityExchange) =>
+                {
+                    isLookupSymbolsCalled = true;
+
+                    var time = timeProvider.GetUtcNow().ConvertFromUtc(algorithmTimeZone);
+
+                    ConsoleWriteLine($"LookupSymbols() called at {time}");
+
+                    Assert.That(time.Hour >= 1 && time.Hour < 23);
+
+                    time = timeProvider.GetUtcNow().ConvertFromUtc(exchangeTimeZone);
+
+                    switch (secType)
+                    {
+                        case SecurityType.Option:
+                            return time.Day == 19
+                                ? new List<Symbol> { optionSymbol1 }
+                                : new List<Symbol> { optionSymbol1, optionSymbol2 };
+
+                        case SecurityType.Future:
+                            return time.Day == 19
+                                ? new List<Symbol> { futureSymbol1 }
+                                : new List<Symbol> { futureSymbol1, futureSymbol2 };
+                    }
+
+                    return Enumerable.Empty<Symbol>();
+                },
+
+                // CanAdvanceTime
+                secType =>
+                {
+                    var time = timeProvider.GetUtcNow().ConvertFromUtc(algorithmTimeZone);
+                    var result = time.Hour >= 1 && time.Hour < 23;
+
+                    ConsoleWriteLine($"CanAdvanceTime() called at {time}, returning {result}");
+
+                    return result;
+                });
+
+            var feed = new TestableLiveTradingDataFeed(dataQueueHandler);
+
+            var algorithm = new QCAlgorithm();
+            algorithm.SetDateTime(timeProvider.GetUtcNow());
+            algorithm.SetBenchmark(t => 0);
+
+            var historyProvider = new Mock<IHistoryProvider>();
+            historyProvider.Setup(
+                    m => m.GetHistory(It.IsAny<IEnumerable<Data.HistoryRequest>>(), It.IsAny<DateTimeZone>()))
+                .Returns(Enumerable.Empty<Slice>());
+            algorithm.SetHistoryProvider(historyProvider.Object);
+
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var securityService = new SecurityService(
+                algorithm.Portfolio.CashBook,
+                marketHoursDatabase,
+                symbolPropertiesDataBase,
+                algorithm,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCacheProvider(algorithm.Portfolio));
+            algorithm.Securities.SetSecurityService(securityService);
+            var dataManager = new DataManager(feed,
+                new UniverseSelection(algorithm, securityService),
+                algorithm,
+                algorithm.TimeKeeper,
+                marketHoursDatabase,
+                true,
+                RegisteredSecurityDataTypesProvider.Null);
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+            algorithm.SetLiveMode(true);
+
+            var mock = new Mock<ITransactionHandler>();
+            mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
+            algorithm.Transactions.SetOrderProcessor(mock.Object);
+
+            var synchronizer = new TestableLiveSynchronizer(timeProvider, TimeSpan.FromMilliseconds(25));
+            synchronizer.Initialize(algorithm, dataManager);
+
+            algorithm.AddForex("EURUSD", Resolution.Minute, Market.FXCM);
+
+            if (securityType == SecurityType.Option)
+            {
+                algorithm.AddEquity("SPY", Resolution.Minute);
+                var option = algorithm.AddOption("SPY", Resolution.Minute, Market.USA);
+                option.SetFilter(x => x);
+                exchangeTimeZone = option.Exchange.TimeZone;
+
+                canonicalOptionSymbol = option.Symbol;
+            }
+            else if (securityType == SecurityType.Future)
+            {
+                var future = algorithm.AddFuture("SPY", Resolution.Minute, Market.USA);
+                future.SetFilter(x => x);
+                exchangeTimeZone = future.Exchange.TimeZone;
+            }
+            else
+            {
+                throw new NotSupportedException($"Unsupported security type: {securityType}");
+            }
+
+            var mapFileProvider = new LocalDiskMapFileProvider();
+            feed.Initialize(algorithm, new LiveNodePacket(), new BacktestingResultHandler(),
+                mapFileProvider, new LocalDiskFactorFileProvider(mapFileProvider), new DefaultDataProvider(),
+                dataManager, synchronizer);
+
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            algorithm.PostInitialize();
+
+            DateTime? lastSecurityChangedTime = null;
+
+            foreach (var timeSlice in synchronizer.StreamData(cancellationTokenSource.Token))
+            {
+                if (timeSlice.IsTimePulse)
+                {
+                    continue;
+                }
+
+                var futureContractCount = 0;
+                var optionContractCount = 0;
+
+                if (securityType == SecurityType.Future)
+                {
+                    foreach (var futureChain in timeSlice.Slice.FutureChains.Values)
+                    {
+                        var symbols = futureChain.Contracts.Values.Select(x => x.Symbol).ToList();
+                        futureContractCount += symbols.Count;
+                        ConsoleWriteLine($"{timeSlice.Time} - future contracts: {string.Join(",", symbols)}");
+                    }
+                    ConsoleWriteLine($"{timeSlice.Time} - future symbols: {string.Join(",", futureSymbols)}");
+                }
+                else if (securityType == SecurityType.Option)
+                {
+                    foreach (var optionChain in timeSlice.Slice.OptionChains.Values)
+                    {
+                        var symbols = optionChain.Contracts.Values.Select(x => x.Symbol).ToList();
+                        optionContractCount += symbols.Count;
+                        ConsoleWriteLine($"{timeSlice.Time} - option contracts: {string.Join(",", symbols)}");
+                    }
+                    ConsoleWriteLine($"{timeSlice.Time} - option symbols: {string.Join(",", optionSymbols)}");
+                }
+
+                if (lastSecurityChangedTime != null &&
+                    timeSlice.Time > lastSecurityChangedTime.Value.AddMinutes(30))
+                {
+                    if (securityType == SecurityType.Future)
+                    {
+                        Assert.AreEqual(futureSymbols.Count, futureContractCount);
+
+                        foreach (var symbol in futureSymbols)
+                        {
+                            Assert.IsTrue(timeSlice.Slice.ContainsKey(symbol));
+                        }
+                    }
+
+                    if (securityType == SecurityType.Option && timeSlice.Slice.OptionChains.Values.Count > 0)
+                    {
+                        Assert.AreEqual(optionSymbols.Count, optionContractCount);
+
+                        foreach (var symbol in optionSymbols)
+                        {
+                            Assert.IsTrue(timeSlice.Slice.ContainsKey(symbol));
+                        }
+                    }
+                }
+
+                foreach (var security in timeSlice.SecurityChanges.AddedSecurities)
+                {
+                    if (security.Symbol.SecurityType == SecurityType.Future)
+                    {
+                        lastSecurityChangedTime = timeSlice.Time;
+                        ConsoleWriteLine($"{timeSlice.Time} - Adding future symbol: {security.Symbol}");
+                        futureSymbols.Add(security.Symbol);
+                    }
+                    else if (security.Symbol.SecurityType == SecurityType.Option)
+                    {
+                        lastSecurityChangedTime = timeSlice.Time;
+                        ConsoleWriteLine($"{timeSlice.Time} - Adding option symbol: {security.Symbol}");
+                        optionSymbols.Add(security.Symbol);
+                    }
+                }
+
+                foreach (var security in timeSlice.SecurityChanges.RemovedSecurities)
+                {
+                    if (security.Symbol.SecurityType == SecurityType.Future)
+                    {
+                        lastSecurityChangedTime = timeSlice.Time;
+                        ConsoleWriteLine($"{timeSlice.Time} - Removing future symbol: {security.Symbol}");
+                        futureSymbols.Remove(security.Symbol);
+                    }
+                    else if (security.Symbol.SecurityType == SecurityType.Option)
+                    {
+                        lastSecurityChangedTime = timeSlice.Time;
+                        ConsoleWriteLine($"{timeSlice.Time} - Removing option symbol: {security.Symbol}");
+                        optionSymbols.Remove(security.Symbol);
+                    }
+                }
+
+                algorithm.OnEndOfTimeStep();
+
+                foreach (var baseDataCollection in timeSlice.UniverseData.Values)
+                {
+                    var symbols = string.Join(",", baseDataCollection.Data.Select(x => x.Symbol));
+                    ConsoleWriteLine($"{timeSlice.Time} - universe data: {symbols}");
+                }
+
+                emittedData.Reset();
+
+                // for faster testing
+                timeProvider.Advance(TimeSpan.FromMinutes(30));
+
+                // give enough time to the producer to emit
+                if (!emittedData.WaitOne(300))
+                {
+                    Assert.Fail("Timeout waiting for data generation");
+                }
+
+                var currentTime = timeProvider.GetUtcNow();
+                algorithm.SetDateTime(currentTime);
+
+                ConsoleWriteLine($"{timeSlice.Time} - " +
+                                 $"Algorithm time set to {currentTime.ConvertFromUtc(algorithmTimeZone)}");
+                ConsoleWriteLine();
+
+                if (currentTime.ConvertFromUtc(algorithmTimeZone) > endDate)
+                {
+                    feed.Exit();
+                    cancellationTokenSource.Cancel();
+                    break;
+                }
+            }
+
+            Assert.IsTrue(isLookupSymbolsCalled);
+
+            if (securityType == SecurityType.Future)
+            {
+                Assert.AreEqual(2, futureSymbols.Count);
+            }
+            else if (securityType == SecurityType.Option)
+            {
+                Assert.AreEqual(2, optionSymbols.Count);
+            }
+
+            dataManager.RemoveAllSubscriptions();
+        }
     }
 
     internal class TestableLiveTradingDataFeed : LiveTradingDataFeed

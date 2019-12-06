@@ -2810,9 +2810,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns></returns>
         public IEnumerable<Symbol> LookupSymbols(string lookupName, SecurityType securityType, string securityCurrency = null, string securityExchange = null)
         {
-            // connect will throw if it fails
-            Connect();
-
             // setting up exchange defaults and filters
             var exchangeSpecifier = securityType == SecurityType.Future ? securityExchange ?? "" : securityExchange ?? "Smart";
             var futuresExchanges = _futuresExchanges.Values.Reverse().ToArray();
@@ -2827,7 +2824,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 SecType = ConvertSecurityType(securityType)
             };
 
-            Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Requesting symbol list for " + contract.Symbol + " ...");
+            Log.Trace($"InteractiveBrokersBrokerage.LookupSymbols(): Requesting symbol list for {contract.Symbol} ...");
 
             var symbols = new List<Symbol>();
 
@@ -2838,8 +2835,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 var underlyingSymbol = Symbol.Create(contract.Symbol, SecurityType.Equity, Market.USA);
                 symbols.AddRange(_algorithm.OptionChainProvider.GetOptionContractList(underlyingSymbol, DateTime.Today));
             }
-            else
+            else if (securityType == SecurityType.Future)
             {
+                if (!IsConnected)
+                {
+                    Connect();
+                }
+
                 // processing request
                 var results = FindContracts(contract, contract.Symbol);
 
@@ -2867,9 +2869,25 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                     Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Removed contract(s) for having expiry in the past: {0}", string.Join(",", removedSymbols.Select(x => x.Value)));
                 }
             }
-            Log.Trace("InteractiveBrokersBrokerage.LookupSymbols(): Returning {0} contract(s) for {1}", symbols.Count, contract.Symbol);
+            Log.Trace($"InteractiveBrokersBrokerage.LookupSymbols(): Returning {symbols.Count} contract(s) for {contract.Symbol}");
 
             return symbols;
+        }
+
+        /// <summary>
+        /// Returns whether the time can be advanced or not.
+        /// </summary>
+        /// <param name="securityType">The security type</param>
+        /// <returns>true if the time can be advanced</returns>
+        public bool CanAdvanceTime(SecurityType securityType)
+        {
+            if (securityType == SecurityType.Future)
+            {
+                // we need to call the IB API only for futures
+                return !IsWithinScheduledServerResetTimes();
+            }
+
+            return true;
         }
 
         /// <summary>

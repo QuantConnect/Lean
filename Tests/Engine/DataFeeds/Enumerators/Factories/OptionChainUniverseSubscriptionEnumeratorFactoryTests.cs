@@ -197,6 +197,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
 
                 return _timeProvider.GetUtcNow().Date.Day >= 20 ? _symbolList2 : _symbolList1;
             }
+
+            public bool CanAdvanceTime(SecurityType securityType)
+            {
+                return true;
+            }
         }
     }
 }

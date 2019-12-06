@@ -94,7 +94,8 @@ namespace QuantConnect.Data.UniverseSelection
 
             var underlying = new Tick { Time = utcTime };
 
-            if (_cacheDate == data.Time.Date)
+            // date change detection needs to be done in exchange time zone
+            if (_cacheDate == data.Time.ConvertFromUtc(Future.Exchange.TimeZone).Date)
             {
                 return Unchanged;
             }
@@ -105,7 +106,7 @@ namespace QuantConnect.Data.UniverseSelection
             // if results are not dynamic, we cache them and won't call filtering till the end of the day
             if (!results.IsDynamic)
             {
-                _cacheDate = data.Time.Date;
+                _cacheDate = data.Time.ConvertFromUtc(Future.Exchange.TimeZone).Date;
             }
 
             var resultingSymbols = results.ToHashSet();

@@ -322,6 +322,16 @@ namespace QuantConnect.ToolBox.IQFeed
         {
             return _symbolUniverse.LookupSymbols(lookupName, securityType, securityCurrency, securityExchange);
         }
+
+        /// <summary>
+        /// Returns whether the time can be advanced or not.
+        /// </summary>
+        /// <param name="securityType">The security type</param>
+        /// <returns>true if the time can be advanced</returns>
+        public bool CanAdvanceTime(SecurityType securityType)
+        {
+            return _symbolUniverse.CanAdvanceTime(securityType);
+        }
     }
 
     /// <summary>

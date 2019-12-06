@@ -363,6 +363,7 @@
     <Compile Include="Engine\DataFeeds\Enumerators\AuxiliaryDataEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\MappingEventProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\PriceScaleFactorEnumeratorTests.cs" />
+    <Compile Include="Engine\DataFeeds\FuncDataQueueHandlerUniverseProvider.cs" />
     <Compile Include="Engine\DataFeeds\IndexSubscriptionDataSourceReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\LiveCoarseUniverseTests.cs" />
     <Compile Include="Engine\DataFeeds\MockDataFeed.cs" />
