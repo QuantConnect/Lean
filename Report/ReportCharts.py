@@ -578,33 +578,6 @@ class ReportCharts:
         plt.close('all')
         return base64
 
-    def CalculateRollingBeta(self, data):
-        if not any(data[0]):
-            return pd.Series(), pd.Series()
-
-        equity = pd.DataFrame(data[1], index=data[0], columns=['Strategy']).resample('D').sum()
-        benchmark = pd.DataFrame(data[3], index=data[2], columns=['Benchmark'])
-        benchmark.index = benchmark.index.date
-
-        returns = equity.join(benchmark).dropna()
-
-        six_month_corr = returns.rolling(22*6).corr()
-        six_month_corr = six_month_corr.dropna()['Benchmark'][::2]
-        portfolio_std = returns['Strategy'].rolling(22*6).std().dropna()
-        benchmark_std = returns['Benchmark'].rolling(22*6).std().dropna()
-
-        six_month_beta = six_month_corr.values * (portfolio_std / benchmark_std)
-
-        twelve_month_corr = returns.rolling(252).corr()
-        twelve_month_corr = twelve_month_corr.dropna()['Benchmark'][::2]
-        portfolio_std = returns['Strategy'].rolling(252).std().dropna()
-        benchmark_std = returns['Benchmark'].rolling(252).std().dropna()
-
-        twelve_month_beta = twelve_month_corr.values * (portfolio_std / benchmark_std)
-
-        return six_month_beta, twelve_month_beta
-
-
     def GetRollingSharpeRatio(self, data = [[],[]], live_data = [[],[]], name = "rolling-sharpe-ratio.png",
                                   width = 11.5, height = 2.5, live_color = "#ff9914", backtest_color = "#71c3fc"):
         if len(data[0]) == 0:
@@ -658,9 +631,6 @@ class ReportCharts:
         plt.clf()
         plt.close('all')
         return base64
-
-    def CalculateAnnualizedSharpe(self, df):
-        return np.sqrt(252) * (df.mean() / df.std())
 
     def GetAssetAllocation(self, data = [[],[]], live_data = [[],[]],
                               width = 7, height = 5):
@@ -724,12 +694,12 @@ class ReportCharts:
         fig = ax.get_figure()
 
         # Backtest
-        ax.plot(data[0][:min(len(data[0]),len(data[1]))], data[1], color = backtest_color, alpha = 0.75)
-        ax.fill_between(data[0][:min(len(data[0]),len(data[1]))], 0, data[1], color = backtest_color, alpha = 0.75)
+        ax.plot(data[0], data[1], color = backtest_color, alpha = 0.75)
+        ax.fill_between(data[0], 0, data[1], color = backtest_color, alpha = 0.75)
 
         # Live
-        ax.plot(live_data[0][:min(len(live_data[0]),len(live_data[1]))], live_data[1], color = live_color, alpha = 0.75)
-        ax.fill_between(live_data[0][:min(len(live_data[0]),len(live_data[1]))], 0, live_data[1], color=live_color, alpha=0.75, step = 'pre')
+        ax.plot(live_data[0], live_data[1], color = live_color, alpha = 0.75)
+        ax.fill_between(live_data[0], 0, live_data[1], color=live_color, alpha=0.75, step = 'pre')
 
         rectangles = [plt.Rectangle((0, 0), 1, 1, fc=backtest_color), plt.Rectangle((0, 0), 1, 1, fc=live_color)]
         ax.legend(rectangles, [label for label in ['Backtest', "Live"]], handlelength=0.8, handleheight=0.8,

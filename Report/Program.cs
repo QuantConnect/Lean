@@ -54,7 +54,10 @@ namespace QuantConnect.Report
             LiveResult live = null;
             if (liveDataFile != string.Empty)
             {
-                live = JsonConvert.DeserializeObject<LiveResult>(File.ReadAllText(liveDataFile));
+                live = JsonConvert.DeserializeObject<LiveResult>(File.ReadAllText(liveDataFile), new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore
+                });
             }
 
             //Create a new report

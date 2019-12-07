@@ -47,5 +47,7 @@ namespace QuantConnect.Report
         public const string LeverageUtilization = @"{{$PLOT-LEVERAGE}}";
         public const string Exposure = @"{{$PLOT-EXPOSURE}}";
         public const string CrisisPlots = @"{{$HTML-CRISIS-PLOTS}}";
+        public const string CrisisTitle = @"{{$TEXT-CRISIS-TITLE}}";
+        public const string CrisisContents = @"{{$PLOT-CRISIS-CONTENT}}";
     }
 }

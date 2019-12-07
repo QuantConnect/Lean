@@ -15,9 +15,13 @@
 
 using Deedle;
 using MathNet.Numerics.Statistics;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Report
 {
@@ -158,6 +162,61 @@ namespace QuantConnect.Report
             return new Series<DateTime, double>(rollingSharpeData.Select(kvp => kvp.Key), rollingSharpeData.Select(kvp => kvp.Value));
         }
 
+        /// <summary>
+        /// Calculates the leverage used from trades. The series used to call this extension function should
+        /// be the equity curve with the associated <see cref="Orders.Order"/> objects that go along with it.
+        /// </summary>
+        /// <param name="series"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public static Series<DateTime, double> LeverageUtilization(this Series<DateTime, double> series, IEnumerable<Orders.Order> orders)
+        {
+            var holdings = new List<KeyValuePair<DateTime, double>>();
+
+            var timeKeeper = new TimeKeeper(series.FirstKey(), TimeZones.Utc);
+            var securityManager = new SecurityManager(timeKeeper);
+            var securityTransactionManager = new SecurityTransactionManager((IAlgorithm)null, securityManager);
+            var portfolioManager = new SecurityPortfolioManager(securityManager, securityTransactionManager);
+            var cash = new Cash("USD", (decimal)series.FirstValue(), 1m);
+
+            var startingCash = series.FirstValue();
+            portfolioManager.SetCash((decimal)startingCash);
+
+            foreach (var order in orders)
+            {
+                var orderSecurity = new Security(
+                    order.Symbol,
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                    new Cash("USD", 0, 1m),
+                    SymbolProperties.GetDefault("USD"),
+                    new IdentityCurrencyConverter("USD"),
+                    new RegisteredSecurityDataTypesProvider(),
+                    new SecurityCache());
+
+                orderSecurity.SetMarketPrice(new Tick { Quantity = order.Quantity, AskPrice = order.Price, BidPrice = order.Price, Value = order.Price });
+
+                // We need to add the security to the portfolio before we can do anything with it
+                portfolioManager.Securities.Add(order.Symbol, orderSecurity);
+
+                // If we fill with the quantity provided, TotalPortfolioValue doesn't return the proper results
+                var orderEvent = new Orders.OrderEvent(order, order.Time, Orders.Fees.OrderFee.Zero) { FillPrice = order.Price, FillQuantity = order.Quantity };
+
+                portfolioManager.ProcessFill(orderEvent);
+                timeKeeper.SetUtcDateTime(order.Time);
+
+                holdings.Add(new KeyValuePair<DateTime, double>(order.Time, (double)portfolioManager.TotalPortfolioValue));
+            }
+
+            // Get the last value for a given time to get the final holdings value
+            var holdingsGroup = holdings.GroupBy(x => x.Key).Select(x => new KeyValuePair<DateTime, double>(x.Key, x.Select(y => y.Value).Last()));
+            var holdingsSeries = new Series<DateTime, double>(holdingsGroup);
+
+            var frame = Frame.CreateEmpty<DateTime, string>();
+            frame["equity"] = series;
+            frame = frame.Join("holdings", holdingsSeries).FillMissing(Direction.Forward).DropSparseRows();
+
+            return frame["holdings"] / frame["equity"];
+        }
 
         /// <summary>
         /// Get the equity chart points
