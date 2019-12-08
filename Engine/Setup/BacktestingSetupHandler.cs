@@ -193,6 +193,12 @@ namespace QuantConnect.Lean.Engine.Setup
                         algorithm.SetEndDate(job.PeriodFinish.Value);
                     }
 
+                    //set initial cash, if present in the job
+                    if (job.CashAmount.HasValue)
+                    {
+                        algorithm.SetCash(job.CashAmount.Value);
+                    }
+
                     // finalize initialization
                     algorithm.PostInitialize();
                 }

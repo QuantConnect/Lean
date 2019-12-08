@@ -87,6 +87,11 @@ namespace QuantConnect.Packets
         public bool IsDebugging => Breakpoints.Any();
 
         /// <summary>
+        /// Optional initial cash amount if set
+        /// </summary>
+        [JsonProperty(PropertyName = "decCashAmount")]
+        public decimal? CashAmount;
+        /// <summary>
         /// Default constructor for JSON
         /// </summary>
         public BacktestNodePacket()
@@ -112,6 +117,7 @@ namespace QuantConnect.Packets
             ProjectId = projectId;
             UserPlan = userPlan;
             Name = name;
+            CashAmount = startingCapital;
             Language = Language.CSharp;
             Controls = new Controls
             {

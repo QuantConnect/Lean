@@ -102,5 +102,16 @@ namespace QuantConnect.Tests.Common.Packets
             Assert.AreEqual(job.PeriodStart, job2.PeriodStart);
             Assert.AreEqual(job.PeriodFinish, job2.PeriodFinish);
         }
+        [Test]
+        public void InitialCashAmount()
+        {
+            var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(BacktestNodePacketTests)}.Pepe");
+            Assert.AreEqual(job.CashAmount.Value,9m);
+
+            job.CashAmount = 10m;
+            var serialized = JsonConvert.SerializeObject(job);
+            var job2 = JsonConvert.DeserializeObject<BacktestNodePacket>(serialized);
+            Assert.AreEqual(job.CashAmount, job2.CashAmount);
+        }
     }
 }
