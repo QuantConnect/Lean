@@ -51,7 +51,8 @@ namespace QuantConnect.Tests
             AlgorithmStatus expectedFinalStatus,
             DateTime? startDate = null,
             DateTime? endDate = null,
-            string setupHandler = "RegressionSetupHandlerWrapper")
+            string setupHandler = "RegressionSetupHandlerWrapper"),
+            decimal? initialCash = null)
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
@@ -110,6 +111,10 @@ namespace QuantConnect.Tests
                             job.BacktestId = algorithm;
                             job.PeriodStart = startDate;
                             job.PeriodFinish = endDate;
+                            if (initialCash.HasValue)
+                            {
+                                job.CashAmount = initialCash.Value;
+                            }
                             algorithmManager = new AlgorithmManager(false, job);
 
                             systemHandlers.LeanManager.Initialize(systemHandlers, algorithmHandlers, job, algorithmManager);

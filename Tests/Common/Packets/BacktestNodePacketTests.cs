@@ -67,7 +67,8 @@ namespace QuantConnect.Tests.Common.Packets
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 startDate: new DateTime(2008, 10, 10),
-                endDate: new DateTime(2010, 10, 10));
+                endDate: new DateTime(2010, 10, 10),
+                initialCash: 100000);
         }
 
         [Test]
