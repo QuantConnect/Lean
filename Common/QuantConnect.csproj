@@ -776,6 +776,7 @@
     <Compile Include="Util\FixedSizeQueue.cs" />
     <Compile Include="Util\FixedSizeHashQueue.cs" />
     <Compile Include="Util\FuncTextWriter.cs" />
+    <Compile Include="Util\ITree.cs" />
     <Compile Include="Util\JsonRoundingConverter.cs" />
     <Compile Include="Util\RateLimit\BusyWaitSleepStrategy.cs" />
     <Compile Include="Util\RateLimit\FixedIntervalRefillStrategy.cs" />
@@ -797,6 +798,7 @@
     <Compile Include="Util\SeriesJsonConverter.cs" />
     <Compile Include="Util\StreamReaderEnumerable.cs" />
     <Compile Include="Util\StreamReaderExtensions.cs" />
+    <Compile Include="Util\Tree.cs" />
     <Compile Include="Util\TypeChangeJsonConverter.cs" />
     <Compile Include="Util\LinqExtensions.cs" />
     <Compile Include="Util\MemoizingEnumerable.cs" />
