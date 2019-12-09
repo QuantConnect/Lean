@@ -33,12 +33,10 @@ namespace QuantConnect.Lean.Launcher
         {
             AppDomain.CurrentDomain.AssemblyLoad += (sender, e) =>
             {
-                Log.Trace($"AssemblyLoad: {e.LoadedAssembly.GetName()}");
-            };
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, e) =>
-            {
-                Log.Trace($"AssemblyResolve: {e.Name} {e.RequestingAssembly}");
-                return null;
+                if (e.LoadedAssembly.FullName.ToLowerInvariant().Contains("python"))
+                {
+                    Log.Trace($"Python for .NET Assembly: {e.LoadedAssembly.GetName()}");
+                }
             };
         }
 
