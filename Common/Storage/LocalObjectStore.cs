@@ -14,12 +14,17 @@
 */
 
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Util;
 
 namespace QuantConnect.Storage
 {
@@ -29,6 +34,15 @@ namespace QuantConnect.Storage
     public class LocalObjectStore : IObjectStore
     {
         private static readonly string StorageRoot = Path.GetFullPath(Config.Get("object-store-root", "./storage"));
+
+        /// <summary>
+        /// Flag indicating the state of this object storage has changed since the last <seealso cref="Persist"/> invocation
+        /// </summary>
+        private volatile bool _dirty;
+
+        private Timer _persistenceTimer;
+        private TimeSpan _persistenceInterval;
+        private readonly ConcurrentDictionary<string, byte[]> _storage = new ConcurrentDictionary<string, byte[]>();
 
         protected Controls Controls { get; private set; }
 
@@ -56,6 +70,9 @@ namespace QuantConnect.Storage
             Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}");
 
             Controls = controls;
+
+            _persistenceInterval = TimeSpan.FromSeconds(controls.PersistenceIntervalSeconds);
+            _persistenceTimer = new Timer(_ => Persist(), null, _persistenceInterval, _persistenceInterval);
         }
 
         /// <summary>
@@ -70,17 +87,7 @@ namespace QuantConnect.Storage
                 throw new ArgumentNullException(nameof(key));
             }
 
-            try
-            {
-                var fileName = GetFilePath(key);
-
-                return File.Exists(fileName);
-            }
-            catch (Exception exception)
-            {
-                Log.Error(exception, $"Error checking file existence, key: [{key}]");
-                return false;
-            }
+            return _storage.ContainsKey(key);
         }
 
         /// <summary>
@@ -88,29 +95,22 @@ namespace QuantConnect.Storage
         /// </summary>
         /// <param name="key">The object key</param>
         /// <returns>A byte array containing the data</returns>
-        public byte[] Read(string key)
+        public byte[] ReadBytes(string key)
         {
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
             }
 
-            try
+            byte[] data;
+            if (!_storage.TryGetValue(key, out data))
             {
-                var fileName = GetFilePath(key);
-
-                if (!File.Exists(fileName))
-                {
-                    return new byte[0];
-                }
-
-                return File.ReadAllBytes(fileName);
+                throw new KeyNotFoundException($"Object with key '{key}' was not found in the current project. " +
+                    "Please use ObjectStore.ContainsKey(key) to check if an object exists before attempting to read."
+                );
             }
-            catch (Exception exception)
-            {
-                Log.Error(exception, $"Error reading file, key: [{key}]");
-                return null;
-            }
+
+            return data;
         }
 
         /// <summary>
@@ -119,41 +119,43 @@ namespace QuantConnect.Storage
         /// <param name="key">The object key</param>
         /// <param name="contents">The object data</param>
         /// <returns>True if the save operation was successful</returns>
-        public bool Save(string key, byte[] contents)
+        public bool SaveBytes(string key, byte[] contents)
         {
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
             }
 
-            try
+            var fileCount = 0;
+            var expectedStorageSizeBytes = 0L;
+            foreach (var kvp in _storage)
             {
-                var files = Directory.EnumerateFiles(StorageRoot).Select(f => new FileInfo(f)).ToList();
-                var fileCount = files.Count;
-                if (fileCount > Controls.StorageFileCount)
+                fileCount++;
+                if (string.Equals(kvp.Key, key))
                 {
-                    Log.Error($"LocaObjectStore at file capacity: {fileCount}. Unable to save: '{key}'");
-                    return false;
+                    expectedStorageSizeBytes += contents.Length - kvp.Value.Length;
                 }
-
-                var fileName = GetFilePath(key);
-                var fileInfo = new FileInfo(fileName);
-                var existingSizeBytes = fileInfo.Exists ? fileInfo.Length : 0;
-                var deltaKeyFileSizeMb = BytesToMb(contents.Length - existingSizeBytes);
-                var expectedStorageSizeMb = files.Sum(f => BytesToMb(f.Length)) + deltaKeyFileSizeMb;
-                if (expectedStorageSizeMb > Controls.StorageLimitMB)
+                else
                 {
-                    Log.Error($"LocalObjectStore at storage capacity: {expectedStorageSizeMb}. Unable to save: '{key}'");
+                    expectedStorageSizeBytes += kvp.Value.Length;
                 }
-
-                File.WriteAllBytes(fileName, contents);
             }
-            catch (Exception exception)
+
+            if (fileCount > Controls.StorageFileCount)
             {
-                Log.Error(exception, $"Error saving file, key: [{key}]");
+                Log.Error($"LocaObjectStore at file capacity: {fileCount}. Unable to save: '{key}'");
                 return false;
             }
 
+            var expectedStorageSizeMb = BytesToMb(expectedStorageSizeBytes);
+            if (expectedStorageSizeMb > Controls.StorageLimitMB)
+            {
+                Log.Error($"LocalObjectStore at storage capacity: {expectedStorageSizeMb}. Unable to save: '{key}'");
+                return false;
+            }
+
+            _dirty = true;
+            _storage.AddOrUpdate(key, k => contents, (k, v) => contents);
             return true;
         }
 
@@ -169,19 +171,14 @@ namespace QuantConnect.Storage
                 throw new ArgumentNullException(nameof(key));
             }
 
-            try
+            byte[] _;
+            if (_storage.TryRemove(key, out _))
             {
-                var fileName = GetFilePath(key);
-
-                File.Delete(fileName);
-            }
-            catch (Exception exception)
-            {
-                Log.Error(exception, $"Error deleting file, key: [{key}]");
-                return false;
+                _dirty = true;
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         /// <summary>
@@ -196,7 +193,14 @@ namespace QuantConnect.Storage
                 throw new ArgumentNullException(nameof(key));
             }
 
-            return Path.Combine(AlgorithmStorageRoot, $"{key.ToMD5()}.dat");
+            // read from RAM
+            var contents = ReadBytes(key);
+
+            // write byte array to storage directory
+            var path = Path.Combine(AlgorithmStorageRoot, $"{key.ToMD5()}.dat");
+            File.WriteAllBytes(path, contents);
+
+            return path;
         }
 
         /// <summary>
@@ -206,6 +210,8 @@ namespace QuantConnect.Storage
         {
             try
             {
+                _persistenceTimer?.DisposeSafely();
+
                 // if the object store was not used, delete the empty storage directory created in Initialize
                 if (!Directory.EnumerateFileSystemEntries(AlgorithmStorageRoot).Any())
                 {
@@ -218,9 +224,75 @@ namespace QuantConnect.Storage
             }
         }
 
+        public IEnumerator<KeyValuePair<string, byte[]>> GetEnumerator()
+        {
+            return _storage.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        /// <summary>
+        /// Invoked periodically to persist the object store's contents
+        /// </summary>
+        private void Persist()
+        {
+            if (!_dirty)
+            {
+                return;
+            }
+
+            try
+            {
+
+                // pause timer will persisting
+                _persistenceTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+                if (PersistData(this))
+                {
+                    _dirty = false;
+                }
+
+            }
+            catch (Exception err)
+            {
+                Log.Error("LocalObjectStore.Persist()", err);
+            }
+            finally
+            {
+                // restart timer following end of persistence
+                _persistenceTimer.Change(_persistenceInterval, _persistenceInterval);
+            }
+        }
+
+        /// <summary>
+        /// Overridable persistence function
+        /// </summary>
+        /// <param name="data">The data to be persisted</param>
+        protected virtual bool PersistData(IEnumerable<KeyValuePair<string, byte[]>> data)
+        {
+            try
+            {
+                foreach (var kvp in data)
+                {
+                    var path = Path.Combine(AlgorithmStorageRoot, kvp.Key);
+                    File.WriteAllBytes(path, kvp.Value);
+                }
+
+                return true;
+            }
+            catch (Exception err)
+            {
+                Log.Error("LocalObjectStore.PersistData()", err);
+                return false;
+            }
+        }
+
         private static double BytesToMb(long bytes)
         {
-            return (double) bytes / 1024 / 1024;
+            return bytes / 1024.0 / 1024.0;
         }
     }
 }

@@ -33,11 +33,23 @@ namespace QuantConnect.Storage
         /// <param name="key">The object key</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>A string containing the data</returns>
-        public static string ReadText(this IObjectStore store, string key, Encoding encoding = null)
+        public static string Read(this IObjectStore store, string key, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            return encoding.GetString(store.Read(key));
+            return encoding.GetString(store.ReadBytes(key));
+        }
+
+        /// <summary>
+        /// Returns the string object data for the specified key
+        /// </summary>
+        /// <param name="store">The object store instance</param>
+        /// <param name="key">The object key</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <returns>A string containing the data</returns>
+        public static string ReadString(this IObjectStore store, string key, Encoding encoding = null)
+        {
+            return store.Read(key, encoding);
         }
 
         /// <summary>
@@ -52,7 +64,7 @@ namespace QuantConnect.Storage
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            var json = store.ReadText(key, encoding);
+            var json = store.Read(key, encoding);
             return JsonConvert.DeserializeObject<T>(json, settings);
         }
 
@@ -67,7 +79,7 @@ namespace QuantConnect.Storage
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            var xml = store.ReadText(key, encoding);
+            var xml = store.Read(key, encoding);
 
             var serializer = new XmlSerializer(typeof(T));
             using (var reader = new StringReader(xml))
@@ -84,11 +96,26 @@ namespace QuantConnect.Storage
         /// <param name="text">The string object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>True if the object was saved successfully</returns>
-        public static bool SaveText(this IObjectStore store, string key, string text, Encoding encoding = null)
+        public static bool Save(this IObjectStore store, string key, string text, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            return store.Save(key, encoding.GetBytes(text));
+            return store.SaveBytes(key, encoding.GetBytes(text));
+        }
+
+        /// <summary>
+        /// Saves the object data in text format for the specified key
+        /// </summary>
+        /// <param name="store">The object store instance</param>
+        /// <param name="key">The object key</param>
+        /// <param name="text">The string object to be saved</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <returns>True if the object was saved successfully</returns>
+        public static bool SaveString(this IObjectStore store, string key, string text, Encoding encoding = null)
+        {
+            encoding = encoding ?? Encoding.UTF8;
+
+            return store.SaveBytes(key, encoding.GetBytes(text));
         }
 
         /// <summary>
@@ -105,7 +132,7 @@ namespace QuantConnect.Storage
             encoding = encoding ?? Encoding.UTF8;
 
             var json = JsonConvert.SerializeObject(obj, settings);
-            return store.SaveText(key, json, encoding);
+            return store.SaveString(key, json, encoding);
         }
 
         /// <summary>
@@ -126,7 +153,7 @@ namespace QuantConnect.Storage
                 serializer.Serialize(writer, obj);
 
                 var xml = writer.ToString();
-                return store.SaveText(key, xml, encoding);
+                return store.SaveString(key, xml, encoding);
             }
         }
     }

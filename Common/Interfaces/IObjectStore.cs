@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Packets;
 
@@ -23,7 +24,7 @@ namespace QuantConnect.Interfaces
     /// Provides object storage for data persistence.
     /// </summary>
     [InheritedExport(typeof(IObjectStore))]
-    public interface IObjectStore : IDisposable
+    public interface IObjectStore : IDisposable, IEnumerable<KeyValuePair<string, byte[]>>
     {
         /// <summary>
         /// Initializes the object store
@@ -47,7 +48,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="key">The object key</param>
         /// <returns>A byte array containing the data</returns>
-        byte[] Read(string key);
+        byte[] ReadBytes(string key);
 
         /// <summary>
         /// Saves the object data for the specified key
@@ -55,7 +56,7 @@ namespace QuantConnect.Interfaces
         /// <param name="key">The object key</param>
         /// <param name="contents">The object data</param>
         /// <returns>True if the save operation was successful</returns>
-        bool Save(string key, byte[] contents);
+        bool SaveBytes(string key, byte[] contents);
 
         /// <summary>
         /// Deletes the object data for the specified key

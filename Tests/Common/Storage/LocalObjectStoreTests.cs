@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void ReturnsEmptyByteArrayOnFileNotFound()
         {
-            var result = _store.Read("missing.missing");
+            var result = _store.ReadBytes("missing.missing");
             Assert.IsNotNull(result);
             Assert.AreEqual(0, result.Length);
         }
@@ -54,9 +54,9 @@ namespace QuantConnect.Tests.Common.Storage
         {
             const string expectedText = "12;26";
 
-            Assert.IsTrue(_store.SaveText("my_settings_text", expectedText));
+            Assert.IsTrue(_store.SaveString("my_settings_text", expectedText));
 
-            var actualText = _store.ReadText("my_settings_text");
+            var actualText = _store.Read("my_settings_text");
 
             Assert.AreEqual(expectedText, actualText);
         }
@@ -91,8 +91,8 @@ namespace QuantConnect.Tests.Common.Storage
         public void ThrowsIfKeyIsNull()
         {
             Assert.Throws<ArgumentNullException>(() => _store.ContainsKey(null));
-            Assert.Throws<ArgumentNullException>(() => _store.Read(null));
-            Assert.Throws<ArgumentNullException>(() => _store.Save(null, null));
+            Assert.Throws<ArgumentNullException>(() => _store.ReadBytes(null));
+            Assert.Throws<ArgumentNullException>(() => _store.SaveBytes(null, null));
             Assert.Throws<ArgumentNullException>(() => _store.Delete(null));
             Assert.Throws<ArgumentNullException>(() => _store.GetFilePath(null));
         }

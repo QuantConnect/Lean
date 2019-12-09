@@ -108,6 +108,9 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "storageFileCountMB")]
         public int StorageFileCount;
 
+        [JsonProperty(PropertyName = "persistenceIntervalSeconds")]
+        public int PersistenceIntervalSeconds;
+
         /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
@@ -126,6 +129,7 @@ namespace QuantConnect.Packets
             SecondTimeOut = 300;
             StorageLimitMB = 5;
             StorageFileCount = 100;
+            PersistenceIntervalSeconds = 5;
 
             // initialize to default leaky bucket values in case they're not specified
             TrainingLimits = new LeakyBucketControlParameters();
