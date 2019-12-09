@@ -192,8 +192,9 @@ namespace QuantConnect
         /// Uncompress zip data byte array into a dictionary string array of filename-contents.
         /// </summary>
         /// <param name="zipData">Byte data array of zip compressed information</param>
+        /// <param name="encoding">Specifies the encoding used to read the bytes. If not specified, defaults to ASCII</param>
         /// <returns>Uncompressed dictionary string-sting of files in the zip</returns>
-        public static Dictionary<string, string> UnzipData(byte[] zipData)
+        public static Dictionary<string, string> UnzipData(byte[] zipData, Encoding encoding = null)
         {
             // Initialize:
             var data = new Dictionary<string, string>();
@@ -217,7 +218,7 @@ namespace QuantConnect
                                 zipStream.Read(buffer, 0, (int)entry.Size);
 
                                 //Save into array:
-                                data.Add(entry.Name, buffer.GetString());
+                                data.Add(entry.Name, buffer.GetString(encoding));
                             }
                             else
                             {
