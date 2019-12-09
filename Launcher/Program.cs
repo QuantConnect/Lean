@@ -90,7 +90,9 @@ namespace QuantConnect.Lean.Launcher
 
             if (job == null)
             {
-                throw new Exception("Engine.Main(): Job was null.");
+                const string jobNullMessage = "Engine.Main(): Sorry we could not process this algorithm request.";
+                Log.Error(jobNullMessage);
+                throw new ArgumentException(jobNullMessage);
             }
 
             LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
