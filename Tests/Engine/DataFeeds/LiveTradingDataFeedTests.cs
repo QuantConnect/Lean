@@ -202,14 +202,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         Assert.IsTrue(ts.Slice.Keys.Contains(Symbols.SPY));
                     }
-                    Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count);
+                    // SPY benchmark and the UserDefinedUniverse
+                    Assert.AreEqual(2, dataQueueHandler.Subscriptions.Count);
 
                     _algorithm.AddSecurities(forex: new List<string> { "EURUSD" });
                     emittedData = true;
                 }
                 else
                 {
-                    if (dataQueueHandler.Subscriptions.Count == 2) // there could be some slices with no data
+                    // SPY benchmark and the UserDefinedUniverse Equity/Forex, EURUSD
+                    if (dataQueueHandler.Subscriptions.Count == 4) // there could be some slices with no data
                     {
                         Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                         if (ts.Data.Count > 0)
@@ -255,8 +257,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 securityChanges += ts.SecurityChanges.Count;
                 if (!firstTime)
                 {
-                    // benchmark SPY and EURUSD
-                    Assert.AreEqual(2, dataQueueHandler.Subscriptions.Count);
+                    // benchmark SPY, EURUSD and the UserDefinedUniverse
+                    Assert.AreEqual(3, dataQueueHandler.Subscriptions.Count);
                     _algorithm.AddUniverse("TestUniverse", time => new List<string> { "AAPL", "SPY" });
                     firstTime = true;
                 }
@@ -266,7 +268,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count(x => x.Value.Contains("TESTUNIVERSE")));
                     }
-                    else if (dataQueueHandler.Subscriptions.Count == 4)
+                    else if (dataQueueHandler.Subscriptions.Count == 5)
                     {
                         Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count(x => x.Value.Contains("TESTUNIVERSE")));
                         Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
@@ -301,10 +303,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var emittedData = false;
             var newDataCount = 0;
-            var securityChanges = 0;
+            var changes = new List<SecurityChanges>();
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
-                securityChanges += ts.SecurityChanges.Count;
+                if (ts.SecurityChanges != SecurityChanges.None)
+                {
+                    changes.Add(ts.SecurityChanges);
+                }
                 if (!emittedData)
                 {
                     Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
@@ -312,14 +317,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         Assert.IsTrue(ts.Slice.Keys.Contains(Symbols.SPY));
                     }
-                    Assert.AreEqual(1, dataQueueHandler.Subscriptions.Count);
+                    // SPY benchmark and the UserDefinedUniverse
+                    Assert.AreEqual(2, dataQueueHandler.Subscriptions.Count);
 
                     _algorithm.AddSecurities(equities: new List<string> { "AAPL" });
                     emittedData = true;
                 }
                 else
                 {
-                    if (dataQueueHandler.Subscriptions.Count == 2) // there could be some slices with no data
+                    // SPY benchmark and the UserDefinedUniverse Equity, AAPL
+                    if (dataQueueHandler.Subscriptions.Count == 3) // there could be some slices with no data
                     {
                         Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                         if (ts.Data.Count > 0)
@@ -343,8 +350,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.GreaterOrEqual(newDataCount, 5);
             Assert.IsTrue(emittedData);
-            Assert.AreEqual(2, securityChanges + _algorithm.SecurityChangesRecord.Count);
-            Assert.AreEqual(Symbols.AAPL, _algorithm.SecurityChangesRecord.First().AddedSecurities.First().Symbol);
+            Assert.AreEqual(2, changes.Count);
+            Assert.AreEqual(Symbols.SPY, changes[0].AddedSecurities.Single().Symbol);
+            Assert.AreEqual(Symbols.AAPL, changes[1].AddedSecurities.Single().Symbol);
         }
 
         [Test]
@@ -393,10 +401,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var emittedData = false;
             var currentSubscriptionCount = 0;
-            var securityChanges = 0;
+            var changes = new List<SecurityChanges>();
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
-                securityChanges += ts.SecurityChanges.Count;
+                if (ts.SecurityChanges != SecurityChanges.None)
+                {
+                    changes.Add(ts.SecurityChanges);
+                }
                 Assert.IsFalse(dataQueueHandler.Subscriptions.Contains(customMockedFileBaseData));
                 if (!emittedData)
                 {
@@ -415,8 +426,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
             Assert.IsTrue(emittedData);
-            Assert.AreEqual(4, securityChanges + _algorithm.SecurityChangesRecord.Count);
-            Assert.AreEqual(Symbols.SPY, _algorithm.SecurityChangesRecord.First().RemovedSecurities.First().Symbol);
+            Assert.AreEqual(4, changes.Aggregate(0, (i, securityChanges) => i+securityChanges.Count));
+            Assert.AreEqual(Symbols.SPY, changes[1].RemovedSecurities.Single().Symbol);
         }
 
         [Test]

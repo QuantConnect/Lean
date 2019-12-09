@@ -16,8 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
@@ -47,7 +45,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private static readonly Symbol DataQueueHandlerSymbol = Symbol.Create("data-queue-handler-symbol", SecurityType.Base, Market.USA);
 
         private LiveNodePacket _job;
-        private IAlgorithm _algorithm;
         // used to get current time
         private ITimeProvider _timeProvider;
         private ITimeProvider _frontierTimeProvider;
@@ -57,7 +54,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private BaseDataExchange _customExchange;
         private SubscriptionCollection _subscriptions;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private UniverseSelection _universeSelection;
         private IDataChannelProvider _channelProvider;
 
         /// <summary>
@@ -87,9 +83,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            _algorithm = algorithm;
             _job = (LiveNodePacket) job;
-
             _timeProvider = dataFeedTimeProvider.TimeProvider;
             _dataQueueHandler = GetDataQueueHandler();
             _dataProvider = dataProvider;
@@ -101,8 +95,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _exchange = new BaseDataExchange("DataQueueExchange"){SleepInterval = 0};
             _exchange.AddEnumerator(DataQueueHandlerSymbol, GetNextTicksEnumerator());
             _subscriptions = subscriptionManager.DataFeedSubscriptions;
-
-            _universeSelection = subscriptionManager.UniverseSelection;
 
             // run the exchanges
             Task.Run(() => _exchange.Start(_cancellationTokenSource.Token));
@@ -435,10 +427,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var timeTriggered = request.Universe as ITimeTriggeredUniverse;
             if (timeTriggered != null)
             {
-                Log.Trace("LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: " + config.Symbol.ToString());
+                Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: {config.Symbol}");
 
                 // spoof a tick on the requested interval to trigger the universe selection function
-                var enumeratorFactory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(timeTriggered, MarketHoursDatabase.FromDataFolder());
+                var enumeratorFactory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(timeTriggered, MarketHoursDatabase.FromDataFolder(), _frontierTimeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
                 enumerator = new FrontierAwareEnumerator(enumerator, _timeProvider, tzOffsetProvider);
@@ -446,30 +438,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var enqueueable = new EnqueueableEnumerator<BaseData>();
                 _customExchange.AddEnumerator(new EnumeratorHandler(config.Symbol, enumerator, enqueueable));
                 enumerator = enqueueable;
-
-                // Trigger universe selection when security added/removed after Initialize
-                if (timeTriggered is UserDefinedUniverse)
-                {
-                    var userDefined = (UserDefinedUniverse) timeTriggered;
-                    userDefined.CollectionChanged += (sender, args) =>
-                    {
-                        var items =
-                            args.Action == NotifyCollectionChangedAction.Add ? args.NewItems :
-                            args.Action == NotifyCollectionChangedAction.Remove ? args.OldItems : null;
-
-                        var currentFrontierUtcTime = _frontierTimeProvider.GetUtcNow();
-                        if (items == null || currentFrontierUtcTime == DateTime.MinValue) return;
-
-                        var symbol = items.OfType<Symbol>().FirstOrDefault();
-                        if (symbol == null) return;
-
-                        var collection = new BaseDataCollection(currentFrontierUtcTime, symbol);
-                        var changes = _universeSelection.ApplyUniverseSelection(userDefined, currentFrontierUtcTime, collection);
-                        _algorithm.OnSecuritiesChanged(changes);
-
-                        subscription.OnNewDataAvailable();
-                    };
-                }
             }
             else if (config.Type == typeof (CoarseFundamental))
             {
