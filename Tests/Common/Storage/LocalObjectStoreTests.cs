@@ -14,8 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using QuantConnect.Configuration;
+using QuantConnect.Lean.Engine.Storage;
 using QuantConnect.Packets;
 using QuantConnect.Storage;
 
@@ -24,28 +27,49 @@ namespace QuantConnect.Tests.Common.Storage
     [TestFixture]
     public class LocalObjectStoreTests
     {
-        private readonly LocalObjectStore _store = new LocalObjectStore();
+        private static readonly string TestStorageRoot = $"./{nameof(LocalObjectStoreTests)}";
+        private static readonly string StorageRootConfigurationValue = Config.Get("object-store-root");
+
+        private LocalObjectStore _store;
 
         [TestFixtureSetUp]
         public void Setup()
         {
+            Config.Set("object-store-root", TestStorageRoot);
+
+            _store = new LocalObjectStore();
             _store.Initialize("CSharp-TestAlgorithm", 0, 0, "", new Controls());
         }
 
-        [Test]
-        public void ReturnsEmptyByteArrayOnFileNotFound()
+        [TestFixtureTearDown]
+        public void Cleanup()
         {
-            var result = _store.ReadBytes("missing.missing");
-            Assert.IsNotNull(result);
-            Assert.AreEqual(0, result.Length);
+            Config.Set("object-store-root", StorageRootConfigurationValue);
+            try
+            {
+                Directory.Delete(TestStorageRoot);
+            }
+            catch
+            {
+            }
         }
 
-        [TestCase("my_key", "./storage/CSharp-TestAlgorithm/9ed6e46a3ff88783ff75296a4ba523f9.dat")]
-        [TestCase("test/123", "./storage/CSharp-TestAlgorithm/0a2557f6be73a1b8a6abe84104899591.dat")]
+        [Test]
+        public void ThrowsKeyNotFoundException_WhenObjectStoreDoesNotContainKey()
+        {
+            var error = Assert.Throws<KeyNotFoundException>(
+                () => _store.ReadBytes("missing.missing")
+            );
+
+            Assert.IsTrue(error.Message.Contains("Please use ObjectStore.ContainsKey(key)"));
+        }
+
+        [TestCase("my_key", "./LocalObjectStoreTests/CSharp-TestAlgorithm/9ed6e46a3ff88783ff75296a4ba523f9.dat")]
+        [TestCase("test/123", "./LocalObjectStoreTests/CSharp-TestAlgorithm/0a2557f6be73a1b8a6abe84104899591.dat")]
         public void GetFilePathReturnsFileName(string key, string expectedRelativePath)
         {
             var expectedPath = Path.GetFullPath(expectedRelativePath).Replace("\\", "/");
-
+            _store.SaveString(key, "data");
             Assert.AreEqual(expectedPath, _store.GetFilePath(key).Replace("\\", "/"));
         }
 
@@ -104,10 +128,10 @@ namespace QuantConnect.Tests.Common.Storage
             {
                 store.Initialize("unused", 0, 0, "", new Controls());
 
-                Assert.IsTrue(Directory.Exists("./storage/unused"));
+                Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests/unused"));
             }
 
-            Assert.IsFalse(Directory.Exists("./storage/unused"));
+            Assert.IsFalse(Directory.Exists("./LocalObjectStoreTests/unused"));
         }
 
         public class TestSettings

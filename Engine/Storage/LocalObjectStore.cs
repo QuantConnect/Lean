@@ -26,14 +26,14 @@ using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
-namespace QuantConnect.Storage
+namespace QuantConnect.Lean.Engine.Storage
 {
     /// <summary>
     /// A local disk implementation of <see cref="IObjectStore"/>.
     /// </summary>
     public class LocalObjectStore : IObjectStore
     {
-        private static readonly string StorageRoot = Path.GetFullPath(Config.Get("object-store-root", "./storage"));
+        private static string StorageRoot => Path.GetFullPath(Config.Get("object-store-root", "./storage"));
 
         /// <summary>
         /// Flag indicating the state of this object storage has changed since the last <seealso cref="Persist"/> invocation

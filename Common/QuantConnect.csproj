@@ -746,7 +746,6 @@
     <Compile Include="Statistics\TradeStatistics.cs" />
     <Compile Include="Statistics\Statistics.cs" />
     <Compile Include="RealTimeSynchronizedTimer.cs" />
-    <Compile Include="Storage\LocalObjectStore.cs" />
     <Compile Include="Storage\ObjectStore.cs" />
     <Compile Include="StringExtensions.cs" />
     <Compile Include="Parse.cs" />
