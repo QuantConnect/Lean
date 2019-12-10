@@ -249,6 +249,36 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             }
         }
 
+
+        [Test]
+        public void CanHandleRepeatedEventsCorrectly()
+        {
+            var factorFileBeforeSplit = GetFactorFile_LODE20191127();
+            var factorFileAfterSplit = GetFactorFile_LODE20191129();
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(QuantConnect.Market.USA, Symbols.SPY, SecurityType.Equity);
+
+            var eventTime = new DateTime(2019, 11, 29);
+            var split = new Split(Symbols.LODE, eventTime, 0.06m, 5, SplitType.SplitOccurred);
+            var events = new List<BaseData> { split, split, split };
+            var actual = factorFileBeforeSplit.Apply(events, exchangeHours);
+
+            Assert.AreEqual(factorFileAfterSplit.Count(), actual.Count());
+            Assert.True(actual.First().Date == new DateTime(1998, 01, 02),
+                $"Factor file first row changed from 1998-01-02 to {actual.First().Date:yyyy-MM-dd} after applying new event");
+            Assert.True(actual.First().SplitFactor == 25m, "Factor File split factor is not computed correctly");
+            foreach (var item in actual.Reverse().Zip(factorFileAfterSplit.Reverse(), (a, e) => new { actual = a, expected = e }))
+            {
+                Console.WriteLine($"expected: {item.expected} actual: {item.actual}  diff: {100 * (1 - item.actual.PriceFactor / item.expected.PriceFactor):0.0000}%");
+                Assert.AreEqual(item.expected.Date, item.actual.Date);
+                Assert.AreEqual(item.expected.ReferencePrice, item.actual.ReferencePrice);
+                Assert.AreEqual(item.expected.SplitFactor, item.actual.SplitFactor);
+
+                var delta = (double)item.expected.PriceFactor * 1e-5;
+                Assert.AreEqual((double)item.expected.PriceFactor, (double)item.actual.PriceFactor, delta);
+            }
+        }
+
+
         [Test]
         public void AppliesSplitAndDividendAtSameTime()
         {
