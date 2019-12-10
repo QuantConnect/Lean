@@ -121,7 +121,7 @@ namespace QuantConnect.Data.Auxiliary
             // parse factor file lines
             foreach (var line in lines)
             {
-                if (line.Contains("inf"))
+                if (line.Contains("inf") || line.Contains("e+"))
                 {
                     hasInfEntry = true;
                     continue;

@@ -41,6 +41,41 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         }
 
         [Test]
+        public void ReadsFactorFileWithExponentialNotation()
+        {
+            // Source NEWL factor file at 2019-12-09
+            var lines = new[]
+            {
+                "19980102,0.8116779,1e+07",
+                "20051108,0.8116779,1e+07",
+                "20060217,0.8416761,1e+07",
+                "20060516,0.8644420,1e+07",
+                "20060814,0.8747766,1e+07",
+                "20061115,0.8901232,1e+07",
+                "20070314,0.9082148,1e+07",
+                "20070522,0.9166239,1e+07",
+                "20070814,0.9306799,1e+07",
+                "20071120,0.9534326,1e+07",
+                "20080520,0.9830510,1e+07",
+                "20100802,1.0000000,1e+07",
+                "20131016,1.0000000,1.11111e+06",
+                "20131205,1.0000000,75188",
+                "20140305,1.0000000,25000",
+                "20140514,1.0000000,2500",
+                "20140714,1.0000000,50",
+                "20501231,1.0000000,1"
+            };
+
+            DateTime? factorFileMinimumDate;
+            var factorFile = FactorFileRow.Parse(lines, out factorFileMinimumDate).ToList();
+
+            Assert.AreEqual(5, factorFile.Count);
+
+            Assert.IsNotNull(factorFileMinimumDate);
+            Assert.AreEqual(new DateTime(2013, 12, 06), factorFileMinimumDate.Value);
+        }
+
+        [Test]
         public void ReadsFactorFileWithInfValues()
         {
             var lines = new[]
