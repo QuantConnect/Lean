@@ -80,12 +80,12 @@ namespace QuantConnect.Algorithm.Framework
         /// <summary>
         /// Most generic form of <see cref="UpdateCollection"/>
         /// </summary>
-        /// <typeparam name="TKey"></typeparam>
-        /// <typeparam name="TValue"></typeparam>
-        /// <param name="dictionary"></param>
-        /// <param name="changes"></param>
-        /// <param name="keyFactory"></param>
-        /// <param name="valueFactory"></param>
+        /// <typeparam name="TKey">The dictionary's key type</typeparam>
+        /// <typeparam name="TValue">The dictionary's value type</typeparam>
+        /// <param name="dictionary">The dictionary to update</param>
+        /// <param name="changes">The <seealso cref="SecurityChanges"/> to apply to the dictionary</param>
+        /// <param name="keyFactory">Selector pulling <typeparamref name="TKey"/> from a <seealso cref="Security"/></param>
+        /// <param name="valueFactory">Selector pulling <typeparamref name="TValue"/> from a <seealso cref="Security"/></param>
         public static void UpdateDictionary<TKey, TValue>(
             IDictionary<TKey, TValue> dictionary,
             SecurityChanges changes,
@@ -107,6 +107,13 @@ namespace QuantConnect.Algorithm.Framework
                 });
         }
 
+        /// <summary>
+        /// Invokes the provided <paramref name="add"/> and <paramref name="remove"/> functions for each
+        /// <seealso cref="SecurityChanges.Added"/> and <seealso cref="SecurityChanges.Removed"/>, respectively
+        /// </summary>
+        /// <param name="changes">The security changes to process</param>
+        /// <param name="add">Function called for each added security</param>
+        /// <param name="remove">Function called for each removed security</param>
         public static void Update(SecurityChanges changes, Action<Security> add, Action<Security> remove)
         {
             foreach (var added in changes.AddedSecurities)
