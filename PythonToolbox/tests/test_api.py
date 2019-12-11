@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from quantconnect import ApiConnection
 from quantconnect.api import Api
 from quantconnect.LeanReportCreator import LeanReportCreator
 import unittest
@@ -46,7 +45,7 @@ class TestApi(unittest.TestCase):
 
     def test_ApiConnectionWillAuthenticate_ValidCredentials_Successfully(self):
         """Test successfully authenticating with the ApiConnection using valid credentials."""
-        connection = ApiConnection(self.userId, self.testToken)
+        connection = Api(self.userId, self.testToken)
         self.assertTrue(connection.connected())
 
     def test_ApiWillAuthenticate_ValidCredentials_Successfully(self):
@@ -56,7 +55,7 @@ class TestApi(unittest.TestCase):
 
     def test_ApiConnectionWillAuthenticate_InvalidCredentials_Unsuccessfully(self):
         """Test that the ApiConnection will reject invalid credentials"""
-        connection = ApiConnection(self.userId, "")
+        connection = Api(self.userId, "")
         self.assertFalse(connection.connected())
 
     def test_ApiWillAuthenticate_InvalidCredentials_Unsuccessfully(self):

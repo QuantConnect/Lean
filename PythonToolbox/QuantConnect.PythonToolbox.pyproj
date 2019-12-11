@@ -24,10 +24,10 @@
   <ItemGroup>
     <Compile Include="CreateLeanReport.py" />
     <Compile Include="quantconnect\api.py" />
+    <Compile Include="quantconnect\Result.py" />
     <Compile Include="quantconnect\LeanOutputReader.py" />
     <Compile Include="quantconnect\LeanReportCreator.py" />
     <Compile Include="quantconnect\symbol.py" />
-    <Compile Include="quantconnect\__init__.py" />
     <Compile Include="setup.py" />
     <Compile Include="tests\test_api.py" />
     <Compile Include="tests\test_symbol.py" />
