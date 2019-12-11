@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             Assert.AreEqual(5, factorFile.Count);
 
             Assert.IsNotNull(factorFileMinimumDate);
-            Assert.AreEqual(new DateTime(2013, 12, 06), factorFileMinimumDate.Value);
+            Assert.AreEqual(new DateTime(2013, 12, 04), factorFileMinimumDate.Value);
         }
 
         [Test]
@@ -93,7 +93,7 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             Assert.AreEqual(3, factorFile.Count);
 
             Assert.IsNotNull(factorFileMinimumDate);
-            Assert.AreEqual(new DateTime(2016, 3, 31), factorFileMinimumDate.Value);
+            Assert.AreEqual(new DateTime(2016, 3, 29), factorFileMinimumDate.Value);
         }
 
         [Test]

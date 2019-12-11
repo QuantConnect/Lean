@@ -113,7 +113,6 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>An enumerable of factor file rows</returns>
         public static List<FactorFileRow> Parse(IEnumerable<string> lines, out DateTime? factorFileMinimumDate)
         {
-            var hasInfEntry = false;
             factorFileMinimumDate = null;
 
             var rows = new List<FactorFileRow>();
@@ -123,18 +122,10 @@ namespace QuantConnect.Data.Auxiliary
             {
                 if (line.Contains("inf") || line.Contains("e+"))
                 {
-                    hasInfEntry = true;
                     continue;
                 }
 
                 var row = Parse(line);
-
-                if (hasInfEntry && rows.Count == 0)
-                {
-                    // special handling for INF values: set minimum date
-                    factorFileMinimumDate = row.Date.AddDays(1);
-                    row = new FactorFileRow(row.Date.AddDays(-1), row.PriceFactor, row.SplitFactor, row.ReferencePrice);
-                }
 
                 // ignore zero factor rows
                 if (row.PriceScaleFactor > 0)
