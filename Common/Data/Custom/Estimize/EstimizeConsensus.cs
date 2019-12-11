@@ -122,8 +122,8 @@ namespace QuantConnect.Data.Custom.Estimize
             UpdatedAt = Parse.DateTimeExact(csv[0], "yyyyMMdd HH:mm:ss");
             Time = UpdatedAt;
             Id = csv[1];
-            Source = csv[2].ConvertInvariant<Source>();
-            Type = csv[3].IfNotNullOrEmpty(s => s.ConvertInvariant<Type>());
+            Source = (Source)Enum.Parse(typeof(Source), csv[2]);
+            Type = csv[3].IfNotNullOrEmpty(s => (Type)Enum.Parse(typeof(Type), s));
             Mean = csv[4].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             High = csv[5].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));
             Low = csv[6].IfNotNullOrEmpty<decimal?>(s => Parse.Decimal(s));

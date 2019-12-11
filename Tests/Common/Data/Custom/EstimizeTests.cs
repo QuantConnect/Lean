@@ -103,6 +103,26 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.IsTrue(content.Contains("\"eps\":1.2"));
         }
 
+        [Test]
+        public void EstimizeConsensusReaderDoesNotThrow()
+        {
+            var data = "20100101 12:00:00,abcdef123456789deadbeef,Estimize,Revenue,100.00,100,100,50,2010,1,100";
+            var instance = new EstimizeConsensus();
+
+            var fakeConfig = new SubscriptionDataConfig(
+                typeof(EstimizeConsensus),
+                Symbol.Create("AAPL", SecurityType.Base, "USA"),
+                Resolution.Daily,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                false,
+                false,
+                false
+            );
+
+            Assert.DoesNotThrow(() => { instance.Reader(fakeConfig, data, DateTime.MinValue, false); });
+        }
+
         [Test, Ignore("Requires Estimize data")]
         public void EstimizeReleaseReaderTest()
         {
