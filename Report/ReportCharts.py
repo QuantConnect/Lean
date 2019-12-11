@@ -418,8 +418,6 @@ class ReportCharts:
             plt.close('all')
             return base64
 
-        #df, _, __ = self.GetDrawdownPlot(list(data), list(live_data))
-
         time = list(data[0]) + list(live_data[0])
         drawdown = list(data[1]) + list(live_data[1])
 
@@ -430,8 +428,8 @@ class ReportCharts:
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
 
         # Backtest
-        ax.plot(time, drawdown, color=gray, zorder=2)
-        ax.fill_between(time, drawdown, 0, color=gray, zorder=3)
+        #ax.plot(time, drawdown, color=gray, zorder=2)
+        ax.fill_between(time, drawdown, 0, color=gray, zorder=3, step='post')
 
         for index, values in enumerate(worst):
             start = values['Begin']
@@ -451,10 +449,8 @@ class ReportCharts:
         live_time = live_data[0]
         live_drawdown = live_data[1]
 
-        # No need to draw the live mode stuff since we've already taken care of it
-
-        #ax.plot(live_time[:min(len(live_drawdown), len(live_time))], live_drawdown, color = gray, zorder = 2)
-        #ax.fill_between(live_time[:min(len(live_drawdown), len(live_time))], live_drawdown, 0, color = gray, zorder = 3)
+        # No need to draw the live mode stuff since we've already taken care of it.
+        # We're just after the Live trading dotted plot in case it exists
 
         plt.axvline(live_time[0], 0, 0.95, ls='dotted', color='red', zorder=4) if len(live_time) > 0 else None
         plt.text(live_time[0], min(min(drawdown), min(live_drawdown)) * 0.75, "Live Trading", rotation=90, zorder=4, fontsize=7) if len(live_time) > 0 else None
@@ -680,6 +676,7 @@ class ReportCharts:
 
     def GetLeverage(self, data = [[],[]], live_data = [[],[]], name = "leverage.png",width = 11.5,
                         height = 2.5, backtest_color = "#71c3fc", live_color = "#ff9914",):
+        
         if len(data[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
@@ -689,20 +686,23 @@ class ReportCharts:
             plt.close('all')
             return base64
 
+        labels = ['Backtest']
+
         plt.figure()
         ax = plt.gca()
         fig = ax.get_figure()
 
         # Backtest
-        ax.plot(data[0], data[1], color = backtest_color, alpha = 0.75)
-        ax.fill_between(data[0], 0, data[1], color = backtest_color, alpha = 0.75)
+        ax.fill_between(data[0], 0, data[1], color = backtest_color, alpha = 0.75, step='post')
 
         # Live
-        ax.plot(live_data[0], live_data[1], color = live_color, alpha = 0.75)
-        ax.fill_between(live_data[0], 0, live_data[1], color=live_color, alpha=0.75, step = 'pre')
+        if len(live_data[0]) != 0:
+            labels.append('Live')
+
+        ax.fill_between(live_data[0], 0, live_data[1], color=live_color, alpha=0.75, step = 'post')
 
         rectangles = [plt.Rectangle((0, 0), 1, 1, fc=backtest_color), plt.Rectangle((0, 0), 1, 1, fc=live_color)]
-        ax.legend(rectangles, [label for label in ['Backtest', "Live"]], handlelength=0.8, handleheight=0.8,
+        ax.legend(rectangles, [label for label in labels], handlelength=0.8, handleheight=0.8,
                   frameon=False, fontsize=8)
         ax.set_xticklabels(ax.get_xticklabels(), rotation=0, ha='center')
         ax.tick_params(axis='both', labelsize=8, labelrotation=0)
@@ -744,16 +744,53 @@ class ReportCharts:
 
         ax = plt.gca()
 
+        # Create step plot for the stackplot by adding a value
+        # right before the next data point with the same previous value
+        time_copy = []
+        long_data_copy = []
+        short_data_copy = []
+        j = 0
+        for time_idx, longs, shorts in zip(time, long_data, short_data):
+            long_data_copy.append([])
+            short_data_copy.append([])
+            
+            long_len = len(longs)
+
+            for i in range(1, long_len + 1):
+                if i == long_len :
+                    time_copy.append(time[i - 1])
+                    long_data_copy[j].append(longs[i - 1])
+                    short_data_copy[j].append(shorts[i - 1])
+
+                else:
+                    time_copy.append(time[i - 1])
+                    time_copy.append(time[i])
+                    long_data_copy[j].append(longs[i - 1])
+                    long_data_copy[j].append(longs[i - 1])
+                    short_data_copy[j].append(shorts[i - 1])
+                    short_data_copy[j].append(shorts[i - 1])
+
+            j += 1
+
+        if len([x for x in long_data]) == 0:
+            long_data = [[]]
+        if len([x for x in short_data]) == 0:
+            short_data = [[]]
+        if len([x for x in live_long_data]) == 0:
+            live_long_data = [[]]
+        if len([x for x in live_short_data]) == 0:
+            live_short_data = [[]]
+
         # No need to check if live is empty or not, this will handle it, just needs to plot whichever has the longer time index first
         if max([len(x) for x in long_data]) > max([len(x) for x in short_data]):
-            ax.stackplot(time[:max([len(x) for x in long_data])], np.vstack(long_data),
+            ax.stackplot(time_copy[:max([len(x) for x in long_data_copy])], np.vstack(long_data_copy),
                          color = [color_map[security] for security in long_securities], alpha = 0.75)
-            ax.stackplot(time[:max([len(x) for x in short_data])], np.vstack(short_data),
+            ax.stackplot(time_copy[:max([len(x) for x in short_data_copy])], np.vstack(short_data_copy),
                          color=[color_map[security] for security in short_securities], alpha=0.75)
         else:
-            ax.stackplot(time[:max([len(x) for x in short_data])], np.vstack(short_data),
+            ax.stackplot(time_copy[:max([len(x) for x in short_data_copy])], np.vstack(short_data_copy),
                          color=[color_map[security] for security in short_securities], alpha=0.75)
-            ax.stackplot(time[:max([len(x) for x in long_data])], np.vstack(long_data),
+            ax.stackplot(time_copy[:max([len(x) for x in long_data_copy])], np.vstack(long_data_copy),
                          color=[color_map[security] for security in long_securities], alpha=0.75)
 
         if max([len(x) for x in live_long_data]) > max([len(x) for x in live_short_data]):

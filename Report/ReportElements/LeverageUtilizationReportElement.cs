@@ -14,9 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Deedle;
 using Python.Runtime;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
@@ -48,9 +50,10 @@ namespace QuantConnect.Report.ReportElements
         {
             var backtestPoints = Calculations.EquityPoints(_backtest);
             var livePoints = Calculations.EquityPoints(_live);
+            var liveOrders = _live == null ? new List<Order>() : _live.Orders.Values.ToList();
 
-            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values).LeverageUtilization(_backtest.Orders.Values).DropMissing();
-            var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values).LeverageUtilization(_live.Orders.Values).DropMissing();
+            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values).LeverageUtilization(_backtest.Orders.Values.ToList()).FillMissing(Direction.Forward);
+            var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values).LeverageUtilization(liveOrders).FillMissing(Direction.Forward);
 
             var base64 = "";
             using (Py.GIL())

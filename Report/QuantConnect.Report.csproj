@@ -126,10 +126,13 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Calculations.cs" />
+    <Compile Include="PointInTimePortfolio.cs" />
+    <Compile Include="PortfolioLooper.cs" />
     <Compile Include="CrisisEvent.cs" />
     <Compile Include="Crisis.cs" />
     <Compile Include="DrawdownCollection.cs" />
     <Compile Include="DrawdownPeriod.cs" />
+    <Compile Include="ReportElements\ExposureReportElement.cs" />
     <Compile Include="ReportElements\LeverageUtilizationReportElement.cs" />
     <Compile Include="ReportElements\RollingSharpeReportElement.cs" />
     <Compile Include="ReportElements\RollingPortfolioBetaReportElement.cs" />
@@ -173,6 +176,18 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj">
+      <Project>{3240ACA4-BDD4-4D24-AC36-BBB651C39212}</Project>
+      <Name>QuantConnect.Algorithm</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Api\QuantConnect.Api.csproj">
+      <Project>{c5d44209-49a0-4505-a870-043c5ef5fddf}</Project>
+      <Name>QuantConnect.Api</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Brokerages\QuantConnect.Brokerages.csproj">
+      <Project>{2D3E13CF-2D14-4180-A42D-F0A13AF0ADE2}</Project>
+      <Name>QuantConnect.Brokerages</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Common\QuantConnect.csproj">
       <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
       <Name>QuantConnect</Name>
@@ -181,9 +196,17 @@
       <Project>{0aeb4ea3-28c8-476e-89fd-926f06590b4c}</Project>
       <Name>QuantConnect.Configuration</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.csproj">
+      <Project>{12156F46-D07E-4E3D-AD2B-7409E82AB62F}</Project>
+      <Name>QuantConnect.Lean.Engine</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
       <Project>{01911409-86BE-4E7D-9947-DF714138610D}</Project>
       <Name>QuantConnect.Logging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Messaging\QuantConnect.Messaging.csproj">
+      <Project>{f2e90e2d-ba25-40e2-b39a-0ba31e68f7f8}</Project>
+      <Name>QuantConnect.Messaging</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

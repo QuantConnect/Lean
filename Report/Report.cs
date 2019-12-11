@@ -65,6 +65,7 @@ namespace QuantConnect.Report
                 new RollingPortfolioBetaReportElement("rolling beta to equities plot", ReportKey.RollingBeta, backtest, live),
                 new RollingSharpeReportElement("rolling sharpe ratio plot", ReportKey.RollingSharpe, backtest, live),
                 new LeverageUtilizationReportElement("leverage plot", ReportKey.LeverageUtilization, backtest, live),
+                new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live),
 
                 // Array of Crisis Plots:
                 new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live)

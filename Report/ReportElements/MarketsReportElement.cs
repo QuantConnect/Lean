@@ -14,7 +14,9 @@
 */
 using MoreLinq;
 using System.Linq;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
+using System.Collections.Generic;
 
 namespace QuantConnect.Report.ReportElements
 {
@@ -43,7 +45,8 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var orders = _backtest.Orders.Values.Union(_live.Orders.Values);
+            var liveOrders = _live == null ? new List<Order>() : _live.Orders.Values.ToList();
+            var orders = _backtest.Orders.Values.Union(liveOrders);
 
             var securityTypes = orders.DistinctBy(o => o.SecurityType).Select(s => s.SecurityType.ToString()).ToList();
 

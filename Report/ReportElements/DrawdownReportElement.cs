@@ -14,8 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Deedle;
 using Python.Runtime;
@@ -52,22 +50,19 @@ namespace QuantConnect.Report.ReportElements
             var backtestPoints = Calculations.EquityPoints(_backtest);
             var livePoints = Calculations.EquityPoints(_live);
 
-            var points = backtestPoints.Concat(livePoints.Where(kvp => !backtestPoints.Keys.Contains(kvp.Key))).ToList();
-
-            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values);
             var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values);
-            var series = new Series<DateTime, double>(points.Select(x => x.Key), points.Select(x => x.Value));
+            var strategySeries = DrawdownCollection.NormalizeResults(_backtest, _live);
 
-            var backtestUnderwaterPlot = DrawdownCollection.GetUnderwater(backtestSeries);
-            var liveUnderwaterPlot = DrawdownCollection.GetUnderwater(liveSeries);
+            var seriesUnderwaterPlot = DrawdownCollection.GetUnderwater(strategySeries).DropMissing();
+            var liveUnderwaterPlot = seriesUnderwaterPlot.After(backtestPoints.Last().Key);
             var drawdownCollection = DrawdownCollection.FromResult(_backtest, _live, periods: 5);
 
             var base64 = "";
             using (Py.GIL())
             {
                 var backtestList = new PyList();
-                backtestList.Append(backtestUnderwaterPlot.Keys.ToList().ToPython());
-                backtestList.Append(backtestUnderwaterPlot.Values.ToList().ToPython());
+                backtestList.Append(seriesUnderwaterPlot.Before(liveUnderwaterPlot.FirstKey()).Keys.ToList().ToPython());
+                backtestList.Append(seriesUnderwaterPlot.Before(liveUnderwaterPlot.FirstKey()).Values.ToList().ToPython());
 
                 var liveList = new PyList();
                 liveList.Append(liveUnderwaterPlot.Keys.ToList().ToPython());

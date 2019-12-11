@@ -13,7 +13,9 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
@@ -43,7 +45,8 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var orders = _backtest.Orders.Values.Union(_live.Orders.Values);
+            var liveOrders = _live == null ? new List<Order>() : _live.Orders.Values.ToList();
+            var orders = _backtest.Orders.Values.Union(liveOrders);
 
             var equity = Calculations.EquityPoints(_backtest).Select(x => x.Value);
 

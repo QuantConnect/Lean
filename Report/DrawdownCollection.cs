@@ -60,13 +60,15 @@ namespace QuantConnect.Report
         /// <summary>
         /// Creates an instance from the given drawdowns and the top N worst drawdowns
         /// </summary>
-        /// <param name="drawdowns">Drawdown groups</param>
+        /// <param name="strategySeries">Equity curve with both live and backtesting merged</param>
         /// <param name="periods">Periods this collection contains</param>
-        public DrawdownCollection(List<DrawdownPeriod> drawdowns, int periods)
+        public DrawdownCollection(Series<DateTime, double> strategySeries, int periods)
         {
+            var drawdowns = GetDrawdownPeriods(strategySeries, periods).ToList();
+
             Periods = periods;
-            Start = drawdowns.Select(x => x.Start).Min();
-            End = drawdowns.Select(x => x.End).Max();
+            Start = strategySeries.FirstKey();
+            End = strategySeries.LastKey();
             Drawdowns = drawdowns.OrderByDescending(x => x.PeakToTrough)
                 .Take(Periods)
                 .ToList();
@@ -81,6 +83,17 @@ namespace QuantConnect.Report
         /// <returns>DrawdownCollection instance</returns>
         public static DrawdownCollection FromResult(BacktestResult backtestResult = null, LiveResult liveResult = null, int periods = 5)
         {
+            return new DrawdownCollection(NormalizeResults(backtestResult, liveResult), periods);
+        }
+
+        /// <summary>
+        /// Normalizes the Series used to calculate the drawdown plots and charts
+        /// </summary>
+        /// <param name="backtestResult"></param>
+        /// <param name="liveResult"></param>
+        /// <returns></returns>
+        public static Series<DateTime, double> NormalizeResults(BacktestResult backtestResult, LiveResult liveResult)
+        {
             if (backtestResult == null && liveResult == null)
             {
                 throw new ArgumentException("backtestResult and liveResult can not be null at the same time");
@@ -88,20 +101,32 @@ namespace QuantConnect.Report
 
             var backtestPoints = Calculations.EquityPoints(backtestResult);
             var livePoints = Calculations.EquityPoints(liveResult);
+            var startingEquity = backtestPoints.First().Value;
 
-            // Cache the last point for performance
-            var lastBacktestPoint = backtestPoints.Last().Value;
+            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values)
+                .PercentChange()
+                .Where(kvp => kvp.Value != 0)
+                .CumulativeSum();
 
-            var points = backtestPoints.Concat(
-                livePoints
-                    .Where(kvp => !backtestPoints.ContainsKey(kvp.Key))
-                    .Select(kvp => new KeyValuePair<DateTime, double>(kvp.Key, kvp.Value + lastBacktestPoint))
-                )
-                .ToList();
+            var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values)
+                .PercentChange()
+                .CumulativeSum();
 
-            var strategySeries = new Series<DateTime, double>(points.Select(x => x.Key), points.Select(x => x.Value));
+            var firstLiveKey = liveSeries.FirstKey();
+            // Add the final non-overlapping point of the backtest equity curve to the entire live series to keep continuity.
+            liveSeries = liveSeries + backtestSeries.Where(kvp => kvp.Key < firstLiveKey).LastValue();
 
-            return new DrawdownCollection(GetDrawdownPeriods(strategySeries, periods).ToList(), periods);
+            // Prefer the live values as we don't care about backtest once we've deployed into live.
+            // All in all, this is a normalized equity curve, though it's been normalized
+            // so that there are no discontinuous jumps in equity value if we only used equity cash
+            // to add the last value of the backtest series to the live series.
+            return backtestSeries.Merge(liveSeries, UnionBehavior.PreferRight)
+                .FillMissing(Direction.Forward)
+                .DropMissing()
+                .Diff(1)
+                .SelectValues(x => x + 1)
+                .CumulativeProduct()
+                .SelectValues(x => x * startingEquity);
         }
 
         /// <summary>
@@ -112,6 +137,11 @@ namespace QuantConnect.Report
         /// <returns></returns>
         public static Series<DateTime, double> GetUnderwater(Series<DateTime, double> curve)
         {
+            if (curve.IsEmpty)
+            {
+                return curve;
+            }
+
             var returns = curve / curve.FirstValue();
             var cumulativeMax = Calculations.CumulativeMax(returns);
 
@@ -159,7 +189,6 @@ namespace QuantConnect.Report
 
             foreach (var group in groups.Values)
             {
-
                 var firstDate = group.SortByKey().FirstKey();
                 var lastDate = group.SortByKey().LastKey();
 
@@ -219,11 +248,14 @@ namespace QuantConnect.Report
 
         private static Tuple<DateTime, DateTime, double> DrawdownGroup(Frame<DateTime, string> frame, double groupMax)
         {
+            var drawdownAfter = frame["cumulativeMax"].Where(kvp => kvp.Value > groupMax);
             var drawdownGroup = frame["cumulativeMax"].Where(kvp => kvp.Value == groupMax);
-            var groupDrawdown = frame["drawdown"].Where(kvp => drawdownGroup.Keys.Contains(kvp.Key)).Max();
+            var groupDrawdown = frame["drawdown"].Realign(drawdownGroup.Keys).Max();//Where(kvp => drawdownGroup.Keys.Contains(kvp.Key)).Max();
 
             var groupStart = drawdownGroup.FirstKey();
-            var groupEnd = drawdownGroup.LastKey();
+            // Get the start of the next period if it exists. That is when the drawdown period has officially ended.
+            // We do this to extend the drawdown period enough so that missing values don't stop it early.
+            var groupEnd = drawdownAfter.IsEmpty ? drawdownGroup.LastKey() : drawdownAfter.FirstKey();
 
             return new Tuple<DateTime, DateTime, double>(groupStart, groupEnd, groupDrawdown);
         }

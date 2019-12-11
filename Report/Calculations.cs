@@ -15,12 +15,28 @@
 
 using Deedle;
 using MathNet.Numerics.Statistics;
+using QuantConnect;
+using QuantConnect.Algorithm;
+using QuantConnect.Brokerages.Backtesting;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine;
+using QuantConnect.Lean.Engine.Alpha;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.RealTime;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.Server;
+using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Logging;
+using QuantConnect.Orders;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuantConnect.Report
@@ -50,6 +66,25 @@ namespace QuantConnect.Report
             });
         }
 
+        /// <summary>
+        /// Calculates the cumulative product of the series. This is equal to the python pandas method: `df.cumprod()`
+        /// </summary>
+        /// <param name="input">Input series</param>
+        /// <returns>Cumulative product</returns>
+        public static Series<DateTime, double> CumulativeProduct(this Series<DateTime, double> input)
+        {
+            var cumulativeProducts = new List<double>();
+            var prev = 1.0;
+
+            return input.SelectValues(current =>
+            {
+                var product = prev * current;
+                cumulativeProducts.Add(product);
+                prev = product;
+
+                return product;
+            });
+        }
 
         /// <summary>
         /// Calculates the cumulative max of the series. This is equal to the python pandas method: `df.cummax()`.
@@ -91,7 +126,7 @@ namespace QuantConnect.Report
 
                 outputDates.Add(input.Index.KeyAt(i));
 
-                if (previous == 0.0)
+                if (previous == 0.0 || double.IsNegativeInfinity(previous))
                 {
                     outputValues.Add(double.NaN);
                     continue;
@@ -106,13 +141,13 @@ namespace QuantConnect.Report
         /// <summary>
         /// Calculate the rolling beta with the given window size (in days)
         /// </summary>
-        /// <param name="series">The series you want to measure beta for</param>
+        /// <param name="equityCurve">The equity curve you want to measure beta for</param>
         /// <param name="benchmarkSeries">The benchmark/series you want to calculate beta with</param>
         /// <param name="windowSize">Days/window to lookback</param>
         /// <returns>Rolling beta</returns>
-        public static Series<DateTime, double> RollingBeta(this Series<DateTime, double> series, Series<DateTime, double> benchmarkSeries, int windowSize = 132)
+        public static Series<DateTime, double> RollingBeta(this Series<DateTime, double> equityCurve, Series<DateTime, double> benchmarkSeries, int windowSize = 132)
         {
-            var dailyReturnsSeries = series.PercentChange().ResampleEquivalence(date => date.Date, s => s.Sum());
+            var dailyReturnsSeries = equityCurve.PercentChange().ResampleEquivalence(date => date.Date, s => s.Sum());
             var benchmarkReturns = benchmarkSeries.PercentChange().ResampleEquivalence(date => date.Date, s => s.Sum());
 
             var returns = Frame.CreateEmpty<DateTime, string>();
@@ -132,17 +167,22 @@ namespace QuantConnect.Report
         /// <summary>
         /// Get the rolling sharpe of the given series with a lookback of <paramref name="months"/>. The risk free rate is adjustable
         /// </summary>
-        /// <param name="series">Series to calculate rolling sharpe for</param>
+        /// <param name="equityCurve">Equity curve to calculate rolling sharpe for</param>
         /// <param name="months">Number of months to calculate the rolling period for</param>
         /// <param name="riskFreeRate">Risk free rate</param>
         /// <returns>Rolling sharpe ratio</returns>
-        public static Series<DateTime, double> RollingSharpe(this Series<DateTime, double> series, int months, double riskFreeRate = 0.0)
+        public static Series<DateTime, double> RollingSharpe(this Series<DateTime, double> equityCurve, int months, double riskFreeRate = 0.0)
         {
-            var dailyReturns = series.PercentChange().ResampleEquivalence(date => date.Date, s => s.Sum());
-            var rollingSharpeData = new List<KeyValuePair<DateTime, double>>();
-            var firstDate = series.FirstKey();
+            if (equityCurve.IsEmpty)
+            {
+                return equityCurve;
+            }
 
-            foreach (var date in series.Keys)
+            var dailyReturns = equityCurve.PercentChange().ResampleEquivalence(date => date.Date, s => s.Sum());
+            var rollingSharpeData = new List<KeyValuePair<DateTime, double>>();
+            var firstDate = equityCurve.FirstKey();
+
+            foreach (var date in equityCurve.Keys)
             {
                 var nMonthsAgo = date.AddMonths(-months);
                 if (nMonthsAgo < firstDate)
@@ -164,58 +204,157 @@ namespace QuantConnect.Report
 
         /// <summary>
         /// Calculates the leverage used from trades. The series used to call this extension function should
-        /// be the equity curve with the associated <see cref="Orders.Order"/> objects that go along with it.
+        /// be the equity curve with the associated <see cref="Order"/> objects that go along with it.
         /// </summary>
-        /// <param name="series"></param>
-        /// <param name="result"></param>
+        /// <param name="equityCurve">Equity curve series</param>
+        /// <param name="orders">Orders associated with the equity curve</param>
         /// <returns></returns>
-        public static Series<DateTime, double> LeverageUtilization(this Series<DateTime, double> series, IEnumerable<Orders.Order> orders)
+        public static Series<DateTime, double> LeverageUtilization(this Series<DateTime, double> equityCurve, List<Order> orders)
         {
-            var holdings = new List<KeyValuePair<DateTime, double>>();
-
-            var timeKeeper = new TimeKeeper(series.FirstKey(), TimeZones.Utc);
-            var securityManager = new SecurityManager(timeKeeper);
-            var securityTransactionManager = new SecurityTransactionManager((IAlgorithm)null, securityManager);
-            var portfolioManager = new SecurityPortfolioManager(securityManager, securityTransactionManager);
-            var cash = new Cash("USD", (decimal)series.FirstValue(), 1m);
-
-            var startingCash = series.FirstValue();
-            portfolioManager.SetCash((decimal)startingCash);
-
-            foreach (var order in orders)
+            if (equityCurve.IsEmpty)
             {
-                var orderSecurity = new Security(
-                    order.Symbol,
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                    new Cash("USD", 0, 1m),
-                    SymbolProperties.GetDefault("USD"),
-                    new IdentityCurrencyConverter("USD"),
-                    new RegisteredSecurityDataTypesProvider(),
-                    new SecurityCache());
-
-                orderSecurity.SetMarketPrice(new Tick { Quantity = order.Quantity, AskPrice = order.Price, BidPrice = order.Price, Value = order.Price });
-
-                // We need to add the security to the portfolio before we can do anything with it
-                portfolioManager.Securities.Add(order.Symbol, orderSecurity);
-
-                // If we fill with the quantity provided, TotalPortfolioValue doesn't return the proper results
-                var orderEvent = new Orders.OrderEvent(order, order.Time, Orders.Fees.OrderFee.Zero) { FillPrice = order.Price, FillQuantity = order.Quantity };
-
-                portfolioManager.ProcessFill(orderEvent);
-                timeKeeper.SetUtcDateTime(order.Time);
-
-                holdings.Add(new KeyValuePair<DateTime, double>(order.Time, (double)portfolioManager.TotalPortfolioValue));
+                return equityCurve;
             }
 
-            // Get the last value for a given time to get the final holdings value
-            var holdingsGroup = holdings.GroupBy(x => x.Key).Select(x => new KeyValuePair<DateTime, double>(x.Key, x.Select(y => y.Value).Last()));
-            var holdingsSeries = new Series<DateTime, double>(holdingsGroup);
+            var ordersTime = orders.Select(x => x.Time).Distinct().ToList();
+            var equityIndex = Frame.CreateEmpty<DateTime, string>()
+                .Join("equity", equityCurve)
+                .Join("index", new Series<DateTime, double>(ordersTime, ordersTime.Select(x => 0.0)))
+                .FillMissing(Direction.Forward)["equity"]
+                .DropMissing();
 
-            var frame = Frame.CreateEmpty<DateTime, string>();
-            frame["equity"] = series;
-            frame = frame.Join("holdings", holdingsSeries).FillMissing(Direction.Forward).DropSparseRows();
+            var curve = equityCurve.Keys.Zip(equityCurve.Values, (first, second) => new KeyValuePair<DateTime, double>(first, second)).ToList();
 
-            return frame["holdings"] / frame["equity"];
+            return new Series<DateTime, double>(
+                new PortfolioLooper(curve, orders).ProcessOrders(orders)
+                    .ToList() // Required because for some reason our AbsoluteHoldingsValue is multiplied by two whenever we GroupBy on the raw IEnumerable
+                    .GroupBy(portfolio => portfolio.Time)
+                    .Select(group => new KeyValuePair<DateTime, double>(
+                         group.Key,
+                         group.Last().Holdings.Select(holdings => (double)holdings.AbsoluteHoldingsValue).Sum() / equityIndex[group.Key]
+                    ))
+                )
+                .FillMissing(Direction.Forward)
+                .DropMissing();
+        }
+
+        public static Frame<DateTime, Tuple<SecurityType, OrderDirection>> Exposure(this Series<DateTime, double> equityCurve, List<Order> orders, OrderDirection direction)
+        {
+            if (equityCurve.IsEmpty)
+            {
+                return Frame.CreateEmpty<DateTime, Tuple<SecurityType, OrderDirection>>();
+            }
+
+            var ordersTime = orders.Select(x => x.Time).Distinct().ToList();
+            var equityIndex = Frame.CreateEmpty<DateTime, string>()
+                .Join("equity", equityCurve)
+                .Join("index", new Series<DateTime, double>(ordersTime, ordersTime.Select(x => 0.0)))
+                .FillMissing(Direction.Forward)["equity"]
+                .DropMissing();
+
+            var holdingsByAssetClass = new Dictionary<SecurityType, List<KeyValuePair<DateTime, double>>>();
+            var multiplier = direction == OrderDirection.Sell ? -1 : 1;
+            var curve = equityCurve.Keys.Zip(equityCurve.Values, (first, second) => new KeyValuePair<DateTime, double>(first, second)).ToList();
+            var portfolioLooper = new PortfolioLooper(curve, orders);
+
+            foreach (var portfolio in portfolioLooper.ProcessOrders(orders))
+            {
+                List<KeyValuePair<DateTime, double>> holdings;
+                if (!holdingsByAssetClass.TryGetValue(portfolio.Order.SecurityType, out holdings))
+                {
+                    holdings = new List<KeyValuePair<DateTime, double>>();
+                    holdingsByAssetClass[portfolio.Order.SecurityType] = holdings;
+                }
+
+                var assets = portfolio.Holdings
+                   .Where(pointInTimeHoldings => pointInTimeHoldings.Symbol.SecurityType == portfolio.Order.SecurityType)
+                   .ToList();
+
+                if (assets.Count > 0)
+                {
+                    var sum = (double)assets.Where(pointInTimeHoldings => multiplier * pointInTimeHoldings.Quantity > 0)
+                       .Select(pointInTimeHoldings => pointInTimeHoldings.AbsoluteHoldingsValue)
+                       .Sum();
+
+                    holdings.Add(new KeyValuePair<DateTime, double>(portfolio.Time, sum / equityIndex[portfolio.Time]));
+                }
+            }
+
+            var frame = Frame.CreateEmpty<DateTime, Tuple<SecurityType, OrderDirection>>();
+
+            foreach (var kvp in holdingsByAssetClass)
+            {
+                // Skip Base asset class since we need it as a special value
+                // (and it can't be traded on either way)
+                if (kvp.Key == SecurityType.Base)
+                {
+                    continue;
+                }
+
+                // Select the last entry of a given time to get accurate results of the portfolio's actual value
+                frame = frame.Join(
+                    new Tuple<SecurityType, OrderDirection>(kvp.Key, direction),
+                    new Series<DateTime, double>(kvp.Value.GroupBy(x => x.Key).Select(x => x.Last()))
+                );
+            }
+
+            // Equivalent to `pd.fillna(method='ffill').dropna(axis=1, how='all').dropna(how='all')`
+            // First drops any missing SecurityTypes, then drops the rows with missing values
+            // to get rid of any empty data prior to the first value.
+            return frame.FillMissing(Direction.Forward)
+                .DropSparseColumnsAll()
+                .DropSparseRowsAll();
+        }
+
+        /// <summary>
+        /// Drops sparse columns only if every value is `missing` in the column
+        /// </summary>
+        /// <typeparam name="TRowKey">Frame row key</typeparam>
+        /// <typeparam name="TColumnKey">Frame column key</typeparam>
+        /// <param name="frame">Data Frame</param>
+        /// <returns>new Frame with sparse columns dropped</returns>
+        /// <remarks>Equivalent to `pd.dropna(axis=1, how='all')`</remarks>
+        public static Frame<TRowKey, TColumnKey> DropSparseColumnsAll<TRowKey, TColumnKey>(this Frame<TRowKey, TColumnKey> frame)
+        {
+            var newFrame = frame.Clone();
+
+            foreach (var key in frame.ColumnKeys)
+            {
+                if (newFrame[key].DropMissing().ValueCount == 0)
+                {
+                    newFrame.DropColumn(key);
+                }
+            }
+
+            return newFrame;
+        }
+
+        /// <summary>
+        /// Drops sparse rows if and only if every value is `missing` in the Frame
+        /// </summary>
+        /// <typeparam name="TRowKey">Frame row key</typeparam>
+        /// <typeparam name="TColumnKey">Frame column key</typeparam>
+        /// <param name="frame">Data Frame</param>
+        /// <returns>new Frame with sparse rows dropped</returns>
+        /// <remarks>Equivalent to `pd.dropna(how='all')`</remarks>
+        public static Frame<TRowKey, TColumnKey> DropSparseRowsAll<TRowKey, TColumnKey>(this Frame<TRowKey, TColumnKey> frame)
+        {
+            if (frame.ColumnKeys.Count() == 0)
+            {
+                return Frame.CreateEmpty<TRowKey, TColumnKey>();
+            }
+
+            var newFrame = frame.Clone().Transpose();
+
+            foreach (var key in frame.RowKeys)
+            {
+                if (newFrame[key].DropMissing().ValueCount == 0)
+                {
+                    newFrame.DropColumn(key);
+                }
+            }
+
+            return newFrame.Transpose();
         }
 
         /// <summary>
