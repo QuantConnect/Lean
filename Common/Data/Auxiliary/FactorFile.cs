@@ -318,13 +318,7 @@ namespace QuantConnect.Data.Auxiliary
             var splitsAndDividends = GetSplitsAndDividends(data[0].Symbol, exchangeHours);
 
             var combinedData = splitsAndDividends.Concat(data)
-                .DistinctBy(e =>
-                    {
-                        var asSplit = e as Split;
-                        var eventType = asSplit == null ? "Dividend" : "Split";
-                        return $"{e.Symbol.ID}{eventType}{e.Time.ToStringInvariant(DateFormat.EightCharacter)}{e.Value.SmartRounding().Normalize()}";
-                    }
-                )
+                .DistinctBy(e => $"{e.GetType().Name}{e.Time.ToStringInvariant(DateFormat.EightCharacter)}")
                 .OrderByDescending(d => d.Time.Date);
 
             foreach (var datum in combinedData)
