@@ -30,6 +30,7 @@ matplotlib.use('Agg')
 font = {'family': 'DejaVu Sans'}
 matplotlib.rc('font',**font)
 matplotlib.rc('axes', edgecolor='#d5d5d5')
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.colors as mcolors
@@ -77,6 +78,9 @@ class ReportCharts:
                         ax[i].axvline(x=np.median(live_returns_per_trade), color="red", ls="dashed", label="median",
                                       linewidth=0.5)
                     ax[i].tick_params(labelsize=8)
+                    ax[i].tick_params(axis='x', color='#d5d5d5')
+                    ax[i].tick_params(axis='y', color='#d5d5d5')
+                    plt.setp(ax[i].spines.values(), color='#d5d5d5')
                     ax[i].spines['right'].set_visible(False)
                     ax[i].spines['top'].set_visible(False)
         else:
@@ -86,6 +90,8 @@ class ReportCharts:
             plt.yticks(fontsize=8)
             plt.gca().spines['right'].set_visible(False)
             plt.gca().spines['top'].set_visible(False)
+            plt.gca().tick_params(axis='x', color='#d5d5d5')
+            plt.gca().tick_params(axis='y', color='#d5d5d5')
             plt.gca().axvline(x=np.median(returns_per_trade), color="red", ls="dashed", label="median", linewidth=0.5)
             plt.ylabel('')
 
@@ -244,7 +250,7 @@ class ReportCharts:
         #ax.set_yticks(fontsize = 8)
         ax.set_ylabel("")
         ax.set_xlabel("")
-        ax.set_xticklabels(['{0:g}%'.format(i) for i in ax.get_xticks()])
+        ax.set_yticklabels(['{:.2f}%'.format(i) for i in ax.get_yticks()])
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
         plt.axhline(y = 0, color = '#d5d5d5')
         plt.setp(ax.spines.values(), color='#d5d5d5')
@@ -284,35 +290,24 @@ class ReportCharts:
         # Make data frame
         returns = pd.DataFrame(returns, index = months).transpose()
 
-        def make_colormap(seq):
-            seq = [(None,) * 3, 0.0] + list(seq) + [1.0, (None,) * 3]
-            cdict = {'red': [], 'green': [], 'blue': []}
-            for i, item in enumerate(seq):
-                if isinstance(item, float):
-                    r1, g1, b1 = seq[i - 1]
-                    r2, g2, b2 = seq[i + 1]
-                    cdict['red'].append([item, r1, r2])
-                    cdict['green'].append([item, g1, g2])
-                    cdict['blue'].append([item, b1, b2])
-            return mcolors.LinearSegmentedColormap('CustomMap', cdict)
-
         c = mcolors.ColorConverter().to_rgb
-        c_map = make_colormap([c('#CC0000'), 0.1, c('#FF0000'), 0.2, c('#FF3333'),
-                               0.3, c('#FF9933'), 0.4, c('#FFFF66'), 0.5, c('#FFFF99'),
-                               0.6, c('#B2FF66'), 0.7, c('#99FF33'), 0.8,
-                               c('#00FF00'), 0.9, c('#00CC00')])
+        colors = [c('#CC0000'), c('#FF0000'), c('#FF3333'),
+                  c('#FF9933'), c('#FFFF66'), c('#FFFF99'),
+                  c('#B2FF66'), c('#99FF33'),
+                  c('#00FF00'), c('#00CC00')]
+
+        abs_cmap = matplotlib.colors.LinearSegmentedColormap.from_list('monthly_returns', colors)
+        norm = plt.Normalize(-10, 10)
 
         if len(live_returns) > 0:
             live_returns = pd.DataFrame(live_returns, index=months).transpose()
-            liveC = mcolors.ColorConverter().to_rgb
-            live_c_map = make_colormap([liveC('#CC0000'), 0.1, liveC('#FF0000'), 0.2, c('#FF3333'),
-                                        0.3, liveC('#FF9933'), 0.4, liveC('#FFFF66'), 0.5, liveC('#FFFF99'),
-                                        0.6, liveC('#B2FF66'), 0.7, liveC('#99FF33'), 0.8,
-                                        liveC('#00FF00'), 0.9, liveC('#00CC00')])
 
             fig, ax = plt.subplots(2, 1, gridspec_kw={'height_ratios': [6, 1]})
-            ax[0].matshow(returns, aspect='auto', cmap=c_map, interpolation='none', vmin=-10, vmax=10)
-            ax[1].matshow(live_returns, aspect='auto', cmap=live_c_map, interpolation='none')
+            #ax[0].matshow(returns, aspect='auto', cmap=c_map, interpolation='none', vmin=-10, vmax=10)
+            #ax[1].matshow(live_returns, aspect='auto', cmap=live_c_map, interpolation='none')
+            ax[0].matshow(returns, aspect='auto', cmap=abs_cmap, norm=norm, interpolation='none')
+            ax[1].matshow(live_returns, aspect='auto', cmap=abs_cmap, norm=norm, interpolation='none')
+
             ax[0].xaxis.set_major_locator(ticker.MaxNLocator(min(12, len(returns.columns))))
             ax[0].yaxis.set_major_locator(ticker.MaxNLocator(len(returns.index.values)))
             ax[0].set_yticklabels([''] + list(returns.index.values))
@@ -320,10 +315,8 @@ class ReportCharts:
             ax[0].tick_params(labelsize=8, bottom=True, labelbottom=True, top=False, labeltop=False)
             ax[0].set_ylabel('Backtest', rotation='vertical', fontweight='black')
             for (j, i), label in np.ndenumerate(returns):
-                if j == 0:
-                    ax[0].text(i, j + 0.1, round(label, 1), ha='center', va='top', fontsize=7)
-                elif j == (returns.shape[0] - 1):
-                    ax[0].text(i, j - 0.1, round(label, 1), ha='center', va='bottom', fontsize=7)
+                if np.isnan(label):
+                    ax[0].text(i, j, "", ha='center', va='center', fontsize=7)
                 else:
                     ax[0].text(i, j, round(label, 1), ha='center', va='center', fontsize=7)
 
@@ -334,13 +327,23 @@ class ReportCharts:
             ax[1].tick_params(labelsize=8, bottom=True, labelbottom=True, top=False, labeltop=False)
             ax[1].set_ylabel('Live', rotation='vertical', fontweight='black')
             for (j, i), label in np.ndenumerate(live_returns):
-                ax[1].text(i, j, round(label, 1), ha='center', va='center', fontsize=7)
+                if np.isnan(label):
+                    ax[1].text(i, j, "", ha='center', va='center', fontsize=7)   
+                else:
+                    ax[1].text(i, j, round(label, 1), ha='center', va='center', fontsize=7)
+
+            ax[0].tick_params(axis='x', color='#d5d5d5')
+            ax[0].tick_params(axis='y', color='#d5d5d5')
+            ax[1].tick_params(axis='x', color='#d5d5d5')
+            ax[1].tick_params(axis='y', color='#d5d5d5')
 
         else:
-            ax = plt.imshow(returns, aspect='auto', cmap=c_map, interpolation='none', vmin=-10, vmax=10)
+            ax = plt.imshow(returns, aspect='auto', cmap=abs_cmap, norm=norm, interpolation='none')
             fig = ax.get_figure()
             plt.xlabel('')
             plt.ylabel('')
+            plt.gca().tick_params(axis='x', color='#d5d5d5')
+            plt.gca().tick_params(axis='y', color='#d5d5d5')
             plt.yticks(range(len(returns.index.values)), returns.index.values, fontsize=8)
             plt.xticks(range(12), ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
             for (j, i), label in np.ndenumerate(returns):
@@ -358,6 +361,9 @@ class ReportCharts:
 
     def GetAnnualReturns(self, data = None, live_data = None, name = "annual-returns.png",width = 3.5*2, height = 2.5*2):
 
+        live_color = "#ff9914"
+        backtest_color = "#71c3fc"
+
         if data is None:
             data = [[], []]
         if live_data is None:
@@ -372,7 +378,7 @@ class ReportCharts:
             plt.close('all')
             return base64
 
-        # Cast to list since the data might come in numpy arrays
+        # Cast to list just in case
         time = list(data[0]) + list(live_data[0])
         returns = list(data[1]) + list(live_data[1])
 
@@ -380,9 +386,9 @@ class ReportCharts:
         ax = plt.gca()
         # Prevent value speculation on the y-axis ticks by
         # converting to string before plotting.
-        ax.barh([str(i) for i in time], returns, color = ["#428BCA"])
+        ax.barh([str(i) for i in time], returns, color = [backtest_color], zorder=1)
         # Add a percentage sign at the end of each x-axis tick
-        ax.set_xticklabels(["{0:g}%".format(i) for i in ax.get_xticks()])
+        ax.set_xticklabels(["{:.1f}%".format(i) for i in ax.get_xticks()])
 
         fig = ax.get_figure()
         plt.xticks(rotation=0, ha='center', fontsize=8)
@@ -392,6 +398,8 @@ class ReportCharts:
         plt.legend([vline], ["mean"], loc='upper right', frameon=False, fontsize=8)
         plt.setp(ax.spines.values(), color='#d5d5d5')
         plt.setp([ax.get_xticklines(), ax.get_yticklines()], color='#d5d5d5')
+        ax.grid(color='#d5d5d5', axis='x', linewidth=1, zorder=0)
+        ax.set_axisbelow(True)
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
         plt.xlabel("")
@@ -457,7 +465,7 @@ class ReportCharts:
 
         fig = ax.get_figure()
         plt.xticks(rotation=0, ha='center', fontsize=8)
-        plt.yticks(fontsize=8)
+        plt.yticks(ticks=[i for i in plt.yticks()[0] if i <= 0], labels=['{:.1f}%'.format(i * 100) for i in plt.yticks()[0] if i <= 0], fontsize=8)
         plt.ylabel("")
         plt.xlabel("")
         plt.axhline(y=0, color='#d5d5d5', zorder=1)
@@ -640,6 +648,8 @@ class ReportCharts:
             return base64
 
         symbols = [data[0], live_data[0]]
+
+        print(', '.join(symbols[0]))
         data = [data[1], live_data[1]]
         colors = ['#fce0bd', '#fcd6a7', '#fbcd92', '#fac37c', '#f8af53', '#f79b31', '#de8b2c', "#dde1e3"]
         pies = {}
@@ -658,7 +668,7 @@ class ReportCharts:
                 to_label.append(1 - sum(to_label))
                 symbols_to_use.append('Others')
 
-            labels = [f'{symbol}\n{value*100}%' for symbol, value in zip(symbols_to_use, to_label)]
+            labels = [f'{symbol}\n' + '{:.2f}%'.format(value * 100) for symbol, value in zip(symbols_to_use, to_label)]
 
             fig = plt.figure()
             plt.pie(to_label, colors = colors)
@@ -672,6 +682,7 @@ class ReportCharts:
             plt.cla()
             plt.clf()
             plt.close('all')
+
         return pies
 
     def GetLeverage(self, data = [[],[]], live_data = [[],[]], name = "leverage.png",width = 11.5,

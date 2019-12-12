@@ -13,8 +13,10 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Deedle;
 using Python.Runtime;
 using QuantConnect.Packets;
 
@@ -45,41 +47,48 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var result = new Dictionary<string, List<double>>();
-            var backtestReturns = Calculations.EquityReturns(Calculations.EquityPoints(_backtest));
+            var backtestPoints = Calculations.EquityPoints(_backtest);
+            var livePoints = Calculations.EquityPoints(_live);
 
-            var returnsByMonth = backtestReturns.Select(day => new {day.Key.Year, day.Key.Month, day.Value}).GroupBy(
-                y => new {y.Year, y.Month},
-                (key, group) => new
-                {
-                    Year = key.Year.ToString(),
-                    Month = key.Month,
-                    Returns = group.Sum(day => day.Value)
-                });
+            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values);
+            var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values);
 
-            foreach (var a in returnsByMonth)
-            {
-                if (!result.ContainsKey(a.Year))
-                {
-                    result.Add(a.Year, new List<double>());
-                }
-                result[a.Year].Add(a.Returns);
-            }
+            // Equivalent to python pandas line: `backtestSeries.resample('M').apply(lambda x: x.pct_change().sum())`
+            var backtestMonthlyReturns = backtestSeries.ResampleEquivalence(date => new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1))
+                .Select(kvp => kvp.Value.PercentChange().Sum());
+
+            var liveMonthlyReturns = liveSeries.ResampleEquivalence(date => new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1))
+                .Select(kvp => kvp.Value.PercentChange().Sum());
 
             var base64 = "";
             using (Py.GIL())
             {
-                var pyDict = new PyDict();
-                foreach (var kvp in result)
+                var backtestResults = new PyDict();
+                foreach (var kvp in backtestMonthlyReturns.GroupBy(kvp => kvp.Key.Year).GetObservations())
                 {
-                    var values = kvp.Value;
+                    var key = kvp.Key.ToStringInvariant();
+                    var values = (kvp.Value * 100).Values.ToList();
+
                     while (values.Count != 12)
                     {
                         values.Add(double.NaN);
                     }
-                    pyDict.SetItem(kvp.Key.ToPython(), values.ToPython());
+                    backtestResults.SetItem(key.ToPython(), values.ToPython());
                 }
-                base64 = Charting.GetMonthlyReturns(pyDict);
+
+                var liveResults = new PyDict();
+                foreach (var kvp in liveMonthlyReturns.GroupBy(kvp => kvp.Key.Year).GetObservations())
+                {
+                    var key = kvp.Key.ToStringInvariant();
+                    var values = (kvp.Value * 100).Values.ToList();
+                    while (values.Count != 12)
+                    {
+                        values.Add(double.NaN);
+                    }
+                    liveResults.SetItem(key.ToPython(), values.ToPython());
+                }
+
+                base64 = Charting.GetMonthlyReturns(backtestResults, liveResults);
             }
 
             return base64;

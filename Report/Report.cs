@@ -60,6 +60,7 @@ namespace QuantConnect.Report
                 new CumulativeReturnsReportElement("cumulative returns", ReportKey.CumulativeReturns, backtest, live),
                 new AnnualReturnsReportElement("annual returns", ReportKey.AnnualReturns, backtest, live),
                 new ReturnsPerTradeReportElement("returns per trade", ReportKey.ReturnsPerTrade, backtest, live),
+                new AssetAllocationReportElement("asset allocation over time pie chart", ReportKey.AssetAllocation, backtest, live),
                 new DrawdownReportElement("drawdown plot", ReportKey.Drawdown, backtest, live),
                 new DailyReturnsReportElement("daily returns plot", ReportKey.DailyReturns, backtest, live),
                 new RollingPortfolioBetaReportElement("rolling beta to equities plot", ReportKey.RollingBeta, backtest, live),

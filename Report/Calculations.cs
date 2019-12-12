@@ -15,29 +15,11 @@
 
 using Deedle;
 using MathNet.Numerics.Statistics;
-using QuantConnect;
-using QuantConnect.Algorithm;
-using QuantConnect.Brokerages.Backtesting;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine;
-using QuantConnect.Lean.Engine.Alpha;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.RealTime;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Lean.Engine.Server;
-using QuantConnect.Lean.Engine.TransactionHandlers;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
-using QuantConnect.Packets;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Report
 {
@@ -236,6 +218,53 @@ namespace QuantConnect.Report
                 )
                 .FillMissing(Direction.Forward)
                 .DropMissing();
+        }
+
+        /// <summary>
+        /// Calculates the portfolio's asset allocation percentage over time. The series used to call this extension function should
+        /// be the equity curve with the associated <see cref="Order"/> objects that go along with it.
+        /// </summary>
+        /// <param name="equityCurve">Equity curve series</param>
+        /// <param name="orders">Orders associated with the equity curve</param>
+        /// <returns></returns>
+        public static Series<Symbol, double> AssetAllocations(this Series<DateTime, double> equityCurve, List<Order> orders)
+        {
+            if (equityCurve.IsEmpty)
+            {
+                return new Series<Symbol, double>(new Symbol[] { }, new double[] { });
+            }
+
+            var curve = equityCurve.Keys
+                .Zip(equityCurve.Values, (first, second) => new KeyValuePair<DateTime, double>(first, second))
+                .ToList();
+
+            var portfolioHoldings = new PortfolioLooper(curve, orders).ProcessOrders(orders)
+                .ToList() // Required because for some reason our AbsoluteHoldingsValue is multiplied by two whenever we GroupBy on the raw IEnumerable
+                .GroupBy(x => x.Time)
+                .Select(kvp => kvp.Last())
+                .ToList();
+
+            var totalPortfolioValueOverTime = (double)portfolioHoldings.Sum(x => x.Holdings.Sum(y => y.AbsoluteHoldingsValue));
+            var holdingsBySymbolOverTime = new Dictionary<Symbol, double>();
+
+            foreach (var portfolio in portfolioHoldings)
+            {
+                foreach (var holding in portfolio.Holdings)
+                {
+                    if (!holdingsBySymbolOverTime.ContainsKey(holding.Symbol))
+                    {
+                        holdingsBySymbolOverTime[holding.Symbol] = (double)holding.AbsoluteHoldingsValue;
+                        continue;
+                    }
+
+                    holdingsBySymbolOverTime[holding.Symbol] = holdingsBySymbolOverTime[holding.Symbol] + (double)holding.AbsoluteHoldingsValue;
+                }
+            }
+
+            return new Series<Symbol, double>(
+                holdingsBySymbolOverTime.Keys,
+                holdingsBySymbolOverTime.Values.Select(x => x / totalPortfolioValueOverTime).ToList()
+            ).DropMissing();
         }
 
         public static Frame<DateTime, Tuple<SecurityType, OrderDirection>> Exposure(this Series<DateTime, double> equityCurve, List<Order> orders, OrderDirection direction)

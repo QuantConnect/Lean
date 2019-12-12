@@ -132,6 +132,7 @@
     <Compile Include="Crisis.cs" />
     <Compile Include="DrawdownCollection.cs" />
     <Compile Include="DrawdownPeriod.cs" />
+    <Compile Include="ReportElements\AssetAllocationReportElement.cs" />
     <Compile Include="ReportElements\ExposureReportElement.cs" />
     <Compile Include="ReportElements\LeverageUtilizationReportElement.cs" />
     <Compile Include="ReportElements\RollingSharpeReportElement.cs" />
