@@ -370,6 +370,7 @@
     <Compile Include="Engine\DataFeeds\PendingRemovalsManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\PredicateTimeProviderTests.cs" />
     <Compile Include="Common\Util\StreamReaderExtensionsTests.cs" />
+    <Compile Include="Engine\DataFeeds\SubscriptionDataReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\SubscriptionUtilsTests.cs" />
     <Compile Include="Engine\DataFeeds\TextSubscriptionDataSourceReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\Transport\RemoteFileSubscriptionStreamReaderTests.cs" />

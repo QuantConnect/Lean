@@ -398,9 +398,30 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // same date,
                         if (!_config.IsInternalFeed)
                         {
+                            // lets keep this, it will be advanced by 'ResolveDataEnumerator'
+                            var currentTradeableDate = _tradeableDates.Current;
+
                             // this will advance the date enumerator and determine if a new
                             // instance of the subscription enumerator is required
+                            var currentInstance = _subscriptionFactoryEnumerator;
                             _subscriptionFactoryEnumerator = ResolveDataEnumerator(false);
+
+                            if (!ReferenceEquals(currentInstance, _subscriptionFactoryEnumerator))
+                            {
+                                if (instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > currentTradeableDate)
+                                {
+                                    if (_subscriptionFactoryEnumerator == null)
+                                    {
+                                        // the end
+                                        break;
+                                    }
+                                    // Skip current 'instance' if its start time is beyond the current date, fixes GH issue 3912
+                                    continue;
+                                }
+                                // its not beyond 'currentTradeableDate' lets use current instance
+                            }
+                            // if we DO NOT get a new enumerator we use current instance, means its a valid source
+                            // even if after 'currentTradeableDate'
                         }
                     }
 
