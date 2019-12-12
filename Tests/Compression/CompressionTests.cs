@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Ionic.Zip;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace QuantConnect.Tests.Compression
@@ -153,6 +154,28 @@ namespace QuantConnect.Tests.Compression
                 File.Delete(zipFile);
                 files.ForEach(File.Delete);
             }
+        }
+
+        [Test]
+        public void UnzipDataSupportsEncoding()
+        {
+            var data = new Dictionary<string, string>
+            {
+                {"Ł", "The key is unicode"}
+            };
+
+            var encoding = Encoding.UTF8;
+            var bytes = encoding.GetBytes(JsonConvert.SerializeObject(data));
+            var compressed = QuantConnect.Compression.ZipBytes(bytes, "entry.json");
+            var decompressed = QuantConnect.Compression.UnzipData(compressed, encoding);
+            var redata = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                decompressed.Single().Value
+            );
+
+            var expected = data.Single();
+            var actual = redata.Single();
+            Assert.AreEqual(expected.Key, actual.Key);
+            Assert.AreEqual(expected.Value, actual.Value);
         }
     }
 }

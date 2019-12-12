@@ -109,11 +109,16 @@ namespace QuantConnect.Api
                     return false;
                 }
 
+                if (!restsharpResponse.IsSuccessful)
+                {
+                    Log.Error($"ApiConnect.TryRequest(): Content: {restsharpResponse.Content}");
+                }
+
                 responseContent = restsharpResponse.Content;
                 result = JsonConvert.DeserializeObject<T>(responseContent);
-                if (!result.Success)
+
+                if (result == null || !result.Success)
                 {
-                    //result;
                     return false;
                 }
             }
