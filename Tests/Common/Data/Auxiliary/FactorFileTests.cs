@@ -393,9 +393,6 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             Assert.IsEmpty(factorFile.GetSplitsAndDividends(Symbols.SPY, SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork)));
         }
 
-      
-
-
         private static FactorFile GetTestFactorFile(string symbol, DateTime reference)
         {
             var file = new FactorFile(symbol, new List<FactorFileRow>

@@ -120,6 +120,9 @@ namespace QuantConnect.Data.Auxiliary
             // parse factor file lines
             foreach (var line in lines)
             {
+                // Exponential notation is treated as inf is because of the loss of precision. In
+                // all cases, the significant part has fewer decimals than the needed for a correct
+                // representation, E.g., 1.6e+6 when the correct factor is 1562500.
                 if (line.Contains("inf") || line.Contains("e+"))
                 {
                     continue;
