@@ -86,7 +86,7 @@ class Api:
                     message += f'{name}: {value} '
                 if isinstance(value, list):
                     message += f'{name}: {", ".join(value)} '
-            exit(f'There was an exception processing your request: {message}')
+            print(f'There was an exception processing your request: {message}')
 
         return result
 
