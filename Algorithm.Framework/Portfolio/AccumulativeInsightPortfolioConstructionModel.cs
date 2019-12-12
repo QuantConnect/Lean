@@ -36,14 +36,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class AccumulativeInsightPortfolioConstructionModel : PortfolioConstructionModel
     {
-        private DateTime _rebalancingTime;
         private List<Symbol> _removedSymbols = new List<Symbol>();
         private readonly InsightCollection _insightCollection = new InsightCollection();
         private DateTime? _nextExpiryTime;
-        private double _percent;
-        private Dictionary<Insight, int> usedInsight = new Dictionary<Insight, int>();
-        private Dictionary<Insight, int> expiredList = new Dictionary<Insight, int>();
-        private Dictionary<Symbol, double> positionSizes = new Dictionary<Symbol, double>();
+        private readonly double _percent;
+        private readonly Dictionary<Insight, int> usedInsight = new Dictionary<Insight, int>();
+        private readonly Dictionary<Insight, int> expiredList = new Dictionary<Insight, int>();
+        private readonly Dictionary<Symbol, double> positionSizes = new Dictionary<Symbol, double>();
                 
         /// <summary>
         /// Initialize a new instance of <see cref="AccumulativeInsightPortfolioConstructionModel"/>
@@ -125,29 +124,29 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>A target percent for each insight</returns>
         public Dictionary<Insight, double> UpdateExpiredInsights(ICollection<Insight> activeInsights)
         {
-                var result = new Dictionary<Insight, double>();
+            var result = new Dictionary<Insight, double>();
         
-                foreach (var insight in activeInsights)
+            foreach (var insight in activeInsights)
+            {
+                if (expiredList.ContainsKey(insight))
                 {
-                        if (expiredList.ContainsKey(insight))
-                        {
-                                continue;
-                        }
-                        expiredList[insight] = 1;
-
-                        // if an expiring insight pushes it past 0, then flatten to 0
-                        if ( (Math.Abs(positionSizes[insight.Symbol]) < _percent) && (insight.Direction != 0) )
-                        {
-                                positionSizes[insight.Symbol] = 0;
-                        }
-                        else
-                        {
-                                positionSizes[insight.Symbol] -= _percent * (int)insight.Direction;
-                        }
-                        result[insight] = positionSizes[insight.Symbol];
+                    continue;
                 }
+                expiredList[insight] = 1;
+
+                // if an expiring insight pushes it past 0, then flatten to 0
+                if ( (Math.Abs(positionSizes[insight.Symbol]) < _percent) && (insight.Direction != 0) )
+                {
+                    positionSizes[insight.Symbol] = 0;
+                }
+                else
+                {
+                    positionSizes[insight.Symbol] -= _percent * (int)insight.Direction;
+                }
+                result[insight] = positionSizes[insight.Symbol];
+            }
         
-                return result;
+            return result;
         }
                 
         /// <summary>

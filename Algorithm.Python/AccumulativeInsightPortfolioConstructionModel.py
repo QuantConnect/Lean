@@ -33,7 +33,7 @@ from datetime import timedelta
 ### Test algorithm using 'AccumulativeInsightPortfolioConstructionModel.py' and 'ConstantAlphaModel'
 ### generating a constant 'Insight' 
 ### </summary>
-class ConfidenceWeightedFrameworkAlgorithm(QCAlgorithm):
+class AccumulativeInsightPortfolioRegressionAlgorithm(QCAlgorithm):
     def Initialize(self):
         ''' Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 
