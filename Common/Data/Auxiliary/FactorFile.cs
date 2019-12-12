@@ -285,7 +285,7 @@ namespace QuantConnect.Data.Auxiliary
                 }
 
                 var split = row.GetSplit(futureFactorFileRow, symbol, exchangeHours);
-                if (i == 0 || split.SplitFactor != 1m)
+                if (split.SplitFactor != 1m)
                 {
                     dividendsAndSplits.Add(split);
                 }
@@ -312,6 +312,7 @@ namespace QuantConnect.Data.Auxiliary
             }
 
             var factorFileRows = new List<FactorFileRow>();
+            var firstEntry = SortedFactorFileData.First().Value;
             var lastEntry = SortedFactorFileData.Last().Value;
             factorFileRows.Add(lastEntry);
 
@@ -350,6 +351,9 @@ namespace QuantConnect.Data.Auxiliary
                     }
                 }
             }
+
+            var firstFactorFileRow = new FactorFileRow(firstEntry.Date, factorFileRows.Last().PriceFactor, factorFileRows.Last().SplitFactor, firstEntry.ReferencePrice == 0 ? 0 : firstEntry.ReferencePrice);
+            factorFileRows.Add(firstFactorFileRow);
 
             return new FactorFile(Permtick, factorFileRows, FactorFileMinimumDate);
         }
