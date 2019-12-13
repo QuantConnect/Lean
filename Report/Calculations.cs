@@ -305,9 +305,9 @@ namespace QuantConnect.Report
 
                 if (assets.Count > 0)
                 {
-                    var sum = (double)assets.Where(pointInTimeHoldings => multiplier * pointInTimeHoldings.Quantity > 0)
-                       .Select(pointInTimeHoldings => pointInTimeHoldings.AbsoluteHoldingsValue)
-                       .Sum();
+                    var sum = (double)assets.Where(pointInTimeHoldings => multiplier * pointInTimeHoldings.HoldingsValue > 0)
+                        .Select(pointInTimeHoldings => pointInTimeHoldings.AbsoluteHoldingsValue)
+                        .Sum();
 
                     holdings.Add(new KeyValuePair<DateTime, double>(portfolio.Time, sum / equityIndex[portfolio.Time]));
                 }
@@ -324,10 +324,11 @@ namespace QuantConnect.Report
                     continue;
                 }
 
-                // Select the last entry of a given time to get accurate results of the portfolio's actual value
+                // Select the last entry of a given time to get accurate results of the portfolio's actual value.
+                // Then, select only the long or short holdings.
                 frame = frame.Join(
                     new Tuple<SecurityType, OrderDirection>(kvp.Key, direction),
-                    new Series<DateTime, double>(kvp.Value.GroupBy(x => x.Key).Select(x => x.Last()))
+                    new Series<DateTime, double>(kvp.Value.GroupBy(x => x.Key).Select(x => x.Last())) * multiplier
                 );
             }
 

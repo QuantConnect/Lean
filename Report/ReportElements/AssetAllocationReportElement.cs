@@ -65,11 +65,11 @@ namespace QuantConnect.Report.ReportElements
                 var data = new PyList();
                 var liveData = new PyList();
 
-                data.Append(backtestSeries.Where(x => x.Value != 0).Keys.Select(x => x.Value).ToList().ToPython());
-                data.Append(backtestSeries.Where(x => x.Value != 0).Values.Select(x => x.ToPython()).ToList().ToPython());
+                data.Append(backtestSeries.SortBy(x => -x).Where(x => x.Value != 0).Keys.Select(x => x.Value).ToList().ToPython());
+                data.Append(backtestSeries.SortBy(x => -x).Where(x => x.Value != 0).Values.ToList().ToPython());
 
-                liveData.Append(liveSeries.Where(x => x.Value != 0).Keys.Select(x => x.Value).ToList().ToPython());
-                liveData.Append(liveSeries.Where(x => x.Value != 0).Values.Select(x => x.ToPython()).ToList().ToPython());
+                liveData.Append(liveSeries.SortBy(x => -x).Where(x => x.Value != 0).Keys.Select(x => x.Value).ToList().ToPython());
+                liveData.Append(liveSeries.SortBy(x => -x).Where(x => x.Value != 0).Values.ToList().ToPython());
 
                 result = Charting.GetAssetAllocation(data, liveData);
             }

@@ -57,14 +57,11 @@ namespace QuantConnect.Report.ReportElements
             var longLiveFrame = new Series<DateTime, double>(livePoints.Keys, livePoints.Values).Exposure(liveOrders, OrderDirection.Buy);
             var shortLiveFrame = new Series<DateTime, double>(livePoints.Keys, livePoints.Values).Exposure(liveOrders, OrderDirection.Sell);
 
-            longBacktestFrame.Print();
-            shortBacktestFrame.Print();
-
-            var backtestFrame = longBacktestFrame.Join(shortBacktestFrame * -1)
+            var backtestFrame = longBacktestFrame.Join(shortBacktestFrame)
                 .FillMissing(Direction.Forward)
                 .FillMissing(0.0);
 
-            var liveFrame = longLiveFrame.Join(shortLiveFrame * -1)
+            var liveFrame = longLiveFrame.Join(shortLiveFrame)
                 .FillMissing(Direction.Forward)
                 .FillMissing(0.0);
 
@@ -84,6 +81,11 @@ namespace QuantConnect.Report.ReportElements
                 longLiveFrame[key] = liveFrame[key].SelectValues(x => x < 0 ? 0 : x);
                 shortLiveFrame[key] = liveFrame[key].SelectValues(x => x > 0 ? 0 : x);
             }
+
+            longBacktestFrame = longBacktestFrame.DropSparseColumnsAll();
+            shortBacktestFrame = shortBacktestFrame.DropSparseColumnsAll();
+            longLiveFrame = longLiveFrame.DropSparseColumnsAll();
+            shortLiveFrame = shortLiveFrame.DropSparseColumnsAll();
 
             var base64 = "";
             using (Py.GIL())

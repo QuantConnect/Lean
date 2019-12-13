@@ -649,7 +649,6 @@ class ReportCharts:
 
         symbols = [data[0], live_data[0]]
 
-        print(', '.join(symbols[0]))
         data = [data[1], live_data[1]]
         colors = ['#fce0bd', '#fcd6a7', '#fbcd92', '#fac37c', '#f8af53', '#f79b31', '#de8b2c', "#dde1e3"]
         pies = {}
@@ -752,6 +751,13 @@ class ReportCharts:
                     'Forex':'#0000FF', 'Future':'#6B8E23', 'Cfd':'#FF8C00', 'Crypto':'#BDB76B'}
         live_color_map = {'Equity': "#ff9914" , 'Option': '#DAA520', 'Commodity': '#9400D3',
                           'Forex':'#6495ED', 'Future':'#808000', 'Cfd':'#FFD700', 'Crypto':'#FFDAB9'}
+
+        for k, v in list(color_map.items()):
+            color_map[k + ' - Short'] = '#' + hex(int(v[1:], 16) ^ 0xffffff)[2:].zfill(6)
+
+        for k, v in list(live_color_map.items()):
+            live_color_map[k + ' - Short'] = '#' + hex(int(v[1:], 16) ^ 0xffffff)[2:].zfill(6)
+
         labels = long_securities + short_securities
         live_labels = live_long_securities + live_short_securities
 
@@ -825,12 +831,12 @@ class ReportCharts:
         # No need to check if live is empty or not, this will handle it, just needs to plot whichever has the longer time index first
         if max([len(x) for x in long_data]) > max([len(x) for x in short_data]):
             ax.stackplot(time_copy[:max([len(x) for x in long_data_copy])], np.vstack(long_data_copy),
-                         color = [color_map[security] for security in long_securities], alpha = 0.75)
+                         color=[color_map[security] for security in long_securities], alpha = 0.75)
             ax.stackplot(time_copy[:max([len(x) for x in short_data_copy])], np.vstack(short_data_copy),
-                         color=[color_map[security] for security in short_securities], alpha=0.75)
+                         color=[color_map[security + ' - Short'] for security in short_securities], alpha=0.75)
         else:
             ax.stackplot(time_copy[:max([len(x) for x in short_data_copy])], np.vstack(short_data_copy),
-                         color=[color_map[security] for security in short_securities], alpha=0.75)
+                         color=[color_map[security + ' - Short'] for security in short_securities], alpha=0.75)
             ax.stackplot(time_copy[:max([len(x) for x in long_data_copy])], np.vstack(long_data_copy),
                          color=[color_map[security] for security in long_securities], alpha=0.75)
 
@@ -838,12 +844,20 @@ class ReportCharts:
             ax.stackplot(live_time_copy[:max([len(x) for x in live_long_data_copy])], np.vstack(live_long_data_copy),
                          color=[live_color_map[security] for security in live_long_securities], alpha = 0.75)
             ax.stackplot(live_time_copy[:max([len(x) for x in live_short_data_copy])], np.vstack(live_short_data_copy),
-                         color=[live_color_map[security] for security in live_short_securities], alpha = 0.75)
+                         color=[live_color_map[security + ' - Short'] for security in live_short_securities], alpha = 0.75)
         else:
             ax.stackplot(live_time_copy[:max([len(x) for x in live_short_data_copy])], np.vstack(live_short_data_copy),
-                         color=[live_color_map[security] for security in live_short_securities], alpha=0.75)
+                         color=[live_color_map[security + ' - Short'] for security in live_short_securities], alpha=0.75)
             ax.stackplot(live_time_copy[:max([len(x) for x in live_long_data_copy])], np.vstack(live_long_data_copy),
                          color=[live_color_map[security] for security in live_long_securities], alpha=0.75)
+
+        for security in short_securities:
+            if not all([all([abs(y) == 0.0 for y in x]) for x in short_data]):
+                labels.append(security + ' - Short')
+
+        for security in live_short_securities:
+            if not all([all([abs(y) == 0.0 for y in x]) for x in live_short_data]):
+                live_labels.append(security + ' - Short')
 
         labels = list(set(labels))
         live_labels = list(set(live_labels))
