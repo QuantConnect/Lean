@@ -297,7 +297,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // adding a day so we stop at EOD
             _delistingDate = _delistingDate.AddDays(1);
 
-            _subscriptionFactoryEnumerator = ResolveDataEnumerator(true);
+            UpdateDataEnumerator(true);
 
             _initialized = true;
         }
@@ -401,12 +401,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             // lets keep this, it will be advanced by 'ResolveDataEnumerator'
                             var currentTradeableDate = _tradeableDates.Current;
 
-                            // this will advance the date enumerator and determine if a new
-                            // instance of the subscription enumerator is required
-                            var currentInstance = _subscriptionFactoryEnumerator;
-                            _subscriptionFactoryEnumerator = ResolveDataEnumerator(false);
-
-                            if (!ReferenceEquals(currentInstance, _subscriptionFactoryEnumerator))
+                            if (UpdateDataEnumerator(false))
                             {
                                 if (instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > currentTradeableDate)
                                 {
@@ -433,7 +428,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // we've ended the enumerator, time to refresh
-                _subscriptionFactoryEnumerator = ResolveDataEnumerator(true);
+                UpdateDataEnumerator(true);
             }
             while (_subscriptionFactoryEnumerator != null);
 
@@ -442,9 +437,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Resolves the next enumerator to be used in <see cref="MoveNext"/>
+        /// Resolves the next enumerator to be used in <see cref="MoveNext"/> and updates
+        /// <see cref="_subscriptionFactoryEnumerator"/>
         /// </summary>
-        private IEnumerator<BaseData> ResolveDataEnumerator(bool endOfEnumerator)
+        /// <returns>True, if the enumerator has been updated (even if updated to null)</returns>
+        private bool UpdateDataEnumerator(bool endOfEnumerator)
         {
             do
             {
@@ -454,8 +451,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 DateTime date;
                 if (!TryGetNextDate(out date) && !_isLiveMode)
                 {
+                    _subscriptionFactoryEnumerator = null;
                     // if we run out of dates then we're finished with this subscription
-                    return null;
+                    return true;
                 }
 
                 // fetch the new source, using the data time zone for the date
@@ -472,14 +470,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // save off for comparison next time
                     _source = newSource;
                     var subscriptionFactory = CreateSubscriptionFactory(newSource);
-                    return subscriptionFactory.Read(newSource).GetEnumerator();
+                    _subscriptionFactoryEnumerator = subscriptionFactory.Read(newSource).GetEnumerator();
+                    return true;
                 }
 
                 // if there's still more in the enumerator and we received the same source from the GetSource call
                 // above, then just keep using the same enumerator as we were before
                 if (!endOfEnumerator) // && !sourceChanged is always true here
                 {
-                    return _subscriptionFactoryEnumerator;
+                    return false;
                 }
 
                 // keep churning until we find a new source or run out of tradeable dates
