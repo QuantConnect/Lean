@@ -94,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedDataPointsPerSymbol = new Dictionary<string, int>
             {
                 { "EURGBP", 3 },
-                { "EURUSD", 47 }
+                { "EURUSD", 48 }
             };
 
             foreach (var kvp in _dataPointsPerSymbol)

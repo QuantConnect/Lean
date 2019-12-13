@@ -189,6 +189,7 @@
     <Compile Include="OnEndOfDayRegressionAlgorithm.cs" />
     <Compile Include="TrainingInitializeRegressionAlgorithm.cs" />
     <Compile Include="TrainingExampleAlgorithm.cs" />
+    <Compile Include="UniverseSharingSubscriptionTradableRegressionAlgorithm.cs" />
     <Compile Include="UniverseUnchangedRegressionAlgorithm.cs" />
     <Compile Include="USTreasuryYieldCurveDataAlgorithm.cs" />
     <Compile Include="SECReportDataAlgorithm.cs" />
