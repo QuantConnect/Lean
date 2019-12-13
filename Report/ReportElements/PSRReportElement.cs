@@ -45,22 +45,14 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestPoints = Calculations.EquityPoints(_backtest);
-            var benchmarkPoints = Calculations.BenchmarkPoints(_backtest);
-            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values)
-                .PercentChange()
-                .ResampleEquivalence(date => date.Date)
-                .Select(kvp => kvp.Value.Sum());
+            var psr = _backtest.TotalPerformance.PortfolioStatistics.ProbabilisticSharpeRatio;
 
-            var benchmarkSeries = new Series<DateTime, double>(benchmarkPoints.Keys, benchmarkPoints.Values)
-                .PercentChange()
-                .ResampleEquivalence(date => date.Date)
-                .Select(kvp => kvp.Value.Sum());
+            if (psr > 0)
+            {
+                return $"{psr:P0}";
+            }
 
-            var benchmarkSharpe = Statistics.Statistics.ObservedSharpeRatio(benchmarkSeries.Values.ToList());
-            var psr = Statistics.Statistics.ProbabilisticSharpeRatio(backtestSeries.Values.ToList(), benchmarkSharpe);
-
-            return $"{psr:P0}";
+            return "-";
         }
     }
 }
