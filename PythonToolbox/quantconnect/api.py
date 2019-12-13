@@ -11,290 +11,382 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime
-from json import dumps
-from requests import get as requests_get, Request
-from time import mktime
-from quantconnect import ApiConnection
+from base64 import b64encode
+from datetime import datetime as dt
+from hashlib import sha256
+from json import dumps, loads
+from requests import get, post
+from time import mktime, time
+from quantconnect.Result import Result
 
 DOWNLOAD_CHUNK_SIZE = 256 * 1024
 
 class Api:
-    """QuantConnect.com Interaction Via API.
-    Attributes:
-        userId(int/str): User Id number from QuantConnect.com account. Found at www.quantconnect.com/account.
-        token(str): Access token for the QuantConnect account. Found at www.quantconnect.com/account.
-    """
-    def __init__(self, userId, token):
-        self.api_connection = ApiConnection(userId, token)
+    '''QuantConnect.com Interaction Via API.
+
+    Args:
+        userId(int/str): User Id number found at www.quantconnect.com/account.
+        token(str): Access token found at www.quantconnect.com/account.
+        debug(boolean): True to enable debugging messages'''
+
+    def __init__(self, userId, token, debug = False):
+        '''Creates a new instance of Api'''
+        self.__url = 'https://www.quantconnect.com/api/v2/'
+        self.__userId =  userId
+        self.__token = token
+        self.__debug = debug
+
+    def Execute(self, endpoint, data = None, is_post = False, headers = {}):
+        '''Execute an authenticated request to the QuantConnect API
+        Args:
+            endpoint(str): Request end point.
+            data(dict): Request values
+            is_post(boolean): True if POST request, GET request otherwise
+            headers(dict): Additional headers'''
+        url = self.__url + endpoint
+
+        # Create authenticated timestamped token.
+        timestamp = str(int(time()))
+
+        # Attach timestamp to token for increasing token randomness
+        timeStampedToken = f'{self.__token}:{timestamp}'
+
+        # Hash token for transport
+        apiToken = sha256(timeStampedToken.encode('utf-8')).hexdigest()
+
+        # Attach in headers for basic authentication.
+        authentication = f'{self.__userId}:{apiToken}'
+        basic = b64encode(authentication.encode('utf-8')).decode('ascii')
+        headers.update({ 'Authorization': f'Basic {basic}', 'Timestamp': timestamp })
+
+        if is_post:
+            response = post(url = url, data = data, headers = headers)
+        else:   # Encode the request in parameters of URL.
+            response = get(url = url, params = data, headers = headers)
+
+        if self.__debug:
+            print(url)
+            self.__pretty_print(response)
+
+        # Convert to object for parsing.
+        try:
+            result = response.json()
+        except:
+            result = {
+                'success': False,
+                'messages': [
+                    'API returned a result which cannot be parsed into JSON. Please inspect the raw result below:',
+                    response.text
+                ]}
+
+        if not result['success']:
+            message = ''
+            for name, value in result.items():
+                if isinstance(value, str):
+                    message += f'{name}: {value} '
+                if isinstance(value, list):
+                    message += f'{name}: {", ".join(value)} '
+            print(f'There was an exception processing your request: {message}')
+
+        return result
 
     def connected(self):
-        """Check if Api is successfully connected with correct credentials"""
-        return self.api_connection.connected()
-
-    def read_project(self, projectId):
-        """Get details about a single project.
-        Args:
-            projectId(int): Id of the project.
-        Returns:
-            ProjectResponse that contains information regarding the project.
-        """
-        request = Request('GET', "projects/read", params = { "projectId": projectId })
-
-        return self.api_connection.try_request(request)
+        '''Check whether Api is successfully connected with correct credentials'''
+        return self.Execute('authenticate')['success']
 
     def list_projects(self):
-        """List details of all projects
-        Returns:
-            ProjectResponse that contains information regarding the project.
-        """
-        request = Request('GET', "projects/read")
+        '''Read back a list of all projects on the account for a user.
 
-        return self.api_connection.try_request(request)
+        Returns:
+            Dictionary that contains for list of projects.
+        '''
+        return self.Execute('projects/read')
 
     def create_project(self, name, language):
-        """Create a project with the specified name and language via QuantConnect.com API
+        '''Create a project with the specified name and language via QuantConnect.com API
+
         Args:
             name(str): Project name
             language(str): Programming language to use (Language must be C#, F# or Py).
         Returns:
-            Project object from the API.
-        """
-        request = Request('POST', "projects/create",
-            data=dumps({ "name": name, "language": language }))
+            Dictionary that includes information about the newly created project.
+        '''
+        return self.Execute('projects/create',
+            {
+                'name': name,
+                'language': language
+            }, True)
 
-        return self.api_connection.try_request(request)
+    def read_project(self, projectId):
+        '''Read in a project from the QuantConnect.com API.
+
+        Args:
+            projectId(int): Project id you own
+        Returns:
+            Dictionary that includes information about a specific project
+        '''
+        return self.Execute('projects/read', { 'projectId': projectId })
 
     def add_project_file(self, projectId, name, content):
-        """Add a file to a project.
+        '''Add a file to a project.
+
         Args:
             projectId(int): The project to which the file should be added.
             name(str): The name of the new file.
             content(str): The content of the new file.
         Returns:
-            ProjectResponse that contains information regarding the project.
-        """
-        request = Request('POST', "files/create",
-            params = 
+            Disctionary that includes information about the newly created file
+        '''
+        return self.Execute('files/create',
             {
-                "projectId" : projectId,
-                "name" : name,
-                "content" : content
-            })
-
-        return self.api_connection.try_request(request)
+                'projectId' : projectId,
+                'name' : name,
+                'content' : content
+            }, True)
 
     def update_project_filename(self, projectId, oldFileName, newFileName):
-        """Update the name of a file
+        '''Update the name of a file
+
         Args:
             projectId(int): Project id to which the file belongs
             oldFileName(str): The current name of the file
             newFileName(str): The new name for the file
         Returns:
-            Response indicating success
-        """
-        request = Request('POST', "files/update",
-            params = 
+            Dictionary indicating success
+        '''
+        return self.Execute('files/update',
             {
-                "projectId": projectId, 
-                "name": oldFileName,
-                "newName": newFileName
-             })
-
-        return self.api_connection.try_request(request)
+                'projectId' : projectId,
+                'name': oldFileName,
+                'newName': newFileName
+            }, True)
 
     def update_project_file_content(self, projectId, fileName, newFileContents):
-        """Update the contents of a file
+        '''Update the contents of a file
+
         Args:
             projectId(int): Project id to which the file belongs
             fileName(str): The name of the file that should be updated
             newFileContents(str): The new contents of the file
         Returns:
-            Response indicating success
-        """
-        request = Request('POST', "files/update",
-            params = 
+            Dictionary indicating success
+        '''
+        return self.Execute('files/update',
             {
-                "projectId": projectId,
-                "name": fileName,
-                "content": newFileContents
-            })
-
-        return self.api_connection.try_request(request)
+                'projectId': projectId,
+                'name': fileName,
+                'content': newFileContents
+            }, True)
 
     def read_project_files(self, projectId):
-        """Read all files in a project
+        '''Read all files in a project
+
         Args:
             projectId(int): Project id to which the file belongs
         Returns:
-            ProjectFilesResponse that includes the information about all files in the project
-        """
-        request = Request('GET', "files/read", params = { "projectId" : projectId })
-
-        return self.api_connection.try_request(request)
+            Dictionary that includes the information about all files in the project
+        '''
+        return self.Execute('files/read', { 'projectId': projectId })
 
     def read_project_file(self, projectId, fileName):
-        """Read a file in a project
+        '''Read a file in a project
+
         Args:
             projectId(int): Project id to which the file belongs
-            fileName(str): The name of the file that should be updated
+            fileName(str): The name of the file
         Returns:
-            ProjectFilesResponse that includes the file information
-        """
-        request = Request('GET', "files/read",
-            params = 
+            Dictionary that includes the file information
+        '''
+        return self.Execute('files/read',
             {
-                "projectId": projectId,
-                "name": fileName
+                'projectId': projectId,
+                'name': fileName
             })
 
-        return self.api_connection.try_request(request)
-
     def delete_project_file(self, projectId, name):
-        """Delete a file in a project
+        '''Delete a file in a project
+
         Args:
             projectId(int): Project id to which the file belongs
             name(str): The name of the file that should be deleted
         Returns:
-            ProjectFilesResponse that includes the information about all files in the project
-        """
-        request = Request('POST', "files/delete",
-            params =
+            Dictionary indicating success
+        '''
+        return self.Execute('files/delete',
             {
-                "projectId": projectId, 
-                "name": name
-            })
-
-        return self.api_connection.try_request(request)
+                'projectId' : projectId,
+                'name' : name
+            }, True)
 
     def delete_project(self, projectId):
-        """Delete a project
+        '''Delete a specific project owned by the user from QuantConnect.com
+
         Args:
             projectId(int): Project id we own and wish to delete
         Returns:
-            Response indicating success
-        """
-        request = Request('POST', "projects/delete",
-            data=dumps({ "projectId": projectId }))
-
-        return self.api_connection.try_request(request)
+            Dictionary indicating success
+        '''
+        return self.Execute('projects/delete', { 'projectId' : projectId }, True)
 
     def create_compile(self, projectId):
-        """Create a new compile job request for this project id.
+        '''Create a new compile job request for this project id.
+
         Args:
             projectId(int): Project id we wish to compile.
         Returns:
-            Compile object result
-        """
-        request = Request('POST', "compile/create",
-            data=dumps({ "projectId": projectId }))
-
-        return self.api_connection.try_request(request)
+            Dictionary that includes the compile information
+        '''
+        return self.Execute('compile/create', { 'projectId' : projectId }, True)
 
     def read_compile(self, projectId, compileId):
-        """Read a compile packet job result.
+        '''Read a compile packet job result.
         Args:
             projectId(int): Project id we sent for compile
             compileId(str): Compile id return from the creation request
         Returns:
-            Response result
-        """
-        request = Request('GET', "compile/read",
-            params =
+            Dictionary that includes the compile information
+        '''
+        return self.Execute('compile/read',
             {
-                "projectId": projectId,
-                "compileId": compileId
+                'projectId' : projectId,
+                'compileId': compileId
             })
 
-        return self.api_connection.try_request(request)
+    def list_backtests(self, projectId):
+        '''Get a list of backtests for a specific project id
+
+        Args:
+            projectId(int): Project id we'd like to get a list of backtest for
+        Returns:
+            Dictionary that includes the list of backtest
+        '''
+        return self.Execute('backtests/read', { 'projectId': projectId })
 
     def create_backtest(self, projectId, compileId, backtestName):
-        """Create a new backtest request and get the id.
+        '''Create a new backtest from a specified projectId and compileId
+
         Args:
             projectId(int): Id for the project to backtest
             compileId(str): Compile id return from the creation request
             backtestName(str): Name for the new backtest
         Returns:
-            Backtest
-        """
-        request = Request('POST', "backtests/create",
-            params = 
+            Dictionary that includes the backtest information
+        '''
+        return self.Execute('backtests/create',
             {
-                "projectId": projectId,
-                "compileId": compileId,
-                "backtestName": backtestName
+                'projectId' : projectId,
+                'compileId': compileId,
+                'backtestName': backtestName
+            }, True)
+
+    def read_backtest(self, projectId, backtestId, json_format = True):
+        '''Read out the full result of a specific backtest.
+
+        Args:
+            projectId(int): Project id for the backtest we'd like to read
+            backtestId(str): Backtest id for the backtest we'd like to read
+            parsed(boolean): True if parse the results as pandas.DataFrame
+        Returns:
+            dictionary that includes the backtest information or Result object
+        '''
+        json =  self.Execute('backtests/read',
+            {
+                'projectId' : projectId,
+                'backtestId': backtestId
             })
 
-        return self.api_connection.try_request(request)
+        return json if json_format else Result(json)
 
-    def read_backtest(self, projectId, backtestId):
-        """Read out a backtest in the project id specified.
+    def read_backtest_report(self, projectId, backtestId, save=False):
+        '''Read out the report of a backtest in the project id specified.
+
         Args:
             projectId(int): Project id to read.
             backtestId(str): Specific backtest id to read.
+            save(boolean): True if data should be saved to disk
         Returns:
-            Backtest
-        """
-        request = Request('GET', "backtests/read",
-            params =
+            Dictionary that contains the backtest report
+        '''
+        json = self.Execute('backtests/read/report',
             {
-                "backtestId": backtestId, 
-                "projectId": projectId
-            })
+                'projectId': projectId,
+                'backtestId': backtestId,
+            }, True)
 
-        return self.api_connection.try_request(request)
+        if save and json['success']:
+            with open(backtestId + '.html', "w") as fp:
+                fp.write(json['report'])
+            print(f'Log saved as {backtestId}.html')
+            
+        return json
 
-    def update_backtest(self, projectId, backtestId, name, note):
-        """Read out a backtest in the project id specified.
+    def update_backtest(self, projectId, backtestId, backtestName = '', backtestNote = ''):
+        '''Update the backtest name.
+
         Args:
-            projectId(str): Project for the backtest we want to update
+            projectId(str): Project id to update
             backtestId(str): Specific backtest id to read
-            name(str): Name we'd like to assign to the backtest
+            backtestName(str): New backtest name to set
             note(str): Note attached to the backtest
         Returns:
-            Request Response
-        """
-        request = Request('POST', "backtests/update", 
-            data = dumps(
-                {
-                    "projectId": projectId,
-                    "backtestId": backtestId,
-                    "name": name,
-                    "note": note
-                }))
-
-        return self.api_connection.try_request(request)
-
-    def list_backtests(self, projectId):
-        """List all the backtests for a project
-        Args:
-            projectId(int): Project id we'd like to get a list of backtest for
-        Returns:
-            Backtest list
-        """
-        request = Request('GET', "backtests/read", params = { "projectId": projectId })
-
-        return self.api_connection.try_request(request)
+            Dictionary indicating success
+        '''
+        return self.Execute('backtests/update',
+            {
+                'projectId' : projectId,
+                'backtestId': backtestId,
+                'name': backtestName,
+                'note': backtestNote
+            }, True)
 
     def delete_backtest(self, projectId, backtestId):
-        """Delete a backtest from the specified project and backtestId.
+        '''Delete a backtest from the specified project and backtestId.
+
         Args:
             projectId(int): Project for the backtest we want to delete
             backtestId(str): Backtest id we want to delete
         Returns:
-            Response
-        """
-        request = Request('GET', "backtests/delete",
-            params = 
+            Dictionary indicating success
+        '''
+        return self.Execute('backtests/delete',
             {
-                "backtestId": backtestId,
-                "projectId": projectId
+                'projectId': projectId,
+                'backtestId': backtestId
             })
 
-        return self.api_connection.try_request(request)
+    def list_live_algorithms(self, status, startTime=None, endTime=None):
+        '''Get a list of live running algorithms for a logged in user.
+
+        Args:
+            status(str): Filter the statuses of the algorithms returned from the api
+                         Only the following statuses are supported by the Api:
+                         "Liquidated", "Running", "RuntimeError", "Stopped",
+            startTime(datetime): Earliest launched time of the algorithms returned by the Api
+            endTime(datetime): Latest launched time of the algorithms returned by the Api
+        Returns:
+            Dictionary that includes the list of live algorithms
+        '''
+        if (status != None and
+            status != "Running" and
+            status != "RuntimeError" and
+            status != "Stopped" and
+            status != "Liquidated"):
+            raise ValueError(
+                "The Api only supports Algorithm Statuses of Running, Stopped, RuntimeError and Liquidated")
+
+        if endTime == None:
+            endTime = dt.utcnow()
+
+        return self.Execute('live/read',
+            {
+                'status': str(status),
+                'end': mktime(endTime.timetuple()),
+                'start': 0 if startTime == None else mktime(startTime.timetuple())
+            })
 
     def create_live_algorithm(self, projectId, compileId, serverType, baseLiveAlgorithmSettings, versionId="-1"):
-        """Create a live algorithm.
+        '''Create a new live algorithm for a logged in user.
+
         Args:
             projectId(int): Id of the project on QuantConnect
             compileId(str): Id of the compilation on QuantConnect
@@ -304,114 +396,90 @@ class Api:
                        -1 is master, however, sometimes this can create problems with live deployments.
                        If you experience problems using, try specifying the version of Lean you would like to use.
         Returns:
-            Information regarding the new algorithm
-        """
-        request = Request('POST', "live/create", headers = {"Accept": "application/json"},
-            data = dumps(
-                {
-                    "versionId": versionId,
-                    "projectId": projectId,
-                    "compileId": compileId,
-                    "serverType": serverType,
-                    "brokerage": baseLiveAlgorithmSettings
-                }))
-
-        return self.api_connection.try_request(request)
-
-    def list_live_algorithms(self, status=None, startTime=None, endTime=None):
-        """Get a list of live running algorithms for user.
-        Args:
-            status(str): Filter the statuses of the algorithms returned from the api
-                         Only the following statuses are supported by the Api:
-                         "Liquidated", "Running", "RuntimeError", "Stopped",
-            startTime(datetime): Earliest launched time of the algorithms returned by the Api
-            endTime(datetime): Latest launched time of the algorithms returned by the Api
-        Returns:
-            Live list
-        """
-
-        if (
-            status != None and
-            status != "Running" and
-            status != "RuntimeError" and
-            status != "Stopped" and
-            status != "Liquidated"):
-            raise ValueError(
-                "The Api only supports Algorithm Statuses of Running, Stopped, RuntimeError and Liquidated")
-
-        request = Request('GET', "live/read",
-            params =
+            Dictionary that contains information regarding the new algorithm
+        '''
+        return self.Execute('live/create',
             {
-                "status": str(status), 
-                "start": 0 if startTime == None else mktime(startTime.timetuple()),
-                "end": mktime(datetime.utcnow().timetuple()) if endTime == None else mktime(endTime.timetuple())
+                'projectId': projectId,
+                'compileId': compileId,
+                'versionId': versionId,
+                'serverType': serverType,
+                'brokerage': baseLiveAlgorithmSettings
+            },
+            True,
+            headers = {"Accept": "application/json"})
+
+    def read_live_algorithm(self, projectId, deployId = None, json_format = True):
+        '''Read out a live algorithm in the project id specified.
+
+        Args:
+            projectId(int): Project id to read
+            deployId: Specific instance id to read
+        Returns:
+            Dictionary that contains information regarding the live algorithm or Result object
+        '''
+        json = self.Execute('live/read',
+            {
+                'projectId': projectId,
+                'deployId': deployId
             })
 
-        return self.api_connection.try_request(request)
-
-    def read_live_algorithm(self, projectId, deployId):
-        """Get a list of live running algorithms for user.
-        Args:
-            projectId(int): Project Id of the live running algorithm
-            deployId: Unique live algorithm deployment identifier
-        Returns:
-            Live list
-        """
-        request = Request('GET', "live/read",
-            params = 
-            {
-                "projectId": projectId,
-                "deployId": deployId
-            })
-
-        return self.api_connection.try_request(request)
+        return json if json_format else Result(json)
 
     def liquidate_live_algorithm(self, projectId):
-        """Liquidate a live algorithm from the specified project and deployId.
-        Args:
-            projectId(int): Project for the live instance we want to stop
-        Returns:
-            Request response
-        """
-        request = Request('POST', "live/update/liquidate", params = { "projectId": projectId })
+        '''Liquidate a live algorithm from the specified project.
 
-        return self.api_connection.try_request(request)
+        Args:
+            projectId(int): Project for the live instance we want to liquidate
+        Returns:
+            Dictionary indicating success
+        '''
+        return self.Execute('live/update/liquidate', { 'projectId': projectId }, True)
 
     def stop_live_algorithm(self, projectId):
-        """Stop a live algorithm from the specified project and deployId.
+        '''Stop a live algorithm from the specified project.
+
         Args:
             projectId(int): Project for the live instance we want to stop.
         Returns:
-            Request response
-        """
-        request = Request('POST', "live/update/stop", params = { "projectId": projectId })
+            Dictionary indicating success
+        '''
+        return self.Execute('live/update/stop', { 'projectId': projectId }, True)
 
-        return self.api_connection.try_request(request)
+    def read_live_logs(self, projectId, algorithmId, startTime=None, endTime=None, save=False):
+        '''Gets the logs of a specific live algorithm.
 
-    def read_live_logs(self, projectId, algorithmId, startTime=None, endTime=None):
-        """Gets the logs of a specific live algorithm.
         Args:
             projectId(int): Project Id of the live running algorithm
             algorithmId(str): Algorithm Id of the live running algorithm
-            startTime(datetime): No logs will be returned before this time
-            endTime(datetime): No logs will be returned after this time
+            startTime(datetime): No logs will be returned before this time. Should be in UTC
+            endTime(datetime): No logs will be returned after this time. Should be in UTC
+            save(boolean): True if data should be saved to disk
         Returns:
             List of strings that represent the logs of the algorithm
-        """
-        request = Request('GET', "live/read/log", 
-            params = 
+        '''
+        if endTime == None:
+            endTime = dt.utcnow()
+
+        json = self.Execute('live/read/log',
             {
-                "format": "json",
-                "projectId": projectId,
-                "algorithmId": algorithmId,
-                "start": 0 if startTime == None else mktime(startTime.timetuple()),
-                "end": mktime(datetime.utcnow().timetuple()) if endTime == None else mktime(endTime.timetuple())
+                'format': 'json',
+                'projectId': projectId,
+                'algorithmId': algorithmId,
+                'end': mktime(endTime.timetuple()),
+                'start': 0 if startTime == None else mktime(startTime.timetuple())
             })
 
-        return self.api_connection.try_request(request)
+        if save and json['success']:
+            with open(algorithmId + '.txt', "w") as fp:
+                fp.write('\n'.join(json['LiveLogs']))
+            print(f'Log saved as {algorithmId}.txt')
+
+        return json
 
     def read_data_link(self, symbol, securityType, market, resolution, date):
-        """Gets the link to the downloadable data.
+        '''Gets the link to the downloadable data.
+
         Args:
             symbol(str): Symbol of security of which data will be requested
             securityType(str): Type of underlying asset
@@ -419,40 +487,21 @@ class Api:
             resolution(str): Resolution of data requested
             date: Date of the data requested
         Returns:
-            List of strings that represent the logs of the algorithm
-        """
-        request = Request('GET', "data/read",
-            params = 
+            Dictionary that contains the link to the downloadable data.
+        '''
+        return self.Execute('data/read',
             {
-                "format": "link",
-                "ticker": symbol.lower(),
-                "type": securityType.lower(),
-                "market": market,
-                "resolution": resolution,
-                "date": date.strftime("%Y%m%d")
+                'format': 'link',
+                'ticker': symbol.lower(),
+                'type': securityType.lower(),
+                'market': market.lower(),
+                'resolution': resolution.lower(),
+                'date': date.strftime("%Y%m%d")
             })
-
-        return self.api_connection.try_request(request)
-
-    def read_backtest_report(self, projectId, backtestId):
-        """Read out the report of a backtest in the project id specified.
-        Args:
-            projectId(int): Project id to read.
-            backtestId(str): Specific backtest id to read.
-        Returns:
-            BacktestReport report
-        """
-        request = Request('POST', "backtests/read/report",
-            params =
-            {
-                "backtestId": backtestId, 
-                "projectId": projectId
-            })
-
-        return self.api_connection.try_request(request)
 
     def download_data(self, symbol, securityType, market, resolution, date, fileName):
-        """Method to download and save the data purchased through QuantConnect
+        '''Method to download and save the data purchased through QuantConnect
+
         Args:
             symbol(str): Symbol of security of which data will be requested.
             securityType(str): Type of underlying asset
@@ -461,18 +510,34 @@ class Api:
             date(datetime): Date of the data requested.
             fileName(str): file name of data download
         Returns:
-            bool indicating whether the data was successfully downloaded or not
-        """
+            Boolean indicating whether the data was successfully downloaded or not
+        '''
 
         # Get a link to the data
         link = self.read_data_link(symbol, securityType, market, resolution, date)
-        
-        # Make sure the link was successfully retrieved
-        if link['success']:
-            # download and save the data
-            request = requests_get(link['link'], stream=True)
-            with open(fileName + '.zip', "wb") as code:
-                for chunk in request.iter_content(DOWNLOAD_CHUNK_SIZE):
-                    code.write(chunk)
 
-        return link['success']
+        # Make sure the link was successfully retrieved
+        if not link['success']:
+            return False
+
+        # download and save the data
+        with open(fileName + '.zip', "wb") as code:
+            request = get(link['link'], stream=True)
+            for chunk in request.iter_content(DOWNLOAD_CHUNK_SIZE):
+                code.write(chunk)
+
+        return True
+
+    def __pretty_print(self, result):
+        '''Print out a nice formatted version of the request'''
+        print ('')
+        try:
+            parsed = loads(result.text)
+            print (dumps(parsed, indent=4, sort_keys=True))
+        except Exception  as err:
+            print ('Fall back error (text print)')
+            print ('')
+            print (result.text)
+            print ('')
+            print (err)
+        print ('')
