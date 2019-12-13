@@ -55,6 +55,9 @@ namespace QuantConnect.Report.ReportElements
             var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values).AssetAllocations(_backtest.Orders.Values.ToList());
             var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values).AssetAllocations(liveOrders);
 
+            backtestSeries.Print();
+            liveSeries.Print();
+
             PyObject result;
 
             using (Py.GIL())
@@ -62,11 +65,11 @@ namespace QuantConnect.Report.ReportElements
                 var data = new PyList();
                 var liveData = new PyList();
 
-                data.Append(backtestSeries.Keys.Select(x => x.Value).ToList().ToPython());
-                data.Append(backtestSeries.Values.Select(x => x.ToPython()).ToList().ToPython());
+                data.Append(backtestSeries.Where(x => x.Value != 0).Keys.Select(x => x.Value).ToList().ToPython());
+                data.Append(backtestSeries.Where(x => x.Value != 0).Values.Select(x => x.ToPython()).ToList().ToPython());
 
-                liveData.Append(liveSeries.Keys.Select(x => x.Value).ToList().ToPython());
-                liveData.Append(liveSeries.Values.Select(x => x.ToPython()).ToList().ToPython());
+                liveData.Append(liveSeries.Where(x => x.Value != 0).Keys.Select(x => x.Value).ToList().ToPython());
+                liveData.Append(liveSeries.Where(x => x.Value != 0).Values.Select(x => x.ToPython()).ToList().ToPython());
 
                 result = Charting.GetAssetAllocation(data, liveData);
             }

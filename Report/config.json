@@ -1,11 +1,38 @@
 ﻿{
   "pdf-configuration-path": "C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe",
-  "data-folder": "C:/Server/Lean/Data",
+  "data-folder": "../../../Data",
   "strategy-name": "Fixed Income Model",
   "strategy-version": "v1.0.2",
   "strategy-description": "This is a relative value trade. It is looking to move money continuously into the most attractive global equity and fixed income assets. The strategy is long only and makes daily predictions. The algorithm decides how much exposure to take on to each asset class and can be totally risk on or risk off on a given day. The capacity of the trade is around 50mm. We have been running a different version of this strategy for around 1.5 years. The returns from the live have closely matched the expected returns from the backtests. We are looking to license the strategy at a 2% annual fee for the capacity. The raw version of the alpha is posted and can be traded as is or with a spy hedge to reduce monthly beta exposure.",
   "live-data-source-file": "FixedIncomeModel-Live.json",
   "backtest-data-source-file": "FixedIncomeModel.json",
   "report-destination": "output.html",
-  "generate-pdf": true
+  "generate-pdf": true,
+
+  "environment": "report",
+  // handlers
+  "log-handler": "QuantConnect.Logging.CompositeLogHandler",
+  "messaging-handler": "QuantConnect.Messaging.Messaging",
+  "job-queue-handler": "QuantConnect.Queues.JobQueue",
+  "api-handler": "QuantConnect.Api.Api",
+  "map-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider",
+  "factor-file-provider": "QuantConnect.Data.Auxiliary.LocalDiskFactorFileProvider",
+  "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
+  "alpha-handler": "QuantConnect.Lean.Engine.Alphas.DefaultAlphaHandler",
+  "data-channel-provider": "DataChannelProvider",
+
+  "environments": {
+
+    // defines the 'backtesting' environment
+    "report": {
+      "live-mode": false,
+
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
+      "history-provider": "QuantConnect.Lean.Engine.HistoricalData.SubscriptionDataReaderHistoryProvider",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
+    },
+  }
 }

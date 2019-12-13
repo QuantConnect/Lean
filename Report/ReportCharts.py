@@ -96,7 +96,7 @@ class ReportCharts:
             plt.ylabel('')
 
         # Set the x ticks as percentage to keep consistency
-        plt.xticks(ticks=plt.xticks()[0], labels=["{:.1f}%".format(tick * 100) for tick in plt.xticks()[0]])
+        plt.xticks(ticks=plt.xticks()[0], labels=["{:.2f}%".format(tick * 100) for tick in plt.xticks()[0]])
 
         fig.set_size_inches(width, height)
         base64 = self.fig_to_base64(name, fig)
@@ -507,7 +507,7 @@ class ReportCharts:
         plt.axhline(y=0, color= gray, zorder=1)
         plt.setp(ax.spines.values(), color='#d5d5d5')
         ax.tick_params(axis='x', labelsize=8, labelrotation=45)
-        plt.yticks(fontsize=8)
+        plt.yticks(ticks=plt.yticks()[0], labels=['{0:g}%'.format(i * 100) for i in plt.yticks()[0]], fontsize=8)
         plt.setp([ax.get_xticklines(), ax.get_yticklines()], color='#d5d5d5')
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
@@ -645,7 +645,7 @@ class ReportCharts:
             plt.cla()
             plt.clf()
             plt.close('all')
-            return base64
+            return {"Backtest Asset Allocation": base64}
 
         symbols = [data[0], live_data[0]]
 
@@ -676,12 +676,14 @@ class ReportCharts:
             plt.axis('equal')
             fig.set_size_inches(width, height)
             if i == 0:
-                pies.update({"Backtest Asset Allocation": self.fig_to_base64(f"asset-allocation-backtest.png", fig)})
+                pies["Backtest Asset Allocation"] = self.fig_to_base64(f"asset-allocation-backtest.png", fig)
             else:
-                pies.update({"Live Asset Allocation": self.fig_to_base64(f"asset-allocation-live.png", fig)})
+                pies["Live Asset Allocation"] = self.fig_to_base64(f"asset-allocation-live.png", fig)
             plt.cla()
             plt.clf()
             plt.close('all')
+
+        pies["filler"] = ''
 
         return pies
 
@@ -792,6 +794,34 @@ class ReportCharts:
         if len([x for x in live_short_data]) == 0:
             live_short_data = [[]]
 
+        # Create step plot for the stackplot by adding a value
+        # right before the next data point with the same previous value
+        live_time_copy = []
+        live_long_data_copy = []
+        live_short_data_copy = []
+        j = 0
+        for time_idx, longs, shorts in zip(live_time, live_long_data, live_short_data):
+            live_long_data_copy.append([])
+            live_short_data_copy.append([])
+            
+            long_len = len(longs)
+
+            for i in range(1, long_len + 1):
+                if i == long_len :
+                    live_time_copy.append(live_time[i - 1])
+                    live_long_data_copy[j].append(longs[i - 1])
+                    live_short_data_copy[j].append(shorts[i - 1])
+
+                else:
+                    live_time_copy.append(live_time[i - 1])
+                    live_time_copy.append(live_time[i])
+                    live_long_data_copy[j].append(longs[i - 1])
+                    live_long_data_copy[j].append(longs[i - 1])
+                    live_short_data_copy[j].append(shorts[i - 1])
+                    live_short_data_copy[j].append(shorts[i - 1])
+
+            j += 1
+
         # No need to check if live is empty or not, this will handle it, just needs to plot whichever has the longer time index first
         if max([len(x) for x in long_data]) > max([len(x) for x in short_data]):
             ax.stackplot(time_copy[:max([len(x) for x in long_data_copy])], np.vstack(long_data_copy),
@@ -804,15 +834,15 @@ class ReportCharts:
             ax.stackplot(time_copy[:max([len(x) for x in long_data_copy])], np.vstack(long_data_copy),
                          color=[color_map[security] for security in long_securities], alpha=0.75)
 
-        if max([len(x) for x in live_long_data]) > max([len(x) for x in live_short_data]):
-            ax.stackplot(live_time[:max([len(x) for x in live_long_data])], np.vstack(live_long_data),
+        if max([len(x) for x in live_long_data_copy]) > max([len(x) for x in live_short_data_copy]):
+            ax.stackplot(live_time_copy[:max([len(x) for x in live_long_data_copy])], np.vstack(live_long_data_copy),
                          color=[live_color_map[security] for security in live_long_securities], alpha = 0.75)
-            ax.stackplot(live_time[:max([len(x) for x in live_short_data])], np.vstack(live_short_data),
+            ax.stackplot(live_time_copy[:max([len(x) for x in live_short_data_copy])], np.vstack(live_short_data_copy),
                          color=[live_color_map[security] for security in live_short_securities], alpha = 0.75)
         else:
-            ax.stackplot(live_time[:max([len(x) for x in live_short_data])], np.vstack(live_short_data),
+            ax.stackplot(live_time_copy[:max([len(x) for x in live_short_data_copy])], np.vstack(live_short_data_copy),
                          color=[live_color_map[security] for security in live_short_securities], alpha=0.75)
-            ax.stackplot(live_time[:max([len(x) for x in live_long_data])], np.vstack(live_long_data),
+            ax.stackplot(live_time_copy[:max([len(x) for x in live_long_data_copy])], np.vstack(live_long_data_copy),
                          color=[live_color_map[security] for security in live_long_securities], alpha=0.75)
 
         labels = list(set(labels))

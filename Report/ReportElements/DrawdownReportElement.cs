@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Deedle;
 using Python.Runtime;
@@ -69,14 +70,23 @@ namespace QuantConnect.Report.ReportElements
                 liveList.Append(liveUnderwaterPlot.Values.ToList().ToPython());
 
                 var worstList = new PyList();
+                var previousDrawdownPeriods = new List<KeyValuePair<DateTime, DateTime>>();
+
                 foreach (var group in drawdownCollection.Drawdowns)
                 {
+                    // Skip drawdown periods that are overlapping
+                    if (previousDrawdownPeriods.Where(kvp => (group.Start >= kvp.Key && group.Start <= kvp.Value) || (group.End >= kvp.Key && group.End <= kvp.Value)).Any())
+                    {
+                        continue;
+                    }
+
                     var worst = new PyDict();
                     worst.SetItem("Begin", group.Start.ToPython());
                     worst.SetItem("End", group.End.ToPython());
                     worst.SetItem("Total", group.PeakToTrough.ToPython());
 
                     worstList.Append(worst);
+                    previousDrawdownPeriods.Add(new KeyValuePair<DateTime, DateTime>(group.Start, group.End));
                 }
 
                 base64 = Charting.GetDrawdown(backtestList, liveList, worstList);

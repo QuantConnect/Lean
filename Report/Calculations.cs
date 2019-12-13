@@ -134,7 +134,9 @@ namespace QuantConnect.Report
 
             var returns = Frame.CreateEmpty<DateTime, string>();
             returns["strategy"] = dailyReturnsSeries;
-            returns["benchmark"] = benchmarkReturns;
+            returns = returns.Join("benchmark", benchmarkReturns)
+                .FillMissing(Direction.Forward)
+                .DropSparseRows();
 
             var correlation = returns
                 .Window(windowSize)
@@ -143,7 +145,9 @@ namespace QuantConnect.Report
             var portfolioStandardDeviation = dailyReturnsSeries.Window(windowSize).SelectValues(s => s.StdDev());
             var benchmarkStandardDeviation = benchmarkReturns.Window(windowSize).SelectValues(s => s.StdDev());
 
-            return correlation * (portfolioStandardDeviation / benchmarkStandardDeviation);
+            return (correlation * (portfolioStandardDeviation / benchmarkStandardDeviation))
+                .FillMissing(Direction.Forward)
+                .DropMissing();
         }
 
         /// <summary>
