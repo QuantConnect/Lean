@@ -29,6 +29,7 @@ namespace QuantConnect.Tests
         public static readonly Symbol MSFT = CreateEquitySymbol("MSFT");
         public static readonly Symbol ZNGA = CreateEquitySymbol("ZNGA");
         public static readonly Symbol FXE = CreateEquitySymbol("FXE");
+        public static readonly Symbol LODE = CreateEquitySymbol("LODE");
 
         public static readonly Symbol USDJPY = CreateForexSymbol("USDJPY");
         public static readonly Symbol EURUSD = CreateForexSymbol("EURUSD");
