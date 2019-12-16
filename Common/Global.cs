@@ -710,6 +710,30 @@ namespace QuantConnect
         /// </summary>
         public static readonly HashSet<DateTime> Dates = new HashSet<DateTime>
         {
+            // Specific dates ordered by year, month and day.
+
+            /* World Trade Center */
+            new DateTime(2001, 09, 11),
+            new DateTime(2001, 09, 12),
+            new DateTime(2001, 09, 13),
+            new DateTime(2001, 09, 14),
+
+            /* Day of Mourning for Former President Ronald W. Regan */
+            new DateTime(2004, 06, 11),
+
+            /* Day of Mourning for Former President Gerald R. Ford */
+            new DateTime(2007, 01, 02),
+
+            /* Hurricane Sandy */
+            new DateTime(2012, 10, 29),
+            new DateTime(2012, 10, 30),
+
+            /* Day of Mourning for Former President George H.W. Bush */
+            new DateTime(2018, 12, 5),
+
+
+            // Annually recurring dates ordered by month and day.
+
             /* New Years Day*/
             new DateTime(1998, 01, 01),
             new DateTime(1999, 01, 01),
@@ -735,22 +759,6 @@ namespace QuantConnect
             new DateTime(2021, 01, 01),
             new DateTime(2022, 01, 01),
             new DateTime(2023, 01, 02),
-
-            /* Day of Mouring */
-            new DateTime(2007, 01, 02),
-
-            /* World Trade Center */
-            new DateTime(2001, 09, 11),
-            new DateTime(2001, 09, 12),
-            new DateTime(2001, 09, 13),
-            new DateTime(2001, 09, 14),
-
-            /* Regan Funeral */
-            new DateTime(2004, 06, 11),
-
-            /* Hurricane Sandy */
-            new DateTime(2012, 10, 29),
-            new DateTime(2012, 10, 30),
 
             /* Martin Luther King Jnr Day*/
             new DateTime(1998, 01, 19),
