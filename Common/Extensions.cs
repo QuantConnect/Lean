@@ -34,6 +34,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Python;
 using QuantConnect.Securities;
@@ -371,7 +372,18 @@ namespace QuantConnect
             {
                 return value;
             }
-            return Math.Truncate(1000 * value) / 1000;
+
+            try
+            {
+                return Math.Truncate(1000 * value) / 1000;
+            }
+            catch (Exception exception)
+            {
+                // even if we have the initial check for extreme values, the conversion can explode
+                // so lets catch it here, log and return 0.
+                Log.Error(exception);
+                return 0;
+            }
         }
 
         /// <summary>
