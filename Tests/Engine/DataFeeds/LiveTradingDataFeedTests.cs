@@ -1778,7 +1778,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             timeProvider.SetCurrentTime(startDate);
 
             var lastTime = DateTime.MinValue;
-            var emittedData = new ManualResetEvent(false);
+            var timeAdvanced = new AutoResetEvent(true);
             var isLookupSymbolsCalled = false;
 
             var optionSymbol1 = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 192m, new DateTime(2019, 12, 19));
@@ -1792,15 +1792,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var futureSymbols = new HashSet<Symbol>();
             var optionSymbols = new HashSet<Symbol>();
 
+            var timer = new Timer(
+                _ =>
+                {
+                    timeProvider.Advance(TimeSpan.FromMinutes(60));
+                    ConsoleWriteLine($"Time advanced to {timeProvider.GetUtcNow()} UTC");
+                    timeAdvanced.Set();
+                }, null, Time.OneSecond, TimeSpan.FromMilliseconds(100));
+
             var dataQueueHandler = new FuncDataQueueHandlerUniverseProvider(
                 fdqh =>
                 {
+                    timeAdvanced.WaitOne();
+
                     var utcTime = timeProvider.GetUtcNow();
                     var exchangeTime = utcTime.ConvertFromUtc(exchangeTimeZone);
                     if (exchangeTime == lastTime ||
                         exchangeTime > endDate.ConvertTo(algorithmTimeZone, exchangeTimeZone))
                     {
-                        emittedData.Set();
                         return Enumerable.Empty<BaseData>();
                     }
 
@@ -1814,15 +1823,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             Time = exchangeTime,
                             EndTime = exchangeTime,
                             TickType = TickType.Trade,
-                            Value = 100,
-                            Quantity = 1
-                        },
-                        new Tick
-                        {
-                            Symbol = Symbols.EURUSD,
-                            Time = exchangeTime,
-                            EndTime = exchangeTime,
-                            TickType = TickType.Quote,
                             Value = 100,
                             Quantity = 1
                         }
@@ -1867,7 +1867,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     ConsoleWriteLine($"DQH: Emitting data point at {utcTime.ConvertFromUtc(algorithmTimeZone)}");
 
-                    emittedData.Set();
                     return dataPoints;
                 },
 
@@ -1876,13 +1875,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     isLookupSymbolsCalled = true;
 
-                    var time = timeProvider.GetUtcNow().ConvertFromUtc(algorithmTimeZone);
+                    var utcTime = timeProvider.GetUtcNow();
+                    var time = utcTime.ConvertFromUtc(algorithmTimeZone);
 
-                    ConsoleWriteLine($"LookupSymbols() called at {time}");
+                    var isValidTime = time.Hour >= 1 && time.Hour < 23;
 
-                    Assert.That(time.Hour >= 1 && time.Hour < 23);
+                    ConsoleWriteLine($"LookupSymbols() called at {time} - valid: {isValidTime}");
 
-                    time = timeProvider.GetUtcNow().ConvertFromUtc(exchangeTimeZone);
+                    Assert.That(isValidTime);
+
+                    time = utcTime.ConvertFromUtc(exchangeTimeZone);
 
                     switch (secType)
                     {
@@ -1950,8 +1952,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var synchronizer = new TestableLiveSynchronizer(timeProvider, TimeSpan.FromMilliseconds(25));
             synchronizer.Initialize(algorithm, dataManager);
 
-            algorithm.AddForex("EURUSD", Resolution.Minute, Market.FXCM);
-
             if (securityType == SecurityType.Option)
             {
                 algorithm.AddEquity("SPY", Resolution.Minute);
@@ -2015,7 +2015,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 }
 
                 if (lastSecurityChangedTime != null &&
-                    timeSlice.Time > lastSecurityChangedTime.Value.AddMinutes(30))
+                    timeSlice.Time > lastSecurityChangedTime.Value.AddMinutes(60))
                 {
                     if (securityType == SecurityType.Future)
                     {
@@ -2078,17 +2078,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     ConsoleWriteLine($"{timeSlice.Time} - universe data: {symbols}");
                 }
 
-                emittedData.Reset();
-
-                // for faster testing
-                timeProvider.Advance(TimeSpan.FromMinutes(30));
-
-                // give enough time to the producer to emit
-                if (!emittedData.WaitOne(300))
-                {
-                    Assert.Fail("Timeout waiting for data generation");
-                }
-
                 var currentTime = timeProvider.GetUtcNow();
                 algorithm.SetDateTime(currentTime);
 
@@ -2116,6 +2105,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             dataManager.RemoveAllSubscriptions();
+
+            timer.DisposeSafely();
         }
     }
 
