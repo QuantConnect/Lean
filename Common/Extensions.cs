@@ -34,6 +34,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Python;
 using QuantConnect.Securities;
@@ -365,12 +366,14 @@ namespace QuantConnect
         /// <returns>New instance with just 3 decimal places</returns>
         public static decimal TruncateTo3DecimalPlaces(this decimal value)
         {
-            if (value == decimal.MaxValue
+            // we will multiply by 1k bellow, if its bigger it will stack overflow
+            if (value >= decimal.MaxValue / 1000
                 || value == decimal.MinValue
                 || value == 0)
             {
                 return value;
             }
+
             return Math.Truncate(1000 * value) / 1000;
         }
 

@@ -50,7 +50,8 @@ namespace QuantConnect.Tests
             Language language,
             AlgorithmStatus expectedFinalStatus,
             DateTime? startDate = null,
-            DateTime? endDate = null)
+            DateTime? endDate = null,
+            string setupHandler = "RegressionSetupHandlerWrapper")
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
@@ -72,7 +73,7 @@ namespace QuantConnect.Tests
                 Config.Set("environment", "");
                 Config.Set("messaging-handler", "QuantConnect.Messaging.Messaging");
                 Config.Set("job-queue-handler", "QuantConnect.Queues.JobQueue");
-                Config.Set("setup-handler", "RegressionSetupHandlerWrapper");
+                Config.Set("setup-handler", setupHandler);
                 Config.Set("history-provider", "RegressionHistoryProviderWrapper");
                 Config.Set("api-handler", "QuantConnect.Api.Api");
                 Config.Set("result-handler", "QuantConnect.Lean.Engine.Results.RegressionResultHandler");
@@ -200,9 +201,9 @@ namespace QuantConnect.Tests
         /// <summary>
         /// Used to intercept the algorithm instance to aid the <see cref="RegressionHistoryProviderWrapper"/>
         /// </summary>
-        class RegressionSetupHandlerWrapper : BacktestingSetupHandler
+        internal class RegressionSetupHandlerWrapper : BacktestingSetupHandler
         {
-            public static IAlgorithm Algorithm { get; private set; }
+            public static IAlgorithm Algorithm { get; protected set; }
             public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
             {
                 Algorithm = base.CreateAlgorithmInstance(algorithmNodePacket, assemblyPath);
