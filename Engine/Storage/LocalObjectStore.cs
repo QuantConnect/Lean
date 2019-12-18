@@ -77,6 +77,12 @@ namespace QuantConnect.Lean.Engine.Storage
 
             Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {new FileInfo(AlgorithmStorageRoot).FullName}");
 
+            foreach (var file in Directory.EnumerateFiles(AlgorithmStorageRoot))
+            {
+                var contents = File.ReadAllBytes(file);
+                _storage[Path.GetFileName(file)] = contents;
+            }
+
             Controls = controls;
 
             _persistenceInterval = TimeSpan.FromSeconds(controls.PersistenceIntervalSeconds);
@@ -218,6 +224,10 @@ namespace QuantConnect.Lean.Engine.Storage
         {
             try
             {
+                _persistenceTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+                Persist();
+
                 _persistenceTimer?.DisposeSafely();
 
                 // if the object store was not used, delete the empty storage directory created in Initialize
