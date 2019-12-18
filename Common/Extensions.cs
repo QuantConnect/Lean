@@ -366,24 +366,15 @@ namespace QuantConnect
         /// <returns>New instance with just 3 decimal places</returns>
         public static decimal TruncateTo3DecimalPlaces(this decimal value)
         {
-            if (value == decimal.MaxValue
+            // we will multiply by 1k bellow, if its bigger it will stack overflow
+            if (value >= decimal.MaxValue / 1000
                 || value == decimal.MinValue
                 || value == 0)
             {
                 return value;
             }
 
-            try
-            {
-                return Math.Truncate(1000 * value) / 1000;
-            }
-            catch (Exception exception)
-            {
-                // even if we have the initial check for extreme values, the conversion can explode
-                // so lets catch it here, log and return 0.
-                Log.Error(exception);
-                return 0;
-            }
+            return Math.Truncate(1000 * value) / 1000;
         }
 
         /// <summary>
