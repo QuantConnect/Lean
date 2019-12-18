@@ -282,8 +282,8 @@ namespace QuantConnect.Lean.Engine.Storage
             }
             catch (Exception err)
             {
-                OnErrorRaised(err);
                 Log.Error("LocalObjectStore.Persist()", err);
+                OnErrorRaised(err);
             }
             finally
             {
@@ -310,8 +310,8 @@ namespace QuantConnect.Lean.Engine.Storage
             }
             catch (Exception err)
             {
-                OnErrorRaised(err);
                 Log.Error("LocalObjectStore.PersistData()", err);
+                OnErrorRaised(err);
                 return false;
             }
         }
