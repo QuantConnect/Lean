@@ -131,6 +131,9 @@ namespace QuantConnect.Lean.Engine
                     // initialize the object store
                     AlgorithmHandlers.ObjectStore.Initialize(algorithm.Name, job.UserId, job.ProjectId, job.UserToken, job.Controls);
 
+                    // notify the user of any errors w/ object store persistence
+                    AlgorithmHandlers.ObjectStore.ErrorRaised += (sender, args) => algorithm.Debug($"ObjectStore Persistence Error: {args.Error.Message}");
+
                     // Initialize the brokerage
                     IBrokerageFactory factory;
                     brokerage = AlgorithmHandlers.Setup.CreateBrokerage(job, algorithm, out factory);
