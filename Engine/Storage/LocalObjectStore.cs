@@ -36,6 +36,11 @@ namespace QuantConnect.Lean.Engine.Storage
         private static string StorageRoot => Path.GetFullPath(Config.Get("object-store-root", "./storage"));
 
         /// <summary>
+        /// Event raised each time there's an error
+        /// </summary>
+        public event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
+
+        /// <summary>
         /// Flag indicating the state of this object storage has changed since the last <seealso cref="Persist"/> invocation
         /// </summary>
         private volatile bool _dirty;
@@ -44,6 +49,9 @@ namespace QuantConnect.Lean.Engine.Storage
         private TimeSpan _persistenceInterval;
         private readonly ConcurrentDictionary<string, byte[]> _storage = new ConcurrentDictionary<string, byte[]>();
 
+        /// <summary>
+        /// Provides access to the controls governing behavior of this instance, such as the persistence interval
+        /// </summary>
         protected Controls Controls { get; private set; }
 
         /// <summary>
@@ -218,17 +226,23 @@ namespace QuantConnect.Lean.Engine.Storage
                     Directory.Delete(AlgorithmStorageRoot);
                 }
             }
-            catch (Exception exception)
+            catch (Exception err)
             {
-                Log.Error(exception, "Error deleting storage directory.");
+                Log.Error(err, "Error deleting storage directory.");
             }
         }
 
+        /// <summary>Returns an enumerator that iterates through the collection.</summary>
+        /// <returns>A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.</returns>
+        /// <filterpriority>1</filterpriority>
         public IEnumerator<KeyValuePair<string, byte[]>> GetEnumerator()
         {
             return _storage.GetEnumerator();
         }
 
+        /// <summary>Returns an enumerator that iterates through a collection.</summary>
+        /// <returns>An <see cref="T:System.Collections.IEnumerator" /> object that can be used to iterate through the collection.</returns>
+        /// <filterpriority>2</filterpriority>
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
@@ -258,6 +272,7 @@ namespace QuantConnect.Lean.Engine.Storage
             }
             catch (Exception err)
             {
+                OnErrorRaised(err);
                 Log.Error("LocalObjectStore.Persist()", err);
             }
             finally
@@ -285,11 +300,23 @@ namespace QuantConnect.Lean.Engine.Storage
             }
             catch (Exception err)
             {
+                OnErrorRaised(err);
                 Log.Error("LocalObjectStore.PersistData()", err);
                 return false;
             }
         }
 
+        /// <summary>
+        /// Event invocator for the <see cref="ErrorRaised"/> event
+        /// </summary>
+        protected virtual void OnErrorRaised(Exception error)
+        {
+            ErrorRaised?.Invoke(this, new ObjectStoreErrorRaisedEventArgs(error));
+        }
+
+        /// <summary>
+        /// Converts a number of bytes to megabytes as it's more human legible
+        /// </summary>
         private static double BytesToMb(long bytes)
         {
             return bytes / 1024.0 / 1024.0;

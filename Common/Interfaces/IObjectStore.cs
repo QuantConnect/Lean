@@ -27,6 +27,11 @@ namespace QuantConnect.Interfaces
     public interface IObjectStore : IDisposable, IEnumerable<KeyValuePair<string, byte[]>>
     {
         /// <summary>
+        /// Event raised each time there's an error
+        /// </summary>
+        event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
+
+        /// <summary>
         /// Initializes the object store
         /// </summary>
         /// <param name="algorithmName">The algorithm name</param>

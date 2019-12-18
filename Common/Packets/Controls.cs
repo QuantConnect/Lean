@@ -15,6 +15,7 @@
 */
 
 using Newtonsoft.Json;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Packets
 {
@@ -108,6 +109,10 @@ namespace QuantConnect.Packets
         [JsonProperty(PropertyName = "storageFileCountMB")]
         public int StorageFileCount;
 
+        /// <summary>
+        /// The interval over which the <see cref="IObjectStore"/> will persistence the contents of
+        /// the object store
+        /// </summary>
         [JsonProperty(PropertyName = "persistenceIntervalSeconds")]
         public int PersistenceIntervalSeconds;
 

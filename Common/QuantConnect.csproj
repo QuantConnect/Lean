@@ -322,6 +322,7 @@
     <Compile Include="Interfaces\ISubscriptionDataConfigProvider.cs" />
     <Compile Include="Interfaces\ISubscriptionDataConfigService.cs" />
     <Compile Include="Interfaces\ITimeKeeper.cs" />
+    <Compile Include="Interfaces\ObjectStoreErrorRaisedEventArgs.cs" />
     <Compile Include="IsolatorLimitResult.cs" />
     <Compile Include="IsolatorLimitResultProvider.cs" />
     <Compile Include="ITimeProvider.cs" />
