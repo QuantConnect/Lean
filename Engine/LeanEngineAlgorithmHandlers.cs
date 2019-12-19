@@ -80,6 +80,11 @@ namespace QuantConnect.Lean.Engine
         public IAlphaHandler Alphas { get; }
 
         /// <summary>
+        /// Gets the object store used for persistence
+        /// </summary>
+        public IObjectStore ObjectStore { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LeanEngineAlgorithmHandlers"/> class from the specified handlers
         /// </summary>
         /// <param name="results">The result handler for communicating results from the algorithm</param>
@@ -91,6 +96,7 @@ namespace QuantConnect.Lean.Engine
         /// <param name="factorFileProvider">Map file provider used as a map file source for the data feed</param>
         /// <param name="dataProvider">file provider used to retrieve security data if it is not on the file system</param>
         /// <param name="alphas">The alpha handler used to process generated insights</param>
+        /// <param name="objectStore">The object store used for persistence</param>
         public LeanEngineAlgorithmHandlers(IResultHandler results,
             ISetupHandler setup,
             IDataFeed dataFeed,
@@ -99,7 +105,8 @@ namespace QuantConnect.Lean.Engine
             IMapFileProvider mapFileProvider,
             IFactorFileProvider factorFileProvider,
             IDataProvider dataProvider,
-            IAlphaHandler alphas
+            IAlphaHandler alphas,
+            IObjectStore objectStore
             )
         {
             if (results == null)
@@ -138,6 +145,10 @@ namespace QuantConnect.Lean.Engine
             {
                 throw new ArgumentNullException(nameof(alphas));
             }
+            if (objectStore == null)
+            {
+                throw new ArgumentNullException(nameof(objectStore));
+            }
 
             Results = results;
             Setup = setup;
@@ -148,6 +159,7 @@ namespace QuantConnect.Lean.Engine
             FactorFileProvider = factorFileProvider;
             DataProvider = dataProvider;
             Alphas = alphas;
+            ObjectStore = objectStore;
         }
 
         /// <summary>
@@ -167,6 +179,7 @@ namespace QuantConnect.Lean.Engine
             var factorFileProviderTypeName = Config.Get("factor-file-provider", "LocalDiskFactorFileProvider");
             var dataProviderTypeName = Config.Get("data-provider", "DefaultDataProvider");
             var alphaHandlerTypeName = Config.Get("alpha-handler", "DefaultAlphaHandler");
+            var objectStoreTypeName = Config.Get("object-store", "LocalObjectStore");
 
             return new LeanEngineAlgorithmHandlers(
                 composer.GetExportedValueByTypeName<IResultHandler>(resultHandlerTypeName),
@@ -177,7 +190,8 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IMapFileProvider>(mapFileProviderTypeName),
                 composer.GetExportedValueByTypeName<IFactorFileProvider>(factorFileProviderTypeName),
                 composer.GetExportedValueByTypeName<IDataProvider>(dataProviderTypeName),
-                composer.GetExportedValueByTypeName<IAlphaHandler>(alphaHandlerTypeName)
+                composer.GetExportedValueByTypeName<IAlphaHandler>(alphaHandlerTypeName),
+                composer.GetExportedValueByTypeName<IObjectStore>(objectStoreTypeName)
                 );
         }
 
@@ -188,6 +202,7 @@ namespace QuantConnect.Lean.Engine
         public void Dispose()
         {
             Setup.Dispose();
+            ObjectStore.Dispose();
 
             Log.Trace("LeanEngineAlgorithmHandlers.Dispose(): Disposed of algorithm handlers.");
         }

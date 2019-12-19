@@ -521,6 +521,11 @@ namespace QuantConnect.Algorithm
         public Slice CurrentSlice { get; private set; }
 
         /// <summary>
+        /// Gets the object store, used for persistence
+        /// </summary>
+        public IObjectStore ObjectStore { get; private set; }
+
+        /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         /// <seealso cref="SetStartDate(DateTime)"/>
@@ -2187,6 +2192,15 @@ namespace QuantConnect.Algorithm
         public void SetApi(IApi api)
         {
             _api = api;
+        }
+
+        /// <summary>
+        /// Sets the object store
+        /// </summary>
+        /// <param name="objectStore">The object store</param>
+        public void SetObjectStore(IObjectStore objectStore)
+        {
+            ObjectStore = objectStore;
         }
 
         /// <summary>

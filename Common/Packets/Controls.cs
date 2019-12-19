@@ -15,6 +15,7 @@
 */
 
 using Newtonsoft.Json;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Packets
 {
@@ -97,6 +98,25 @@ namespace QuantConnect.Packets
         public LeakyBucketControlParameters TrainingLimits;
 
         /// <summary>
+        /// Limits the total size of storage used by <see cref="IObjectStore"/>
+        /// </summary>
+        [JsonProperty(PropertyName = "storageLimitMB")]
+        public int StorageLimitMB;
+
+        /// <summary>
+        /// Limits the number of files to be held under the <see cref="IObjectStore"/>
+        /// </summary>
+        [JsonProperty(PropertyName = "storageFileCountMB")]
+        public int StorageFileCount;
+
+        /// <summary>
+        /// The interval over which the <see cref="IObjectStore"/> will persistence the contents of
+        /// the object store
+        /// </summary>
+        [JsonProperty(PropertyName = "persistenceIntervalSeconds")]
+        public int PersistenceIntervalSeconds;
+
+        /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class
         /// </summary>
         public Controls()
@@ -112,6 +132,9 @@ namespace QuantConnect.Packets
             BacktestingMaxInsights = 10000;
             MaximumDataPointsPerChartSeries = 4000;
             SecondTimeOut = 300;
+            StorageLimitMB = 5;
+            StorageFileCount = 100;
+            PersistenceIntervalSeconds = 5;
 
             // initialize to default leaky bucket values in case they're not specified
             TrainingLimits = new LeakyBucketControlParameters();

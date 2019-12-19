@@ -64,6 +64,11 @@ namespace QuantConnect.Lean.Engine.Setup
         public IRealTimeHandler RealTimeHandler { get; }
 
         /// <summary>
+        /// Gets the ObjectStore
+        /// </summary>
+        public IObjectStore ObjectStore { get; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="universeSelection">The universe selection instance</param>
@@ -73,13 +78,15 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="resultHandler">The configured result handler</param>
         /// <param name="transactionHandler">The configured transaction handler</param>
         /// <param name="realTimeHandler">The configured real time handler</param>
+        /// <param name="objectStore">The configured object store</param>
         public SetupHandlerParameters(UniverseSelection universeSelection,
             IAlgorithm algorithm,
             IBrokerage brokerage,
             AlgorithmNodePacket algorithmNodePacket,
             IResultHandler resultHandler,
             ITransactionHandler transactionHandler,
-            IRealTimeHandler realTimeHandler
+            IRealTimeHandler realTimeHandler,
+            IObjectStore objectStore
             )
         {
             UniverseSelection = universeSelection;
@@ -89,6 +96,7 @@ namespace QuantConnect.Lean.Engine.Setup
             ResultHandler = resultHandler;
             TransactionHandler = transactionHandler;
             RealTimeHandler = realTimeHandler;
+            ObjectStore = objectStore;
         }
     }
 }

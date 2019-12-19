@@ -321,6 +321,11 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
+        /// Gets the object store, used for persistence
+        /// </summary>
+        IObjectStore ObjectStore { get; }
+
+        /// <summary>
         /// Returns the current Slice object
         /// </summary>
         Slice CurrentSlice { get; }
@@ -684,6 +689,12 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="api">Initiated API</param>
         void SetApi(IApi api);
+
+        /// <summary>
+        /// Sets the object store
+        /// </summary>
+        /// <param name="objectStore">The object store</param>
+        void SetObjectStore(IObjectStore objectStore);
 
         /// <summary>
         /// Sets the order event provider
