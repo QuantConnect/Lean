@@ -136,8 +136,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 Current.Underlying = Underlying.Current;
                 Current.Time = Underlying.Current.EndTime;
                 Current.EndTime = Underlying.Current.EndTime;
-
-                _lastEmitTime = Current.EndTime;
             }
 
             return true;

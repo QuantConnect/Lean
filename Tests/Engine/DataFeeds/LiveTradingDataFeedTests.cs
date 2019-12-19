@@ -1883,7 +1883,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     var isValidTime = time.Hour >= 1 && time.Hour < 23;
 
-                    Log.Debug($"LookupSymbols() called at {time} ({algorithmTimeZone}) - valid: {isValidTime}");
+                    Log.Trace($"LookupSymbols() called at {time} ({algorithmTimeZone}) - valid: {isValidTime}");
 
                     if (!isValidTime)
                     {
@@ -1912,7 +1912,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 secType =>
                 {
                     var time = timeProvider.GetUtcNow().ConvertFromUtc(algorithmTimeZone);
-                    var result = time.Hour >= 1 && time.Hour < 23;
+                    var result = time.Hour >= 1 && time.Hour < 23 && time.Day != 21;
 
                     Log.Debug($"CanAdvanceTime() called at {time} ({algorithmTimeZone}), returning {result}");
 
@@ -2104,7 +2104,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 throw lookupSymbolsException;
             }
 
-            Assert.AreEqual(3, lookupCount, "LookupSymbols call count mismatch");
+            Assert.AreEqual(2, lookupCount, "LookupSymbols call count mismatch");
 
             if (securityType == SecurityType.Future)
             {
