@@ -21,7 +21,6 @@ namespace QuantConnect.Report.ReportElements
 {
     internal abstract class ChartReportElement : ReportElement
     {
-        internal static dynamic Pandas;
         internal static dynamic Charting;
 
         /// <summary>
@@ -34,7 +33,6 @@ namespace QuantConnect.Report.ReportElements
             using (Py.GIL())
             {
                 dynamic module = PythonEngine.ImportModule("ReportCharts");
-                Pandas = PythonEngine.ImportModule("pandas");
                 var classObj = module.ReportCharts;
 
                 Charting = classObj.Invoke();

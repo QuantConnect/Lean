@@ -45,8 +45,20 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var liveOrders = _live == null ? new List<Order>() : _live.Orders.Values.ToList();
-            var orders = _backtest.Orders.Values.Union(liveOrders);
+            var liveOrders = _live?.Orders?.Values.ToList();
+            if (liveOrders == null)
+            {
+                liveOrders = new List<Order>();
+            }
+
+            var orders = new List<Order>();
+            var backtestOrders = _backtest?.Orders?.Values;
+            if (backtestOrders != null)
+            {
+                orders = backtestOrders.ToList();
+            }
+
+            orders = orders.Union(liveOrders).ToList();
 
             var securityTypes = orders.DistinctBy(o => o.SecurityType).Select(s => s.SecurityType.ToString()).ToList();
 

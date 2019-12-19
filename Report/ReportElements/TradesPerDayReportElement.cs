@@ -45,12 +45,31 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var liveOrders = _live == null ? new List<Order>() : _live.Orders.Values.ToList();
-            var orders = _backtest.Orders.Values.Union(liveOrders);
+            var liveOrders = _live?.Orders?.Values.ToList();
+            if (liveOrders == null)
+            {
+                liveOrders = new List<Order>();
+            }
 
-            var equity = Calculations.EquityPoints(_backtest).Select(x => x.Value);
+            var orders = _backtest?.Orders?.Values.Union(liveOrders);
+            if (orders == null)
+            {
+                return "-";
+            }
 
-            var days = 1;
+            if (!orders.Any())
+            {
+                return "-";
+            }
+
+            var days = orders.Last().Time
+                .Subtract(orders.First().Time)
+                .TotalDays;
+
+            if (days == 0)
+            {
+                days = 1;
+            }
 
             var tradesPerDay = orders.Count() / days;
 

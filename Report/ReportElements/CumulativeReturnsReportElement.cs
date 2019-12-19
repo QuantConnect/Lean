@@ -18,6 +18,7 @@ using System.Linq;
 using Python.Runtime;
 using QuantConnect.Packets;
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Report.ReportElements
 {
@@ -47,10 +48,10 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestReturns = Calculations.EquityPoints(_backtest);
-            var benchmark = Calculations.BenchmarkPoints(_backtest);
-            var liveReturns = Calculations.EquityPoints(_live);
-            var liveBenchmark = Calculations.BenchmarkPoints(_live);
+            var backtestReturns = ResultsUtil.EquityPoints(_backtest);
+            var benchmark = ResultsUtil.BenchmarkPoints(_backtest);
+            var liveReturns = ResultsUtil.EquityPoints(_live);
+            var liveBenchmark = ResultsUtil.BenchmarkPoints(_live);
 
             var backtestTime = backtestReturns.Keys.ToList();
             var backtestStrategy = backtestReturns.Values.ToList();
@@ -68,23 +69,6 @@ namespace QuantConnect.Report.ReportElements
                 var backtestList = new PyList();
                 var liveList = new PyList();
 
-                //                var backtestSeries = Pandas.Series(backtestStrategy.ToPython(), backtestTime.ToPython());
-                //                var backtestCumulativePercent = backtestSeries.pct_change().cumsum().mul(100);
-                //                var benchmarkCumulativePercent = Pandas.Series(benchmarkPoints.ToPython()).pct_change().cumsum().mul(100);
-                //                benchmarkList.Append(backtestTime.ToPython());
-                //                benchmarkList.Append(backtestCumulativePercent.values);
-                //                benchmarkList.Append(benchmarkTime.ToPython());
-                //                benchmarkList.Append(benchmarkCumulativePercent.values);
-                //
-                //                // Gets the last element of the benchmark and add it to the live strategy and benchmark to
-                //                // start in the same position as the end of the live strategy or benchmark.
-                //                var liveCumulativePercent = Pandas.Series(liveStrategy.ToPython()).pct_change().cumsum().mul(100).add(backtestCumulativePercent.iloc[-1]);
-                //                var liveBenchmarkCumulativePercent = Pandas.Series(liveBenchmarkStrategy.ToPython()).pct_change().cumsum().mul(100).add(benchmarkCumulativePercent.iloc[-1]);
-                //                liveList.Append(liveTime.ToPython());
-                //                liveList.Append(liveCumulativePercent.values);
-                //                liveList.Append(liveBenchmarkTime.ToPython());
-                //                liveList.Append(liveBenchmarkCumulativePercent.values);
-
                 var backtestSeries = new Series<DateTime, double>(backtestTime, backtestStrategy);
                 var liveSeries = new Series<DateTime, double>(liveTime, liveStrategy);
                 var backtestBenchmarkSeries = new Series<DateTime, double>(benchmarkTime, benchmarkPoints);
@@ -93,8 +77,8 @@ namespace QuantConnect.Report.ReportElements
                 // Equivalent in python using pandas for the following operations is:
                 //
                 // df.pct_change().cumsum().mul(100)
-                var backtestCumulativePercent = backtestSeries.PercentChange().CumulativeSum() * 100;
-                var backtestBenchmarkCumulativePercent = backtestBenchmarkSeries.PercentChange().CumulativeSum() * 100;
+                var backtestCumulativePercent = (backtestSeries.PercentChange().CumulativeSum() * 100).FillMissing(Direction.Forward).DropMissing();
+                var backtestBenchmarkCumulativePercent = (backtestBenchmarkSeries.PercentChange().CumulativeSum() * 100).FillMissing(Direction.Forward).DropMissing();
 
                 // Equivalent in python using pandas for the following operations is:
                 // --------------------------------------------------
@@ -105,8 +89,12 @@ namespace QuantConnect.Report.ReportElements
                 //
                 // We add the final value of the backtest and benchmark to have a continuous graph showing the performance out of sample
                 // as a continuation of the cumulative returns graph. Otherwise, we start plotting from 0% and not the last value of the backtest data
-                var liveCumulativePercent = (liveSeries.PercentChange().CumulativeSum() * 100) + backtestCumulativePercent.LastValue();
-                var liveBenchmarkCumulativePercent = (liveBenchmarkSeries.PercentChange().CumulativeSum() * 100) + backtestBenchmarkCumulativePercent.LastValue();
+
+                var backtestLastValue = backtestCumulativePercent.IsEmpty ? 0 : backtestCumulativePercent.LastValue();
+                var backtestBenchmarkLastValue = backtestBenchmarkCumulativePercent.IsEmpty ? 0 : backtestBenchmarkCumulativePercent.LastValue();
+
+                var liveCumulativePercent = (liveSeries.PercentChange().CumulativeSum() * 100) + backtestLastValue;
+                var liveBenchmarkCumulativePercent = (liveBenchmarkSeries.PercentChange().CumulativeSum() * 100) + backtestBenchmarkLastValue;
 
                 backtestList.Append(backtestCumulativePercent.Keys.ToList().ToPython());
                 backtestList.Append(backtestCumulativePercent.Values.ToList().ToPython());

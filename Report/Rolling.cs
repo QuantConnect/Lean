@@ -1,0 +1,84 @@
+﻿using Deedle;
+using MathNet.Numerics.Statistics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace QuantConnect.Report
+{
+    /// <summary>
+    /// Rolling window functions
+    /// </summary>
+    public static class Rolling
+    {
+        /// <summary>
+        /// Calculate the rolling beta with the given window size (in days)
+        /// </summary>
+        /// <param name="equityCurve">The equity curve you want to measure beta for</param>
+        /// <param name="benchmarkSeries">The benchmark/series you want to calculate beta with</param>
+        /// <param name="windowSize">Days/window to lookback</param>
+        /// <returns>Rolling beta</returns>
+        public static Series<DateTime, double> Beta(Series<DateTime, double> equityCurve, Series<DateTime, double> benchmarkSeries, int windowSize = 132)
+        {
+            var dailyReturnsSeries = equityCurve.PercentChange().ResampleEquivalence(date => date.Date, s => s.Sum());
+            var benchmarkReturns = benchmarkSeries.PercentChange().ResampleEquivalence(date => date.Date, s => s.Sum());
+
+            var returns = Frame.CreateEmpty<DateTime, string>();
+            returns["strategy"] = dailyReturnsSeries;
+            returns = returns.Join("benchmark", benchmarkReturns)
+                .FillMissing(Direction.Forward)
+                .DropSparseRows();
+
+            var correlation = returns
+                .Window(windowSize)
+                .SelectValues(x => Correlation.Pearson(x["strategy"].Values, x["benchmark"].Values));
+
+            var portfolioStandardDeviation = dailyReturnsSeries.Window(windowSize).SelectValues(s => s.StdDev());
+            var benchmarkStandardDeviation = benchmarkReturns.Window(windowSize).SelectValues(s => s.StdDev());
+
+            return (correlation * (portfolioStandardDeviation / benchmarkStandardDeviation))
+                .FillMissing(Direction.Forward)
+                .DropMissing();
+        }
+
+        /// <summary>
+        /// Get the rolling sharpe of the given series with a lookback of <paramref name="months"/>. The risk free rate is adjustable
+        /// </summary>
+        /// <param name="equityCurve">Equity curve to calculate rolling sharpe for</param>
+        /// <param name="months">Number of months to calculate the rolling period for</param>
+        /// <param name="riskFreeRate">Risk free rate</param>
+        /// <returns>Rolling sharpe ratio</returns>
+        public static Series<DateTime, double> Sharpe(Series<DateTime, double> equityCurve, int months, double riskFreeRate = 0.0)
+        {
+            if (equityCurve.IsEmpty)
+            {
+                return equityCurve;
+            }
+
+            var dailyReturns = equityCurve.PercentChange().ResampleEquivalence(date => date.Date, s => s.Sum());
+            var rollingSharpeData = new List<KeyValuePair<DateTime, double>>();
+            var firstDate = equityCurve.FirstKey();
+
+            foreach (var date in equityCurve.Keys)
+            {
+                var nMonthsAgo = date.AddMonths(-months);
+                if (nMonthsAgo < firstDate)
+                {
+                    continue;
+                }
+
+                var algoPerformanceLookback = dailyReturns.Between(nMonthsAgo, date);
+                rollingSharpeData.Add(
+                    new KeyValuePair<DateTime, double>(
+                        date,
+                        Statistics.Statistics.SharpeRatio(algoPerformanceLookback.Values.ToList(), riskFreeRate)
+                    )
+                );
+            }
+
+            return new Series<DateTime, double>(rollingSharpeData.Select(kvp => kvp.Key), rollingSharpeData.Select(kvp => kvp.Value));
+        }
+    }
+}

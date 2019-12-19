@@ -13,10 +13,7 @@
  * limitations under the License.
 */
 
-using Deedle;
 using QuantConnect.Packets;
-using System;
-using System.Linq;
 
 namespace QuantConnect.Report.ReportElements
 {
@@ -45,7 +42,11 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var psr = _backtest.TotalPerformance.PortfolioStatistics.ProbabilisticSharpeRatio;
+            var psr = _backtest?.TotalPerformance?.PortfolioStatistics?.ProbabilisticSharpeRatio;
+            if (psr == null)
+            {
+                return "-";
+            }
 
             if (psr > 0)
             {

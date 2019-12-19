@@ -48,15 +48,14 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestPoints = Calculations.EquityPoints(_backtest);
-            var livePoints = Calculations.EquityPoints(_live);
-            var liveOrders = _live == null ? new List<Order>() : _live.Orders.Values.ToList();
+            var backtestPoints = ResultsUtil.EquityPoints(_backtest);
+            var livePoints = ResultsUtil.EquityPoints(_live);
 
-            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values).AssetAllocations(_backtest.Orders.Values.ToList());
-            var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values).AssetAllocations(liveOrders);
+            var backtestOrders = _backtest?.Orders?.Values.ToList() ?? new List<Order>();
+            var liveOrders = _live?.Orders?.Values.ToList() ?? new List<Order>();
 
-            backtestSeries.Print();
-            liveSeries.Print();
+            var backtestSeries = Metrics.AssetAllocations(new Series<DateTime, double>(backtestPoints), backtestOrders);
+            var liveSeries = Metrics.AssetAllocations(new Series<DateTime, double>(livePoints), liveOrders);
 
             PyObject result;
 

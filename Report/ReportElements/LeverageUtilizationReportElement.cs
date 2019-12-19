@@ -48,12 +48,14 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestPoints = Calculations.EquityPoints(_backtest);
-            var livePoints = Calculations.EquityPoints(_live);
-            var liveOrders = _live == null ? new List<Order>() : _live.Orders.Values.ToList();
+            var backtestPoints = ResultsUtil.EquityPoints(_backtest);
+            var livePoints = ResultsUtil.EquityPoints(_live);
 
-            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values).LeverageUtilization(_backtest.Orders.Values.ToList()).FillMissing(Direction.Forward);
-            var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values).LeverageUtilization(liveOrders).FillMissing(Direction.Forward);
+            var backtestOrders = _backtest?.Orders?.Values.ToList() ?? new List<Order>();
+            var liveOrders = _live?.Orders?.Values.ToList() ?? new List<Order>();
+
+            var backtestSeries = Metrics.LeverageUtilization(new Series<DateTime, double>(backtestPoints), backtestOrders).FillMissing(Direction.Forward);
+            var liveSeries = Metrics.LeverageUtilization(new Series<DateTime, double>(livePoints), liveOrders).FillMissing(Direction.Forward);
 
             var base64 = "";
             using (Py.GIL())

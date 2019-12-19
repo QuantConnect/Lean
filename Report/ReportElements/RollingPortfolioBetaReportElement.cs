@@ -46,15 +46,15 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestPoints = Calculations.EquityPoints(_backtest);
-            var backtestBenchmarkPoints = Calculations.BenchmarkPoints(_backtest);
-            var livePoints = Calculations.EquityPoints(_live);
-            var liveBenchmarkPoints = Calculations.BenchmarkPoints(_live);
+            var backtestPoints = ResultsUtil.EquityPoints(_backtest);
+            var backtestBenchmarkPoints = ResultsUtil.BenchmarkPoints(_backtest);
+            var livePoints = ResultsUtil.EquityPoints(_live);
+            var liveBenchmarkPoints = ResultsUtil.BenchmarkPoints(_live);
 
-            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values);
-            var backtestBenchmarkSeries = new Series<DateTime, double>(backtestBenchmarkPoints.Keys, backtestBenchmarkPoints.Values);
-            var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values);
-            var liveBenchmarkSeries = new Series<DateTime, double>(liveBenchmarkPoints.Keys, liveBenchmarkPoints.Values);
+            var backtestSeries = new Series<DateTime, double>(backtestPoints);
+            var backtestBenchmarkSeries = new Series<DateTime, double>(backtestBenchmarkPoints);
+            var liveSeries = new Series<DateTime, double>(livePoints);
+            var liveBenchmarkSeries = new Series<DateTime, double>(liveBenchmarkPoints);
 
             var base64 = "";
             using (Py.GIL())
@@ -62,29 +62,17 @@ namespace QuantConnect.Report.ReportElements
                 var backtestList = new PyList();
                 var liveList = new PyList();
 
-                var backtestPercentChange = backtestSeries.PercentChange();
-                var backtestBenchmarkPercentChange = backtestBenchmarkSeries.PercentChange();
-                var backtestRollingBetaSixMonths = backtestSeries.RollingBeta(backtestBenchmarkSeries, windowSize: 22 * 6);
-                var backtestRollingBetaTwelveMonths = backtestSeries.RollingBeta(backtestBenchmarkSeries, windowSize: 252);
+                var backtestRollingBetaSixMonths = Rolling.Beta(backtestSeries, backtestBenchmarkSeries, windowSize: 22 * 6);
+                var backtestRollingBetaTwelveMonths = Rolling.Beta(backtestSeries, backtestBenchmarkSeries, windowSize: 252);
 
-                backtestList.Append(backtestPercentChange.Keys.ToList().ToPython());
-                backtestList.Append(backtestPercentChange.Values.ToList().ToPython());
-                backtestList.Append(backtestBenchmarkPercentChange.Keys.ToList().ToPython());
-                backtestList.Append(backtestBenchmarkPercentChange.Values.ToList().ToPython());
                 backtestList.Append(backtestRollingBetaSixMonths.Keys.ToList().ToPython());
                 backtestList.Append(backtestRollingBetaSixMonths.Values.ToList().ToPython());
                 backtestList.Append(backtestRollingBetaTwelveMonths.Keys.ToList().ToPython());
                 backtestList.Append(backtestRollingBetaTwelveMonths.Values.ToList().ToPython());
 
-                var livePercentChange = liveSeries.PercentChange();
-                var liveBenchmarkPercentChange = liveBenchmarkSeries.PercentChange();
-                var liveRollingBetaSixMonths = liveSeries.RollingBeta(liveBenchmarkSeries, windowSize: 22 * 6);
-                var liveRollingBetaTwelveMonths = liveSeries.RollingBeta(liveBenchmarkSeries, windowSize: 252);
+                var liveRollingBetaSixMonths = Rolling.Beta(liveSeries, liveBenchmarkSeries, windowSize: 22 * 6);
+                var liveRollingBetaTwelveMonths = Rolling.Beta(liveSeries, liveBenchmarkSeries, windowSize: 252);
 
-                liveList.Append(livePercentChange.Keys.ToList().ToPython());
-                liveList.Append(livePercentChange.Values.ToList().ToPython());
-                liveList.Append(liveBenchmarkPercentChange.Keys.ToList().ToPython());
-                liveList.Append(liveBenchmarkPercentChange.Values.ToList().ToPython());
                 liveList.Append(liveRollingBetaSixMonths.Keys.ToList().ToPython());
                 liveList.Append(liveRollingBetaSixMonths.Values.ToList().ToPython());
                 liveList.Append(liveRollingBetaTwelveMonths.Keys.ToList().ToPython());

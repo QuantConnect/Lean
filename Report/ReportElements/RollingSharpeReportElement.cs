@@ -46,11 +46,11 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestPoints = Calculations.EquityPoints(_backtest);
-            var livePoints = Calculations.EquityPoints(_live);
+            var backtestPoints = ResultsUtil.EquityPoints(_backtest);
+            var livePoints = ResultsUtil.EquityPoints(_live);
 
-            var backtestRollingSharpe = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values).RollingSharpe(6);
-            var liveRollingSharpe = new Series<DateTime, double>(livePoints.Keys, livePoints.Values).RollingSharpe(6);
+            var backtestRollingSharpe = Rolling.Sharpe(new Series<DateTime, double>(backtestPoints), 6).DropMissing();
+            var liveRollingSharpe = Rolling.Sharpe(new Series<DateTime, double>(livePoints), 6).DropMissing();
 
             var base64 = "";
             using (Py.GIL())

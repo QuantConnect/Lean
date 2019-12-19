@@ -11,6 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# You can run this test by first running `nPython.exe` (with mono or otherwise):
+# $ ./nPython.exe ReportChartTests.py
+
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -107,23 +110,22 @@ result = charts.GetCrisisEventsPlots(empty, 'empty_crisis')
 result = charts.GetCrisisEventsPlots(backtest, 'dummy_crisis')
 
 ## Test GetRollingBetaPlot
-empty = [[], [], []]
+empty = [[], [], [], []]
 twelve = [np.nan for x in range(180)] + list(np.random.uniform(-1, 1, 185))
 six = list(np.random.uniform(-1, 1, 365))
 time = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2012-10-01 00:00:00', periods=365)]
 backtest = [time, six, twelve]
 
+result = charts.GetRollingBeta([time, six, time, twelve], empty)
+result = charts.GetRollingBeta([time, six, [], []], empty)
 result = charts.GetRollingBeta(empty, empty)
-result = charts.GetRollingBeta([time, six,[]], empty)
-result = charts.GetRollingBeta(backtest, empty)
 
 twelve = [np.nan for x in range(180)] + list(np.random.uniform(-1, 1, 185))
 six = list(np.random.uniform(-1, 1, 365))
 time = [pd.Timestamp(x).to_pydatetime() for x in pd.date_range('2013-10-01 00:00:00', periods=365)]
-live = [time, six, twelve]
+live = [time, six, time, twelve]
 
-result = charts.GetRollingBeta(backtest, [time, six,[]])
-result = charts.GetRollingBeta(backtest, live)
+result = charts.GetRollingBeta(live)
 
 ## Test GetRollingSharpeRatioPlot
 data = list(np.random.uniform(1, 3, 365 * 2))
@@ -171,8 +173,8 @@ live_long_securities = ['Equity']
 live_short_securities = ['Forex']
 
 result = charts.GetExposure()
-result = charts.GetExposure(time, long_securities = long_securities, long_data=long)
-result = charts.GetExposure(time, short_securities = short_securities, short_data=short)
+result = charts.GetExposure(time, long_securities = long_securities, long_data=long, short_securities=[], short_data=[list(np.zeros(len(long[0])))])
+result = charts.GetExposure(time, long_securities=[], long_data=[list(np.zeros(len(short[0])))], short_securities = short_securities, short_data=short)
 result = charts.GetExposure(time, long_securities, short_securities, long, short)
 result = charts.GetExposure(time, long_securities, short_securities, long, short,
                                 live_time, live_long_securities, live_short_securities,

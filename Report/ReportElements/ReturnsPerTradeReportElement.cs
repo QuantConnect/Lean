@@ -47,15 +47,18 @@ namespace QuantConnect.Report.ReportElements
         public override string Render()
         {
             var backtestPercentagePerTrade = new List<double>();
-            foreach (var trade in _backtest.TotalPerformance.ClosedTrades)
+            if (_backtest?.TotalPerformance?.ClosedTrades != null)
             {
-                if (trade.EntryPrice == 0m)
+                foreach (var trade in _backtest.TotalPerformance.ClosedTrades)
                 {
-                    Log.Error($"ReturnsPerTradeReportElement.Render(): Encountered entry price of 0 in trade with entry time: {trade.EntryTime:yyyy-MM-dd HH:mm:ss} - Exit time: {trade.ExitTime:yyyy-MM-dd HH::mm:ss}");
-                    continue;
-                }
+                    if (trade.EntryPrice == 0m)
+                    {
+                        Log.Error($"ReturnsPerTradeReportElement.Render(): Encountered entry price of 0 in trade with entry time: {trade.EntryTime:yyyy-MM-dd HH:mm:ss} - Exit time: {trade.ExitTime:yyyy-MM-dd HH::mm:ss}");
+                        continue;
+                    }
 
-                backtestPercentagePerTrade.Add((Convert.ToDouble(trade.ExitPrice) - Convert.ToDouble(trade.EntryPrice)) / Convert.ToDouble(trade.EntryPrice));
+                    backtestPercentagePerTrade.Add((Convert.ToDouble(trade.ExitPrice) - Convert.ToDouble(trade.EntryPrice)) / Convert.ToDouble(trade.EntryPrice));
+                }
             }
 
             // TODO: LiveResult does not contain a TotalPerformance field, so skip live mode for now

@@ -46,8 +46,8 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestReturns = Calculations.EquityPoints(_backtest);
-            var liveReturns = Calculations.EquityPoints(_live);
+            var backtestReturns = ResultsUtil.EquityPoints(_backtest);
+            var liveReturns = ResultsUtil.EquityPoints(_live);
 
             var backtestSeries = new Series<DateTime, double>(backtestReturns.Keys, backtestReturns.Values);
             var liveSeries = new Series<DateTime, double>(liveReturns.Keys, liveReturns.Values);

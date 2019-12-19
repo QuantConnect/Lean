@@ -51,11 +51,11 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestPoints = Calculations.EquityPoints(_backtest);
-            var backtestBenchmarkPoints = Calculations.BenchmarkPoints(_backtest);
+            var backtestPoints = ResultsUtil.EquityPoints(_backtest);
+            var backtestBenchmarkPoints = ResultsUtil.BenchmarkPoints(_backtest);
 
-            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values).PercentChange();
-            var backtestBenchmarkSeries = new Series<DateTime, double>(backtestBenchmarkPoints.Keys, backtestBenchmarkPoints.Values).PercentChange();
+            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values);
+            var backtestBenchmarkSeries = new Series<DateTime, double>(backtestBenchmarkPoints.Keys, backtestBenchmarkPoints.Values);
 
             var html = new List<string>();
 
@@ -68,14 +68,19 @@ namespace QuantConnect.Report.ReportElements
                     var frame = Frame.CreateEmpty<DateTime, string>();
 
                     // The two following operations are equivalent to Pandas' `df.resample("D").sum()`
-                    frame["Backtest"] = backtestSeries.ResampleEquivalence(date => date.Date, s => s.Sum()).CumulativeSum();
-                    frame["Benchmark"] = backtestBenchmarkSeries.ResampleEquivalence(date => date.Date, s => s.Sum()).CumulativeSum();
+                    frame["Backtest"] = backtestSeries.ResampleEquivalence(date => date.Date, s => s.LastValue());
+                    frame["Benchmark"] = backtestBenchmarkSeries.ResampleEquivalence(date => date.Date, s => s.LastValue());
 
                     var crisisFrame = frame.Where(kvp => kvp.Key >= crisis.Start && kvp.Key <= crisis.End);
+                    crisisFrame = crisisFrame.Join("BacktestPercent", crisisFrame["Backtest"].PercentChange().CumulativeSum());
+                    crisisFrame = crisisFrame.Join("BenchmarkPercent", crisisFrame["Benchmark"].PercentChange().CumulativeSum());
+
+                    // Pad out all missing values to start from 0 for nice plots
+                    crisisFrame = crisisFrame.FillMissing(0.0);
 
                     data.Append(crisisFrame.RowKeys.ToList().ToPython());
-                    data.Append(crisisFrame["Backtest"].Values.ToList().ToPython());
-                    data.Append(crisisFrame["Benchmark"].Values.ToList().ToPython());
+                    data.Append(crisisFrame["BacktestPercent"].Values.ToList().ToPython());
+                    data.Append(crisisFrame["BenchmarkPercent"].Values.ToList().ToPython());
 
                     var base64 = (string)Charting.GetCrisisEventsPlots(data, crisis.Name.Replace("/", "").Replace(".", "").Replace(" ", ""));
 
@@ -84,11 +89,24 @@ namespace QuantConnect.Report.ReportElements
                         continue;
                     }
 
-                    var contents = _template.Replace(ReportKey.CrisisTitle, crisis.ToString(crisisFrame.GetRowKeyAt(0), crisisFrame.GetRowKeyAt(crisisFrame.RowCount - 1)));
-                    contents = contents.Replace(ReportKey.CrisisContents, base64);
+                    if (!crisisFrame.IsEmpty)
+                    {
+                        var contents = _template.Replace(ReportKey.CrisisTitle, crisis.ToString(crisisFrame.GetRowKeyAt(0), crisisFrame.GetRowKeyAt(crisisFrame.RowCount - 1)));
+                        contents = contents.Replace(ReportKey.CrisisContents, base64);
 
-                    html.Add(contents);
+                        html.Add(contents);
+                    }
                 }
+            }
+
+            if (Key == ReportKey.CrisisPageStyle)
+            {
+                if (html.Count == 0)
+                {
+                    return "display: none;";
+                }
+
+                return string.Empty;
             }
 
             return string.Join("\n", html);

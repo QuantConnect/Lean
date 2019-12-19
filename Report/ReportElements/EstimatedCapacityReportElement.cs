@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System.Linq;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
@@ -43,26 +42,8 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var unit = "";
-            var capacity = _backtest.Orders.Values.Sum(x => x.Value);
-
-            if (capacity > 1e9m)
-            {
-                unit = "B";
-                capacity /= 1e9m;
-            }
-            else if (capacity > 1e6m)
-            {
-                unit = "M";
-                capacity /= 1e6m;
-            }
-            else if (capacity > 1e4m)
-            {
-                unit = "K";
-                capacity /= 1e3m;
-            }
-
-            return $"{capacity:C0}{unit}";
+            // TODO: estimated capacity calculation
+            return "-";
         }
     }
 }

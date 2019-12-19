@@ -67,8 +67,8 @@ namespace QuantConnect.Report
             var drawdowns = GetDrawdownPeriods(strategySeries, periods).ToList();
 
             Periods = periods;
-            Start = strategySeries.FirstKey();
-            End = strategySeries.LastKey();
+            Start = strategySeries.IsEmpty ? DateTime.MinValue : strategySeries.FirstKey();
+            End = strategySeries.IsEmpty ? DateTime.MaxValue : strategySeries.LastKey();
             Drawdowns = drawdowns.OrderByDescending(x => x.PeakToTrough)
                 .Take(Periods)
                 .ToList();
@@ -89,37 +89,49 @@ namespace QuantConnect.Report
         /// <summary>
         /// Normalizes the Series used to calculate the drawdown plots and charts
         /// </summary>
-        /// <param name="backtestResult"></param>
-        /// <param name="liveResult"></param>
+        /// <param name="backtestResult">Backtest result packet</param>
+        /// <param name="liveResult">Live result packet</param>
         /// <returns></returns>
         public static Series<DateTime, double> NormalizeResults(BacktestResult backtestResult, LiveResult liveResult)
         {
-            if (backtestResult == null && liveResult == null)
+            var backtestPoints = ResultsUtil.EquityPoints(backtestResult);
+            var livePoints = ResultsUtil.EquityPoints(liveResult);
+
+            if (backtestPoints.Count == 0 && livePoints.Count == 0)
             {
-                throw new ArgumentException("backtestResult and liveResult can not be null at the same time");
+                return new Series<DateTime, double>(new DateTime[] { }, new double[] { });
             }
 
-            var backtestPoints = Calculations.EquityPoints(backtestResult);
-            var livePoints = Calculations.EquityPoints(liveResult);
-            var startingEquity = backtestPoints.First().Value;
-
-            var backtestSeries = new Series<DateTime, double>(backtestPoints.Keys, backtestPoints.Values)
+            var startingEquity = backtestPoints.Count == 0 ? livePoints.First().Value : backtestPoints.First().Value;
+            var backtestSeries = new Series<DateTime, double>(backtestPoints)
                 .PercentChange()
                 .Where(kvp => kvp.Value != 0)
                 .CumulativeSum();
 
-            var liveSeries = new Series<DateTime, double>(livePoints.Keys, livePoints.Values)
+            var liveSeries = new Series<DateTime, double>(livePoints)
                 .PercentChange()
                 .CumulativeSum();
 
-            var firstLiveKey = liveSeries.FirstKey();
+            // Get the last key of the backtest series if our series is empty to avoid issues with empty frames
+            var firstLiveKey = liveSeries.IsEmpty ? backtestSeries.LastKey().AddDays(1) : liveSeries.FirstKey();
+
             // Add the final non-overlapping point of the backtest equity curve to the entire live series to keep continuity.
-            liveSeries = liveSeries + backtestSeries.Where(kvp => kvp.Key < firstLiveKey).LastValue();
+            if (!backtestSeries.IsEmpty)
+            {
+                var filtered = backtestSeries.Where(kvp => kvp.Key < firstLiveKey);
+                liveSeries = filtered.IsEmpty ? liveSeries : liveSeries + filtered.LastValue();
+            }
 
             // Prefer the live values as we don't care about backtest once we've deployed into live.
             // All in all, this is a normalized equity curve, though it's been normalized
             // so that there are no discontinuous jumps in equity value if we only used equity cash
             // to add the last value of the backtest series to the live series.
+            //
+            // Pandas equivalent:
+            //
+            // ```
+            // pd.concat([backtestSeries, liveSeries], axis=1).fillna(method='ffill').dropna().diff().add(1).cumprod().mul(startingEquity)
+            // ```
             return backtestSeries.Merge(liveSeries, UnionBehavior.PreferRight)
                 .FillMissing(Direction.Forward)
                 .DropMissing()
@@ -131,7 +143,7 @@ namespace QuantConnect.Report
 
         /// <summary>
         /// Gets the underwater plot for the provided curve.
-        /// Data is expected to be the concatenated output of <see cref="Calculations.EquityPoints"/>.
+        /// Data is expected to be the concatenated output of <see cref="Util.EquityPoints"/>.
         /// </summary>
         /// <param name="curve">Equity curve</param>
         /// <returns></returns>
@@ -143,7 +155,7 @@ namespace QuantConnect.Report
             }
 
             var returns = curve / curve.FirstValue();
-            var cumulativeMax = Calculations.CumulativeMax(returns);
+            var cumulativeMax = returns.CumulativeMax();
 
             return (1 - (returns / cumulativeMax)) * -1;
         }
@@ -157,11 +169,15 @@ namespace QuantConnect.Report
         /// <returns>Frame containing the following keys: "returns", "cumulativeMax", "drawdown"</returns>
         public static Frame<DateTime, string> GetUnderwaterFrame(Series<DateTime, double> curve)
         {
-            var returns = curve / curve.FirstValue();
-            var cumulativeMax = Calculations.CumulativeMax(returns);
-            var drawdown = 1 - (returns / cumulativeMax);
-
             var frame = Frame.CreateEmpty<DateTime, string>();
+            if (curve.IsEmpty)
+            {
+                return frame;
+            }
+
+            var returns = curve / curve.FirstValue();
+            var cumulativeMax = returns.CumulativeMax();
+            var drawdown = 1 - (returns / cumulativeMax);
 
             frame.AddColumn("returns", returns);
             frame.AddColumn("cumulativeMax", cumulativeMax);
@@ -179,8 +195,14 @@ namespace QuantConnect.Report
         /// <returns>Frame with the following keys: "duration", "cumulativeMax", "drawdown"</returns>
         public static Frame<DateTime, string> GetTopWorstDrawdowns(Series<DateTime, double> curve, int periods)
         {
+            var frame = Frame.CreateEmpty<DateTime, string>();
+            if (curve.IsEmpty)
+            {
+                return frame;
+            }
+
             var returns = curve / curve.FirstValue();
-            var cumulativeMax = Calculations.CumulativeMax(returns);
+            var cumulativeMax = returns.CumulativeMax();
             var drawdown = 1 - (returns / cumulativeMax);
 
             var groups = cumulativeMax.GroupBy(kvp => kvp.Value);
@@ -216,8 +238,6 @@ namespace QuantConnect.Report
             var topDrawdowns = new Series<DateTime, double>(sortedDrawdowns.Keys.Take(periodsToTake), sortedDrawdowns.Values.Take(periodsToTake));
             var topDurations = new Series<DateTime, double>(topDrawdowns.Keys.OrderBy(x => x), drawdownGroups.Where(t => topDrawdowns.Keys.Contains(t.Item1)).OrderBy(x => x.Item1).Select(x => x.Item2));
             var topCumulativeMax = new Series<DateTime, double>(topDrawdowns.Keys.OrderBy(x => x), drawdownGroups.Where(t => topDrawdowns.Keys.Contains(t.Item1)).OrderBy(x => x.Item1).Select(x => x.Item3));
-
-            var frame = Frame.CreateEmpty<DateTime, string>();
 
             frame.AddColumn("duration", topDurations);
             frame.AddColumn("cumulativeMax", topCumulativeMax);

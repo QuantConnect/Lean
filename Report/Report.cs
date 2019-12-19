@@ -21,7 +21,7 @@ using QuantConnect.Report.ReportElements;
 
 namespace QuantConnect.Report
 {
-    internal class Report
+    public class Report
     {
         private const string _template = "template.html";
         private readonly IReadOnlyCollection<IReportElement> _elements;
@@ -69,6 +69,7 @@ namespace QuantConnect.Report
                 new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live),
 
                 // Array of Crisis Plots:
+                new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live),
                 new CrisisReportElement("crisis plots", ReportKey.CrisisPlots, backtest, live)
             };
         }

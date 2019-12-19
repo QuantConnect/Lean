@@ -1,0 +1,73 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace QuantConnect.Report
+{
+    /// <summary>
+    /// Utility methods for dealing with the <see cref="Result"/> objects
+    /// </summary>
+    public static class ResultsUtil
+    {
+        /// <summary>
+        /// Get the equity chart points
+        /// </summary>
+        /// <param name="result">Result object to extract the chart points</param>
+        /// <returns></returns>
+        public static SortedList<DateTime, double> EquityPoints(Result result)
+        {
+            var points = new SortedList<DateTime, double>();
+
+            if (result == null || result.Charts == null ||
+                !result.Charts.ContainsKey("Strategy Equity") ||
+                result.Charts["Strategy Equity"].Series == null ||
+                !result.Charts["Strategy Equity"].Series.ContainsKey("Equity"))
+            {
+                return points;
+            }
+
+            foreach (var point in result.Charts["Strategy Equity"].Series["Equity"].Values)
+            {
+                points[Time.UnixTimeStampToDateTime(point.x)] = Convert.ToDouble(point.y);
+            }
+
+            return points;
+        }
+
+        /// <summary>
+        /// Gets the points of the benchmark
+        /// </summary>
+        /// <param name="result">Backtesting or live results</param>
+        /// <returns>Sorted list keyed by date and value</returns>
+        public static SortedList<DateTime, double> BenchmarkPoints(Result result)
+        {
+            var points = new SortedList<DateTime, double>();
+
+            if (result == null || result.Charts == null ||
+                !result.Charts.ContainsKey("Benchmark") ||
+                result.Charts["Benchmark"].Series == null ||
+                !result.Charts["Benchmark"].Series.ContainsKey("Benchmark"))
+            {
+                return points;
+            }
+
+            if (!result.Charts.ContainsKey("Benchmark"))
+            {
+                return new SortedList<DateTime, double>();
+            }
+            if (!result.Charts["Benchmark"].Series.ContainsKey("Benchmark"))
+            {
+                return new SortedList<DateTime, double>();
+            }
+
+            foreach (var point in result.Charts["Benchmark"].Series["Benchmark"].Values)
+            {
+                points[Time.UnixTimeStampToDateTime(point.x)] = Convert.ToDouble(point.y);
+            }
+
+            return points;
+        }
+    }
+}

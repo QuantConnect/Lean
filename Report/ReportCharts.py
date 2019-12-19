@@ -56,6 +56,24 @@ class ReportCharts:
         if len(returns_per_trade) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
+
+            left, box_width = .25, .5
+            bottom, box_height = .25, .5
+            right = left + box_width
+            top = bottom + box_height
+
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=30,
+                    transform=ax.transAxes)
+
+            ax.axis('off')
+
+            for _, spine in ax.spines.items():
+                spine.set_visible(False)
+
             base64 = self.fig_to_base64(name, fig)
             plt.cla()
             plt.clf()
@@ -123,6 +141,24 @@ class ReportCharts:
         if len(data[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
+
+            left, box_width = .25, .5
+            bottom, box_height = .25, .5
+            right = left + box_width
+            top = bottom + box_height
+
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=40,
+                    transform=ax.transAxes)
+
+            ax.axis('off')
+
+            for _, spine in ax.spines.items():
+                spine.set_visible(False)
+
             base64 = self.fig_to_base64(name, fig)
             plt.cla()
             plt.clf()
@@ -140,7 +176,7 @@ class ReportCharts:
 
         for i, array in enumerate(values):
             if any(array[0]):
-                ax.plot(array[0], array[1], linewidth=0.5, color=colors[i])
+                ax.plot(array[0], array[1], linewidth=0.5, color=colors[i], drawstyle='steps-post')
             else:
                 # We have nothing for this graph. Wipe any mention of it
                 labels_removed.append(labels[i])
@@ -152,20 +188,43 @@ class ReportCharts:
 
         # Return if we don't have any valid labels
         if not any(labels):
-            return ""
+            fig = plt.figure()
+            fig.set_size_inches(width, height)
+
+            left, box_width = .25, .5
+            bottom, box_height = .25, .5
+            right = left + box_width
+            top = bottom + box_height
+
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=40,
+                    transform=ax.transAxes)
+
+            ax.axis('off')
+
+            for _, spine in ax.spines.items():
+                spine.set_visible(False)
+
+            base64 = self.fig_to_base64(name, fig)
+            plt.cla()
+            plt.clf()
+            plt.close('all')
+            return base64
 
         live_labels = []
         live_labels_removed = []
 
         if len(live_data[0]) > 0:
-            colors = [live_color, '#ff2000']
+            colors = [live_color, gray]
             live_labels.append('Live')
-            live_labels.append('Live Benchmark')
             values = [[live_data[0], live_data[1]], [live_data[2], live_data[3]]]
 
             for i, array in enumerate(values):
                 if any(array[0]):
-                    ax.plot(array[0], array[1], linewidth=0.5, color=colors[i])
+                    ax.plot(array[0], array[1], linewidth=0.5, color=colors[i], drawstyle='steps-post')
                     rectangles.append(plt.Rectangle((0, 0), 1, 1, fc=colors[i]))
                 else:
                     live_labels_removed.append(live_labels[i])
@@ -180,11 +239,8 @@ class ReportCharts:
         plt.xticks(rotation=0, ha='center', fontsize=8)
         plt.yticks(fontsize=8)
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
-        ax.yaxis.set_major_formatter(FormatStrFormatter('%.0f'))
+        ax.yaxis.set_major_formatter(ticker.PercentFormatter())
         ax.yaxis.set_major_locator(MaxNLocator(6))
-        # Convert the raw numbers to numbers with a percentage sign.
-        # This means that '25' would become '25%'
-        ax.set_yticklabels(['{0:g}%'.format(i) for i in ax.get_yticks()])
         plt.axhline(y=0, color='#d5d5d5', zorder=1)
         plt.setp(ax.spines.values(), color='#d5d5d5')
         ax.spines['right'].set_visible(False)
@@ -206,6 +262,24 @@ class ReportCharts:
         if len(returns[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
+
+            left, box_width = .25, .5
+            bottom, box_height = .25, .5
+            right = left + box_width
+            top = bottom + box_height
+
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=40,
+                    transform=ax.transAxes)
+
+            ax.axis('off')
+
+            for _, spine in ax.spines.items():
+                spine.set_visible(False)
+
             base64 = self.fig_to_base64(name, fig)
             plt.cla()
             plt.clf()
@@ -230,7 +304,7 @@ class ReportCharts:
 
         # Backtest
         #ax.bar(returns[0][:min(len(returns[0]),len(returns[1]))], returns[1], color=backtest_color,zorder=2)
-        ax.bar(backtest_positive.index, backtest_positive.values, color = backtest_color, zorder = 2)
+        ax.bar(backtest_positive.index, backtest_positive.values, color=backtest_color, zorder=2)
         ax.bar(backtest_negative.index, backtest_negative.values, color=gray, zorder=2)
 
         # Live
@@ -250,7 +324,7 @@ class ReportCharts:
         #ax.set_yticks(fontsize = 8)
         ax.set_ylabel("")
         ax.set_xlabel("")
-        ax.set_yticklabels(['{:.2f}%'.format(i) for i in ax.get_yticks()])
+        ax.yaxis.set_major_formatter(ticker.PercentFormatter())
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
         plt.axhline(y = 0, color = '#d5d5d5')
         plt.setp(ax.spines.values(), color='#d5d5d5')
@@ -272,7 +346,7 @@ class ReportCharts:
         '''
         months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-        # Populate the list with np.nan so that we can successfully 
+        # Populate the list with np.nan so that we can successfully
         # convert this dict into a DataFrame
         #for k in returns.keys(): while len(returns[k]) != 12:
         #                   returns[k].append(np.nan)
@@ -281,6 +355,24 @@ class ReportCharts:
             print("No monthly returns found")
             fig = plt.figure()
             fig.set_size_inches(width, height)
+
+            left, box_width = .25, .5
+            bottom, box_height = .25, .5
+            right = left + box_width
+            top = bottom + box_height
+
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=30,
+                    transform=ax.transAxes)
+
+            ax.axis('off')
+
+            for _, spine in ax.spines.items():
+                spine.set_visible(False)
+
             base64 = self.fig_to_base64(name, fig)
             plt.cla()
             plt.clf()
@@ -328,7 +420,7 @@ class ReportCharts:
             ax[1].set_ylabel('Live', rotation='vertical', fontweight='black')
             for (j, i), label in np.ndenumerate(live_returns):
                 if np.isnan(label):
-                    ax[1].text(i, j, "", ha='center', va='center', fontsize=7)   
+                    ax[1].text(i, j, "", ha='center', va='center', fontsize=7)
                 else:
                     ax[1].text(i, j, round(label, 1), ha='center', va='center', fontsize=7)
 
@@ -372,6 +464,24 @@ class ReportCharts:
         if len(data[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
+
+            left, box_width = .25, .5
+            bottom, box_height = .25, .5
+            right = left + box_width
+            top = bottom + box_height
+
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=30,
+                    transform=ax.transAxes)
+
+            ax.axis('off')
+
+            for _, spine in ax.spines.items():
+                spine.set_visible(False)
+
             base64 = self.fig_to_base64(name, fig)
             plt.cla()
             plt.clf()
@@ -388,7 +498,7 @@ class ReportCharts:
         # converting to string before plotting.
         ax.barh([str(i) for i in time], returns, color = [backtest_color], zorder=1)
         # Add a percentage sign at the end of each x-axis tick
-        ax.set_xticklabels(["{:.1f}%".format(i) for i in ax.get_xticks()])
+        ax.xaxis.set_major_formatter(ticker.PercentFormatter())
 
         fig = ax.get_figure()
         plt.xticks(rotation=0, ha='center', fontsize=8)
@@ -414,12 +524,28 @@ class ReportCharts:
 
     def GetDrawdown(self, data = [[],[]], live_data = [[],[]], worst = [{}], name = "drawdowns.png",
                         width = 11.5, height = 2.5, gray = "#b3bcc0"):
-        #if len(worst) == 0:
-        #    worst = self.GetDrawdownPeriods(data, live_data)
 
         if len(data[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
+
+            left, box_width = .25, .5
+            bottom, box_height = .25, .5
+            right = left + box_width
+            top = bottom + box_height
+
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=40,
+                    transform=ax.transAxes)
+
+            ax.axis('off')
+
+            for _, spine in ax.spines.items():
+                spine.set_visible(False)
+
             base64 = self.fig_to_base64(name, fig)
             plt.cla()
             plt.clf()
@@ -521,11 +647,30 @@ class ReportCharts:
         plt.close('all')
         return base64
 
-    def GetRollingBeta(self, data = [[],[],[],[],[],[],[],[]], live_data = [[],[],[],[],[],[]], name = "rolling-portfolio-beta-to-equity.png",
+    def GetRollingBeta(self, data = [[],[],[],[]], live_data = [[],[],[],[]], name = "rolling-portfolio-beta-to-equity.png",
                            width = 11.5, height = 2.5):
-        if len(data[0]) == 0:
+
+        if len(data[0]) == 0 and len(live_data[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
+
+            left, box_width = .25, .5
+            bottom, box_height = .25, .5
+            right = left + box_width
+            top = bottom + box_height
+
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=40,
+                    transform=ax.transAxes)
+
+            ax.axis('off')
+
+            for _, spine in ax.spines.items():
+                spine.set_visible(False)
+
             base64 = self.fig_to_base64(name, fig)
             plt.cla()
             plt.clf()
@@ -533,17 +678,19 @@ class ReportCharts:
             return base64
 
         # Data will come in the following format:
-        # [backtest time, backtest returns, benchmark time, benchmark returns, six month rolling beta, twelve month rolling beta]
-        
-        # TODO: Different asset classes can have different rolling window periods due to their trading
-        # days. Equities trade 252 days a year, whereas crypto and FOREX are closer to 365 days per year.
-        backtest_six_month_beta_dates, backtest_six_month_beta = (data[4], data[5])
-        backtest_twelve_month_beta_dates, backtest_twelve_month_beta = (data[6], data[7])
-        live_six_month_beta_dates, live_six_month_beta = (live_data[4], live_data[5])
-        live_twelve_month_beta_dates, live_twelve_month_beta = (live_data[6], live_data[7])
+        # [six month rolling beta time, six month rolling beta, twelve month rolling beta time, twelve month rolling beta]
 
-        labels = ['6 mo.', '12 mo.']
-        rectangles = [plt.Rectangle((0, 0), 1, 1, fc="#71c3fc"), plt.Rectangle((0, 0), 1, 1, fc="#1d7dc1")]
+        backtest_six_month_beta_dates, backtest_six_month_beta = (data[0], data[1])
+        backtest_twelve_month_beta_dates, backtest_twelve_month_beta = (data[2], data[3])
+        live_six_month_beta_dates, live_six_month_beta = (live_data[0], live_data[1])
+        live_twelve_month_beta_dates, live_twelve_month_beta = (live_data[2], live_data[3])
+
+        labels = []
+        rectangles = []
+
+        if len(backtest_six_month_beta) > 0:
+            labels += ['6 mo.', '12 mo.']
+            rectangles += [plt.Rectangle((0, 0), 1, 1, fc="#71c3fc"), plt.Rectangle((0, 0), 1, 1, fc="#1d7dc1")]
         if len(live_six_month_beta) > 0:
             labels += ['Live 6 mo.', 'Live 12 mo.']
             rectangles += [plt.Rectangle((0, 0), 1, 1, fc="#ff9914"), plt.Rectangle((0, 0), 1, 1, fc="#ffd700")]
@@ -553,9 +700,10 @@ class ReportCharts:
         fig = ax.get_figure()
         ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
 
-        # Backtest
-        ax.plot(backtest_six_month_beta_dates, backtest_six_month_beta, linewidth = 0.5, color = "#71c3fc")
-        ax.plot(backtest_twelve_month_beta_dates, backtest_twelve_month_beta, linewidth=0.5, color="#1d7dc1")
+        if len(backtest_six_month_beta_dates) > 0:
+            # Backtest
+            ax.plot(backtest_six_month_beta_dates, backtest_six_month_beta, linewidth = 0.5, color = "#71c3fc")
+            ax.plot(backtest_twelve_month_beta_dates, backtest_twelve_month_beta, linewidth=0.5, color="#1d7dc1")
 
         # Live
         if len(live_six_month_beta) > 0:
@@ -587,6 +735,24 @@ class ReportCharts:
         if len(data[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
+
+            left, box_width = .25, .5
+            bottom, box_height = .25, .5
+            right = left + box_width
+            top = bottom + box_height
+
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=40,
+                    transform=ax.transAxes)
+
+            ax.axis('off')
+
+            for _, spine in ax.spines.items():
+                spine.set_visible(False)
+
             base64 = self.fig_to_base64(name, fig)
             plt.cla()
             plt.clf()
@@ -637,11 +803,29 @@ class ReportCharts:
         return base64
 
     def GetAssetAllocation(self, data = [[],[]], live_data = [[],[]],
-                              width = 7, height = 5):
+                              name="asset-allocation.png", width = 7, height = 5):
         if len(data[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
-            base64 = self.fig_to_base64("asset-allocation.png", fig)
+
+            left, box_width = .25, .5
+            bottom, box_height = .25, .5
+            right = left + box_width
+            top = bottom + box_height
+
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=30,
+                    transform=ax.transAxes)
+
+            ax.axis('off')
+
+            for _, spine in ax.spines.items():
+                spine.set_visible(False)
+
+            base64 = self.fig_to_base64(name, fig)
             plt.cla()
             plt.clf()
             plt.close('all')
@@ -688,10 +872,28 @@ class ReportCharts:
 
     def GetLeverage(self, data = [[],[]], live_data = [[],[]], name = "leverage.png",width = 11.5,
                         height = 2.5, backtest_color = "#71c3fc", live_color = "#ff9914",):
-        
+
         if len(data[0]) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
+
+            left, box_width = .25, .5
+            bottom, box_height = .25, .5
+            right = left + box_width
+            top = bottom + box_height
+
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=40,
+                    transform=ax.transAxes)
+
+            ax.axis('off')
+
+            for _, spine in ax.spines.items():
+                spine.set_visible(False)
+
             base64 = self.fig_to_base64(name, fig)
             plt.cla()
             plt.clf()
@@ -741,6 +943,24 @@ class ReportCharts:
         if len(time) == 0:
             fig = plt.figure()
             fig.set_size_inches(width, height)
+
+            left, box_width = .25, .5
+            bottom, box_height = .25, .5
+            right = left + box_width
+            top = bottom + box_height
+
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=40,
+                    transform=ax.transAxes)
+
+            ax.axis('off')
+
+            for _, spine in ax.spines.items():
+                spine.set_visible(False)
+
             base64 = self.fig_to_base64(name, fig)
             plt.cla()
             plt.clf()
@@ -768,11 +988,12 @@ class ReportCharts:
         time_copy = []
         long_data_copy = []
         short_data_copy = []
+
         j = 0
         for time_idx, longs, shorts in zip(time, long_data, short_data):
             long_data_copy.append([])
             short_data_copy.append([])
-            
+
             long_len = len(longs)
 
             for i in range(1, long_len + 1):
@@ -786,6 +1007,7 @@ class ReportCharts:
                     time_copy.append(time[i])
                     long_data_copy[j].append(longs[i - 1])
                     long_data_copy[j].append(longs[i - 1])
+
                     short_data_copy[j].append(shorts[i - 1])
                     short_data_copy[j].append(shorts[i - 1])
 
@@ -809,7 +1031,7 @@ class ReportCharts:
         for time_idx, longs, shorts in zip(live_time, live_long_data, live_short_data):
             live_long_data_copy.append([])
             live_short_data_copy.append([])
-            
+
             long_len = len(longs)
 
             for i in range(1, long_len + 1):
@@ -828,8 +1050,19 @@ class ReportCharts:
 
             j += 1
 
+        if not len(long_data_copy) > 0:
+            long_data_copy.append([])
+        if not len(short_data_copy) > 0:
+            short_data_copy.append([])
+        if not len(live_long_data_copy) > 0:
+            live_long_data_copy.append([])
+        if not len(live_short_data_copy) > 0:
+            live_short_data_copy.append([])
+        if not len(time_copy) > 0:
+            time_copy.append(float('nan'))
+
         # No need to check if live is empty or not, this will handle it, just needs to plot whichever has the longer time index first
-        if max([len(x) for x in long_data]) > max([len(x) for x in short_data]):
+        if max([len(x) for x in long_data_copy]) > max([len(x) for x in short_data_copy]):
             ax.stackplot(time_copy[:max([len(x) for x in long_data_copy])], np.vstack(long_data_copy),
                          color=[color_map[security] for security in long_securities], alpha = 0.75)
             ax.stackplot(time_copy[:max([len(x) for x in short_data_copy])], np.vstack(short_data_copy),

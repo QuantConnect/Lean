@@ -42,7 +42,7 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            return _backtest.TotalPerformance.PortfolioStatistics.InformationRatio.ToString("F1");
+            return _backtest?.TotalPerformance?.PortfolioStatistics?.InformationRatio.ToString("F1") ?? "-";
         }
     }
 }
