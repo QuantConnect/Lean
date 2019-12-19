@@ -368,7 +368,7 @@ namespace QuantConnect
         {
             // we will multiply by 1k bellow, if its bigger it will stack overflow
             if (value >= decimal.MaxValue / 1000
-                || value == decimal.MinValue
+                || value <= decimal.MinValue / 1000
                 || value == 0)
             {
                 return value;

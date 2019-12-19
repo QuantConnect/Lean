@@ -969,6 +969,22 @@ actualDictionary.update({'IBM': 5})
             Assert.AreEqual(10.999m, value.TruncateTo3DecimalPlaces());
         }
 
+        [Test]
+        public void DecimalTruncateTo3DecimalPlacesDoesNotThrowException()
+        {
+            var value = decimal.MaxValue;
+            Assert.DoesNotThrow(() => value.TruncateTo3DecimalPlaces());
+
+            value = decimal.MinValue;
+            Assert.DoesNotThrow(() => value.TruncateTo3DecimalPlaces());
+
+            value = decimal.MaxValue - 1;
+            Assert.DoesNotThrow(() => value.TruncateTo3DecimalPlaces());
+
+            value = decimal.MinValue + 1;
+            Assert.DoesNotThrow(() => value.TruncateTo3DecimalPlaces());
+        }
+
         private PyObject ConvertToPyObject(object value)
         {
             using (Py.GIL())
