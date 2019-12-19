@@ -143,7 +143,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var data = new EstimizeRelease();
             var date = new DateTime(2019, 6, 10);
             var source = data.GetSource(config, date, false);
-            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false);
+            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false, data);
 
             var rows = factory.Read(source).ToList();
 
@@ -226,7 +226,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var data = new EstimizeEstimate();
             var date = new DateTime(2019, 6, 10);
             var source = data.GetSource(config, date, false);
-            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false);
+            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false, data);
 
             var rows = factory.Read(source).ToList();
 
@@ -254,7 +254,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var data = new EstimizeConsensus();
             var date = new DateTime(2019, 6, 10);
             var source = data.GetSource(config, date, false);
-            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false);
+            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false, data);
 
             var rows = factory.Read(source).ToList();
 

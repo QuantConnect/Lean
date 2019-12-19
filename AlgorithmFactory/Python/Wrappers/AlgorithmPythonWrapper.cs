@@ -48,6 +48,11 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         private readonly IAlgorithm _baseAlgorithm;
 
         /// <summary>
+        /// True if the underlying python algorithm implements "OnEndOfDay"
+        /// </summary>
+        public bool IsOnEndOfDayImplemented { get; }
+
+        /// <summary>
         /// <see cref = "AlgorithmPythonWrapper"/> constructor.
         /// Creates and wraps the algorithm written in python.
         /// </summary>
@@ -90,6 +95,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             _onMarginCall = pyAlgorithm.GetPythonMethod("OnMarginCall");
 
                             _onOrderEvent = pyAlgorithm.GetAttr("OnOrderEvent");
+
+                            IsOnEndOfDayImplemented = pyAlgorithm.GetPythonMethod("OnEndOfDay") != null;
                         }
                         attr.Dispose();
                     }

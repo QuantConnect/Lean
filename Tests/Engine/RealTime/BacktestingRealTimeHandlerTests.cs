@@ -16,8 +16,14 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
+using QuantConnect.AlgorithmFactory.Python.Wrappers;
+using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
+using QuantConnect.Packets;
 using QuantConnect.Scheduling;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine.RealTime
 {
@@ -44,6 +50,101 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             realTimeHandler.SetTime(DateTime.UtcNow);
             Assert.AreEqual(100, count);
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void DoesNotAddOnEndOfDayEventsIfNotImplemented(Language language)
+        {
+            IAlgorithm algorithm;
+            if (language == Language.CSharp)
+            {
+                algorithm = new AlgorithmStub();
+                (algorithm as QCAlgorithm).AddEquity("SPY");
+            }
+            else
+            {
+                algorithm = new AlgorithmPythonWrapper("Test_CustomDataAlgorithm");
+                algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+                algorithm.AddSecurity(SecurityType.Equity,
+                    "SPY",
+                    Resolution.Daily,
+                    Market.USA,
+                    false,
+                    1,
+                    false);
+            }
+
+            var realTimeHandler = new TestBacktestingRealTimeHandler();
+            realTimeHandler.Setup(algorithm,
+                new AlgorithmNodePacket(PacketType.AlgorithmNode) { Language = language },
+                new TestResultHandler(),
+                null,
+                new TestTimeLimitManager());
+            Assert.AreEqual(1, realTimeHandler.GetScheduledEventsCount);
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void AddsOnEndOfDayEventsIfImplemented(Language language)
+        {
+            IAlgorithm algorithm;
+            if (language == Language.CSharp)
+            {
+                algorithm = new TestAlgorithm();
+                (algorithm as QCAlgorithm).AddEquity("SPY");
+            }
+            else
+            {
+                algorithm = new AlgorithmPythonWrapper("OnEndOfDayRegressionAlgorithm");
+                algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(new MockDataFeed(), algorithm));
+                algorithm.AddSecurity(SecurityType.Equity,
+                    "SPY",
+                    Resolution.Daily,
+                    Market.USA,
+                    false,
+                    1,
+                    false);
+            }
+
+            var realTimeHandler = new TestBacktestingRealTimeHandler();
+            realTimeHandler.Setup(algorithm,
+                new AlgorithmNodePacket(PacketType.AlgorithmNode) { Language = language },
+                new TestResultHandler(),
+                null,
+                new TestTimeLimitManager());
+            Assert.AreEqual(2, realTimeHandler.GetScheduledEventsCount);
+        }
+
+        private class TestTimeLimitManager : IIsolatorLimitResultProvider
+        {
+            public IsolatorLimitResult IsWithinLimit()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void RequestAdditionalTime(int minutes)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool TryRequestAdditionalTime(int minutes)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        private class TestBacktestingRealTimeHandler : BacktestingRealTimeHandler
+        {
+            public int GetScheduledEventsCount => ScheduledEvents.Count;
+        }
+
+        private class TestAlgorithm : AlgorithmStub
+        {
+            public override void OnEndOfDay(Symbol symbol)
+            {
+
+            }
         }
     }
 }

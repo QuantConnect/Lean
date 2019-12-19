@@ -469,7 +469,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // save off for comparison next time
                     _source = newSource;
-                    var subscriptionFactory = CreateSubscriptionFactory(newSource);
+                    var subscriptionFactory = CreateSubscriptionFactory(newSource, _dataFactory);
                     _subscriptionFactoryEnumerator = subscriptionFactory.Read(newSource).GetEnumerator();
                     return true;
                 }
@@ -488,9 +488,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             while (true);
         }
 
-        private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source)
+        private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source, BaseData baseDataInstance)
         {
-            var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, _config, _tradeableDates.Current, _isLiveMode);
+            var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, _config, _tradeableDates.Current, _isLiveMode, baseDataInstance);
             AttachEventHandlers(factory, source);
             return factory;
         }

@@ -71,7 +71,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                 RefreshMarketHoursToday(triggerTime.ConvertFromUtc(Algorithm.TimeZone).Date);
             }));
 
-            base.Setup(todayInAlgorithmTimeZone, Time.EndOfTime, DateTime.UtcNow);
+            base.Setup(todayInAlgorithmTimeZone, Time.EndOfTime, job.Language, DateTime.UtcNow);
 
             foreach (var scheduledEvent in ScheduledEvents)
             {

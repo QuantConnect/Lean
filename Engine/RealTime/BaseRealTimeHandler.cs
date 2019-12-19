@@ -18,6 +18,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using QuantConnect.Algorithm;
+using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -34,6 +36,9 @@ namespace QuantConnect.Lean.Engine.RealTime
     public abstract class BaseRealTimeHandler : IEventSchedule
     {
         private int _scheduledEventUniqueId;
+        // For performance only add OnEndOfDay Symbol scheduled events if the method is implemented.
+        // When there are many securities it adds a significant overhead
+        private bool _implementsOnEndOfDaySymbol;
 
         /// <summary>
         /// Keep track of this event so we can remove it when we need to update it
@@ -83,9 +88,29 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// Initializes the real time handler for the specified algorithm and job.
         /// Adds EndOfDayEvents
         /// </summary>
-        protected void Setup(DateTime start, DateTime end, DateTime? currentUtcTime = null)
+        protected void Setup(DateTime start, DateTime end, Language language, DateTime? currentUtcTime = null)
         {
             AddAlgorithmEndOfDayEvent(start, end, currentUtcTime);
+
+            if (language == Language.CSharp)
+            {
+                var method = Algorithm.GetType().GetMethod("OnEndOfDay", new[] { typeof(Symbol) });
+                var method2 = Algorithm.GetType().GetMethod("OnEndOfDay", new[] { typeof(string) });
+                if (method != null && method.DeclaringType != typeof(QCAlgorithm)
+                    || method2 != null && method2.DeclaringType != typeof(QCAlgorithm))
+                {
+                    _implementsOnEndOfDaySymbol = true;
+                }
+            }
+            else if (language == Language.Python)
+            {
+                var wrapper = Algorithm as AlgorithmPythonWrapper;
+                _implementsOnEndOfDaySymbol = wrapper.IsOnEndOfDayImplemented;
+            }
+            else
+            {
+                throw new ArgumentException(nameof(language));
+            }
 
             // add end of trading day events for each security
             AddSecurityDependentEndOfDayEvents(Algorithm.Securities.Values, start, end, currentUtcTime);
@@ -144,19 +169,22 @@ namespace QuantConnect.Lean.Engine.RealTime
             DateTime end,
             DateTime? currentUtcTime = null)
         {
-            // add end of trading day events for each security
-            foreach (var security in securities)
+            if (_implementsOnEndOfDaySymbol)
             {
-                if (!security.IsInternalFeed())
+                // add end of trading day events for each security
+                foreach (var security in securities)
                 {
-                    var scheduledEvent = ScheduledEventFactory.EverySecurityEndOfDay(
-                        Algorithm, ResultHandler, security, start, end, ScheduledEvent.SecurityEndOfDayDelta, currentUtcTime);
+                    if (!security.IsInternalFeed())
+                    {
+                        var scheduledEvent = ScheduledEventFactory.EverySecurityEndOfDay(
+                            Algorithm, ResultHandler, security, start, end, ScheduledEvent.SecurityEndOfDayDelta, currentUtcTime);
 
-                    // we keep separate track so we can remove it later
-                    _securityOnEndOfDay[security.Symbol] = scheduledEvent;
+                        // we keep separate track so we can remove it later
+                        _securityOnEndOfDay[security.Symbol] = scheduledEvent;
 
-                    // assumes security.Exchange has been updated with today's hours via RefreshMarketHoursToday
-                    Add(scheduledEvent);
+                        // assumes security.Exchange has been updated with today's hours via RefreshMarketHoursToday
+                        Add(scheduledEvent);
+                    }
                 }
             }
         }
@@ -168,18 +196,21 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             if (changes != SecurityChanges.None)
             {
-                AddSecurityDependentEndOfDayEvents(changes.AddedSecurities,
-                    Algorithm.UtcTime,
-                    Algorithm.EndDate,
-                    Algorithm.UtcTime);
-
-                foreach (var security in changes.RemovedSecurities)
+                if (_implementsOnEndOfDaySymbol)
                 {
-                    ScheduledEvent scheduledEvent;
-                    if (_securityOnEndOfDay.TryRemove(security.Symbol, out scheduledEvent))
+                    AddSecurityDependentEndOfDayEvents(changes.AddedSecurities,
+                        Algorithm.UtcTime,
+                        Algorithm.EndDate,
+                        Algorithm.UtcTime);
+
+                    foreach (var security in changes.RemovedSecurities)
                     {
-                        // we remove the schedule events of the securities that were removed
-                        Remove(scheduledEvent);
+                        ScheduledEvent scheduledEvent;
+                        if (_securityOnEndOfDay.TryRemove(security.Symbol, out scheduledEvent))
+                        {
+                            // we remove the schedule events of the securities that were removed
+                            Remove(scheduledEvent);
+                        }
                     }
                 }
 

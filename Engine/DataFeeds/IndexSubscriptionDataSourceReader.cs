@@ -104,7 +104,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             DataCacheProvider,
                             _config,
                             _date,
-                            IsLiveMode);
+                            IsLiveMode,
+                            _factory);
 
                         var enumerator = dataReader.Read(dataSource).GetEnumerator();
                         while (enumerator.MoveNext())

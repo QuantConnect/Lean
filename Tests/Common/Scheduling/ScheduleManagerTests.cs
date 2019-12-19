@@ -19,6 +19,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.RealTime;
+using QuantConnect.Packets;
 using QuantConnect.Util.RateLimit;
 
 namespace QuantConnect.Tests.Common.Scheduling
@@ -33,7 +34,7 @@ namespace QuantConnect.Tests.Common.Scheduling
 
             var handler = new BacktestingRealTimeHandler();
             var timeLimitManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.MaxValue);
-            handler.Setup(algorithm, null, null, null, timeLimitManager);
+            handler.Setup(algorithm, new AlgorithmNodePacket(PacketType.BacktestNode), null, null, timeLimitManager);
 
             algorithm.Schedule.SetEventSchedule(handler);
 
