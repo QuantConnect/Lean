@@ -27,7 +27,7 @@ namespace QuantConnect.Report
         private readonly IReadOnlyCollection<IReportElement> _elements;
 
         /// <summary>
-        /// Creating beautiful HTML and PDF Reports based on backtest and live data.
+        /// Create beautiful HTML and PDF Reports based on backtest and live data.
         /// </summary>
         /// <param name="name">Name of the strategy</param>
         /// <param name="description">Description of the strategy</param>
@@ -51,7 +51,7 @@ namespace QuantConnect.Report
                 new KellyEstimateReportElement("kelly estimate kpi", ReportKey.KellyEstimate, backtest, live),
                 new SharpeRatioReportElement("sharpe kpi", ReportKey.SharpeRatio, backtest, live),
                 new PSRReportElement("psr kpi", ReportKey.PSR, backtest, live),
-                new InformationRatioReportElement("psr kpi", ReportKey.InformationRatio, backtest, live),
+                new InformationRatioReportElement("ir kpi", ReportKey.InformationRatio, backtest, live),
                 new MarketsReportElement("markets kpi", ReportKey.Markets, backtest, live),
                 new TradesPerDayReportElement("trades per day kpi", ReportKey.TradesPerDay, backtest, live),
 

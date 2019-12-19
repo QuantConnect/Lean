@@ -42,7 +42,7 @@ namespace QuantConnect.Report.ReportElements
         }
 
         /// <summary>
-        /// Generate the annual returns plot using the python libraries.
+        /// Generate the daily returns plot using the python libraries.
         /// </summary>
         public override string Render()
         {

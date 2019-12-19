@@ -27,7 +27,7 @@ namespace QuantConnect.Report.ReportElements
         private BacktestResult _backtest;
 
         /// <summary>
-        /// Create a new array of crisis event plots
+        /// Create a monthly returns plot
         /// </summary>
         /// <param name="name">Name of the widget</param>
         /// <param name="key">Location of injection</param>
