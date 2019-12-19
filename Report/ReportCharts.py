@@ -624,7 +624,7 @@ class ReportCharts:
         ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d"))
         colors = [backtest_color, gray]
         for j, values in enumerate(data[1:]):
-            ax.plot(data[0][:min(len(data[0]),len(values))], values, color=colors[j], linewidth=0.5, zorder=2)
+            ax.plot(data[0][:min(len(data[0]),len(values))], values, color=colors[j], linewidth=0.5, zorder=2, drawstyle='steps-post')
         labels = ['Backtest', 'Benchmark']
         rectangles = [plt.Rectangle((0, 0), 1, 1, fc=backtest_color), plt.Rectangle((0, 0), 1, 1, fc=gray)]
         leg = ax.legend(rectangles, labels, handlelength=0.8, handleheight=0.8,

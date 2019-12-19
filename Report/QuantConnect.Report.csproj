@@ -121,12 +121,18 @@
     </When>
   </Choose>
   <ItemGroup>
+    <Compile Include="PortfolioLooper\MockDataFeed.cs" />
+    <Compile Include="PortfolioLooper\NullLeanManager.cs" />
+    <Compile Include="PortfolioLooper\PortfolioLooperAlgorithm.cs" />
+    <Compile Include="PortfolioLooper\NullAlphaHandler.cs" />
+    <Compile Include="PortfolioLooper\NullSynchronizer.cs" />
+    <Compile Include="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="ResultsUtil.cs" />
     <Compile Include="Metrics.cs" />
     <Compile Include="Rolling.cs" />
     <Compile Include="DeedleUtil.cs" />
     <Compile Include="PointInTimePortfolio.cs" />
-    <Compile Include="PortfolioLooper.cs" />
+    <Compile Include="PortfolioLooper\PortfolioLooper.cs" />
     <Compile Include="CrisisEvent.cs" />
     <Compile Include="Crisis.cs" />
     <Compile Include="DrawdownCollection.cs" />

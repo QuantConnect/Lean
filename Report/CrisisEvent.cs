@@ -21,6 +21,21 @@ namespace QuantConnect.Report
     public enum CrisisEvent
     {
         /// <summary>
+        /// DotCom bubble - https://en.wikipedia.org/wiki/Dot-com_bubble
+        /// </summary>
+        DotCom,
+
+        /// <summary>
+        /// September 11, 2001 attacks - https://en.wikipedia.org/wiki/September_11_attacks
+        /// </summary>
+        SeptemberEleventh,
+
+        /// <summary>
+        /// United States housing bubble - https://en.wikipedia.org/wiki/United_States_housing_bubble
+        /// </summary>
+        USHousingBubble2003,
+
+        /// <summary>
         /// https://en.wikipedia.org/wiki/Financial_crisis_of_2007%E2%80%9308
         /// </summary>
         GlobalFinancialCrisis,
@@ -29,6 +44,11 @@ namespace QuantConnect.Report
         /// The flash crash of 2010 - https://en.wikipedia.org/wiki/2010_Flash_Crash
         /// </summary>
         FlashCrash,
+
+        /// <summary>
+        /// Fukushima nuclear power plant meltdown - https://en.wikipedia.org/wiki/Fukushima_Daiichi_nuclear_disaster
+        /// </summary>
+        FukushimaMeltdown,
 
         /// <summary>
         /// United States credit rating downgrade - https://en.wikipedia.org/wiki/United_States_federal_government_credit-rating_downgrades

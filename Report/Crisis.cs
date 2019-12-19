@@ -28,7 +28,11 @@ namespace QuantConnect.Report
         /// </summary>
         public readonly static Dictionary<CrisisEvent, Crisis> Events = new Dictionary<CrisisEvent, Crisis>
         {
+            {CrisisEvent.DotCom, new Crisis("DotCom Bubble", new DateTime(2000, 2, 26), new DateTime(2000, 9, 10)) },
+            {CrisisEvent.SeptemberEleventh, new Crisis("September 11, 2001 Attacks", new DateTime(2001, 9, 5), new DateTime(2001, 10, 10)) },
+            {CrisisEvent.USHousingBubble2003, new Crisis("U.S. Housing Bubble (2003)", new DateTime(2003, 1, 1), new DateTime(2003, 2, 20)) },
             {CrisisEvent.GlobalFinancialCrisis, new Crisis("Global Financial Crisis", new DateTime(2007, 10, 1), new DateTime(2011, 12, 1))},
+            {CrisisEvent.FukushimaMeltdown, new Crisis("Fukushima Meltdown", new DateTime(2011, 3, 1), new DateTime(2011, 4, 22)) },
             {CrisisEvent.FlashCrash, new Crisis("Flash Crash", new DateTime(2010, 5, 5), new DateTime(2010, 5, 10))},
             {CrisisEvent.USDowngradeEuropeanDebt, new Crisis("U.S. Downgrade / European Debt Crisis", new DateTime(2011, 8, 5), new DateTime(2011, 9, 1))},
             {CrisisEvent.EurozoneSeptember2012, new Crisis("ECB IR Event 2012", new DateTime(2012, 9, 5), new DateTime(2012, 10, 12))},
