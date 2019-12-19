@@ -158,21 +158,21 @@ namespace QuantConnect.Orders
                     break;
 
                 case OrderType.Limit:
-                    order = new LimitOrder {LimitPrice = jObject["LimitPrice"].IsNullOrEmpty() ? default(decimal) : jObject["LimitPrice"].Value<decimal>() };
+                    order = new LimitOrder {LimitPrice = jObject["LimitPrice"] == null ? default(decimal) : jObject["LimitPrice"].Value<decimal>() };
                     break;
 
                 case OrderType.StopMarket:
                     order = new StopMarketOrder
                     {
-                        StopPrice = jObject["StopPrice"].IsNullOrEmpty() ? default(decimal) : jObject["StopPrice"].Value<decimal>()
+                        StopPrice = jObject["StopPrice"] == null ? default(decimal) : jObject["StopPrice"].Value<decimal>()
                     };
                     break;
 
                 case OrderType.StopLimit:
                     order = new StopLimitOrder
                     {
-                        LimitPrice = jObject["LimitPrice"].IsNullOrEmpty() ? default(decimal) : jObject["LimitPrice"].Value<decimal>(),
-                        StopPrice = jObject["StopPrice"].IsNullOrEmpty() ? default(decimal) : jObject["StopPrice"].Value<decimal>()
+                        LimitPrice = jObject["LimitPrice"] == null ? default(decimal) : jObject["LimitPrice"].Value<decimal>(),
+                        StopPrice = jObject["StopPrice"] == null ? default(decimal) : jObject["StopPrice"].Value<decimal>()
                     };
                     break;
 
