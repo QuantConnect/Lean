@@ -34,9 +34,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class TextSubscriptionDataSourceReader : BaseSubscriptionDataSourceReader
     {
         private readonly bool _implementsStreamReader;
-        private readonly BaseData _factory;
         private readonly DateTime _date;
         private readonly SubscriptionDataConfig _config;
+        private BaseData _factory;
         private bool _shouldCacheDataPoints;
         private static readonly MemoryCache BaseDataSourceCache = new MemoryCache("BaseDataSourceCache",
             // Cache can use up to 70% of the installed physical memory
@@ -77,7 +77,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             _date = date;
             _config = config;
-            _factory = config.GetBaseDataInstance();
             _shouldCacheDataPoints = !_config.IsCustomData && _config.Resolution >= Resolution.Hour
                 && _config.Type != typeof(FineFundamental) && _config.Type != typeof(CoarseFundamental)
                 && !DataCacheProvider.IsDataEphemeral;
@@ -113,6 +112,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     {
                         OnCreateStreamReaderError(_date, source);
                         yield break;
+                    }
+
+                    if (_factory == null)
+                    {
+                        // only create a factory if the stream isn't null
+                        _factory = _config.GetBaseDataInstance();
                     }
                     // while the reader has data
                     while (!reader.EndOfStream)

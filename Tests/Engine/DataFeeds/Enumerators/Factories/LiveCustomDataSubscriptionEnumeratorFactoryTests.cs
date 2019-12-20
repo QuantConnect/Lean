@@ -491,7 +491,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             protected override ISubscriptionDataSourceReader GetSubscriptionDataSourceReader(SubscriptionDataSource source,
                 IDataCacheProvider dataCacheProvider,
                 SubscriptionDataConfig config,
-                DateTime date)
+                DateTime date,
+                BaseData baseData)
             {
                 return _dataSourceReader;
             }

@@ -36,6 +36,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     {
         private static readonly ConcurrentDictionary<int, List<DateTime>> FineFilesCache
             = new ConcurrentDictionary<int, List<DateTime>>();
+        // creating a fine fundamental instance is expensive (its massive) so we keep our factory instance
+        private static readonly FineFundamental FineFundamental = new FineFundamental();
 
         private readonly bool _isLiveMode;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
@@ -64,13 +66,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             {
                 var tradableDays = _tradableDaysProvider(request);
 
-                var fineFundamental = new FineFundamental();
                 var fineFundamentalConfiguration = new SubscriptionDataConfig(request.Configuration, typeof(FineFundamental), request.Security.Symbol);
 
                 foreach (var date in tradableDays)
                 {
-                    var fineFundamentalSource = GetSource(fineFundamental, fineFundamentalConfiguration, date);
-                    var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode);
+                    var fineFundamentalSource = GetSource(FineFundamental, fineFundamentalConfiguration, date);
+                    var fineFundamentalFactory = SubscriptionDataSourceReader.ForSource(fineFundamentalSource, dataCacheProvider, fineFundamentalConfiguration, date, _isLiveMode, FineFundamental);
                     var fineFundamentalForDate = (FineFundamental)fineFundamentalFactory.Read(fineFundamentalSource).FirstOrDefault();
 
                     yield return new FineFundamental

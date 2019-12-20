@@ -52,7 +52,7 @@ namespace QuantConnect.Lean.Engine.RealTime
 
             // create events for algorithm's end of tradeable dates
             // set up the events for each security to fire every tradeable date before market close
-            base.Setup(Algorithm.StartDate, Algorithm.EndDate);
+            base.Setup(Algorithm.StartDate, Algorithm.EndDate, job.Language);
 
             foreach (var scheduledEvent in GetScheduledEventsSortedByTime())
             {

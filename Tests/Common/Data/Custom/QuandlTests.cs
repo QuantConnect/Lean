@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var config = new SubscriptionDataConfig(typeof(HistoryAlgorithm.QuandlFuture), Symbol.Create(ticker, SecurityType.Base, QuantConnect.Market.USA), Resolution.Daily, DateTimeZone.Utc, DateTimeZone.Utc, false, false, false, true);
             var source = data.GetSource(config, date, false);
             var dataCacheProvider = new SingleEntryDataCacheProvider(new DefaultDataProvider());
-            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false);
+            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false, data);
 
             var rows = factory.Read(source).ToList();
 

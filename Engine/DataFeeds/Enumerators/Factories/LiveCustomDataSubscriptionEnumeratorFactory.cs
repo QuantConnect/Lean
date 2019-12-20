@@ -72,7 +72,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 var source = sourceFactory.GetSource(config, localDate, true);
 
                 // fetch the new source and enumerate the data source reader
-                var enumerator = EnumerateDataSourceReader(config, dataProvider, frontier, source, localDate);
+                var enumerator = EnumerateDataSourceReader(config, dataProvider, frontier, source, localDate, sourceFactory);
 
                 if (SourceRequiresFastForward(source))
                 {
@@ -127,12 +127,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             return refresher;
         }
 
-        private IEnumerator<BaseData> EnumerateDataSourceReader(SubscriptionDataConfig config, IDataProvider dataProvider, Ref<DateTime> localFrontier, SubscriptionDataSource source, DateTime localDate)
+        private IEnumerator<BaseData> EnumerateDataSourceReader(SubscriptionDataConfig config, IDataProvider dataProvider, Ref<DateTime> localFrontier, SubscriptionDataSource source, DateTime localDate, BaseData baseDataInstance)
         {
             using (var dataCacheProvider = new SingleEntryDataCacheProvider(dataProvider))
             {
                 var newLocalFrontier = localFrontier.Value;
-                var dataSourceReader = GetSubscriptionDataSourceReader(source, dataCacheProvider, config, localDate);
+                var dataSourceReader = GetSubscriptionDataSourceReader(source, dataCacheProvider, config, localDate, baseDataInstance);
                 foreach (var datum in dataSourceReader.Read(source))
                 {
                     // always skip past all times emitted on the previous invocation of this enumerator
@@ -177,10 +177,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         protected virtual ISubscriptionDataSourceReader GetSubscriptionDataSourceReader(SubscriptionDataSource source,
             IDataCacheProvider dataCacheProvider,
             SubscriptionDataConfig config,
-            DateTime date
+            DateTime date,
+            BaseData baseDataInstance
             )
         {
-            return SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, true);
+            return SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, true, baseDataInstance);
         }
 
         private bool SourceRequiresFastForward(SubscriptionDataSource source)
