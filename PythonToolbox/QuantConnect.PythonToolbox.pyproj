@@ -22,11 +22,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CreateLeanReport.py" />
     <Compile Include="quantconnect\api.py" />
     <Compile Include="quantconnect\Result.py" />
-    <Compile Include="quantconnect\LeanOutputReader.py" />
-    <Compile Include="quantconnect\LeanReportCreator.py" />
     <Compile Include="quantconnect\symbol.py" />
     <Compile Include="setup.py" />
     <Compile Include="tests\test_api.py" />
@@ -40,12 +37,10 @@
     <Folder Include="quantconnect\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="AuthorProfile.png" />
     <Content Include="MANIFEST.in" />
     <Content Include="README.rst">
       <SubType>Code</SubType>
     </Content>
-    <Content Include="user_data.json" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

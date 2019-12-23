@@ -1,0 +1,536 @@
+body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-size: 12px;
+    background-color: #666666;
+    box-shadow: #0A0A0A;
+    font-family: "Roboto";
+}
+
+.table.qc-table.compact thead > tr {
+    height: 1em;
+}
+
+.page .content .text-center {
+    text-align: center;
+}
+
+.page .content .text-left {
+    text-align: left;
+}
+
+.page .content .text-right {
+    text-align: right;
+}
+
+.page {
+    width: 993px;
+    height: 1405px;
+    overflow: hidden;
+    position: relative;
+    margin: 10px auto;
+    background-color: #fff;
+    page-break-after: always; /* Fixes wkhtmltopdf header bug - https://github.com/wkhtmltopdf/wkhtmltopdf/issues/1524*/
+}
+
+
+.text-h1,
+h1 {
+    font-size: 26px;
+    width: 100%;
+    font-family: 'Titillium Web', Helvetica, Arial, sans-serif !important;
+    font-weight: bold;
+}
+
+.footer {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    position: absolute;
+    color: #222;
+    font-family: 'Titillium Web', Helvetica, Arial, sans-serif;
+    text-align: center;
+    line-height: 50px;
+}
+
+.footer .footer-page {
+    position: absolute;
+    top: 0;
+    right: 0;
+    line-height: 50px;
+    margin-right: 40px;
+}
+
+.footer .footer-id {
+    position: absolute;
+    top: 0;
+    left: 0;
+    line-height: 50px;
+    margin-left: 40px;
+}
+
+.header {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 120px;
+    padding-left: 40px;
+    padding-right: 40px;
+    color: #222;
+    font-family: 'Titillium Web', Helvetica, Arial, sans-serif;
+}
+
+.header .header-left {
+    float: left;
+}
+
+.header .header-left img {
+    height: 58px;
+    padding-top: 25px;
+}
+
+.header .header-right {
+    margin-top: 40px;
+    line-height: 30px;
+    float: right;
+}
+
+.page .content {
+    position: absolute;
+    left: 40px;
+    right: 40px;
+    top: 80px;
+    bottom: 80px;
+    border-top: 1px solid #222;
+    border-bottom: 1px solid #222;
+    padding-top: 6px;
+}
+
+table.table {
+    width: 100%;
+}
+
+.table.qc-table {
+    border-spacing: 0;
+    border-collapse: separate;
+    margin-bottom: 0;
+}
+
+    .table.qc-table thead th {
+        padding: 5px;
+        border-top: solid 1px #677080;
+        border-left: solid 1px #677080;
+        border-bottom: solid 1px #677080;
+        color: #ffffff;
+        font-family: 'Titillium Web', Helvetica, Arial, sans-serif;
+        font-weight: bold;
+    }
+
+.table.qc-table thead tr {
+    background-color: #677080;
+}
+
+.table.qc-table thead th:last-child {
+    border-right: solid 1px #677080;
+}
+
+.table.qc-table tbody tr td {
+    border-top: none;
+    border-bottom: solid 1px #e9edf1;
+    border-left: solid 1px #e9edf1;
+    padding: 15px;
+    margin: 0;
+    word-wrap: break-word;
+}
+
+.table.qc-table.compact tbody tr td {
+    padding: 5px;
+}
+
+.table.qc-table tbody tr {
+    background-color: #fff;
+}
+
+.table.qc-table tbody tr:nth-child(odd) {
+    background-color: #f8f9fa;
+}
+
+.table.qc-table tbody tr td:last-child {
+    border-right: solid 1px #e9edf1;
+}
+
+    .table.qc-table a,
+    .table.qc-table span,
+    .table.qc-table div,
+    .table.qc-table p {
+        font-family: 'Titillium Web', Helvetica, Arial, sans-serif;
+        font-weight: bold;
+    }
+
+    .table.qc-table.table-itemized tbody tr td:first-child,
+    .table.qc-table.table-itemized tbody tr td:first-child a,
+    .table.qc-table.table-itemized tbody tr td:first-child span,
+    .table.qc-table.table-itemized tbody tr td:first-child div,
+    .table.qc-table.table-itemized tbody tr td:first-child p {
+        font-family: 'Titillium Web', Helvetica, Arial, sans-serif;
+        font-weight: bold;
+    }
+
+.table.qc-table a,
+.table.qc-table a span,
+.table.qc-table a div,
+.table.qc-table a p {
+    color: #f5ae29;
+}
+
+.table.v-top tr td {
+    vertical-align: top;
+}
+
+.table.col-2 td {
+    width: 50%
+}
+
+.table.col-3 td {
+    width: 33.3%
+}
+
+.table.col-4 td {
+    width: 25%
+}
+
+.table.col-5 td {
+    width: 20%
+}
+
+.no-padding {
+    padding: 0 !important;
+}
+
+.no-margin {
+    margin: 0 !important;
+}
+
+.split-text {
+    -webkit-column-count: 2;
+    -moz-column-count: 2;
+    column-count: 2;
+}
+
+.profile img {
+    max-height: 150px;
+    max-width: 100%;
+    width: auto;
+    display: block;
+    margin: auto auto 12px;
+}
+
+.page .content .text-justify,
+.page .content p {
+    text-align: justify;
+}
+
+@media print {
+    body {
+        background-color: #ffffff;
+    }
+
+    .hide-print {
+        display: none;
+    }
+
+    .page {
+        border: none;
+        margin: 0;
+    }
+}
+
+.col-xs-1, .col-sm-1, .col-md-1, .col-lg-1, .col-xs-2, .col-sm-2, .col-md-2, .col-lg-2, .col-xs-3, .col-sm-3, .col-md-3, .col-lg-3, .col-xs-4, .col-sm-4, .col-md-4, .col-lg-4, .col-xs-5, .col-sm-5, .col-md-5, .col-lg-5, .col-xs-6, .col-sm-6, .col-md-6, .col-lg-6, .col-xs-7, .col-sm-7, .col-md-7, .col-lg-7, .col-xs-8, .col-sm-8, .col-md-8, .col-lg-8, .col-xs-9, .col-sm-9, .col-md-9, .col-lg-9, .col-xs-10, .col-sm-10, .col-md-10, .col-lg-10, .col-xs-11, .col-sm-11, .col-md-11, .col-lg-11, .col-xs-12, .col-sm-12, .col-md-12, .col-lg-12 {
+    padding: 6px;
+}
+
+.container-row {
+    width: 100%;
+    display: block;
+}
+
+.container-row > div:last-child {
+    padding-right: 0;
+}
+
+.container-row > div:first-child {
+    padding-left: 0;
+}
+
+#table-summary .fa-times {
+    color: #d9534f;
+}
+
+#author-metadata tr > td:first-child,
+#project-metadata tr > td:first-child {
+    width: 66%;
+}
+
+#project-metadata tr > td:last-child {
+    text-align: center;
+}
+
+#key-statistics tr > td:last-child {
+    text-align: right;
+}
+
+#key-statistics tr > td,
+#key-characteristics tr > td,
+table.table tr > td {
+    vertical-align: middle;
+}
+
+table.table.align-top tr > td {
+    vertical-align: top;
+}
+
+table.table {
+    height: 230px;
+}
+
+table img {
+    width: 100%;
+    height: 100%;
+    max-height: 225px;
+}
+
+.col-xs-12 table > tbody > tr > td {
+    text-align: center;
+}
+
+table.table > thead > tr > th {
+    border-bottom: none;
+    font-weight: bold;
+    font-size: 18px;
+    padding-top: 15px;
+    font-family: 'Titillium Web', sans-serif;
+}
+
+table.table > tbody > tr > td {
+    border-top: none;
+    font-size: 15px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+table#key-characteristics {
+    width: calc(100% - 30px);
+}
+
+table#key-characteristics > thead > tr > th {
+    font-size: 14px;
+    width: 12.5%;
+    text-align: center;
+}
+
+    table#key-characteristics > thead > tr > th.title {
+        font-size: 18px;
+        width: 25%;
+        text-align: left;
+    }
+
+table#key-characteristics > tbody > tr {
+    border-bottom: 1px solid #cbd1d4;
+}
+
+table#key-characteristics > tbody > tr > td {
+    position: relative;
+    text-align: center;
+}
+
+    table#key-characteristics > tbody > tr > td.title {
+        text-align: left;
+    }
+
+table#key-characteristics > tbody > tr:first-child {
+    border-top: 1px solid #9c9c9c;
+}
+
+table#key-characteristics > tbody > tr > td > span.markets {
+    background: #8f9ca3;
+    font-size: 11px;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 4px;
+}
+
+.col-xs-4:nth-child(2) table#key-characteristics > tbody > tr > td:last-child {
+    text-align: right;
+}
+
+table#key-characteristics > tbody > tr > td:first-child {
+    border-top: #c3cace;
+}
+
+table#description-box {
+    word-wrap: break-word;
+    min-height: 225px;
+}
+
+    table#description-box > thead > tr > th > p {
+        color: #f5ae29;
+        font-size: 24px;
+    }
+
+        table#description-box > thead > tr > th > p > span {
+            font-weight: 100;
+        }
+
+        table#description-box > thead > tr > th > p > span {
+            margin-right: 10px;
+            width: 1px;
+            height: 24px;
+            background: #f5ae29;
+        }
+
+.page {
+    width: 1200px;
+    height: 1698px;
+}
+
+    .page .content {
+        top: 80px;
+        left: 110px;
+        right: 110px;
+        border-top: 1px solid #888888;
+        border-bottom: none;
+        padding: 0;
+    }
+
+    .page .header {
+        height: 80px;
+        left: 110px;
+        right: 110px;
+        padding: 0;
+    }
+
+.header .header-left img {
+    width: 230px;
+    height: auto;
+    padding-top: 0;
+    margin-top: 25px;
+}
+
+.header .header-right {
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: bold;
+    margin-top: 40px;
+    line-height: 23px;
+    float: right;
+    font-size: 18px;
+    max-width: 70%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.container-row {
+    height: auto;
+    overflow: auto;
+    border-bottom: 1px solid #b8b8b8;
+}
+
+    .container-row.first-row .col-xs-4:last-child {
+        text-align: right;
+    }
+
+        .container-row.first-row .col-xs-4:last-child p {
+            font-family: 'Titillium Web', sans-serif;
+            position: absolute;
+            transform: rotate(-90deg);
+            font-size: 12px;
+        }
+
+            .container-row.first-row .col-xs-4:last-child p:first-child {
+                left: -13px;
+                top: 128px;
+            }
+
+            .container-row.first-row .col-xs-4:last-child p:nth-child(2) {
+                bottom: 36px;
+            }
+
+        .container-row.first-row .col-xs-4:last-child table img {
+            width: calc(100% - 25px);
+        }
+
+    .container-row:empty {
+        border: none;
+    }
+
+span.checkmark, span.exmark {
+    border-radius: 50%;
+    position: absolute;
+    border: none;
+    top: 10px;
+    right: 36%;
+}
+
+    span.checkmark.half, span.exmark.half {
+        right: 44%;
+    }
+
+span.checkmark {
+    background-color: #46bd6a;
+    height: 20px;
+    width: 20px;
+}
+
+    span.checkmark:after {
+        content: "";
+        position: absolute;
+        left: 8px;
+        top: 3px;
+        width: 5px;
+        height: 10px;
+        border: solid #fff;
+        border-width: 0 1px 1px 0;
+        -webkit-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        transform: rotate(45deg);
+    }
+
+span.exmark {
+    background-color: #bc4143;
+    color: white;
+    font-size: 12px;
+    padding: 4px 5px;
+    padding-top: 4px;
+    line-height: 1;
+}
+
+p#strategy-description {
+    overflow: hidden;
+    max-height: 130px;
+    margin-bottom: 0;
+    word-break: break-word;
+}
+
+.kpi-live {
+    display: none;
+}
+
+@media print {
+    body {
+        margin: 0;
+        box-shadow: 0;
+        padding: 0;
+        background-color: #ffffff;
+    }
+
+    .page {
+        margin: 0;
+    }
+}
+
+#monthly-returns-plot {
+    width: 100% !important;
+}
