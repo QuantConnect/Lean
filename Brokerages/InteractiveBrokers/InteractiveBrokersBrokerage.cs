@@ -2837,11 +2837,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             else if (securityType == SecurityType.Future)
             {
-                if (!IsConnected)
-                {
-                    Connect();
-                }
-
                 // processing request
                 var results = FindContracts(contract, contract.Symbol);
 
@@ -2884,7 +2879,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (securityType == SecurityType.Future)
             {
                 // we need to call the IB API only for futures
-                return !IsWithinScheduledServerResetTimes();
+                return !IsWithinScheduledServerResetTimes() && IsConnected;
             }
 
             return true;

@@ -493,11 +493,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     throw new NotSupportedException("The DataQueueHandler does not support Options.");
                 }
 
-                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, _timeProvider);
+                var timeProvider = new PredicateTimeProvider(_timeProvider,
+                    time => symbolUniverse.CanAdvanceTime(config.SecurityType));
+
+                var enumeratorFactory = new OptionChainUniverseSubscriptionEnumeratorFactory(configure, symbolUniverse, timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
-                enumerator = GetConfiguredFrontierAwareEnumerator(enumerator, tzOffsetProvider,
-                    time => symbolUniverse.CanAdvanceTime(config.SecurityType));
+                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
             }
             else if (request.Universe is FuturesChainUniverse)
             {
@@ -509,11 +511,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     throw new NotSupportedException("The DataQueueHandler does not support Futures.");
                 }
 
-                var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, _timeProvider);
+                var timeProvider = new PredicateTimeProvider(_timeProvider,
+                    time => symbolUniverse.CanAdvanceTime(config.SecurityType));
+
+                var enumeratorFactory = new FuturesChainUniverseSubscriptionEnumeratorFactory(symbolUniverse, timeProvider);
                 enumerator = enumeratorFactory.CreateEnumerator(request, _dataProvider);
 
-                enumerator = GetConfiguredFrontierAwareEnumerator(enumerator, tzOffsetProvider,
-                    time => symbolUniverse.CanAdvanceTime(config.SecurityType));
+                enumerator = new FrontierAwareEnumerator(enumerator, _frontierTimeProvider, tzOffsetProvider);
             }
             else
             {
