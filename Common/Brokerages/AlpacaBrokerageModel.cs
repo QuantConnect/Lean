@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
@@ -49,13 +48,9 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="AccountType.Cash"/></param>
-        public AlpacaBrokerageModel(AccountType accountType = AccountType.Cash)
+        public AlpacaBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
-            if (accountType == AccountType.Margin)
-            {
-                throw new ArgumentException("The Alpaca brokerage does not currently support Margin trading.");
-            }
         }
 
         /// <summary>
