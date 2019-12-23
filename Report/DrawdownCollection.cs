@@ -143,7 +143,7 @@ namespace QuantConnect.Report
 
         /// <summary>
         /// Gets the underwater plot for the provided curve.
-        /// Data is expected to be the concatenated output of <see cref="Util.EquityPoints"/>.
+        /// Data is expected to be the concatenated output of <see cref="ResultsUtil.EquityPoints"/>.
         /// </summary>
         /// <param name="curve">Equity curve</param>
         /// <returns></returns>
@@ -270,7 +270,7 @@ namespace QuantConnect.Report
         {
             var drawdownAfter = frame["cumulativeMax"].Where(kvp => kvp.Value > groupMax);
             var drawdownGroup = frame["cumulativeMax"].Where(kvp => kvp.Value == groupMax);
-            var groupDrawdown = frame["drawdown"].Realign(drawdownGroup.Keys).Max();//Where(kvp => drawdownGroup.Keys.Contains(kvp.Key)).Max();
+            var groupDrawdown = frame["drawdown"].Realign(drawdownGroup.Keys).Max();
 
             var groupStart = drawdownGroup.FirstKey();
             // Get the start of the next period if it exists. That is when the drawdown period has officially ended.

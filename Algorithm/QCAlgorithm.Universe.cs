@@ -449,7 +449,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="security">The security to add</param>
         /// <param name="configurations">The <see cref="SubscriptionDataConfig"/> instances we want to add</param>
-        protected void AddToUserDefinedUniverse(
+        private void AddToUserDefinedUniverse(
             Security security,
             List<SubscriptionDataConfig> configurations)
         {

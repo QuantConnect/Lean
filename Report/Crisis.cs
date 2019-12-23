@@ -26,7 +26,7 @@ namespace QuantConnect.Report
         /// <summary>
         /// Crisis events and pre-defined values
         /// </summary>
-        public readonly static Dictionary<CrisisEvent, Crisis> Events = new Dictionary<CrisisEvent, Crisis>
+        public static readonly Dictionary<CrisisEvent, Crisis> Events = new Dictionary<CrisisEvent, Crisis>
         {
             {CrisisEvent.DotCom, new Crisis("DotCom Bubble", new DateTime(2000, 2, 26), new DateTime(2000, 9, 10)) },
             {CrisisEvent.SeptemberEleventh, new Crisis("September 11, 2001 Attacks", new DateTime(2001, 9, 5), new DateTime(2001, 10, 10)) },
@@ -45,17 +45,17 @@ namespace QuantConnect.Report
         /// <summary>
         /// Start of the crisis event
         /// </summary>
-        public DateTime Start { get; private set; }
+        public DateTime Start { get; }
 
         /// <summary>
         /// End of the crisis event
         /// </summary>
-        public DateTime End { get; private set; }
+        public DateTime End { get; }
 
         /// <summary>
         /// Name of the crisis
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
         /// <summary>
         /// Creates a new crisis instance with the given name and start/end date.

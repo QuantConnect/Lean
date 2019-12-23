@@ -13,11 +13,15 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using Deedle;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Report.ReportElements;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Report
 {
@@ -36,6 +40,15 @@ namespace QuantConnect.Report
         /// <param name="live">Live result object</param>
         public Report(string name, string description, string version, BacktestResult backtest, LiveResult live)
         {
+            var backtestCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(backtest));
+            var liveCurve = new Series<DateTime, double>(ResultsUtil.EquityPoints(live));
+
+            var backtestOrders = backtest?.Orders?.Values.ToList() ?? new List<Order>();
+            var liveOrders = live?.Orders?.Values.ToList() ?? new List<Order>();
+
+            var backtestPortfolioInTime = PortfolioLooper.FromOrders(backtestCurve, backtestOrders).ToList();
+            var livePortfolioInTime = PortfolioLooper.FromOrders(liveCurve, liveOrders).ToList();
+
             _elements = new List<ReportElement>
             {
                 //Basics
@@ -60,13 +73,13 @@ namespace QuantConnect.Report
                 new CumulativeReturnsReportElement("cumulative returns", ReportKey.CumulativeReturns, backtest, live),
                 new AnnualReturnsReportElement("annual returns", ReportKey.AnnualReturns, backtest, live),
                 new ReturnsPerTradeReportElement("returns per trade", ReportKey.ReturnsPerTrade, backtest, live),
-                new AssetAllocationReportElement("asset allocation over time pie chart", ReportKey.AssetAllocation, backtest, live),
+                new AssetAllocationReportElement("asset allocation over time pie chart", ReportKey.AssetAllocation, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
                 new DrawdownReportElement("drawdown plot", ReportKey.Drawdown, backtest, live),
                 new DailyReturnsReportElement("daily returns plot", ReportKey.DailyReturns, backtest, live),
                 new RollingPortfolioBetaReportElement("rolling beta to equities plot", ReportKey.RollingBeta, backtest, live),
                 new RollingSharpeReportElement("rolling sharpe ratio plot", ReportKey.RollingSharpe, backtest, live),
-                new LeverageUtilizationReportElement("leverage plot", ReportKey.LeverageUtilization, backtest, live),
-                new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live),
+                new LeverageUtilizationReportElement("leverage plot", ReportKey.LeverageUtilization, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
+                new ExposureReportElement("exposure plot", ReportKey.Exposure, backtest, live, backtestPortfolioInTime, livePortfolioInTime),
 
                 // Array of Crisis Plots:
                 new CrisisReportElement("crisis page", ReportKey.CrisisPageStyle, backtest, live),

@@ -14,9 +14,6 @@
 */
 
 using Deedle;
-using MathNet.Numerics.Statistics;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,13 +37,11 @@ namespace QuantConnect.Report
                 return input;
             }
 
-            var cumulativeSums = new List<double>();
             var prev = 0.0;
 
             return input.SelectValues(current =>
             {
                 var sum = prev + current;
-                cumulativeSums.Add(sum);
                 prev = sum;
 
                 return sum;
@@ -65,13 +60,11 @@ namespace QuantConnect.Report
                 return input;
             }
 
-            var cumulativeProducts = new List<double>();
             var prev = 1.0;
 
             return input.SelectValues(current =>
             {
                 var product = prev * current;
-                cumulativeProducts.Add(product);
                 prev = product;
 
                 return product;
@@ -189,20 +182,6 @@ namespace QuantConnect.Report
             }
 
             return newFrame.Transpose();
-        }
-
-        /// <summary>
-        /// Converts a series to key/value pair
-        /// </summary>
-        /// <typeparam name="TKey">Series key</typeparam>
-        /// <typeparam name="TValue">Series value</typeparam>
-        /// <param name="series">Series to convert</param>
-        /// <returns>Key/value pair of the series with missing values dropped</returns>
-        public static IEnumerable<KeyValuePair<TKey, TValue>> ToKeyValuePair<TKey, TValue>(this Series<TKey, TValue> series)
-        {
-            var noMissing = series.DropMissing();
-
-            return noMissing.Keys.Zip(noMissing.Values, (first, second) => new KeyValuePair<TKey, TValue>(first, second));
         }
     }
 }

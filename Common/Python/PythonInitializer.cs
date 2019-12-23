@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using Python.Runtime;
 using QuantConnect.Logging;
 

@@ -25,17 +25,17 @@ namespace QuantConnect.Report
         /// <summary>
         /// Start of the drawdown period
         /// </summary>
-        public DateTime Start { get; private set; }
+        public DateTime Start { get; }
 
         /// <summary>
         /// End of the drawdown period
         /// </summary>
-        public DateTime End { get; private set; }
+        public DateTime End { get; }
 
         /// <summary>
         /// Loss in percent from peak to trough
         /// </summary>
-        public double PeakToTrough { get; private set; }
+        public double PeakToTrough { get; }
 
         /// <summary>
         /// Loss in percent from peak to trough - Alias for <see cref="PeakToTrough"/>

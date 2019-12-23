@@ -27,6 +27,8 @@ namespace QuantConnect.Report.ReportElements
     {
         private LiveResult _live;
         private BacktestResult _backtest;
+        private List<PointInTimePortfolio> _backtestPortfolios;
+        private List<PointInTimePortfolio> _livePortfolios;
 
         /// <summary>
         /// Create a new plot of the exposure
@@ -35,10 +37,20 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public ExposureReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        /// <param name="backtestPortfolios">Backtest point in time portfolios</param>
+        /// <param name="livePortfolios">Live point in time portfolios</param>
+        public ExposureReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live,
+            List<PointInTimePortfolio> backtestPortfolios,
+            List<PointInTimePortfolio> livePortfolios)
         {
-            _live = live;
             _backtest = backtest;
+            _backtestPortfolios = backtestPortfolios;
+            _live = live;
+            _livePortfolios = livePortfolios;
             Name = name;
             Key = key;
         }
@@ -48,16 +60,10 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestPoints = ResultsUtil.EquityPoints(_backtest);
-            var livePoints = ResultsUtil.EquityPoints(_live);
-
-            var backtestOrders = _backtest?.Orders?.Values.ToList() ?? new List<Order>();
-            var liveOrders = _live?.Orders?.Values.ToList() ?? new List<Order>();
-
-            var longBacktestFrame = Metrics.Exposure(new Series<DateTime, double>(backtestPoints), backtestOrders, OrderDirection.Buy);
-            var shortBacktestFrame = Metrics.Exposure(new Series<DateTime, double>(backtestPoints), backtestOrders, OrderDirection.Sell);
-            var longLiveFrame = Metrics.Exposure(new Series<DateTime, double>(livePoints), liveOrders, OrderDirection.Buy);
-            var shortLiveFrame = Metrics.Exposure(new Series<DateTime, double>(livePoints), liveOrders, OrderDirection.Sell);
+            var longBacktestFrame = Metrics.Exposure(_backtestPortfolios, OrderDirection.Buy);
+            var shortBacktestFrame = Metrics.Exposure(_backtestPortfolios, OrderDirection.Sell);
+            var longLiveFrame = Metrics.Exposure(_livePortfolios, OrderDirection.Buy);
+            var shortLiveFrame = Metrics.Exposure(_livePortfolios, OrderDirection.Sell);
 
             var backtestFrame = longBacktestFrame.Join(shortBacktestFrame)
                 .FillMissing(Direction.Forward)

@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Lean.Engine.Setup;
+using QuantConnect.Algorithm;
 
 namespace QuantConnect.Report
 {
@@ -226,7 +227,6 @@ namespace QuantConnect.Report
             return algorithm.HistoryProvider.GetHistory(historyRequests, algorithm.TimeZone).ToList();
         }
 
-
         /// <summary>
         /// Gets the point in time portfolio over multiple deployments
         /// </summary>
@@ -235,8 +235,8 @@ namespace QuantConnect.Report
         /// <returns>Enumerable of <see cref="PointInTimePortfolio"/></returns>
         public static IEnumerable<PointInTimePortfolio> FromOrders(Series<DateTime, double> equityCurve, IEnumerable<Order> orders)
         {
-            // Don't do anything if we have no orders to process
-            if (!orders.Any())
+            // Don't do anything if we have no orders or equity curve to process
+            if (!orders.Any() || equityCurve.IsEmpty)
             {
                 yield break;
             }

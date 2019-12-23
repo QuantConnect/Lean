@@ -25,8 +25,10 @@ namespace QuantConnect.Report.ReportElements
 {
     internal sealed class AssetAllocationReportElement : ChartReportElement
     {
-        private LiveResult _live;
         private BacktestResult _backtest;
+        private List<PointInTimePortfolio> _backtestPortfolios;
+        private LiveResult _live;
+        private List<PointInTimePortfolio> _livePortfolios;
 
         /// <summary>
         /// Create a new plot of the asset allocation over time
@@ -35,10 +37,20 @@ namespace QuantConnect.Report.ReportElements
         /// <param name="key">Location of injection</param>
         /// <param name="backtest">Backtest result object</param>
         /// <param name="live">Live result object</param>
-        public AssetAllocationReportElement(string name, string key, BacktestResult backtest, LiveResult live)
+        /// <param name="backtestPortfolios">Backtest point in time portfolios</param>
+        /// <param name="livePortfolios">Live point in time portfolios</param>
+        public AssetAllocationReportElement(
+            string name,
+            string key,
+            BacktestResult backtest,
+            LiveResult live,
+            List<PointInTimePortfolio> backtestPortfolios,
+            List<PointInTimePortfolio> livePortfolios)
         {
-            _live = live;
             _backtest = backtest;
+            _backtestPortfolios = backtestPortfolios;
+            _live = live;
+            _livePortfolios = livePortfolios;
             Name = name;
             Key = key;
         }
@@ -48,14 +60,8 @@ namespace QuantConnect.Report.ReportElements
         /// </summary>
         public override string Render()
         {
-            var backtestPoints = ResultsUtil.EquityPoints(_backtest);
-            var livePoints = ResultsUtil.EquityPoints(_live);
-
-            var backtestOrders = _backtest?.Orders?.Values.ToList() ?? new List<Order>();
-            var liveOrders = _live?.Orders?.Values.ToList() ?? new List<Order>();
-
-            var backtestSeries = Metrics.AssetAllocations(new Series<DateTime, double>(backtestPoints), backtestOrders);
-            var liveSeries = Metrics.AssetAllocations(new Series<DateTime, double>(livePoints), liveOrders);
+            var backtestSeries = Metrics.AssetAllocations(_backtestPortfolios);
+            var liveSeries = Metrics.AssetAllocations(_livePortfolios);
 
             PyObject result;
 

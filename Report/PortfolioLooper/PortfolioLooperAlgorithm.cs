@@ -17,6 +17,7 @@ using QuantConnect.Algorithm;
 using QuantConnect.Orders;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace QuantConnect.Report
 {
@@ -41,7 +42,8 @@ namespace QuantConnect.Report
                 var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, Resolution.Daily, false, false);
                 var security = Securities.CreateSecurity(symbol, configs, 1);
 
-                AddToUserDefinedUniverse(security, configs);
+                var method = typeof(QCAlgorithm).GetMethod("AddToUserDefinedUniverse", BindingFlags.NonPublic | BindingFlags.Instance);
+                method.Invoke(this, new object[] { security, configs });
             }
         }
 

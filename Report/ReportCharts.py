@@ -151,7 +151,7 @@ class ReportCharts:
             ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
                     horizontalalignment='center',
                     verticalalignment='center',
-                    fontsize=40,
+                    fontsize=20,
                     transform=ax.transAxes)
 
             ax.axis('off')
@@ -200,7 +200,7 @@ class ReportCharts:
             ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
                     horizontalalignment='center',
                     verticalalignment='center',
-                    fontsize=40,
+                    fontsize=20,
                     transform=ax.transAxes)
 
             ax.axis('off')
@@ -219,19 +219,13 @@ class ReportCharts:
 
         if len(live_data[0]) > 0:
             colors = [live_color, gray]
-            live_labels.append('Live')
+            labels.append('Live')
             values = [[live_data[0], live_data[1]], [live_data[2], live_data[3]]]
 
             for i, array in enumerate(values):
                 if any(array[0]):
                     ax.plot(array[0], array[1], linewidth=0.5, color=colors[i], drawstyle='steps-post')
                     rectangles.append(plt.Rectangle((0, 0), 1, 1, fc=colors[i]))
-                else:
-                    live_labels_removed.append(live_labels[i])
-
-            # Only get the labels we didn't remove (i.e. labels that have a graph, guaranteed)
-            live_labels = [live_label for live_label in live_labels if live_label not in live_labels_removed]
-            labels += live_labels
 
         ax.legend(rectangles, labels, handlelength=0.8, handleheight=0.8,
                   frameon=False, fontsize=8, ncol=len(labels))
@@ -272,7 +266,7 @@ class ReportCharts:
             ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
                     horizontalalignment='center',
                     verticalalignment='center',
-                    fontsize=40,
+                    fontsize=20,
                     transform=ax.transAxes)
 
             ax.axis('off')
@@ -538,7 +532,7 @@ class ReportCharts:
             ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
                     horizontalalignment='center',
                     verticalalignment='center',
-                    fontsize=40,
+                    fontsize=20,
                     transform=ax.transAxes)
 
             ax.axis('off')
@@ -663,7 +657,7 @@ class ReportCharts:
             ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
                     horizontalalignment='center',
                     verticalalignment='center',
-                    fontsize=40,
+                    fontsize=20,
                     transform=ax.transAxes)
 
             ax.axis('off')
@@ -745,7 +739,7 @@ class ReportCharts:
             ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
                     horizontalalignment='center',
                     verticalalignment='center',
-                    fontsize=40,
+                    fontsize=20,
                     transform=ax.transAxes)
 
             ax.axis('off')
@@ -886,7 +880,7 @@ class ReportCharts:
             ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
                     horizontalalignment='center',
                     verticalalignment='center',
-                    fontsize=40,
+                    fontsize=20,
                     transform=ax.transAxes)
 
             ax.axis('off')
@@ -953,7 +947,7 @@ class ReportCharts:
             ax.text(0.5 * (left + right), 0.5 * (top + bottom), 'Insufficient Data', color="#d5d5d5",
                     horizontalalignment='center',
                     verticalalignment='center',
-                    fontsize=40,
+                    fontsize=20,
                     transform=ax.transAxes)
 
             ax.axis('off')
