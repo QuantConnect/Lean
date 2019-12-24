@@ -313,7 +313,7 @@ namespace QuantConnect.Lean.Engine.Results
                         Log.Debug("LiveTradingResultHandler.Update(): Storing log...");
                         lock (_logStoreLock)
                         {
-                            var timeLimitUtc = utcNow.RoundDown(TimeSpan.FromHours(1));
+                            var timeLimitUtc = utcNow - TimeSpan.FromHours(1);
                             logs = (from log in _logStore
                                     where log.Time >= timeLimitUtc
                                     select log).ToList();
