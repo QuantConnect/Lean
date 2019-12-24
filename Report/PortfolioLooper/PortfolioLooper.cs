@@ -21,15 +21,16 @@ using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Logging;
+using QuantConnect.Orders.Fills;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Lean.Engine.Setup;
-using QuantConnect.Algorithm;
 
 namespace QuantConnect.Report
 {
@@ -48,7 +49,7 @@ namespace QuantConnect.Report
 
         private SecurityService _securityService;
         private DataManager _dataManager;
-        private IEnumerable<Slice> _conversionSlices;
+        private IEnumerable<Slice> _conversionSlices = new List<Slice>();
 
         /// <summary>
         /// QCAlgorithm derived class that sets up internal data feeds for
@@ -266,6 +267,7 @@ namespace QuantConnect.Report
                 previousOrderId = order.Id;
             }
 
+            PointInTimePortfolio prev = null;
             foreach (var deploymentOrders in portfolioDeployments)
             {
                 // For every deployment, we want to start fresh.
@@ -276,8 +278,14 @@ namespace QuantConnect.Report
 
                 foreach (var portfolio in looper.ProcessOrders(deploymentOrders))
                 {
+                    prev = portfolio;
                     yield return portfolio;
                 }
+            }
+
+            if (prev != null)
+            {
+                yield return new PointInTimePortfolio(prev, equityCurve.LastKey());
             }
         }
 
@@ -289,13 +297,24 @@ namespace QuantConnect.Report
         private IEnumerable<PointInTimePortfolio> ProcessOrders(IEnumerable<Order> orders)
         {
             // Portfolio.ProcessFill(...) does not filter out invalid orders. We must do so ourselves
-            foreach (var order in orders.Where(x => x.Status != OrderStatus.Invalid))
+            foreach (var order in orders)
             {
+                Algorithm.SetDateTime(order.Time);
+
                 var orderSecurity = Algorithm.Securities[order.Symbol];
-                var tick = new Tick { Quantity = order.Quantity, AskPrice = order.Price, BidPrice = order.Price, Value = order.Price };
+                if (order.LastFillTime == null)
+                {
+                    Log.Trace($"Order with ID: {order.Id} has been skipped because of null LastFillTime");
+                    continue;
+                }
+
+                var tick = new Tick { Quantity = order.Quantity, AskPrice = order.Price, BidPrice = order.Price, Value = order.Price, EndTime = order.LastFillTime.Value };
 
                 // Set the market price of the security
                 orderSecurity.SetMarketPrice(tick);
+
+                // security price got updated
+                Algorithm.Portfolio.InvalidateTotalPortfolioValue();
 
                 // Check if we have a base currency (i.e. forex or crypto that requires currency conversion)
                 // to ensure the proper conversion rate is set for them
@@ -325,7 +344,6 @@ namespace QuantConnect.Report
                     }
                 }
 
-                // Make sure to manually set the FillPrice and FillQuantity since constructor doesn't do it by default
                 var orderEvent = new OrderEvent(order, order.Time, Orders.Fees.OrderFee.Zero) { FillPrice = order.Price, FillQuantity = order.Quantity };
 
                 // Process the order

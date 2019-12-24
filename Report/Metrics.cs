@@ -54,7 +54,8 @@ namespace QuantConnect.Report
         public static Series<DateTime, double> LeverageUtilization(List<PointInTimePortfolio> portfolios)
         {
             var leverage = portfolios.GroupBy(portfolio => portfolio.Time)
-                .Select(group => new KeyValuePair<DateTime, double>(group.Key, (double)group.Last().Leverage));
+                .Select(group => new KeyValuePair<DateTime, double>(group.Key, (double)group.Last().Leverage))
+                .ToList();
 
             // Drop missing because we don't care about the missing values
             return new Series<DateTime, double>(leverage).DropMissing();

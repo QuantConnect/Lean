@@ -104,6 +104,7 @@ namespace QuantConnect.Report
         /// </summary>
         /// <param name="input">Series to calculate percentage change for</param>
         /// <returns>Percentage change in series form</returns>
+        /// <remarks>Equivalent to `df.pct_change()`</remarks>
         public static Series<DateTime, double> PercentChange(this Series<DateTime, double> input)
         {
             if (input.IsEmpty)
@@ -111,26 +112,43 @@ namespace QuantConnect.Report
                 return input;
             }
 
-            var outputDates = new List<DateTime>();
-            var outputValues = new List<double>();
+            var inputShifted = input.Shift(1);
 
-            for (var i = 1; i < input.ValueCount; i++)
+            return (input - inputShifted) / inputShifted;
+        }
+
+        /// <summary>
+        /// Calculates the cumulative returns series of the given input equity curve
+        /// </summary>
+        /// <param name="input">Equity curve series</param>
+        /// <returns>Cumulative returns over time</returns>
+        public static Series<DateTime, double> CumulativeReturns(this Series<DateTime, double> input)
+        {
+            if (input.IsEmpty)
             {
-                var current = input.GetAt(i);
-                var previous = input.GetAt(i - 1);
-
-                outputDates.Add(input.Index.KeyAt(i));
-
-                if (previous == 0.0 || double.IsNegativeInfinity(previous))
-                {
-                    outputValues.Add(double.NaN);
-                    continue;
-                }
-
-                outputValues.Add((current - previous) / previous);
+                return input;
             }
 
-            return new Series<DateTime, double>(outputDates, outputValues);
+            return (input.PercentChange()
+                .Where(kvp => !double.IsInfinity(kvp.Value)) + 1)
+                .CumulativeProduct() - 1;
+        }
+
+        /// <summary>
+        /// Calculates the total returns over a period of time for the given input
+        /// </summary>
+        /// <param name="input">Equity curve series</param>
+        /// <returns>Total returns over time</returns>
+        public static double TotalReturns(this Series<DateTime, double> input)
+        {
+            var returns = input.CumulativeReturns();
+
+            if (returns.IsEmpty)
+            {
+                return double.NaN;
+            }
+
+            return returns.LastValue();
         }
 
         /// <summary>
@@ -140,7 +158,7 @@ namespace QuantConnect.Report
         /// <typeparam name="TColumnKey">Frame column key</typeparam>
         /// <param name="frame">Data Frame</param>
         /// <returns>new Frame with sparse columns dropped</returns>
-        /// <remarks>Equivalent to `pd.dropna(axis=1, how='all')`</remarks>
+        /// <remarks>Equivalent to `df.dropna(axis=1, how='all')`</remarks>
         public static Frame<TRowKey, TColumnKey> DropSparseColumnsAll<TRowKey, TColumnKey>(this Frame<TRowKey, TColumnKey> frame)
         {
             var newFrame = frame.Clone();
@@ -163,7 +181,7 @@ namespace QuantConnect.Report
         /// <typeparam name="TColumnKey">Frame column key</typeparam>
         /// <param name="frame">Data Frame</param>
         /// <returns>new Frame with sparse rows dropped</returns>
-        /// <remarks>Equivalent to `pd.dropna(how='all')`</remarks>
+        /// <remarks>Equivalent to `df.dropna(how='all')`</remarks>
         public static Frame<TRowKey, TColumnKey> DropSparseRowsAll<TRowKey, TColumnKey>(this Frame<TRowKey, TColumnKey> frame)
         {
             if (frame.ColumnKeys.Count() == 0)

@@ -103,14 +103,12 @@ namespace QuantConnect.Report
             }
 
             var startingEquity = backtestPoints.Count == 0 ? livePoints.First().Value : backtestPoints.First().Value;
-            var backtestSeries = new Series<DateTime, double>(backtestPoints)
-                .PercentChange()
-                .Where(kvp => kvp.Value != 0)
-                .CumulativeSum();
 
-            var liveSeries = new Series<DateTime, double>(livePoints)
-                .PercentChange()
-                .CumulativeSum();
+            // Note: these calculations are *incorrect* for getting the cumulative returns. However, since we're just
+            // trying to normalize these two series with each other, it's a good candidate for it since the original
+            // values can easily be recalculated from this point
+            var backtestSeries = new Series<DateTime, double>(backtestPoints).PercentChange().Where(kvp => !double.IsInfinity(kvp.Value)).CumulativeSum();
+            var liveSeries = new Series<DateTime, double>(livePoints).PercentChange().Where(kvp => !double.IsInfinity(kvp.Value)).CumulativeSum();
 
             // Get the last key of the backtest series if our series is empty to avoid issues with empty frames
             var firstLiveKey = liveSeries.IsEmpty ? backtestSeries.LastKey().AddDays(1) : liveSeries.FirstKey();
