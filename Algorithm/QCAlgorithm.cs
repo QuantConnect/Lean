@@ -61,7 +61,6 @@ namespace QuantConnect.Algorithm
 
         private DateTime _startDate;   //Default start and end dates.
         private DateTime _endDate;     //Default end to yesterday
-        private RunMode _runMode = RunMode.Series;
         private bool _locked;
         private bool _liveMode;
         private string _algorithmId = "";
@@ -140,9 +139,6 @@ namespace QuantConnect.Algorithm
             Portfolio = new SecurityPortfolioManager(Securities, Transactions, DefaultOrderProperties);
             BrokerageModel = new DefaultBrokerageModel();
             Notify = new NotificationManager(false); // Notification manager defaults to disabled.
-
-            //Initialise Algorithm RunMode to Series - Parallel Mode deprecated:
-            _runMode = RunMode.Series;
 
             //Initialise to unlocked:
             _locked = false;
@@ -430,23 +426,6 @@ namespace QuantConnect.Algorithm
             get
             {
                 return _algorithmId;
-            }
-        }
-
-        /// <summary>
-        /// Control the server setup run style for the backtest: Automatic, Parallel or Series.
-        /// </summary>
-        /// <remark>
-        ///     Series mode runs all days through one computer, allowing memory of the previous days.
-        ///     Parallel mode runs all days separately which maximises speed but gives no memory of a previous day trading.
-        /// </remark>
-        /// <obsolete>The RunMode enum propert is now obsolete. All algorithms will default to RunMode.Series for series backtests.</obsolete>
-        [Obsolete("The RunMode enum propert is now obsolete. All algorithms will default to RunMode.Series for series backtests.")]
-        public RunMode RunMode
-        {
-            get
-            {
-                return _runMode;
             }
         }
 
@@ -983,19 +962,6 @@ namespace QuantConnect.Algorithm
 
             // reset the current time according to the time zone
             SetDateTime(_startDate.ConvertToUtc(TimeZone));
-        }
-
-        /// <summary>
-        /// Set the RunMode for the Servers. If you are running an overnight algorithm, you must select series.
-        /// Automatic will analyse the selected data, and if you selected only minute data we'll select series for you.
-        /// </summary>
-        /// <obsolete>This method is now obsolete and has no replacement. All algorithms now run in Series mode.</obsolete>
-        /// <param name="mode">Enum RunMode with options Series, Parallel or Automatic. Automatic scans your requested symbols and resolutions and makes a decision on the fastest analysis</param>
-        [Obsolete("This method is now obsolete and has no replacement. All algorithms now run in Series mode.")]
-        public void SetRunMode(RunMode mode)
-        {
-            if (mode != RunMode.Parallel) return;
-            Debug("Algorithm.SetRunMode(): RunMode-Parallel Type has been deprecated. Series analysis selected instead");
         }
 
         /// <summary>
