@@ -55,7 +55,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <summary>
         /// The brokerage model
         /// </summary>
-        public override IBrokerageModel BrokerageModel => new BitfinexBrokerageModel();
+        public override IBrokerageModel GetBrokerageModel(IAlgorithm algorithm) => new BitfinexBrokerageModel();
 
         /// <summary>
         /// Create the Brokerage instance

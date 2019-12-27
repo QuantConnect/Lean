@@ -63,10 +63,7 @@ namespace QuantConnect.Brokerages.Fxcm
         /// <summary>
         /// Gets a new instance of the <see cref="FxcmBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel
-        {
-            get { return new FxcmBrokerageModel(); }
-        }
+        public override IBrokerageModel GetBrokerageModel(IAlgorithm algorithm) => new FxcmBrokerageModel();
 
         /// <summary>
         /// Creates a new <see cref="IBrokerage"/> instance

@@ -141,10 +141,8 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Gets a new instance of the <see cref="TradierBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel
-        {
-            get { return new TradierBrokerageModel(); }
-        }
+        /// <param name="algorithm">The algorithm instance</param>
+        public override IBrokerageModel GetBrokerageModel(IAlgorithm algorithm) => new TradierBrokerageModel();
 
         /// <summary>
         /// Creates a new IBrokerage instance

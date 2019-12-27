@@ -55,7 +55,7 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// The brokerage model
         /// </summary>
-        public override IBrokerageModel BrokerageModel => new GDAXBrokerageModel();
+        public override IBrokerageModel GetBrokerageModel(IAlgorithm algorithm) => new GDAXBrokerageModel();
 
         /// <summary>
         /// Create the Brokerage instance

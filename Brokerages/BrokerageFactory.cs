@@ -51,10 +51,10 @@ namespace QuantConnect.Brokerages
         public abstract Dictionary<string, string> BrokerageData { get; }
 
         /// <summary>
-        /// Gets a brokerage model that can be used to model this brokerage's unique
-        /// behaviors
+        /// Gets a brokerage model that can be used to model this brokerage's unique behaviors
         /// </summary>
-        public abstract IBrokerageModel BrokerageModel { get; }
+        /// <param name="algorithm">The algorithm instance</param>
+        public abstract IBrokerageModel GetBrokerageModel(IAlgorithm algorithm);
 
         /// <summary>
         /// Creates a new IBrokerage instance

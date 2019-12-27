@@ -54,7 +54,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Gets a new instance of the <see cref="InteractiveBrokersBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel => new InteractiveBrokersBrokerageModel();
+        public override IBrokerageModel GetBrokerageModel(IAlgorithm algorithm) => new InteractiveBrokersBrokerageModel();
 
         /// <summary>
         /// Creates a new IBrokerage instance and set ups the environment for the brokerage

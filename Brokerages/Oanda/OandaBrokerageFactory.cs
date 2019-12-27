@@ -66,10 +66,7 @@ namespace QuantConnect.Brokerages.Oanda
         /// <summary>
         /// Gets a new instance of the <see cref="OandaBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel
-        {
-            get { return new OandaBrokerageModel(); }
-        }
+        public override IBrokerageModel GetBrokerageModel(IAlgorithm algorithm) => new OandaBrokerageModel();
 
         /// <summary>
         /// Creates a new <see cref="IBrokerage"/> instance

@@ -14,6 +14,8 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -29,6 +31,8 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class AlpacaBrokerageModel : DefaultBrokerageModel
     {
+        private readonly IAlgorithm _algorithm;
+
         /// <summary>
         /// The default markets for the alpaca brokerage
         /// </summary>
@@ -46,11 +50,13 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>
+        /// <param name="algorithm">The algorithm</param>
         /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="AccountType.Cash"/></param>
-        public AlpacaBrokerageModel(AccountType accountType = AccountType.Margin)
+        public AlpacaBrokerageModel(IAlgorithm algorithm, AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
+            _algorithm = algorithm;
         }
 
         /// <summary>
@@ -96,6 +102,60 @@ namespace QuantConnect.Brokerages
                 );
 
                 return false;
+            }
+
+            var openOrders = _algorithm.Transactions.GetOpenOrders(order.Symbol);
+            if (security.Holdings.IsLong)
+            {
+                var openSellQuantity = openOrders.Where(x => x.Direction == OrderDirection.Sell).Sum(x => x.Quantity);
+                var availableSellQuantity = -security.Holdings.Quantity - openSellQuantity;
+
+                // cannot reverse position from long to short with a single order (open sell orders are taken into account)
+                if (order.Direction == OrderDirection.Sell && order.Quantity < availableSellQuantity)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        $"The {nameof(AlpacaBrokerageModel)} does not support reversing the position (from long to short) with a single order."
+                    );
+
+                    return false;
+                }
+            }
+            else if (security.Holdings.IsShort)
+            {
+                var openBuyQuantity = openOrders.Where(x => x.Direction == OrderDirection.Buy).Sum(x => x.Quantity);
+                var availableBuyQuantity = -security.Holdings.Quantity - openBuyQuantity;
+
+                // cannot reverse position from short to long with a single order (open buy orders are taken into account)
+                if (order.Direction == OrderDirection.Buy && order.Quantity > availableBuyQuantity)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        $"The {nameof(AlpacaBrokerageModel)} does not support reversing the position (from short to long) with a single order."
+                    );
+
+                    return false;
+                }
+            }
+            else if (security.Holdings.Quantity == 0)
+            {
+                // cannot open a short sell while a long buy order is open
+                if (order.Direction == OrderDirection.Sell && openOrders.Any(x => x.Direction == OrderDirection.Buy))
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        $"The {nameof(AlpacaBrokerageModel)} does not support shorting with open buy orders."
+                    );
+
+                    return false;
+                }
+
+                // cannot open a long buy while a short sell order is open
+                if (order.Direction == OrderDirection.Buy && openOrders.Any(x => x.Direction == OrderDirection.Sell))
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        $"The {nameof(AlpacaBrokerageModel)} does not support buying with open sell orders."
+                    );
+
+                    return false;
+                }
             }
 
             return true;

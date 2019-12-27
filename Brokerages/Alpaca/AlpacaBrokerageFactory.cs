@@ -59,7 +59,8 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <summary>
         /// Gets a new instance of the <see cref="AlpacaBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel => new AlpacaBrokerageModel();
+        /// <param name="algorithm">The algorithm instance</param>
+        public override IBrokerageModel GetBrokerageModel(IAlgorithm algorithm) => new AlpacaBrokerageModel(algorithm);
 
         /// <summary>
         /// Creates a new <see cref="IBrokerage"/> instance
