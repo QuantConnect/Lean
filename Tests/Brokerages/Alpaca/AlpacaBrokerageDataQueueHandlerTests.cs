@@ -19,18 +19,41 @@ using System.Diagnostics;
 using System.Threading;
 using NUnit.Framework;
 using QuantConnect.Brokerages.Alpaca;
+using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Brokerages.Alpaca
 {
-    [TestFixture]
-    public partial class AlpacaBrokerageTests
+    [TestFixture, Ignore("This test requires a configured and testable Alpaca practice account. Since it uses the Polygon API, the account needs to be funded.")]
+    public class AlpacaBrokerageDataQueueHandlerBrokerageTests
     {
+        private AlpacaBrokerage _brokerage;
+
+        [SetUp]
+        public void Setup()
+        {
+            Log.LogHandler = new ConsoleLogHandler();
+
+            var keyId = Config.Get("alpaca-key-id");
+            var secretKey = Config.Get("alpaca-secret-key");
+            var tradingMode = Config.Get("alpaca-trading-mode");
+
+            _brokerage = new AlpacaBrokerage(null, null, keyId, secretKey, tradingMode, true);
+            _brokerage.Connect();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _brokerage.Disconnect();
+            _brokerage.Dispose();
+        }
+
         [Test]
         public void GetsTickData()
         {
-            var brokerage = (AlpacaBrokerage)Brokerage;
+            var brokerage = _brokerage;
 
             brokerage.Subscribe(null, new List<Symbol>
             {
@@ -83,7 +106,7 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
                 "AAPL", "FB", "MSFT", "GOOGL"
             };
 
-            var brokerage = (AlpacaBrokerage)Brokerage;
+            var brokerage = _brokerage;
 
             var stopwatch = Stopwatch.StartNew();
             foreach (var symbol in symbols)

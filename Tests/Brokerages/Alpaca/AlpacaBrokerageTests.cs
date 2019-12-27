@@ -31,7 +31,7 @@ using QuantConnect.Securities;
 namespace QuantConnect.Tests.Brokerages.Alpaca
 {
     [TestFixture, Ignore("This test requires a configured and testable Alpaca practice account")]
-    public partial class AlpacaBrokerageTests : BrokerageTests
+    public class AlpacaBrokerageTests : BrokerageTests
     {
         /// <summary>
         /// Creates the brokerage under test and connects it
@@ -113,27 +113,17 @@ namespace QuantConnect.Tests.Brokerages.Alpaca
         }
 
         [Test, TestCaseSource(nameof(OrderParameters))]
-        public override void ShortFromZero(OrderTestParameters parameters)
-        {
-            Assert.Ignore("Alpaca brokerage does not currently support shorting.");
-        }
-
-        [Test, TestCaseSource(nameof(OrderParameters))]
-        public override void CloseFromShort(OrderTestParameters parameters)
-        {
-            Assert.Ignore("Alpaca brokerage does not currently support shorting.");
-        }
-
-        [Test, TestCaseSource(nameof(OrderParameters))]
         public override void ShortFromLong(OrderTestParameters parameters)
         {
-            Assert.Ignore("Alpaca brokerage does not currently support shorting.");
+            // https://github.com/alpacahq/Alpaca-API/issues/90
+            Assert.Ignore("Alpaca brokerage does not currently support reversing a position with a single order.");
         }
 
         [Test, TestCaseSource(nameof(OrderParameters))]
         public override void LongFromShort(OrderTestParameters parameters)
         {
-            Assert.Ignore("Alpaca brokerage does not currently support shorting.");
+            // https://github.com/alpacahq/Alpaca-API/issues/90
+            Assert.Ignore("Alpaca brokerage does not currently support reversing a position with a single order.");
         }
 
         [Test]
