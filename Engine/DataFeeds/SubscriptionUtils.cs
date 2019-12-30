@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 
@@ -57,32 +58,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <param name="request">The subscription data request</param>
         /// <param name="enumerator">The data enumerator stack</param>
-        /// <param name="firstLoopLimit">The first loop data point count for which the worker will stop</param>
         /// <returns>A new subscription instance ready to consume</returns>
         public static Subscription CreateAndScheduleWorker(
             SubscriptionRequest request,
-            IEnumerator<BaseData> enumerator,
-            int firstLoopLimit = 50)
+            IEnumerator<BaseData> enumerator)
         {
-            var upperThreshold = GetUpperThreshold(request.Configuration.Resolution);
-            var lowerThreshold = GetLowerThreshold(request.Configuration.Resolution);
-            if (request.Configuration.Type == typeof(CoarseFundamental))
-            {
-                // the lower threshold will be when we start the worker again, if he is stopped
-                lowerThreshold = 200;
-                // the upper threshold will stop the worker from loading more data. This is roughly 1 GB
-                upperThreshold = 500;
-            }
-
             var exchangeHours = request.Security.Exchange.Hours;
             var enqueueable = new EnqueueableEnumerator<SubscriptionData>(true);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(request.Security.Exchange.TimeZone, request.StartTimeUtc, request.EndTimeUtc);
             var subscription = new Subscription(request, enqueueable, timeZoneOffsetProvider);
 
-            // The first loop of a backtest can load hundreds of subscription feeds, resulting in long delays while the thresholds
-            // for the buffer are reached. For the first loop start up with just 50 items in the buffer.
-            var firstLoop = Ref.Create(true);
-            Action produce = () =>
+            Func<int, bool> produce = (workBatchSize) =>
             {
                 try
                 {
@@ -93,7 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (enqueueable.HasFinished)
                         {
                             enumerator.DisposeSafely();
-                            return;
+                            return false;
                         }
 
                         var subscriptionData = SubscriptionData.Create(subscription.Configuration, exchangeHours,
@@ -103,21 +89,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         enqueueable.Enqueue(subscriptionData);
 
                         count++;
-
-                        // stop executing if we have more data than the upper threshold in the enqueueable, we don't want to fill the ram
-                        if (count > upperThreshold || count > firstLoopLimit && firstLoop.Value)
+                        // stop executing if added more data than the work batch size, we don't want to fill the ram
+                        if (count > workBatchSize)
                         {
-                            // we use local count for the outside if, for performance, and adjust here
-                            count = enqueueable.Count;
-                            if (count > upperThreshold || firstLoop.Value)
-                            {
-                                firstLoop.Value = false;
-                                // we will be re scheduled to run by the consumer, see EnqueueableEnumerator
-
-                                // if the consumer is already waiting for us wake him up, he will rescheduled us if required
-                                enqueueable.CancellationTokenSource.Cancel();
-                                return;
-                            }
+                            return true;
                         }
                     }
                 }
@@ -130,47 +105,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 enqueueable.Stop();
                 // we have to dispose of the enumerator
                 enumerator.DisposeSafely();
+                return false;
             };
 
-            enqueueable.SetProducer(produce, lowerThreshold);
+            WeightedWorkScheduler.Instance.QueueWork(produce,
+                // if the subscription finished we return 0, so the work is prioritized and gets removed
+                () => enqueueable.HasFinished ? 0 : enqueueable.Count);
 
             return subscription;
-        }
-
-        private static int GetLowerThreshold(Resolution resolution)
-        {
-            switch (resolution)
-            {
-                case Resolution.Tick:
-                    return 500;
-
-                case Resolution.Second:
-                case Resolution.Minute:
-                case Resolution.Hour:
-                case Resolution.Daily:
-                    return 250;
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
-            }
-        }
-
-        private static int GetUpperThreshold(Resolution resolution)
-        {
-            switch (resolution)
-            {
-                case Resolution.Tick:
-                    return 10000;
-
-                case Resolution.Second:
-                case Resolution.Minute:
-                case Resolution.Hour:
-                case Resolution.Daily:
-                    return 5000;
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
-            }
         }
     }
 }
