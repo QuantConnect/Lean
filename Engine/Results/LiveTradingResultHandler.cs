@@ -1042,7 +1042,11 @@ namespace QuantConnect.Lean.Engine.Results
                 }
             }
             result.Charts = charts;
-            result.Orders = result.Orders.Values.Where(x => x.Time >= start && x.Time <= stop).ToDictionary(x => x.Id);
+            result.Orders = result.Orders.Values.Where(x =>
+                (x.Time >= start && x.Time <= stop) ||
+                (x.LastFillTime != null && x.LastFillTime >= start && x.LastFillTime <= stop) ||
+                (x.LastUpdateTime != null && x.LastUpdateTime >= start && x.LastUpdateTime <= stop)
+            ).ToDictionary(x => x.Id);
 
             //Log.Trace("LiveTradingResultHandler.Truncate: Truncate Outgoing: " + result.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
