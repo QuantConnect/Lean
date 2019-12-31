@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Alpaca
@@ -59,7 +60,8 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <summary>
         /// Gets a new instance of the <see cref="AlpacaBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel BrokerageModel => new AlpacaBrokerageModel();
+        /// <param name="orderProvider">The order provider</param>
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new AlpacaBrokerageModel(orderProvider);
 
         /// <summary>
         /// Creates a new <see cref="IBrokerage"/> instance

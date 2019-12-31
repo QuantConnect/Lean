@@ -416,7 +416,7 @@ namespace QuantConnect.Brokerages.Alpaca
                 MarketPrice = position.AssetCurrentPrice,
                 MarketValue = position.MarketValue,
                 CurrencySymbol = "$",
-                Quantity = position.Side == PositionSide.Long ? position.Quantity : -position.Quantity
+                Quantity = position.Quantity
             };
         }
 

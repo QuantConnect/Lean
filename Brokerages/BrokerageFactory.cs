@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Brokerages
 {
@@ -51,10 +52,10 @@ namespace QuantConnect.Brokerages
         public abstract Dictionary<string, string> BrokerageData { get; }
 
         /// <summary>
-        /// Gets a brokerage model that can be used to model this brokerage's unique
-        /// behaviors
+        /// Gets a brokerage model that can be used to model this brokerage's unique behaviors
         /// </summary>
-        public abstract IBrokerageModel BrokerageModel { get; }
+        /// <param name="orderProvider">The order provider</param>
+        public abstract IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider);
 
         /// <summary>
         /// Creates a new IBrokerage instance

@@ -10,7 +10,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
 {
     internal sealed class JsonError
     {
-        [JsonProperty(PropertyName = "code", Required = Required.Always)]
+        [JsonProperty(PropertyName = "code", Required = Required.Default)]
         public Int32 Code { get; set; }
 
         [JsonProperty(PropertyName = "message", Required = Required.Always)]
