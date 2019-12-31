@@ -96,8 +96,17 @@ namespace QuantConnect.Orders
             order.Id = jObject["Id"].Value<int>();
             order.Status = (OrderStatus) jObject["Status"].Value<int>();
             order.Time = jObject["Time"].Value<DateTime>();
-            order.LastFillTime = jObject["LastFillTime"]?.Value<DateTime>();
-            order.LastUpdateTime = jObject["LastUpdateTime"]?.Value<DateTime>();
+            var lastFillTime = jObject["LastFillTime"];
+            var lastUpdateTime = jObject["LastUpdateTime"];
+
+            if (lastFillTime != null && lastFillTime.Type != JTokenType.Null)
+            {
+                order.LastFillTime = lastFillTime.Value<DateTime>();
+            }
+            if (lastUpdateTime != null && lastUpdateTime.Type != JTokenType.Null)
+            {
+                order.LastUpdateTime = lastUpdateTime.Value<DateTime>();
+            }
             order.Tag = jObject["Tag"].Value<string>();
 
             order.Quantity = jObject["Quantity"].Value<decimal>();
