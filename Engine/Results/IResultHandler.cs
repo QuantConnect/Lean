@@ -245,13 +245,6 @@ namespace QuantConnect.Lean.Engine.Results
         void ProcessSynchronousEvents(bool forceProcess = false);
 
         /// <summary>
-        /// Save the logs
-        /// </summary>
-        /// <param name="id">Id that will be incorporated into the algorithm log name</param>
-        /// <param name="logs">The logs to save</param>
-        string SaveLogs(string id, IEnumerable<string> logs);
-
-        /// <summary>
         /// Save the results
         /// </summary>
         /// <param name="name">The name of the results</param>

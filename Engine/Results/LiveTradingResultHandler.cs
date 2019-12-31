@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,7 +46,6 @@ namespace QuantConnect.Lean.Engine.Results
         // Required properties for the cloud app.
         private LiveNodePacket _job;
         private readonly ConcurrentQueue<OrderEvent> _orderEvents;
-        private volatile bool _exitTriggered;
 
         //Update loop:
         private DateTime _nextUpdate;
@@ -58,8 +58,6 @@ namespace QuantConnect.Lean.Engine.Results
         private int _lastOrderId;
 
         //Log Message Store:
-        private readonly object _logStoreLock;
-        private List<LogEntry> _logStore;
         private DateTime _nextSample;
         private IApi _api;
         private readonly CancellationTokenSource _cancellationTokenSource;
@@ -103,9 +101,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public LiveTradingResultHandler()
         {
-            _logStoreLock = new object();
             _statusUpdateLock = new object();
-            _logStore = new List<LogEntry>();
             _orderEvents = new ConcurrentQueue<OrderEvent>();
             _cancellationTokenSource = new CancellationTokenSource();
             Messages = new ConcurrentQueue<Packet>();
@@ -143,7 +139,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void Run()
         {
             // -> 1. Run Primary Sender Loop: Continually process messages from queue as soon as they arrive.
-            while (!(_exitTriggered && Messages.Count == 0))
+            while (!(ExitTriggered && Messages.Count == 0))
             {
                 try
                 {
@@ -311,18 +307,14 @@ namespace QuantConnect.Lean.Engine.Results
                     {
                         List<LogEntry> logs;
                         Log.Debug("LiveTradingResultHandler.Update(): Storing log...");
-                        lock (_logStoreLock)
+                        lock (LogStore)
                         {
-                            var timeLimitUtc = utcNow - TimeSpan.FromHours(1);
-                            logs = (from log in _logStore
-                                    where log.Time >= timeLimitUtc
-                                    select log).ToList();
-                            //Override the log master to delete the old entries and prevent memory creep.
-                            _logStore = logs;
                             // we need a new container instance so we can store the logs outside the lock
-                            logs = new List<LogEntry>(logs);
+                            logs = new List<LogEntry>(LogStore);
+                            LogStore.Clear();
                         }
-                        StoreLog(logs);
+                        SaveLogs(_job.DeployId, logs);
+
                         _nextLogStoreUpdate = DateTime.UtcNow.AddMinutes(2);
                         Log.Debug("LiveTradingResultHandler.Update(): Finished storing log");
                     }
@@ -567,9 +559,9 @@ namespace QuantConnect.Lean.Engine.Results
         private void AddToLogStore(string message)
         {
             Log.Debug("LiveTradingResultHandler.AddToLogStore(): Adding");
-            lock (_logStoreLock)
+            lock (LogStore)
             {
-                _logStore.Add(new LogEntry(DateTime.Now.ToStringInvariant(DateFormat.UI) + " " + message));
+                LogStore.Add(new LogEntry(DateTime.Now.ToStringInvariant(DateFormat.UI) + " " + message));
             }
             Log.Debug("LiveTradingResultHandler.AddToLogStore(): Finished adding");
         }
@@ -872,21 +864,25 @@ namespace QuantConnect.Lean.Engine.Results
             Log.Trace("LiveTradingResultHandler.SendFinalResult(): Ended");
         }
 
-
         /// <summary>
         /// Process the log entries and save it to permanent storage
         /// </summary>
+        /// <param name="id">Id that will be incorporated into the algorithm log name</param>
         /// <param name="logs">Log list</param>
-        public void StoreLog(IEnumerable<LogEntry> logs)
+        /// <returns>Returns the location of the logs</returns>
+        public override string SaveLogs(string id, List<LogEntry> logs)
         {
             try
             {
-                SaveLogs(_job.DeployId, logs.Select(x => x.Message));
+                var path = $"{id}-log.txt";
+                File.AppendAllLines(path, logs.Select(x => x.Message));
+                return Path.Combine(Directory.GetCurrentDirectory(), path);
             }
             catch (Exception err)
             {
                 Log.Error(err);
             }
+            return "";
         }
 
         /// <summary>
@@ -992,9 +988,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public void Exit()
         {
-            if (!_exitTriggered)
+            if (!ExitTriggered)
             {
-                _exitTriggered = true;
+                ExitTriggered = true;
                 _cancellationTokenSource.Cancel();
 
                 if (Algorithm != null)
@@ -1002,9 +998,10 @@ namespace QuantConnect.Lean.Engine.Results
                     ProcessSynchronousEvents(true);
                 }
 
-                lock (_logStoreLock)
+                lock (LogStore)
                 {
-                    StoreLog(_logStore);
+                    SaveLogs(_job.DeployId, LogStore);
+                    LogStore.Clear();
                 }
             }
         }
@@ -1221,7 +1218,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         private void UpdateAlgorithmStatus()
         {
-            if (!_exitTriggered
+            if (!ExitTriggered
                 && !_cancellationTokenSource.IsCancellationRequested) // just in case
             {
                 // wait until after we're warmed up to start sending running status each minute
