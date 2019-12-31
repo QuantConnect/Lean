@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Oanda
@@ -66,7 +67,8 @@ namespace QuantConnect.Brokerages.Oanda
         /// <summary>
         /// Gets a new instance of the <see cref="OandaBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel GetBrokerageModel(IAlgorithm algorithm) => new OandaBrokerageModel();
+        /// <param name="orderProvider">The order provider</param>
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new OandaBrokerageModel();
 
         /// <summary>
         /// Creates a new <see cref="IBrokerage"/> instance

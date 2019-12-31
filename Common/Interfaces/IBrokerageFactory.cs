@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Brokerages;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Interfaces
 {
@@ -44,8 +45,8 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets a brokerage model that can be used to model this brokerage's unique behaviors
         /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        IBrokerageModel GetBrokerageModel(IAlgorithm algorithm);
+        /// <param name="orderProvider">The order provider</param>
+        IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider);
 
         /// <summary>
         /// Creates a new IBrokerage instance

@@ -15,7 +15,6 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
@@ -31,7 +30,7 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class AlpacaBrokerageModel : DefaultBrokerageModel
     {
-        private readonly IAlgorithm _algorithm;
+        private readonly IOrderProvider _orderProvider;
 
         /// <summary>
         /// The default markets for the alpaca brokerage
@@ -50,13 +49,13 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageModel"/> class
         /// </summary>
-        /// <param name="algorithm">The algorithm</param>
+        /// <param name="orderProvider">The order provider</param>
         /// <param name="accountType">The type of account to be modelled, defaults to
         /// <see cref="AccountType.Cash"/></param>
-        public AlpacaBrokerageModel(IAlgorithm algorithm, AccountType accountType = AccountType.Margin)
+        public AlpacaBrokerageModel(IOrderProvider orderProvider, AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
-            _algorithm = algorithm;
+            _orderProvider = orderProvider;
         }
 
         /// <summary>
@@ -104,7 +103,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            var openOrders = _algorithm.Transactions.GetOpenOrders(order.Symbol);
+            var openOrders = _orderProvider.GetOpenOrders(x => x.Symbol == order.Symbol);
             if (security.Holdings.IsLong)
             {
                 var openSellQuantity = openOrders.Where(x => x.Direction == OrderDirection.Sell).Sum(x => x.Quantity);

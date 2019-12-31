@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             var order = Order.CreateOrder(request);
 
-            var model = new AlpacaBrokerageModel(algorithm);
+            var model = new AlpacaBrokerageModel(algorithm.Transactions);
 
             BrokerageMessageEvent messageEvent;
             Assert.AreEqual(isValid, model.CanSubmitOrder(security, order, out messageEvent));

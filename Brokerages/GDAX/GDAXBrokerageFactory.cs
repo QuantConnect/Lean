@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 using RestSharp;
 
@@ -55,7 +56,8 @@ namespace QuantConnect.Brokerages.GDAX
         /// <summary>
         /// The brokerage model
         /// </summary>
-        public override IBrokerageModel GetBrokerageModel(IAlgorithm algorithm) => new GDAXBrokerageModel();
+        /// <param name="orderProvider">The order provider</param>
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new GDAXBrokerageModel();
 
         /// <summary>
         /// Create the Brokerage instance

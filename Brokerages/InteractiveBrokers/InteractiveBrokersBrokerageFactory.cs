@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.InteractiveBrokers
@@ -54,7 +55,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Gets a new instance of the <see cref="InteractiveBrokersBrokerageModel"/>
         /// </summary>
-        public override IBrokerageModel GetBrokerageModel(IAlgorithm algorithm) => new InteractiveBrokersBrokerageModel();
+        /// <param name="orderProvider">The order provider</param>
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new InteractiveBrokersBrokerageModel();
 
         /// <summary>
         /// Creates a new IBrokerage instance and set ups the environment for the brokerage

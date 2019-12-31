@@ -22,6 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages.Tradier
@@ -141,8 +142,8 @@ namespace QuantConnect.Brokerages.Tradier
         /// <summary>
         /// Gets a new instance of the <see cref="TradierBrokerageModel"/>
         /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        public override IBrokerageModel GetBrokerageModel(IAlgorithm algorithm) => new TradierBrokerageModel();
+        /// <param name="orderProvider">The order provider</param>
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new TradierBrokerageModel();
 
         /// <summary>
         /// Creates a new IBrokerage instance
