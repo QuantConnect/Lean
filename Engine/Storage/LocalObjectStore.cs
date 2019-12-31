@@ -296,6 +296,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// Overridable persistence function
         /// </summary>
         /// <param name="data">The data to be persisted</param>
+        /// <returns>True if persistence was successful, otherwise false</returns>
         protected virtual bool PersistData(IEnumerable<KeyValuePair<string, byte[]>> data)
         {
             try

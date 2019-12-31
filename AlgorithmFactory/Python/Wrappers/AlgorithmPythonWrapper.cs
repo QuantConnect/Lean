@@ -33,6 +33,7 @@ using QuantConnect.Securities.Option;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using QuantConnect.Storage;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {
@@ -287,7 +288,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <summary>
         /// Gets the object store, used for persistence
         /// </summary>
-        public IObjectStore ObjectStore => _baseAlgorithm.ObjectStore;
+        public ObjectStore ObjectStore => _baseAlgorithm.ObjectStore;
 
         /// <summary>
         /// Returns the current Slice object

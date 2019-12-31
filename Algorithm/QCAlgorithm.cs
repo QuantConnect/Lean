@@ -45,6 +45,7 @@ using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Storage;
 
 namespace QuantConnect.Algorithm
 {
@@ -523,7 +524,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Gets the object store, used for persistence
         /// </summary>
-        public IObjectStore ObjectStore { get; private set; }
+        public ObjectStore ObjectStore { get; private set; }
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -2200,7 +2201,7 @@ namespace QuantConnect.Algorithm
         /// <param name="objectStore">The object store</param>
         public void SetObjectStore(IObjectStore objectStore)
         {
-            ObjectStore = objectStore;
+            ObjectStore = new ObjectStore(objectStore);
         }
 
         /// <summary>
