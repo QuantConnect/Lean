@@ -180,6 +180,9 @@ namespace QuantConnect.Lean.Engine.Setup
                     // set the object store
                     algorithm.SetObjectStore(parameters.ObjectStore);
 
+                    // before we call initialize
+                    BaseSetupHandler.LoadBacktestJobAccountCurrency(algorithm, job);
+
                     //Initialise the algorithm, get the required data:
                     algorithm.Initialize();
 
@@ -192,6 +195,9 @@ namespace QuantConnect.Lean.Engine.Setup
                     {
                         algorithm.SetEndDate(job.PeriodFinish.Value);
                     }
+
+                    // after we call initialize
+                    BaseSetupHandler.LoadBacktestJobCashAmount(algorithm, job);
 
                     // finalize initialization
                     algorithm.PostInitialize();

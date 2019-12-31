@@ -32,6 +32,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Util;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
@@ -51,7 +52,8 @@ namespace QuantConnect.Tests
             AlgorithmStatus expectedFinalStatus,
             DateTime? startDate = null,
             DateTime? endDate = null,
-            string setupHandler = "RegressionSetupHandlerWrapper")
+            string setupHandler = "RegressionSetupHandlerWrapper",
+            decimal? initialCash = null)
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
@@ -110,6 +112,10 @@ namespace QuantConnect.Tests
                             job.BacktestId = algorithm;
                             job.PeriodStart = startDate;
                             job.PeriodFinish = endDate;
+                            if (initialCash.HasValue)
+                            {
+                                job.CashAmount = new CashAmount(initialCash.Value, Currencies.USD);
+                            }
                             algorithmManager = new AlgorithmManager(false, job);
 
                             systemHandlers.LeanManager.Initialize(systemHandlers, algorithmHandlers, job, algorithmManager);
