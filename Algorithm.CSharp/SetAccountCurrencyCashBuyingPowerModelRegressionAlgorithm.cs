@@ -64,15 +64,11 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception("This regression algorithm is expected to test the CashBuyingPowerModel");
             }
 
-            try
+            // Second call to change account currency will be ignored
+            SetAccountCurrency("ARG");
+            if (AccountCurrency != "EUR")
             {
-                // Change account currency after adding a security will throw
-                SetAccountCurrency("ARG");
-                throw new Exception("Calling SetAccountCurrency() after adding a Security should throw");
-            }
-            catch (InvalidOperationException)
-            {
-                // expected
+                throw new Exception($"Unexpected account currency value {AccountCurrency}");
             }
         }
 

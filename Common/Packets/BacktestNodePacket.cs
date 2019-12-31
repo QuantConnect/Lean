@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Packets
 {
@@ -89,8 +90,8 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Optional initial cash amount if set
         /// </summary>
-        [JsonProperty(PropertyName = "decCashAmount")]
-        public decimal? CashAmount;
+        public CashAmount? CashAmount;
+
         /// <summary>
         /// Default constructor for JSON
         /// </summary>
@@ -109,7 +110,15 @@ namespace QuantConnect.Packets
         /// Initialize the backtest task packet.
         /// </summary>
         public BacktestNodePacket(int userId, int projectId, string sessionId, byte[] algorithmData, decimal startingCapital, string name, UserPlan userPlan = UserPlan.Free) 
-            : base (PacketType.BacktestNode)
+            : this (userId, projectId, sessionId, algorithmData, name, userPlan, new CashAmount(startingCapital, Currencies.USD))
+        {
+        }
+
+        /// <summary>
+        /// Initialize the backtest task packet.
+        /// </summary>
+        public BacktestNodePacket(int userId, int projectId, string sessionId, byte[] algorithmData, string name, UserPlan userPlan = UserPlan.Free, CashAmount? startingCapital = null)
+            : base(PacketType.BacktestNode)
         {
             UserId = userId;
             Algorithm = algorithmData;
