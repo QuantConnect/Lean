@@ -30,14 +30,14 @@ namespace QuantConnect.Tests.Common.Storage
         private static readonly string TestStorageRoot = $"./{nameof(LocalObjectStoreTests)}";
         private static readonly string StorageRootConfigurationValue = Config.Get("object-store-root");
 
-        private LocalObjectStore _store;
+        private ObjectStore _store;
 
         [TestFixtureSetUp]
         public void Setup()
         {
             Config.Set("object-store-root", TestStorageRoot);
 
-            _store = new LocalObjectStore();
+            _store = new ObjectStore(new LocalObjectStore());
             _store.Initialize("CSharp-TestAlgorithm", 0, 0, "", new Controls());
         }
 

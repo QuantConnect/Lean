@@ -28,6 +28,7 @@ using System.Collections.Concurrent;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
+using QuantConnect.Storage;
 
 namespace QuantConnect.Interfaces
 {
@@ -323,7 +324,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Gets the object store, used for persistence
         /// </summary>
-        IObjectStore ObjectStore { get; }
+        ObjectStore ObjectStore { get; }
 
         /// <summary>
         /// Returns the current Slice object
