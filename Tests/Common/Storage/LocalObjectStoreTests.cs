@@ -20,7 +20,6 @@ using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Storage;
 using QuantConnect.Packets;
-using QuantConnect.Storage;
 
 namespace QuantConnect.Tests.Common.Storage
 {

@@ -13,73 +13,138 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Storage
 {
     /// <summary>
-    /// Helper class for easier access to <see cref="IObjectStore"/> methods
+    /// Base abstract class that implements <see cref="IObjectStore"/> methods
     /// </summary>
-    public static class ObjectStore
+    public abstract class BaseObjectStore : IObjectStore
     {
+        /// <summary>
+        /// Event raised each time there's an error
+        /// </summary>
+        public abstract event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
+
+        /// <summary>
+        /// Initializes the object store
+        /// </summary>
+        /// <param name="algorithmName">The algorithm name</param>
+        /// <param name="userId">The user id</param>
+        /// <param name="projectId">The project id</param>
+        /// <param name="userToken">The user token</param>
+        /// <param name="controls">The job controls instance</param>
+        public abstract void Initialize(string algorithmName, int userId, int projectId, string userToken, Controls controls);
+
+        /// <summary>
+        /// Determines whether the store contains data for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <returns>True if the key was found</returns>
+        public abstract bool ContainsKey(string key);
+
+        /// <summary>
+        /// Returns the object data for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <returns>A byte array containing the data</returns>
+        public abstract byte[] ReadBytes(string key);
+
+        /// <summary>
+        /// Saves the object data for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <param name="contents">The object data</param>
+        /// <returns>True if the save operation was successful</returns>
+        public abstract bool SaveBytes(string key, byte[] contents);
+
+        /// <summary>
+        /// Deletes the object data for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <returns>True if the delete operation was successful</returns>
+        public abstract bool Delete(string key);
+
+        /// <summary>
+        /// Returns the file path for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <returns>The path for the file</returns>
+        public abstract string GetFilePath(string key);
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public abstract void Dispose();
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns></returns>
+        public abstract IEnumerator<KeyValuePair<string, byte[]>> GetEnumerator();
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns></returns>
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
         /// <summary>
         /// Returns the string object data for the specified key
         /// </summary>
-        /// <param name="store">The object store instance</param>
         /// <param name="key">The object key</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>A string containing the data</returns>
-        public static string Read(this IObjectStore store, string key, Encoding encoding = null)
+        public string Read(string key, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            return encoding.GetString(store.ReadBytes(key));
+            return encoding.GetString(ReadBytes(key));
         }
 
         /// <summary>
         /// Returns the string object data for the specified key
         /// </summary>
-        /// <param name="store">The object store instance</param>
         /// <param name="key">The object key</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>A string containing the data</returns>
-        public static string ReadString(this IObjectStore store, string key, Encoding encoding = null)
-        {
-            return store.Read(key, encoding);
-        }
+        public string ReadString(string key, Encoding encoding = null) => Read(key, encoding);
 
         /// <summary>
         /// Returns the JSON deserialized object data for the specified key
         /// </summary>
-        /// <param name="store">The object store instance</param>
         /// <param name="key">The object key</param>
         /// <param name="encoding">The string encoding used</param>
         /// <param name="settings">The settings used by the JSON deserializer</param>
         /// <returns>An object containing the data</returns>
-        public static T ReadJson<T>(this IObjectStore store, string key, Encoding encoding = null, JsonSerializerSettings settings = null)
+        public T ReadJson<T>(string key, Encoding encoding = null, JsonSerializerSettings settings = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            var json = store.Read(key, encoding);
+            var json = Read(key, encoding);
             return JsonConvert.DeserializeObject<T>(json, settings);
         }
 
         /// <summary>
         /// Returns the XML deserialized object data for the specified key
         /// </summary>
-        /// <param name="store">The object store instance</param>
         /// <param name="key">The object key</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>An object containing the data</returns>
-        public static T ReadXml<T>(this IObjectStore store, string key, Encoding encoding = null)
+        public T ReadXml<T>(string key, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            var xml = store.Read(key, encoding);
+            var xml = Read(key, encoding);
 
             var serializer = new XmlSerializer(typeof(T));
             using (var reader = new StringReader(xml))
@@ -91,59 +156,55 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Saves the object data in text format for the specified key
         /// </summary>
-        /// <param name="store">The object store instance</param>
         /// <param name="key">The object key</param>
         /// <param name="text">The string object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>True if the object was saved successfully</returns>
-        public static bool Save(this IObjectStore store, string key, string text, Encoding encoding = null)
+        public bool Save(string key, string text, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            return store.SaveBytes(key, encoding.GetBytes(text));
+            return SaveBytes(key, encoding.GetBytes(text));
         }
 
         /// <summary>
         /// Saves the object data in text format for the specified key
         /// </summary>
-        /// <param name="store">The object store instance</param>
         /// <param name="key">The object key</param>
         /// <param name="text">The string object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>True if the object was saved successfully</returns>
-        public static bool SaveString(this IObjectStore store, string key, string text, Encoding encoding = null)
+        public bool SaveString(string key, string text, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            return store.SaveBytes(key, encoding.GetBytes(text));
+            return SaveBytes(key, encoding.GetBytes(text));
         }
 
         /// <summary>
         /// Saves the object data in JSON format for the specified key
         /// </summary>
-        /// <param name="store">The object store instance</param>
         /// <param name="key">The object key</param>
         /// <param name="obj">The object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <param name="settings">The settings used by the JSON serializer</param>
         /// <returns>True if the object was saved successfully</returns>
-        public static bool SaveJson<T>(this IObjectStore store, string key, T obj, Encoding encoding = null, JsonSerializerSettings settings = null)
+        public bool SaveJson<T>(string key, T obj, Encoding encoding = null, JsonSerializerSettings settings = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
             var json = JsonConvert.SerializeObject(obj, settings);
-            return store.SaveString(key, json, encoding);
+            return SaveString(key, json, encoding);
         }
 
         /// <summary>
         /// Saves the object data in XML format for the specified key
         /// </summary>
-        /// <param name="store">The object store instance</param>
         /// <param name="key">The object key</param>
         /// <param name="obj">The object to be saved</param>
         /// <param name="encoding">The string encoding used</param>
         /// <returns>True if the object was saved successfully</returns>
-        public static bool SaveXml<T>(this IObjectStore store, string key, T obj, Encoding encoding = null)
+        public bool SaveXml<T>(string key, T obj, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
@@ -153,7 +214,7 @@ namespace QuantConnect.Storage
                 serializer.Serialize(writer, obj);
 
                 var xml = writer.ToString();
-                return store.SaveString(key, xml, encoding);
+                return SaveString(key, xml, encoding);
             }
         }
     }

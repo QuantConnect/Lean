@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -24,6 +23,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
+using QuantConnect.Storage;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Storage
@@ -31,14 +31,14 @@ namespace QuantConnect.Lean.Engine.Storage
     /// <summary>
     /// A local disk implementation of <see cref="IObjectStore"/>.
     /// </summary>
-    public class LocalObjectStore : IObjectStore
+    public class LocalObjectStore : BaseObjectStore
     {
         private static string StorageRoot => Path.GetFullPath(Config.Get("object-store-root", "./storage"));
 
         /// <summary>
         /// Event raised each time there's an error
         /// </summary>
-        public event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
+        public override event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
 
         /// <summary>
         /// Flag indicating the state of this object storage has changed since the last <seealso cref="Persist"/> invocation
@@ -67,7 +67,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <param name="projectId">The project id</param>
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
-        public virtual void Initialize(string algorithmName, int userId, int projectId, string userToken, Controls controls)
+        public override void Initialize(string algorithmName, int userId, int projectId, string userToken, Controls controls)
         {
             // absolute path including algorithm name
             AlgorithmStorageRoot = Path.Combine(StorageRoot, algorithmName);
@@ -94,7 +94,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         /// <param name="key">The object key</param>
         /// <returns>True if the key was found</returns>
-        public bool ContainsKey(string key)
+        public override bool ContainsKey(string key)
         {
             if (key == null)
             {
@@ -109,7 +109,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         /// <param name="key">The object key</param>
         /// <returns>A byte array containing the data</returns>
-        public byte[] ReadBytes(string key)
+        public override byte[] ReadBytes(string key)
         {
             if (key == null)
             {
@@ -133,7 +133,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <param name="key">The object key</param>
         /// <param name="contents">The object data</param>
         /// <returns>True if the save operation was successful</returns>
-        public bool SaveBytes(string key, byte[] contents)
+        public override bool SaveBytes(string key, byte[] contents)
         {
             if (key == null)
             {
@@ -178,7 +178,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         /// <param name="key">The object key</param>
         /// <returns>True if the delete operation was successful</returns>
-        public bool Delete(string key)
+        public override bool Delete(string key)
         {
             if (key == null)
             {
@@ -200,7 +200,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         /// <param name="key">The object key</param>
         /// <returns>The path for the file</returns>
-        public string GetFilePath(string key)
+        public override string GetFilePath(string key)
         {
             if (key == null)
             {
@@ -220,7 +220,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public virtual void Dispose()
+        public override void Dispose()
         {
             try
             {
@@ -245,17 +245,9 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>Returns an enumerator that iterates through the collection.</summary>
         /// <returns>A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.</returns>
         /// <filterpriority>1</filterpriority>
-        public IEnumerator<KeyValuePair<string, byte[]>> GetEnumerator()
+        public override IEnumerator<KeyValuePair<string, byte[]>> GetEnumerator()
         {
             return _storage.GetEnumerator();
-        }
-
-        /// <summary>Returns an enumerator that iterates through a collection.</summary>
-        /// <returns>An <see cref="T:System.Collections.IEnumerator" /> object that can be used to iterate through the collection.</returns>
-        /// <filterpriority>2</filterpriority>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
 
         /// <summary>

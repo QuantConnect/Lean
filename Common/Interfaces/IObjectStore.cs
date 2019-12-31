@@ -16,6 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Text;
+using Newtonsoft.Json;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Interfaces
@@ -56,12 +58,82 @@ namespace QuantConnect.Interfaces
         byte[] ReadBytes(string key);
 
         /// <summary>
+        /// Returns the string object data for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <returns>A string containing the data</returns>
+        string Read(string key, Encoding encoding = null);
+
+        /// <summary>
+        /// Returns the string object data for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <returns>A string containing the data</returns>
+        string ReadString(string key, Encoding encoding = null);
+
+        /// <summary>
+        /// Returns the JSON deserialized object data for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <param name="settings">The settings used by the JSON deserializer</param>
+        /// <returns>An object containing the data</returns>
+        T ReadJson<T>(string key, Encoding encoding = null, JsonSerializerSettings settings = null);
+
+        /// <summary>
+        /// Returns the XML deserialized object data for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <returns>An object containing the data</returns>
+        T ReadXml<T>(string key, Encoding encoding = null);
+
+        /// <summary>
         /// Saves the object data for the specified key
         /// </summary>
         /// <param name="key">The object key</param>
         /// <param name="contents">The object data</param>
         /// <returns>True if the save operation was successful</returns>
         bool SaveBytes(string key, byte[] contents);
+
+        /// <summary>
+        /// Saves the object data in text format for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <param name="text">The string object to be saved</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <returns>True if the object was saved successfully</returns>
+        bool Save(string key, string text, Encoding encoding = null);
+
+        /// <summary>
+        /// Saves the object data in text format for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <param name="text">The string object to be saved</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <returns>True if the object was saved successfully</returns>
+        bool SaveString(string key, string text, Encoding encoding = null);
+
+        /// <summary>
+        /// Saves the object data in JSON format for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <param name="obj">The object to be saved</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <param name="settings">The settings used by the JSON serializer</param>
+        /// <returns>True if the object was saved successfully</returns>
+        bool SaveJson<T>(string key, T obj, Encoding encoding = null, JsonSerializerSettings settings = null);
+
+        /// <summary>
+        /// Saves the object data in XML format for the specified key
+        /// </summary>
+        /// <param name="key">The object key</param>
+        /// <param name="obj">The object to be saved</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <returns>True if the object was saved successfully</returns>
+        bool SaveXml<T>(string key, T obj, Encoding encoding = null);
 
         /// <summary>
         /// Deletes the object data for the specified key
