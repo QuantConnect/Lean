@@ -503,18 +503,11 @@ namespace QuantConnect.Lean.Engine.Results
         {
             lock (LogStore)
             {
-                if (Algorithm != null)
-                {
-                    LogStore.Add(new LogEntry(
-                        Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message,
-                        Algorithm.Time));
-                }
-                else
-                {
-                    LogStore.Add(new LogEntry(
-                        "Algorithm Initialization: " + message,
-                        DateTime.MinValue));
-                }
+                var messageToLog = Algorithm != null
+                    ? new LogEntry(Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message)
+                    : new LogEntry("Algorithm Initialization: " + message);
+
+                LogStore.Add(messageToLog);
             }
         }
 
