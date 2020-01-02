@@ -147,7 +147,8 @@ namespace QuantConnect.Lean.Engine.Storage
                 fileCount++;
                 if (string.Equals(kvp.Key, key))
                 {
-                    expectedStorageSizeBytes += contents.Length - kvp.Value.Length;
+                    // we use the New content size
+                    expectedStorageSizeBytes += contents.Length;
                 }
                 else
                 {
