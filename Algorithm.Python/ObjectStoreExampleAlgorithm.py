@@ -74,7 +74,7 @@ class ObjectStoreExampleAlgorithm(QCAlgorithm):
 
             # save our warm up data so next time we don't need to issue the history request
             self.ObjectStore.Save(self.SPY_Close_ObjectStore_Key,
-                '\n'.join([f'{x.EndTime},{x.Value}' for x in sorted(self.SPY_Close_History, key=lambda x: x.EndTime)]))
+                '\n'.join(reversed([f'{x.EndTime},{x.Value}' for x in self.SPY_Close_History])))
 
             # Can also use ObjectStore.SaveBytes(key, byte[])
             # and to read  ObjectStore.ReadBytes(key) => byte[]

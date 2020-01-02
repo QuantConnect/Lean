@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var values = ObjectStore.ReadJson<IndicatorDataPoint[]>(SPY_Close_ObjectStore_Key);
                 Debug($"{SPY_Close_ObjectStore_Key} key exists in object store. Count: {values.Length}");
 
-                foreach (var value in values.OrderBy(x => x.EndTime))
+                foreach (var value in values)
                 {
                     SPY_Close.Update(value);
                 }
@@ -86,13 +86,13 @@ namespace QuantConnect.Algorithm.CSharp
                 // we're pulling the last year's worth of SPY daily trade bars to fee into our indicators
                 var history = History(SPY, TimeSpan.FromDays(365), Resolution.Daily);
 
-                foreach (var tradeBar in history.OrderBy(x => x.EndTime))
+                foreach (var tradeBar in history)
                 {
                     SPY_Close.Update(tradeBar.EndTime, tradeBar.Close);
                 }
 
                 // save our warm up data so next time we don't need to issue the history request
-                var array = SPY_Close_History.OrderBy(x => x.EndTime).ToArray();
+                var array = SPY_Close_History.Reverse().ToArray();
                 ObjectStore.SaveJson(SPY_Close_ObjectStore_Key, array);
 
                 // Can also use ObjectStore.SaveBytes(key, byte[])
