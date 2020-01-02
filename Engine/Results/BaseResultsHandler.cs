@@ -34,6 +34,16 @@ namespace QuantConnect.Lean.Engine.Results
     public abstract class BaseResultsHandler
     {
         /// <summary>
+        /// True if the exit has been triggered
+        /// </summary>
+        protected volatile bool ExitTriggered;
+
+        /// <summary>
+        /// The log store instance
+        /// </summary>
+        protected List<LogEntry> LogStore { get; }
+
+        /// <summary>
         /// Algorithms performance related chart names
         /// </summary>
         /// <remarks>Used to calculate the probabilistic sharpe ratio</remarks>
@@ -106,6 +116,7 @@ namespace QuantConnect.Lean.Engine.Results
             CompileId = "";
             JobId = "";
             ChartLock = new object();
+            LogStore = new List<LogEntry>();
         }
 
         /// <summary>
@@ -114,10 +125,10 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="id">Id that will be incorporated into the algorithm log name</param>
         /// <param name="logs">The logs to save</param>
         /// <returns>The path to the logs</returns>
-        public virtual string SaveLogs(string id, IEnumerable<string> logs)
+        public virtual string SaveLogs(string id, List<LogEntry> logs)
         {
             var path = $"{id}-log.txt";
-            File.WriteAllLines(path, logs);
+            File.WriteAllLines(path, logs.Select(x => x.Message));
             return Path.Combine(Directory.GetCurrentDirectory(), path);
         }
 

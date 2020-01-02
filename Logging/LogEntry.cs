@@ -54,11 +54,11 @@ namespace QuantConnect.Logging
         /// Create a log entry at a specific time in the analysis (for a backtest).
         /// </summary>
         /// <param name="message">Message for log</param>
-        /// <param name="time">Time of the message</param>
+        /// <param name="time">Utc time of the message</param>
         /// <param name="type">Type of the log entry</param>
         public LogEntry(string message, DateTime time, LogType type = LogType.Trace)
         {
-            Time = time.ToUniversalTime();
+            Time = time;
             Message = message;
             MessageType = type;
         }
