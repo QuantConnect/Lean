@@ -72,7 +72,10 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
         sortedByDollarVolume = []
         sortedBySector = sorted(filteredFine, key = lambda x: x.CompanyReference.IndustryTemplateCode)
 
-        percent = self.numberOfSymbolsFine/float(len(sortedBySector))
+        if len(sortedBySector) != 0:
+            percent = self.numberOfSymbolsFine/float(len(sortedBySector))
+        else:
+            percent = 1
 
         # select stocks with top dollar volume in every single sector
         for code, g in groupby(sortedBySector, lambda x: x.CompanyReference.IndustryTemplateCode):
