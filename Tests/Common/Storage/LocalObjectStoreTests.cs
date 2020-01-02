@@ -86,6 +86,20 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
+        public void SizeLimitIsRespected()
+        {
+            {
+                var validData = new byte[1024 * 1024 * 4];
+                Assert.IsTrue(_store.SaveBytes("my_settings_text", validData));
+            }
+            {
+                var invalidData = new byte[1024 * 1024 * 6];
+                Assert.IsFalse(_store.SaveBytes("my_settings_text", invalidData));
+            }
+            _store.Delete("my_settings_text");
+        }
+
+        [Test]
         public void SavesAndLoadsJson()
         {
             var expected = new TestSettings { EmaFastPeriod = 12, EmaSlowPeriod = 26 };

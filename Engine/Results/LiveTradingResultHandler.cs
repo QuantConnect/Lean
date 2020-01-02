@@ -206,7 +206,6 @@ namespace QuantConnect.Lean.Engine.Results
                     foreach (var order in deltaOrders)
                     {
                         order.Value.Price = order.Value.Price.SmartRounding();
-                        order.Value.Time = order.Value.Time.ToUniversalTime();
                     }
 
                     //Reset loop variables:
@@ -1045,12 +1044,6 @@ namespace QuantConnect.Lean.Engine.Results
             result.Orders = result.Orders.Values.Where(x => x.Time >= start && x.Time <= stop).ToDictionary(x => x.Id);
 
             //Log.Trace("LiveTradingResultHandler.Truncate: Truncate Outgoing: " + result.Charts["Strategy Equity"].Series["Equity"].Values.Count);
-
-            //For live charting convert to UTC
-            foreach (var order in result.Orders)
-            {
-                order.Value.Time = order.Value.Time.ToUniversalTime();
-            }
         }
 
         private string CreateKey(string suffix, string dateFormat = "yyyy-MM-dd")
