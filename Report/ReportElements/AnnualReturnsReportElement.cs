@@ -71,7 +71,7 @@ namespace QuantConnect.Report.ReportElements
                 // Pandas equivalent:
                 //
                 // df.pct_change().resample('AS').sum().mul(100)
-                var backtestAnnualReturns = backtestSeries.PercentChange().ResampleEquivalence(date => new DateTime(date.Year, 1, 1), agg => agg.Sum() * 100);
+                var backtestAnnualReturns = backtestSeries.ResampleEquivalence(date => new DateTime(date.Year, 1, 1), agg => agg.TotalReturns() * 100).DropMissing();
 
                 // We need to set the datetime index first before we resample
                 var liveSeries = new Series<DateTime, double>(liveTime, liveStrategy);
@@ -80,7 +80,7 @@ namespace QuantConnect.Report.ReportElements
                 // Same as above, this is equivalent to:
                 //
                 // df.pct_change().resample('AS').sum().mul(100)
-                var liveAnnualReturns = liveSeries.PercentChange().ResampleEquivalence(date => new DateTime(date.Year, 1, 1), agg => agg.Sum() * 100);
+                var liveAnnualReturns = liveSeries.ResampleEquivalence(date => new DateTime(date.Year, 1, 1), agg => agg.TotalReturns() * 100).DropMissing();
 
                 // Select only the year number and pass it to the plotting library
                 backtestList.Append(backtestAnnualReturns.Keys.Select(x => x.Year).ToList().ToPython());

@@ -72,11 +72,11 @@ namespace QuantConnect.Report.ReportElements
                     frame["Benchmark"] = backtestBenchmarkSeries.ResampleEquivalence(date => date.Date, s => s.LastValue());
 
                     var crisisFrame = frame.Where(kvp => kvp.Key >= crisis.Start && kvp.Key <= crisis.End);
-                    crisisFrame = crisisFrame.Join("BacktestPercent", crisisFrame["Backtest"].PercentChange().CumulativeSum());
-                    crisisFrame = crisisFrame.Join("BenchmarkPercent", crisisFrame["Benchmark"].PercentChange().CumulativeSum());
+                    crisisFrame = crisisFrame.Join("BacktestPercent", crisisFrame["Backtest"].CumulativeReturns());
+                    crisisFrame = crisisFrame.Join("BenchmarkPercent", crisisFrame["Benchmark"].CumulativeReturns());
 
                     // Pad out all missing values to start from 0 for nice plots
-                    crisisFrame = crisisFrame.FillMissing(0.0);
+                    crisisFrame = crisisFrame.FillMissing(Direction.Forward).FillMissing(0.0);
 
                     data.Append(crisisFrame.RowKeys.ToList().ToPython());
                     data.Append(crisisFrame["BacktestPercent"].Values.ToList().ToPython());

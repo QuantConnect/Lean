@@ -40,7 +40,7 @@ namespace QuantConnect.Report
             foreach (var symbol in orders.Select(x => x.Symbol).Distinct())
             {
                 var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, Resolution.Daily, false, false);
-                var security = Securities.CreateSecurity(symbol, configs, 1);
+                var security = Securities.CreateSecurity(symbol, configs, 10000m);
 
                 var method = typeof(QCAlgorithm).GetMethod("AddToUserDefinedUniverse", BindingFlags.NonPublic | BindingFlags.Instance);
                 method.Invoke(this, new object[] { security, configs });

@@ -18,7 +18,6 @@ using System.Linq;
 using Python.Runtime;
 using QuantConnect.Packets;
 using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Report.ReportElements
 {
@@ -77,14 +76,14 @@ namespace QuantConnect.Report.ReportElements
                 // Equivalent in python using pandas for the following operations is:
                 //
                 // df.pct_change().cumsum().mul(100)
-                var backtestCumulativePercent = (backtestSeries.PercentChange().CumulativeSum() * 100).FillMissing(Direction.Forward).DropMissing();
-                var backtestBenchmarkCumulativePercent = (backtestBenchmarkSeries.PercentChange().CumulativeSum() * 100).FillMissing(Direction.Forward).DropMissing();
+                var backtestCumulativePercent = (backtestSeries.CumulativeReturns() * 100).FillMissing(Direction.Forward).DropMissing();
+                var backtestBenchmarkCumulativePercent = (backtestBenchmarkSeries.CumulativeReturns() * 100).FillMissing(Direction.Forward).DropMissing();
 
                 // Equivalent in python using pandas for the following operations is:
                 // --------------------------------------------------
                 // # note: [...] denotes the data we're passing in
                 // bt = pd.Series([...], index=time)
-                // df.pct_change().cumsum().mul(100).add(bt.iloc[-1])
+                // df.pct_change().replace([np.inf, -np.inf], np.nan).dropna().cumsum().mul(100).add(bt.iloc[-1])
                 // --------------------------------------------------
                 //
                 // We add the final value of the backtest and benchmark to have a continuous graph showing the performance out of sample
@@ -93,8 +92,8 @@ namespace QuantConnect.Report.ReportElements
                 var backtestLastValue = backtestCumulativePercent.IsEmpty ? 0 : backtestCumulativePercent.LastValue();
                 var backtestBenchmarkLastValue = backtestBenchmarkCumulativePercent.IsEmpty ? 0 : backtestBenchmarkCumulativePercent.LastValue();
 
-                var liveCumulativePercent = (liveSeries.PercentChange().CumulativeSum() * 100) + backtestLastValue;
-                var liveBenchmarkCumulativePercent = (liveBenchmarkSeries.PercentChange().CumulativeSum() * 100) + backtestBenchmarkLastValue;
+                var liveCumulativePercent = (liveSeries.CumulativeReturns() * 100).FillMissing(Direction.Forward).DropMissing() + backtestLastValue;
+                var liveBenchmarkCumulativePercent = (liveBenchmarkSeries.CumulativeReturns() * 100).FillMissing(Direction.Forward).DropMissing() + backtestBenchmarkLastValue;
 
                 backtestList.Append(backtestCumulativePercent.Keys.ToList().ToPython());
                 backtestList.Append(backtestCumulativePercent.Values.ToList().ToPython());

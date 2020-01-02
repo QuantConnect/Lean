@@ -66,6 +66,20 @@ namespace QuantConnect.Report
         }
 
         /// <summary>
+        /// Clones the provided portfolio
+        /// </summary>
+        /// <param name="portfolio">Portfolio</param>
+        /// <param name="time">Time</param>
+        public PointInTimePortfolio(PointInTimePortfolio portfolio, DateTime time)
+        {
+            Time = time;
+            Order = portfolio.Order;
+            TotalPortfolioValue = portfolio.TotalPortfolioValue;
+            Holdings = portfolio.Holdings;
+            Leverage = portfolio.Leverage;
+        }
+
+        /// <summary>
         /// Holding of an asset at a point in time
         /// </summary>
         public class PointInTimeHolding

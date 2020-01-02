@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Deedle;
 using Python.Runtime;
@@ -54,10 +55,10 @@ namespace QuantConnect.Report.ReportElements
 
             // Equivalent to python pandas line: `backtestSeries.resample('M').apply(lambda x: x.pct_change().sum())`
             var backtestMonthlyReturns = backtestSeries.ResampleEquivalence(date => new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1))
-                .Select(kvp => kvp.Value.PercentChange().Sum());
+                .Select(kvp => kvp.Value.TotalReturns());
 
             var liveMonthlyReturns = liveSeries.ResampleEquivalence(date => new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1))
-                .Select(kvp => kvp.Value.PercentChange().Sum());
+                .Select(kvp => kvp.Value.TotalReturns());
 
             var base64 = "";
             using (Py.GIL())
@@ -66,12 +67,21 @@ namespace QuantConnect.Report.ReportElements
                 foreach (var kvp in backtestMonthlyReturns.GroupBy(kvp => kvp.Key.Year).GetObservations())
                 {
                     var key = kvp.Key.ToStringInvariant();
-                    var values = (kvp.Value * 100).Values.ToList();
+                    var monthlyReturns = kvp.Value * 100;
 
-                    while (values.Count != 12)
+                    var values = new List<double>();
+                    for (var i = 1; i <= 12; i++)
                     {
+                        var returns = monthlyReturns.Where(row => row.Key.Month == i);
+                        if (!returns.IsEmpty)
+                        {
+                            values.Add(returns.FirstValue());
+                            continue;
+                        }
+
                         values.Add(double.NaN);
                     }
+
                     backtestResults.SetItem(key.ToPython(), values.ToPython());
                 }
 
@@ -79,11 +89,21 @@ namespace QuantConnect.Report.ReportElements
                 foreach (var kvp in liveMonthlyReturns.GroupBy(kvp => kvp.Key.Year).GetObservations())
                 {
                     var key = kvp.Key.ToStringInvariant();
-                    var values = (kvp.Value * 100).Values.ToList();
-                    while (values.Count != 12)
+                    var monthlyReturns = kvp.Value * 100;
+
+                    var values = new List<double>();
+                    for (var i = 1; i <= 12; i++)
                     {
+                        var returns = monthlyReturns.Where(row => row.Key.Month == i);
+                        if (!returns.IsEmpty)
+                        {
+                            values.Add(returns.FirstValue());
+                            continue;
+                        }
+
                         values.Add(double.NaN);
                     }
+
                     liveResults.SetItem(key.ToPython(), values.ToPython());
                 }
 
