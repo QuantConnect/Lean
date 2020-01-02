@@ -43,8 +43,8 @@ class ObjectStoreExampleAlgorithm(QCAlgorithm):
         self.SPY = self.AddEquity("SPY", Resolution.Minute).Symbol
 
         self.SPY_Close = self.Identity(self.SPY, Resolution.Daily)
-        self.SPY_Close_EMA10 = self.EMA(self.SPY, 10, Resolution.Daily)
-        self.SPY_Close_EMA50 = self.EMA(self.SPY, 50, Resolution.Daily)
+        self.SPY_Close_EMA10 = IndicatorExtensions.EMA(self.SPY_Close, 10)
+        self.SPY_Close_EMA50 = IndicatorExtensions.EMA(self.SPY_Close, 50)
 
         # track last year of close and EMA10/EMA50
         self.SPY_Close.Updated += lambda _, args: self.SPY_Close_History.Add(args)
