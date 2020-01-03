@@ -45,6 +45,7 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public class Engine
     {
+        private bool _historyStartDateLimitedWarningEmitted;
         private readonly bool _liveMode;
         private readonly Lazy<StackExceptionInterpreter> _exceptionInterpreter;
 
@@ -499,7 +500,14 @@ namespace QuantConnect.Lean.Engine
 
             provider.InvalidConfigurationDetected += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message); };
             provider.NumericalPrecisionLimited += (sender, args) => { AlgorithmHandlers.Results.DebugMessage(args.Message); };
-            provider.StartDateLimited += (sender, args) => { AlgorithmHandlers.Results.DebugMessage(args.Message); };
+            provider.StartDateLimited += (sender, args) =>
+            {
+                if (!_historyStartDateLimitedWarningEmitted)
+                {
+                    _historyStartDateLimitedWarningEmitted = true;
+                    AlgorithmHandlers.Results.DebugMessage("Warning: when performing history requests, the start date will be adjusted if it is before the first known date for the symbol.");
+                }
+            };
             provider.DownloadFailed += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message, args.StackTrace); };
             provider.ReaderErrorDetected += (sender, args) => { AlgorithmHandlers.Results.RuntimeError(args.Message, args.StackTrace); };
 
