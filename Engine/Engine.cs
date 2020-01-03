@@ -505,8 +505,7 @@ namespace QuantConnect.Lean.Engine
                 if (!_historyStartDateLimitedWarningEmitted)
                 {
                     _historyStartDateLimitedWarningEmitted = true;
-                    AlgorithmHandlers.Results.DebugMessage("Warning: when performing history requests," +
-                                                           " the start date will be adjusted if its before the map files first date.");
+                    AlgorithmHandlers.Results.DebugMessage("Warning: when performing history requests, the start date will be adjusted if it is before the first known date for the symbol.");
                 }
             };
             provider.DownloadFailed += (sender, args) => { AlgorithmHandlers.Results.ErrorMessage(args.Message, args.StackTrace); };
