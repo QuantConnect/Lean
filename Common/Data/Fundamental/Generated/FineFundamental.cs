@@ -74,6 +74,13 @@ namespace QuantConnect.Data.Fundamental
 		public AssetClassification AssetClassification { get; set; }
 
 		/// <summary>
+		/// Market capitalization is the aggregate market value of a company represented in dollar amount.
+		/// </summary>
+		public decimal MarketCap => ValuationRatios.PERatio *
+									EarningReports.BasicEPS.TwelveMonths *
+									EarningReports.BasicAverageShares.ThreeMonths;
+
+		/// <summary>
 		/// Creates an instance of the FineFundamental class
 		/// </summary>
 		public FineFundamental()
