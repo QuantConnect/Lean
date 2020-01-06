@@ -36,6 +36,15 @@ namespace QuantConnect.Data.Fundamental
         }
 
         /// <summary>
+        /// Market capitalization is the aggregate market value of a company represented in dollar amount.
+        /// </summary>
+        /// <remarks>
+        /// Returns zero if <see cref="BasicAverageShares"/> is null
+        /// </remarks>
+        [JsonIgnore]
+        public decimal MarketCap => EarningReports?.BasicAverageShares?.ThreeMonths * Value ?? 0;
+
+        /// <summary>
         /// Creates the universe symbol used for fine fundamental data
         /// </summary>
         /// <param name="market">The market</param>
