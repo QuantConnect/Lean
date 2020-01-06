@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
@@ -38,13 +39,17 @@ namespace QuantConnect.Tests.Common.Brokerages
             var request = new SubmitOrderRequest(orderType, symbol.SecurityType, symbol, quantity, stopPrice, limitPrice, DateTime.UtcNow, "");
             mock.Setup(m => m.Process(It.IsAny<OrderRequest>())).Returns(new OrderTicket(null, request));
 
+            var order = Order.CreateOrder(request);
+
             var existingOrders = new List<Order>();
             if (existingOrderQuantity != 0)
             {
                 existingOrders.Add(new LimitOrder(symbol, existingOrderQuantity, 1, DateTime.UtcNow));
             }
+            existingOrders.Add(order);
 
-            mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(existingOrders);
+            mock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>()))
+                .Returns((Func<Order, bool> filter) => existingOrders.Where(filter).ToList());
             algorithm.Transactions.SetOrderProcessor(mock.Object);
 
             var security = CreateSecurity(symbol);
@@ -54,8 +59,6 @@ namespace QuantConnect.Tests.Common.Brokerages
             {
                 security.Holdings.SetHoldings(1, existingPosition);
             }
-
-            var order = Order.CreateOrder(request);
 
             var model = new AlpacaBrokerageModel(algorithm.Transactions);
 
@@ -96,7 +99,19 @@ namespace QuantConnect.Tests.Common.Brokerages
                 new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 1m, -1m, false),
 
                 // cannot submit buy order with short position and open buy order
-                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, -1m, 1m, false)
+                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, -1m, 1m, false),
+
+                // can close long position with no open orders
+                new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 1m, 0m, true),
+
+                // can close short position with no open orders
+                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, -1m, 0m, true),
+
+                // can reduce long position with no open orders
+                new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 2m, 0m, true),
+
+                // can reduce short position with no open orders
+                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, -2m, 0m, true)
             };
         }
 

@@ -103,7 +103,8 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            var openOrders = _orderProvider.GetOpenOrders(x => x.Symbol == order.Symbol);
+            var openOrders = _orderProvider.GetOpenOrders(x => x.Symbol == order.Symbol && x.Id != order.Id);
+
             if (security.Holdings.IsLong)
             {
                 var openSellQuantity = openOrders.Where(x => x.Direction == OrderDirection.Sell).Sum(x => x.Quantity);
