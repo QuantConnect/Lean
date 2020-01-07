@@ -110,11 +110,15 @@ namespace QuantConnect.Brokerages
                 var openSellQuantity = openOrders.Where(x => x.Direction == OrderDirection.Sell).Sum(x => x.Quantity);
                 var availableSellQuantity = -security.Holdings.Quantity - openSellQuantity;
 
-                // cannot reverse position from long to short with a single order (open sell orders are taken into account)
+                // cannot reverse position from long to short (open sell orders are taken into account)
                 if (order.Direction == OrderDirection.Sell && order.Quantity < availableSellQuantity)
                 {
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        $"The {nameof(AlpacaBrokerageModel)} does not support reversing the position (from long to short) with a single order."
+                        (openSellQuantity == 0
+                        ? $"The {nameof(AlpacaBrokerageModel)} does not support reversing the position (from long to short) with a single order"
+                        : $"The {nameof(AlpacaBrokerageModel)} does not support submitting orders which could potentially reverse the position (from long to short)") +
+                        $" [position:{security.Holdings.Quantity}, order quantity:{order.Quantity}, " +
+                        $"open sell orders quantity:{openSellQuantity}, available sell quantity:{availableSellQuantity}]."
                     );
 
                     return false;
@@ -125,11 +129,15 @@ namespace QuantConnect.Brokerages
                 var openBuyQuantity = openOrders.Where(x => x.Direction == OrderDirection.Buy).Sum(x => x.Quantity);
                 var availableBuyQuantity = -security.Holdings.Quantity - openBuyQuantity;
 
-                // cannot reverse position from short to long with a single order (open buy orders are taken into account)
+                // cannot reverse position from short to long (open buy orders are taken into account)
                 if (order.Direction == OrderDirection.Buy && order.Quantity > availableBuyQuantity)
                 {
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        $"The {nameof(AlpacaBrokerageModel)} does not support reversing the position (from short to long) with a single order."
+                        (openBuyQuantity == 0
+                        ? $"The {nameof(AlpacaBrokerageModel)} does not support reversing the position (from short to long) with a single order"
+                        : $"The {nameof(AlpacaBrokerageModel)} does not support submitting orders which could potentially reverse the position (from short to long)") +
+                        $" [position:{security.Holdings.Quantity}, order quantity:{order.Quantity}, " +
+                        $"open buy orders quantity:{openBuyQuantity}, available buy quantity:{availableBuyQuantity}]."
                     );
 
                     return false;
@@ -140,8 +148,12 @@ namespace QuantConnect.Brokerages
                 // cannot open a short sell while a long buy order is open
                 if (order.Direction == OrderDirection.Sell && openOrders.Any(x => x.Direction == OrderDirection.Buy))
                 {
+                    var openBuyQuantity = openOrders.Where(x => x.Direction == OrderDirection.Buy).Sum(x => x.Quantity);
+
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        $"The {nameof(AlpacaBrokerageModel)} does not support shorting with open buy orders."
+                        $"The {nameof(AlpacaBrokerageModel)} does not support shorting with open buy orders" +
+                        $" [position:{security.Holdings.Quantity}, order quantity:{order.Quantity}, " +
+                        $"open buy orders quantity:{openBuyQuantity}]."
                     );
 
                     return false;
@@ -150,8 +162,12 @@ namespace QuantConnect.Brokerages
                 // cannot open a long buy while a short sell order is open
                 if (order.Direction == OrderDirection.Buy && openOrders.Any(x => x.Direction == OrderDirection.Sell))
                 {
+                    var openSellQuantity = openOrders.Where(x => x.Direction == OrderDirection.Sell).Sum(x => x.Quantity);
+
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        $"The {nameof(AlpacaBrokerageModel)} does not support buying with open sell orders."
+                        $"The {nameof(AlpacaBrokerageModel)} does not support buying with open sell orders" +
+                        $" [position:{security.Holdings.Quantity}, order quantity:{order.Quantity}, " +
+                        $"open sell orders quantity:{openSellQuantity}]."
                     );
 
                     return false;

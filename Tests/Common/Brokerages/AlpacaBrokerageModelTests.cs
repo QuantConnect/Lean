@@ -32,7 +32,16 @@ namespace QuantConnect.Tests.Common.Brokerages
     public class AlpacaBrokerageModelTests
     {
         [TestCaseSource(nameof(GetOrderTestData))]
-        public void ValidatesOrders(OrderType orderType, Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, decimal existingPosition, decimal existingOrderQuantity, bool isValid)
+        public void ValidatesOrders(
+            OrderType orderType,
+            Symbol symbol,
+            decimal quantity,
+            decimal stopPrice,
+            decimal limitPrice,
+            decimal existingPosition,
+            decimal existingOrderQuantity,
+            bool isValid,
+            string errorMessage)
         {
             var algorithm = new QCAlgorithm();
             var mock = new Mock<ITransactionHandler>();
@@ -64,6 +73,12 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             BrokerageMessageEvent messageEvent;
             Assert.AreEqual(isValid, model.CanSubmitOrder(security, order, out messageEvent));
+
+            if (!isValid)
+            {
+                Console.WriteLine(messageEvent.Message);
+                Assert.That(messageEvent.Message.Contains(errorMessage));
+            }
         }
 
         public TestCaseData[] GetOrderTestData()
@@ -71,47 +86,47 @@ namespace QuantConnect.Tests.Common.Brokerages
             return new[]
             {
                 // valid security type
-                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, 0m, 0m, true),
+                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, 0m, 0m, true, ""),
 
                 // invalid security type
-                new TestCaseData(OrderType.Market, Symbols.EURUSD, 1m, 0m, 0m, 0m, 0m, false),
-                new TestCaseData(OrderType.Market, Symbols.DE30EUR, 1m, 0m, 0m, 0m, 0m, false),
-                new TestCaseData(OrderType.Market, Symbols.BTCUSD, 1m, 0m, 0m, 0m, 0m, false),
-                new TestCaseData(OrderType.Market, Symbols.Fut_SPY_Feb19_2016, 1m, 0m, 0m, 0m, 0m, false),
-                new TestCaseData(OrderType.Market, Symbols.SPY_C_192_Feb19_2016, 1m, 0m, 0m, 0m, 0m, false),
+                new TestCaseData(OrderType.Market, Symbols.EURUSD, 1m, 0m, 0m, 0m, 0m, false, "does not support Forex security type"),
+                new TestCaseData(OrderType.Market, Symbols.DE30EUR, 1m, 0m, 0m, 0m, 0m, false, "does not support Cfd security type"),
+                new TestCaseData(OrderType.Market, Symbols.BTCUSD, 1m, 0m, 0m, 0m, 0m, false, "does not support Crypto security type"),
+                new TestCaseData(OrderType.Market, Symbols.Fut_SPY_Feb19_2016, 1m, 0m, 0m, 0m, 0m, false, "does not support Future security type"),
+                new TestCaseData(OrderType.Market, Symbols.SPY_C_192_Feb19_2016, 1m, 0m, 0m, 0m, 0m, false, "does not support Option security type"),
 
                 // invalid order type
-                new TestCaseData(OrderType.MarketOnClose, Symbols.SPY, 1m, 0m, 0m, 0m, 0m, false),
+                new TestCaseData(OrderType.MarketOnClose, Symbols.SPY, 1m, 0m, 0m, 0m, 0m, false, "does not support MarketOnClose order type"),
 
-                // invalid reverse from long to short (with no open orders)
-                new TestCaseData(OrderType.Market, Symbols.SPY, -2m, 0m, 0m, 1m, 0m, false),
+                // single-order reverse from long to short (with no open orders)
+                new TestCaseData(OrderType.Market, Symbols.SPY, -2m, 0m, 0m, 1m, 0m, false, "does not support reversing the position (from long to short)"),
 
-                // invalid reverse from short to long (with no open orders)
-                new TestCaseData(OrderType.Market, Symbols.SPY, 2m, 0m, 0m, -1m, 0m, false),
+                // single-order reverse from short to long (with no open orders)
+                new TestCaseData(OrderType.Market, Symbols.SPY, 2m, 0m, 0m, -1m, 0m, false, "does not support reversing the position (from short to long)"),
 
                 // cannot open a short sell while a long buy order is open
-                new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 0m, 1m, false),
+                new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 0m, 1m, false, "does not support shorting with open buy orders"),
 
                 // cannot open a long buy while a short sell order is open
-                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, 0m, -1m, false),
+                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, 0m, -1m, false, "does not support buying with open sell orders"),
 
                 // cannot submit sell order with long position and open sell order
-                new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 1m, -1m, false),
+                new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 1m, -1m, false, "does not support submitting orders which could potentially reverse the position (from long to short)"),
 
                 // cannot submit buy order with short position and open buy order
-                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, -1m, 1m, false),
+                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, -1m, 1m, false, "does not support submitting orders which could potentially reverse the position (from short to long)"),
 
                 // can close long position with no open orders
-                new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 1m, 0m, true),
+                new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 1m, 0m, true, ""),
 
                 // can close short position with no open orders
-                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, -1m, 0m, true),
+                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, -1m, 0m, true, ""),
 
                 // can reduce long position with no open orders
-                new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 2m, 0m, true),
+                new TestCaseData(OrderType.Market, Symbols.SPY, -1m, 0m, 0m, 2m, 0m, true, ""),
 
                 // can reduce short position with no open orders
-                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, -2m, 0m, true)
+                new TestCaseData(OrderType.Market, Symbols.SPY, 1m, 0m, 0m, -2m, 0m, true, "")
             };
         }
 
