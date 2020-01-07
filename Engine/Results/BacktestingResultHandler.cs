@@ -55,6 +55,8 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly HashSet<string> _chartSeriesExceededDataPoints;
 
         //Processing Time:
+        private decimal _previousDailyPortfolioValue;
+        private DateTime _previousProcessTime;
         private DateTime _nextSample;
         private string _algorithmId;
         private int _projectId;
@@ -433,6 +435,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Algorithm = algorithm;
             StartingPortfolioValue = startingPortfolioValue;
+            _previousDailyPortfolioValue = StartingPortfolioValue;
 
             //Get the resample period:
             var totalMinutes = (algorithm.EndDate - algorithm.StartDate).TotalMinutes;
@@ -772,14 +775,47 @@ namespace QuantConnect.Lean.Engine.Results
             if (Algorithm == null) return;
 
             var time = Algorithm.UtcTime;
+            var shouldSample = _previousProcessTime.Date != time.Date;
+            var currentPortfolioValue = Algorithm.Portfolio.TotalPortfolioValue;
+
+            if (shouldSample)
+            {
+                // Sample all of the metrics daily once we're certain that all feeds
+                // and prices have been setup properly. In the past, we sampled at the beginning of the AlgorithmManager loop,
+                // which caused issues with the alignment of data in the statistics calculation phase.
+                SampleBenchmark(time.Date, Algorithm.Benchmark.Evaluate(time).SmartRounding());
+
+                // We need to sample the equity separately from the next if statement method since
+                // we need consistent sampling of the equity curve, rather than potentially having a sparse equity curve in rare cases,
+                // which is used to save on bandwidth costs when uploading interim algorithm results to the cloud.
+                SampleEquity(time.Date, _previousDailyPortfolioValue);
+
+                // The benchmark will have an invalid first value since we don't
+                // calculate the percentage change between open and close for the first point.
+                //
+                // The performance series will contain the cumulative percent gain from market open to close
+                // for the first data point. This means that the first point between benchmark and performance
+                // are incompatible with each other, and must be removed for accurate calculations.
+                var portfolioValuePercentChange = _previousDailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - _previousDailyPortfolioValue) * 100 / _previousDailyPortfolioValue, 10);
+                SamplePerformance(time.Date, portfolioValuePercentChange);
+
+                // We only want to update the previous portfolio value on a daily basis.
+                // As a result, we do it here instead of at the end of the loop so that we can calculate
+                // the previous daily sampling period's portfolio value.
+                _previousDailyPortfolioValue = currentPortfolioValue;
+            }
 
             if (time > _nextSample || forceProcess)
             {
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
 
-                //Sample the portfolio value over time for chart.
-                SampleEquity(time, Math.Round(Algorithm.Portfolio.TotalPortfolioValue, 4));
+                // Save ourselves some processing power if we've already sampled the equity series in this time step
+                if (!shouldSample)
+                {
+                    //Sample the portfolio value over time for chart.
+                    SampleEquity(time, Math.Round(currentPortfolioValue, 4));
+                }
 
                 //Also add the user samples / plots to the result handler tracking:
                 SampleRange(Algorithm.GetChartUpdates());
@@ -844,6 +880,8 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 RuntimeStatistic(pair.Key, pair.Value);
             }
+
+            _previousProcessTime = time;
         }
     }
 }

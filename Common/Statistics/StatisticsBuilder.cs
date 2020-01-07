@@ -83,7 +83,6 @@ namespace QuantConnect.Statistics
             decimal startingCapital)
         {
             var periodEquity = new SortedDictionary<DateTime, decimal>(equity.Where(x => x.Key.Date >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
-
             // No portfolio equity for the period means that there is no performance to be computed
             if (periodEquity.IsNullOrEmpty())
             {
@@ -96,18 +95,63 @@ namespace QuantConnect.Statistics
             var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
             var performance = ChartPointToDictionary(pointsPerformance, fromDate, toDate);
 
-            // we need to have the same dates in the performance and benchmark dictionaries,
-            // so we add missing dates with zero value
-            var missingPerformanceDates = benchmark.Keys.Where(x => !performance.ContainsKey(x));
-            foreach (var date in missingPerformanceDates)
+            var missingDays = performance.Keys.Except(benchmark.Keys).ToList();
+
+            // Most likely there will be no need to insert zeroes to the performance or benchmark since we sample both
+            // performance and benchmark at the same time step, and at daily resolution. In addition,
+            // if the benchmark contains missing values, it will automatically be padded with zeroes
+            // to account for the missing data.
+            // However, sometimes when calculating rolling statistics, we are provided a performance and benchmark
+            // series with the same length. When that is the case, let's truncate the performance series to contain
+            // one less value than the benchmark at the earliest date possible.
+            // If we do have a misaligned series, let's pad the values with zeroes at the missing time step, though this should never happen.
+            if (performance.Count == benchmark.Count && missingDays.Count == 0)
             {
-                performance.Add(date, 0m);
+                performance.Remove(performance.Keys.FirstOrDefault());
+            }
+            // Benchmark will contain one more value than performance under normal circumstances
+            else if (benchmark.Count - performance.Count != 1)
+            {
+                // Should never happen, but in case we have a misaligned series, let the user know.
+                Log.Error($"StatisticsBuilder.GetAlgorithmPerformance(): Benchmark and performance series has {missingDays.Count} misaligned keys. Padding with zeroes, statistics calculation may be incorrect.");
+                foreach (var missingDay in missingDays)
+                {
+                    if (!performance.ContainsKey(missingDay))
+                    {
+                        performance[missingDay] = 0;
+                    }
+                    else if (!benchmark.ContainsKey(missingDay))
+                    {
+                        benchmark[missingDay] = 0;
+                    }
+                }
             }
 
-            var listPerformance = new List<double>();
-            performance.Values.ToList().ForEach(i => listPerformance.Add((double)(i / 100)));
+            var listPerformance = performance.Values.Select(i => (double)(i / 100)).ToList();
+            var listBenchmark = CreateBenchmarkDifferences(benchmark, fromDate, toDate);
 
-            var listBenchmark = CreateBenchmarkDifferences(benchmark, periodEquity);
+            // Get rid of the first data point generated. The benchmark will have an
+            // invalid first value since we don't calculate the percentage change between open and close
+            // for the first point.
+            // The performance series will contain the cumulative percent gain from market open to close
+            // for the first data point. This means that the first point between benchmark and performance
+            // are incompatible with each other, and must be removed for accurate calculations.
+            // This does not apply whenever we're calculating rolling statistics since we can be supplied data
+            // that starts after the initial start date, which following our logic, means it is a valid data
+            // point and should *not* be removed.
+            if (listPerformance.Count > 0 && listBenchmark.Count > 0 && fromDate == equity.Keys.First())
+            {
+                listPerformance.RemoveAt(0);
+                listBenchmark.RemoveAt(0);
+            }
+
+            // Wipe the two series if we have no data for one of them. We can still calculate
+            // some metrics for this time step, so let's do that instead of returning an empty value.
+            if (listPerformance.Count == 0 || listBenchmark.Count == 0)
+            {
+                listPerformance.Clear();
+                listBenchmark.Clear();
+            }
 
             EnsureSameLength(listPerformance, listBenchmark);
 
@@ -202,7 +246,6 @@ namespace QuantConnect.Statistics
             internal DateTime EndDate { get; set; }
         }
 
-        // 
         /// <summary>
         /// Gets a list of date ranges for the requested monthly period
         /// </summary>
@@ -268,9 +311,10 @@ namespace QuantConnect.Statistics
         /// Creates a list of benchmark differences for the period
         /// </summary>
         /// <param name="benchmark">The benchmark values</param>
-        /// <param name="equity">The equity values</param>
+        /// <param name="fromDate">The starting date to start at for benchmark data</param>
+        /// <param name="toDate">The end date to stop at for benchmark data</param>
         /// <returns>The list of benchmark differences</returns>
-        private static List<double> CreateBenchmarkDifferences(SortedDictionary<DateTime, decimal> benchmark, SortedDictionary<DateTime, decimal> equity)
+        private static List<double> CreateBenchmarkDifferences(SortedDictionary<DateTime, decimal> benchmark, DateTime fromDate, DateTime toDate)
         {
             // to find the delta in benchmark for first day, we need to know the price at
             // the opening moment of the day, but since we cannot find this, we cannot find
@@ -280,21 +324,21 @@ namespace QuantConnect.Statistics
 
             var listBenchmark = new List<double>();
 
-            var minDate = equity.Keys.FirstOrDefault().AddDays(-1);
-            var maxDate = equity.Keys.LastOrDefault();
+            var resampledBenchmark = DailyResampleBenchmark(benchmark);
 
             // Get benchmark performance array for same period:
-            benchmark.Keys.ToList().ForEach(dt =>
+            resampledBenchmark.Keys.ToList().ForEach(dt =>
             {
-                if (dt >= minDate && dt <= maxDate)
+                if (dt >= fromDate && dt <= toDate)
                 {
                     decimal previous;
-                    if (benchmark.TryGetValue(dtPrevious, out previous) && previous != 0)
+                    var hasPrevious = resampledBenchmark.TryGetValue(dtPrevious, out previous);
+                    if (hasPrevious && previous != 0)
                     {
-                        var deltaBenchmark = (benchmark[dt] - previous) / previous;
+                        var deltaBenchmark = (resampledBenchmark[dt] - previous) / previous;
                         listBenchmark.Add((double)deltaBenchmark);
                     }
-                    else
+                    else if (hasPrevious && previous == 0)
                     {
                         listBenchmark.Add(0);
                     }
@@ -303,6 +347,22 @@ namespace QuantConnect.Statistics
             });
 
             return listBenchmark;
+        }
+
+        /// <summary>
+        /// Resample the benchmark of an unknown resolution to daily. This ensures that the "Daily Performance" series is aligned
+        /// with the benchmark series. Because we sample at a minimum of minute resolution for live mode, this is critical to ensure
+        /// that we get accurate results when calculating statistics
+        /// </summary>
+        /// <param name="benchmark">Original benchmark series of an unknown resolution</param>
+        /// <returns>New benchmark series resampled to daily resolution</returns>
+        private static SortedDictionary<DateTime, decimal> DailyResampleBenchmark(SortedDictionary<DateTime, decimal> benchmark)
+        {
+            var resampledBenchmark = benchmark.GroupBy(x => x.Key.Date)
+                .Select(kvp => kvp.Last())
+                .ToDictionary(kvp => kvp.Key.Date, kvp => kvp.Value);
+
+            return new SortedDictionary<DateTime, decimal>(resampledBenchmark);
         }
 
         /// <summary>

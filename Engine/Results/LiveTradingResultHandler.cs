@@ -59,6 +59,8 @@ namespace QuantConnect.Lean.Engine.Results
 
         //Log Message Store:
         private DateTime _nextSample;
+        private DateTime _previousProcessTime;
+        private decimal _previousDailyPortfolioValue;
         private IApi _api;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly bool _debugMode;
@@ -759,6 +761,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Algorithm = algorithm;
             StartingPortfolioValue = startingPortfolioValue;
+            _previousDailyPortfolioValue = StartingPortfolioValue;
 
             var types = new List<SecurityType>();
             foreach (var kvp in Algorithm.Securities)
@@ -1070,6 +1073,26 @@ namespace QuantConnect.Lean.Engine.Results
         public void ProcessSynchronousEvents(bool forceProcess = false)
         {
             var time = DateTime.UtcNow;
+            var currentPortfolioValue = Algorithm.Portfolio.TotalPortfolioValue;
+
+            //// Sample the benchmark in real-time once we're certain that all feeds
+            //// and prices have been setup properly. In the past, we sampled at the beginning of the loop,
+            //// which caused issues with the alignment of data in the statistics calculation phase.
+            SampleBenchmark(time, Algorithm.Benchmark.Evaluate(time).SmartRounding());
+
+            if (time.Date != _previousProcessTime.Date)
+            {
+                // The benchmark will have an invalid first value since we don't
+                // calculate the percentage change between open and close for the first point.
+                //
+                // The performance series will contain the cumulative percent gain from market open to close
+                // for the first data point. This means that the first point between benchmark and performance
+                // are incompatible with each other, and must be removed for accurate calculations.
+                var portfolioValuePercentChange = _previousDailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - _previousDailyPortfolioValue) * 100 / _previousDailyPortfolioValue, 10);
+                SamplePerformance(time.Date, portfolioValuePercentChange);
+
+                _previousDailyPortfolioValue = currentPortfolioValue;
+            }
 
             if (time > _nextSample || forceProcess)
             {
@@ -1129,7 +1152,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 //Sample the portfolio value over time for chart.
-                SampleEquity(time, Math.Round(Algorithm.Portfolio.TotalPortfolioValue, 4));
+                SampleEquity(time, Math.Round(currentPortfolioValue, 4));
 
                 //Also add the user samples / plots to the result handler tracking:
                 SampleRange(Algorithm.GetChartUpdates(true));
@@ -1173,6 +1196,8 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 RuntimeStatistic(pair.Key, pair.Value);
             }
+
+            _previousProcessTime = time;
 
             //Send all the notification messages but timeout within a second, or if this is a force process, wait till its done.
             var start = DateTime.UtcNow;
