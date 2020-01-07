@@ -31,7 +31,6 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
         self.numberOfSymbolsCoarse = 1000
         self.numberOfSymbolsFine = 500
         self.dollarVolumeBySymbol = {}
-        self.symbols = []
         self.lastMonth = -1
 
     def SelectCoarse(self, algorithm, coarse):
@@ -39,20 +38,22 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
         The stocks must have fundamental data
         The stock must have positive previous-day close price
         The stock must have positive volume on the previous trading day'''
-        if algorithm.Time.month == self.lastMonth: 
+        if algorithm.Time.month == self.lastMonth:
             return Universe.Unchanged
 
-        filtered = [x for x in coarse if x.HasFundamentalData and x.Volume > 0 and x.Price > 0]
-        sortedByDollarVolume = sorted(filtered, key = lambda x: x.DollarVolume, reverse=True)[:self.numberOfSymbolsCoarse]
+        sortedByDollarVolume = sorted([x for x in coarse if x.HasFundamentalData and x.Volume > 0 and x.Price > 0],
+                                     key = lambda x: x.DollarVolume, reverse=True)[:self.numberOfSymbolsCoarse]
 
-        self.symbols.clear()
-        self.dollarVolumeBySymbol.clear()
-        for x in sortedByDollarVolume:
-            self.symbols.append(x.Symbol)
-            self.dollarVolumeBySymbol[x.Symbol] = x.DollarVolume
+        self.dollarVolumeBySymbol = {x.Symbol:x.DollarVolume for x in sortedByDollarVolume}
+
+        if len(self.dollarVolumeBySymbol) == 0:
+            algorithm.Debug(f'''QC500UniverseSelectionModel.SelectCoarse: Since no security has met the QC500 criteria,
+the current universe is unchanged. A new selection will be attempted on the next trading day.
+CoarseFundamental Count: {len(list(coarse))}''')
+            return Universe.Unchanged
 
         # return the symbol objects our sorted collection
-        return self.symbols
+        return list(self.dollarVolumeBySymbol.keys())
 
     def SelectFine(self, algorithm, fine):
         '''Performs fine selection for the QC500 constituents
@@ -60,22 +61,26 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
         The stock must be traded on either the NYSE or NASDAQ
         At least half a year since its initial public offering
         The stock's market cap must be greater than 500 million'''
-        if algorithm.Time.month == self.lastMonth: 
-            return self.symbols
+
+        sortedBySector = sorted([x for x in fine if x.CompanyReference.CountryId == "USA"
+                                        and x.CompanyReference.PrimaryExchangeID in ["NYS","NAS"]
+                                        and (algorithm.Time - x.SecurityReference.IPODate).days > 180
+                                        and x.MarketCap > 5e8],
+                               key = lambda x: x.CompanyReference.IndustryTemplateCode)
+
+        count = len(sortedBySector)
+
+        if count == 0:
+            algorithm.Debug(f'''QC500UniverseSelectionModel.SelectFine: Since no security has met the QC500 criteria,
+the current universe is unchanged. A new selection will be attempted on the next trading day.
+FineFundamental Count: {len(list(fine))}''')
+            return Universe.Unchanged
+
+        # Update self.lastMonth after all QC500 criteria checks passed
         self.lastMonth = algorithm.Time.month
 
-        filteredFine = [x for x in fine if x.CompanyReference.CountryId == "USA"
-                                        and (x.CompanyReference.PrimaryExchangeID == "NYS" or x.CompanyReference.PrimaryExchangeID == "NAS")
-                                        and (algorithm.Time - x.SecurityReference.IPODate).days > 180
-                                        and x.EarningReports.BasicAverageShares.ThreeMonths * x.EarningReports.BasicEPS.TwelveMonths * x.ValuationRatios.PERatio > 5e8]
-
+        percent = self.numberOfSymbolsFine / count
         sortedByDollarVolume = []
-        sortedBySector = sorted(filteredFine, key = lambda x: x.CompanyReference.IndustryTemplateCode)
-
-        if len(sortedBySector) != 0:
-            percent = self.numberOfSymbolsFine/float(len(sortedBySector))
-        else:
-            percent = 1
 
         # select stocks with top dollar volume in every single sector
         for code, g in groupby(sortedBySector, lambda x: x.CompanyReference.IndustryTemplateCode):
@@ -84,5 +89,4 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
             sortedByDollarVolume.extend(y[:c])
 
         sortedByDollarVolume = sorted(sortedByDollarVolume, key = lambda x: self.dollarVolumeBySymbol[x.Symbol], reverse=True)
-        self.symbols = [x.Symbol for x in sortedByDollarVolume[:self.numberOfSymbolsFine]]
-        return self.symbols
+        return [x.Symbol for x in sortedByDollarVolume[:self.numberOfSymbolsFine]]
