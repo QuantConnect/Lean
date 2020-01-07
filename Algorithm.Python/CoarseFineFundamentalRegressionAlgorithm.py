@@ -56,13 +56,13 @@ class CoarseFineFundamentalRegressionAlgorithm(QCAlgorithm):
         return [ Symbol.Create(x, SecurityType.Equity, Market.USA) for x in tickers ]
 
 
-    # sort the data by P/E ratio and take the top 'NumberOfSymbolsFine'
+    # sort the data by market capitalization and take the top 'NumberOfSymbolsFine'
     def FineSelectionFunction(self, fine):
-        # sort descending by P/E ratio
-        sortedByPeRatio = sorted(fine, key=lambda x: x.ValuationRatios.PERatio, reverse=True)
+        # sort descending by market capitalization
+        sortedByMarketCap = sorted(fine, key=lambda x: x.MarketCap, reverse=True)
 
         # take the top entries from our sorted collection
-        return [ x.Symbol for x in sortedByPeRatio[:self.numberOfSymbolsFine] ]
+        return [ x.Symbol for x in sortedByMarketCap[:self.numberOfSymbolsFine] ]
 
     def OnData(self, data):
         # if we have no changes, do nothing
