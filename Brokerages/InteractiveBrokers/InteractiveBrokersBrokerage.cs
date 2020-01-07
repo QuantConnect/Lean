@@ -1287,7 +1287,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         public void ResetGatewayConnection()
         {
+            // clear all error/status flags
             _disconnected1100Fired = false;
+            _previouslyInResetTime = false;
+            _loginFailed = false;
+            _existingSessionDetected = false;
+            _securityDialogDetected = false;
+            _performingRelogin = false;
 
             // notify the BrokerageMessageHandler before the restart, so it can stop polling
             OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
