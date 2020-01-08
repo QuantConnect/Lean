@@ -1249,6 +1249,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // we've reconnected
                 OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
 
+                // do not restart after IBAutomater errors
+                CheckIbAutomaterErrors();
+
                 // With IB Gateway v960.2a in the cloud, we are not receiving order fill events after the nightly reset,
                 // so we execute the following sequence:
                 // disconnect, kill IB Gateway, restart IB Gateway, reconnect, restore data subscriptions
@@ -1366,6 +1369,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 if (_previouslyInResetTime)
                 {
+                    // do not restart after IBAutomater errors
+                    CheckIbAutomaterErrors();
+
                     // reset time finished and we're still disconnected, restart IB client
                     Log.Trace("InteractiveBrokersBrokerage.TryWaitForReconnect(): Reset time finished and still disconnected. Restarting...");
 
