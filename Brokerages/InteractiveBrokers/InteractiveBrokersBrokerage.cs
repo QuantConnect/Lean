@@ -684,6 +684,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     Log.Trace("InteractiveBrokersBrokerage.Connect(): Attempting to connect ({0}/{1}) ...", attempt, maxAttempts);
 
+                    // if we have errors from IBAutomater, exit immediately
+                    if (HasIbAutomaterErrors())
+                    {
+                        attempt = maxAttempts;
+                        CheckIbAutomaterErrors();
+                    }
+
                     // if message processing thread is still running, wait until it terminates
                     Disconnect();
 
@@ -3167,6 +3174,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private void OnIbAutomaterExited(object sender, ExitedEventArgs e)
         {
             Log.Trace($"InteractiveBrokersBrokerage.OnIbAutomaterExited(): Exit code: {e.ExitCode}");
+        }
+
+        private bool HasIbAutomaterErrors()
+        {
+            return _loginFailed || _existingSessionDetected || _securityDialogDetected;
         }
 
         private void CheckIbAutomaterErrors()
