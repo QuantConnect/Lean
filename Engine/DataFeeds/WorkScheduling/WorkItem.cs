@@ -73,7 +73,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
                 return 1;
             }
 
-            return obj.Weight.CompareTo(other.Weight);
+            return other.Weight.CompareTo(obj.Weight);
         }
     }
 }
