@@ -38,24 +38,18 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         {
             SetPortfolioConstruction(language);
 
-            var direction = InsightDirection.Down;
-            if (PortfolioBias != PortfolioBias.LongShort && (int)direction != (int)PortfolioBias)
-            {
-                direction = InsightDirection.Flat;
-            }
-
             // create two insights whose weights sums up to 2
             var insights = new[]
             {
-                GetInsight(Symbols.SPY, InsightDirection.Down, Algorithm.UtcTime, weight:1),
+                GetInsight(Symbols.SPY, InsightDirection.Up, Algorithm.UtcTime, weight:1),
                 GetInsight(Symbol.Create("IBM", SecurityType.Equity, Market.USA),
-                    InsightDirection.Down, Algorithm.UtcTime, weight:1)
+                    InsightDirection.Up, Algorithm.UtcTime, weight:1)
             };
 
             // they will each share, proportionally, the total portfolio value
             var amount = Algorithm.Portfolio.TotalPortfolioValue * (decimal)0.5;
             var expectedTargets = Algorithm.Securities.Where(pair => insights.Any(insight => pair.Key == insight.Symbol))
-                .Select(x => new PortfolioTarget(x.Key, (int)direction
+                .Select(x => new PortfolioTarget(x.Key, (int)InsightDirection.Up
                     * Math.Floor(amount * (1 - Algorithm.Settings.FreePortfolioValuePercentage)
                         / x.Value.Price)));
 

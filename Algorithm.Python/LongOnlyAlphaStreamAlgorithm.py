@@ -53,9 +53,6 @@ class LongOnlyAlphaStreamAlgorithm(QCAlgorithm):
         # 3. Required: Significant AUM Capacity
         self.SetCash(1000000)
 
-        # 4. Required: Benchmark to SPY
-        self.SetBenchmark("SPY")
-
         # Only SPY will be traded
         self.SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel.LongOnly())
         self.SetExecution(ImmediateExecutionModel())

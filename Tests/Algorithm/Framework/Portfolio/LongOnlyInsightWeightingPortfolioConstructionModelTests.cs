@@ -15,12 +15,8 @@
 
 using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Securities;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -28,8 +24,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     public class LongOnlyInsightWeightingPortfolioConstructionModelTests : InsightWeightingPortfolioConstructionModelTests
     {
         private const double _weight = 0.01;
-
-        //public override double? Weight => Algorithm.Securities.Count == 0 ? default(double) : 1d / Algorithm.Securities.Count;
 
         public override PortfolioBias PortfolioBias => PortfolioBias.Long;
 

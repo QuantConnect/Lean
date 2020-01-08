@@ -48,9 +48,6 @@ namespace QuantConnect.Algorithm.CSharp
             // 3. Required: Significant AUM Capacity
             SetCash(1000000);
 
-            // 4. Required: Benchmark to SPY
-            SetBenchmark("SPY");
-
             // Only SPY will be traded
             SetPortfolioConstruction(EqualWeightingPortfolioConstructionModel.LongOnly());
             SetExecution(new ImmediateExecutionModel());
