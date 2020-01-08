@@ -788,7 +788,7 @@ namespace QuantConnect.Lean.Engine.Results
                 // We need to sample the equity separately from the next if statement method since
                 // we need consistent sampling of the equity curve, rather than potentially having a sparse equity curve in rare cases,
                 // which is used to save on bandwidth costs when uploading interim algorithm results to the cloud.
-                SampleEquity(time.Date, _previousDailyPortfolioValue);
+                SampleEquity(time, Math.Round(currentPortfolioValue, 4));
 
                 // The benchmark will have an invalid first value since we don't
                 // calculate the percentage change between open and close for the first point.
@@ -810,12 +810,8 @@ namespace QuantConnect.Lean.Engine.Results
                 //Set next sample time: 4000 samples per backtest
                 _nextSample = time.Add(ResamplePeriod);
 
-                // Save ourselves some processing power if we've already sampled the equity series in this time step
-                if (!shouldSample)
-                {
-                    //Sample the portfolio value over time for chart.
-                    SampleEquity(time, Math.Round(currentPortfolioValue, 4));
-                }
+                //Sample the portfolio value over time for chart.
+                SampleEquity(time, Math.Round(currentPortfolioValue, 4));
 
                 //Also add the user samples / plots to the result handler tracking:
                 SampleRange(Algorithm.GetChartUpdates());

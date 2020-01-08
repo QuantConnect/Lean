@@ -92,7 +92,7 @@ namespace QuantConnect.Statistics
             var periodTrades = trades.Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1)).ToList();
             var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
 
-            var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
+            var benchmark = DailyResampleBenchmark(ChartPointToDictionary(pointsBenchmark, fromDate, toDate));
             var performance = ChartPointToDictionary(pointsPerformance, fromDate, toDate);
 
             var missingDays = performance.Keys.Except(benchmark.Keys).ToList();
@@ -110,21 +110,9 @@ namespace QuantConnect.Statistics
                 performance.Remove(performance.Keys.FirstOrDefault());
             }
             // Benchmark will contain one more value than performance under normal circumstances
-            else if (benchmark.Count - performance.Count != 1)
+            else if (benchmark.Count - performance.Count != 1 || missingDays.Count != 0)
             {
-                // Should never happen, but in case we have a misaligned series, let the user know.
-                Log.Error($"StatisticsBuilder.GetAlgorithmPerformance(): Benchmark and performance series has {missingDays.Count} misaligned keys. Padding with zeroes, statistics calculation may be incorrect.");
-                foreach (var missingDay in missingDays)
-                {
-                    if (!performance.ContainsKey(missingDay))
-                    {
-                        performance[missingDay] = 0;
-                    }
-                    else if (!benchmark.ContainsKey(missingDay))
-                    {
-                        benchmark[missingDay] = 0;
-                    }
-                }
+                throw new Exception($"Benchmark and performance series has {missingDays.Count} misaligned keys. Benchmark length: {benchmark.Count}, performance length: {performance.Count}");
             }
 
             var listPerformance = performance.Values.Select(i => (double)(i / 100)).ToList();
@@ -139,21 +127,11 @@ namespace QuantConnect.Statistics
             // This does not apply whenever we're calculating rolling statistics since we can be supplied data
             // that starts after the initial start date, which following our logic, means it is a valid data
             // point and should *not* be removed.
-            if (listPerformance.Count > 0 && listBenchmark.Count > 0 && fromDate == equity.Keys.First())
+            if (listPerformance.Count > 0 && listBenchmark.Count > 0 && fromDate == equity.Keys.First().Date)
             {
                 listPerformance.RemoveAt(0);
                 listBenchmark.RemoveAt(0);
             }
-
-            // Wipe the two series if we have no data for one of them. We can still calculate
-            // some metrics for this time step, so let's do that instead of returning an empty value.
-            if (listPerformance.Count == 0 || listBenchmark.Count == 0)
-            {
-                listPerformance.Clear();
-                listBenchmark.Clear();
-            }
-
-            EnsureSameLength(listPerformance, listBenchmark);
 
             var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
 
@@ -324,27 +302,23 @@ namespace QuantConnect.Statistics
 
             var listBenchmark = new List<double>();
 
-            var resampledBenchmark = DailyResampleBenchmark(benchmark);
-
             // Get benchmark performance array for same period:
-            resampledBenchmark.Keys.ToList().ForEach(dt =>
+            foreach (var dt in benchmark.Keys.Where(dt => dt >= fromDate && dt <= toDate))
             {
-                if (dt >= fromDate && dt <= toDate)
+                decimal previous;
+                var hasPrevious = benchmark.TryGetValue(dtPrevious, out previous);
+                if (hasPrevious && previous != 0)
                 {
-                    decimal previous;
-                    var hasPrevious = resampledBenchmark.TryGetValue(dtPrevious, out previous);
-                    if (hasPrevious && previous != 0)
-                    {
-                        var deltaBenchmark = (resampledBenchmark[dt] - previous) / previous;
-                        listBenchmark.Add((double)deltaBenchmark);
-                    }
-                    else if (hasPrevious && previous == 0)
-                    {
-                        listBenchmark.Add(0);
-                    }
-                    dtPrevious = dt;
+                    var deltaBenchmark = (benchmark[dt] - previous) / previous;
+                    listBenchmark.Add((double)deltaBenchmark);
                 }
-            });
+                else if (hasPrevious && previous == 0)
+                {
+                    listBenchmark.Add(0);
+                }
+
+                dtPrevious = dt;
+            }
 
             return listBenchmark;
         }
@@ -363,26 +337,6 @@ namespace QuantConnect.Statistics
                 .ToDictionary(kvp => kvp.Key.Date, kvp => kvp.Value);
 
             return new SortedDictionary<DateTime, decimal>(resampledBenchmark);
-        }
-
-        /// <summary>
-        /// Ensures the performance list and benchmark list have the same length, padding with trailing zeros
-        /// </summary>
-        /// <param name="listPerformance">The performance list</param>
-        /// <param name="listBenchmark">The benchmark list</param>
-        private static void EnsureSameLength(List<double> listPerformance, List<double> listBenchmark)
-        {
-            // THIS SHOULD NEVER HAPPEN --> But if it does, log it and fail silently.
-            while (listPerformance.Count < listBenchmark.Count)
-            {
-                listPerformance.Add(0);
-                Log.Trace("StatisticsBuilder.EnsureSameLength(): Padded Performance");
-            }
-            while (listPerformance.Count > listBenchmark.Count)
-            {
-                listBenchmark.Add(0);
-                Log.Trace("StatisticsBuilder.EnsureSameLength(): Padded Benchmark");
-            }
         }
     }
 }

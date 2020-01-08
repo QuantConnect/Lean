@@ -47,7 +47,6 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public class AlgorithmManager
     {
-        private DateTime _previousTime;
         private decimal _dailyPortfolioValue;
         private IAlgorithm _algorithm;
         private readonly object _lock;
@@ -132,7 +131,6 @@ namespace QuantConnect.Lean.Engine
             //Initialize Properties:
             AlgorithmId = job.AlgorithmId;
             _algorithm.Status = AlgorithmStatus.Running;
-            _previousTime = algorithm.StartDate.Date;
 
             //Create the method accessors to push generic types into algorithm: Find all OnData events:
 
@@ -195,7 +193,7 @@ namespace QuantConnect.Lean.Engine
                 DataPoints += timeSlice.DataPointCount;
 
                 // Stops the algorithm if our portfolio has no value
-                if (_dailyPortfolioValue <= 0)
+                if (backtestMode && _dailyPortfolioValue <= 0)
                 {
                     var logMessage = "AlgorithmManager.Run(): Portfolio value is less than or equal to zero, stopping algorithm.";
                     Log.Error(logMessage);
@@ -642,9 +640,6 @@ namespace QuantConnect.Lean.Engine
                 // poke the algorithm at the end of each time step
                 algorithm.OnEndOfTimeStep();
 
-                //Save the previous time for the sample calculations
-                _previousTime = time;
-
             } // End of ForEach feed.Bridge.GetConsumingEnumerable
 
             // stop timing the loops
@@ -833,7 +828,6 @@ namespace QuantConnect.Lean.Engine
                         if (!setStartTime)
                         {
                             setStartTime = true;
-                            _previousTime = timeSlice.Time;
                             algorithm.Debug("Algorithm warming up...");
                         }
                         if (DateTime.UtcNow > nextStatusTime)
@@ -863,11 +857,6 @@ namespace QuantConnect.Lean.Engine
 
             foreach (var timeSlice in synchronizer.StreamData(cancellationToken))
             {
-                if (!setStartTime)
-                {
-                    setStartTime = true;
-                    _previousTime = timeSlice.Time;
-                }
                 if (algorithm.LiveMode && algorithm.IsWarmingUp)
                 {
                     if (timeSlice.IsTimePulse)
