@@ -35,6 +35,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 {'0', "B"}, {'1', "I"}, {'2', "M"}, {'3', "N"}, {'4', "T"}, {'5', "U"}
             };
 
+        private readonly List<Symbol> _symbols = Enumerable.Range(0, 6000)
+            .Select(x => Symbol.Create($"{x:0000}", SecurityType.Equity, Market.USA))
+            .ToList();
+
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
         public void FiltersUniverseCorrectlyWithValidData(Language language)
@@ -80,8 +84,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 out coarseCountByDateTime,
                 out fineCountByDateTime); ;
 
-            // No debug messages
-            Assert.AreEqual(0, algorithm.DebugMessages.Count);
             // Universe Changed 4 times
             Assert.AreEqual(4, coarseCountByDateTime.Count);
             Assert.AreEqual(4, fineCountByDateTime.Count);
@@ -135,12 +137,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 out coarseCountByDateTime,
                 out fineCountByDateTime); ;
 
-            // 1 debug message
-            Assert.AreEqual(1, algorithm.DebugMessages.Count);
-            Assert.IsTrue(algorithm.DebugMessages.Single()
-                .Contains("QC500UniverseSelectionModel.SelectCoarse: Since no security has met the QC500 criteria"));
-            Assert.IsTrue(algorithm.DebugMessages.Single()
-                .Contains("CoarseFundamental Count: 6000"));
             // No Universe Changes
             Assert.AreEqual(0, coarseCountByDateTime.Count);
             Assert.AreEqual(0, fineCountByDateTime.Count);
@@ -174,12 +170,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 out coarseCountByDateTime,
                 out fineCountByDateTime); ;
 
-            // 1 debug message
-            Assert.AreEqual(1, algorithm.DebugMessages.Count);
-            Assert.IsTrue(algorithm.DebugMessages.Single()
-                .Contains("QC500UniverseSelectionModel.SelectFine: Since no security has met the QC500 criteria"));
-            Assert.IsTrue(algorithm.DebugMessages.Single()
-                .Contains("FineFundamental Count: 1000"));
             // Coarse Fundamental called every day.
             Assert.Greater(coarseCountByDateTime.Count, 4);
             Assert.IsTrue(coarseCountByDateTime.All(kvp => kvp.Value == 1000));
@@ -210,9 +200,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             {
                 var time = algorithm.UtcTime;
 
-                var coarse = Enumerable.Range(0, 6000).Select(x =>
-                    getCoarseFundamental(Symbol.Create($"{x:0000}", SecurityType.Equity, Market.USA), time));
-
+                var coarse = _symbols.Select(x => getCoarseFundamental(x, time));
+                
                 var selectSymbolsResult = SelectCoarse(algorithm, coarse);
 
                 if (!ReferenceEquals(selectSymbolsResult, Universe.Unchanged))

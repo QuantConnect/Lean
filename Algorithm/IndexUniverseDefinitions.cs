@@ -79,11 +79,10 @@ namespace QuantConnect.Algorithm
                             dollarVolumeBySymbol[x.Symbol] = x.DollarVolume;
                         }
 
+                        // If no security has met the QC500 criteria, the universe is unchanged.
+                        // A new selection will be attempted on the next trading day as lastMonth is not updated
                         if (dollarVolumeBySymbol.Count == 0)
                         {
-                            _algorithm.Debug($@"QC500UniverseSelectionModel.SelectCoarse: Since no security has met the QC500 criteria,
-the current universe is unchanged. A new selection will be attempted on the next trading day.
-CoarseFundamental Count: {coarse.Count()}");
                             return Universe.Unchanged;
                         }
 
@@ -108,11 +107,10 @@ CoarseFundamental Count: {coarse.Count()}");
 
                         var count = filteredFine.Count;
 
+                        // If no security has met the QC500 criteria, the universe is unchanged.
+                        // A new selection will be attempted on the next trading day as lastMonth is not updated
                         if (count == 0)
                         {
-                            _algorithm.Debug($@"QC500UniverseSelectionModel.SelectFine: Since no security has met the QC500 criteria,
-the current universe is unchanged.A new selection will be attempted on the next trading day.
-FineFundamental Count: {fine.Count()}");
                             return Universe.Unchanged;
                         }
 

@@ -46,10 +46,9 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
 
         self.dollarVolumeBySymbol = {x.Symbol:x.DollarVolume for x in sortedByDollarVolume}
 
+        # If no security has met the QC500 criteria, the universe is unchanged.
+        # A new selection will be attempted on the next trading day as self.lastMonth is not updated
         if len(self.dollarVolumeBySymbol) == 0:
-            algorithm.Debug(f'''QC500UniverseSelectionModel.SelectCoarse: Since no security has met the QC500 criteria,
-the current universe is unchanged. A new selection will be attempted on the next trading day.
-CoarseFundamental Count: {len(list(coarse))}''')
             return Universe.Unchanged
 
         # return the symbol objects our sorted collection
@@ -70,10 +69,9 @@ CoarseFundamental Count: {len(list(coarse))}''')
 
         count = len(sortedBySector)
 
+        # If no security has met the QC500 criteria, the universe is unchanged.
+        # A new selection will be attempted on the next trading day as self.lastMonth is not updated
         if count == 0:
-            algorithm.Debug(f'''QC500UniverseSelectionModel.SelectFine: Since no security has met the QC500 criteria,
-the current universe is unchanged. A new selection will be attempted on the next trading day.
-FineFundamental Count: {len(list(fine))}''')
             return Universe.Unchanged
 
         # Update self.lastMonth after all QC500 criteria checks passed
