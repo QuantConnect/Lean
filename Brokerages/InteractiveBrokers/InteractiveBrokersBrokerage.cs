@@ -75,7 +75,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private bool _loginFailed;
         private bool _existingSessionDetected;
         private bool _securityDialogDetected;
-        private bool _performingRelogin;
         private string _ibServerName;
         private Region _ibServerRegion = Region.America;
 
@@ -1293,7 +1292,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _loginFailed = false;
             _existingSessionDetected = false;
             _securityDialogDetected = false;
-            _performingRelogin = false;
 
             // notify the BrokerageMessageHandler before the restart, so it can stop polling
             OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
@@ -3136,8 +3134,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 _ibAutomaterInitializeEvent.Set();
             }
 
-            // an existing session was detected and IBAutomater clicked the "Exit Application" button
-            else if (e.Data.Contains("Existing session detected") && !_performingRelogin)
+            // an existing session was detected
+            else if (e.Data.Contains("Existing session detected"))
             {
                 _existingSessionDetected = true;
                 _ibAutomaterInitializeEvent.Set();
@@ -3156,18 +3154,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else if (e.Data.Contains("Configuration settings updated"))
             {
                 _ibAutomaterInitializeEvent.Set();
-            }
-
-            // the IB session was disconnected by the user logging in from another location
-            else if (e.Data.Contains("Re-login is required"))
-            {
-                _performingRelogin = true;
-            }
-
-            // the IB session was disconnected by the user logging in from another location
-            else if (e.Data.Contains("Starting application"))
-            {
-                _performingRelogin = false;
             }
         }
 
