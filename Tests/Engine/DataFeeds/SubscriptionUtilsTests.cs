@@ -54,49 +54,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 true, true, false);
         }
 
-        [TestCase(1)]
-        [TestCase(5)]
-        [TestCase(20)]
-        public void FirstLoopLimit(int firstLoopLimit)
-        {
-            var dataPoints = 10;
-            var enumerator = new TestDataEnumerator { MoveNextTrueCount = dataPoints };
-
-            var subscription = SubscriptionUtils.CreateAndScheduleWorker(
-                new SubscriptionRequest(
-                    false,
-                    null,
-                    _security,
-                    _config,
-                    DateTime.UtcNow,
-                    Time.EndOfTime
-                ),
-                enumerator,
-                firstLoopLimit: firstLoopLimit);
-
-            var count = 0;
-            var expectedValue = dataPoints - firstLoopLimit - 1;
-            expectedValue = expectedValue > 0 ? expectedValue : -1;
-            while (enumerator.MoveNextTrueCount != expectedValue)
-            {
-                if (count++ > 100)
-                {
-                    Assert.Fail("Timeout waiting for producer");
-                }
-                Thread.Sleep(1);
-            }
-            // producer should only have produced 'firstLoopLimit' data points, lets assert remaining to produce
-            Assert.AreEqual(expectedValue, enumerator.MoveNextTrueCount);
-
-            for (var j = 0; j < dataPoints; j++)
-            {
-                Assert.IsTrue(subscription.MoveNext());
-            }
-            Assert.IsFalse(subscription.MoveNext());
-            subscription.DisposeSafely();
-            Assert.IsTrue(enumerator.Disposed);
-        }
-
         [Test]
         public void SubscriptionIsDisposed()
         {
@@ -112,15 +69,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     DateTime.UtcNow,
                     Time.EndOfTime
                 ),
-                enumerator,
-                firstLoopLimit: 1);
+                enumerator);
 
             var count = 0;
-            while (enumerator.MoveNextTrueCount != 8)
+            while (enumerator.MoveNextTrueCount > 8)
             {
                 if (count++ > 100)
                 {
-                    Assert.Fail("Timeout waiting for producer");
+                    Assert.Fail($"Timeout waiting for producer. {enumerator.MoveNextTrueCount}");
                 }
                 Thread.Sleep(1);
             }
@@ -143,8 +99,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     DateTime.UtcNow,
                     Time.EndOfTime
                 ),
-                enumerator,
-                firstLoopLimit: 1);
+                enumerator);
 
             var count = 0;
             while (enumerator.MoveNextTrueCount != 9)
@@ -180,8 +135,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         DateTime.UtcNow,
                         Time.EndOfTime
                     ),
-                    enumerator,
-                    firstLoopLimit: dataPoints / 2);
+                    enumerator);
 
                 for (var j = 0; j < dataPoints; j++)
                 {

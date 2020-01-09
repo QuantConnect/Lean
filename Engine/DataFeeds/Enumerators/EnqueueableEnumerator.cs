@@ -19,7 +19,6 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -40,11 +39,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly int _timeout;
         private readonly object _lock = new object();
         private readonly BlockingCollection<T> _blockingCollection;
-
-        private int _count;
-        private int _lowerThreshold;
-        private Action _produce;
-        private Task _producer;
 
         /// <summary>
         /// Gets the current number of items held in the internal queue
@@ -86,7 +80,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _blockingCollection = new BlockingCollection<T>();
             _isBlocking = blocking;
             _timeout = blocking ? Timeout.Infinite : 0;
-            CancellationTokenSource = new CancellationTokenSource();
         }
 
         /// <summary>
@@ -119,16 +112,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         }
 
         /// <summary>
-        /// Cancellation token source used by the producer to wake up waiting consumer
-        /// and trigger a new worker if required.
-        /// </summary>
-        /// <remarks>This was added to fix a race condition where the worker could stop
-        /// after the consumer had already checked on him <see cref="TriggerProducer"/>,
-        /// leaving the consumer waiting for ever GH issue 3885. This cancellation token
-        /// works as a flag for this particular case waking up the consumer.</remarks>
-        public CancellationTokenSource CancellationTokenSource { get; set; }
-
-        /// <summary>
         /// Advances the enumerator to the next element of the collection.
         /// </summary>
         /// <returns>
@@ -137,37 +120,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
-            TriggerProducer();
-
-            try
+            T current;
+            if (!_blockingCollection.TryTake(out current, _timeout))
             {
-                T current;
-                if (!_blockingCollection.TryTake(out current, _timeout, CancellationTokenSource.Token))
+                _current = default(T);
+
+                // if the enumerator has blocking behavior and there is no more data, it has ended
+                if (_isBlocking)
                 {
-                    _current = default(T);
-
-                    // if the enumerator has blocking behavior and there is no more data, it has ended
-                    if (_isBlocking)
+                    lock (_lock)
                     {
-                        lock (_lock)
-                        {
-                            _end = true;
-                        }
+                        _end = true;
                     }
-
-                    return !_end;
                 }
 
-                _current = current;
+                return !_end;
             }
-            catch (OperationCanceledException)
-            {
-                _count = 0;
 
-                // lets wait for the producer to end
-                _producer.Wait();
-                return MoveNext();
-            }
+            _current = current;
 
             // even if we don't have data to return, we haven't technically
             // passed the end of the collection, so always return true until
@@ -219,48 +189,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 Stop();
                 if (_blockingCollection != null) _blockingCollection.Dispose();
                 _disposed = true;
-            }
-        }
-
-        /// <summary>
-        /// Sets the production <see cref="Action"/> and the lower threshold production trigger.
-        /// Will also start the first producer <see cref="Task"/>
-        /// </summary>
-        /// <param name="produce">The <see cref="Action"/> used to produce more items</param>
-        /// <param name="lowerThreshold">The threshold used to determine
-        /// if a new producer <see cref="Task"/> has to start</param>
-        public void SetProducer(Action produce, int lowerThreshold)
-        {
-            _producer = Task.Run(produce);
-            _produce = produce;
-            _lowerThreshold = lowerThreshold;
-        }
-
-        /// <summary>
-        /// If the <see cref="_produce"/> action was set <see cref="SetProducer"/>,
-        /// this method will generate a new task to execute the <see cref="_produce"/> action
-        /// when items are less than <see cref="_lowerThreshold"/>, the enumerator is not finished
-        /// <see cref="HasFinished"/> and previous <see cref="_producer"/> already finished running.
-        /// </summary>
-        private void TriggerProducer()
-        {
-            if (_produce != null
-                && !HasFinished
-                && _producer.IsCompleted
-                && _lowerThreshold > _count--)
-            {
-                if (CancellationTokenSource.IsCancellationRequested)
-                {
-                    // refresh the cancellation token source
-                    CancellationTokenSource = new CancellationTokenSource();
-                }
-
-                // we use local count for the outside if, for performance, and adjust here
-                _count = Count;
-                if (_lowerThreshold > _count)
-                {
-                    _producer = Task.Run(_produce);
-                }
             }
         }
     }
