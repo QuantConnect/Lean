@@ -636,7 +636,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Time = currentTime - Time.OneDay, // hard-coded coarse period of one day
                     });
                 }
-            }, lck, TimeSpan.FromSeconds(0.5), TimeSpan.FromMilliseconds(-1));
+            },
+            lck,
+            // we need to give the universe time to be added
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromMilliseconds(-1));
 
             var yieldedUniverseData = false;
             var feed = RunDataFeed(getNextTicksFunction: fdqh =>
@@ -661,7 +665,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.AddUniverse(coarse => coarse.Take(10).Select(x => x.Symbol));
 
             var receivedCoarseData = false;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(1.5), ts =>
             {
                 if (ts.UniverseData.Count > 0 &&
                     ts.UniverseData.First().Value.Data.First() is CoarseFundamental)
@@ -709,6 +713,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
             _algorithm.AddUniverse(coarse => coarse.Take(10).Select(x => x.Symbol));
+            _algorithm.OnEndOfTimeStep();
 
             var receivedCoarseData = false;
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), ts =>
@@ -762,7 +767,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         HasFundamentalData = true
                     });
                 }
-            }, lck, TimeSpan.FromSeconds(0.5), TimeSpan.FromMilliseconds(-1));
+            },
+            lck,
+            // we need to give the universe time to be added
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromMilliseconds(-1));
 
             var yieldedUniverseData = false;
             var feed = RunDataFeed(getNextTicksFunction: fdqh =>
@@ -797,7 +806,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 });
 
             var receivedFundamentalsData = false;
-            ConsumeBridge(feed, TimeSpan.FromSeconds(2), ts =>
+            ConsumeBridge(feed, TimeSpan.FromSeconds(1.5), ts =>
             {
                 if (ts.UniverseData.Count > 0 &&
                     ts.UniverseData.First().Value.Data.First() is Fundamentals)

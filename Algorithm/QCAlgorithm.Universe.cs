@@ -167,7 +167,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets a helper that provides pre-defined universe defintions, such as top dollar volume
+        /// Gets a helper that provides pre-defined universe definitions, such as top dollar volume
         /// </summary>
         public UniverseDefinitions Universe
         {
@@ -181,7 +181,9 @@ namespace QuantConnect.Algorithm
         /// <param name="universe">The universe to be added</param>
         public void AddUniverse(Universe universe)
         {
-            UniverseManager.Add(universe.Configuration.Symbol, universe);
+            // The universe will be added at the end of time step, same as the AddData user defined universes.
+            // This is required to be independent of the start and end date set during initialize
+            _pendingUniverseAdditions.Add(universe);
         }
 
         /// <summary>

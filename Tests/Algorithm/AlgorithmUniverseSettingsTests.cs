@@ -39,6 +39,8 @@ namespace QuantConnect.Tests.Algorithm
             var symbol = Symbols.SPY;
             algorithm.UniverseSettings.DataNormalizationMode = dataNormalizationMode;
             algorithm.AddUniverse(coarse => new[] { symbol });
+            // OnEndOfTimeStep will add all pending universe additions
+            algorithm.OnEndOfTimeStep();
 
             var changes = dataManager.UniverseSelection
                 .ApplyUniverseSelection(
@@ -67,6 +69,8 @@ namespace QuantConnect.Tests.Algorithm
             var symbol = spy.Symbol;
             algorithm.UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
             algorithm.AddUniverse(coarse => new[] { symbol });
+            // OnEndOfTimeStep will add all pending universe additions
+            algorithm.OnEndOfTimeStep();
 
             var changes = dataManager.UniverseSelection
                 .ApplyUniverseSelection(
