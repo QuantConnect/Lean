@@ -129,7 +129,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="insight">The insight to create a target for</param>
         /// <returns>True if the insight respects the portfolio bias</returns>
-        public bool RespectPortfolioBias(Insight insight)
+        protected bool RespectPortfolioBias(Insight insight)
         {
             return _portfolioBias == PortfolioBias.LongShort || (int) insight.Direction == (int) _portfolioBias;
         }
