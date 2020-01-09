@@ -3191,27 +3191,27 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             if (_loginFailed)
             {
-                throw new Exception(
-                    "InteractiveBrokersBrokerage.CheckIbAutomaterErrors(): " +
-                    "Login failed. " +
-                    "Please check the validity of your login credentials.");
+                HandleIbAutomaterError("Login failed. Please check the validity of your login credentials.");
             }
 
             if (_existingSessionDetected)
             {
-                throw new Exception(
-                    "InteractiveBrokersBrokerage.CheckIbAutomaterErrors(): " +
-                    "An existing session was detected and will not be automatically disconnected. " +
-                    "Please close the existing session manually.");
+                HandleIbAutomaterError("An existing session was detected and will not be automatically disconnected. " +
+                                       "Please close the existing session manually.");
             }
 
             if (_securityDialogDetected)
             {
-                throw new Exception(
-                    "InteractiveBrokersBrokerage.CheckIbAutomaterErrors(): " +
-                    "A security dialog was detected for Second Factor/Code Card Authentication. " +
-                    "Please opt out of the Secure Login System: Manage Account > Security > Secure Login System > SLS Opt Out");
+                HandleIbAutomaterError("A security dialog was detected for Second Factor/Code Card Authentication. " +
+                                       "Please opt out of the Secure Login System: Manage Account > Security > Secure Login System > SLS Opt Out");
             }
+        }
+
+        private void HandleIbAutomaterError(string message)
+        {
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomater", message));
+
+            throw new Exception($"InteractiveBrokersBrokerage.CheckIbAutomaterErrors(): {message}");
         }
 
         private void LoadIbServerInformation()
