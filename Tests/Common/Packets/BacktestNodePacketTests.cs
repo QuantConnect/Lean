@@ -72,6 +72,42 @@ namespace QuantConnect.Tests.Common.Packets
         }
 
         [Test]
+        public void JobDatesAreRespectedByAddUniverseAtInitialize()
+        {
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(CoarseFundamentalTop3Algorithm),
+                new Dictionary<string, string> {
+                    { "Total Trades", "3" },
+                    {"Average Win", "0%"},
+                    { "Average Loss", "0%"},
+                    { "Compounding Annual Return", "-40.620%"},
+                    { "Drawdown", "0.300%"},
+                    { "Expectancy", "0"},
+                    { "Net Profit", "-0.285%"},
+                    { "Sharpe Ratio", "-9.165"},
+                    { "Loss Rate", "0%"},
+                    { "Win Rate", "0%"},
+                    { "Profit-Loss Ratio", "0"},
+                    { "Alpha", "-0.221"},
+                    { "Beta", "-0.314"},
+                    { "Annual Standard Deviation", "0.026"},
+                    { "Annual Variance", "0.001"},
+                    { "Information Ratio", "-3.063"},
+                    { "Tracking Error", "0.098"},
+                    { "Treynor Ratio", "0.764"},
+                    { "Total Fees", "$3.00"} },
+                Language.CSharp,
+                AlgorithmStatus.Completed);
+
+            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+                parameter.Statistics,
+                parameter.AlphaStatistics,
+                parameter.Language,
+                parameter.ExpectedFinalStatus,
+                startDate: new DateTime(2014, 03, 24),
+                endDate: new DateTime(2014, 03, 25));
+        }
+
+        [Test]
         public void RoundTripNullJobDates()
         {
             var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(BacktestNodePacketTests)}.Pepe");
