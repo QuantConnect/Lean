@@ -3136,14 +3136,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // login failed
             if (e.Data.Contains("Login failed"))
             {
-                _stateManager.LoginFailed = true;
+                _stateManager.IbAutomaterErrorType = IbAutomaterErrorType.LoginFailed;
                 _ibAutomaterInitializeEvent.Set();
             }
 
             // an existing session was detected
             else if (e.Data.Contains("Existing session detected"))
             {
-                _stateManager.ExistingSessionDetected = true;
+                _stateManager.IbAutomaterErrorType = IbAutomaterErrorType.ExistingSessionDetected;
                 _ibAutomaterInitializeEvent.Set();
             }
 
@@ -3152,7 +3152,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 e.Data.Contains("Security Code Card Authentication") ||
                 e.Data.Contains("Enter security code"))
             {
-                _stateManager.SecurityDialogDetected = true;
+                _stateManager.IbAutomaterErrorType = IbAutomaterErrorType.SecurityDialogDetected;
                 _ibAutomaterInitializeEvent.Set();
             }
 
@@ -3177,29 +3177,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private void CheckIbAutomaterErrors()
         {
-            if (_stateManager.LoginFailed)
+            if (_stateManager.HasIbAutomaterErrors())
             {
-                HandleIbAutomaterError("Login failed. Please check the validity of your login credentials.");
+                var message = _stateManager.GetIbAutomaterErrorMessage();
+
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomater", message));
+
+                throw new Exception($"InteractiveBrokersBrokerage.CheckIbAutomaterErrors(): {message}");
             }
-
-            if (_stateManager.ExistingSessionDetected)
-            {
-                HandleIbAutomaterError("An existing session was detected and will not be automatically disconnected. " +
-                                       "Please close the existing session manually.");
-            }
-
-            if (_stateManager.SecurityDialogDetected)
-            {
-                HandleIbAutomaterError("A security dialog was detected for Second Factor/Code Card Authentication. " +
-                                       "Please opt out of the Secure Login System: Manage Account > Security > Secure Login System > SLS Opt Out");
-            }
-        }
-
-        private void HandleIbAutomaterError(string message)
-        {
-            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomater", message));
-
-            throw new Exception($"InteractiveBrokersBrokerage.CheckIbAutomaterErrors(): {message}");
         }
 
         private void LoadIbServerInformation()

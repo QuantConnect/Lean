@@ -13,8 +13,36 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
+
 namespace QuantConnect.Brokerages.InteractiveBrokers
 {
+    /// <summary>
+    /// The IBAutomater error type
+    /// </summary>
+    public enum IbAutomaterErrorType
+    {
+        /// <summary>
+        /// No error
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// The login failed
+        /// </summary>
+        LoginFailed,
+
+        /// <summary>
+        /// An existing session was detected
+        /// </summary>
+        ExistingSessionDetected,
+
+        /// <summary>
+        /// A security dialog (2FA/code card) was detected
+        /// </summary>
+        SecurityDialogDetected
+    }
+
     /// <summary>
     /// Holds the brokerage state information (connection status, error conditions, etc.)
     /// </summary>
@@ -22,9 +50,26 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
     {
         private volatile bool _disconnected1100Fired;
         private volatile bool _previouslyInResetTime;
-        private volatile bool _loginFailed;
-        private volatile bool _existingSessionDetected;
-        private volatile bool _securityDialogDetected;
+        private volatile IbAutomaterErrorType _ibAutomaterErrorType = IbAutomaterErrorType.None;
+
+        private readonly Dictionary<IbAutomaterErrorType, string> _ibAutomaterErrorMessages =
+            new Dictionary<IbAutomaterErrorType, string>
+            {
+                {
+                    IbAutomaterErrorType.LoginFailed,
+                    "Login failed. Please check the validity of your login credentials."
+                },
+                {
+                    IbAutomaterErrorType.ExistingSessionDetected,
+                    "An existing session was detected and will not be automatically disconnected. " +
+                    "Please close the existing session manually."
+                },
+                {
+                    IbAutomaterErrorType.SecurityDialogDetected,
+                    "A security dialog was detected for Second Factor/Code Card Authentication. " +
+                    "Please opt out of the Secure Login System: Manage Account > Security > Secure Login System > SLS Opt Out"
+                },
+            };
 
         /// <summary>
         /// Gets/sets whether the IB client has received a Disconnect (1100) message
@@ -59,50 +104,18 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         }
 
         /// <summary>
-        /// Gets/sets whether a login failure was detected by IBAutomater
+        /// Gets/sets whether an IBAutomater error occurred
         /// </summary>
-        public bool LoginFailed
+        public IbAutomaterErrorType IbAutomaterErrorType
         {
             get
             {
-                return _loginFailed;
+                return _ibAutomaterErrorType;
             }
 
             set
             {
-                _loginFailed = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets/sets whether an existing session was detected by IBAutomater
-        /// </summary>
-        public bool ExistingSessionDetected
-        {
-            get
-            {
-                return _existingSessionDetected;
-            }
-
-            set
-            {
-                _existingSessionDetected = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets/sets whether a security dialog (2FA/code card) was detected by IBAutomater
-        /// </summary>
-        public bool SecurityDialogDetected
-        {
-            get
-            {
-                return _securityDialogDetected;
-            }
-
-            set
-            {
-                _securityDialogDetected = value;
+                _ibAutomaterErrorType = value;
             }
         }
 
@@ -112,7 +125,17 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <returns>true if any IBAutomater error has occurred</returns>
         public bool HasIbAutomaterErrors()
         {
-            return _loginFailed || _existingSessionDetected || _securityDialogDetected;
+            return _ibAutomaterErrorType != IbAutomaterErrorType.None;
+        }
+
+        /// <summary>
+        /// Returns an error message for the given IBAutomater error
+        /// </summary>
+        /// <returns>The error message</returns>
+        public string GetIbAutomaterErrorMessage()
+        {
+            string errorMessage;
+            return _ibAutomaterErrorMessages.TryGetValue(_ibAutomaterErrorType, out errorMessage) ? errorMessage : string.Empty;
         }
 
         /// <summary>
@@ -122,9 +145,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             _disconnected1100Fired = false;
             _previouslyInResetTime = false;
-            _loginFailed = false;
-            _existingSessionDetected = false;
-            _securityDialogDetected = false;
+
+            // IBAutomater errors are not recoverable, so we don't reset them
         }
     }
 }
