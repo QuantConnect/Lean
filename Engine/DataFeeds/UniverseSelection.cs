@@ -381,7 +381,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
                         securityBenchmark.Security.Symbol,
-                        _algorithm.LiveMode ? Resolution.Minute : Resolution.Daily,
+                        _algorithm.LiveMode ? Resolution.Minute : Resolution.Hour,
                         isInternalFeed: true,
                         fillForward: false).First();
 

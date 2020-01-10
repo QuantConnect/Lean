@@ -29,6 +29,7 @@ using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.IO;
 using QuantConnect.Lean.Engine.Alphas;
+using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -53,6 +54,9 @@ namespace QuantConnect.Lean.Engine.Results
         private double _daysProcessedFrontier;
         private bool _processingFinalPacket;
         private readonly HashSet<string> _chartSeriesExceededDataPoints;
+
+        protected decimal _closingPortfolioValue;
+        protected DateTime _previousTime;
 
         //Processing Time:
         private DateTime _nextSample;
@@ -296,7 +300,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Run over all the data and break it into smaller packets to ensure they all arrive at the terminal
         /// </summary>
-        public IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, Dictionary<string,string> runtimeStatistics, decimal progress)
+        public IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, Dictionary<string, string> runtimeStatistics, decimal progress)
         {
             // break the charts into groups
             var splitPackets = new List<BacktestResultPacket>();
@@ -312,7 +316,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             // Send alpha run time statistics
-            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { AlphaRuntimeStatistics = AlphaRuntimeStatistics}, Algorithm.EndDate, Algorithm.StartDate, progress));
+            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { AlphaRuntimeStatistics = AlphaRuntimeStatistics }, Algorithm.EndDate, Algorithm.StartDate, progress));
 
             // Add the orders into the charting packet:
             splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { Orders = deltaOrders }, Algorithm.EndDate, Algorithm.StartDate, progress));
@@ -400,7 +404,7 @@ namespace QuantConnect.Lean.Engine.Results
                 //Create a result packet to send to the browser.
                 var result = new BacktestResultPacket(_job,
                     new BacktestResult(charts, orders, profitLoss, statisticsResults.Summary, runtime, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance)
-                        { AlphaRuntimeStatistics = AlphaRuntimeStatistics }, Algorithm.EndDate, Algorithm.StartDate)
+                    { AlphaRuntimeStatistics = AlphaRuntimeStatistics }, Algorithm.EndDate, Algorithm.StartDate)
                 {
                     ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds,
                     DateFinished = DateTime.Now,
@@ -431,6 +435,8 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Algorithm = algorithm;
             StartingPortfolioValue = startingPortfolioValue;
+            _previousTime = Algorithm.UtcTime;
+            _closingPortfolioValue = StartingPortfolioValue;
 
             //Get the resample period:
             var totalMinutes = (algorithm.EndDate - algorithm.StartDate).TotalMinutes;
@@ -671,7 +677,7 @@ namespace QuantConnect.Lean.Engine.Results
                                     //We already have this record, so just the new samples to the end:
                                     values.AddRange(series.Values);
                                 }
-                                else if(!_chartSeriesExceededDataPoints.Contains(chart.Name + series.Name))
+                                else if (!_chartSeriesExceededDataPoints.Contains(chart.Name + series.Name))
                                 {
                                     _chartSeriesExceededDataPoints.Add(chart.Name + series.Name);
                                     DebugMessage($"Exceeded maximum data points per series, chart update skipped. Chart Name {update.Name}. Series name {series.Name}. " +
@@ -761,6 +767,41 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Attempt to sample portfolio equity, benchmark, and daily performance
+        /// </summary>
+        /// <param name="time">Current time in the AlgorithmManager loop</param>
+        /// <param name="force">Force sampling of equity, benchmark, and performance to be </param>
+        public virtual void Sample(DateTime time, bool force = false)
+        {
+            var dayChanged = _previousTime.Date != time.Date;
+
+            if (dayChanged || force)
+            {
+                if (force)
+                {
+                    // For any forced sampling, we need to sample at the time we provide to this method.
+                    _previousTime = time;
+                }
+
+                var currentPortfolioValue = Algorithm.Portfolio.TotalPortfolioValue;
+                var portfolioPerformance = _closingPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - _closingPortfolioValue) * 100 / _closingPortfolioValue, 10);
+
+                SampleEquity(_previousTime, Algorithm.Portfolio.TotalPortfolioValue);
+                SampleBenchmark(_previousTime, Algorithm.Benchmark.Evaluate(_previousTime).SmartRounding());
+                SamplePerformance(_previousTime, portfolioPerformance);
+
+                // If the day changed, set the closing portfolio value. Otherwise, we would end up
+                // with skewed statistics if a processing event was forced.
+                if (dayChanged)
+                {
+                    _closingPortfolioValue = currentPortfolioValue;
+                }
+            }
+
+            _previousTime = time;
+        }
+
+        /// <summary>
         /// Process the synchronous result events, sampling and message reading.
         /// This method is triggered from the algorithm manager thread.
         /// </summary>
@@ -781,14 +822,6 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Also add the user samples / plots to the result handler tracking:
                 SampleRange(Algorithm.GetChartUpdates());
-
-                //Sample the asset pricing:
-                foreach (var kvp in Algorithm.Securities)
-                {
-                    var security = kvp.Value;
-
-                    SampleAssetPrices(security.Symbol, time, security.Price);
-                }
             }
 
             long endTime;

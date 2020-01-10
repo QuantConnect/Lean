@@ -93,23 +93,28 @@ namespace QuantConnect.Statistics
             var periodTrades = trades.Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1)).ToList();
             var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
 
-            var benchmark = ChartPointToDictionary(pointsBenchmark, fromDate, toDate);
-            var performance = ChartPointToDictionary(pointsPerformance, fromDate, toDate);
+            // In very rare circumstances, we might have multiple entries for a single day in backtesting.
+            // These multiple entries will all be located at the end of the `pointsBenchmark` and `pointsPerformance`
+            // collections, since we force sample at the end of the algorithm.
+            // For good measure and to put any alignment issues to rest, let's resample both collections
+            // to daily resolution just in case.
+            var benchmark = ResampleDaily(ChartPointToDictionary(pointsBenchmark, fromDate, toDate));
+            var performance = ResampleDaily(ChartPointToDictionary(pointsPerformance, fromDate, toDate));
 
-            // we need to have the same dates in the performance and benchmark dictionaries,
-            // so we add missing dates with zero value
-            var missingPerformanceDates = benchmark.Keys.Where(x => !performance.ContainsKey(x));
-            foreach (var date in missingPerformanceDates)
+            // Because the `CreateBenchmarkDifferences(...)` method omits the first value from the
+            // series, we have to also remove the first value from the performance series to re-align
+            // the two series.
+            if (benchmark.Count == performance.Count)
             {
-                performance.Add(date, 0m);
+                performance.Remove(performance.Keys.FirstOrDefault());
+            }
+            else
+            {
+                throw new Exception($"Benchmark and performance series has {Math.Abs(benchmark.Count - performance.Count)} misaligned values.");
             }
 
-            var listPerformance = new List<double>();
-            performance.Values.ToList().ForEach(i => listPerformance.Add((double)(i / 100)));
-
-            var listBenchmark = CreateBenchmarkDifferences(benchmark, periodEquity);
-
-            EnsureSameLength(listPerformance, listBenchmark);
+            var listPerformance = performance.Values.Select(x => (double)(x / 100)).ToList();
+            var listBenchmark = CreateDifferences(benchmark, fromDate, toDate);
 
             var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
 
@@ -202,7 +207,7 @@ namespace QuantConnect.Statistics
             internal DateTime EndDate { get; set; }
         }
 
-        // 
+        //
         /// <summary>
         /// Gets a list of date ranges for the requested monthly period
         /// </summary>
@@ -265,64 +270,45 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Creates a list of benchmark differences for the period
+        /// Creates a list of percentage change for the period
         /// </summary>
-        /// <param name="benchmark">The benchmark values</param>
-        /// <param name="equity">The equity values</param>
-        /// <returns>The list of benchmark differences</returns>
-        private static List<double> CreateBenchmarkDifferences(SortedDictionary<DateTime, decimal> benchmark, SortedDictionary<DateTime, decimal> equity)
+        /// <param name="points">The values to calculate percentage change for</param>
+        /// <param name="fromDate">Starting date (inclusive)</param>
+        /// <param name="toDate">Ending date (inclusive)</param>
+        /// <returns>The list of percentage change</returns>
+        private static List<double> CreateDifferences(SortedDictionary<DateTime, decimal> points, DateTime fromDate, DateTime toDate)
         {
-            // to find the delta in benchmark for first day, we need to know the price at
-            // the opening moment of the day, but since we cannot find this, we cannot find
-            // the first benchmark's delta, so we start looking for data in a inexistent day.
-            // If running a short backtest this will skew results, longer backtests will not be affected much
             var dtPrevious = new DateTime();
+            var listPercentage = new List<double>();
 
-            var listBenchmark = new List<double>();
-
-            var minDate = equity.Keys.FirstOrDefault().AddDays(-1);
-            var maxDate = equity.Keys.LastOrDefault();
-
-            // Get benchmark performance array for same period:
-            benchmark.Keys.ToList().ForEach(dt =>
+            // Get points performance array for the given period:
+            foreach (var dt in points.Keys.Where(dt => dt >= fromDate.Date && dt.Date <= toDate))
             {
-                if (dt >= minDate && dt <= maxDate)
+                decimal previous;
+                var hasPrevious = points.TryGetValue(dtPrevious, out previous);
+                if (hasPrevious && previous != 0)
                 {
-                    decimal previous;
-                    if (benchmark.TryGetValue(dtPrevious, out previous) && previous != 0)
-                    {
-                        var deltaBenchmark = (benchmark[dt] - previous) / previous;
-                        listBenchmark.Add((double)deltaBenchmark);
-                    }
-                    else
-                    {
-                        listBenchmark.Add(0);
-                    }
-                    dtPrevious = dt;
+                    var deltaPercentage = (points[dt] - previous) / previous;
+                    listPercentage.Add((double)deltaPercentage);
                 }
-            });
+                else if (hasPrevious)
+                {
+                    listPercentage.Add(0);
+                }
+                dtPrevious = dt;
+            }
 
-            return listBenchmark;
+            return listPercentage;
         }
 
-        /// <summary>
-        /// Ensures the performance list and benchmark list have the same length, padding with trailing zeros
-        /// </summary>
-        /// <param name="listPerformance">The performance list</param>
-        /// <param name="listBenchmark">The benchmark list</param>
-        private static void EnsureSameLength(List<double> listPerformance, List<double> listBenchmark)
+        private static SortedDictionary<DateTime, T> ResampleDaily<T>(SortedDictionary<DateTime, T> points)
         {
-            // THIS SHOULD NEVER HAPPEN --> But if it does, log it and fail silently.
-            while (listPerformance.Count < listBenchmark.Count)
-            {
-                listPerformance.Add(0);
-                Log.Trace("StatisticsBuilder.EnsureSameLength(): Padded Performance");
-            }
-            while (listPerformance.Count > listBenchmark.Count)
-            {
-                listBenchmark.Add(0);
-                Log.Trace("StatisticsBuilder.EnsureSameLength(): Padded Benchmark");
-            }
+            // GroupBy(...) is guaranteed to preserve the order the elements are in.
+            // See http://msdn.microsoft.com/en-us/library/bb534501 for more information.
+            return new SortedDictionary<DateTime, T>(
+                points.GroupBy(kvp => kvp.Key.Date)
+                    .Select(x => x.Last())
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
         }
     }
 }

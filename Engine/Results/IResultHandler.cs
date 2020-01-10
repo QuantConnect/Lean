@@ -131,24 +131,17 @@ namespace QuantConnect.Lean.Engine.Results
         void RuntimeError(string message, string stacktrace = "");
 
         /// <summary>
-        /// Add a sample to the chart specified by the chartName, and seriesName.
+        /// Method to attempt to update the <see cref="IResultHandler"/> with various performance metrics.
         /// </summary>
-        /// <param name="chartName">String chart name to place the sample.</param>
-        /// <param name="seriesName">Series name for the chart.</param>
-        /// <param name="seriesType">Series type for the chart.</param>
-        /// <param name="time">Time for the sample</param>
-        /// <param name="value">Value for the chart sample.</param>
-        /// <param name="unit">Unit for the sample chart</param>
-        /// <param name="seriesIndex">Index of the series we're sampling</param>
-        /// <remarks>Sample can be used to create new charts or sample equity - daily performance.</remarks>
-        void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$");
+        /// <param name="timeSlice">Time slice</param>
+        /// <param name="force">Forces a sampling event if true</param>
+        void Sample(DateTime time, bool force = false);
 
         /// <summary>
         /// Wrapper methond on sample to create the equity chart.
         /// </summary>
         /// <param name="time">Time of the sample.</param>
         /// <param name="value">Equity value at this moment in time.</param>
-        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
         void SampleEquity(DateTime time, decimal value);
 
         /// <summary>

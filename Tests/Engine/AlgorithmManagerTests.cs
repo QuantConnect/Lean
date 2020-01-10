@@ -192,6 +192,10 @@ namespace QuantConnect.Tests.Engine
             {
             }
 
+            public void Sample(DateTime time, bool force = false)
+            {
+            }
+
             public void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
             {
             }

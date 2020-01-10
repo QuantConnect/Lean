@@ -44,6 +44,12 @@ namespace QuantConnect.Tests
     /// </summary>
     public static class AlgorithmRunner
     {
+        /// <summary>
+        /// Dictionary used to store algorithm <see cref="BacktestingResultHandler"/> instances keyed by the algorithm's <see cref="Language"/>
+        /// </summary>
+        public static Dictionary<Language, Dictionary<string, BacktestingResultHandler>> AlgorithmResults = new Dictionary<Language, Dictionary<string, BacktestingResultHandler>>();
+
+
         public static AlgorithmManager RunLocalBacktest(
             string algorithm,
             Dictionary<string, string> expectedStatistics,
@@ -53,7 +59,8 @@ namespace QuantConnect.Tests
             DateTime? startDate = null,
             DateTime? endDate = null,
             string setupHandler = "RegressionSetupHandlerWrapper",
-            decimal? initialCash = null)
+            decimal? initialCash = null,
+            bool storeResult = false)
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
@@ -129,8 +136,20 @@ namespace QuantConnect.Tests
                         }
                     }).Wait();
 
-                    var backtestingResultHandler = (BacktestingResultHandler) algorithmHandlers.Results;
+                    var backtestingResultHandler = (BacktestingResultHandler)algorithmHandlers.Results;
                     statistics = backtestingResultHandler.FinalStatistics;
+
+                    if (storeResult)
+                    {
+                        Dictionary<string, BacktestingResultHandler> results;
+                        if (!AlgorithmResults.TryGetValue(language, out results))
+                        {
+                            results = new Dictionary<string, BacktestingResultHandler>();
+                            AlgorithmResults[language] = results;
+                        }
+
+                        results[algorithm] = backtestingResultHandler;
+                    }
 
                     var defaultAlphaHandler = (DefaultAlphaHandler) algorithmHandlers.Alphas;
                     alphaStatistics = defaultAlphaHandler.RuntimeStatistics;
