@@ -35,8 +35,8 @@ namespace QuantConnect.Tests.Common.Data
         public void SetUp()
         {
             _dailyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, TimeSpan.FromDays(1) } };
-            _weeklyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, CalendarType.Weekly } };
-            _monthlyFuncDictionary = new Dictionary<Language, dynamic> {{Language.CSharp, CalendarType.Monthly}};
+            _weeklyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, Calendar.Weekly } };
+            _monthlyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, Calendar.Monthly } };
 
             using (Py.GIL())
             {

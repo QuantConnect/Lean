@@ -17,16 +17,49 @@ using System;
 
 namespace QuantConnect.Data.Consolidators
 {
-    static public class CalendarType
+    static public class Calendar
     {
         /// <summary>
         /// Computes the start of week (previous Monday) of given date/time
         /// </summary>
-        public static Func<DateTime, CalendarInfo> Weekly => Calendar.Weekly;
+        public static Func<DateTime, CalendarInfo> Weekly
+        {
+            get
+            {
+                return dt =>
+                {
+                    var start = Expiry.EndOfWeek(dt).AddDays(-7);
+                    return new CalendarInfo(start, TimeSpan.FromDays(7));
+                };
+            }
+        }
 
         /// <summary>
         /// Computes the start of month (1st of the current month) of given date/time
         /// </summary>
-        public static Func<DateTime, CalendarInfo> Monthly => Calendar.Monthly;
+        public static Func<DateTime, CalendarInfo> Monthly
+        {
+            get
+            {
+                return dt =>
+                {
+                    var start = dt.AddDays(1 - dt.Day).Date;
+                    var end = Expiry.EndOfMonth(dt);
+                    return new CalendarInfo(start, end - start);
+                };
+            }
+        }
+    }
+
+    public struct CalendarInfo
+    {
+        public readonly DateTime Start;
+        public readonly TimeSpan Period;
+
+        public CalendarInfo(DateTime start, TimeSpan period)
+        {
+            Start = start;
+            Period = period;
+        }
     }
 }
