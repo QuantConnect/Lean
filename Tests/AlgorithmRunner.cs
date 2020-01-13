@@ -120,7 +120,7 @@ namespace QuantConnect.Tests
 
                             systemHandlers.LeanManager.Initialize(systemHandlers, algorithmHandlers, job, algorithmManager);
 
-                            engine.Run(job, algorithmManager, algorithmPath);
+                            engine.Run(job, algorithmManager, algorithmPath, new TestWorkerThread());
                             ordersLogFile = ((RegressionResultHandler)algorithmHandlers.Results).LogFilePath;
                         }
                         catch (Exception e)
@@ -236,6 +236,10 @@ namespace QuantConnect.Tests
                 }
                 return base.GetHistory(requests, sliceTimeZone);
             }
+        }
+
+        class TestWorkerThread : WorkerThread
+        {
         }
     }
 }
