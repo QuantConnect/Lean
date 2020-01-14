@@ -111,9 +111,6 @@ namespace QuantConnect.Lean.Engine.RealTime
             {
                 throw new ArgumentException(nameof(language));
             }
-
-            // add end of trading day events for each security
-            AddSecurityDependentEndOfDayEvents(Algorithm.Securities.Values, start, end, currentUtcTime);
         }
 
         /// <summary>
