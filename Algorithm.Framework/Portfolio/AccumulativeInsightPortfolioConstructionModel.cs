@@ -176,7 +176,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             _insightCollection.AddRange(insights.Where(ShouldCreateTargetForInsight));
 
             // Create flatten target for each security that was removed from the universe
-            foreach (var target in _removedSymbols.Select(symbol => new PortoflioTarget(symbol,0))
+            foreach (var target in _removedSymbols.Select(symbol => new PortoflioTarget(symbol,0)))
             {
                  yield return target;
             }            
