@@ -72,6 +72,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                     {
                         IPODate = time.AddDays(-200)
                     },
+                    CompanyProfile = new CompanyProfile
+                    {
+                        MarketCap = 500000001
+                    },
                     EarningReports = new EarningReports
                     {
                         BasicAverageShares = new BasicAverageShares
