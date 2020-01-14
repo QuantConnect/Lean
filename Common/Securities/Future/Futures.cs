@@ -45,6 +45,12 @@ namespace QuantConnect.Securities
             public const string SRWWheat = "ZW";
 
             /// <summary>
+            /// Default wheat contract is SRWWheat
+            /// </summary>
+            /// <returns>The SRW Wheat symbol</returns>
+            public const string Wheat = SRWWheat;
+
+            /// <summary>
             /// KC HRW Wheat Futures
             /// </summary>
             /// <returns>The symbol</returns>
