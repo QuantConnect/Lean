@@ -79,9 +79,10 @@ namespace QuantConnect.Lean.Engine
         /// Runs a single backtest/live job from the job queue
         /// </summary>
         /// <param name="job">The algorithm job to be processed</param>
-        /// <param name="manager"></param>
+        /// <param name="manager">The algorithm manager instance</param>
         /// <param name="assemblyPath">The path to the algorithm's assembly</param>
-        public void Run(AlgorithmNodePacket job, AlgorithmManager manager, string assemblyPath)
+        /// <param name="workerThread">The worker thread instance</param>
+        public void Run(AlgorithmNodePacket job, AlgorithmManager manager, string assemblyPath, WorkerThread workerThread)
         {
             var marketHoursDatabaseTask = Task.Run(() => StaticInitializations());
 
@@ -96,7 +97,6 @@ namespace QuantConnect.Lean.Engine
                 Thread threadResults = null;
                 Thread threadRealTime = null;
                 Thread threadAlphas = null;
-                WorkerThread workerThread = null;
 
                 //-> Initialize messaging system
                 SystemHandlers.Notify.SetAuthentication(job);
@@ -116,8 +116,6 @@ namespace QuantConnect.Lean.Engine
                     // since the algorithm constructor will use it
                     var marketHoursDatabase = marketHoursDatabaseTask.Result;
 
-                    // start worker thread
-                    workerThread = new WorkerThread();
                     AlgorithmHandlers.Setup.WorkerThread = workerThread;
 
                     // Save algorithm to cache, load algorithm instance:
