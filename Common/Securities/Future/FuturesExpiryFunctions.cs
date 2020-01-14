@@ -451,9 +451,26 @@ namespace QuantConnect.Securities.Future
                     return closestWednesday.Add(new TimeSpan(20, 0, 0));
                 })
             },
+            // Lumber and Pulp Group
+            // Random Length Lumber (LBS): https://www.cmegroup.com/trading/agricultural/lumber-and-pulp/random-length-lumber_contract_specifications.html
+            {Futures.LumberPulp.RandomLengthLumber, (time =>
+                {
+                    // The business day prior to the 16th calendar day of the contract month.
+                    var sixteenth = new DateTime(time.Year,time.Month,16);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(sixteenth, -1).Add(new TimeSpan(17, 5, 0));
+                }) 
+            },
             // Grains And OilSeeds Group
-            // Wheat (ZW): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/wheat_contract_specifications.html
-            {Futures.Grains.Wheat, (time =>
+            // Chicago SRW Wheat (ZW): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/wheat_contract_specifications.html
+            {Futures.Grains.SRWWheat, (time =>
+                {
+                    // The business day prior to the 15th calendar day of the contract month.
+                    var fifteenth = new DateTime(time.Year,time.Month,15);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1);
+                })
+            },
+            // HRW Wheat (KE): https://www.cmegroup.com/trading/agricultural/grain-and-oilseed/kc-wheat_contract_specifications.html
+            {Futures.Grains.HRWWheat, (time =>
                 {
                     // The business day prior to the 15th calendar day of the contract month.
                     var fifteenth = new DateTime(time.Year,time.Month,15);
@@ -1800,7 +1817,27 @@ namespace QuantConnect.Securities.Future
                     return FuturesExpiryUtilityFunctions.AddBusinessDays(firstDay,-3);
                 })
             },
-
+            // Brent Crude (B) : https://www.theice.com/products/219/Brent-Crude-Futures
+            {Futures.Energies.BrentCrude, (time =>
+                {
+                    //Trading shall cease at the end of the designated settlement period on the last Business Day of the second month
+                    //preceding the relevant contract month (e.g. the March contract month will expire on the last Business Day of January).
+                    //If the day on which trading is due to cease would be either: (i) the Business Day preceding Christmas Day, or
+                    //(ii) the Business Day preceding New Year’s Day, then trading shall cease on the next preceding Business Day
+                    var secondPrecedingMonth = time.AddMonths(-2);
+                    var nthLastBusinessDay = secondPrecedingMonth.Month == 12 ? 2 : 1;
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(secondPrecedingMonth, nthLastBusinessDay);
+                })
+            },
+            // 
+            {Futures.Energies.LowSulfurGasoil, (time =>
+                {
+                    //Trading shall cease at 12:00 hours London Time, 2 business days prior to the 14th calendar day of the delivery month.
+                    var fourteenthDay = new DateTime(time.Year,time.Month,14);
+                    var twelfthDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fourteenthDay, -2);
+                    return twelfthDay.Add(new TimeSpan(12,0,0));
+                })
+            },
             // Meats group
             // LiveCattle (LE): http://www.cmegroup.com/trading/agricultural/livestock/live-cattle_contract_specifications.html
             {Futures.Meats.LiveCattle, (time =>

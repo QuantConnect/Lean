@@ -510,6 +510,140 @@
       "saturday": [],
       "holidays": []
     },
+    "Future-usa-KE": {
+      "dataTimeZone": "UTC",
+      "exchangeTimeZone": "America/Chicago",
+      "sunday": [
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        },
+        {
+          "start": "19:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "07:45:00",
+          "state": "market"
+        },
+        {
+          "start": "08:30:00",
+          "end": "13:20:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
+    "Future-usa-LBS": {
+      "dataTimeZone": "UTC",
+      "exchangeTimeZone": "America/Chicago",
+      "monday": [
+        {
+          "start": "15:00:00",
+          "end": "19:05:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "15:00:00",
+          "end": "19:05:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "15:00:00",
+          "end": "19:05:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "15:00:00",
+          "end": "19:05:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "15:00:00",
+          "end": "19:05:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": []
+    },
     "Future-usa-ZC": {
       "dataTimeZone": "UTC",
       "exchangeTimeZone": "America/Chicago",
@@ -22897,6 +23031,140 @@
       ],
       "saturday": [],
       "holidays": []
+    },
+    "Future-usa-B": {
+      "dataTimeZone": "UTC",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "18:00:00",
+          "state": "market"
+        },
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "18:00:00",
+          "state": "market"
+        },
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "18:00:00",
+          "state": "market"
+        },
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "18:00:00",
+          "state": "market"
+        },
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "18:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": []
+    },
+    "Future-usa-G": {
+      "dataTimeZone": "UTC",
+      "exchangeTimeZone": "America/New_York",
+      "sunday": [
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "monday": [
+        {
+          "start": "00:00:00",
+          "end": "18:00:00",
+          "state": "market"
+        },
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "00:00:00",
+          "end": "18:00:00",
+          "state": "market"
+        },
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "00:00:00",
+          "end": "18:00:00",
+          "state": "market"
+        },
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "00:00:00",
+          "end": "18:00:00",
+          "state": "market"
+        },
+        {
+          "start": "20:00:00",
+          "end": "1.00:00:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "00:00:00",
+          "end": "18:00:00",
+          "state": "market"
+        }
+      ],
+      "saturday": []
     },
     "Option-usa-[*]": {
       "dataTimeZone": "America/New_York",

@@ -34,6 +34,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         private const string NineFifteenCentralTime = "14:15:00";
         private const string NineSixteenCentralTime = "14:16:00";
         private const string TwelvePMCentralTime = "17:00:00";
+        private const string TwelveFivePMCentralTime = "17:05:00";
         private const string TwelveTenCentralTime = "17:10:00";
         private const string OneThirtyPMCentralTime = "18:30:00";
         private const string OneFortyPMCentralTime = "18:40:00";
@@ -57,7 +58,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         }
 
         [TestCase(QuantConnect.Securities.Futures.Grains.BlackSeaCornFinanciallySettledPlatts)]
-        [TestCase(QuantConnect.Securities.Futures.Grains.Wheat)]
+        [TestCase(QuantConnect.Securities.Futures.Grains.SRWWheat)]
+        [TestCase(QuantConnect.Securities.Futures.Grains.HRWWheat)]
         [TestCase(QuantConnect.Securities.Futures.Grains.Corn)]
         [TestCase(QuantConnect.Securities.Futures.Grains.Soybeans)]
         [TestCase(QuantConnect.Securities.Futures.Grains.SoybeanMeal)]
@@ -191,6 +193,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Energies.WTIHoustonArgusVsWTITradeMonth, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energies.Gasoline, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energies.NaturalGas, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.BrentCrude, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Energies.LowSulfurGasoil, TwelveOclock)]
         public void EnergiesExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
@@ -266,6 +270,25 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Meats.LeanHogs, TwelveOclock)]
         [TestCase(QuantConnect.Securities.Futures.Meats.FeederCattle, Zero)]
         public void MeatsExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
+        {
+            Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
+            foreach (var date in _data[symbol])
+            {
+                //Arrange
+                var security = Symbol.CreateFuture(symbol, Market.USA, date.ContractMonth);
+                var func = FuturesExpiryFunctions.FuturesExpiryFunction(security.ID.Symbol);
+
+                //Act
+                var actual = func(security.ID.Date);
+                var expected = date.LastTrade + Parse.TimeSpan(dayTime);
+
+                //Assert
+                Assert.AreEqual(expected, actual, "Failed for symbol: " + symbol);
+            }
+        }
+
+        [TestCase(QuantConnect.Securities.Futures.LumberPulp.RandomLengthLumber, TwelveFivePMCentralTime)]
+        public void LumberPulpExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
             foreach (var date in _data[symbol])
