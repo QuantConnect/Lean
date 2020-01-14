@@ -44,6 +44,10 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
                 {
                     PERatio = 22.476871m
                 },
+                CompanyProfile = new CompanyProfile
+                {
+                    MarketCap = 119985488298
+                },
                 EarningReports = new EarningReports
                 {
                     BasicAverageShares = new BasicAverageShares

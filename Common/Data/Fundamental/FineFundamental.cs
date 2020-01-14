@@ -36,13 +36,13 @@ namespace QuantConnect.Data.Fundamental
         }
 
         /// <summary>
-        /// Market capitalization is the aggregate market value of a company represented in dollar amount.
+        /// Price * Total SharesOutstanding.
+        /// The most current market cap for example, would be the most recent closing price x the most recent reported shares outstanding.
+        /// For ADR share classes, market cap is price * (ordinary shares outstanding / adr ratio).
         /// </summary>
-        /// <remarks>
-        /// Returns zero if <see cref="BasicAverageShares"/> is null
-        /// </remarks>
         [JsonIgnore]
-        public decimal MarketCap => EarningReports?.BasicAverageShares?.ThreeMonths * Value ?? 0;
+        public long MarketCap => CompanyProfile?.MarketCap ?? 0;
+
 
         /// <summary>
         /// Creates the universe symbol used for fine fundamental data
