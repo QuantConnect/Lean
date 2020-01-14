@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class AccumulativeInsightPortfolioConstructionModel : PortfolioConstructionModel
     {
-        private List<Symbol> _removedSymbols = new List<Symbol>();
+        private Array<Symbol> _removedSymbols = new Array<Symbol>();
         private readonly InsightCollection _insightCollection = new InsightCollection();
         private DateTime? _nextExpiryTime;
         private readonly double _percent;
@@ -47,30 +47,31 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize a new instance of <see cref="AccumulativeInsightPortfolioConstructionModel"/>
         /// </summary>
-        /// <param name="percent">The amount of portfolio to allocate to a single insight</param>
+        /// <param name="percent">The percentage amount of the portfolio value to allocate 
+        /// to a single insight. The value of percent should be in the range [0,1]. 
+        /// The default value is 0.03.</param>
         public AccumulativeInsightPortfolioConstructionModel(double percent = 0.03)
         {
             _percent = Math.Abs(percent);
         }
-
        
         /// <summary>
         /// Method that will determine if the portfolio construction model should create a
         /// target for this insight
         /// </summary>
         /// <param name="insight">The insight to create a target for</param>
-        /// <returns>True if the portfolio should create a target for the insight</returns>
-        public virtual bool ShouldCreateTargetForInsight(Insight insight)
+        /// <returns>Determines if the portfolio construction model should create a target for this insight</returns>
+        protected virtual bool ShouldCreateTargetForInsight(Insight insight)
         {
             return true;
         }
 
         /// <summary>
-        /// Will determine the target percent for each insight
+        /// Determines the target percent for each insight
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        public Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
+        private Dictionary<Insight, double> DetermineTargetPercent(IEnumerable<Insight> activeInsights)
         {
             var result = new Dictionary<Insight, double>();
 
@@ -78,40 +79,43 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             {
                 if (usedInsight.ContainsKey(insight))
                 {
-                   continue;
+                    continue;
                 }
+
                 usedInsight[insight] = 1;
-                if (positionSizes.ContainsKey(insight.Symbol))
+
+                double targetPercent;
+                if (positionSizes.TryGetValue(insight.Symbol, out targetPercent))
                 {
-                   positionSizes[insight.Symbol] += _percent * (int)insight.Direction;
+                    targetPercent += _percent * (int)insight.Direction;
                 }
                 else
                 {
-                     positionSizes[insight.Symbol] = _percent * (int)insight.Direction;
+                    targetPercent = _percent * (int)insight.Direction;
                 }
 
-                if (insight.Direction == 0)
+                if (insight.Direction == InsightDirection.Flat)
                 {
                    // We received a Flat
 
                    // if adding or subtracting will push past 0, then make it 0
-                   if (Math.Abs(positionSizes[insight.Symbol]) < _percent)
+                   if (Math.Abs(targetPercent) < _percent)
                    {
-                      positionSizes[insight.Symbol] = 0;
+                        targetPercent = 0;
                    }
 
                    // otherwise, we flatten by percent
-                   if (positionSizes[insight.Symbol] > 0)
+                   if (targetPercent > 0)
                    {
-                        positionSizes[insight.Symbol] -= _percent;
+                        targetPercent -= _percent;
                    }
-                   if (positionSizes[insight.Symbol] < 0)
+                   if (targetPercent < 0)
                    {
-                      positionSizes[insight.Symbol] += _percent;
+                        targetPercent += _percent;
                    }
                 }
-            
-                result[insight] = positionSizes[insight.Symbol];
+                positionSizes[insight.Symbol] = targetPercent;
+                result[insight] = targetPercent;
             }
             return result;
         }
@@ -122,7 +126,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name ="activeInsights">The insights that are expiring and must be updated
         /// <returns>A target percent for each insight</returns>
-        public Dictionary<Insight, double> UpdateExpiredInsights(ICollection<Insight> activeInsights)
+        private Dictionary<Insight, double> UpdateExpiredInsights(IEnumberable<Insight> activeInsights)
         {
             var result = new Dictionary<Insight, double>();
         
@@ -132,17 +136,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 {
                     continue;
                 }
+                
                 expiredList[insight] = 1;
 
+                double targetPercent = positionSizes[insight.Symbol];
                 // if an expiring insight pushes it past 0, then flatten to 0
-                if ( (Math.Abs(positionSizes[insight.Symbol]) < _percent) && (insight.Direction != 0) )
+                if ( (Math.Abs(targetPercent) < _percent) && (insight.Direction != InsightDirection.Flat) )
                 {
-                    positionSizes[insight.Symbol] = 0;
+                    targetPercent = 0;
                 }
                 else
                 {
-                    positionSizes[insight.Symbol] -= _percent * (int)insight.Direction;
+                    targetPercent -= _percent * (int)insight.Direction;
                 }
+                positionSizes[insight.Symbol] = targetPercent;
                 result[insight] = positionSizes[insight.Symbol];
             }
         
@@ -157,25 +164,22 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
         public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
         {
-            var targets = new List<IPortfolioTarget>();
-
+            
             if (algorithm.UtcTime <= _nextExpiryTime &&
                 insights.Length == 0 &&
                 _removedSymbols == null)
             {
-                return targets;
+                yield break;
             }
 
             // Validate we should create a target for this insight
             _insightCollection.AddRange(insights.Where(ShouldCreateTargetForInsight));
 
             // Create flatten target for each security that was removed from the universe
-            if (_removedSymbols != null)
+            foreach (var target in _removedSymbols.Select(symbol => new PortoflioTarget(symbol,0))
             {
-                var universeDeselectionTargets = _removedSymbols.Select(symbol => new PortfolioTarget(symbol, 0));
-                targets.AddRange(universeDeselectionTargets);
-                _removedSymbols = null;
-            }
+                 yield return target;
+            }            
 
             // Get insight that haven't expired of each symbol that is still in the universe
             var activeInsights = _insightCollection.GetActiveInsights(algorithm.UtcTime);
@@ -195,7 +199,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 var target = PortfolioTarget.Percent(algorithm, insight.Symbol, percents[insight]);
                 if (target != null)
                 {
-                    targets.Add(target);
+                    yield return target;
                 }
                 else
                 {
@@ -206,14 +210,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // Get expired insights and create flatten targets for each symbol
             var expiredInsights = _insightCollection.RemoveExpiredInsights(algorithm.UtcTime);
 
-                        percents = UpdateExpiredInsights(expiredInsights);
+            percents = UpdateExpiredInsights(expiredInsights);
 
             foreach (var insight in percents.Keys)
             {
                 var target = PortfolioTarget.Percent(algorithm, insight.Symbol, percents[insight]);
                 if (target != null)
                 {
-                    targets.Add(target);
+                    yield return target;
                 }
                 else
                 {
@@ -223,7 +227,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             _nextExpiryTime = _insightCollection.GetNextExpiryTime();
 
-            return targets;
         }
 
         /// <summary>
@@ -234,8 +237,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
             // Get removed symbol and invalidate them in the insight collection
-            _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol).ToList();
-            _insightCollection.Clear(_removedSymbols.ToArray());
+            _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol);
+            _insightCollection.Clear(_removedSymbols);
         }
     }
 }
