@@ -562,7 +562,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Time for the sample</param>
         /// <param name="unit">Unit of the sample</param>
         /// <param name="value">Value for the chart sample.</param>
-        public void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
+        protected void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
         {
             // Sampling during warming up period skews statistics
             if (Algorithm.IsWarmingUp)
@@ -601,7 +601,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="time">Current backtest time.</param>
         /// <param name="value">Current equity value.</param>
-        public void SampleEquity(DateTime time, decimal value)
+        protected void SampleEquity(DateTime time, decimal value)
         {
             //Sample the Equity Value:
             Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value);
@@ -615,7 +615,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="time">Current backtest date.</param>
         /// <param name="value">Current daily performance value.</param>
-        public virtual void SamplePerformance(DateTime time, decimal value)
+        protected virtual void SamplePerformance(DateTime time, decimal value)
         {
             //Added a second chart to equity plot - daily perforamnce:
             Sample("Strategy Equity", "Daily Performance", 1, SeriesType.Bar, time, value, "%");
@@ -627,7 +627,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Current backtest date.</param>
         /// <param name="value">Current benchmark value.</param>
         /// <seealso cref="IResultHandler.Sample"/>
-        public void SampleBenchmark(DateTime time, decimal value)
+        protected void SampleBenchmark(DateTime time, decimal value)
         {
             Sample("Benchmark", "Benchmark", 0, SeriesType.Line, time, value);
         }
@@ -636,7 +636,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Add a range of samples from the users algorithms to the end of our current list.
         /// </summary>
         /// <param name="updates">Chart updates since the last request.</param>
-        public void SampleRange(List<Chart> updates)
+        protected void SampleRange(List<Chart> updates)
         {
             lock (ChartLock)
             {
@@ -731,17 +731,6 @@ namespace QuantConnect.Lean.Engine.Results
         {
             var statusPacket = new AlgorithmStatusPacket(_algorithmId, _projectId, status, message);
             MessagingHandler.Send(statusPacket);
-        }
-
-        /// <summary>
-        /// Sample the asset prices to generate plots.
-        /// </summary>
-        /// <param name="symbol">Symbol we're sampling.</param>
-        /// <param name="time">Time of sample</param>
-        /// <param name="value">Value of the asset price</param>
-        public void SampleAssetPrices(Symbol symbol, DateTime time, decimal value)
-        {
-            //NOP. Don't sample asset prices in console.
         }
 
         /// <summary>

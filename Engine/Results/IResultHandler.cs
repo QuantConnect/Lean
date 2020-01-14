@@ -133,48 +133,9 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Method to attempt to update the <see cref="IResultHandler"/> with various performance metrics.
         /// </summary>
-        /// <param name="timeSlice">Time slice</param>
+        /// <param name="time">Current time</param>
         /// <param name="force">Forces a sampling event if true</param>
         void Sample(DateTime time, bool force = false);
-
-        /// <summary>
-        /// Wrapper methond on sample to create the equity chart.
-        /// </summary>
-        /// <param name="time">Time of the sample.</param>
-        /// <param name="value">Equity value at this moment in time.</param>
-        void SampleEquity(DateTime time, decimal value);
-
-        /// <summary>
-        /// Sample the current daily performance directly with a time-value pair.
-        /// </summary>
-        /// <param name="time">Current backtest date.</param>
-        /// <param name="value">Current daily performance value.</param>
-        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
-        void SamplePerformance(DateTime time, decimal value);
-
-        /// <summary>
-        /// Sample the current benchmark performance directly with a time-value pair.
-        /// </summary>
-        /// <param name="time">Current backtest date.</param>
-        /// <param name="value">Current benchmark value.</param>
-        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
-        void SampleBenchmark(DateTime time, decimal value);
-
-        /// <summary>
-        /// Sample the asset prices to generate plots.
-        /// </summary>
-        /// <param name="symbol">Symbol we're sampling.</param>
-        /// <param name="time">Time of sample</param>
-        /// <param name="value">Value of the asset price</param>
-        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
-        void SampleAssetPrices(Symbol symbol, DateTime time, decimal value);
-
-        /// <summary>
-        /// Add a range of samples from the users algorithms to the end of our current list.
-        /// </summary>
-        /// <param name="samples">Chart updates since the last request.</param>
-        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
-        void SampleRange(List<Chart> samples);
 
         /// <summary>
         /// Set the algorithm of the result handler after its been initialized.

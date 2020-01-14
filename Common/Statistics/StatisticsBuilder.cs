@@ -207,7 +207,6 @@ namespace QuantConnect.Statistics
             internal DateTime EndDate { get; set; }
         }
 
-        //
         /// <summary>
         /// Gets a list of date ranges for the requested monthly period
         /// </summary>

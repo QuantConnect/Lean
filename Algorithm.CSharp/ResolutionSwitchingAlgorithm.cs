@@ -70,9 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (changes.RemovedSecurities.Count > 0)
             {
-                var spy = AddEquity("SPY", Resolution.Minute).Symbol;
-                MarketOrder(spy, 651);
-                Debug("Bought SPY again");
+                AddEquity("SPY", Resolution.Minute);
             }
         }
 

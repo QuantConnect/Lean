@@ -196,27 +196,27 @@ namespace QuantConnect.Tests.Engine
             {
             }
 
-            public void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
+            protected void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
             {
             }
 
-            public void SampleEquity(DateTime time, decimal value)
+            protected void SampleEquity(DateTime time, decimal value)
             {
             }
 
-            public void SamplePerformance(DateTime time, decimal value)
+            protected void SamplePerformance(DateTime time, decimal value)
             {
             }
 
-            public void SampleBenchmark(DateTime time, decimal value)
+            protected void SampleBenchmark(DateTime time, decimal value)
             {
             }
 
-            public void SampleAssetPrices(Symbol symbol, DateTime time, decimal value)
+            protected void SampleAssetPrices(Symbol symbol, DateTime time, decimal value)
             {
             }
 
-            public void SampleRange(List<Chart> samples)
+            protected void SampleRange(List<Chart> samples)
             {
             }
 
