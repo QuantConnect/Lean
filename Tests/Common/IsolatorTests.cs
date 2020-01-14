@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void WorksCorrectlyUsingWorker()
         {
-            using (var worker = new WorkerThread())
+            using (var worker = new TestWorkerThread())
             {
                 var isolator = new Isolator();
                 var executed = false;
@@ -51,7 +51,7 @@ namespace QuantConnect.Tests.Common
         [TestCase(Language.CSharp, false)]
         public void TimeOutWorkCorrectly(Language language, bool useWorker)
         {
-            var worker = useWorker ? new WorkerThread() : null;
+            var worker = useWorker ? new TestWorkerThread() : null;
             using (worker)
             {
                 var isolator = new Isolator();
@@ -91,6 +91,11 @@ namespace QuantConnect.Tests.Common
                     Assert.IsFalse(result);
                 }
             }
+        }
+
+        private class TestWorkerThread : WorkerThread
+        {
+
         }
     }
 }

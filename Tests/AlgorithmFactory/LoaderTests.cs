@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.AlgorithmFactory
         [SetUp]
         public void SetUp()
         {
-            _workerThread = new WorkerThread();
+            _workerThread = new TestWorkerThread();
         }
 
         [TearDown]
@@ -107,6 +107,11 @@ namespace QuantConnect.Tests.AlgorithmFactory
             Assert.IsTrue(one);
             Assert.IsTrue(two);
             Assert.AreNotEqual(algorithm1.ToString(), algorithm2.ToString());
+        }
+
+        private class TestWorkerThread : WorkerThread
+        {
+
         }
     }
 }
