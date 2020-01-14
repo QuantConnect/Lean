@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class AccumulativeInsightPortfolioConstructionModel : PortfolioConstructionModel
     {
-        private Array<Symbol> _removedSymbols = new Array<Symbol>();
+        private Symbol[] _removedSymbols = null;
         private readonly InsightCollection _insightCollection = new InsightCollection();
         private DateTime? _nextExpiryTime;
         private readonly double _percent;
@@ -126,7 +126,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name ="activeInsights">The insights that are expiring and must be updated
         /// <returns>A target percent for each insight</returns>
-        private Dictionary<Insight, double> UpdateExpiredInsights(IEnumberable<Insight> activeInsights)
+        private Dictionary<Insight, double> UpdateExpiredInsights(IEnumerable<Insight> activeInsights)
         {
             var result = new Dictionary<Insight, double>();
         
