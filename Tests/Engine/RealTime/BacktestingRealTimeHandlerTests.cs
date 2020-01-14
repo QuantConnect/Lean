@@ -15,14 +15,17 @@
 */
 
 using System;
+using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Engine.RealTime
@@ -56,17 +59,18 @@ namespace QuantConnect.Tests.Engine.RealTime
         [TestCase(Language.Python)]
         public void DoesNotAddOnEndOfDayEventsIfNotImplemented(Language language)
         {
+            Security security;
             IAlgorithm algorithm;
             if (language == Language.CSharp)
             {
                 algorithm = new AlgorithmStub();
-                (algorithm as QCAlgorithm).AddEquity("SPY");
+                security = (algorithm as QCAlgorithm).AddEquity("SPY");
             }
             else
             {
                 algorithm = new AlgorithmPythonWrapper("Test_CustomDataAlgorithm");
                 algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-                algorithm.AddSecurity(SecurityType.Equity,
+                security = algorithm.AddSecurity(SecurityType.Equity,
                     "SPY",
                     Resolution.Daily,
                     Market.USA,
@@ -81,6 +85,12 @@ namespace QuantConnect.Tests.Engine.RealTime
                 new TestResultHandler(),
                 null,
                 new TestTimeLimitManager());
+            // the generic OnEndOfDay()
+            Assert.AreEqual(1, realTimeHandler.GetScheduledEventsCount);
+
+            realTimeHandler.OnSecuritiesChanged(
+                new SecurityChanges(new[] { security }, Enumerable.Empty<Security>()));
+
             Assert.AreEqual(1, realTimeHandler.GetScheduledEventsCount);
         }
 
@@ -88,17 +98,18 @@ namespace QuantConnect.Tests.Engine.RealTime
         [TestCase(Language.Python)]
         public void AddsOnEndOfDayEventsIfImplemented(Language language)
         {
+            Security security;
             IAlgorithm algorithm;
             if (language == Language.CSharp)
             {
                 algorithm = new TestAlgorithm();
-                (algorithm as QCAlgorithm).AddEquity("SPY");
+                security = (algorithm as QCAlgorithm).AddEquity("SPY");
             }
             else
             {
                 algorithm = new AlgorithmPythonWrapper("OnEndOfDayRegressionAlgorithm");
                 algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(new MockDataFeed(), algorithm));
-                algorithm.AddSecurity(SecurityType.Equity,
+                security = algorithm.AddSecurity(SecurityType.Equity,
                     "SPY",
                     Resolution.Daily,
                     Market.USA,
@@ -113,6 +124,12 @@ namespace QuantConnect.Tests.Engine.RealTime
                 new TestResultHandler(),
                 null,
                 new TestTimeLimitManager());
+            // the generic OnEndOfDay()
+            Assert.AreEqual(1, realTimeHandler.GetScheduledEventsCount);
+
+            realTimeHandler.OnSecuritiesChanged(
+                new SecurityChanges(new []{ security }, Enumerable.Empty<Security>()));
+
             Assert.AreEqual(2, realTimeHandler.GetScheduledEventsCount);
         }
 
