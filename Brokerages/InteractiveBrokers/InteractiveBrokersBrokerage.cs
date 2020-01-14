@@ -72,10 +72,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private readonly IBAutomater.IBAutomater _ibAutomater;
         private readonly AutoResetEvent _ibAutomaterInitializeEvent = new AutoResetEvent(false);
-        private bool _loginFailed;
-        private bool _existingSessionDetected;
-        private bool _securityDialogDetected;
-        private bool _performingRelogin;
         private string _ibServerName;
         private Region _ibServerRegion = Region.America;
 
@@ -89,7 +85,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // next valid request id for queries
         private int _nextRequestId;
         private int _nextTickerId;
-        private volatile bool _disconnected1100Fired;
 
         private readonly int _port;
         private readonly string _account;
@@ -120,6 +115,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // holds account properties, cash balances and holdings for the account
         private readonly InteractiveBrokersAccountData _accountData = new InteractiveBrokersAccountData();
 
+        // holds brokerage state information (connection status, error conditions, etc.)
+        private readonly InteractiveBrokersStateManager _stateManager = new InteractiveBrokersStateManager();
+
         private readonly object _sync = new object();
 
         private readonly ConcurrentDictionary<string, ContractDetails> _contractDetails = new ConcurrentDictionary<string, ContractDetails>();
@@ -142,8 +140,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // IB requests made through the IB-API must be limited to a maximum of 50 messages/second
         private readonly RateGate _messagingRateLimiter = new RateGate(50, TimeSpan.FromSeconds(1));
 
-        // used for reconnection attempts
-        private bool _previouslyInResetTime;
         // used to limit logging
         private bool _isWithinScheduledServerResetTimesLastValue;
 
@@ -160,7 +156,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected => _client != null && _client.Connected && !_disconnected1100Fired;
+        public override bool IsConnected => _client != null && _client.Connected && !_stateManager.Disconnected1100Fired;
 
         /// <summary>
         /// Returns true if the connected user is a financial advisor or non-disclosed broker
@@ -599,7 +595,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (balances.Count == 0)
             {
-                Log.Trace($"InteractiveBrokersBrokerage.GetCashBalance(): no balances found, IsConnected: {IsConnected}, _disconnected1100Fired: {_disconnected1100Fired}");
+                Log.Trace($"InteractiveBrokersBrokerage.GetCashBalance(): no balances found, IsConnected: {IsConnected}, _disconnected1100Fired: {_stateManager.Disconnected1100Fired}");
             }
 
             return balances;
@@ -684,6 +680,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 try
                 {
                     Log.Trace("InteractiveBrokersBrokerage.Connect(): Attempting to connect ({0}/{1}) ...", attempt, maxAttempts);
+
+                    // if we have errors from IBAutomater, exit immediately
+                    if (_stateManager.HasIbAutomaterErrors())
+                    {
+                        attempt = maxAttempts;
+                        CheckIbAutomaterErrors();
+                    }
 
                     // if message processing thread is still running, wait until it terminates
                     Disconnect();
@@ -1223,9 +1226,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // code 1100 is a connection failure, we'll wait a minute before exploding gracefully
             if (errorCode == 1100)
             {
-                if (!_disconnected1100Fired)
+                if (!_stateManager.Disconnected1100Fired)
                 {
-                    _disconnected1100Fired = true;
+                    _stateManager.Disconnected1100Fired = true;
 
                     // begin the try wait logic
                     TryWaitForReconnect();
@@ -1242,6 +1245,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 // we've reconnected
                 OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
+
+                // do not restart after IBAutomater errors
+                CheckIbAutomaterErrors();
 
                 // With IB Gateway v960.2a in the cloud, we are not receiving order fill events after the nightly reset,
                 // so we execute the following sequence:
@@ -1287,7 +1293,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// </summary>
         public void ResetGatewayConnection()
         {
-            _disconnected1100Fired = false;
+            // clear all error/status flags
+            _stateManager.Reset();
 
             // notify the BrokerageMessageHandler before the restart, so it can stop polling
             OnMessage(BrokerageMessageEvent.Reconnected(string.Empty));
@@ -1344,7 +1351,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         {
             // IB has server reset schedule: https://www.interactivebrokers.com/en/?f=%2Fen%2Fsoftware%2FsystemStatus.php%3Fib_entity%3Dllc
 
-            if (!_disconnected1100Fired)
+            if (!_stateManager.Disconnected1100Fired)
             {
                 return;
             }
@@ -1353,8 +1360,11 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             if (!isResetTime)
             {
-                if (_previouslyInResetTime)
+                if (_stateManager.PreviouslyInResetTime)
                 {
+                    // do not restart after IBAutomater errors
+                    CheckIbAutomaterErrors();
+
                     // reset time finished and we're still disconnected, restart IB client
                     Log.Trace("InteractiveBrokersBrokerage.TryWaitForReconnect(): Reset time finished and still disconnected. Restarting...");
 
@@ -1376,7 +1386,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 Task.Delay(TimeSpan.FromMinutes(1)).ContinueWith(_ => TryWaitForReconnect());
             }
 
-            _previouslyInResetTime = isResetTime;
+            _stateManager.PreviouslyInResetTime = isResetTime;
         }
 
         /// <summary>
@@ -1416,7 +1426,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     if (_client != null)
                     {
-                        Log.Error("InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Not connected; update dropped, _client.Connected: {0}, _disconnected1100Fired: {1}", _client.Connected, _disconnected1100Fired);
+                        Log.Error($"InteractiveBrokersBrokerage.HandleOrderStatusUpdates(): Not connected; update dropped, _client.Connected: {_client.Connected}, _disconnected1100Fired: {_stateManager.Disconnected1100Fired}");
                     }
                     else
                     {
@@ -1502,7 +1512,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 {
                     if (_client != null)
                     {
-                        Log.Error("InteractiveBrokersBrokerage.HandleExecutionDetails(): Not connected; update dropped, _client.Connected: {0}, _disconnected1100Fired: {1}", _client.Connected, _disconnected1100Fired);
+                        Log.Error($"InteractiveBrokersBrokerage.HandleExecutionDetails(): Not connected; update dropped, _client.Connected: {_client.Connected}, _disconnected1100Fired: {_stateManager.Disconnected1100Fired}");
                     }
                     else
                     {
@@ -3126,14 +3136,14 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             // login failed
             if (e.Data.Contains("Login failed"))
             {
-                _loginFailed = true;
+                _stateManager.IbAutomaterErrorType = IbAutomaterErrorType.LoginFailed;
                 _ibAutomaterInitializeEvent.Set();
             }
 
-            // an existing session was detected and IBAutomater clicked the "Exit Application" button
-            else if (e.Data.Contains("Existing session detected") && !_performingRelogin)
+            // an existing session was detected
+            else if (e.Data.Contains("Existing session detected"))
             {
-                _existingSessionDetected = true;
+                _stateManager.IbAutomaterErrorType = IbAutomaterErrorType.ExistingSessionDetected;
                 _ibAutomaterInitializeEvent.Set();
             }
 
@@ -3142,7 +3152,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 e.Data.Contains("Security Code Card Authentication") ||
                 e.Data.Contains("Enter security code"))
             {
-                _securityDialogDetected = true;
+                _stateManager.IbAutomaterErrorType = IbAutomaterErrorType.SecurityDialogDetected;
                 _ibAutomaterInitializeEvent.Set();
             }
 
@@ -3150,18 +3160,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             else if (e.Data.Contains("Configuration settings updated"))
             {
                 _ibAutomaterInitializeEvent.Set();
-            }
-
-            // the IB session was disconnected by the user logging in from another location
-            else if (e.Data.Contains("Re-login is required"))
-            {
-                _performingRelogin = true;
-            }
-
-            // the IB session was disconnected by the user logging in from another location
-            else if (e.Data.Contains("Starting application"))
-            {
-                _performingRelogin = false;
             }
         }
 
@@ -3179,28 +3177,13 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
         private void CheckIbAutomaterErrors()
         {
-            if (_loginFailed)
+            if (_stateManager.HasIbAutomaterErrors())
             {
-                throw new Exception(
-                    "InteractiveBrokersBrokerage.CheckIbAutomaterErrors(): " +
-                    "Login failed. " +
-                    "Please check the validity of your login credentials.");
-            }
+                var message = _stateManager.GetIbAutomaterErrorMessage();
 
-            if (_existingSessionDetected)
-            {
-                throw new Exception(
-                    "InteractiveBrokersBrokerage.CheckIbAutomaterErrors(): " +
-                    "An existing session was detected and will not be automatically disconnected. " +
-                    "Please close the existing session manually.");
-            }
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomater", message));
 
-            if (_securityDialogDetected)
-            {
-                throw new Exception(
-                    "InteractiveBrokersBrokerage.CheckIbAutomaterErrors(): " +
-                    "A security dialog was detected for Second Factor/Code Card Authentication. " +
-                    "Please opt out of the Secure Login System: Manage Account > Security > Secure Login System > SLS Opt Out");
+                throw new Exception($"InteractiveBrokersBrokerage.CheckIbAutomaterErrors(): {message}");
             }
         }
 
