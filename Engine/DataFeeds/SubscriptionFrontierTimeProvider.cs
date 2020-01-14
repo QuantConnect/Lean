@@ -57,12 +57,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             long earlyBirdTicks = MaxDateTimeTicks;
             foreach (var subscription in _subscriptionManager.DataFeedSubscriptions)
             {
-                if (subscription.Current == null
-                    && !subscription.IsUniverseSelectionSubscription
-                    && subscription.UtcStartTime == _utcNow)
-                {
-                    // this is a data subscription we just added
+                // this if should just be 'subscription.Current == null' but its affected by GH issue 3914
+                if (// this is a data subscription we just added
                     // lets move it next to find the initial emit time
+                    subscription.Current == null
+                    && !subscription.IsUniverseSelectionSubscription
+                    && subscription.UtcStartTime == _utcNow
+                    ||
+                    // UserDefinedUniverse, through the AddData calls
+                    // will add new universe selection data points when is has too
+                    // so lets move it next to check if there is any
+                    subscription.Current == null
+                    && subscription.IsUniverseSelectionSubscription
+                    && subscription.UtcStartTime != _utcNow)
+                {
                     subscription.MoveNext();
                 }
 

@@ -158,6 +158,12 @@ namespace QuantConnect.Lean.Engine.Setup
                     // set the future chain provider
                     algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new BacktestingFutureChainProvider()));
 
+                    // set the object store
+                    algorithm.SetObjectStore(parameters.ObjectStore);
+
+                    // before we call initialize
+                    BaseSetupHandler.LoadBacktestJobAccountCurrency(algorithm, backtestJob);
+
                     var isolator = new Isolator();
                     isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5),
                         () =>
@@ -177,6 +183,9 @@ namespace QuantConnect.Lean.Engine.Setup
                     {
                         algorithm.SetEndDate(backtestJob.PeriodFinish.Value);
                     }
+
+                    // after we call initialize
+                    BaseSetupHandler.LoadBacktestJobCashAmount(algorithm, backtestJob);
 
                     //Finalize Initialization
                     algorithm.PostInitialize();

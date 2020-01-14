@@ -180,7 +180,7 @@ namespace QuantConnect.Lean.Engine.Setup
                     try
                     {
                         //Set the default brokerage model before initialize
-                        algorithm.SetBrokerageModel(_factory.BrokerageModel);
+                        algorithm.SetBrokerageModel(_factory.GetBrokerageModel(algorithm.Transactions));
 
                         //Margin calls are disabled by default in live mode
                         algorithm.Portfolio.MarginCallModel = MarginCallModel.Null;
@@ -203,6 +203,9 @@ namespace QuantConnect.Lean.Engine.Setup
 
                         // set the future chain provider
                         algorithm.SetFutureChainProvider(new CachingFutureChainProvider(new LiveFutureChainProvider()));
+
+                        // set the object store
+                        algorithm.SetObjectStore(parameters.ObjectStore);
 
                         // If we're going to receive market data from IB,
                         // set the default subscription limit to 100,

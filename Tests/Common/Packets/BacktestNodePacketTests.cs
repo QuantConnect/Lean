@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Tests.Common.Packets
@@ -71,6 +72,42 @@ namespace QuantConnect.Tests.Common.Packets
         }
 
         [Test]
+        public void JobDatesAreRespectedByAddUniverseAtInitialize()
+        {
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(CoarseFundamentalTop3Algorithm),
+                new Dictionary<string, string> {
+                    { "Total Trades", "3" },
+                    {"Average Win", "0%"},
+                    { "Average Loss", "0%"},
+                    { "Compounding Annual Return", "-40.620%"},
+                    { "Drawdown", "0.300%"},
+                    { "Expectancy", "0"},
+                    { "Net Profit", "-0.285%"},
+                    { "Sharpe Ratio", "-9.165"},
+                    { "Loss Rate", "0%"},
+                    { "Win Rate", "0%"},
+                    { "Profit-Loss Ratio", "0"},
+                    { "Alpha", "-0.221"},
+                    { "Beta", "-0.314"},
+                    { "Annual Standard Deviation", "0.026"},
+                    { "Annual Variance", "0.001"},
+                    { "Information Ratio", "-3.063"},
+                    { "Tracking Error", "0.098"},
+                    { "Treynor Ratio", "0.764"},
+                    { "Total Fees", "$3.00"} },
+                Language.CSharp,
+                AlgorithmStatus.Completed);
+
+            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+                parameter.Statistics,
+                parameter.AlphaStatistics,
+                parameter.Language,
+                parameter.ExpectedFinalStatus,
+                startDate: new DateTime(2014, 03, 24),
+                endDate: new DateTime(2014, 03, 25));
+        }
+
+        [Test]
         public void RoundTripNullJobDates()
         {
             var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(BacktestNodePacketTests)}.Pepe");
@@ -101,6 +138,126 @@ namespace QuantConnect.Tests.Common.Packets
 
             Assert.AreEqual(job.PeriodStart, job2.PeriodStart);
             Assert.AreEqual(job.PeriodFinish, job2.PeriodFinish);
+        }
+
+        [Test]
+        public void RoundTripWithInitialCashAmount()
+        {
+            var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(BacktestNodePacketTests)}.Pepe");
+            Assert.AreEqual(9m, job.CashAmount.Value.Amount);
+            Assert.AreEqual(Currencies.USD, job.CashAmount.Value.Currency);
+
+            var serialized = JsonConvert.SerializeObject(job);
+            var job2 = JsonConvert.DeserializeObject<BacktestNodePacket>(serialized);
+            Assert.AreEqual(job.CashAmount, job2.CashAmount);
+        }
+
+        [Test]
+        public void RoundTripWithNullInitialCashAmount()
+        {
+            var job = new BacktestNodePacket(1, 2, "3", null, $"{nameof(BacktestNodePacketTests)}.Pepe");
+            Assert.IsNull(job.CashAmount);
+
+            var serialized = JsonConvert.SerializeObject(job);
+            var job2 = JsonConvert.DeserializeObject<BacktestNodePacket>(serialized);
+            Assert.AreEqual(job.CashAmount, job2.CashAmount);
+        }
+
+        [Test]
+        public void InitialCashAmountIsRespected()
+        {
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(BasicTemplateDailyAlgorithm),
+                new Dictionary<string, string> {
+                    {"Total Trades", "1"},
+                    {"Average Win", "0%"},
+                    {"Average Loss", "0%"},
+                    {"Compounding Annual Return", "246.519%"},
+                    {"Drawdown", "1.100%"},
+                    {"Expectancy", "0"},
+                    {"Net Profit", "3.463%"},
+                    {"Sharpe Ratio", "6.033"},
+                    {"Loss Rate", "0%"},
+                    {"Win Rate", "0%"},
+                    {"Profit-Loss Ratio", "0"},
+                    {"Alpha", "0.012"},
+                    {"Beta", "0.992"},
+                    {"Annual Standard Deviation", "0.16"},
+                    {"Annual Variance", "0.026"},
+                    {"Information Ratio", "2.734"},
+                    {"Tracking Error", "0.002"},
+                    {"Treynor Ratio", "0.974"},
+                    {"Total Fees", "$32.59"} // 10x times more than original BasicTemplateDailyAlgorithm
+                },
+                Language.CSharp,
+                AlgorithmStatus.Completed);
+
+            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+                parameter.Statistics,
+                parameter.AlphaStatistics,
+                parameter.Language,
+                parameter.ExpectedFinalStatus,
+                initialCash: 1000000); // 1M vs 100K that is set in BasicTemplateDailyAlgorithm (10x)
+        }
+
+        [Test]
+        public void ClearsOtherCashAmounts()
+        {
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(nameof(TestInitialCashAmountAlgorithm),
+                new Dictionary<string, string> {
+                    {"Total Trades", "1"},
+                    {"Average Win", "0%"},
+                    {"Average Loss", "0%"},
+                    {"Compounding Annual Return", "244.737%"},
+                    {"Drawdown", "1.100%"},
+                    {"Expectancy", "0"},
+                    {"Net Profit", "3.463%"},
+                    {"Sharpe Ratio", "5.713"},
+                    {"Loss Rate", "0%"},
+                    {"Win Rate", "0%"},
+                    {"Profit-Loss Ratio", "0"},
+                    {"Alpha", "0.011"},
+                    {"Beta", "0.992"},
+                    {"Annual Standard Deviation", "0.152"},
+                    {"Annual Variance", "0.023"},
+                    {"Information Ratio", "2.606"},
+                    {"Tracking Error", "0.002"},
+                    {"Treynor Ratio", "0.876"},
+                    {"Total Fees", "$32.59"} // 10x times more than original BasicTemplateDailyAlgorithm
+                },
+                Language.CSharp,
+                AlgorithmStatus.Completed);
+
+            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+                parameter.Statistics,
+                parameter.AlphaStatistics,
+                parameter.Language,
+                parameter.ExpectedFinalStatus,
+                initialCash: 1000000, // 1M vs 100K that is set in BasicTemplateDailyAlgorithm (10x)
+                setupHandler: "TestInitialCashAmountSetupHandler");
+
+            Assert.AreEqual(0, TestInitialCashAmountSetupHandler.TestAlgorithm.Portfolio.CashBook["EUR"].Amount);
+            Assert.AreEqual(Currencies.USD, TestInitialCashAmountSetupHandler.TestAlgorithm.AccountCurrency);
+        }
+
+        internal class TestInitialCashAmountAlgorithm : BasicTemplateDailyAlgorithm
+        {
+            public override void Initialize()
+            {
+                SetAccountCurrency("EUR");
+                base.Initialize();
+                SetCash("EUR", 1000000);
+            }
+        }
+
+        internal class TestInitialCashAmountSetupHandler : AlgorithmRunner.RegressionSetupHandlerWrapper
+        {
+            public static TestInitialCashAmountAlgorithm TestAlgorithm { get; set; }
+
+            public override IAlgorithm CreateAlgorithmInstance(AlgorithmNodePacket algorithmNodePacket, string assemblyPath)
+            {
+                 Algorithm = TestAlgorithm = new TestInitialCashAmountAlgorithm();
+                return Algorithm;
+            }
         }
     }
 }

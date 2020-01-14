@@ -64,7 +64,7 @@ namespace QuantConnect.Logging
         /// <param name="text">The error text to log</param>
         public void Error(string text)
         {
-            var log = new LogEntry(text, DateTime.Now, LogType.Error);
+            var log = new LogEntry(text, DateTime.UtcNow, LogType.Error);
             _logs.Enqueue(log);
             OnLogEvent(log);
 
@@ -79,7 +79,7 @@ namespace QuantConnect.Logging
         /// <param name="text">The debug text to log</param>
         public void Debug(string text)
         {
-            var log = new LogEntry(text, DateTime.Now, LogType.Debug);
+            var log = new LogEntry(text, DateTime.UtcNow, LogType.Debug);
             _logs.Enqueue(log);
             OnLogEvent(log);
 
@@ -92,7 +92,7 @@ namespace QuantConnect.Logging
         /// <param name="text">The trace text to log</param>
         public void Trace(string text)
         {
-            var log = new LogEntry(text, DateTime.Now, LogType.Trace);
+            var log = new LogEntry(text, DateTime.UtcNow, LogType.Trace);
             _logs.Enqueue(log);
             OnLogEvent(log);
 

@@ -116,6 +116,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>bin\Release\QuantConnect.Lean.Engine.xml</DocumentationFile>
   </PropertyGroup>
   <Target Name="Print" BeforeTargets="Build">
     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
@@ -199,6 +200,7 @@
     <Compile Include="DataFeeds\LiveOptionChainProvider.cs" />
     <Compile Include="DataFeeds\NullDataFeed.cs" />
     <Compile Include="DataFeeds\PendingRemovalsManager.cs" />
+    <Compile Include="DataFeeds\WorkScheduling\WeightedWorkScheduler.cs" />
     <Compile Include="DataFeeds\RealTimeScheduleEventService.cs" />
     <Compile Include="DataFeeds\PredicateTimeProvider.cs" />
     <Compile Include="DataFeeds\SubscriptionFrontierTimeProvider.cs" />
@@ -257,6 +259,8 @@
     <Compile Include="DataFeeds\Transport\RestSubscriptionStreamReader.cs" />
     <Compile Include="DataFeeds\UniverseSelection.cs" />
     <Compile Include="DataFeeds\UpdateData.cs" />
+    <Compile Include="DataFeeds\WorkScheduling\WorkItem.cs" />
+    <Compile Include="DataFeeds\WorkScheduling\WorkQueue.cs" />
     <Compile Include="DataFeeds\ZipDataCacheProvider.cs" />
     <Compile Include="DataFeeds\ZipEntryNameSubscriptionDataSourceReader.cs" />
     <Compile Include="HistoricalData\SineHistoryProvider.cs" />
@@ -290,6 +294,7 @@
     <Compile Include="Alphas\DefaultAlphaHandler.cs" />
     <Compile Include="Alphas\IAlphaHandler.cs" />
     <Compile Include="Setup\SetupHandlerParameters.cs" />
+    <Compile Include="Storage\LocalObjectStore.cs" />
     <Compile Include="TransactionHandlers\BacktestingTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\BrokerageTransactionHandler.cs" />
     <Compile Include="TransactionHandlers\CancelPendingOrders.cs" />
@@ -368,6 +373,7 @@
     <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.CSharp.Analyzers.dll" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <PropertyGroup>

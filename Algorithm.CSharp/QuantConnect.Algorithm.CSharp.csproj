@@ -175,6 +175,7 @@
     <Compile Include="LeveragePrecedenceRegressionAlgorithm.cs" />
     <Compile Include="LiquidETFUniverseFrameworkAlgorithm.cs" />
     <Compile Include="MarginRemainingRegressionAlgorithm.cs" />
+    <Compile Include="ObjectStoreExampleAlgorithm.cs" />
     <Compile Include="TimeRulesDefaultTimeZoneRegressionAlgorithm.cs" />
     <Compile Include="SetHoldingsMultipleTargetsRegressionAlgorithm.cs" />
     <Compile Include="SetHoldingsMarketOnOpenRegressionAlgorithm.cs" />
@@ -189,6 +190,7 @@
     <Compile Include="OnEndOfDayRegressionAlgorithm.cs" />
     <Compile Include="TrainingInitializeRegressionAlgorithm.cs" />
     <Compile Include="TrainingExampleAlgorithm.cs" />
+    <Compile Include="UniverseSharingSubscriptionTradableRegressionAlgorithm.cs" />
     <Compile Include="UniverseUnchangedRegressionAlgorithm.cs" />
     <Compile Include="USTreasuryYieldCurveDataAlgorithm.cs" />
     <Compile Include="SECReportDataAlgorithm.cs" />

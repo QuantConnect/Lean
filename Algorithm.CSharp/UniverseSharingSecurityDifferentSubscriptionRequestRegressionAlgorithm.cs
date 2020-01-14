@@ -67,6 +67,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             _onDataCalls++;
 
+            if (_alreadyRemoved)
+            {
+                var config = SubscriptionManager
+                    .SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(_aig);
+                if (config.Any())
+                {
+                    throw new Exception($"Unexpected SubscriptionDataConfig: {config}");
+                }
+            }
+
             if (!_alreadyRemoved)
             {
                 _alreadyRemoved = true;
@@ -78,14 +89,6 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new Exception("Expecting to find a SubscriptionDataConfig for AIG");
                 }
                 RemoveSecurity(_aig);
-
-                config = SubscriptionManager
-                    .SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(_aig);
-                if (config.Any())
-                {
-                    throw new Exception($"Unexpected SubscriptionDataConfig: {config}");
-                }
             }
 
             var isExtendedMarketHours = SubscriptionManager

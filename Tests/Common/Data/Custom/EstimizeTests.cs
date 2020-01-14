@@ -103,6 +103,26 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.IsTrue(content.Contains("\"eps\":1.2"));
         }
 
+        [Test]
+        public void EstimizeConsensusReaderDoesNotThrow()
+        {
+            var data = "20100101 12:00:00,abcdef123456789deadbeef,Estimize,Revenue,100.00,100,100,50,2010,1,100";
+            var instance = new EstimizeConsensus();
+
+            var fakeConfig = new SubscriptionDataConfig(
+                typeof(EstimizeConsensus),
+                Symbol.Create("AAPL", SecurityType.Base, "USA"),
+                Resolution.Daily,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                false,
+                false,
+                false
+            );
+
+            Assert.DoesNotThrow(() => { instance.Reader(fakeConfig, data, DateTime.MinValue, false); });
+        }
+
         [Test, Ignore("Requires Estimize data")]
         public void EstimizeReleaseReaderTest()
         {
@@ -123,7 +143,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var data = new EstimizeRelease();
             var date = new DateTime(2019, 6, 10);
             var source = data.GetSource(config, date, false);
-            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false);
+            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false, data);
 
             var rows = factory.Read(source).ToList();
 
@@ -206,7 +226,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var data = new EstimizeEstimate();
             var date = new DateTime(2019, 6, 10);
             var source = data.GetSource(config, date, false);
-            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false);
+            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false, data);
 
             var rows = factory.Read(source).ToList();
 
@@ -234,7 +254,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var data = new EstimizeConsensus();
             var date = new DateTime(2019, 6, 10);
             var source = data.GetSource(config, date, false);
-            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false);
+            var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, false, data);
 
             var rows = factory.Read(source).ToList();
 

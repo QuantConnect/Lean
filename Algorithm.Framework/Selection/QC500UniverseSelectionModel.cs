@@ -66,9 +66,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 return Universe.Unchanged;
             }
 
-            // The stocks must have fundamental data
-            // The stock must have positive previous-day close price
-            // The stock must have positive volume on the previous trading day
             var sortedByDollarVolume =
                 (from x in coarse
                  where x.HasFundamentalData && x.Volume > 0 && x.Price > 0
@@ -76,10 +73,18 @@ namespace QuantConnect.Algorithm.Framework.Selection
                  select x).Take(_numberOfSymbolsCoarse).ToList();
 
             _dollarVolumeBySymbol.Clear();
-            foreach (var i in sortedByDollarVolume)
+            foreach (var x in sortedByDollarVolume)
             {
-                _dollarVolumeBySymbol[i.Symbol] = i.DollarVolume;
+                _dollarVolumeBySymbol[x.Symbol] = x.DollarVolume;
             }
+
+            // If no security has met the QC500 criteria, the universe is unchanged.
+            // A new selection will be attempted on the next trading day as _lastMonth is not updated
+            if (_dollarVolumeBySymbol.Count == 0)
+            {
+                return Universe.Unchanged;
+            }
+
             return _dollarVolumeBySymbol.Keys;
         }
 
@@ -92,26 +97,27 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         public override IEnumerable<Symbol> SelectFine(QCAlgorithm algorithm, IEnumerable<FineFundamental> fine)
         {
-            if (algorithm.Time.Month == _lastMonth)
-            {
-                return Universe.Unchanged;
-            }
-            _lastMonth = algorithm.Time.Month;
-
-            // The company's headquarter must in the U.S.
-            // The stock must be traded on either the NYSE or NASDAQ
-            // At least half a year since its initial public offering
-            // The stock's market cap must be greater than 500 million
             var filteredFine =
                 (from x in fine
                  where x.CompanyReference.CountryId == "USA" &&
                        (x.CompanyReference.PrimaryExchangeID == "NYS" || x.CompanyReference.PrimaryExchangeID == "NAS") &&
                        (algorithm.Time - x.SecurityReference.IPODate).Days > 180 &&
-                       x.EarningReports.BasicAverageShares.ThreeMonths *
-                       x.EarningReports.BasicEPS.TwelveMonths * x.ValuationRatios.PERatio > 500000000m
+                       x.MarketCap > 500000000m
                  select x).ToList();
 
-            var percent = _numberOfSymbolsFine / (double)filteredFine.Count;
+            var count = filteredFine.Count;
+
+            // If no security has met the QC500 criteria, the universe is unchanged.
+            // A new selection will be attempted on the next trading day as _lastMonth is not updated
+            if (count == 0)
+            {
+                return Universe.Unchanged;
+            }
+
+            // Update _lastMonth after all QC500 criteria checks passed
+            _lastMonth = algorithm.Time.Month;
+
+            var percent = _numberOfSymbolsFine / (double)count;
 
             // select stocks with top dollar volume in every single sector
             var topFineBySector =

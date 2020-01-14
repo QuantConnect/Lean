@@ -39,7 +39,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly MarketHoursDatabase _marketHoursDatabase;
         private readonly ITimeKeeper _timeKeeper;
         private readonly bool _liveMode;
-        private readonly IAlgorithm _algorithm;
         private readonly IRegisteredSecurityDataTypesProvider _registeredTypesProvider;
 
         /// There is no ConcurrentHashSet collection in .NET,
@@ -78,7 +77,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _marketHoursDatabase = marketHoursDatabase;
             _liveMode = liveMode;
             _registeredTypesProvider = registeredTypesProvider;
-            _algorithm = algorithm;
 
             // wire ourselves up to receive notifications when universes are added/removed
             algorithm.UniverseManager.CollectionChanged += (sender, args) =>
@@ -170,6 +168,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <returns>True if the subscription was created and added successfully, false otherwise</returns>
         public bool AddSubscription(SubscriptionRequest request)
         {
+            // guarantee the configuration is present in our config collection
+            // this is related to GH issue 3877: where we added a configuration which we also removed
+            _subscriptionManagerSubscriptions.TryAdd(request.Configuration, request.Configuration);
+
             Subscription subscription;
             if (DataFeedSubscriptions.TryGetValue(request.Configuration, out subscription))
             {

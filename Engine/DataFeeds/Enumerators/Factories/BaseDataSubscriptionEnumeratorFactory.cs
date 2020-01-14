@@ -79,7 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                         request.Configuration.MappedSymbol = GetMappedSymbol(request.Configuration, date);
                     }
                     var source = sourceFactory.GetSource(request.Configuration, date, _isLiveMode);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, request.Configuration, date, _isLiveMode);
+                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, request.Configuration, date, _isLiveMode, sourceFactory);
                     var entriesForDate = factory.Read(source);
                     foreach (var entry in entriesForDate)
                     {

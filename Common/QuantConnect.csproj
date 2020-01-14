@@ -52,6 +52,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <LangVersion>6</LangVersion>
     <CodeAnalysisRuleSet>..\QuantConnect.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>bin\Release\QuantConnect.Common.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -308,6 +309,7 @@
     <Compile Include="Indicators\IIndicatorWarmUpPeriodProvider.cs" />
     <Compile Include="Interfaces\IAccountCurrencyProvider.cs" />
     <Compile Include="Interfaces\IAlgorithmSubscriptionManager.cs" />
+    <Compile Include="Interfaces\IObjectStore.cs" />
     <Compile Include="Interfaces\IBrokerageCashSynchronizer.cs" />
     <Compile Include="Interfaces\IBusyCollection.cs" />
     <Compile Include="Interfaces\IDataProviderEvents.cs" />
@@ -320,6 +322,7 @@
     <Compile Include="Interfaces\ISubscriptionDataConfigProvider.cs" />
     <Compile Include="Interfaces\ISubscriptionDataConfigService.cs" />
     <Compile Include="Interfaces\ITimeKeeper.cs" />
+    <Compile Include="Interfaces\ObjectStoreErrorRaisedEventArgs.cs" />
     <Compile Include="IsolatorLimitResult.cs" />
     <Compile Include="IsolatorLimitResultProvider.cs" />
     <Compile Include="ITimeProvider.cs" />
@@ -744,6 +747,7 @@
     <Compile Include="Statistics\TradeStatistics.cs" />
     <Compile Include="Statistics\Statistics.cs" />
     <Compile Include="RealTimeSynchronizedTimer.cs" />
+    <Compile Include="Storage\ObjectStore.cs" />
     <Compile Include="StringExtensions.cs" />
     <Compile Include="Parse.cs" />
     <Compile Include="Symbol.cs" />

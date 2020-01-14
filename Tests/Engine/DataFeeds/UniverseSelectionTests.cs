@@ -41,6 +41,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.SetEndDate(Time.EndOfTime);
             algorithm.SetStartDate(DateTime.UtcNow.Subtract(TimeSpan.FromDays(10)));
             algorithm.AddUniverse(CoarseSelectionFunction, FineSelectionFunction);
+            // OnEndOfTimeStep will add all pending universe additions
+            algorithm.OnEndOfTimeStep();
             var universe = algorithm.UniverseManager.Values.First();
             var securityChanges = algorithm.DataManager.UniverseSelection.ApplyUniverseSelection(
                 universe,
@@ -82,6 +84,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.SetStartDate(2012, 3, 27);
             algorithm.SetEndDate(2012, 3, 30);
             algorithm.AddUniverse("my-custom-universe", dt => dt.Day < 30 ? new List<string> { "CPRT" } : Enumerable.Empty<string>());
+            // OnEndOfTimeStep will add all pending universe additions
+            algorithm.OnEndOfTimeStep();
             var universe = algorithm.UniverseManager.Values.First();
 
             var securityChanges = algorithm.DataManager.UniverseSelection.ApplyUniverseSelection(
@@ -128,6 +132,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 coarse => coarse.Select(c => c.Symbol),
                 fine => fine.Select(f => f.Symbol)
             );
+            // OnEndOfTimeStep will add all pending universe additions
+            algorithm.OnEndOfTimeStep();
 
             var universe = algorithm.UniverseManager.Values.First();
             var securityChanges = algorithm.DataManager.UniverseSelection.ApplyUniverseSelection(

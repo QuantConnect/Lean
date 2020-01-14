@@ -20,7 +20,6 @@ using System.Threading;
 using NodaTime;
 using QuantConnect.Brokerages.Alpaca.Markets;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
@@ -48,6 +47,7 @@ namespace QuantConnect.Brokerages.Alpaca
         private readonly RestClient _restClient;
         private readonly SockClient _sockClient;
         private readonly NatsClient _natsClient;
+        private readonly bool _handlesMarketData;
 
         /// <summary>
         /// This lock is used to sync 'PlaceOrder' and callback 'OnTradeUpdate'
@@ -79,9 +79,12 @@ namespace QuantConnect.Brokerages.Alpaca
         /// <param name="accountKeyId">The Alpaca api key id</param>
         /// <param name="secretKey">The api secret key</param>
         /// <param name="tradingMode">The Alpaca trading mode. paper/live</param>
-        public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountKeyId, string secretKey, string tradingMode)
+        /// <param name="handlesMarketData">true if market data subscriptions will be handled by Alpaca</param>
+        public AlpacaBrokerage(IOrderProvider orderProvider, ISecurityProvider securityProvider, string accountKeyId, string secretKey, string tradingMode, bool handlesMarketData)
             : base("Alpaca Brokerage")
         {
+            _handlesMarketData = handlesMarketData;
+
             var baseUrl = "api.alpaca.markets";
             if (tradingMode.Equals("paper")) baseUrl = "paper-" + baseUrl;
             baseUrl = "https://" + baseUrl;
@@ -121,7 +124,11 @@ namespace QuantConnect.Brokerages.Alpaca
             if (IsConnected) return;
 
             _sockClient.ConnectAsync().SynchronouslyAwaitTask();
-            _natsClient.Open();
+
+            if (_handlesMarketData)
+            {
+                _natsClient.Open();
+            }
 
             _isConnected = true;
 
@@ -208,7 +215,11 @@ namespace QuantConnect.Brokerages.Alpaca
             _connectionMonitorThread?.Join();
 
             _sockClient.DisconnectAsync().SynchronouslyAwaitTask();
-            _natsClient.Close();
+
+            if (_handlesMarketData)
+            {
+                _natsClient.Close();
+            }
 
             _isConnected = false;
         }

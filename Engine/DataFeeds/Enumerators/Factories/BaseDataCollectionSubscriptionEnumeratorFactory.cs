@@ -63,7 +63,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 foreach (var date in tradableDays)
                 {
                     var source = sourceFactory.GetSource(configuration, date, false);
-                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, configuration, date, false);
+                    var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, configuration, date, false, sourceFactory);
                     var coarseFundamentalForDate = factory.Read(source);
                     //  shift all date of emitting the file forward one day to model emitting coarse midnight the next day.
                     yield return new BaseDataCollection(date.AddDays(1), configuration.Symbol, coarseFundamentalForDate);

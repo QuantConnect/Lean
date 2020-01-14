@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Common.Data
     public class RenkoConsolidatorTests
     {
         [Test]
-        public void ClassicOututTypeIsRenkoBar()
+        public void ClassicOutputTypeIsRenkoBar()
         {
             var consolidator = new RenkoConsolidator(10, x => x.Value, x => 0);
             Assert.AreEqual(typeof(RenkoBar), consolidator.OutputType);

@@ -74,14 +74,14 @@ namespace QuantConnect.Algorithm.CSharp
             };
         }
 
-        // sort the data by P/E ratio and take the top 'NumberOfSymbolsFine'
+        // sort the data by market capitalization and take the top 'NumberOfSymbolsFine'
         public IEnumerable<Symbol> FineSelectionFunction(IEnumerable<FineFundamental> fine)
         {
-            // sort descending by P/E ratio
-            var sortedByPeRatio = fine.OrderByDescending(x => x.ValuationRatios.PERatio);
+            // sort descending by market capitalization
+            var sortedByMarketCap = fine.OrderByDescending(x => x.MarketCap);
 
             // take the top entries from our sorted collection
-            var topFine = sortedByPeRatio.Take(NumberOfSymbolsFine);
+            var topFine = sortedByMarketCap.Take(NumberOfSymbolsFine);
 
             // we need to return only the symbol objects
             return topFine.Select(x => x.Symbol);

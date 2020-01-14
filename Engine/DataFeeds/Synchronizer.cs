@@ -119,8 +119,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // check for cancellation
                 if (timeSlice == null || cancellationToken.IsCancellationRequested) break;
 
+                if (timeSlice.IsTimePulse && Algorithm.UtcTime == timeSlice.Time)
+                {
+                    previousWasTimePulse = timeSlice.IsTimePulse;
+                    // skip time pulse when algorithms already at that time
+                    continue;
+                }
+
                 // SubscriptionFrontierTimeProvider will return twice the same time if there are no more subscriptions or if Subscription.Current is null
-                if (timeSlice.Time != previousEmitTime || previousWasTimePulse)
+                if (timeSlice.Time != previousEmitTime || previousWasTimePulse || timeSlice.UniverseData.Count != 0)
                 {
                     previousEmitTime = timeSlice.Time;
                     previousWasTimePulse = timeSlice.IsTimePulse;
@@ -128,7 +135,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     retried = false;
                     yield return timeSlice;
                 }
-                else if (timeSlice.SecurityChanges == SecurityChanges.None)
+                else
                 {
                     // if the slice has data lets retry just once more... this could happen
                     // with subscriptions added after initialize using algorithm.AddSecurity() API,

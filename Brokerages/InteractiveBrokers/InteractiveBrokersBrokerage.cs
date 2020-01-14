@@ -142,7 +142,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         // IB requests made through the IB-API must be limited to a maximum of 50 messages/second
         private readonly RateGate _messagingRateLimiter = new RateGate(50, TimeSpan.FromSeconds(1));
 
+        // used for reconnection attempts
         private bool _previouslyInResetTime;
+        // used to limit logging
+        private bool _isWithinScheduledServerResetTimesLastValue;
 
         // additional IB request information, will be matched with errors in the handler, for better error reporting
         private readonly ConcurrentDictionary<int, string> _requestInformation = new ConcurrentDictionary<int, string>();
@@ -2358,7 +2361,12 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 }
             }
 
-            Log.Trace("InteractiveBrokersBrokerage.IsWithinScheduledServerResetTimes(): " + result);
+            if (result != _isWithinScheduledServerResetTimesLastValue)
+            {
+                _isWithinScheduledServerResetTimesLastValue = result;
+
+                Log.Trace($"InteractiveBrokersBrokerage.IsWithinScheduledServerResetTimes(): {result}");
+            }
 
             return result;
         }
@@ -2837,11 +2845,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             }
             else if (securityType == SecurityType.Future)
             {
-                if (!IsConnected)
-                {
-                    Connect();
-                }
-
                 // processing request
                 var results = FindContracts(contract, contract.Symbol);
 
@@ -2884,7 +2887,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (securityType == SecurityType.Future)
             {
                 // we need to call the IB API only for futures
-                return !IsWithinScheduledServerResetTimes();
+                return !IsWithinScheduledServerResetTimes() && IsConnected;
             }
 
             return true;

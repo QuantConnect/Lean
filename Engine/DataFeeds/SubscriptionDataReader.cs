@@ -297,7 +297,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // adding a day so we stop at EOD
             _delistingDate = _delistingDate.AddDays(1);
 
-            _subscriptionFactoryEnumerator = ResolveDataEnumerator(true);
+            UpdateDataEnumerator(true);
 
             _initialized = true;
         }
@@ -398,9 +398,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // same date,
                         if (!_config.IsInternalFeed)
                         {
-                            // this will advance the date enumerator and determine if a new
-                            // instance of the subscription enumerator is required
-                            _subscriptionFactoryEnumerator = ResolveDataEnumerator(false);
+                            // lets keep this, it will be advanced by 'ResolveDataEnumerator'
+                            var currentTradeableDate = _tradeableDates.Current;
+
+                            if (UpdateDataEnumerator(false))
+                            {
+                                if (instance.Time.ConvertTo(_config.ExchangeTimeZone, _config.DataTimeZone).Date > currentTradeableDate)
+                                {
+                                    if (_subscriptionFactoryEnumerator == null)
+                                    {
+                                        // the end
+                                        break;
+                                    }
+                                    // Skip current 'instance' if its start time is beyond the current date, fixes GH issue 3912
+                                    continue;
+                                }
+                                // its not beyond 'currentTradeableDate' lets use current instance
+                            }
+                            // if we DO NOT get a new enumerator we use current instance, means its a valid source
+                            // even if after 'currentTradeableDate'
                         }
                     }
 
@@ -412,7 +428,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // we've ended the enumerator, time to refresh
-                _subscriptionFactoryEnumerator = ResolveDataEnumerator(true);
+                UpdateDataEnumerator(true);
             }
             while (_subscriptionFactoryEnumerator != null);
 
@@ -421,9 +437,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Resolves the next enumerator to be used in <see cref="MoveNext"/>
+        /// Resolves the next enumerator to be used in <see cref="MoveNext"/> and updates
+        /// <see cref="_subscriptionFactoryEnumerator"/>
         /// </summary>
-        private IEnumerator<BaseData> ResolveDataEnumerator(bool endOfEnumerator)
+        /// <returns>True, if the enumerator has been updated (even if updated to null)</returns>
+        private bool UpdateDataEnumerator(bool endOfEnumerator)
         {
             do
             {
@@ -433,8 +451,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 DateTime date;
                 if (!TryGetNextDate(out date) && !_isLiveMode)
                 {
+                    _subscriptionFactoryEnumerator = null;
                     // if we run out of dates then we're finished with this subscription
-                    return null;
+                    return true;
                 }
 
                 // fetch the new source, using the data time zone for the date
@@ -450,15 +469,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // save off for comparison next time
                     _source = newSource;
-                    var subscriptionFactory = CreateSubscriptionFactory(newSource);
-                    return subscriptionFactory.Read(newSource).GetEnumerator();
+                    var subscriptionFactory = CreateSubscriptionFactory(newSource, _dataFactory);
+                    _subscriptionFactoryEnumerator = subscriptionFactory.Read(newSource).GetEnumerator();
+                    return true;
                 }
 
                 // if there's still more in the enumerator and we received the same source from the GetSource call
                 // above, then just keep using the same enumerator as we were before
                 if (!endOfEnumerator) // && !sourceChanged is always true here
                 {
-                    return _subscriptionFactoryEnumerator;
+                    return false;
                 }
 
                 // keep churning until we find a new source or run out of tradeable dates
@@ -468,9 +488,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             while (true);
         }
 
-        private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source)
+        private ISubscriptionDataSourceReader CreateSubscriptionFactory(SubscriptionDataSource source, BaseData baseDataInstance)
         {
-            var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, _config, _tradeableDates.Current, _isLiveMode);
+            var factory = SubscriptionDataSourceReader.ForSource(source, _dataCacheProvider, _config, _tradeableDates.Current, _isLiveMode, baseDataInstance);
             AttachEventHandlers(factory, source);
             return factory;
         }

@@ -68,8 +68,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Brokerages\InteractiveBrokers\CSharpAPI.dll</HintPath>
     </Reference>
+    <Reference Include="Deedle, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Deedle.2.1.0\lib\net45\Deedle.dll</HintPath>
+    </Reference>
     <Reference Include="DotNetZip, Version=1.13.3.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
       <HintPath>..\packages\DotNetZip.1.13.3\lib\net40\DotNetZip.dll</HintPath>
+    </Reference>
+    <Reference Include="FSharp.Core, Version=4.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\FSharp.Core.4.5.2\lib\net45\FSharp.Core.dll</HintPath>
     </Reference>
     <Reference Include="IKVM.AWT.WinForms, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
       <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.AWT.WinForms.dll</HintPath>
@@ -259,6 +265,7 @@
     <Compile Include="Algorithm\AlgorithmSettingsTest.cs" />
     <Compile Include="Algorithm\AlgorithmSubscriptionManagerRemoveConsolidatorTests.cs" />
     <Compile Include="Algorithm\AlgorithmUniverseSettingsTests.cs" />
+    <Compile Include="Algorithm\AlgorithmWarmupTests.cs" />
     <Compile Include="Algorithm\CashModelAlgorithmTradingTests.cs" />
     <Compile Include="Algorithm\AlgorithmTradingTests.cs" />
     <Compile Include="Algorithm\Framework\Alphas\CommonAlphaModelTests.cs" />
@@ -275,6 +282,7 @@
     <Compile Include="Algorithm\Framework\Execution\StandardDeviationExecutionModelTests.cs" />
     <Compile Include="Algorithm\Framework\FrameworkModelsPythonInheritanceTests.cs" />
     <Compile Include="Algorithm\Framework\InsightTests.cs" />
+    <Compile Include="Algorithm\Framework\NotifiedSecurityChangesTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\DuplicateKeyPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\BlackLittermanOptimizationPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\ConfidenceWeightedPortfolioConstructionModelTests.cs" />
@@ -282,12 +290,14 @@
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetCollectionTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\EqualWeightingPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetTests.cs" />
+    <Compile Include="Algorithm\Framework\Selection\QC500UniverseSelectionModelTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexFeeModelTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexSymbolMapperTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\DowngradeErrorCodeToWarningBrokerageMessageHandlerTests.cs" />
     <Compile Include="Brokerages\Paper\PaperBrokerageTests.cs" />
     <Compile Include="Common\Benchmarks\SecurityBenchmarkTests.cs" />
+    <Compile Include="Common\Brokerages\AlpacaBrokerageModelTests.cs" />
     <Compile Include="Common\Brokerages\BitfinexBrokerageModelTests.cs" />
     <Compile Include="Common\Brokerages\FxcmBrokerageModelTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileRowTests.cs" />
@@ -297,6 +307,8 @@
     <Compile Include="Brokerages\Alpaca\AlpacaBrokerageTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
+    <Compile Include="Common\Data\Fundamental\FineFundamentalTests.cs" />
+    <Compile Include="Common\Storage\LocalObjectStoreTests.cs" />
     <Compile Include="Common\Data\BaseDataTests.cs" />
     <Compile Include="Common\Data\CalendarConsolidatorsTests.cs" />
     <Compile Include="Common\Data\Custom\FredApiTest.cs" />
@@ -357,6 +369,7 @@
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BacktestingTransactionHandlerTests.cs" />
     <Compile Include="Engine\DataFeeds\BacktestingFutureChainProviderTests.cs" />
     <Compile Include="Engine\DataFeeds\DataManagerStub.cs" />
+    <Compile Include="Engine\DataFeeds\DataManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\Factories\OptionChainUniverseSubscriptionEnumeratorFactoryTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\DelistingEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\Factories\FuturesChainUniverseSubscriptionEnumeratorFactoryTests.cs" />
@@ -370,6 +383,7 @@
     <Compile Include="Engine\DataFeeds\PendingRemovalsManagerTests.cs" />
     <Compile Include="Engine\DataFeeds\PredicateTimeProviderTests.cs" />
     <Compile Include="Common\Util\StreamReaderExtensionsTests.cs" />
+    <Compile Include="Engine\DataFeeds\SubscriptionDataReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\SubscriptionUtilsTests.cs" />
     <Compile Include="Engine\DataFeeds\TextSubscriptionDataSourceReaderTests.cs" />
     <Compile Include="Engine\DataFeeds\Transport\RemoteFileSubscriptionStreamReaderTests.cs" />
@@ -624,6 +638,7 @@
     <Compile Include="Python\SecurityCustomModelTests.cs" />
     <Compile Include="Python\PandasConverterTests.cs" />
     <Compile Include="RegressionTests.cs" />
+    <Compile Include="Report\CalculationTests.cs" />
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
@@ -893,6 +908,10 @@
     <ProjectReference Include="..\Queues\QuantConnect.Queues.csproj">
       <Project>{d6633172-1368-4df6-9444-825c3e00c819}</Project>
       <Name>QuantConnect.Queues</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Report\QuantConnect.Report.csproj">
+      <Project>{2431419f-8bc6-4f59-944e-9a1cd28982df}</Project>
+      <Name>QuantConnect.Report</Name>
     </ProjectReference>
     <ProjectReference Include="..\ToolBox\QuantConnect.ToolBox.csproj">
       <Project>{AC9A142C-B485-44D7-91FF-015C22C43D05}</Project>

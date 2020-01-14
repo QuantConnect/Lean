@@ -35,8 +35,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="config">The configuration of the subscription</param>
         /// <param name="date">The date to be processed</param>
         /// <param name="isLiveMode">True for live mode, false otherwise</param>
+        /// <param name="factory">The base data instance factory</param>
         /// <returns>A new <see cref="ISubscriptionDataSourceReader"/> that can read the specified <paramref name="source"/></returns>
-        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+        public static ISubscriptionDataSourceReader ForSource(SubscriptionDataSource source, IDataCacheProvider dataCacheProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode, BaseData factory)
         {
             ISubscriptionDataSourceReader reader;
             TextSubscriptionDataSourceReader textReader = null;
@@ -64,7 +65,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // wire up event handlers for logging missing files
             if (source.TransportMedium == SubscriptionTransportMedium.LocalFile)
             {
-                var factory = config.GetBaseDataInstance();
                 if (!factory.IsSparseData())
                 {
                     reader.InvalidSource += (sender, args) => Log.Error($"SubscriptionDataSourceReader.InvalidSource(): File not found: {args.Source.Source}");

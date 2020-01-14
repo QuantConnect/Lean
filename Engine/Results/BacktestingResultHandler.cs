@@ -43,13 +43,11 @@ namespace QuantConnect.Lean.Engine.Results
         private const double Samples = 4000;
         private const double MinimumSamplePeriod = 4;
 
-        private bool _exitTriggered;
         private BacktestNodePacket _job;
         private int _jobDays;
         private DateTime _nextUpdate;
         private DateTime _nextS3Update;
         private DateTime _lastUpdate;
-        private readonly List<string> _log;
         private string _errorMessage;
         private double _daysProcessed;
         private double _daysProcessedFrontier;
@@ -104,7 +102,6 @@ namespace QuantConnect.Lean.Engine.Results
             ResamplePeriod = TimeSpan.FromMinutes(4);
             NotificationPeriod = TimeSpan.FromSeconds(2);
 
-            _log = new List<string>();
             _chartSeriesExceededDataPoints = new HashSet<string>();
 
             // Delay uploading first packet
@@ -142,7 +139,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             try
             {
-                while (!(_exitTriggered && Messages.Count == 0))
+                while (!(ExitTriggered && Messages.Count == 0))
                 {
                     //While there's no work to do, go back to the algorithm:
                     if (Messages.Count == 0)
@@ -504,16 +501,13 @@ namespace QuantConnect.Lean.Engine.Results
 
         private void AddToLogStore(string message)
         {
-            lock (_log)
+            lock (LogStore)
             {
-                if (Algorithm != null)
-                {
-                    _log.Add(Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message);
-                }
-                else
-                {
-                    _log.Add("Algorithm Initialization: " + message);
-                }
+                var messageToLog = Algorithm != null
+                    ? new LogEntry(Algorithm.Time.ToStringInvariant(DateFormat.UI) + " " + message)
+                    : new LogEntry("Algorithm Initialization: " + message);
+
+                LogStore.Add(messageToLog);
             }
         }
 
@@ -698,12 +692,12 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void Exit()
         {
             // Only process the logs once
-            if (!_exitTriggered)
+            if (!ExitTriggered)
             {
-                List<string> copy;
-                lock (_log)
+                List<LogEntry> copy;
+                lock (LogStore)
                 {
-                    copy = _log.ToList();
+                    copy = LogStore.ToList();
                 }
                 ProcessSynchronousEvents(true);
                 var logLocation = SaveLogs(_algorithmId, copy);
@@ -711,7 +705,7 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             //Set exit flag, and wait for the messages to send:
-            _exitTriggered = true;
+            ExitTriggered = true;
         }
 
         /// <summary>

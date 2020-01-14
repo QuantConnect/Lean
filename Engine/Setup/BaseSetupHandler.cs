@@ -112,5 +112,37 @@ namespace QuantConnect.Lean.Engine.Setup
                 sleepIntervalMillis: 100,
                 workerThread: workerThread);
         }
+
+        /// <summary>
+        /// Sets the initial cash for the algorithm if set in the job packet.
+        /// </summary>
+        /// <remarks>Should be called after initialize <see cref="LoadBacktestJobAccountCurrency"/></remarks>
+        public static void LoadBacktestJobCashAmount(IAlgorithm algorithm, BacktestNodePacket job)
+        {
+            // set initial cash, if present in the job
+            if (job.CashAmount.HasValue)
+            {
+                // Zero the CashBook - we'll populate directly from job
+                foreach (var kvp in algorithm.Portfolio.CashBook)
+                {
+                    kvp.Value.SetAmount(0);
+                }
+
+                algorithm.SetCash(job.CashAmount.Value.Amount);
+            }
+        }
+
+        /// <summary>
+        /// Sets the account currency the algorithm should use if set in the job packet
+        /// </summary>
+        /// <remarks>Should be called before initialize <see cref="LoadBacktestJobCashAmount"/></remarks>
+        public static void LoadBacktestJobAccountCurrency(IAlgorithm algorithm, BacktestNodePacket job)
+        {
+            // set account currency if present in the job
+            if (job.CashAmount.HasValue)
+            {
+                algorithm.SetAccountCurrency(job.CashAmount.Value.Currency);
+            }
+        }
     }
 }
