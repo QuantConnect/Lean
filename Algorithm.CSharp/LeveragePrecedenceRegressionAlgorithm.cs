@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -85,23 +85,42 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "-0.06%"},
-            {"Compounding Annual Return", "220.077%"},
+            {"Compounding Annual Return", "247.812%"},
             {"Drawdown", "2.200%"},
             {"Expectancy", "-1"},
             {"Net Profit", "1.606%"},
-            {"Sharpe Ratio", "3.923"},
-            {"Probabilistic Sharpe Ratio", "67.651%"},
+            {"Sharpe Ratio", "4.824"},
+            {"Probabilistic Sharpe Ratio", "66.955%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.572"},
-            {"Beta", "0.311"},
-            {"Annual Standard Deviation", "0.174"},
-            {"Annual Variance", "0.03"},
-            {"Information Ratio", "1.559"},
-            {"Tracking Error", "0.209"},
-            {"Treynor Ratio", "2.199"},
-            {"Total Fees", "$61.90"}
+            {"Alpha", "0"},
+            {"Beta", "0.998"},
+            {"Annual Standard Deviation", "0.22"},
+            {"Annual Variance", "0.048"},
+            {"Information Ratio", "-4.89"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "1.061"},
+            {"Total Fees", "$61.90"},
+            {"Fitness Score", "0.981"},
+            {"Kelly Criterion Estimate", "39.573"},
+            {"Kelly Criterion Probability Value", "0.226"},
+            {"Sortino Ratio", "7.842"},
+            {"Return Over Maximum Drawdown", "82.77"},
+            {"Portfolio Turnover", "4.737"},
+            {"Total Insights Generated", "100"},
+            {"Total Insights Closed", "99"},
+            {"Total Insights Analysis Completed", "99"},
+            {"Long Insight Count", "100"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$158418.3850"},
+            {"Total Accumulated Estimated Alpha Value", "$25522.9620"},
+            {"Mean Population Estimated Insight Value", "$257.8077"},
+            {"Mean Population Direction", "54.5455%"},
+            {"Mean Population Magnitude", "54.5455%"},
+            {"Rolling Averaged Population Direction", "59.8056%"},
+            {"Rolling Averaged Population Magnitude", "59.8056%"}
         };
 
         private class TestBrokerageModel : DefaultBrokerageModel
