@@ -29,7 +29,6 @@ using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System.IO;
 using QuantConnect.Lean.Engine.Alphas;
-using QuantConnect.Lean.Engine.DataFeeds;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -54,9 +53,6 @@ namespace QuantConnect.Lean.Engine.Results
         private double _daysProcessedFrontier;
         private bool _processingFinalPacket;
         private readonly HashSet<string> _chartSeriesExceededDataPoints;
-
-        protected decimal _closingPortfolioValue;
-        protected DateTime _previousTime;
 
         //Processing Time:
         private DateTime _nextSample;
@@ -435,8 +431,8 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Algorithm = algorithm;
             StartingPortfolioValue = startingPortfolioValue;
-            _previousTime = Algorithm.UtcTime;
-            _closingPortfolioValue = StartingPortfolioValue;
+            _previousUtcSampleTime = Algorithm.UtcTime;
+            _dailyPortfolioValue = StartingPortfolioValue;
 
             //Get the resample period:
             var totalMinutes = (algorithm.EndDate - algorithm.StartDate).TotalMinutes;
@@ -762,32 +758,32 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="force">Force sampling of equity, benchmark, and performance to be </param>
         public virtual void Sample(DateTime time, bool force = false)
         {
-            var dayChanged = _previousTime.Date != time.Date;
+            var dayChanged = _previousUtcSampleTime.Date != time.Date;
 
             if (dayChanged || force)
             {
                 if (force)
                 {
                     // For any forced sampling, we need to sample at the time we provide to this method.
-                    _previousTime = time;
+                    _previousUtcSampleTime = time;
                 }
 
                 var currentPortfolioValue = Algorithm.Portfolio.TotalPortfolioValue;
-                var portfolioPerformance = _closingPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - _closingPortfolioValue) * 100 / _closingPortfolioValue, 10);
+                var portfolioPerformance = _dailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - _dailyPortfolioValue) * 100 / _dailyPortfolioValue, 10);
 
-                SampleEquity(_previousTime, Algorithm.Portfolio.TotalPortfolioValue);
-                SampleBenchmark(_previousTime, Algorithm.Benchmark.Evaluate(_previousTime).SmartRounding());
-                SamplePerformance(_previousTime, portfolioPerformance);
+                SampleEquity(_previousUtcSampleTime, Algorithm.Portfolio.TotalPortfolioValue);
+                SampleBenchmark(_previousUtcSampleTime, Algorithm.Benchmark.Evaluate(_previousUtcSampleTime).SmartRounding());
+                SamplePerformance(_previousUtcSampleTime, portfolioPerformance);
 
                 // If the day changed, set the closing portfolio value. Otherwise, we would end up
                 // with skewed statistics if a processing event was forced.
                 if (dayChanged)
                 {
-                    _closingPortfolioValue = currentPortfolioValue;
+                    _dailyPortfolioValue = currentPortfolioValue;
                 }
             }
 
-            _previousTime = time;
+            _previousUtcSampleTime = time;
         }
 
         /// <summary>

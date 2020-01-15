@@ -58,9 +58,6 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly object _statusUpdateLock;
         private int _lastOrderId;
 
-        protected decimal _closingPortfolioValue;
-        protected DateTime _previousTime;
-
         //Log Message Store:
         private DateTime _nextSample;
         private IApi _api;
@@ -1073,34 +1070,34 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="force">Forces processing of equity and performance if true</param>
         public virtual void Sample(DateTime time, bool force = false)
         {
-            var dayChanged = _previousTime.Date != time.Date;
+            var dayChanged = _previousUtcSampleTime.Date != time.Date;
 
             if (force)
             {
                 // For any forced sampling, we need to sample at the time we provide to this method.
-                _previousTime = time;
+                _previousUtcSampleTime = time;
             }
 
             // Continously sample the benchmark in live mode
-            SampleBenchmark(_previousTime, Algorithm.Benchmark.Evaluate(_previousTime).SmartRounding());
+            SampleBenchmark(_previousUtcSampleTime, Algorithm.Benchmark.Evaluate(_previousUtcSampleTime).SmartRounding());
 
             if (dayChanged || force)
             {
                 var currentPortfolioValue = Algorithm.Portfolio.TotalPortfolioValue;
-                var portfolioPerformance = _closingPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - _closingPortfolioValue) * 100 / _closingPortfolioValue, 10);
+                var portfolioPerformance = _dailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - _dailyPortfolioValue) * 100 / _dailyPortfolioValue, 10);
 
-                SampleEquity(_previousTime, currentPortfolioValue);
-                SamplePerformance(_previousTime, portfolioPerformance);
+                SampleEquity(_previousUtcSampleTime, currentPortfolioValue);
+                SamplePerformance(_previousUtcSampleTime, portfolioPerformance);
 
                 // If the day changed, set the closing portfolio value. Otherwise, we would end up
                 // with skewed statistics if a processing event was forced.
                 if (dayChanged)
                 {
-                    _closingPortfolioValue = currentPortfolioValue;
+                    _dailyPortfolioValue = currentPortfolioValue;
                 }
             }
 
-            _previousTime = time;
+            _previousUtcSampleTime = time;
         }
 
         /// <summary>

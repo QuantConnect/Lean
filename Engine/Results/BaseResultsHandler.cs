@@ -107,6 +107,16 @@ namespace QuantConnect.Lean.Engine.Results
         protected AlphaRuntimeStatistics AlphaRuntimeStatistics { get; set; }
 
         /// <summary>
+        /// Closing portfolio value. Used to calculate daily performance.
+        /// </summary>
+        protected decimal _dailyPortfolioValue;
+
+        /// <summary>
+        /// Last time the <see cref="IResultHandler.Sample(DateTime, bool)"/> method was called in UTC
+        /// </summary>
+        protected DateTime _previousUtcSampleTime;
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()

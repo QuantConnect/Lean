@@ -123,7 +123,7 @@ namespace QuantConnect.Lean.Engine
             var nextMarginCallTime = DateTime.MinValue;
             var settlementScanFrequency = TimeSpan.FromMinutes(30);
             var nextSettlementScanTime = DateTime.MinValue;
-            var previousTime = algorithm.StartDate.Date;
+            var time = algorithm.StartDate.Date;
 
             var delistings = new List<Delisting>();
             var splitWarnings = new List<Split>();
@@ -189,7 +189,7 @@ namespace QuantConnect.Lean.Engine
                 // Update the ILeanManager
                 leanManager.Update();
 
-                var time = timeSlice.Time;
+                time = timeSlice.Time;
                 DataPoints += timeSlice.DataPointCount;
 
                 // We need to sample at the top of the loop in case we have a strategy
@@ -635,9 +635,6 @@ namespace QuantConnect.Lean.Engine
                 // are processed so that insights closed because of new order based insights get updated
                 alphas.ProcessSynchronousEvents();
 
-                //Save the previous time for the sample calculations
-                previousTime = time;
-
                 // send the alpha statistics to the result handler for storage/transmit with the result packets
                 results.SetAlphaRuntimeStatistics(alphas.RuntimeStatistics);
 
@@ -705,7 +702,7 @@ namespace QuantConnect.Lean.Engine
             SetStatus(AlgorithmStatus.Completed);
 
             //Take final samples:
-            results.Sample(previousTime, force: true);
+            results.Sample(time, force: true);
 
         } // End of Run();
 
