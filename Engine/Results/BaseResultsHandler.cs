@@ -109,12 +109,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Closing portfolio value. Used to calculate daily performance.
         /// </summary>
-        protected decimal _dailyPortfolioValue;
+        protected decimal DailyPortfolioValue;
 
         /// <summary>
         /// Last time the <see cref="IResultHandler.Sample(DateTime, bool)"/> method was called in UTC
         /// </summary>
-        protected DateTime _previousUtcSampleTime;
+        protected DateTime PreviousUtcSampleTime;
 
         /// <summary>
         /// Creates a new instance

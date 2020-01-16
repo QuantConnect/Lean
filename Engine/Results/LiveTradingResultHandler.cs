@@ -26,7 +26,6 @@ using QuantConnect.Configuration;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alphas;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
@@ -655,29 +654,6 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Sample the asset prices to generate plots.
-        /// </summary>
-        /// <param name="symbol">Symbol we're sampling.</param>
-        /// <param name="time">Time of sample</param>
-        /// <param name="value">Value of the asset price</param>
-        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
-        protected virtual void SampleAssetPrices(Symbol symbol, DateTime time, decimal value)
-        {
-            // don't send stockplots for internal feeds
-            Security security;
-            if (_debugMode
-                && Algorithm.Securities.TryGetValue(symbol, out security)
-                && !security.IsInternalFeed() && value > 0)
-            {
-                var now = DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone);
-                if (security.Exchange.Hours.IsOpen(now, security.IsExtendedMarketHours))
-                {
-                    Sample("Stockplot: " + symbol.Value, "Stockplot: " + symbol.Value, 0, SeriesType.Line, time, value);
-                }
-            }
-        }
-
-        /// <summary>
         /// Sample the current daily performance directly with a time-value pair.
         /// </summary>
         /// <param name="time">Current backtest date.</param>
@@ -1070,34 +1046,34 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="force">Forces processing of equity and performance if true</param>
         public virtual void Sample(DateTime time, bool force = false)
         {
-            var dayChanged = _previousUtcSampleTime.Date != time.Date;
+            var dayChanged = PreviousUtcSampleTime.Date != time.Date;
 
             if (force)
             {
                 // For any forced sampling, we need to sample at the time we provide to this method.
-                _previousUtcSampleTime = time;
+                PreviousUtcSampleTime = time;
             }
 
             // Continously sample the benchmark in live mode
-            SampleBenchmark(_previousUtcSampleTime, Algorithm.Benchmark.Evaluate(_previousUtcSampleTime).SmartRounding());
+            SampleBenchmark(PreviousUtcSampleTime, Algorithm.Benchmark.Evaluate(PreviousUtcSampleTime).SmartRounding());
 
             if (dayChanged || force)
             {
                 var currentPortfolioValue = Algorithm.Portfolio.TotalPortfolioValue;
-                var portfolioPerformance = _dailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - _dailyPortfolioValue) * 100 / _dailyPortfolioValue, 10);
+                var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
 
-                SampleEquity(_previousUtcSampleTime, currentPortfolioValue);
-                SamplePerformance(_previousUtcSampleTime, portfolioPerformance);
+                SampleEquity(PreviousUtcSampleTime, currentPortfolioValue);
+                SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
 
                 // If the day changed, set the closing portfolio value. Otherwise, we would end up
                 // with skewed statistics if a processing event was forced.
                 if (dayChanged)
                 {
-                    _dailyPortfolioValue = currentPortfolioValue;
+                    DailyPortfolioValue = currentPortfolioValue;
                 }
             }
 
-            _previousUtcSampleTime = time;
+            PreviousUtcSampleTime = time;
         }
 
         /// <summary>
@@ -1159,9 +1135,6 @@ namespace QuantConnect.Lean.Engine.Results
                                     security.SetMarketPrice(new Tick(exchangeTime, symbol, price, 0, 0) { TickType = TickType.Trade });
                                 }
                             }
-
-                            //Sample Asset Pricing:
-                            SampleAssetPrices(symbol, time, price);
                         }
                     }
                 }

@@ -297,6 +297,7 @@
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\DowngradeErrorCodeToWarningBrokerageMessageHandlerTests.cs" />
     <Compile Include="Brokerages\Paper\PaperBrokerageTests.cs" />
+    <Compile Include="AlgorithmRunnerResults.cs" />
     <Compile Include="Common\Benchmarks\SecurityBenchmarkTests.cs" />
     <Compile Include="Common\Brokerages\AlpacaBrokerageModelTests.cs" />
     <Compile Include="Common\Brokerages\BitfinexBrokerageModelTests.cs" />

@@ -44,13 +44,7 @@ namespace QuantConnect.Tests
     /// </summary>
     public static class AlgorithmRunner
     {
-        /// <summary>
-        /// Dictionary used to store algorithm <see cref="BacktestingResultHandler"/> instances keyed by the algorithm's <see cref="Language"/>
-        /// </summary>
-        public static Dictionary<Language, Dictionary<string, BacktestingResultHandler>> AlgorithmResults = new Dictionary<Language, Dictionary<string, BacktestingResultHandler>>();
-
-
-        public static AlgorithmManager RunLocalBacktest(
+        public static AlgorithmRunnerResults RunLocalBacktest(
             string algorithm,
             Dictionary<string, string> expectedStatistics,
             AlphaRuntimeStatistics expectedAlphaStatistics,
@@ -65,6 +59,7 @@ namespace QuantConnect.Tests
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
             var alphaStatistics = new AlphaRuntimeStatistics(new TestAccountCurrencyProvider());
+            BacktestingResultHandler results = null;
 
             Composer.Instance.Reset();
             SymbolCache.Clear();
@@ -137,19 +132,8 @@ namespace QuantConnect.Tests
                     }).Wait();
 
                     var backtestingResultHandler = (BacktestingResultHandler)algorithmHandlers.Results;
+                    results = backtestingResultHandler;
                     statistics = backtestingResultHandler.FinalStatistics;
-
-                    if (storeResult)
-                    {
-                        Dictionary<string, BacktestingResultHandler> results;
-                        if (!AlgorithmResults.TryGetValue(language, out results))
-                        {
-                            results = new Dictionary<string, BacktestingResultHandler>();
-                            AlgorithmResults[language] = results;
-                        }
-
-                        results[algorithm] = backtestingResultHandler;
-                    }
 
                     var defaultAlphaHandler = (DefaultAlphaHandler) algorithmHandlers.Alphas;
                     alphaStatistics = defaultAlphaHandler.RuntimeStatistics;
@@ -201,7 +185,7 @@ namespace QuantConnect.Tests
             File.Delete(passedOrderLogFile);
             if (File.Exists(ordersLogFile)) File.Copy(ordersLogFile, passedOrderLogFile);
 
-            return algorithmManager;
+            return new AlgorithmRunnerResults(algorithm, language, algorithmManager, results);
         }
 
         private static void AssertAlphaStatistics(AlphaRuntimeStatistics expected, AlphaRuntimeStatistics actual, Expression<Func<AlphaRuntimeStatistics, object>> selector)

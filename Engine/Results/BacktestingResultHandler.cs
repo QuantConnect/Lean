@@ -431,8 +431,8 @@ namespace QuantConnect.Lean.Engine.Results
         {
             Algorithm = algorithm;
             StartingPortfolioValue = startingPortfolioValue;
-            _previousUtcSampleTime = Algorithm.UtcTime;
-            _dailyPortfolioValue = StartingPortfolioValue;
+            PreviousUtcSampleTime = Algorithm.UtcTime;
+            DailyPortfolioValue = StartingPortfolioValue;
 
             //Get the resample period:
             var totalMinutes = (algorithm.EndDate - algorithm.StartDate).TotalMinutes;
@@ -758,32 +758,32 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="force">Force sampling of equity, benchmark, and performance to be </param>
         public virtual void Sample(DateTime time, bool force = false)
         {
-            var dayChanged = _previousUtcSampleTime.Date != time.Date;
+            var dayChanged = PreviousUtcSampleTime.Date != time.Date;
 
             if (dayChanged || force)
             {
                 if (force)
                 {
                     // For any forced sampling, we need to sample at the time we provide to this method.
-                    _previousUtcSampleTime = time;
+                    PreviousUtcSampleTime = time;
                 }
 
                 var currentPortfolioValue = Algorithm.Portfolio.TotalPortfolioValue;
-                var portfolioPerformance = _dailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - _dailyPortfolioValue) * 100 / _dailyPortfolioValue, 10);
+                var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
 
-                SampleEquity(_previousUtcSampleTime, Algorithm.Portfolio.TotalPortfolioValue);
-                SampleBenchmark(_previousUtcSampleTime, Algorithm.Benchmark.Evaluate(_previousUtcSampleTime).SmartRounding());
-                SamplePerformance(_previousUtcSampleTime, portfolioPerformance);
+                SampleEquity(PreviousUtcSampleTime, Algorithm.Portfolio.TotalPortfolioValue);
+                SampleBenchmark(PreviousUtcSampleTime, Algorithm.Benchmark.Evaluate(PreviousUtcSampleTime).SmartRounding());
+                SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
 
                 // If the day changed, set the closing portfolio value. Otherwise, we would end up
                 // with skewed statistics if a processing event was forced.
                 if (dayChanged)
                 {
-                    _dailyPortfolioValue = currentPortfolioValue;
+                    DailyPortfolioValue = currentPortfolioValue;
                 }
             }
 
-            _previousUtcSampleTime = time;
+            PreviousUtcSampleTime = time;
         }
 
         /// <summary>

@@ -18,6 +18,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Logging;
 using QuantConnect.Report;
 using System;
 using System.Collections.Generic;
@@ -28,8 +29,6 @@ namespace QuantConnect.Tests.Engine.Results
     [TestFixture]
     public class BacktestingResultHandlerTests
     {
-        private object _lock = new object();
-
         public BacktestingResultHandler GetResults(string algorithm, DateTime algoStart, DateTime algoEnd)
         {
             // Required, otherwise LocalObjectStoreTests overwrites the "object-store-root" config value
@@ -41,31 +40,28 @@ namespace QuantConnect.Tests.Engine.Results
                Language.CSharp,
                AlgorithmStatus.Completed);
 
-            lock (_lock)
-            {
-                // The AlgorithmRunner uses the `RegressionResultHandler` but doesn't do any sampling.
-                // It defaults to the behavior of the `BacktestingResultHandler` class in `results.ProcessSynchronousEvents()`
-                AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
-                    parameter.Statistics,
-                    parameter.AlphaStatistics,
-                    parameter.Language,
-                    parameter.ExpectedFinalStatus,
-                    startDate: algoStart,
-                    endDate: algoEnd,
-                    storeResult: true);
+            // The AlgorithmRunner uses the `RegressionResultHandler` but doesn't do any sampling.
+            // It defaults to the behavior of the `BacktestingResultHandler` class in `results.ProcessSynchronousEvents()`
+            var backtestResults = AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+                parameter.Statistics,
+                parameter.AlphaStatistics,
+                parameter.Language,
+                parameter.ExpectedFinalStatus,
+                startDate: algoStart,
+                endDate: algoEnd,
+                storeResult: true);
 
-                var results = AlgorithmRunner.AlgorithmResults[Language.CSharp][algorithm];
-                AlgorithmRunner.AlgorithmResults[Language.CSharp].Remove(algorithm);
-
-                return results;
-            }
+            return backtestResults.Results;
         }
 
-        [TestCase(nameof(BasicTemplateAlgorithm))]
-        [TestCase(nameof(BasicTemplateDailyAlgorithm), Ignore=true, IgnoreReason="Failing. Please see PR for more information: https://github.com/QuantConnect/Lean/pull/4003")]
-        [TestCase(nameof(ResolutionSwitchingAlgorithm), Ignore=true, IgnoreReason="Failing. Please see PR for more information: https://github.com/QuantConnect/Lean/pull/4003")]
-        public void SamplesNotMisalignedRelative(string algorithm)
+        [TestCase(nameof(BasicTemplateAlgorithm), true)]
+        [TestCase(nameof(BasicTemplateDailyAlgorithm), false)]
+        [TestCase(nameof(ResolutionSwitchingAlgorithm), false)]
+        public void SamplesNotMisalignedRelative(string algorithm, bool shouldSucceed)
         {
+            // After PR #4003 is merged (https://github.com/QuantConnect/Lean/pull/4003),
+            // this test will fail with any daily algorithm, such as BasicTemplateDailyAlgorithm.
+
             var backtestResults = GetResults(algorithm, new DateTime(2013, 10, 7), new DateTime(2013, 10, 11));
             var benchmarkSeries = backtestResults.Charts["Benchmark"].Series["Benchmark"];
             var equitySeries = backtestResults.Charts["Strategy Equity"].Series["Equity"];
@@ -133,7 +129,7 @@ namespace QuantConnect.Tests.Engine.Results
             // If we manually calculate the beta with the series put above,  we get the beta: 0.8757695
             // If we manually calculate the beta without the invalid values, we get the beta: 0.9892104
 
-            TestSampleAlignmentsRelative(equityPerformance, benchmarkPerformance, performance);
+            TestSampleAlignmentsRelative(equityPerformance, benchmarkPerformance, performance, shouldSucceed);
         }
 
         [Test]
@@ -199,9 +195,10 @@ namespace QuantConnect.Tests.Engine.Results
             // in the test SamplesNotMisalignedRelative().
         }
 
-        [Test]//, Ignore("This is a failing test in master as of 2020-01-15 - Related to issue #3927")]
+        [Test]
         public void BasicTemplateDailyAlgorithmSamplesNotMisalignedAbsolute()
         {
+            // This test will produce incorrect results, but is here to detect if any changes occur to the Sampling.
             var backtestResults = GetResults(nameof(BasicTemplateDailyAlgorithm), new DateTime(2013, 10, 7), new DateTime(2013, 10, 11));
             var benchmarkSeries = backtestResults.Charts["Benchmark"].Series["Benchmark"];
             var equitySeries = backtestResults.Charts["Strategy Equity"].Series["Equity"];
@@ -310,9 +307,10 @@ namespace QuantConnect.Tests.Engine.Results
             // in the SamplesNotMisalignedRelative() test.
         }
 
-        [Test]//, Ignore("This is a failing test in master as of 2020-01-15 - Related to issue #3927")]
+        [Test]
         public void ResolutionSwitchingAlgorithmSamplesNotMisalignedAbsolute()
         {
+            // This test will produce incorrect results, but is here to detect if any changes occur to the Sampling.
             var backtestResults = GetResults(nameof(ResolutionSwitchingAlgorithm), new DateTime(2013, 10, 7), new DateTime(2013, 10, 11));
             var benchmarkSeries = backtestResults.Charts["Benchmark"].Series["Benchmark"];
             var equitySeries = backtestResults.Charts["Strategy Equity"].Series["Equity"];
@@ -355,7 +353,6 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(0.0, performance.GetAt(1));
             Assert.AreEqual(Math.Round(-0.01148770, 6), Math.Round(performance.GetAt(2), 6));
             Assert.AreEqual(Math.Round(0.011161310, 6), Math.Round(performance.GetAt(3), 6));
-            // Unknown value should go here.
             Assert.AreEqual(Math.Round(0.006428134, 6), Math.Round(performance.GetAt(4), 6));
 
             Assert.AreEqual(4, equityPerformance.ValueCount);
@@ -366,26 +363,51 @@ namespace QuantConnect.Tests.Engine.Results
         private void TestSampleAlignmentsRelative(
             Series<DateTime, double> equityPerformance,
             Series<DateTime, double> benchmarkPerformance,
-            Series<DateTime, double> performance)
+            Series<DateTime, double> performance,
+            bool shouldSucceed)
         {
-            Assert.AreEqual(
-                equityPerformance.ValueCount,
-                performance.ValueCount - 1,
-                "Calculated equity performance series or performance series contains more values than expected"
-            );
-            Assert.AreEqual(
-                equityPerformance.Values.Select(x => Math.Round(x, 5)).ToList(), performance.Values.Skip(1).Select(x => Math.Round(x, 5)).ToList(),
-                "Calculated equity performance value does not match performance series value. This most likely means that the performance series has been sampled more than it should have and is misaligned as a result."
-            );
-            Assert.AreEqual(
-                performance.ValueCount - 1,
-                benchmarkPerformance.ValueCount,
-                "Performance and benchmark performance series are misaligned"
-            );
-            Assert.IsTrue(
-                (performance - benchmarkPerformance).Values.All(x => x <= 0.0005 && x >= -0.0005),
-                "Equity performance and benchmark performance have diverging values. This most likely means that the performance and calculated benchmark performance series are misaligned."
-            );
+            var equityPerformanceContainsExpectedCount = equityPerformance.ValueCount == performance.ValueCount - 1;
+            var equityPerformanceContainsExpectedCountMessage = "Calculated equity performance series or performance series contains more values than expected";
+            var equityPerformanceMatchesPerformance = equityPerformance.Values.Select(x => Math.Round(x, 5)).ToList().SequenceEqual(performance.Values.Skip(1).Select(x => Math.Round(x, 5)).ToList());
+            var equityPerformanceMatchesPerformanceMessage = "Calculated equity performance value does not match performance series value. This most likely means that the performance series has been sampled more than it should have and is misaligned as a result.";
+            var benchmarkPerformanceAndPerformanceAreAligned = benchmarkPerformance.ValueCount == performance.ValueCount - 1;
+            var benchmarkPerformanceAndPerformanceAreAlignedMessage = "Performance and benchmark performance series are misaligned";
+            var benchmarkPerformanceAndPerformanceDoNotDiverge = (performance - benchmarkPerformance).Values.All(x => x <= 0.0005 && x >= -0.0005);
+            var benchmarkPerformanceAndPerformanceDoNotDivergeMessage = "Equity performance and benchmark performance have diverging values. This most likely means that the performance and calculated benchmark performance series are misaligned.";
+
+            if (!shouldSucceed)
+            {
+                // All tests are passing, though we aren't expecting that.
+                if (equityPerformanceContainsExpectedCount && equityPerformanceMatchesPerformance &&
+                    benchmarkPerformanceAndPerformanceAreAligned && benchmarkPerformanceAndPerformanceDoNotDiverge)
+                {
+                    Assert.Fail("All checks are passing on a test that should be failing.");
+                }
+
+                if (!equityPerformanceContainsExpectedCount)
+                {
+                    Log.Trace($"TestSampleAlignmentsRelative(): Test failed, but it was expected. Message: {equityPerformanceContainsExpectedCountMessage}");
+                }
+                if (!equityPerformanceMatchesPerformance)
+                {
+                    Log.Trace($"TestSampleAlignmentsRelative(): Test failed, but it was expected. Message: {equityPerformanceMatchesPerformanceMessage}");
+                }
+                if (!benchmarkPerformanceAndPerformanceAreAligned)
+                {
+                    Log.Trace($"TestSampleAlignmentsRelative(): Test failed, but it was expected. Message: {benchmarkPerformanceAndPerformanceAreAlignedMessage}");
+                }
+                if (!benchmarkPerformanceAndPerformanceDoNotDiverge)
+                {
+                    Log.Trace($"TestSampleAlignmentsRelative(): Test failed, but it was expected. Message: {benchmarkPerformanceAndPerformanceDoNotDivergeMessage}");
+                }
+
+                return;
+            }
+
+            Assert.IsTrue(equityPerformanceContainsExpectedCount, equityPerformanceContainsExpectedCountMessage);
+            Assert.IsTrue(equityPerformanceMatchesPerformance, equityPerformanceMatchesPerformanceMessage);
+            Assert.IsTrue(benchmarkPerformanceAndPerformanceAreAligned, benchmarkPerformanceAndPerformanceAreAlignedMessage);
+            Assert.IsTrue(benchmarkPerformanceAndPerformanceDoNotDiverge, benchmarkPerformanceAndPerformanceDoNotDivergeMessage);
         }
 
         private static Series<DateTime, double> ToDeedleSeries(Series series)
