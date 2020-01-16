@@ -112,18 +112,26 @@ namespace QuantConnect.Brokerages.Alpaca
             Log.Trace($"AlpacaBrokerage.OnTradeUpdate(): Event:{trade.Event} OrderId:{trade.Order.OrderId} OrderStatus:{trade.Order.OrderStatus} FillQuantity: {trade.Order.FilledQuantity} Price: {trade.Price}");
 
             Order order;
+            OrderTicket ticket = null;
             lock (_locker)
             {
                 order = _orderProvider.GetOrderByBrokerageId(trade.Order.OrderId.ToString());
+                if (order != null)
+                {
+                    ticket = _orderProvider.GetOrderTicket(order.Id);
+                }
             }
 
-            if (order != null)
+            if (order != null && ticket != null)
             {
                 if (trade.Event == TradeEvent.Fill || trade.Event == TradeEvent.PartialFill)
                 {
                     order.PriceCurrency = _securityProvider.GetSecurity(order.Symbol).SymbolProperties.QuoteCurrency;
 
                     var status = trade.Event == TradeEvent.Fill ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
+
+                    // The Alpaca API does not return the individual quantity for each partial fill, but the cumulative filled quantity
+                    var fillQuantity = Convert.ToInt64(trade.Order.FilledQuantity) - Math.Abs(ticket.QuantityFilled);
 
                     OnOrderEvent(new OrderEvent(order,
                         DateTime.UtcNow,
@@ -132,7 +140,7 @@ namespace QuantConnect.Brokerages.Alpaca
                     {
                         Status = status,
                         FillPrice = trade.Price.Value,
-                        FillQuantity = Convert.ToInt32(trade.Order.FilledQuantity) * (order.Direction == OrderDirection.Buy ? +1 : -1)
+                        FillQuantity = fillQuantity * (order.Direction == OrderDirection.Buy ? +1 : -1)
                     });
                 }
                 else if (trade.Event == TradeEvent.Canceled)
