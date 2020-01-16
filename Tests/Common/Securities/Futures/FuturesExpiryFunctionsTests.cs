@@ -17,10 +17,12 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Securities.Future;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using System.IO;
+using System.Reflection;
 
 namespace QuantConnect.Tests.Common.Securities.Futures
 {
@@ -46,6 +48,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         private const string TwelveOclock = "12:00:00";
         private const string TwelveOne = "12:01:00";
         private const string FourPmLondonTime = "15:00:00";
+
         [TestFixtureSetUp]
         public void Init()
         {
@@ -55,6 +58,40 @@ namespace QuantConnect.Tests.Common.Securities.Futures
                 var serializer = new XmlSerializer(typeof(Item[]));
                 _data = ((Item[])serializer.Deserialize(reader)).ToDictionary(i=>i.Symbol,i=>i.SymbolDates);
             }
+        }
+
+        [TestCase]
+        public void FuturesExpiryFunction_MissingSymbol_ShouldThrowArgumentException()
+        {
+            const string badSymbol = "AAAAA";
+            Assert.Throws<ArgumentException>(() => { FuturesExpiryFunctions.FuturesExpiryFunction(badSymbol); },
+                                             $"Expiry function not implemented for {badSymbol} in FuturesExpiryFunctions.FuturesExpiryDictionary");
+        }
+
+        [TestCase]
+        public void FuturesExpiryFunctions_AllFutures_ShouldHaveExpiryFunction()
+        {
+            var missingFutures = new List<string>();
+
+            var futuresSymbols = typeof(QuantConnect.Securities.Futures).GetNestedTypes()
+                                                                        .SelectMany(x => x.GetFields())
+                                                                        .Select(x => x.GetValue(null))
+                                                                        .Cast<string>(); // null for obj in GetValue indicates static field
+
+            foreach (var futuresSymbol in futuresSymbols)
+            {
+                try
+                {
+                    FuturesExpiryFunctions.FuturesExpiryFunction(futuresSymbol);
+                }
+                catch (ArgumentException)
+                {
+                    missingFutures.Add(futuresSymbol);
+                }
+            }
+
+            Assert.IsEmpty(missingFutures,
+                           $"The following symbols do not have an expiry function defined in FuturesExpiryFunction.FuturesExpiryDictionary: {string.Join(", ", missingFutures)}");
         }
 
         [TestCase(QuantConnect.Securities.Futures.Grains.BlackSeaCornFinanciallySettledPlatts)]
