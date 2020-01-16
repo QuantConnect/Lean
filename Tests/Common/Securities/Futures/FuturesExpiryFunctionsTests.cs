@@ -96,6 +96,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
 
         [TestCase(QuantConnect.Securities.Futures.Grains.BlackSeaCornFinanciallySettledPlatts)]
         [TestCase(QuantConnect.Securities.Futures.Grains.SRWWheat)]
+        [TestCase(QuantConnect.Securities.Futures.Grains.Wheat)]
         [TestCase(QuantConnect.Securities.Futures.Grains.HRWWheat)]
         [TestCase(QuantConnect.Securities.Futures.Grains.Corn)]
         [TestCase(QuantConnect.Securities.Futures.Grains.Soybeans)]
