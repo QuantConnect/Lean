@@ -31,7 +31,7 @@ namespace QuantConnect.Data.Consolidators
         where TConsolidated : BaseData
     {
         // The symbol that we are consolidating for.
-        private Symbol symbol;
+        private Symbol _symbol;
         //The number of data updates between creating new bars.
         private readonly int? _maxCount;
         //
@@ -128,13 +128,13 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="data">The new data for the consolidator</param>
         public override void Update(T data)
         {
-            if (symbol == null)
+            if (_symbol == null)
             {
-                symbol = data.Symbol;
+                _symbol = data.Symbol;
             }
-            else if (symbol != data.Symbol)
+            else if (_symbol != data.Symbol)
             {
-                throw new InvalidOperationException($"Consolidators can only be used with a single symbol. The previous consolidated symbol ({symbol}) is not the same as in the current data ({data.Symbol}).");
+                throw new InvalidOperationException($"Consolidators can only be used with a single symbol. The previous consolidated symbol ({_symbol}) is not the same as in the current data ({data.Symbol}).");
             }
 
             if (!ShouldProcess(data))
