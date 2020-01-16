@@ -194,20 +194,18 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Extract the orders since last update
                 var deltaOrders = new Dictionary<int, Order>();
-
                 try
                 {
                     deltaOrders = (from order in TransactionHandler.Orders
-                        where order.Value.Time.Date >= _lastUpdate && order.Value.Status == OrderStatus.Filled
-                        select order).ToDictionary(t => t.Key, t => t.Value);
+                        where (order.Value.Time.Date >= _lastUpdate
+                              || (order.Value.LastFillTime.HasValue && order.Value.LastFillTime.Value.Date >= _lastUpdate)
+                              || (order.Value.LastUpdateTime.HasValue && order.Value.LastUpdateTime.Value.Date >= _lastUpdate))
+                        select order).Take(50).ToDictionary(t => t.Key, t => t.Value);
                 }
                 catch (Exception err)
                 {
-                    Log.Error(err, "Transactions");
+                    Log.Error(err);
                 }
-
-                //Limit length of orders we pass back dynamically to avoid flooding.
-                if (deltaOrders.Count > 50) deltaOrders.Clear();
 
                 //Reset loop variables:
                 try
