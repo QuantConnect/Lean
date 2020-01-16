@@ -140,7 +140,7 @@ namespace QuantConnect.Brokerages.Alpaca
                     {
                         Status = status,
                         FillPrice = trade.Price.Value,
-                        FillQuantity = fillQuantity * (order.Direction == OrderDirection.Buy ? +1 : -1)
+                        FillQuantity = fillQuantity * (order.Direction == OrderDirection.Buy ? 1 : -1)
                     });
                 }
                 else if (trade.Event == TradeEvent.Canceled)
