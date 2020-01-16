@@ -131,7 +131,7 @@ namespace QuantConnect.Brokerages.Alpaca
                     var status = trade.Event == TradeEvent.Fill ? OrderStatus.Filled : OrderStatus.PartiallyFilled;
 
                     // The Alpaca API does not return the individual quantity for each partial fill, but the cumulative filled quantity
-                    var fillQuantity = Convert.ToInt64(trade.Order.FilledQuantity) - Math.Abs(ticket.QuantityFilled);
+                    var fillQuantity = trade.Order.FilledQuantity - Math.Abs(ticket.QuantityFilled);
 
                     OnOrderEvent(new OrderEvent(order,
                         DateTime.UtcNow,
