@@ -111,20 +111,20 @@ namespace QuantConnect.Algorithm.CSharp
 
             // assert benchmark updates only on date change
             var currentValue = Benchmark.Evaluate(data.Time);
-            if (_previousTime.Date == data.Time.Date)
+            if (_previousTime.Hour == data.Time.Hour)
             {
                 if (currentValue != _previousBenchmarkValue)
                 {
-                    throw new Exception($"Benchmark value error - expected: {_previousBenchmarkValue}, actual: {currentValue}. " +
-                                        "Benchmark value should only change when there is a date change");
+                    throw new Exception($"Benchmark value error - expected: {_previousBenchmarkValue} {_previousTime}, actual: {currentValue} {data.Time}. " +
+                                        "Benchmark value should only change when there is a change in hours");
                 }
             }
             else
             {
-                if (currentValue == _previousBenchmarkValue)
+                if (currentValue == _previousBenchmarkValue && data.Time.Minute == 0)
                 {
-                    throw new Exception($"Benchmark value error - expected a new value, current {currentValue}" +
-                                        "Benchmark value should change when there is a date change");
+                    throw new Exception($"Benchmark value error - expected a new value, current {currentValue} {data.Time}" +
+                                        "Benchmark value should change when there is a change in hours");
                 }
             }
             _previousBenchmarkValue = currentValue;
@@ -160,11 +160,31 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
+            {"Total Trades", "0"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$0.00"},
             {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "0"},
-            {"Return Over Maximum Drawdown", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "79228162514264337593543950335"},
             {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
