@@ -373,9 +373,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     currentSubscriptionCount = dataQueueHandler.Subscriptions.Count;
                     Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                     Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
-                    _dataManager.RemoveSubscription(_dataManager.DataFeedSubscriptions
-                        .Where(subscription => !subscription.Configuration.IsInternalFeed)
-                        .Single(sub => sub.Configuration.Symbol == Symbols.SPY).Configuration);
+                    var subscriptions = _dataManager.DataFeedSubscriptions
+                        .Where(subscription => !subscription.Configuration.IsInternalFeed && subscription.Configuration.Symbol == Symbols.SPY);
+                    foreach (var subscription in subscriptions)
+                    {
+                        _dataManager.RemoveSubscription(subscription.Configuration);
+                    } 
                     emittedData = true;
                 }
                 else

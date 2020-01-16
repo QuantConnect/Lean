@@ -626,7 +626,7 @@ namespace QuantConnect.Util
         /// <returns>The most common tick type for the specified security type</returns>
         public static TickType GetCommonTickType(SecurityType securityType)
         {
-            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto || securityType == SecurityType.Equity)
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd || securityType == SecurityType.Crypto)
             {
                 return TickType.Quote;
             }
@@ -767,8 +767,7 @@ namespace QuantConnect.Util
             }
             if (type == typeof(Tick))
             {
-                if (securityType == SecurityType.Equity||
-                    securityType == SecurityType.Forex || 
+                if (securityType == SecurityType.Forex || 
                     securityType == SecurityType.Cfd || 
                     securityType == SecurityType.Crypto)
                 {

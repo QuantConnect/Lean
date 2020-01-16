@@ -455,8 +455,7 @@ namespace QuantConnect.Algorithm
             Security security,
             List<SubscriptionDataConfig> configurations)
         {
-            foreach (var subscription in configurations)
-            {
+            var subscription = configurations.First();
             // if we are adding a non-internal security which already has an internal feed, we remove it first
             Security existingSecurity;
             if (Securities.TryGetValue(security.Symbol, out existingSecurity))
@@ -484,7 +483,7 @@ namespace QuantConnect.Algorithm
                     {
                         // create a new universe, these subscription settings don't currently get used
                         // since universe selection proper is never invoked on this type of universe
-                            var uconfig = new SubscriptionDataConfig(subscription, symbol: universeSymbol, isInternalFeed: true, fillForward: false, tickType: subscription.TickType);
+                        var uconfig = new SubscriptionDataConfig(subscription, symbol: universeSymbol, isInternalFeed: true, fillForward: false);
 
                         if (security.Type == SecurityType.Base)
                         {
@@ -521,7 +520,6 @@ namespace QuantConnect.Algorithm
                 // should never happen, someone would need to add a non-user defined universe with this symbol
                 throw new Exception("Expected universe with symbol '" + universeSymbol.Value + "' to be of type UserDefinedUniverse.");
             }
-        }
         }
 
         /// <summary>

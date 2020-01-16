@@ -75,6 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "5"},
             {"Average Win", "0%"},
+<<<<<<< refs/remotes/origin/master
             {"Average Loss", "-0.66%"},
             {"Compounding Annual Return", "232.602%"},
             {"Drawdown", "2.300%"},

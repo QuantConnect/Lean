@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Algorithm
 
             // equity
             var equity = algo.AddSecurity(SecurityType.Equity, "goog");
-            Assert.IsTrue(equity.Subscriptions.Count() == 1);
+            Assert.IsTrue(equity.Subscriptions.Count() == 2);
             Assert.IsTrue(GetMatchingSubscription(equity, typeof(TradeBar)) != null);
 
             // option

@@ -15,9 +15,7 @@
 
 using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
-using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,28 +28,25 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="trading and orders" />
     public class BasicTemplateAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _aapl;
-        private Identity _price;
+        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2007, 1, 01);  //Set Start Date
-            SetEndDate(2007, 1, 5);    //Set End Date
+            SetStartDate(2013, 10, 07);  //Set Start Date
+            SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            _aapl = AddEquity("aapl", Resolution.Minute).Symbol;
+            AddEquity("SPY", Resolution.Minute);
 
             // There are other assets with similar methods. See "Selecting Options" etc for more details.
             // AddFuture, AddForex, AddCfd, AddOption
-            _price = Identity(_aapl);
-            PlotIndicator($"{_aapl.Value} Price", _price);
         }
 
         /// <summary>
@@ -60,26 +55,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (Time.Minute == 0)
+            if (!Portfolio.Invested)
             {
-                if (!Portfolio.Invested)
-                {
-                    SetHoldings(_aapl, 1);
-                    Debug("Purchased Stock");
-                }
-                else
-                {
-                    Liquidate();
-                }
-            }
-        }
-
-        public override void OnOrderEvent(OrderEvent orderEvent)
-        {
-            if (orderEvent.Status == OrderStatus.Filled)
-            {
-                Log($"{Time:s} {orderEvent.Direction} Order fill price {orderEvent.FillPrice.SmartRounding()}\n" +
-                    $"AAPL Bid price {Securities[_aapl].BidPrice} - AAPL Ask price {Securities[_aapl].AskPrice}");
+                SetHoldings(_spy, 1);
+                Debug("Purchased Stock");
             }
         }
 
