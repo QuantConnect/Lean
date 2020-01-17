@@ -378,7 +378,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     foreach (var subscription in subscriptions)
                     {
                         _dataManager.RemoveSubscription(subscription.Configuration);
-                    } 
+                    }
                     emittedData = true;
                 }
                 else
@@ -429,7 +429,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
             Assert.IsTrue(emittedData);
-            Assert.AreEqual(4, changes.Aggregate(0, (i, securityChanges) => i+securityChanges.Count));
+            Assert.AreEqual(4, changes.Aggregate(0, (i, securityChanges) => i + securityChanges.Count));
             Assert.AreEqual(Symbols.SPY, changes[1].RemovedSecurities.Single().Symbol);
         }
 
@@ -927,7 +927,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 }
             }, secondsTimeStep: 60 * 60 * 6, // 6 hour time step
-                alwaysInvoke:true,
+                alwaysInvoke: true,
                 endDate: endDate);
 
             Assert.IsTrue(yieldedSymbols, "Did not yielded Symbols");
@@ -1333,7 +1333,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda), Resolution.Tick, 1, 14, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Crypto
-            new TestCaseData(Symbols.BTCUSD, Resolution.Hour, 1, 0, 24, 24, 0, 0, false, _instances[typeof(BaseData)]),
+            // Low resolution crypto only receives trades
+            new TestCaseData(Symbols.BTCUSD, Resolution.Hour, 1, 0, 24, 0, 0, 0, false, _instances[typeof(BaseData)]),
             new TestCaseData(Symbols.BTCUSD, Resolution.Minute, 1, 0, 1 * 60, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
             // x2 because counting trades and quotes
             new TestCaseData(Symbols.BTCUSD, Resolution.Tick, 1, 24 * 2, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
@@ -1730,8 +1731,18 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     switch (symbol.SecurityType)
                     {
+                        case SecurityType.Crypto:
                         case SecurityType.Equity:
                             Assert.IsTrue(actualTradeBarsReceived > 0);
+                            if (resolution == Resolution.Daily || resolution == Resolution.Hour)
+                            {
+                                Assert.IsTrue(actualQuoteBarsReceived == 0);
+                            }
+                            else
+                            {
+                                Assert.IsTrue(actualQuoteBarsReceived > 0);
+
+                            }
                             break;
 
                         case SecurityType.Forex:
@@ -1739,7 +1750,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             Assert.IsTrue(actualQuoteBarsReceived > 0);
                             break;
 
-                        case SecurityType.Crypto:
                         case SecurityType.Option:
                         case SecurityType.Future:
                             Assert.IsTrue(actualTradeBarsReceived > 0);
