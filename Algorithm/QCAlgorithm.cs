@@ -1610,36 +1610,17 @@ namespace QuantConnect.Algorithm
             var option = (Option)Securities.CreateSecurity(symbol, configs, leverage);
 
             // add underlying if not present
-            var underlying = option.Symbol.Underlying;
-            Security equity;
-            List<SubscriptionDataConfig> underlyingConfigs;
-            if (!Securities.TryGetValue(underlying, out equity))
-            {
-                equity = AddEquity(underlying.Value, resolution, underlying.ID.Market, false);
-                underlyingConfigs = SubscriptionManager.SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(underlying);
-            }
-            else
-            {
-                underlyingConfigs = SubscriptionManager.SubscriptionDataConfigService
-                    .GetSubscriptionDataConfigs(underlying);
+            Security underlying;
+            var underlyingSymbol = option.Symbol.Underlying;
 
-                var dataNormalizationMode = underlyingConfigs.DataNormalizationMode();
-                if (dataNormalizationMode != DataNormalizationMode.Raw && _locked)
-                {
-                    // We check the "locked" flag here because during initialization we need to load existing open orders and holdings from brokerages.
-                    // There is no data streaming yet, so it is safe to change the data normalization mode to Raw.
-                    throw new ArgumentException($"The underlying equity asset ({underlying.Value}) is set to " +
-                        $"{dataNormalizationMode}, please change this to DataNormalizationMode.Raw with the " +
-                        "SetDataNormalization() method"
-                    );
-                }
+            if (!Securities.TryGetValue(underlyingSymbol, out underlying))
+            {
+                underlying = AddEquity(underlyingSymbol.Value, resolution, underlyingSymbol.ID.Market, false);
             }
-            underlyingConfigs.SetDataNormalizationMode(DataNormalizationMode.Raw);
-            // For backward compatibility we need to refresh the security DataNormalizationMode Property
-            equity.RefreshDataNormalizationModeProperty();
 
-            option.Underlying = equity;
+            option.Underlying = underlying;
+
+            ConfigureUnderlyingSecurity(underlying);
 
             AddToUserDefinedUniverse(option, configs);
 

@@ -20,6 +20,7 @@ from System import *
 from QuantConnect import *
 from QuantConnect.Data import *
 from QuantConnect.Algorithm import *
+from QuantConnect.Securities.Option import OptionPriceModels
 import numpy as np
 from datetime import timedelta
 
@@ -52,30 +53,48 @@ class OptionChainProviderAlgorithm(QCAlgorithm):
             self.MarketOrder(self.equity.Symbol, 100)
 
         if not (self.Securities.ContainsKey(self.contract) and self.Portfolio[self.contract].Invested):
-            self.contract = self.OptionsFilter(data)
-
-        if self.Securities.ContainsKey(self.contract) and not self.Portfolio[self.contract].Invested:
-            self.MarketOrder(self.contract, -1)
-
-    def OptionsFilter(self, data):
-        ''' OptionChainProvider gets a list of option contracts for an underlying symbol at requested date.
+            '''OptionChainProvider gets a list of option contracts for an underlying symbol at requested date.
             Then you can manually filter the contract list returned by GetOptionContractList.
             The manual filtering will be limited to the information included in the Symbol
-            (strike, expiration, type, style) and/or prices from a History call '''
+            (strike, expiration, type, style) and/or prices from a History call'''
 
-        contracts = self.OptionChainProvider.GetOptionContractList(self.equity.Symbol, data.Time)
-        self.underlyingPrice = self.Securities[self.equity.Symbol].Price
-        # filter the out-of-money call options from the contract list which expire in 10 to 30 days from now on
-        otm_calls = [i for i in contracts if i.ID.OptionRight == OptionRight.Call and
-                                            i.ID.StrikePrice - self.underlyingPrice > 0 and
-                                            10 < (i.ID.Date - data.Time).days < 30]
-        if len(otm_calls) > 0:
-            contract = sorted(sorted(otm_calls, key = lambda x: x.ID.Date),
-                                                     key = lambda x: x.ID.StrikePrice - self.underlyingPrice)[0]
-            if contract not in self.contractsAdded:
-                self.contractsAdded.add(contract)
-                # use AddOptionContract() to subscribe the data for specified contract
-                self.AddOptionContract(contract, Resolution.Minute)
-            return contract
-        else:
-            return str()
+            contracts = self.OptionChainProvider.GetOptionContractList(self.equity.Symbol, data.Time)
+            self.underlyingPrice = self.Securities[self.equity.Symbol].Price
+            # filter the out-of-money call options from the contract list which expire in 10 to 30 days from now on
+            otm_calls = [i for i in contracts if i.ID.OptionRight == OptionRight.Call and
+                                                 i.ID.StrikePrice - self.underlyingPrice > 0 and
+                                                 10 < (i.ID.Date - data.Time).days < 30]
+            self.contract = str()
+            if len(otm_calls) > 0:
+                self.contract = sorted(otm_calls, key = lambda x: (x.ID.Date, x.ID.StrikePrice - self.underlyingPrice))[0]
+                if self.contract not in self.contractsAdded:
+                    self.contractsAdded.add(self.contract)
+                    # use AddOptionContract() to subscribe the data for specified contract
+                    self.AddOptionContract(self.contract, Resolution.Minute).PriceModel = OptionPriceModels.CrankNicolsonFD()
+
+        if self.Securities.ContainsKey(self.contract) and not self.Portfolio[self.contract].Invested and data.OptionChains.Count > 0:
+            self.MarketOrder(self.contract, -1)
+
+            for chain in data.OptionChains:
+                volatility = self.Securities[chain.Key.Underlying].VolatilityModel.Volatility
+                for contract in chain.Value:
+
+                    delta = contract.Greeks.Delta;
+                    if delta == 0:
+                        raise Exception(f"Delta for {contract.Symbol} cannot be zero")
+
+                    self.Log("{0},Bid={1} Ask={2} Last={3} OI={4} sigma={5:.3f} NPV={6:.3f} \
+                              delta={7:.3f} gamma={8:.3f} vega={9:.3f} beta={10:.2f} theta={11:.2f} IV={12:.2f}".format(
+                    contract.Symbol.Value,
+                    contract.BidPrice,
+                    contract.AskPrice,
+                    contract.LastPrice,
+                    contract.OpenInterest,
+                    volatility,
+                    contract.TheoreticalPrice,
+                    delta,
+                    contract.Greeks.Gamma,
+                    contract.Greeks.Vega,
+                    contract.Greeks.Rho,
+                    contract.Greeks.Theta / 365,
+                    contract.ImpliedVolatility))

@@ -13,10 +13,12 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -71,14 +73,43 @@ namespace QuantConnect.Algorithm.CSharp
                     if (_contractsAdded.Add(_optionContract))
                     {
                         // use AddOptionContract() to subscribe the data for specified contract
-                        AddOptionContract(_optionContract, Resolution.Minute);
+                        AddOptionContract(_optionContract, Resolution.Minute)
+                            .PriceModel = OptionPriceModels.CrankNicolsonFD();
                     }
                 }
                 else _optionContract = string.Empty;
             }
-            if (Securities.ContainsKey(_optionContract) && !Portfolio[_optionContract].Invested)
+            if (Securities.ContainsKey(_optionContract) && !Portfolio[_optionContract].Invested && data.OptionChains.Count > 0)
             {
                 MarketOrder(_optionContract, -1);
+
+                foreach (var chain in data.OptionChains)
+                {
+                    var underlying = Securities[chain.Key.Underlying];
+                    foreach (var contract in chain.Value)
+                    {
+                        var delta = contract.Greeks.Delta;
+                        if (delta == 0)
+                        {
+                            throw new Exception($"Delta for {contract.Symbol} cannot be zero");
+                        }
+
+                        Log($"{contract.Symbol.Value}," +
+                            $"Bid={contract.BidPrice.ToStringInvariant()} " +
+                            $"Ask={contract.AskPrice.ToStringInvariant()} " +
+                            $"Last={contract.LastPrice.ToStringInvariant()} " +
+                            $"OI={contract.OpenInterest.ToStringInvariant()} " +
+                            $"σ={underlying.VolatilityModel.Volatility.ToStringInvariant("0.000")} " +
+                            $"NPV={contract.TheoreticalPrice.ToStringInvariant("0.000")} " +
+                            $"Δ={delta.ToStringInvariant("0.000")} " +
+                            $"Γ={contract.Greeks.Gamma.ToStringInvariant("0.000")} " +
+                            $"ν={contract.Greeks.Vega.ToStringInvariant("0.000")} " +
+                            $"ρ={contract.Greeks.Rho.ToStringInvariant("0.00")} " +
+                            $"Θ={(contract.Greeks.Theta / 365.0m).ToStringInvariant("0.00")} " +
+                            $"IV={contract.ImpliedVolatility.ToStringInvariant("0.000")}"
+                        );
+                    }
+                }
             }
         }
 

@@ -531,18 +531,39 @@ namespace QuantConnect.Algorithm
             // force underlying securities to be raw data mode
             var configs = SubscriptionManager.SubscriptionDataConfigService
                 .GetSubscriptionDataConfigs(security.Symbol);
-            if (configs.DataNormalizationMode() != DataNormalizationMode.Raw)
+
+            var dataNormalizationMode = configs.DataNormalizationMode();
+            if (dataNormalizationMode != DataNormalizationMode.Raw)
             {
+                if (_locked)
+                {
+                    // We check the "locked" flag here because during initialization we need to load existing open orders and holdings from brokerages.
+                    // There is no data streaming yet, so it is safe to change the data normalization mode to Raw.
+                    throw new ArgumentException($"The underlying equity asset ({security.Symbol.Value}) is set to " +
+                        $"{dataNormalizationMode}, please change this to DataNormalizationMode.Raw with the " +
+                        "SetDataNormalization() method"
+                    );
+                }
+
                 Debug($"Warning: The {security.Symbol.Value} equity security was set the raw price normalization mode to work with options.");
                 configs.SetDataNormalizationMode(DataNormalizationMode.Raw);
                 // For backward compatibility we need to refresh the security DataNormalizationMode Property
                 security.RefreshDataNormalizationModeProperty();
             }
 
-            // ensure a volatility model has been set on the underlying
+            // ensure a volatility model has been set on the underlying and it is fully warmed up
             if (security.VolatilityModel == VolatilityModel.Null)
             {
-                security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(periods: 30);
+                var volatilityModel = new StandardDeviationOfReturnsVolatilityModel(periods: 30);
+                volatilityModel.SetSubscriptionDataConfigProvider(SubscriptionManager.SubscriptionDataConfigService);
+
+                var requests = volatilityModel.GetHistoryRequirements(security, UtcTime);
+                if (requests != null)
+                {
+                    History(requests).PushThrough(data => volatilityModel.Update(security, data));
+                }
+
+                security.VolatilityModel = volatilityModel;
             }
         }
 
