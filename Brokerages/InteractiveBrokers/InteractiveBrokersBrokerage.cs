@@ -3109,15 +3109,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private void OnIbAutomaterExited(object sender, ExitedEventArgs e)
         {
             Log.Trace($"InteractiveBrokersBrokerage.OnIbAutomaterExited(): Exit code: {e.ExitCode}");
+
+            // check if IBGateway was closed because of an existing session
+            CheckIbAutomaterError(_ibAutomater.GetLastStartResult(), false);
         }
 
-        private void CheckIbAutomaterError(StartResult result)
+        private void CheckIbAutomaterError(StartResult result, bool throwException = true)
         {
             if (result.HasError)
             {
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, result.ErrorCode.ToString(), result.ErrorMessage));
 
-                throw new Exception($"InteractiveBrokersBrokerage.CheckIbAutomaterError(): {result.ErrorCode} - {result.ErrorMessage}");
+                if (throwException)
+                {
+                    throw new Exception($"InteractiveBrokersBrokerage.CheckIbAutomaterError(): {result.ErrorCode} - {result.ErrorMessage}");
+                }
             }
         }
 
