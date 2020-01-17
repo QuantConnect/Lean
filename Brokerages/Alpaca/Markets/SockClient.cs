@@ -14,6 +14,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using WebSocketSharp;
 using System.Security.Authentication;
+using QuantConnect.Configuration;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
@@ -76,7 +78,16 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
             };
             uriBuilder.Path += "/stream";
 
-            _webSocket = new WebSocket(uriBuilder.Uri.ToString());
+            _webSocket = new WebSocket(uriBuilder.Uri.ToString())
+            {
+                Log =
+                {
+                    Level = Config.GetBool("websocket-log-trace") ? LogLevel.Trace : LogLevel.Error,
+
+                    // The stack frame number of 3 was derived from the usage of the Logger class in the WebSocketSharp library
+                    Output = (data, file) => { Log.Trace($"{WhoCalledMe.GetMethodName(3)}(): {data.Message}", true); }
+                }
+            };
 
             _webSocket.SslConfiguration.EnabledSslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12;
 
