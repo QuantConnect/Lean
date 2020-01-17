@@ -342,10 +342,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Provides public access to the underlying IBClient instance
         /// </summary>
-        public IB.InteractiveBrokersClient Client
-        {
-            get { return _client; }
-        }
+        public IB.InteractiveBrokersClient Client => _client;
 
         /// <summary>
         /// Places a new order and assigns a new broker ID to the order
