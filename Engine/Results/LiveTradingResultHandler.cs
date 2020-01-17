@@ -713,7 +713,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
         {
             Algorithm = algorithm;
-            StartingPortfolioValue = startingPortfolioValue;
+            DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
 
             var types = new List<SecurityType>();
             foreach (var kvp in Algorithm.Securities)
