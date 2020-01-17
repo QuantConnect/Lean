@@ -131,6 +131,7 @@ namespace QuantConnect.Lean.Engine.Results
             if (_job == null) throw new Exception("LiveResultHandler.Constructor(): Submitted Job type invalid.");
             JobId = _job.DeployId;
             CompileId = _job.CompileId;
+            PreviousUtcSampleTime = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -609,7 +610,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="value">Value for the chart sample.</param>
         /// <param name="unit">Unit for the chart axis</param>
         /// <remarks>Sample can be used to create new charts or sample equity - daily performance.</remarks>
-        protected void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
+        protected override void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
         {
             // Sampling during warming up period skews statistics
             if (Algorithm.IsWarmingUp)
@@ -644,36 +645,13 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Time of the sample.</param>
         /// <param name="value">Equity value at this moment in time.</param>
         /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
-        protected void SampleEquity(DateTime time, decimal value)
+        protected override void SampleEquity(DateTime time, decimal value)
         {
             if (value > 0)
             {
                 Log.Debug("LiveTradingResultHandler.SampleEquity(): " + time.ToShortTimeString() + " >" + value);
-                Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value);
+                base.SampleEquity(time, value);
             }
-        }
-
-        /// <summary>
-        /// Sample the current daily performance directly with a time-value pair.
-        /// </summary>
-        /// <param name="time">Current backtest date.</param>
-        /// <param name="value">Current daily performance value.</param>
-        /// <seealso cref="Sample(string,string,int,SeriesType,DateTime,decimal,string)"/>
-        protected void SamplePerformance(DateTime time, decimal value)
-        {
-            Log.Debug("LiveTradingResultHandler.SamplePerformance(): " + time.ToShortTimeString() + " >" + value);
-            Sample("Strategy Equity", "Daily Performance", 1, SeriesType.Bar, time, value, "%");
-        }
-
-        /// <summary>
-        /// Sample the current benchmark performance directly with a time-value pair.
-        /// </summary>
-        /// <param name="time">Current backtest date.</param>
-        /// <param name="value">Current benchmark value.</param>
-        /// <seealso cref="IResultHandler.Sample"/>
-        protected virtual void SampleBenchmark(DateTime time, decimal value)
-        {
-            Sample("Benchmark", "Benchmark", 0, SeriesType.Line, time, value);
         }
 
         /// <summary>
@@ -1037,43 +1015,6 @@ namespace QuantConnect.Lean.Engine.Results
         protected virtual string CreateSafeChartName(string chartName)
         {
             return Uri.EscapeDataString(chartName);
-        }
-
-        /// <summary>
-        /// Samples benchmark continuously, and on date change, samples performance and portfolio equity
-        /// </summary>
-        /// <param name="time">Current time step of the AlgorithmManager loop</param>
-        /// <param name="force">Forces processing of equity and performance if true</param>
-        public virtual void Sample(DateTime time, bool force = false)
-        {
-            var dayChanged = PreviousUtcSampleTime.Date != time.Date;
-
-            if (force)
-            {
-                // For any forced sampling, we need to sample at the time we provide to this method.
-                PreviousUtcSampleTime = time;
-            }
-
-            // Continously sample the benchmark in live mode
-            SampleBenchmark(PreviousUtcSampleTime, Algorithm.Benchmark.Evaluate(PreviousUtcSampleTime).SmartRounding());
-
-            if (dayChanged || force)
-            {
-                var currentPortfolioValue = Algorithm.Portfolio.TotalPortfolioValue;
-                var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
-
-                SampleEquity(PreviousUtcSampleTime, currentPortfolioValue);
-                SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
-
-                // If the day changed, set the closing portfolio value. Otherwise, we would end up
-                // with skewed statistics if a processing event was forced.
-                if (dayChanged)
-                {
-                    DailyPortfolioValue = currentPortfolioValue;
-                }
-            }
-
-            PreviousUtcSampleTime = time;
         }
 
         /// <summary>

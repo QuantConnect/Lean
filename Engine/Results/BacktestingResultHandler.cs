@@ -558,7 +558,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Time for the sample</param>
         /// <param name="unit">Unit of the sample</param>
         /// <param name="value">Value for the chart sample.</param>
-        protected void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
+        protected override void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
         {
             // Sampling during warming up period skews statistics
             if (Algorithm.IsWarmingUp)
@@ -597,35 +597,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         /// <param name="time">Current backtest time.</param>
         /// <param name="value">Current equity value.</param>
-        protected void SampleEquity(DateTime time, decimal value)
+        protected override void SampleEquity(DateTime time, decimal value)
         {
-            //Sample the Equity Value:
-            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value);
+            base.SampleEquity(time, value);
 
             //Recalculate the days processed:
             _daysProcessed = (time - Algorithm.StartDate).TotalDays;
-        }
-
-        /// <summary>
-        /// Sample the current daily performance directly with a time-value pair.
-        /// </summary>
-        /// <param name="time">Current backtest date.</param>
-        /// <param name="value">Current daily performance value.</param>
-        protected virtual void SamplePerformance(DateTime time, decimal value)
-        {
-            //Added a second chart to equity plot - daily perforamnce:
-            Sample("Strategy Equity", "Daily Performance", 1, SeriesType.Bar, time, value, "%");
-        }
-
-        /// <summary>
-        /// Sample the current benchmark performance directly with a time-value pair.
-        /// </summary>
-        /// <param name="time">Current backtest date.</param>
-        /// <param name="value">Current benchmark value.</param>
-        /// <seealso cref="IResultHandler.Sample"/>
-        protected void SampleBenchmark(DateTime time, decimal value)
-        {
-            Sample("Benchmark", "Benchmark", 0, SeriesType.Line, time, value);
         }
 
         /// <summary>
@@ -749,41 +726,6 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 RuntimeStatistics[key] = value;
             }
-        }
-
-        /// <summary>
-        /// Attempt to sample portfolio equity, benchmark, and daily performance
-        /// </summary>
-        /// <param name="time">Current time in the AlgorithmManager loop</param>
-        /// <param name="force">Force sampling of equity, benchmark, and performance to be </param>
-        public virtual void Sample(DateTime time, bool force = false)
-        {
-            var dayChanged = PreviousUtcSampleTime.Date != time.Date;
-
-            if (dayChanged || force)
-            {
-                if (force)
-                {
-                    // For any forced sampling, we need to sample at the time we provide to this method.
-                    PreviousUtcSampleTime = time;
-                }
-
-                var currentPortfolioValue = Algorithm.Portfolio.TotalPortfolioValue;
-                var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
-
-                SampleEquity(PreviousUtcSampleTime, Algorithm.Portfolio.TotalPortfolioValue);
-                SampleBenchmark(PreviousUtcSampleTime, Algorithm.Benchmark.Evaluate(PreviousUtcSampleTime).SmartRounding());
-                SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
-
-                // If the day changed, set the closing portfolio value. Otherwise, we would end up
-                // with skewed statistics if a processing event was forced.
-                if (dayChanged)
-                {
-                    DailyPortfolioValue = currentPortfolioValue;
-                }
-            }
-
-            PreviousUtcSampleTime = time;
         }
 
         /// <summary>

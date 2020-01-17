@@ -117,11 +117,7 @@ namespace QuantConnect.Tests.Engine
             Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, _job.AlgorithmId, message, stacktrace));
         }
 
-        public void Sample(DateTime time, bool force = false)
-        {
-        }
-
-        protected void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
+        protected override void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
         {
             //Add a copy locally:
             if (!Charts.ContainsKey(chartName))
@@ -137,26 +133,6 @@ namespace QuantConnect.Tests.Engine
 
             //Add our value:
             Charts[chartName].Series[seriesName].Values.Add(new ChartPoint(time, value));
-        }
-
-        protected void SampleEquity(DateTime time, decimal value)
-        {
-            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value);
-        }
-
-        protected void SamplePerformance(DateTime time, decimal value)
-        {
-            Sample("Strategy Equity", "Daily Performance", 1, SeriesType.Line, time, value, "%");
-        }
-
-        protected void SampleBenchmark(DateTime time, decimal value)
-        {
-            Sample("Benchmark", "Benchmark", 0, SeriesType.Line, time, value);
-        }
-
-        protected void SampleAssetPrices(Symbol symbol, DateTime time, decimal value)
-        {
-            Sample("Stockplot: " + symbol.Value, "Stockplot: " + symbol.Value, 0, SeriesType.Line, time, value);
         }
 
         protected void SampleRange(List<Chart> updates)
