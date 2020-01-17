@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -106,18 +106,38 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "2.000%"},
             {"Expectancy", "0"},
             {"Net Profit", "-1.674%"},
-            {"Sharpe Ratio", "-5.986"},
+            {"Sharpe Ratio", "-5.737"},
+            {"Probabilistic Sharpe Ratio", "5.425%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.253"},
-            {"Beta", "0.474"},
-            {"Annual Standard Deviation", "0.059"},
+            {"Alpha", "-0.321"},
+            {"Beta", "0.046"},
+            {"Annual Standard Deviation", "0.057"},
             {"Annual Variance", "0.003"},
-            {"Information Ratio", "-2.235"},
-            {"Tracking Error", "0.064"},
-            {"Treynor Ratio", "-0.744"},
+            {"Information Ratio", "-1.913"},
+            {"Tracking Error", "0.112"},
+            {"Treynor Ratio", "-7.132"},
             {"Total Fees", "$3.50"},
+            {"Fitness Score", "0"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "-7.276"},
+            {"Return Over Maximum Drawdown", "-16.98"},
+            {"Portfolio Turnover", "0.038"},
+            {"Total Insights Generated", "1"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "1"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"}
         };
     }
 }

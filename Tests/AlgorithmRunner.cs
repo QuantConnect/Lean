@@ -44,7 +44,7 @@ namespace QuantConnect.Tests
     /// </summary>
     public static class AlgorithmRunner
     {
-        public static AlgorithmManager RunLocalBacktest(
+        public static AlgorithmRunnerResults RunLocalBacktest(
             string algorithm,
             Dictionary<string, string> expectedStatistics,
             AlphaRuntimeStatistics expectedAlphaStatistics,
@@ -53,11 +53,13 @@ namespace QuantConnect.Tests
             DateTime? startDate = null,
             DateTime? endDate = null,
             string setupHandler = "RegressionSetupHandlerWrapper",
-            decimal? initialCash = null)
+            decimal? initialCash = null,
+            bool storeResult = false)
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
             var alphaStatistics = new AlphaRuntimeStatistics(new TestAccountCurrencyProvider());
+            BacktestingResultHandler results = null;
 
             Composer.Instance.Reset();
             SymbolCache.Clear();
@@ -129,7 +131,8 @@ namespace QuantConnect.Tests
                         }
                     }).Wait();
 
-                    var backtestingResultHandler = (BacktestingResultHandler) algorithmHandlers.Results;
+                    var backtestingResultHandler = (BacktestingResultHandler)algorithmHandlers.Results;
+                    results = backtestingResultHandler;
                     statistics = backtestingResultHandler.FinalStatistics;
 
                     var defaultAlphaHandler = (DefaultAlphaHandler) algorithmHandlers.Alphas;
@@ -182,7 +185,7 @@ namespace QuantConnect.Tests
             File.Delete(passedOrderLogFile);
             if (File.Exists(ordersLogFile)) File.Copy(ordersLogFile, passedOrderLogFile);
 
-            return algorithmManager;
+            return new AlgorithmRunnerResults(algorithm, language, algorithmManager, results);
         }
 
         private static void AssertAlphaStatistics(AlphaRuntimeStatistics expected, AlphaRuntimeStatistics actual, Expression<Func<AlphaRuntimeStatistics, object>> selector)

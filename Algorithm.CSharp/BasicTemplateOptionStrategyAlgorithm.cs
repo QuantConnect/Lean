@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -113,23 +113,43 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "778"},
             {"Average Win", "0%"},
-            {"Average Loss", "-0.02%"},
-            {"Compounding Annual Return", "-100.000%"},
-            {"Drawdown", "6.900%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "-6.860%"},
-            {"Sharpe Ratio", "-11.225"},
-            {"Loss Rate", "100%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-17.287"},
-            {"Beta", "-26.806"},
-            {"Annual Standard Deviation", "0.77"},
-            {"Annual Variance", "0.593"},
-            {"Information Ratio", "-10.418"},
-            {"Tracking Error", "0.799"},
-            {"Treynor Ratio", "0.322"},
-            {"Total Fees", "$778.00"}
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$778.00"},
+            {"Fitness Score", "0"},
+            {"Kelly Criterion Estimate", "-2.958"},
+            {"Kelly Criterion Probability Value", "0.613"},
+            {"Sortino Ratio", "0"},
+            {"Return Over Maximum Drawdown", "0"},
+            {"Portfolio Turnover", "0"},
+            {"Total Insights Generated", "778"},
+            {"Total Insights Closed", "774"},
+            {"Total Insights Analysis Completed", "774"},
+            {"Long Insight Count", "0"},
+            {"Short Insight Count", "390"},
+            {"Long/Short Ratio", "0%"},
+            {"Estimated Monthly Alpha Value", "$-0.2716981"},
+            {"Total Accumulated Estimated Alpha Value", "$-0.008"},
+            {"Mean Population Estimated Insight Value", "$-0.00001033592"},
+            {"Mean Population Direction", "22.6169%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0.5865%"},
+            {"Rolling Averaged Population Magnitude", "0%"}
         };
     }
 }

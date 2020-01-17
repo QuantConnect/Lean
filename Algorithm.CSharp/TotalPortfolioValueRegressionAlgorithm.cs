@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -121,18 +121,38 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "65.200%"},
             {"Expectancy", "-0.007"},
             {"Net Profit", "-19.684%"},
-            {"Sharpe Ratio", "0.277"},
+            {"Sharpe Ratio", "0.254"},
+            {"Probabilistic Sharpe Ratio", "20.861%"},
             {"Loss Rate", "47%"},
             {"Win Rate", "53%"},
             {"Profit-Loss Ratio", "0.88"},
-            {"Alpha", "-0.299"},
-            {"Beta", "4.723"},
-            {"Annual Standard Deviation", "0.952"},
-            {"Annual Variance", "0.907"},
-            {"Information Ratio", "0.165"},
-            {"Tracking Error", "0.876"},
-            {"Treynor Ratio", "0.056"},
-            {"Total Fees", "$18746.38"}
+            {"Alpha", "0.228"},
+            {"Beta", "-0.053"},
+            {"Annual Standard Deviation", "0.874"},
+            {"Annual Variance", "0.764"},
+            {"Information Ratio", "0.138"},
+            {"Tracking Error", "0.883"},
+            {"Treynor Ratio", "-4.207"},
+            {"Total Fees", "$18746.38"},
+            {"Fitness Score", "0.456"},
+            {"Kelly Criterion Estimate", "1.469"},
+            {"Kelly Criterion Probability Value", "0.087"},
+            {"Sortino Ratio", "-0.247"},
+            {"Return Over Maximum Drawdown", "-0.301"},
+            {"Portfolio Turnover", "7.177"},
+            {"Total Insights Generated", "3514"},
+            {"Total Insights Closed", "3500"},
+            {"Total Insights Analysis Completed", "3500"},
+            {"Long Insight Count", "1764"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$987813.3451"},
+            {"Total Accumulated Estimated Alpha Value", "$12025255.5130"},
+            {"Mean Population Estimated Insight Value", "$3435.7873"},
+            {"Mean Population Direction", "50.0431%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "53.7417%"},
+            {"Rolling Averaged Population Magnitude", "0%"}
         };
     }
 }

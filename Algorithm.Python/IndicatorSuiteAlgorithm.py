@@ -25,6 +25,7 @@ from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Data.Custom import *
 from QuantConnect.Algorithm import *
+from QuantConnect.Python import PythonQuandl
 
 ### <summary>
 ### Basic template algorithm simply initializes the date range and cash. This is a skeleton
@@ -38,11 +39,11 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
 
     def Initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
-        
+
         self.symbol = "SPY"
         self.customSymbol = "WIKI/FB"
         self.price = None
-        
+
         self.SetStartDate(2013, 1, 1)  #Set Start Date
         self.SetEndDate(2014, 12, 31)    #Set End Date
         self.SetCash(25000)           #Set Strategy Cash
@@ -75,7 +76,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         #
         #  For more information on 'anonymous functions' see: http:#en.wikipedia.org/wiki/Anonymous_function
         #                                                     https:#msdn.microsoft.com/en-us/library/bb397687.aspx
-        # 
+        #
         self.selectorIndicators = {
                                     'BB' : self.BB(self.symbol, 20, 1, MovingAverageType.Simple, Resolution.Daily, Field.Low),
                                     'RSI' :self.RSI(self.symbol, 14, MovingAverageType.Simple, Resolution.Daily, Field.Low),
@@ -108,7 +109,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
 
         # we can also easily plot our indicators each time they update using th PlotIndicator function
         self.PlotIndicator("Ratio", self.ratio)
-        
+
         # The following methods will add multiple charts to the algorithm output.
         # Those chatrs names will be used later to plot different series in a particular chart.
         # For more information on Lean Charting see: https://www.quantconnect.com/docs#Charting
@@ -127,12 +128,12 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        
+
         if (#not data.Bars.ContainsKey(self.symbol) or
             not self.indicators['BB'].IsReady or
             not self.indicators['RSI'].IsReady):
             return
-        
+
         self.price = data[self.symbol].Close
 
         if not self.Portfolio.HoldStock:
@@ -141,28 +142,28 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
             self.Debug('Purchased SPY on ' + self.Time.strftime('%Y-%m-%d'))
 
     def update_plots(self):
-        if not self.indicators['BB'].IsReady or not self.indicators['STD'].IsReady: 
+        if not self.indicators['BB'].IsReady or not self.indicators['STD'].IsReady:
             return
-        
-        # Plots can also be created just with this one line command. 
+
+        # Plots can also be created just with this one line command.
         self.Plot('RSI', self.indicators['RSI'])
         # Custom data indicator
         self.Plot('RSI-FB', self.rsiCustom)
-        
+
         # Here we make use of the chats decalred in the Initialize method, plotting multiple series
         # in each chart.
         self.Plot('STD', 'STD', self.indicators['STD'].Current.Value)
-        
+
         self.Plot('BB', 'Price', self.price)
         self.Plot('BB', 'BollingerUpperBand', self.indicators['BB'].UpperBand.Current.Value)
         self.Plot('BB', 'BollingerMiddleBand', self.indicators['BB'].MiddleBand.Current.Value)
         self.Plot('BB', 'BollingerLowerBand', self.indicators['BB'].LowerBand.Current.Value)
-         
-        
+
+
         self.Plot('AROON', 'Aroon', self.indicators['AROON'].Current.Value)
         self.Plot('AROON', 'AroonUp', self.indicators['AROON'].AroonUp.Current.Value)
         self.Plot('AROON', 'AroonDown', self.indicators['AROON'].AroonDown.Current.Value)
-        
+
         # The following Plot method calls are commented out because of the 10 series limit for backtests
         #self.Plot('ATR', 'ATR', self.indicators['ATR'].Current.Value)
         #self.Plot('ATR', 'ATRDoubleBar', self.selectorIndicators['ATR'].Current.Value)
@@ -172,7 +173,7 @@ class IndicatorSuiteAlgorithm(QCAlgorithm):
         #self.Plot('MOMP', self.indicators['MOMP'].Current.Value)
         #self.Plot('MACD', 'MACD', self.indicators['MACD'].Current.Value)
         #self.Plot('MACD', 'MACDSignal', self.indicators['MACD'].Signal.Current.Value)
-        
+
     def selector_double_TradeBar(self, bar):
         trade_bar = TradeBar()
         trade_bar.Close = 2 * bar.Close

@@ -107,6 +107,16 @@ namespace QuantConnect.Lean.Engine.Results
         protected AlphaRuntimeStatistics AlphaRuntimeStatistics { get; set; }
 
         /// <summary>
+        /// Closing portfolio value. Used to calculate daily performance.
+        /// </summary>
+        protected decimal DailyPortfolioValue;
+
+        /// <summary>
+        /// Last time the <see cref="IResultHandler.Sample(DateTime, bool)"/> method was called in UTC
+        /// </summary>
+        protected DateTime PreviousUtcSampleTime;
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()
@@ -169,6 +179,95 @@ namespace QuantConnect.Lean.Engine.Results
                 (Algorithm.Portfolio.TotalPortfolioValue - StartingPortfolioValue) / StartingPortfolioValue
                 : 0;
         }
+
+        /// <summary>
+        /// Samples portfolio equity, benchmark, and daily performance
+        /// </summary>
+        /// <param name="time">Current time in the AlgorithmManager loop</param>
+        /// <param name="force">Force sampling of equity, benchmark, and performance to be </param>
+        public virtual void Sample(DateTime time, bool force = false)
+        {
+            var dayChanged = PreviousUtcSampleTime.Date != time.Date;
+
+            if (dayChanged || force)
+            {
+                if (force)
+                {
+                    // For any forced sampling, we need to sample at the time we provide to this method.
+                    PreviousUtcSampleTime = time;
+                }
+
+                var currentPortfolioValue = Algorithm.Portfolio.TotalPortfolioValue;
+                var portfolioPerformance = DailyPortfolioValue == 0 ? 0 : Math.Round((currentPortfolioValue - DailyPortfolioValue) * 100 / DailyPortfolioValue, 10);
+
+                SampleEquity(PreviousUtcSampleTime, currentPortfolioValue);
+                SampleBenchmark(PreviousUtcSampleTime, Algorithm.Benchmark.Evaluate(PreviousUtcSampleTime).SmartRounding());
+                SamplePerformance(PreviousUtcSampleTime, portfolioPerformance);
+
+                // If the day changed, set the closing portfolio value. Otherwise, we would end up
+                // with skewed statistics if a processing event was forced.
+                if (dayChanged)
+                {
+                    DailyPortfolioValue = currentPortfolioValue;
+                }
+            }
+
+            PreviousUtcSampleTime = time;
+        }
+
+        /// <summary>
+        /// Sample the current equity of the strategy directly with time-value pair.
+        /// </summary>
+        /// <param name="time">Time of the sample.</param>
+        /// <param name="value">Current equity value.</param>
+        protected virtual void SampleEquity(DateTime time, decimal value)
+        {
+            Sample("Strategy Equity", "Equity", 0, SeriesType.Candle, time, value);
+        }
+
+        /// <summary>
+        /// Sample the current daily performance directly with a time-value pair.
+        /// </summary>
+        /// <param name="time">Time of the sample.</param>
+        /// <param name="value">Current daily performance value.</param>
+        protected virtual void SamplePerformance(DateTime time, decimal value)
+        {
+            if (Log.DebuggingEnabled)
+            {
+                Log.Debug("BaseResultsHandler.SamplePerformance(): " + time.ToShortTimeString() + " >" + value);
+            }
+            Sample("Strategy Equity", "Daily Performance", 1, SeriesType.Bar, time, value, "%");
+        }
+
+        /// <summary>
+        /// Sample the current benchmark performance directly with a time-value pair.
+        /// </summary>
+        /// <param name="time">Time of the sample.</param>
+        /// <param name="value">Current benchmark value.</param>
+        /// <seealso cref="IResultHandler.Sample"/>
+        protected virtual void SampleBenchmark(DateTime time, decimal value)
+        {
+            Sample("Benchmark", "Benchmark", 0, SeriesType.Line, time, value);
+        }
+
+        /// <summary>
+        /// Add a sample to the chart specified by the chartName, and seriesName.
+        /// </summary>
+        /// <param name="chartName">String chart name to place the sample.</param>
+        /// <param name="seriesName">Series name for the chart.</param>
+        /// <param name="seriesIndex">Series chart index - which chart should this series belong</param>
+        /// <param name="seriesType">Series type for the chart.</param>
+        /// <param name="time">Time for the sample</param>
+        /// <param name="value">Value for the chart sample.</param>
+        /// <param name="unit">Unit for the chart axis</param>
+        /// <remarks>Sample can be used to create new charts or sample equity - daily performance.</remarks>
+        protected abstract void Sample(string chartName,
+            string seriesName,
+            int seriesIndex,
+            SeriesType seriesType,
+            DateTime time,
+            decimal value,
+            string unit = "$");
 
         /// <summary>
         /// Gets the algorithm runtime statistics

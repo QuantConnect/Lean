@@ -59,7 +59,7 @@ namespace QuantConnect.Tests
                 parameters.AlphaStatistics,
                 parameters.Language,
                 parameters.ExpectedFinalStatus
-            );
+            ).AlgorithmManager;
 
             if (parameters.Algorithm == "TrainingOnDataRegressionAlgorithm")
             {

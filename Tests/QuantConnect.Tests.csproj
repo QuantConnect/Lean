@@ -297,6 +297,7 @@
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\DowngradeErrorCodeToWarningBrokerageMessageHandlerTests.cs" />
     <Compile Include="Brokerages\Paper\PaperBrokerageTests.cs" />
+    <Compile Include="AlgorithmRunnerResults.cs" />
     <Compile Include="Common\Benchmarks\SecurityBenchmarkTests.cs" />
     <Compile Include="Common\Brokerages\AlpacaBrokerageModelTests.cs" />
     <Compile Include="Common\Brokerages\BitfinexBrokerageModelTests.cs" />
@@ -309,6 +310,7 @@
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
     <Compile Include="Common\Data\Fundamental\FineFundamentalTests.cs" />
+    <Compile Include="Common\Statistics\StatisticsBuilderTests.cs" />
     <Compile Include="Common\Storage\LocalObjectStoreTests.cs" />
     <Compile Include="Common\Data\BaseDataTests.cs" />
     <Compile Include="Common\Data\CalendarConsolidatorsTests.cs" />
@@ -392,6 +394,7 @@
     <Compile Include="Engine\DataFeeds\SubscriptionTests.cs" />
     <Compile Include="Engine\HistoricalData\SubscriptionDataReaderHistoryProviderTests.cs" />
     <Compile Include="Engine\RealTime\BacktestingRealTimeHandlerTests.cs" />
+    <Compile Include="Engine\Results\BacktestingResultHandlerTests.cs" />
     <Compile Include="Indicators\PythonIndicatorNoinheritanceTestsLegacy.cs" />
     <Compile Include="Indicators\PythonIndicatorNoinheritanceTests.cs" />
     <Compile Include="Indicators\PythonIndicatorTests.cs" />

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -79,22 +79,42 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Trades", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "33.293%"},
+            {"Compounding Annual Return", "36.057%"},
             {"Drawdown", "2.300%"},
             {"Expectancy", "0"},
             {"Net Profit", "0.394%"},
-            {"Sharpe Ratio", "1.167"},
+            {"Sharpe Ratio", "3.816"},
+            {"Probabilistic Sharpe Ratio", "60.034%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.534"},
-            {"Beta", "-0.415"},
-            {"Annual Standard Deviation", "0.15"},
-            {"Annual Variance", "0.022"},
-            {"Information Ratio", "-2.767"},
-            {"Tracking Error", "0.25"},
-            {"Treynor Ratio", "-0.421"},
-            {"Total Fees", "$7.78"}
+            {"Alpha", "0"},
+            {"Beta", "0.997"},
+            {"Annual Standard Deviation", "0.178"},
+            {"Annual Variance", "0.032"},
+            {"Information Ratio", "-3.872"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0.68"},
+            {"Total Fees", "$7.78"},
+            {"Fitness Score", "0.031"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "-2.133"},
+            {"Return Over Maximum Drawdown", "-8.479"},
+            {"Portfolio Turnover", "0.25"},
+            {"Total Insights Generated", "1"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "1"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"}
         };
     }
 }
