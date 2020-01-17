@@ -33,6 +33,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         private const string Zero = "00:00:00";
         private const string ElevenAmHongKongTime = "03:00:00";
         private const string ElevenOclockMoscowTime = "08:00:00";
+        private const string TenSixteen = "10:16:00";
+        private const string ElevenOclock = "11:00:00";
         private const string NineFifteenCentralTime = "14:15:00";
         private const string NineSixteenCentralTime = "14:16:00";
         private const string TwelvePMCentralTime = "17:00:00";
@@ -122,6 +124,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             }
         }
 
+        [TestCase(QuantConnect.Securities.Futures.Currencies.USD, TenSixteen)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.GBP, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.CAD, NineSixteenCentralTime)]
         [TestCase(QuantConnect.Securities.Futures.Currencies.JPY, NineSixteenCentralTime)]
@@ -251,6 +254,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             }
         }
 
+        [TestCase(QuantConnect.Securities.Futures.Financials.EuroDollar, ElevenOclock)]
         [TestCase(QuantConnect.Securities.Futures.Financials.Y30TreasuryBond, TwelveOne)]
         [TestCase(QuantConnect.Securities.Futures.Financials.Y10TreasuryNote, TwelveOne)]
         [TestCase(QuantConnect.Securities.Futures.Financials.Y5TreasuryNote, TwelveOne)]
@@ -370,7 +374,12 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             }
         }
 
+        [TestCase(QuantConnect.Securities.Futures.Softs.Cotton2)]
+        [TestCase(QuantConnect.Securities.Futures.Softs.OrangeJuice)]
+        [TestCase(QuantConnect.Securities.Futures.Softs.Coffee)]
+        [TestCase(QuantConnect.Securities.Futures.Softs.Sugar11)]
         [TestCase(QuantConnect.Securities.Futures.Softs.Sugar11CME)]
+        [TestCase(QuantConnect.Securities.Futures.Softs.Cocoa)]
         public void SoftsExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");

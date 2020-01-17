@@ -30,9 +30,18 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         /// <param name="time">The current Time</param>
         /// <param name="n">Number of business days succeeding current time. Use negative value for preceding business days</param>
+        /// <param name="useEquityHolidays">Use LEAN's <see cref="USHoliday"/> definitions as holidays to exclude</param>
+        /// <param name="holidayList">Enumerable of holidays to exclude. These should be sourced from the <see cref="MarketHoursDatabase"/></param>
         /// <returns>The date-time after adding n business days</returns>
-        public static DateTime AddBusinessDays(DateTime time, int n)
+        public static DateTime AddBusinessDays(DateTime time, int n, bool useEquityHolidays = true, IEnumerable<DateTime> holidayList = null)
         {
+
+            var holidays = holidayList?.ToList() ?? new List<DateTime>();
+            if (useEquityHolidays)
+            {
+                holidays.AddRange(USHoliday.Dates);
+            }
+
             if (n < 0)
             {
                 var businessDays = (-1) * n;
@@ -40,10 +49,11 @@ namespace QuantConnect.Securities.Future
                 do
                 {
                     var previousDay = time.AddDays(-totalDays);
-                    if (NotHoliday(previousDay))
+                    if (!holidays.Contains(previousDay) && previousDay.IsCommonBusinessDay())
                     {
                         businessDays--;
                     }
+
                     if (businessDays > 0) totalDays++;
                 } while (businessDays > 0);
 
@@ -56,10 +66,11 @@ namespace QuantConnect.Securities.Future
                 do
                 {
                     var previousDay = time.AddDays(totalDays);
-                    if (NotHoliday(previousDay))
+                    if (!holidays.Contains(previousDay) && previousDay.IsCommonBusinessDay())
                     {
                         businessDays--;
                     }
+
                     if (businessDays > 0) totalDays++;
                 } while (businessDays > 0);
 
