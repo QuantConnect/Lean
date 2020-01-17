@@ -25,7 +25,7 @@ from QuantConnect.Data import *
 from QuantConnect.Data.Market import *
 from QuantConnect.Data.Custom import *
 from QuantConnect.Algorithm import *
-from QuantConnect.Python import PythonQuandl
+from QuantConnect.Python import *
 
 ### <summary>
 ### Basic template algorithm simply initializes the date range and cash. This is a skeleton
