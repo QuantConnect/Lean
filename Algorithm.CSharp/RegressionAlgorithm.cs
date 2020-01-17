@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 
@@ -43,12 +44,12 @@ namespace QuantConnect.Algorithm.CSharp
         private DateTime lastTradeTradeBars;
         private DateTime lastTradeTicks;
         private TimeSpan tradeEvery = TimeSpan.FromMinutes(1);
-        public void OnData(TradeBars data)
+        public void OnData(Slice data)
         {
             if (Time - lastTradeTradeBars < tradeEvery) return;
             lastTradeTradeBars = Time;
 
-            foreach (var kvp in data)
+            foreach (var kvp in data.Bars)
             {
                 var symbol = kvp.Key;
                 var bar = kvp.Value;
@@ -86,10 +87,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "5433"},
+            {"Total Trades", "1638"},
             {"Average Win", "0.00%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-3.894%"},
+            {"Compounding Annual Return", "-3.958%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "-0.993"},
             {"Net Profit", "-0.054%"},

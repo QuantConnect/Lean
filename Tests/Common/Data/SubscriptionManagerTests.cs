@@ -111,8 +111,10 @@ namespace QuantConnect.Tests.Common.Data
 
         [Test]
         [TestCase(SecurityType.Equity, Resolution.Minute)]
+        [TestCase(SecurityType.Equity, Resolution.Second)]
         [TestCase(SecurityType.Equity, Resolution.Tick)]
         [TestCase(SecurityType.Crypto, Resolution.Minute)]
+        [TestCase(SecurityType.Crypto, Resolution.Second)]
         [TestCase(SecurityType.Crypto, Resolution.Tick)]
         public void GetsSubscriptionDataTypes(SecurityType securityType, Resolution resolution)
         {

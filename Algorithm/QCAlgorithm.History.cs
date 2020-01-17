@@ -654,9 +654,14 @@ namespace QuantConnect.Algorithm
             if (Securities.TryGetValue(symbol, out security))
             {
                 // find all subscriptions matching the requested type with a higher resolution than requested
-                return from sub in security.Subscriptions.OrderByDescending(s => s.Resolution)
+                var matchingSubscriptions = from sub in security.Subscriptions.OrderByDescending(s => s.Resolution)
                        where type.IsAssignableFrom(sub.Type)
                        select sub;
+                return matchingSubscriptions.Where(
+                    s => !(s.TickType == TickType.Quote &&
+                           (s.SecurityType == SecurityType.Equity || s.SecurityType == SecurityType.Crypto) &&
+                           (s.Resolution == Resolution.Daily || s.Resolution == Resolution.Hour))
+                );
             }
             else
             {

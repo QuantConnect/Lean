@@ -520,7 +520,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var availableDataType = AvailableDataTypes[symbolSecurityType];
             // Securities with trades and quotes available (crypto and equities so far) will only look for trades in case of low resolutions.
-            if (symbolSecurityType == SecurityType.Crypto || symbolSecurityType == SecurityType.Equity 
+            if ((symbolSecurityType == SecurityType.Crypto || symbolSecurityType == SecurityType.Equity)
                 && (resolution == Resolution.Daily || resolution == Resolution.Hour))
             {
                 availableDataType = availableDataType.Where(t => t == TickType.Trade).ToList();
