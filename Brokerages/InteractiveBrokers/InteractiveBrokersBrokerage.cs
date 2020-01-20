@@ -71,7 +71,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         };
 
         private readonly IBAutomater.IBAutomater _ibAutomater;
-        private readonly AutoResetEvent _ibAutomaterInitializeEvent = new AutoResetEvent(false);
         private string _ibServerName;
         private Region _ibServerRegion = Region.America;
 
@@ -272,17 +271,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _ibAutomater.OutputDataReceived += OnIbAutomaterOutputDataReceived;
             _ibAutomater.ErrorDataReceived += OnIbAutomaterErrorDataReceived;
             _ibAutomater.Exited += OnIbAutomaterExited;
-            _ibAutomater.Start(false);
 
-            // wait for IB to start up
-            if (!_ibAutomaterInitializeEvent.WaitOne(TimeSpan.FromSeconds(60)))
-            {
-                Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): IB Automater initialization timeout.");
-            }
-
-            Log.Trace("InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): IB Automater initialized.");
-
-            CheckIbAutomaterErrors();
+            CheckIbAutomaterError(_ibAutomater.Start(false));
 
             Log.Trace($"InteractiveBrokersBrokerage.InteractiveBrokersBrokerage(): Host: {host}, Port: {port}, Account: {account}, AgentDescription: {agentDescription}");
 
@@ -352,10 +342,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         /// <summary>
         /// Provides public access to the underlying IBClient instance
         /// </summary>
-        public IB.InteractiveBrokersClient Client
-        {
-            get { return _client; }
-        }
+        public IB.InteractiveBrokersClient Client => _client;
 
         /// <summary>
         /// Places a new order and assigns a new broker ID to the order
@@ -680,13 +667,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 try
                 {
                     Log.Trace("InteractiveBrokersBrokerage.Connect(): Attempting to connect ({0}/{1}) ...", attempt, maxAttempts);
-
-                    // if we have errors from IBAutomater, exit immediately
-                    if (_stateManager.HasIbAutomaterErrors())
-                    {
-                        attempt = maxAttempts;
-                        CheckIbAutomaterErrors();
-                    }
 
                     // if message processing thread is still running, wait until it terminates
                     Disconnect();
@@ -1246,9 +1226,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // we've reconnected
                 OnMessage(new BrokerageMessageEvent(brokerageMessageType, errorCode, errorMsg));
 
-                // do not restart after IBAutomater errors
-                CheckIbAutomaterErrors();
-
                 // With IB Gateway v960.2a in the cloud, we are not receiving order fill events after the nightly reset,
                 // so we execute the following sequence:
                 // disconnect, kill IB Gateway, restart IB Gateway, reconnect, restore data subscriptions
@@ -1302,20 +1279,8 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Disconnecting...");
             Disconnect();
 
-            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Stopping IB Gateway...");
-            _ibAutomater.Stop();
-
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Restarting IB Gateway...");
-            _ibAutomater.Start(false);
-
-            // wait for IB to start up
-            if (!_ibAutomaterInitializeEvent.WaitOne(TimeSpan.FromSeconds(60)))
-            {
-                Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): IB Automater initialization timeout.");
-            }
-
-            Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): IB Automater initialized.");
-            CheckIbAutomaterErrors();
+            CheckIbAutomaterError(_ibAutomater.Restart());
 
             Log.Trace("InteractiveBrokersBrokerage.ResetGatewayConnection(): Reconnecting...");
             Connect();
@@ -1362,9 +1327,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             {
                 if (_stateManager.PreviouslyInResetTime)
                 {
-                    // do not restart after IBAutomater errors
-                    CheckIbAutomaterErrors();
-
                     // reset time finished and we're still disconnected, restart IB client
                     Log.Trace("InteractiveBrokersBrokerage.TryWaitForReconnect(): Reset time finished and still disconnected. Restarting...");
 
@@ -3132,35 +3094,6 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             if (e.Data == null) return;
 
             Log.Trace($"InteractiveBrokersBrokerage.OnIbAutomaterOutputDataReceived(): {e.Data}");
-
-            // login failed
-            if (e.Data.Contains("Login failed"))
-            {
-                _stateManager.IbAutomaterErrorType = IbAutomaterErrorType.LoginFailed;
-                _ibAutomaterInitializeEvent.Set();
-            }
-
-            // an existing session was detected
-            else if (e.Data.Contains("Existing session detected"))
-            {
-                _stateManager.IbAutomaterErrorType = IbAutomaterErrorType.ExistingSessionDetected;
-                _ibAutomaterInitializeEvent.Set();
-            }
-
-            // a security dialog (2FA/code card) was detected by IBAutomater
-            else if (e.Data.Contains("Second Factor Authentication") ||
-                e.Data.Contains("Security Code Card Authentication") ||
-                e.Data.Contains("Enter security code"))
-            {
-                _stateManager.IbAutomaterErrorType = IbAutomaterErrorType.SecurityDialogDetected;
-                _ibAutomaterInitializeEvent.Set();
-            }
-
-            // initialization completed
-            else if (e.Data.Contains("Configuration settings updated"))
-            {
-                _ibAutomaterInitializeEvent.Set();
-            }
         }
 
         private void OnIbAutomaterErrorDataReceived(object sender, ErrorDataReceivedEventArgs e)
@@ -3173,17 +3106,21 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
         private void OnIbAutomaterExited(object sender, ExitedEventArgs e)
         {
             Log.Trace($"InteractiveBrokersBrokerage.OnIbAutomaterExited(): Exit code: {e.ExitCode}");
+
+            // check if IBGateway was closed because of an existing session
+            CheckIbAutomaterError(_ibAutomater.GetLastStartResult(), false);
         }
 
-        private void CheckIbAutomaterErrors()
+        private void CheckIbAutomaterError(StartResult result, bool throwException = true)
         {
-            if (_stateManager.HasIbAutomaterErrors())
+            if (result.HasError)
             {
-                var message = _stateManager.GetIbAutomaterErrorMessage();
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, result.ErrorCode.ToString(), result.ErrorMessage));
 
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "IBAutomater", message));
-
-                throw new Exception($"InteractiveBrokersBrokerage.CheckIbAutomaterErrors(): {message}");
+                if (throwException)
+                {
+                    throw new Exception($"InteractiveBrokersBrokerage.CheckIbAutomaterError(): {result.ErrorCode} - {result.ErrorMessage}");
+                }
             }
         }
 

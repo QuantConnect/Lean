@@ -158,7 +158,7 @@
       <HintPath>Fxcm\QuantConnect.Fxcm.dll</HintPath>
     </Reference>
     <Reference Include="QuantConnect.IBAutomater, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\QuantConnect.IBAutomater.1.0.4\lib\net45\QuantConnect.IBAutomater.exe</HintPath>
+      <HintPath>..\packages\QuantConnect.IBAutomater.1.0.14\lib\net45\QuantConnect.IBAutomater.exe</HintPath>
     </Reference>
     <Reference Include="RestSharp, Version=106.6.10.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
       <HintPath>..\packages\RestSharp.106.6.10\lib\net452\RestSharp.dll</HintPath>
@@ -705,18 +705,18 @@
     <Analyzer Include="..\packages\Microsoft.NetFramework.Analyzers.2.9.3\analyzers\dotnet\cs\Microsoft.NetFramework.CSharp.Analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\QuantConnect.IBAutomater.1.0.4\build\QuantConnect.IBAutomater.targets" Condition="Exists('..\packages\QuantConnect.IBAutomater.1.0.4\build\QuantConnect.IBAutomater.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\QuantConnect.IBAutomater.1.0.4\build\QuantConnect.IBAutomater.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.IBAutomater.1.0.4\build\QuantConnect.IBAutomater.targets'))" />
     <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.VersionCheckAnalyzer.2.9.3\build\Microsoft.CodeAnalysis.VersionCheckAnalyzer.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeQuality.Analyzers.2.9.3\build\Microsoft.CodeQuality.Analyzers.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetCore.Analyzers.2.9.3\build\Microsoft.NetCore.Analyzers.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NetFramework.Analyzers.2.9.3\build\Microsoft.NetFramework.Analyzers.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeAnalysis.FxCopAnalyzers.2.9.3\build\Microsoft.CodeAnalysis.FxCopAnalyzers.props'))" />
+    <Error Condition="!Exists('..\packages\QuantConnect.IBAutomater.1.0.14\build\QuantConnect.IBAutomater.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\QuantConnect.IBAutomater.1.0.14\build\QuantConnect.IBAutomater.targets'))" />
   </Target>
+  <Import Project="..\packages\QuantConnect.IBAutomater.1.0.14\build\QuantConnect.IBAutomater.targets" Condition="Exists('..\packages\QuantConnect.IBAutomater.1.0.14\build\QuantConnect.IBAutomater.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
