@@ -57,6 +57,12 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
                 # if there is any contract, trade the front contract
                 if len(contracts) == 0: continue
                 front = sorted(contracts, key = lambda x: x.Expiry, reverse=True)[0]
+
+                # Get the margin requirements
+                model = self.Securities[front.Symbol].BuyingPowerModel
+                initialMarginRequirement = model.InitialMarginRequirement
+                maintenanceMarginRequirement = model.MaintenanceMarginRequirement
+
                 self.MarketOrder(front.Symbol , 1)
         else:
             self.Liquidate()

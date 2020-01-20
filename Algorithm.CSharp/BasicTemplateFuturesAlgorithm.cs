@@ -20,6 +20,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -81,6 +82,11 @@ namespace QuantConnect.Algorithm.CSharp
                     // if found, trade it
                     if (contract != null)
                     {
+                        // Get the margin requirements
+                        var model = Securities[contract.Symbol].BuyingPowerModel as FutureMarginModel;
+                        var initialOvernight = model?.InitialMarginRequirement;
+                        var maintenanceOvernight = model?.MaintenanceMarginRequirement;
+
                         MarketOrder(contract.Symbol, 1);
                     }
                 }
