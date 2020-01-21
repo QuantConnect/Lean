@@ -17,12 +17,10 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Securities.Future;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using System.IO;
-using System.Reflection;
 
 namespace QuantConnect.Tests.Common.Securities.Futures
 {
@@ -75,8 +73,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
 
             var futuresSymbols = typeof(QuantConnect.Securities.Futures).GetNestedTypes()
                                                                         .SelectMany(x => x.GetFields())
-                                                                        .Select(x => x.GetValue(null))
-                                                                        .Cast<string>(); // null for obj in GetValue indicates static field
+                                                                        .Select(x => x.GetValue(null)) // null for obj in GetValue indicates static field
+                                                                        .Cast<string>();
 
             foreach (var futuresSymbol in futuresSymbols)
             {
@@ -325,7 +323,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             }
         }
 
-        [TestCase(QuantConnect.Securities.Futures.LumberPulp.RandomLengthLumber, TwelveFivePMCentralTime)]
+        [TestCase(QuantConnect.Securities.Futures.Forestry.RandomLengthLumber, TwelveFivePMCentralTime)]
         public void LumberPulpExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");

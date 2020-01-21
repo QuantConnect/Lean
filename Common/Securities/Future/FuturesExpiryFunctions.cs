@@ -453,7 +453,7 @@ namespace QuantConnect.Securities.Future
             },
             // Lumber and Pulp Group
             // Random Length Lumber (LBS): https://www.cmegroup.com/trading/agricultural/lumber-and-pulp/random-length-lumber_contract_specifications.html
-            {Futures.LumberPulp.RandomLengthLumber, (time =>
+            {Futures.Forestry.RandomLengthLumber, (time =>
                 {
                     // The business day prior to the 16th calendar day of the contract month.
                     var sixteenth = new DateTime(time.Year,time.Month,16);

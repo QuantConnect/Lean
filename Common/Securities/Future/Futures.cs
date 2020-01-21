@@ -785,7 +785,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Lumber and Pulp group
         /// </summary>
-        public static class LumberPulp
+        public static class Forestry
         {
             /// <summary>
             /// Random Length Lumber Futures

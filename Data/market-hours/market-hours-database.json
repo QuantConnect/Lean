@@ -23097,7 +23097,8 @@
           "state": "market"
         }
       ],
-      "saturday": []
+      "saturday": [],
+      "holidays": []
     },
     "Future-usa-G": {
       "dataTimeZone": "UTC",
@@ -23164,7 +23165,8 @@
           "state": "market"
         }
       ],
-      "saturday": []
+      "saturday": [],
+      "holidays": []
     },
     "Option-usa-[*]": {
       "dataTimeZone": "America/New_York",
