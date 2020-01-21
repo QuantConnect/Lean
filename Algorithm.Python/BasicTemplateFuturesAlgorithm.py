@@ -37,6 +37,8 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
         self.SetEndDate(2013, 10, 10)
         self.SetCash(1000000)
 
+        self.contractSymbol = None
+
         # Subscribe and set our expiry filter for the futures chain
         futureES = self.AddFuture(Futures.Indices.SP500EMini)
         futureES.SetFilter(timedelta(0), timedelta(182))
@@ -58,11 +60,16 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
                 if len(contracts) == 0: continue
                 front = sorted(contracts, key = lambda x: x.Expiry, reverse=True)[0]
 
-                # Get the margin requirements
-                model = self.Securities[front.Symbol].BuyingPowerModel
-                initialMarginRequirement = model.InitialMarginRequirement
-                maintenanceMarginRequirement = model.MaintenanceMarginRequirement
-
+                self.contractSymbol = front.Symbol
                 self.MarketOrder(front.Symbol , 1)
         else:
             self.Liquidate()
+
+    def OnEndOfAlgorithm(self):
+        # Get the margin requirements
+        buyingPowerModel = self.Securities[self.contractSymbol].BuyingPowerModel
+        name = type(buyingPowerModel).__name__
+        if name != 'FutureMarginModel':
+            raise Exception(f"Invalid buying power model. Found: {name}. Expected: FutureMarginModel")    
+        initialMarginRequirement = buyingPowerModel.InitialMarginRequirement
+        maintenanceMarginRequirement = buyingPowerModel.MaintenanceMarginRequirement

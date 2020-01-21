@@ -34,6 +34,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="futures" />
     public class BasicTemplateFuturesAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Symbol _contractSymbol;
+
         // S&P 500 EMini futures
         private const string RootSP500 = Futures.Indices.SP500EMini;
         public Symbol SP500 = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.USA);
@@ -82,12 +84,8 @@ namespace QuantConnect.Algorithm.CSharp
                     // if found, trade it
                     if (contract != null)
                     {
-                        // Get the margin requirements
-                        var model = Securities[contract.Symbol].BuyingPowerModel as FutureMarginModel;
-                        var initialOvernight = model?.InitialMarginRequirement;
-                        var maintenanceOvernight = model?.MaintenanceMarginRequirement;
-
-                        MarketOrder(contract.Symbol, 1);
+                        _contractSymbol = contract.Symbol;
+                        MarketOrder(_contractSymbol, 1);
                     }
                 }
             }
@@ -95,6 +93,19 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Liquidate();
             }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            // Get the margin requirements
+            var buyingPowerModel = Securities[_contractSymbol].BuyingPowerModel;
+            var futureMarginModel = buyingPowerModel as FutureMarginModel;
+            if (buyingPowerModel == null)
+            {
+                throw new Exception($"Invalid buying power model. Found: {buyingPowerModel.GetType().Name}. Expected: {nameof(FutureMarginModel)}");
+            }
+            var initialOvernight = futureMarginModel?.InitialMarginRequirement;
+            var maintenanceOvernight = futureMarginModel?.MaintenanceMarginRequirement;
         }
 
         /// <summary>
