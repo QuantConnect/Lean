@@ -300,7 +300,7 @@ namespace QuantConnect.Brokerages
                     model = new OptionMarginModel(RequiredFreeBuyingPowerPercent);
                     break;
                 case SecurityType.Future:
-                    model = new FutureMarginModel(RequiredFreeBuyingPowerPercent);
+                    model = new FutureMarginModel(RequiredFreeBuyingPowerPercent, security);
                     break;
                 default:
                     model = new SecurityMarginModel(leverage, RequiredFreeBuyingPowerPercent);

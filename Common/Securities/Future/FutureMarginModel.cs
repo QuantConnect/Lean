@@ -34,13 +34,27 @@ namespace QuantConnect.Securities.Future
         private MarginRequirementsEntry[] _marginRequirementsHistory;
         private int _marginCurrentIndex;
 
+        private readonly Security _security;
+
+        /// <summary>
+        /// Initial margin requirement for the contract effective from the date of change
+        /// </summary>
+        public decimal InitialMarginRequirement => GetCurrentMarginRequirements(_security)?.InitialOvernight ?? 0m;
+
+        /// <summary>
+        /// Maintenance margin requirement for the contract effective from the date of change
+        /// </summary>
+        public decimal MaintenanceMarginRequirement => GetCurrentMarginRequirements(_security)?.MaintenanceOvernight ?? 0m;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="FutureMarginModel"/>
         /// </summary>
         /// <param name="requiredFreeBuyingPowerPercent">The percentage used to determine the required unused buying power for the account.</param>
-        public FutureMarginModel(decimal requiredFreeBuyingPowerPercent = 0)
+        /// <param name="security">The security that this model belongs to</param>
+        public FutureMarginModel(decimal requiredFreeBuyingPowerPercent = 0, Security security = null)
         {
             RequiredFreeBuyingPowerPercent = requiredFreeBuyingPowerPercent;
+            _security = security;
         }
 
         /// <summary>
@@ -101,9 +115,7 @@ namespace QuantConnect.Securities.Future
             if (security?.GetLastData() == null || security.Holdings.HoldingsCost == 0m)
                 return 0m;
 
-            var symbol = security.Symbol;
-            var date = security.GetLastData().Time.Date;
-            var marginReq = GetCurrentMarginRequirements(symbol, date);
+            var marginReq = GetCurrentMarginRequirements(security);
 
             return marginReq.MaintenanceOvernight * Math.Sign(security.Holdings.HoldingsCost);
         }
@@ -180,9 +192,7 @@ namespace QuantConnect.Securities.Future
             if (security?.GetLastData() == null || holdingValue == 0m)
                 return 0m;
 
-            var symbol = security.Symbol;
-            var date = security.GetLastData().Time.Date;
-            var marginReq = GetCurrentMarginRequirements(symbol, date);
+            var marginReq = GetCurrentMarginRequirements(security);
 
             return marginReq.InitialOvernight / holdingValue;
         }
@@ -195,20 +205,23 @@ namespace QuantConnect.Securities.Future
             if (security?.GetLastData() == null || holdingValue == 0m)
                 return 0m;
 
-            var symbol = security.Symbol;
-            var date = security.GetLastData().Time.Date;
-            var marginReq = GetCurrentMarginRequirements(symbol, date);
+            var marginReq = GetCurrentMarginRequirements(security);
 
             return marginReq.MaintenanceOvernight / holdingValue;
         }
 
-        private MarginRequirementsEntry GetCurrentMarginRequirements (Symbol symbol, DateTime date)
+        private MarginRequirementsEntry GetCurrentMarginRequirements(Security security)
         {
+            if (security?.GetLastData() == null)
+                return null;
+
             if (_marginRequirementsHistory == null)
             {
-                _marginRequirementsHistory = LoadMarginRequirementsHistory(symbol);
+                _marginRequirementsHistory = LoadMarginRequirementsHistory(security.Symbol);
                 _marginCurrentIndex = 0;
             }
+
+            var date = security.GetLastData().Time.Date;
 
             while (_marginCurrentIndex + 1 < _marginRequirementsHistory.Length &&
                 _marginRequirementsHistory[_marginCurrentIndex + 1].Date <= date )
