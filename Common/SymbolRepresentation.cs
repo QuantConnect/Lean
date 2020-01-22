@@ -145,18 +145,12 @@ namespace QuantConnect
             var month = expiration.Month;
 
             // These futures expire in the month before the contract month
-            if (FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(underlying))
-            {
-                if (month < 12)
-                {
-                    month++;
-                }
-                else
-                {
-                    month = 1;
-                    year++;
-                }
-            }
+            month += FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(underlying);
+            // Get the month back into the allowable range, allowing for a wrap 
+            month--;
+            year += month / 12;
+            month %= 12;
+            month++;
 
             return $"{underlying}{expiration.Day:00}{_futuresMonthLookup[month]}{year}";
         }

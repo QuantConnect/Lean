@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities.Future
@@ -297,17 +298,33 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
-        /// Returns true if the future expires in the month before the contract month
+        /// Returns the number of months prior to the contract month that the future expires
         /// </summary>
         /// <param name="underlying">The future symbol</param>
-        /// <returns>True if the future expires in the month before the contract month</returns>
-        public static bool ExpiresInPreviousMonth(string underlying)
+        /// <returns>The number of months prior it expires</returns>
+        public static int ExpiresInPreviousMonth(string underlying)
         {
-            return
-                underlying == Futures.Energies.CrudeOilWTI ||
-                underlying == Futures.Energies.Gasoline ||
-                underlying == Futures.Energies.HeatingOil ||
-                underlying == Futures.Energies.NaturalGas;
+            int value;
+            return ExpiriesPriorMonth.TryGetValue(underlying, out value) ? value : 0;
         }
+
+        private static readonly Dictionary<string, int> ExpiriesPriorMonth = new Dictionary<string, int>
+        {
+            { Futures.Energies.ArgusLLSvsWTIArgusTradeMonth, 1 },
+            { Futures.Energies.ArgusPropaneSaudiAramco, 1 },
+            { Futures.Energies.BrentCrude, 2 },
+            { Futures.Energies.BrentLastDayFinancial, 2 },
+            { Futures.Energies.CrudeOilWTI, 1 },
+            { Futures.Energies.Gasoline, 1 },
+            { Futures.Energies.HeatingOil, 1 },
+            { Futures.Energies.MarsArgusVsWTITradeMonth, 1 },
+            { Futures.Energies.NaturalGas, 1 },
+            { Futures.Energies.NaturalGasHenryHubLastDayFinancial, 1 },
+            { Futures.Energies.NaturalGasHenryHubPenultimateFinancial, 1 },
+            { Futures.Energies.WTIHoustonArgusVsWTITradeMonth, 1 },
+            { Futures.Energies.WTIHoustonCrudeOil, 1 },
+            { Futures.Softs.Sugar11, 1 },
+            { Futures.Softs.Sugar11CME, 1 }
+        };
     }
 }
