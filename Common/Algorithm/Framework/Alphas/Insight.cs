@@ -420,7 +420,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public static Insight FromSerializedInsight(SerializedInsight serializedInsight)
         {
             var insight = new Insight(
-                Time.UnixTimeStampToDateTime(serializedInsight.GeneratedTime),
+                Time.UnixTimeStampToDateTime(serializedInsight.CreatedTime),
                 new Symbol(SecurityIdentifier.Parse(serializedInsight.Symbol), serializedInsight.Ticker),
                 TimeSpan.FromSeconds(serializedInsight.Period),
                 serializedInsight.Type,
