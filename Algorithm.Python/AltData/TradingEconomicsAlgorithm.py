@@ -50,7 +50,7 @@ class TradingEconomicsAlgorithm(QCAlgorithm):
         announcement = data[self.interestRate]
 
         # Confirm its a FED Rate Decision
-        if announcement.Event != "Fed Interest Rate Decision":
+        if announcement.Event != "fed interest rate decision":
             return
 
         # In the event of a rate increase, rebalance 50% to Bonds.
