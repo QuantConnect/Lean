@@ -783,7 +783,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Lumber and Pulp group
+        /// Forestry group
         /// </summary>
         public static class Forestry
         {

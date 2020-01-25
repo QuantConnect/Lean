@@ -147,6 +147,10 @@ namespace QuantConnect
             // These futures expire in the month before the contract month
             month += FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(underlying);
             // Get the month back into the allowable range, allowing for a wrap 
+            // Below is a little algorithm for wrapping numbers with a certain bounds.
+            // In this case, were dealing with months, wrapping to years once we get to January
+            // As modulo works for [0, x), it's best to subtract 1 (as months are [1, 12] to convert to [0, 11]),
+            // do the modulo/integer division, then add 1 back on to get into the correct range again
             month--;
             year += month / 12;
             month %= 12;

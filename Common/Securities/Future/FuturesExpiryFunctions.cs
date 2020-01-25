@@ -451,11 +451,11 @@ namespace QuantConnect.Securities.Future
                     return closestWednesday.Add(new TimeSpan(20, 0, 0));
                 })
             },
-            // Lumber and Pulp Group
+            // Forestry Group
             // Random Length Lumber (LBS): https://www.cmegroup.com/trading/agricultural/lumber-and-pulp/random-length-lumber_contract_specifications.html
             {Futures.Forestry.RandomLengthLumber, (time =>
                 {
-                    // The business day prior to the 16th calendar day of the contract month.
+                    // The business day prior to the 16th calendar day of the contract month at 12:05pm CT
                     var sixteenth = new DateTime(time.Year,time.Month,16);
                     return FuturesExpiryUtilityFunctions.AddBusinessDays(sixteenth, -1).Add(new TimeSpan(17, 5, 0));
                 })
