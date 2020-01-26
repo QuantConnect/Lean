@@ -161,5 +161,14 @@ namespace QuantConnect.Tests.Common
 
             Assert.AreEqual(ticker, result);
         }
+
+        [TestCase("ABC", 2017, 12, 20, "ABC20Z17", true)] // Generic contract (i.e. expires current month
+        public void GenerateFutureTickerExpiringInCurrentMonth(string underlying, int year, int month, int day, string ticker, bool doubleDigitsYear)
+        {
+            // CL Dec17 expires in Nov17
+            var result = SymbolRepresentation.GenerateFutureTicker(underlying, new DateTime(year, month, day), doubleDigitsYear);
+
+            Assert.AreEqual(ticker, result);
+        }
     }
 }
