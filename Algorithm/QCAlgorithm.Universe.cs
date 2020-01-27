@@ -75,6 +75,7 @@ namespace QuantConnect.Algorithm
                     if (Securities.Any(skvp => skvp.Key.SecurityType != SecurityType.Base && skvp.Key.HasUnderlyingSymbol(security.Symbol)))
                     {
                         // set data mode raw and default volatility model
+                        // we are changing the data mode of an existing security, see GitHub issue #4031
                         ConfigureUnderlyingSecurity(security);
                     }
 
@@ -100,7 +101,8 @@ namespace QuantConnect.Algorithm
                         }
 
                         // set data mode raw and default volatility model
-                        ConfigureUnderlyingSecurity(underlyingSecurity, !hasValue);
+                        // this should be '!hasValue' but using 'true' instead, see GitHub issue #4031
+                        ConfigureUnderlyingSecurity(underlyingSecurity, true);
 
                         if (LiveMode && underlyingSecurity.GetLastData() == null)
                         {
