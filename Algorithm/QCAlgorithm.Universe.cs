@@ -87,7 +87,8 @@ namespace QuantConnect.Algorithm
                         var resolution = configs.GetHighestResolution();
 
                         // create the underlying security object if it doesn't already exist
-                        if (!Securities.TryGetValue(underlyingSymbol, out underlyingSecurity))
+                        var hasValue = Securities.TryGetValue(underlyingSymbol, out underlyingSecurity);
+                        if (!hasValue)
                         {
                             underlyingSecurity = AddSecurity(underlyingSymbol.SecurityType,
                                 underlyingSymbol.Value,
@@ -99,7 +100,7 @@ namespace QuantConnect.Algorithm
                         }
 
                         // set data mode raw and default volatility model
-                        ConfigureUnderlyingSecurity(underlyingSecurity);
+                        ConfigureUnderlyingSecurity(underlyingSecurity, !hasValue);
 
                         if (LiveMode && underlyingSecurity.GetLastData() == null)
                         {
@@ -526,7 +527,8 @@ namespace QuantConnect.Algorithm
         /// Configures the security to be in raw data mode and ensures that a reasonable default volatility model is supplied
         /// </summary>
         /// <param name="security">The underlying security</param>
-        private void ConfigureUnderlyingSecurity(Security security)
+        /// <param name="canChangeDataNormalizationMode">True if we are allowed to change the security data normalization mode (security was just added).</param>
+        private void ConfigureUnderlyingSecurity(Security security, bool canChangeDataNormalizationMode = true)
         {
             // force underlying securities to be raw data mode
             var configs = SubscriptionManager.SubscriptionDataConfigService
@@ -535,10 +537,11 @@ namespace QuantConnect.Algorithm
             var dataNormalizationMode = configs.DataNormalizationMode();
             if (dataNormalizationMode != DataNormalizationMode.Raw)
             {
-                if (_locked)
+                if (_locked && !canChangeDataNormalizationMode)
                 {
                     // We check the "locked" flag here because during initialization we need to load existing open orders and holdings from brokerages.
-                    // There is no data streaming yet, so it is safe to change the data normalization mode to Raw.
+                    // If locked, we can still change the data normalization mode if the security was just added, because
+                    // if there is no data streaming yet, so it is safe to change the data normalization mode to Raw.
                     throw new ArgumentException($"The underlying equity asset ({security.Symbol.Value}) is set to " +
                         $"{dataNormalizationMode}, please change this to DataNormalizationMode.Raw with the " +
                         "SetDataNormalization() method"

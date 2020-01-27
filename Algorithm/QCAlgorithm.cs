@@ -1613,14 +1613,15 @@ namespace QuantConnect.Algorithm
             Security underlying;
             var underlyingSymbol = option.Symbol.Underlying;
 
-            if (!Securities.TryGetValue(underlyingSymbol, out underlying))
+            var hasValue = Securities.TryGetValue(underlyingSymbol, out underlying);
+            if (!hasValue)
             {
                 underlying = AddEquity(underlyingSymbol.Value, resolution, underlyingSymbol.ID.Market, false);
             }
 
             option.Underlying = underlying;
 
-            ConfigureUnderlyingSecurity(underlying);
+            ConfigureUnderlyingSecurity(underlying, !hasValue);
 
             AddToUserDefinedUniverse(option, configs);
 
