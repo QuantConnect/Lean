@@ -30,6 +30,9 @@ namespace QuantConnect.Data.Custom.TradingEconomics
     /// </summary>
     public class TradingEconomicsCalendar : BaseData
     {
+        // Filtered calendar event name
+        private string _filteredEvent;
+
         /// <summary>
         /// Unique calendar ID used by Trading Economics
         /// </summary>
@@ -58,7 +61,11 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// Specific event name in the calendar
         /// </summary>
         [JsonProperty(PropertyName = "Event")]
-        public string Event { get; set; }
+        public string Event
+        {
+            get { return _filteredEvent; }
+            set { _filteredEvent = TradingEconomicsEventFilter.FilterEvent(value); }
+        }
 
         /// <summary>
         /// The period for which released data refers to
@@ -125,13 +132,13 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         public decimal? Revised { get; set; }
 
         /// <summary>
-        /// Country�s original name
+        /// Country's original name
         /// </summary>
         [JsonProperty(PropertyName = "OCountry")]
         public string OCountry { get; set; }
 
         /// <summary>
-        /// Category�s original name
+        /// Category's original name
         /// </summary>
         [JsonProperty(PropertyName = "OCategory")]
         public string OCategory { get; set; }
