@@ -143,7 +143,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Long Insight Count", "0"},
             {"Short Insight Count", "390"},
             {"Long/Short Ratio", "0%"},
-            {"Estimated Monthly Alpha Value", "$-0.2716981"},
+            {"Estimated Monthly Alpha Value", "$-0.2742857"},
             {"Total Accumulated Estimated Alpha Value", "$-0.008"},
             {"Mean Population Estimated Insight Value", "$-0.00001033592"},
             {"Mean Population Direction", "22.6169%"},

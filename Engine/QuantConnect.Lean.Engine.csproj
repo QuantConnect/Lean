@@ -222,7 +222,6 @@
     <Compile Include="DataFeeds\Enumerators\LiveFillForwardEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\FuturesChainUniverseDataCollectionAggregatorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\OptionChainUniverseDataCollectionEnumerator.cs" />
-    <Compile Include="DataFeeds\Enumerators\OptionChainUniverseDataCollectionAggregatorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\OpenInterestEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\RateLimitEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\RefreshEnumerator.cs" />
