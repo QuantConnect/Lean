@@ -118,9 +118,9 @@ namespace QuantConnect.Data.Custom.SmartInsider
         }
 
         /// <summary>
-        /// Creates an instance of the object by taking a formatted CSV line
+        /// Creates an instance of the object by taking a formatted TSV line
         /// </summary>
-        /// <param name="line">Line of formatted CSV</param>
+        /// <param name="line">Line of formatted TSV</param>
         public SmartInsiderTransaction(string line) : base(line)
         {
             var tsv = line.Split('\t');
@@ -146,9 +146,9 @@ namespace QuantConnect.Data.Custom.SmartInsider
         }
 
         /// <summary>
-        /// Creates an instance of the object by taking a formatted CSV line
+        /// Creates an instance of the object by taking a formatted TSV line
         /// </summary>
-        /// <param name="line">Line of formatted CSV</param>
+        /// <param name="line">Line of formatted TSV</param>
         public override void FromRawData(string line)
         {
             var tsv = line.Split('\t');
@@ -194,10 +194,10 @@ namespace QuantConnect.Data.Custom.SmartInsider
             TreasuryHolding = string.IsNullOrWhiteSpace(tsv[36]) ? (int?)null : Convert.ToInt32(tsv[36], CultureInfo.InvariantCulture);
 
             AnnouncementDate = string.IsNullOrWhiteSpace(tsv[37]) ? (DateTime?)null : DateTime.ParseExact(tsv[37], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            TimeReleased = string.IsNullOrWhiteSpace(tsv[38]) ? (DateTime?)null : ParseTransactionDate(tsv[38]);
-            TimeProcessed = string.IsNullOrWhiteSpace(tsv[39]) ? (DateTime?)null : ParseTransactionDate(tsv[39]);
-            TimeReleasedUtc = string.IsNullOrWhiteSpace(tsv[40]) ? (DateTime?)null : ParseTransactionDate(tsv[40]);
-            TimeProcessedUtc = string.IsNullOrWhiteSpace(tsv[41]) ? (DateTime?)null : ParseTransactionDate(tsv[41]);
+            TimeReleased = string.IsNullOrWhiteSpace(tsv[38]) ? (DateTime?)null : ParseDate(tsv[38]);
+            TimeProcessed = string.IsNullOrWhiteSpace(tsv[39]) ? (DateTime?)null : ParseDate(tsv[39]);
+            TimeReleasedUtc = string.IsNullOrWhiteSpace(tsv[40]) ? (DateTime?)null : ParseDate(tsv[40]);
+            TimeProcessedUtc = string.IsNullOrWhiteSpace(tsv[41]) ? (DateTime?)null : ParseDate(tsv[41]);
             AnnouncedIn = string.IsNullOrWhiteSpace(tsv[42]) ? null : tsv[42];
         }
 
@@ -227,7 +227,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// Reads the data into LEAN for use in algorithms
         /// </summary>
         /// <param name="config">Subscription configuration</param>
-        /// <param name="line">Line of CSV</param>
+        /// <param name="line">Line of TSV</param>
         /// <param name="date">Algorithm date</param>
         /// <param name="isLiveMode">Is live mode</param>
         /// <returns>Instance of the object</returns>
@@ -306,10 +306,10 @@ namespace QuantConnect.Data.Custom.SmartInsider
         }
 
         /// <summary>
-        /// Converts the data to CSV
+        /// Converts the data to TSV
         /// </summary>
-        /// <returns>String of CSV</returns>
-        /// <remarks>Parsable by the constructor should you need to recreate the object from CSV</remarks>
+        /// <returns>String of TSV</returns>
+        /// <remarks>Parsable by the constructor should you need to recreate the object from TSV</remarks>
         public override string ToLine()
         {
             return string.Join("\t",
@@ -356,26 +356,6 @@ namespace QuantConnect.Data.Custom.SmartInsider
                 AmountAdjustedFactor,
                 PriceAdjustedFactor,
                 TreasuryHolding);
-        }
-
-        /// <summary>
-        /// Attempts to normalize and parse SmartInsider transaction dates.
-        /// </summary>
-        /// <param name="date">Date string to parse</param>
-        /// <returns>DateTime object</returns>
-        /// <exception cref="ArgumentException">Date string was unable to be parsed</exception>
-        public DateTime ParseTransactionDate(string date)
-        {
-            date = date.Replace(" ", "").Trim();
-
-            DateTime time;
-            if (!Parse.TryParseExact(date, "dd/MM/yyyyHH:mm:ss", DateTimeStyles.None, out time) &&
-                !Parse.TryParseExact(date, "yyyy-MM-ddHH:mm:ss", DateTimeStyles.None, out time))
-            {
-                throw new ArgumentException($"SmartInsider transaction contains unparsable DateTime: {date}");
-            }
-
-            return time;
         }
     }
 }

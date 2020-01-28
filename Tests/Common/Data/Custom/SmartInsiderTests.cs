@@ -41,20 +41,18 @@ namespace QuantConnect.Tests.Common.Data.Custom
         [TestCase("01/01/2019  23:59:59")]
         public void ParsesOldAndNewTransactionDateTimeValues(string date)
         {
-            var transaction = new SmartInsiderTransaction();
             var expected = new DateTime(2019, 1, 1, 23, 59, 59);
-            var actual = transaction.ParseTransactionDate(date);
+            var actual = SmartInsiderEvent.ParseDate(date);
 
             Assert.AreEqual(expected, actual);
         }
 
         [Test]
-        public void ParseTransactionDateThrowsOnInvalidDateTimeValue()
+        public void ParseDateThrowsOnInvalidDateTimeValue()
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                var transaction = new SmartInsiderTransaction();
-                transaction.ParseTransactionDate("05/21/2019 00:00:00");
+                SmartInsiderEvent.ParseDate("05/21/2019 00:00:00");
             });
         }
     }

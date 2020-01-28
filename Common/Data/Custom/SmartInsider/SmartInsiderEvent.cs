@@ -214,7 +214,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// <summary>
         /// Parses a line of TSV (tab delimited) from Smart Insider data
         /// </summary>
-        /// <param name="csvLine">Tab delimited line of data</param>
+        /// <param name="tsvLine">Tab delimited line of data</param>
         public SmartInsiderEvent(string tsvLine)
         {
             var tsv = tsvLine.Split('\t');
@@ -261,5 +261,25 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// </summary>
         /// <param name="line">Line of raw TSV (raw with fields 46, 36, 14, 7 removed in descending order)</param>
         public abstract void FromRawData(string line);
+
+        /// <summary>
+        /// Attempts to normalize and parse SmartInsider transaction dates.
+        /// </summary>
+        /// <param name="date">Date string to parse</param>
+        /// <returns>DateTime object</returns>
+        /// <exception cref="ArgumentException">Date string was unable to be parsed</exception>
+        public static DateTime ParseDate(string date)
+        {
+            date = date.Replace(" ", "");
+
+            DateTime time;
+            if (!Parse.TryParseExact(date, "yyyy-MM-ddHH:mm:ss", DateTimeStyles.None, out time) &&
+                !Parse.TryParseExact(date, "dd/MM/yyyyHH:mm:ss", DateTimeStyles.None, out time))
+            {
+                throw new ArgumentException($"SmartInsider transaction contains unparsable DateTime: {date}");
+            }
+
+            return time;
+        }
     }
 }
