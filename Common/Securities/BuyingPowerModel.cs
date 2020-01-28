@@ -17,6 +17,7 @@ using System;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities.Future;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Securities
@@ -100,7 +101,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the current leverage of the security
+        /// Gets the current leverage of the security. Does not require holding the security.
         /// </summary>
         /// <param name="security">The security to get leverage for</param>
         /// <returns>The current leverage in the security</returns>
@@ -153,10 +154,10 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the margin currently allocated to the specified holding
+        /// Gets the margin currently allocated to the specified holding. Always positive
         /// </summary>
         /// <param name="security">The security to compute maintenance margin for</param>
-        /// <returns>The maintenance margin required for the </returns>
+        /// <returns>The maintenance margin required for the current position</returns>
         protected virtual decimal GetMaintenanceMargin(Security security)
         {
             return security.Holdings.AbsoluteHoldingsValue * GetMaintenanceMarginRequirement(security);
@@ -309,6 +310,22 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the initial margin required for a given order
+        /// </summary>
+        /// <param name="order">The desired order</param>
+        /// <param name="security">The target security</param>
+        /// <returns>Returns the margin required</returns>
+        /// <remarks>This method is required to allow the <see cref="FutureMarginModel"/>
+        /// to factor in margin requirements since the leveraged used depends on it and is
+        /// independent of the user provided target. For this reason targets above absolute 1
+        /// do no make sense and are not allowed. <see cref="GetMaximumOrderQuantityForTargetValue"/>
+        /// Note that for example equities, factor leverage into the target portfolio value</remarks>
+        protected virtual decimal GetNormalizedInitialMarginForOrder(Order order, Security security)
+        {
+            return order.GetValue(security);
+        }
+
+        /// <summary>
         /// Get the maximum market order quantity to obtain a position with a given value in account currency.
         /// Will not take into account buying power.
         /// </summary>
@@ -329,23 +346,25 @@ namespace QuantConnect.Securities
                 return new GetMaximumOrderQuantityForTargetValueResult(-parameters.Security.Holdings.Quantity, string.Empty, false);
             }
 
-            var currentHoldingsValue = parameters.Security.Holdings.HoldingsValue;
+            var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
+            var currentHoldingsMargin = GetNormalizedInitialMarginForOrder(
+                new MarketOrder(parameters.Security.Symbol, parameters.Security.Holdings.Quantity, utcTime),
+                parameters.Security);
 
             // remove directionality, we'll work in the land of absolutes
-            var targetOrderValue = Math.Abs(targetPortfolioValue - currentHoldingsValue);
-            var direction = targetPortfolioValue > currentHoldingsValue ? OrderDirection.Buy : OrderDirection.Sell;
+            var targetOrderValue = Math.Abs(targetPortfolioValue - currentHoldingsMargin);
+            var direction = targetPortfolioValue > currentHoldingsMargin ? OrderDirection.Buy : OrderDirection.Sell;
 
             // determine the unit price in terms of the account currency
-            var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
-            var unitPrice = new MarketOrder(parameters.Security.Symbol, 1, utcTime).GetValue(parameters.Security);
-            if (unitPrice == 0)
+            var unitMargin = GetNormalizedInitialMarginForOrder(new MarketOrder(parameters.Security.Symbol, 1, utcTime), parameters.Security);
+            if (unitMargin == 0)
             {
                 var reason = $"The price of the {parameters.Security.Symbol.Value} security is zero because it does not have any market " +
                     "data yet. When the security price is set this security will be ready for trading.";
                 return new GetMaximumOrderQuantityForTargetValueResult(0, reason);
             }
 
-            var minimumValue = unitPrice * parameters.Security.SymbolProperties.LotSize;
+            var minimumValue = unitMargin * parameters.Security.SymbolProperties.LotSize;
             if (minimumValue > targetOrderValue)
             {
                 string reason = null;
@@ -368,7 +387,7 @@ namespace QuantConnect.Securities
             decimal orderValue = 0;
             decimal orderFees = 0;
             // compute the initial order quantity
-            var orderQuantity = targetOrderValue / unitPrice;
+            var orderQuantity = targetOrderValue / unitMargin;
 
             // rounding off Order Quantity to the nearest multiple of Lot Size
             orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
@@ -425,14 +444,14 @@ namespace QuantConnect.Securities
                 // then scale that by the target -- finally remove currentHoldingsValue to get targetOrderValue
                 targetOrderValue = Math.Abs(
                     (totalPortfolioValue - orderFees - totalPortfolioValue * RequiredFreeBuyingPowerPercent)
-                    * parameters.Target - currentHoldingsValue
+                    * parameters.Target - currentHoldingsMargin
                 );
 
                 // After the first loop we need to recalculate order quantity since now we have fees included
                 if (loopCount == 0)
                 {
                     // re compute the initial order quantity
-                    orderQuantity = targetOrderValue / unitPrice;
+                    orderQuantity = targetOrderValue / unitMargin;
                     orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
                 }
                 else
@@ -450,7 +469,7 @@ namespace QuantConnect.Securities
                     lastOrderQuantity = orderQuantity;
                 }
 
-                orderValue = orderQuantity * unitPrice;
+                orderValue = orderQuantity * unitMargin;
                 loopCount++;
                 // we always have to loop at least twice
             }

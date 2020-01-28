@@ -536,12 +536,14 @@ namespace QuantConnect.Tests.Common.Securities
         public void FreeBuyingPowerPercentDefault_Future()
         {
             var algo = GetAlgorithm();
-            var security = InitAndGetSecurity(algo, 5, SecurityType.Future);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Future, "ES");
             var model = security.BuyingPowerModel;
 
-            var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
-            // (100000 * 1 * 0.9975 ) / 25 - 1 order due to fees
-            Assert.AreEqual(3989m, actual);
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m);
+            // (100000 * 1 * 0.9975 ) / 5250 - 1 order due to fees
+            // 5250 because in this test we are using initial margin requirements but contract multiplier is 1
+            // so each contract is actually super expensive
+            Assert.AreEqual(18m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
             Assert.AreEqual(algo.Portfolio.Cash, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
         }
