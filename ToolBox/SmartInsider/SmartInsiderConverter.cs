@@ -138,94 +138,87 @@ namespace QuantConnect.ToolBox.SmartInsider
                     continue;
                 }
 
-                try
+                // Yes, there are ONE HUNDRED total fields in this dataset.
+                // However, we will only take the first 60 since the rest are reserved fields
+                var tsv = line.Split('\t')
+                    .Take(60)
+                    .Select(x => x.Replace("\"", ""))
+                    .ToList();
+
+                // If we have a null value on a non-nullable field, consider it invalid data and skip
+                if (string.IsNullOrWhiteSpace(tsv[2]))
                 {
-                    // Yes, there are ONE HUNDRED total fields in this dataset.
-                    // However, we will only take the first 60 since the rest are reserved fields
-                    var tsv = line.Split('\t')
-                        .Take(60)
-                        .Select(x => x.Replace("\"", ""))
-                        .ToList();
+                    Log.Trace($"SmartInsiderConverter.Process(): Null value encountered on non-nullable value on line {i}");
+                    continue;
+                }
 
-                    // If we have a null value on a non-nullable field, consider it invalid data
-                    if (string.IsNullOrWhiteSpace(tsv[2]))
+                // Remove in descending order to maintain index order
+                // while we delete lower indexed values
+                tsv.RemoveAt(46); // ShowOriginal
+                tsv.RemoveAt(36); // PreviousClosePrice
+                tsv.RemoveAt(14); // ShortCompanyName
+                tsv.RemoveAt(7);  // CompanyPageURL
+
+                var finalLine = string.Join("\t", tsv);
+
+                var dataInstance = new T();
+                dataInstance.FromRawData(finalLine);
+
+                var ticker = dataInstance.TickerSymbol;
+
+                // For now, only support US markets
+                if (dataInstance.TickerCountry != "US")
+                {
+                    if (dataInstance.TickerCountry != previousMarket && ticker != previousTicker)
                     {
-                        Log.Trace($"SmartInsiderConverter.Process(): Null value encountered on non-nullable value on line {i}");
-                        continue;
+                        Log.Error($"SmartInsiderConverter.Process(): Market {dataInstance.TickerCountry} is not supported at this time for ticker {ticker} on line {i}");
                     }
-
-                    // Remove in descending order to maintain index order
-                    // while we delete lower indexed values
-                    tsv.RemoveAt(46); // ShowOriginal
-                    tsv.RemoveAt(36); // PreviousClosePrice
-                    tsv.RemoveAt(14); // ShortCompanyName
-                    tsv.RemoveAt(7);  // CompanyPageURL
-
-                    var finalLine = string.Join("\t", tsv);
-
-                    var dataInstance = new T();
-                    dataInstance.FromRawData(finalLine);
-
-                    var ticker = dataInstance.TickerSymbol;
-
-                    // For now, only support US markets
-                    if (dataInstance.TickerCountry != "US")
-                    {
-                        if (dataInstance.TickerCountry != previousMarket && ticker != previousTicker)
-                        {
-                            Log.Error($"SmartInsiderConverter.Process(): Market {dataInstance.TickerCountry} is not supported at this time for ticker {ticker} on line {i}");
-                        }
-
-                        previousMarket = dataInstance.TickerCountry;
-                        previousTicker = ticker;
-
-                        continue;
-                    }
-
-                    var mapFile = _mapFileResolver.ResolveMapFile(ticker, dataInstance.LastUpdate);
-                    if (!mapFile.Any())
-                    {
-                        Log.Error($"SmartInsiderConverter.Process(): Failed to find mapfile for ticker {ticker} on {dataInstance.LastUpdate} on line {i}");
-
-                        previousMarket = dataInstance.TickerCountry;
-                        previousTicker = ticker;
-
-                        continue;
-                    }
-
-                    var newTicker = mapFile.GetMappedSymbol(dataInstance.LastUpdate);
-                    if (string.IsNullOrEmpty(newTicker))
-                    {
-                        Log.Error($"SmartInsiderConverter.Process(): Failed to resolve ticker for old ticker {ticker} on line {i}");
-
-                        previousMarket = dataInstance.TickerCountry;
-                        previousTicker = ticker;
-
-                        continue;
-                    }
-
-                    // Log any mapping events since this can be a point of failure
-                    if (ticker != newTicker)
-                    {
-                        Log.Trace($"SmartInsiderConverter.Process(): Mapped ticker from {ticker} to {newTicker}");
-                    }
-
-                    List<T> symbolLines;
-                    if (!lines.TryGetValue(newTicker, out symbolLines))
-                    {
-                        symbolLines = new List<T>();
-                        lines[newTicker] = symbolLines;
-                    }
-
-                    symbolLines.Add(dataInstance);
 
                     previousMarket = dataInstance.TickerCountry;
                     previousTicker = ticker;
+
+                    continue;
                 }
-                catch (Exception e)
+
+                var mapFile = _mapFileResolver.ResolveMapFile(ticker, dataInstance.LastUpdate);
+                if (!mapFile.Any())
                 {
-                    Log.Error(e, $"SmartInsiderConverter.Process(): Error on line {i}");
+                    Log.Error($"SmartInsiderConverter.Process(): Failed to find mapfile for ticker {ticker} on {dataInstance.LastUpdate} on line {i}");
+
+                    previousMarket = dataInstance.TickerCountry;
+                    previousTicker = ticker;
+
+                    continue;
                 }
+
+                var newTicker = mapFile.GetMappedSymbol(dataInstance.LastUpdate);
+                if (string.IsNullOrEmpty(newTicker))
+                {
+                    Log.Error($"SmartInsiderConverter.Process(): Failed to resolve ticker for old ticker {ticker} on line {i}");
+
+                    previousMarket = dataInstance.TickerCountry;
+                    previousTicker = ticker;
+
+                    continue;
+                }
+
+                // Log any mapping events since this can be a point of failure
+                if (ticker != newTicker)
+                {
+                    Log.Trace($"SmartInsiderConverter.Process(): Mapped ticker from {ticker} to {newTicker}");
+                }
+
+                List<T> symbolLines;
+                if (!lines.TryGetValue(newTicker, out symbolLines))
+                {
+                    symbolLines = new List<T>();
+                    lines[newTicker] = symbolLines;
+                }
+
+                symbolLines.Add(dataInstance);
+
+                previousMarket = dataInstance.TickerCountry;
+                previousTicker = ticker;
             }
 
             return lines;

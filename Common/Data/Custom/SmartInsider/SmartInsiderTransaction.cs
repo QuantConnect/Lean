@@ -194,10 +194,10 @@ namespace QuantConnect.Data.Custom.SmartInsider
             TreasuryHolding = string.IsNullOrWhiteSpace(tsv[36]) ? (int?)null : Convert.ToInt32(tsv[36], CultureInfo.InvariantCulture);
 
             AnnouncementDate = string.IsNullOrWhiteSpace(tsv[37]) ? (DateTime?)null : DateTime.ParseExact(tsv[37], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            TimeReleased = string.IsNullOrWhiteSpace(tsv[38]) ? (DateTime?)null : DateTime.ParseExact(tsv[38].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
-            TimeProcessed = string.IsNullOrWhiteSpace(tsv[39]) ? (DateTime?)null : DateTime.ParseExact(tsv[39].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
-            TimeReleasedUtc = string.IsNullOrWhiteSpace(tsv[40]) ? (DateTime?)null : DateTime.ParseExact(tsv[40].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
-            TimeProcessedUtc = string.IsNullOrWhiteSpace(tsv[41]) ? (DateTime?)null : DateTime.ParseExact(tsv[41].Replace(" ", "").Trim(), "yyyy-MM-ddHH:mm:ss", CultureInfo.InvariantCulture);
+            TimeReleased = string.IsNullOrWhiteSpace(tsv[38]) ? (DateTime?)null : ParseTransactionDate(tsv[38]);
+            TimeProcessed = string.IsNullOrWhiteSpace(tsv[39]) ? (DateTime?)null : ParseTransactionDate(tsv[39]);
+            TimeReleasedUtc = string.IsNullOrWhiteSpace(tsv[40]) ? (DateTime?)null : ParseTransactionDate(tsv[40]);
+            TimeProcessedUtc = string.IsNullOrWhiteSpace(tsv[41]) ? (DateTime?)null : ParseTransactionDate(tsv[41]);
             AnnouncedIn = string.IsNullOrWhiteSpace(tsv[42]) ? null : tsv[42];
         }
 
@@ -356,6 +356,26 @@ namespace QuantConnect.Data.Custom.SmartInsider
                 AmountAdjustedFactor,
                 PriceAdjustedFactor,
                 TreasuryHolding);
+        }
+
+        /// <summary>
+        /// Attempts to normalize and parse SmartInsider transaction dates.
+        /// </summary>
+        /// <param name="date">Date string to parse</param>
+        /// <returns>DateTime object</returns>
+        /// <exception cref="ArgumentException">Date string was unable to be parsed</exception>
+        public DateTime ParseTransactionDate(string date)
+        {
+            date = date.Replace(" ", "").Trim();
+
+            DateTime time;
+            if (!Parse.TryParseExact(date, "dd/MM/yyyyHH:mm:ss", DateTimeStyles.None, out time) &&
+                !Parse.TryParseExact(date, "yyyy-MM-ddHH:mm:ss", DateTimeStyles.None, out time))
+            {
+                throw new ArgumentException($"SmartInsider transaction contains unparsable DateTime: {date}");
+            }
+
+            return time;
         }
     }
 }

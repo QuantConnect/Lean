@@ -251,15 +251,15 @@ namespace QuantConnect.Data.Custom.SmartInsider
         }
 
         /// <summary>
-        /// Converts data to CSV
+        /// Converts data to TSV
         /// </summary>
-        /// <returns>String of CSV</returns>
+        /// <returns>String of TSV</returns>
         public abstract string ToLine();
 
         /// <summary>
-        /// Derived class instances populate their fields from raw CSV
+        /// Derived class instances populate their fields from raw TSV
         /// </summary>
-        /// <param name="line">Line of raw CSV (raw with fields 46, 36, 14, 7 removed in descending order)</param>
+        /// <param name="line">Line of raw TSV (raw with fields 46, 36, 14, 7 removed in descending order)</param>
         public abstract void FromRawData(string line);
     }
 }
