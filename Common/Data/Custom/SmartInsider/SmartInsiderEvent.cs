@@ -263,7 +263,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
         public abstract void FromRawData(string line);
 
         /// <summary>
-        /// Attempts to normalize and parse SmartInsider transaction dates.
+        /// Attempts to normalize and parse SmartInsider dates that include a time component.
         /// </summary>
         /// <param name="date">Date string to parse</param>
         /// <returns>DateTime object</returns>
@@ -276,7 +276,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
             if (!Parse.TryParseExact(date, "yyyy-MM-ddHH:mm:ss", DateTimeStyles.None, out time) &&
                 !Parse.TryParseExact(date, "dd/MM/yyyyHH:mm:ss", DateTimeStyles.None, out time))
             {
-                throw new ArgumentException($"SmartInsider transaction contains unparsable DateTime: {date}");
+                throw new ArgumentException($"SmartInsider data contains unparsable DateTime: {date}");
             }
 
             return time;
