@@ -524,9 +524,8 @@ namespace QuantConnect.Util
 
                 case SecurityType.Future:
                     var expiryDate = symbol.ID.Date;
-                    var contractYearMonth = FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(symbol.ID.Symbol)
-                        ? expiryDate.AddMonths(1).ToStringInvariant(DateFormat.YearMonth)
-                        : expiryDate.ToStringInvariant(DateFormat.YearMonth);
+                    var monthsToAdd = FuturesExpiryUtilityFunctions.ExpiresInPreviousMonth(symbol.ID.Symbol); 
+                    var contractYearMonth = expiryDate.AddMonths(monthsToAdd).ToStringInvariant(DateFormat.YearMonth);
 
                     if (isHourOrDaily)
                     {

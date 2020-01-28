@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(inputTime, n);
 
             //Assert
-            Assert.AreEqual(calculatedDate, actualDate);
+            Assert.AreEqual(actualDate, calculatedDate);
         }
 
         [TestCase("11/05/2017", -2, "09/05/2017")]
@@ -52,7 +52,47 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(inputTime, n);
 
             //Assert
-            Assert.AreEqual(calculatedDate, actualDate);
+            Assert.AreEqual(actualDate, calculatedDate);
+        }
+
+        [TestCase("08/05/2017", 4, "15/05/2017", "12/05/2017")]
+        [TestCase("08/05/2017", 5, "22/05/2017", "15/05/2017", "16/05/2017", "17/05/2017", "18/05/2017", "19/05/2017")]
+        [TestCase("24/12/2017", 3, "27/12/2017")]
+        public void AddBusinessDays_WithPositiveInput_ShouldReturnNthSuccedingBusinessDay_ExcludingCustomHolidays(string time, int n, string actual, params string[] holidays)
+        {
+            //Arrange
+            var inputTime = Parse.DateTimeExact(time, "dd/MM/yyyy");
+            var actualDate = Parse.DateTimeExact(actual, "dd/MM/yyyy");
+
+            //Act
+            var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(
+                inputTime,
+                n,
+                useEquityHolidays: false,
+                holidayList: holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy")));
+
+            //Assert
+            Assert.AreEqual(actualDate, calculatedDate);
+        }
+
+        [TestCase("11/05/2017", -1, "09/05/2017", "10/05/2017")]
+        [TestCase("15/05/2017", -1, "10/05/2017", "11/05/2017", "12/05/2017")]
+        [TestCase("26/12/2017", -1, "18/12/2017", "25/12/2017", "22/12/2017", "21/12/2017", "20/12/2017", "19/12/2017")]
+        public void AddBusinessDays_WithNegativeInput_ShouldReturnNthprecedingBusinessDay_ExcludingCustomHolidays(string time, int n, string actual, params string[] holidays)
+        {
+            //Arrange
+            var inputTime = Parse.DateTimeExact(time, "dd/MM/yyyy");
+            var actualDate = Parse.DateTimeExact(actual, "dd/MM/yyyy");
+
+            //Act
+            var calculatedDate = FuturesExpiryUtilityFunctions.AddBusinessDays(
+                inputTime,
+                n,
+                useEquityHolidays: false,
+                holidayList: holidays.Select(x => Parse.DateTimeExact(x, "dd/MM/yyyy")));
+
+            //Assert
+            Assert.AreEqual(actualDate, calculatedDate);
         }
 
         [TestCase("01/03/2016", 5, "24/03/2016")]
@@ -68,7 +108,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var calculatedDate = FuturesExpiryUtilityFunctions.NthLastBusinessDay(inputDate, numberOfDays);
 
             //Assert
-            Assert.AreEqual(calculatedDate, actualDate);
+            Assert.AreEqual(actualDate, calculatedDate);
         }
 
         [TestCase("01/03/2016", 45)]

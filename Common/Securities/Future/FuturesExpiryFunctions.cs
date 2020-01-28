@@ -34,8 +34,8 @@ namespace QuantConnect.Securities.Future
                 return FuturesExpiryDictionary[symbol.ToUpperInvariant()];
             }
 
-            // If function for expiry cannot be found pass the date through
-            return (date) => date;
+            // If the function cannot be found, throw an exception as it hasn't yet been implemented
+            throw new ArgumentException($"Expiry function not implemented for {symbol} in FuturesExpiryFunctions.FuturesExpiryDictionary");
         }
 
         /// <summary>
@@ -451,9 +451,26 @@ namespace QuantConnect.Securities.Future
                     return closestWednesday.Add(new TimeSpan(20, 0, 0));
                 })
             },
+            // Forestry Group
+            // Random Length Lumber (LBS): https://www.cmegroup.com/trading/agricultural/lumber-and-pulp/random-length-lumber_contract_specifications.html
+            {Futures.Forestry.RandomLengthLumber, (time =>
+                {
+                    // The business day prior to the 16th calendar day of the contract month at 12:05pm CT
+                    var sixteenth = new DateTime(time.Year,time.Month,16);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(sixteenth, -1).Add(new TimeSpan(17, 5, 0));
+                })
+            },
             // Grains And OilSeeds Group
-            // Wheat (ZW): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/wheat_contract_specifications.html
-            {Futures.Grains.Wheat, (time =>
+            // Chicago SRW Wheat (ZW): http://www.cmegroup.com/trading/agricultural/grain-and-oilseed/wheat_contract_specifications.html
+            {Futures.Grains.SRWWheat, (time =>
+                {
+                    // The business day prior to the 15th calendar day of the contract month.
+                    var fifteenth = new DateTime(time.Year,time.Month,15);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(fifteenth,-1);
+                })
+            },
+            // HRW Wheat (KE): https://www.cmegroup.com/trading/agricultural/grain-and-oilseed/kc-wheat_contract_specifications.html
+            {Futures.Grains.HRWWheat, (time =>
                 {
                     // The business day prior to the 15th calendar day of the contract month.
                     var fifteenth = new DateTime(time.Year,time.Month,15);
@@ -526,7 +543,24 @@ namespace QuantConnect.Securities.Future
                 })
             },
             // Currencies group
-            // U.S. Dollar Index Futures is not found on cmegroup will discuss and update
+            // U.S. Dollar Index(R) Futures (DX): https://www.theice.com/products/194/US-Dollar-Index-Futures
+            {Futures.Currencies.USD, (time =>
+                {
+                    // Last Trading Day:
+                    // Trading ceases at 10:16 Eastern time two days prior to settlement
+                    //
+                    // Final Settlement:
+                    // The US Dollar Index is physically settled on the third Wednesday of the expiration month
+                    // against six component currencies (euro, Japanese yen, British pound, Canadian dollar, Swedish
+                    // krona and Swiss franc) in their respective percentage weights in the Index.
+                    // Settlement rates may be quoted to three decimal places.
+
+                    var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(time);
+                    var twoDaysPrior = thirdWednesday.AddDays(-2);
+
+                    return twoDaysPrior.Add(new TimeSpan(10, 16, 0));
+                })
+            },
             //  GBP (6B): http://www.cmegroup.com/trading/fx/g10/british-pound_contract_specifications.html
             {Futures.Currencies.GBP, (time =>
                 {
@@ -904,6 +938,21 @@ namespace QuantConnect.Securities.Future
                     return lastBusinessDay.Add(new TimeSpan(12,01,0));
                 })
             },
+            // Eurodollar (GE): https://www.cmegroup.com/trading/interest-rates/stir/eurodollar_contract_specifications.html
+            {Futures.Financials.EuroDollar, (time =>
+                {
+                    // Termination of trading:
+                    // Second London bank business day before 3rd Wednesday of the contract month. Trading
+                    // in expiring contracts terminates at 11:00 a.m. London time on the last trading day.
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, Futures.Financials.EuroDollar, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(FuturesExpiryUtilityFunctions.ThirdWednesday(time), -2, useEquityHolidays: false, holidayList: holidays)
+                        .Add(TimeSpan.FromHours(11));
+                })
+            },
             // 5-Year USD MAC Swap (F1U): https://www.cmegroup.com/trading/interest-rates/swap-futures/5-year-usd-mac-swap_contract_specifications.html
             {Futures.Financials.FiveYearUSDMACSwap, (time =>
                 {
@@ -923,8 +972,6 @@ namespace QuantConnect.Securities.Future
                     return secondBusinessDayBeforeThirdWednesday.Add(new TimeSpan(19, 0, 0));
                 })
             },
-            // EuroDollar Futures : TODO London bank calendar
-
             // Energies group
             // Propane Non LDH Mont Belvieu (1S): https://www.cmegroup.com/trading/energy/petrochemicals/propane-non-ldh-mt-belvieu-opis-balmo-swap_contract_specifications.html
             {Futures.Energies.PropaneNonLDHMontBelvieu, (time =>
@@ -1800,7 +1847,27 @@ namespace QuantConnect.Securities.Future
                     return FuturesExpiryUtilityFunctions.AddBusinessDays(firstDay,-3);
                 })
             },
-
+            // Brent Crude (B) : https://www.theice.com/products/219/Brent-Crude-Futures
+            {Futures.Energies.BrentCrude, (time =>
+                {
+                    //Trading shall cease at the end of the designated settlement period on the last Business Day of the second month
+                    //preceding the relevant contract month (e.g. the March contract month will expire on the last Business Day of January).
+                    //If the day on which trading is due to cease would be either: (i) the Business Day preceding Christmas Day, or
+                    //(ii) the Business Day preceding New Year’s Day, then trading shall cease on the next preceding Business Day
+                    var secondPrecedingMonth = time.AddMonths(-2);
+                    var nthLastBusinessDay = secondPrecedingMonth.Month == 12 ? 2 : 1;
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(secondPrecedingMonth, nthLastBusinessDay);
+                })
+            },
+            //
+            {Futures.Energies.LowSulfurGasoil, (time =>
+                {
+                    //Trading shall cease at 12:00 hours London Time, 2 business days prior to the 14th calendar day of the delivery month.
+                    var fourteenthDay = new DateTime(time.Year,time.Month,14);
+                    var twelfthDay = FuturesExpiryUtilityFunctions.AddBusinessDays(fourteenthDay, -2);
+                    return twelfthDay.Add(new TimeSpan(12,0,0));
+                })
+            },
             // Meats group
             // LiveCattle (LE): http://www.cmegroup.com/trading/agricultural/livestock/live-cattle_contract_specifications.html
             {Futures.Meats.LiveCattle, (time =>
@@ -1860,12 +1927,84 @@ namespace QuantConnect.Securities.Future
                     return lastThursday;
                 })
             },
+            // Softs group
+            // Cotton #2 (CT): https://www.theice.com/products/254/Cotton-No-2-Futures
+            {Futures.Softs.Cotton2, (time =>
+                {
+                    // Last Trading Day:
+                    // Seventeen business days from end of spot month.
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, Futures.Softs.Cotton2, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 17, holidays);
+                })
+            },
+            // Orange Juice (OJ): https://www.theice.com/products/30/FCOJ-A-Futures
+            {Futures.Softs.OrangeJuice, (time =>
+                {
+                    // Last Trading Day:
+                    // 14th business day prior to the last business day of the month
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, Futures.Softs.OrangeJuice, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 15, holidays);
+                })
+            },
+            // Coffee (KC): https://www.theice.com/products/15/Coffee-C-Futures
+            {Futures.Softs.Coffee, (time =>
+                {
+                    // Last Trading Day:
+                    // One business day prior to last notice day
+                    //
+                    // Last Notice Day:
+                    // Seven business days prior to the last business day off the delivery month
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, Futures.Softs.Coffee, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 9, holidays);
+                })
+            },
+            // Sugar #11 ICE (SB): https://www.theice.com/products/23/Sugar-No-11-Futures
+            {Futures.Softs.Sugar11, (time =>
+                {
+                    // Last Trading Day:
+                    // Last business day of the month preceding the delivery month
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, Futures.Softs.Sugar11, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time.AddMonths(-1), 1, holidays);
+                })
+            },
             // Sugar #11 CME (YO): https://www.cmegroup.com/trading/agricultural/softs/sugar-no11_contract_specifications.html
             {Futures.Softs.Sugar11CME, (time =>
                 {
                     // Trading terminates on the day immediately preceding the first notice day of the corresponding trading month of Sugar No. 11 futures at ICE Futures U.S.
                     var precedingMonth = time.AddMonths(-1);
                     return FuturesExpiryUtilityFunctions.NthLastBusinessDay(precedingMonth, 1);
+                })
+            },
+            // Cocoa (CC): https://www.theice.com/products/7/Cocoa-Futures
+            {Futures.Softs.Cocoa, (time =>
+                {
+                    // Last Trading Day:
+                    // One business day prior to last notice day
+                    //
+                    // Last Notice Day:
+                    // Ten business days prior to last business day of delivery month
+                    var holidays = MarketHoursDatabase.FromDataFolder()
+                        .GetEntry(Market.USA, Futures.Softs.Cocoa, SecurityType.Future)
+                        .ExchangeHours
+                        .Holidays;
+
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 12, holidays);
                 })
             },
             // Dairy Group
