@@ -493,9 +493,6 @@ namespace QuantConnect.Algorithm
             var resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)configs.GetHighestResolution());
             var isExtendedMarketHours = configs.IsExtendedMarketHours();
 
-            var startTime = _historyRequestFactory.GetStartTimeAlgoTz(security.Symbol, 1, resolution, security.Exchange.Hours);
-            var endTime   = Time;
-
             // request QuoteBar for Options and Futures
             var dataType = typeof(BaseData);
             if (security.Type == SecurityType.Option || security.Type == SecurityType.Future)
@@ -513,36 +510,62 @@ namespace QuantConnect.Algorithm
                 subscriptionDataConfig = new SubscriptionDataConfig(subscriptionDataConfig, dataType, resolution: resolution);
             }
 
-            var request = new HistoryRequest(
-                startTime.ConvertToUtc(_localTimeKeeper.TimeZone),
-                endTime.ConvertToUtc(_localTimeKeeper.TimeZone),
-                subscriptionDataConfig == null ? typeof(TradeBar) : subscriptionDataConfig.Type,
-                security.Symbol,
-                resolution,
-                security.Exchange.Hours,
-                MarketHoursDatabase.FromDataFolder().GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Symbol.SecurityType),
-                resolution,
-                isExtendedMarketHours,
-                configs.IsCustomData(),
-                configs.DataNormalizationMode(),
-                subscriptionDataConfig == null ? LeanData.GetCommonTickTypeForCommonDataTypes(typeof(TradeBar), security.Type) : subscriptionDataConfig.TickType
-            );
+            dataType = subscriptionDataConfig == null ? typeof(TradeBar) : subscriptionDataConfig.Type;
+            var dataTimeZone = MarketHoursDatabase.GetDataTimeZone(security.Symbol.ID.Market, security.Symbol, security.Symbol.SecurityType);
+            var tickType = subscriptionDataConfig == null ? LeanData.GetCommonTickTypeForCommonDataTypes(typeof(TradeBar), security.Type) : subscriptionDataConfig.TickType;
 
-            var history = History(new List<HistoryRequest> { request }).ToList();
-
-            if (history.Any() && history.First().Values.Any())
+            Func<int, BaseData> getLastKnownPrice = arg =>
             {
-                return history.First().Values.First();
+                var startTimeUtc = _historyRequestFactory
+                    .GetStartTimeAlgoTz(security.Symbol, arg, resolution, security.Exchange.Hours)
+                    .ConvertToUtc(_localTimeKeeper.TimeZone);
+
+                var request = new HistoryRequest(
+                    startTimeUtc,
+                    UtcTime,
+                    dataType,
+                    security.Symbol,
+                    resolution,
+                    security.Exchange.Hours,
+                    dataTimeZone,
+                    resolution,
+                    isExtendedMarketHours,
+                    configs.IsCustomData(),
+                    configs.DataNormalizationMode(),
+                    tickType
+                );
+
+                BaseData result = null;
+                History(new List<HistoryRequest> { request })
+                    .PushThrough(bar =>
+                    {
+                        if (!bar.IsFillForward)
+                            result = bar;
+                    });
+
+                return result;
+            };
+
+            var lastKnownPrice = getLastKnownPrice(1);
+            if (lastKnownPrice != null)
+            {
+                return lastKnownPrice;
             }
 
-            return null;
+            // If the first attempt to get the last know price returns null, it maybe the case of an iliquid security.
+            // We increase the look-back period for this case accordingly to the resolution
+            var periods =
+                resolution == Resolution.Daily ? 3 :
+                resolution == Resolution.Hour ? 24 : 1440;
+
+            return getLastKnownPrice(periods);
         }
 
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
         {
             var sentMessage = false;
             // filter out any universe securities that may have made it this far
-            var reqs = requests.Where(hr => !UniverseManager.ContainsKey(hr.Symbol)) .ToList();
+            var reqs = requests.Where(hr => !UniverseManager.ContainsKey(hr.Symbol)).ToList();
             foreach (var request in reqs)
             {
                 // prevent future requests
