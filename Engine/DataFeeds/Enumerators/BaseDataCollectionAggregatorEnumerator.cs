@@ -74,6 +74,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     if (!_enumerator.MoveNext())
                     {
                         _endOfStream = true;
+                        if (!IsValid(collection))
+                        {
+                            // we don't emit
+                            collection = null;
+                        }
                         break;
                     }
                 }
@@ -96,7 +101,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 {
                     // the data from the underlying is at a different time, stop here
                     _needsMoveNext = false;
-                    break;
+                    if (IsValid(collection))
+                    {
+                        // we emit
+                        break;
+                    }
+                    // we try again
+                    collection = null;
+                    continue;
                 }
 
                 // this data belongs in this collection, keep going until null or bad time
@@ -184,6 +196,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         protected virtual void SetData(T collection, List<BaseData> current)
         {
             collection.Data = current;
+        }
+
+        /// <summary>
+        /// Determines if a given data point is valid and can be emitted
+        /// </summary>
+        /// <param name="collection">The collection to be emitted</param>
+        /// <returns>True if its a valid data point</returns>
+        protected virtual bool IsValid(T collection)
+        {
+            return true;
         }
     }
 

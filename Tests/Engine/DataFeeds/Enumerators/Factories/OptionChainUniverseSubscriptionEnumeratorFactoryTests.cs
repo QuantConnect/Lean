@@ -35,6 +35,78 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
     public class OptionChainUniverseSubscriptionEnumeratorFactoryTests
     {
         [Test]
+        public void DoesNotEmitInvalidData()
+        {
+            var startTime = new DateTime(2014, 06, 06, 0, 0, 0);
+            var endTime = new DateTime(2014, 06, 09, 20, 0, 0);
+
+            var canonicalSymbol = Symbol.Create("AAPL", SecurityType.Option, Market.USA, "?AAPL");
+
+            var quoteCurrency = new Cash(Currencies.USD, 0, 1);
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, canonicalSymbol, SecurityType.Option);
+            var config = new SubscriptionDataConfig(
+                typeof(ZipEntryName),
+                canonicalSymbol,
+                Resolution.Minute,
+                TimeZones.Utc,
+                TimeZones.NewYork,
+                true,
+                false,
+                false,
+                false,
+                TickType.Quote,
+                false,
+                DataNormalizationMode.Raw
+            );
+
+            var option = new Option(
+                canonicalSymbol,
+                exchangeHours,
+                quoteCurrency,
+                new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+
+            var fillForwardResolution = Ref.CreateReadOnly(() => Resolution.Minute.ToTimeSpan());
+            Func<SubscriptionRequest, IEnumerator<BaseData>, IEnumerator<BaseData>> underlyingEnumeratorFunc =
+                (req, input) =>
+                {
+                    input = new BaseDataCollectionAggregatorEnumerator(input, req.Configuration.Symbol);
+                    return new FillForwardEnumerator(
+                        input,
+                        option.Exchange,
+                        fillForwardResolution,
+                        false,
+                        endTime,
+                        Resolution.Minute.ToTimeSpan(),
+                        TimeZones.Utc,
+                        startTime);
+                };
+            var factory = new OptionChainUniverseSubscriptionEnumeratorFactory(underlyingEnumeratorFunc,
+                MapFileResolver.Create(Globals.DataFolder, Market.USA),
+                new LocalDiskFactorFileProvider(new LocalDiskMapFileProvider()));
+
+            var request = new SubscriptionRequest(true, null, option, config, startTime, endTime);
+            var enumerator = factory.CreateEnumerator(request, new DefaultDataProvider());
+
+            var emittedCount = 0;
+            foreach (var data in enumerator.AsEnumerable())
+            {
+                emittedCount++;
+                var optionData = data as OptionChainUniverseDataCollection;
+
+                Assert.IsNotNull(optionData);
+                Assert.IsNotNull(optionData.Underlying);
+                Assert.AreNotEqual(0, optionData.Data.Count);
+            }
+
+            // 9:30 to 15:59 -> 6.5 hours * 60 => 390 minutes * 2 days = 780
+            Assert.AreEqual(780, emittedCount);
+        }
+
+        [Test]
         public void RefreshesOptionChainUniverseOnDateChange()
         {
             var startTime = new DateTime(2018, 10, 19, 10, 0, 0);
