@@ -98,9 +98,9 @@ namespace QuantConnect.Data.Custom.SmartInsider
         }
 
         /// <summary>
-        /// Constructs instance of this via a *formatted* CSV line (tab delimited)
+        /// Constructs instance of this via a *formatted* TSV line (tab delimited)
         /// </summary>
-        /// <param name="line">Line of formatted CSV data</param>
+        /// <param name="line">Line of formatted TSV data</param>
         public SmartInsiderIntention(string line) : base(line)
         {
             var tsv = line.Split('\t');
@@ -121,9 +121,9 @@ namespace QuantConnect.Data.Custom.SmartInsider
         }
 
         /// <summary>
-        /// Constructs a new instance from unformatted CSV data
+        /// Constructs a new instance from unformatted TSV data
         /// </summary>
-        /// <param name="line">Line of raw CSV (raw with fields 46, 36, 14, 7 removed in descending order)</param>
+        /// <param name="line">Line of raw TSV (raw with fields 46, 36, 14, 7 removed in descending order)</param>
         /// <returns>Instance of the object</returns>
         public override void FromRawData(string line)
         {
@@ -151,10 +151,10 @@ namespace QuantConnect.Data.Custom.SmartInsider
             TickerSymbol = string.IsNullOrWhiteSpace(tsv[19]) ? null : tsv[19];
 
             AnnouncementDate = string.IsNullOrWhiteSpace(tsv[37]) ? (DateTime?)null : DateTime.ParseExact(tsv[37], "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            TimeReleased = string.IsNullOrWhiteSpace(tsv[38]) ? (DateTime?)null : DateTime.ParseExact(tsv[38].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
-            TimeProcessed = string.IsNullOrWhiteSpace(tsv[39]) ? (DateTime?)null : DateTime.ParseExact(tsv[39].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
-            TimeReleasedUtc = string.IsNullOrWhiteSpace(tsv[40]) ? (DateTime?)null : DateTime.ParseExact(tsv[40].Replace(" ", "").Trim(), "dd/MM/yyyyHH:mm:ss", CultureInfo.InvariantCulture);
-            TimeProcessedUtc = string.IsNullOrWhiteSpace(tsv[41]) ? (DateTime?)null : DateTime.ParseExact(tsv[41].Replace(" ", "").Trim(), "yyyy-MM-ddHH:mm:ss", CultureInfo.InvariantCulture);
+            TimeReleased = string.IsNullOrWhiteSpace(tsv[38]) ? (DateTime?)null : ParseDate(tsv[38]);
+            TimeProcessed = string.IsNullOrWhiteSpace(tsv[39]) ? (DateTime?)null : ParseDate(tsv[39]);
+            TimeReleasedUtc = string.IsNullOrWhiteSpace(tsv[40]) ? (DateTime?)null : ParseDate(tsv[40]);
+            TimeProcessedUtc = string.IsNullOrWhiteSpace(tsv[41]) ? (DateTime?)null : ParseDate(tsv[41]);
             AnnouncedIn = string.IsNullOrWhiteSpace(tsv[42]) ? null : tsv[42];
 
             Execution = string.IsNullOrWhiteSpace(tsv[43]) ? (SmartInsiderExecution?)null : JsonConvert.DeserializeObject<SmartInsiderExecution>($"\"{tsv[43]}\"");
@@ -199,7 +199,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// Loads and reads the data to be used in LEAN
         /// </summary>
         /// <param name="config">Subscription configuration</param>
-        /// <param name="line">CSV line</param>
+        /// <param name="line">TSV line</param>
         /// <param name="date">Algorithm date</param>
         /// <param name="isLiveMode">Is live mode</param>
         /// <returns>Instance of the object</returns>
@@ -274,10 +274,10 @@ namespace QuantConnect.Data.Custom.SmartInsider
         }
 
         /// <summary>
-        /// Converts the data to CSV
+        /// Converts the data to TSV
         /// </summary>
-        /// <returns>String of CSV</returns>
-        /// <remarks>Parsable by the constructor should you need to recreate the object from CSV</remarks>
+        /// <returns>String of TSV</returns>
+        /// <remarks>Parsable by the constructor should you need to recreate the object from TSV</remarks>
         public override string ToLine()
         {
             return string.Join("\t",
