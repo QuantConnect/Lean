@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -25,7549 +25,3541 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// </summary>
         public static class Calendar
         {
-            public static class Albania
-            {
-                /// <summary>
-                /// Albania Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "ALBANIABALRADE";
-                /// <summary>
-                /// Albania Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "ALBANIABUSCON";
-                /// <summary>
-                /// Albania Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "ALBANIACONCON";
-                /// <summary>
-                /// Albania GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "ALBANIAGDPATE";
-                /// <summary>
-                /// Albania GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "ALBANIAGDPRATE";
-                /// <summary>
-                /// Albania Harmonised Consumer Prices
-                /// </summary>
-                public const string HarmonisedConsumerPrices = "ALBANIAHARCONPRI";
-                /// <summary>
-                /// Albania Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "ALBANIAINDCTION";
-                /// <summary>
-                /// Albania Inflation Rate
-                /// </summary>
-                public const string InflationRate = "ALBANIAINFNRATE";
-                /// <summary>
-                /// Albania Interest Rate
-                /// </summary>
-                public const string InterestRate = "ALBANIAINTTRATE";
-                /// <summary>
-                /// Albania Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "ALBANIAPROPRICHA";
-                /// <summary>
-                /// Albania Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "ALBANIAUNETRATE";
-            }
-            public static class Angola
-            {
-                /// <summary>
-                /// Angola Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "ANGOLAFOREXCRES";
-                /// <summary>
-                /// Angola Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "ANGOLAINDPRO";
-                /// <summary>
-                /// Angola Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "ANGOLAINDPROMOM";
-                /// <summary>
-                /// Angola Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "ANGOLAINFRATMOM";
-                /// <summary>
-                /// Angola Interest Rate
-                /// </summary>
-                public const string InterestRate = "ANGOLAINTRATE";
-                /// <summary>
-                /// Angola Inflation Rate
-                /// </summary>
-                public const string InflationRate = "ANGOLAIR";
-                /// <summary>
-                /// Angola Money Supply M3
-                /// </summary>
-                public const string MoneySupplyM3 = "ANGOLAMONSUPM3";
-                /// <summary>
-                /// Angola Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "ANGOLAPROPRICHA";
-            }
-            public static class Argentina
-            {
-                /// <summary>
-                /// Argentina Interest Rate
-                /// </summary>
-                public const string InterestRate = "APDR1T";
-                /// <summary>
-                /// Argentina Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "ARBABAL";
-                /// <summary>
-                /// Argentina Current Account
-                /// </summary>
-                public const string CurrentAccount = "ARBPCURR";
-                /// <summary>
-                /// Argentina Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "ARCCIND";
-                /// <summary>
-                /// Argentina Inflation Rate
-                /// </summary>
-                public const string InflationRate = "ARCPIYOY";
-                /// <summary>
-                /// Argentina Calendar
-                /// </summary>
-                public const string Calendar = "ARG-CALENDAR";
-                /// <summary>
-                /// Argentina Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "ARGENTINAINFRATMOM";
-                /// <summary>
-                /// Argentina Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "ARGENTINALEAECOIND";
-                /// <summary>
-                /// Argentina GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "ARGQPQOX";
-                /// <summary>
-                /// Argentina GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "ARGQPYOX";
-                /// <summary>
-                /// Argentina Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "ARGRETAILSALESMOM";
-                /// <summary>
-                /// Argentina Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "ARGRETAILSALESYOY";
-                /// <summary>
-                /// Argentina Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "ARIPNSYO";
-                /// <summary>
-                /// Argentina Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "ARUERATE";
-            }
-            public static class Armenia
-            {
-                /// <summary>
-                /// Armenia Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "ARMENIABALRADE";
-                /// <summary>
-                /// Armenia Construction Output
-                /// </summary>
-                public const string ConstructionOutput = "ARMENIACONOUT";
-                /// <summary>
-                /// Armenia Current Account
-                /// </summary>
-                public const string CurrentAccount = "ARMENIACURCOUNT";
-                /// <summary>
-                /// Armenia GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "ARMENIAGDPATE";
-                /// <summary>
-                /// Armenia Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "ARMENIAINDCTION";
-                /// <summary>
-                /// Armenia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "ARMENIAINFNRATE";
-                /// <summary>
-                /// Armenia Interest Rate
-                /// </summary>
-                public const string InterestRate = "ARMENIAINTTRATE";
-                /// <summary>
-                /// Armenia Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "ARMENIALEAECOIND";
-                /// <summary>
-                /// Armenia Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "ARMENIAPROPRICHA";
-                /// <summary>
-                /// Armenia Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "ARMENIARETSYOY";
-                /// <summary>
-                /// Armenia Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "ARMENIAUNETRATE";
-            }
+            /// <summary>
+            /// Australia
+            /// </summary>
             public static class Australia
             {
                 /// <summary>
-                /// Australia Current Account
+                /// Balance of Trade
                 /// </summary>
-                public const string CurrentAccount = "AUCABAL";
+                public const string BalanceOfTrade = "Australia//AUITGSB";
                 /// <summary>
-                /// Australia Inflation Rate
+                /// Building Permits
                 /// </summary>
-                public const string InflationRate = "AUCPIYOY";
+                public const string BuildingPermits = "Australia//AUSTRALIABUIPER";
                 /// <summary>
-                /// Australia Calendar
+                /// Business Confidence
                 /// </summary>
-                public const string Calendar = "CALENDARAUSTRALIA";
+                public const string BusinessConfidence = "Australia//NABSCONF";
                 /// <summary>
-                /// Australia Exports
+                /// Business Inventories
                 /// </summary>
-                public const string Exports = "AUITEXP";
+                public const string BusinessInventories = "Australia//AUSTRALIABUSINV";
                 /// <summary>
-                /// Australia Balance of Trade
+                /// Calendar
                 /// </summary>
-                public const string BalanceOfTrade = "AUITGSB";
+                public const string Calendar = "Australia//AUD-CALENDAR";
                 /// <summary>
-                /// Australia Imports
+                /// Car Registrations
                 /// </summary>
-                public const string Imports = "AUITIMP";
+                public const string CarRegistrations = "Australia//AUSTRALIACARREG";
                 /// <summary>
-                /// Australia Unemployment Rate
+                /// Composite Pmi
                 /// </summary>
-                public const string UnemploymentRate = "AULFUNEM";
+                public const string CompositePmi = "Australia//AUSTRALIACOMPMI";
                 /// <summary>
-                /// Australia GDP Growth Rate
+                /// Construction Output
                 /// </summary>
-                public const string GdpGrowthRate = "AUNAGDPC";
+                public const string ConstructionOutput = "Australia//AUSTRALIACONOUT";
                 /// <summary>
-                /// Australia GDP Annual Growth Rate
+                /// Construction Pmi
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "AUNAGDPY";
+                public const string ConstructionPmi = "Australia//AUSTRALIACONPMI";
                 /// <summary>
-                /// Australia Core Inflation Rate
+                /// Consumer Confidence
                 /// </summary>
-                public const string CoreInflationRate = "AUSCORECPIRATE";
+                public const string ConsumerConfidence = "Australia//WMCCCONPCT";
                 /// <summary>
-                /// Australia Retail Sales MoM
+                /// Consumer Price Index (CPI)
                 /// </summary>
-                public const string RetailSalesMom = "AUSRETAILSALESMOM";
+                public const string ConsumerPriceIndexCPI = "Australia//AUSTRALIACONPRIINDCP";
                 /// <summary>
-                /// Australia Retail Sales YoY
+                /// Consumer Spending
                 /// </summary>
-                public const string RetailSalesYoy = "AUSRETAILSALESYOY";
+                public const string ConsumerSpending = "Australia//AUSTRALIACONSPE";
                 /// <summary>
-                /// Australia Building Permits
+                /// Core Inflation Rate
                 /// </summary>
-                public const string BuildingPermits = "AUSTRALIABUIPER";
+                public const string CoreInflationRate = "Australia//AUSCORECPIRATE";
                 /// <summary>
-                /// Australia Business Inventories
+                /// Corporate Profits
                 /// </summary>
-                public const string BusinessInventories = "AUSTRALIABUSINV";
+                public const string CorporateProfits = "Australia//AUSTRALIACORPRO";
                 /// <summary>
-                /// Australia Car Registrations
+                /// Current Account
                 /// </summary>
-                public const string CarRegistrations = "AUSTRALIACARREG";
+                public const string CurrentAccount = "Australia//AUCABAL";
                 /// <summary>
-                /// Australia Composite Pmi
+                /// Employment Change
                 /// </summary>
-                public const string CompositePmi = "AUSTRALIACOMPMI";
+                public const string EmploymentChange = "Australia//AUSTRALIAEMPCHA";
                 /// <summary>
-                /// Australia Construction Output
+                /// Export Prices
                 /// </summary>
-                public const string ConstructionOutput = "AUSTRALIACONOUT";
+                public const string ExportPrices = "Australia//AUSTRALIAEXPPRI";
                 /// <summary>
-                /// Australia Construction Pmi
+                /// Exports
                 /// </summary>
-                public const string ConstructionPmi = "AUSTRALIACONPMI";
+                public const string Exports = "Australia//AUITEXP";
                 /// <summary>
-                /// Australia Consumer Price Index (CPI)
+                /// Full Time Employment
                 /// </summary>
-                public const string ConsumerPriceIndex = "AUSTRALIACONPRIINDCP";
+                public const string FullTimeEmployment = "Australia//AUSTRALIAFULTIMEMP";
                 /// <summary>
-                /// Australia Consumer Spending
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string ConsumerSpending = "AUSTRALIACONSPE";
+                public const string GDPAnnualGrowthRate = "Australia//AUNAGDPY";
                 /// <summary>
-                /// Australia Corporate Profits
+                /// GDP Deflator
                 /// </summary>
-                public const string CorporateProfits = "AUSTRALIACORPRO";
+                public const string GDPDeflator = "Australia//AUSTRALIAGDPDEF";
                 /// <summary>
-                /// Australia Employment Change
+                /// GDP Growth Rate
                 /// </summary>
-                public const string EmploymentChange = "AUSTRALIAEMPCHA";
+                public const string GDPGrowthRate = "Australia//AUNAGDPC";
                 /// <summary>
-                /// Australia Export Prices
+                /// Gross Fixed Capital Formation
                 /// </summary>
-                public const string ExportPrices = "AUSTRALIAEXPPRI";
+                public const string GrossFixedCapitalFormation = "Australia//AUSTRALIAGROFIXCAPFO";
                 /// <summary>
-                /// Australia Full Time Employment
+                /// Holidays
                 /// </summary>
-                public const string FullTimeEmployment = "AUSTRALIAFULTIMEMP";
+                public const string Holidays = "Australia//HOLIDAYSAUSTRALIA";
                 /// <summary>
-                /// Australia GDP Deflator
+                /// Home Loans
                 /// </summary>
-                public const string GdpDeflator = "AUSTRALIAGDPDEF";
+                public const string HomeLoans = "Australia//AUSTRALIAHOMLOA";
                 /// <summary>
-                /// Australia Gross Fixed Capital Formation
+                /// Housing Index
                 /// </summary>
-                public const string GrossFixedCapitalFormation = "AUSTRALIAGROFIXCAPFO";
+                public const string HousingIndex = "Australia//AUSTRALIAHOUIND";
                 /// <summary>
-                /// Australia Housing Index
+                /// Import Prices
                 /// </summary>
-                public const string HousingIndex = "AUSTRALIAHOUIND";
+                public const string ImportPrices = "Australia//AUSTRALIAIMPPRI";
                 /// <summary>
-                /// Australia Import Prices
+                /// Imports
                 /// </summary>
-                public const string ImportPrices = "AUSTRALIAIMPPRI";
+                public const string Imports = "Australia//AUITIMP";
                 /// <summary>
-                /// Australia Inflation Expectations
+                /// Industrial Sentiment
                 /// </summary>
-                public const string InflationExpectations = "AUSTRALIAINFEXP";
+                public const string IndustrialSentiment = "Australia//AUSTRALIAINDSEN";
                 /// <summary>
-                /// Australia Inflation Rate Mom
+                /// Inflation Expectations
                 /// </summary>
-                public const string InflationRateMom = "AUSTRALIAINFRATMOM";
+                public const string InflationExpectations = "Australia//AUSTRALIAINFEXP";
                 /// <summary>
-                /// Australia Job Advertisements
+                /// Inflation Rate
                 /// </summary>
-                public const string JobAdvertisements = "AUSTRALIAJOBADV";
+                public const string InflationRate = "Australia//AUCPIYOY";
                 /// <summary>
-                /// Australia Labor Force Participation Rate
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string LaborForceParticipationRate = "AUSTRALIALABFORPARRA";
+                public const string InflationRateMom = "Australia//AUSTRALIAINFRATMOM";
                 /// <summary>
-                /// Australia Leading Economic Index
+                /// Interest Rate
                 /// </summary>
-                public const string LeadingEconomicIndex = "AUSTRALIALEAECOIND";
+                public const string InterestRate = "Australia//RBATCTR";
                 /// <summary>
-                /// Australia Manufacturing Pmi
+                /// Job Advertisements
                 /// </summary>
-                public const string ManufacturingPmi = "AUSTRALIAMANPMI";
+                public const string JobAdvertisements = "Australia//AUSTRALIAJOBADV";
                 /// <summary>
-                /// Australia New Home Sales
+                /// Labor Force Participation Rate
                 /// </summary>
-                public const string NewHomeSales = "AUSTRALIANEWHOMSAL";
+                public const string LaborForceParticipationRate = "Australia//AUSTRALIALABFORPARRA";
                 /// <summary>
-                /// Australia Part Time Employment
+                /// Leading Economic Index
                 /// </summary>
-                public const string PartTimeEmployment = "AUSTRALIAPARTIMEMP";
+                public const string LeadingEconomicIndex = "Australia//AUSTRALIALEAECOIND";
                 /// <summary>
-                /// Australia Private Investment
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string PrivateInvestment = "AUSTRALIAPRIINV";
+                public const string ManufacturingPmi = "Australia//AUSTRALIAMANPMI";
                 /// <summary>
-                /// Australia Private Sector Credit
+                /// New Home Sales
                 /// </summary>
-                public const string PrivateSectorCredit = "AUSTRALIAPRISECCRE";
+                public const string NewHomeSales = "Australia//AUSTRALIANEWHOMSAL";
                 /// <summary>
-                /// Australia Producer Prices
+                /// Part Time Employment
                 /// </summary>
-                public const string ProducerPrices = "AUSTRALIAPROPRI";
+                public const string PartTimeEmployment = "Australia//AUSTRALIAPARTIMEMP";
                 /// <summary>
-                /// Australia Producer Prices Change
+                /// Private Investment
                 /// </summary>
-                public const string ProducerPricesChange = "AUSTRALIAPROPRICHA";
+                public const string PrivateInvestment = "Australia//AUSTRALIAPRIINV";
                 /// <summary>
-                /// Australia Services PMI
+                /// Private Sector Credit
                 /// </summary>
-                public const string ServicesPmi = "AUSTRALIASERPMI";
+                public const string PrivateSectorCredit = "Australia//AUSTRALIAPRISECCRE";
                 /// <summary>
-                /// Australia Total Vehicle Sales
+                /// Producer Prices
                 /// </summary>
-                public const string TotalVehicleSales = "AUSTRALIATOTVEHSAL";
+                public const string ProducerPrices = "Australia//AUSTRALIAPROPRI";
                 /// <summary>
-                /// Australia Wage Growth
+                /// Producer Prices Change
                 /// </summary>
-                public const string WageGrowth = "AUSTRALIAWAGGRO";
+                public const string ProducerPricesChange = "Australia//AUSTRALIAPROPRICHA";
                 /// <summary>
-                /// Australia Business Confidence
+                /// Retail Sales MoM
                 /// </summary>
-                public const string BusinessConfidence = "NABSCONF";
+                public const string RetailSalesMom = "Australia//AUSRETAILSALESMOM";
                 /// <summary>
-                /// Australia Interest Rate
+                /// Retail Sales YoY
                 /// </summary>
-                public const string InterestRate = "RBATCTR";
+                public const string RetailSalesYoy = "Australia//AUSRETAILSALESYOY";
                 /// <summary>
-                /// Australia Consumer Confidence
+                /// Services Pmi
                 /// </summary>
-                public const string ConsumerConfidence = "WMCCCONPCT";
+                public const string ServicesPmi = "Australia//AUSTRALIASERPMI";
+                /// <summary>
+                /// Services Sentiment
+                /// </summary>
+                public const string ServicesSentiment = "Australia//AUSTRALIASERSEN";
+                /// <summary>
+                /// Total Vehicle Sales
+                /// </summary>
+                public const string TotalVehicleSales = "Australia//AUSTRALIATOTVEHSAL";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Australia//AULFUNEM";
+                /// <summary>
+                /// Wage Growth
+                /// </summary>
+                public const string WageGrowth = "Australia//AUSTRALIAWAGGRO";
             }
+            /// <summary>
+            /// Austria
+            /// </summary>
             public static class Austria
             {
                 /// <summary>
-                /// Austria GDP Growth Rate
+                /// Balance of Trade
                 /// </summary>
-                public const string GdpGrowthRate = "ASGPGDPQ";
+                public const string BalanceOfTrade = "Austria//ATTBAL";
                 /// <summary>
-                /// Austria GDP Annual Growth Rate
+                /// Business Confidence
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "ASGPGDPY";
+                public const string BusinessConfidence = "Austria//AUSTRIABUSCON";
                 /// <summary>
-                /// Austria Industrial Production
+                /// Calendar
                 /// </summary>
-                public const string IndustrialProduction = "ATIPIYY";
+                public const string Calendar = "Austria//AUT-CALENDAR";
                 /// <summary>
-                /// Austria Balance of Trade
+                /// Consumer Confidence
                 /// </summary>
-                public const string BalanceOfTrade = "ATTBAL";
+                public const string ConsumerConfidence = "Austria//AUSTRIACC";
                 /// <summary>
-                /// Austria Business Confidence
+                /// Current Account
                 /// </summary>
-                public const string BusinessConfidence = "AUSTRIABUSCON";
+                public const string CurrentAccount = "Austria//OEATB007";
                 /// <summary>
-                /// Austria Consumer Confidence
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string ConsumerConfidence = "AUSTRIACC";
+                public const string GDPAnnualGrowthRate = "Austria//ASGPGDPY";
                 /// <summary>
-                /// Austria Harmonised Consumer Prices
+                /// GDP Growth Rate
                 /// </summary>
-                public const string HarmonisedConsumerPrices = "AUSTRIAHARCONPRI";
+                public const string GDPGrowthRate = "Austria//ASGPGDPQ";
                 /// <summary>
-                /// Austria Inflation Rate Mom
+                /// Harmonised Consumer Prices
                 /// </summary>
-                public const string InflationRateMom = "AUSTRIAINFRATMOM";
+                public const string HarmonisedConsumerPrices = "Austria//AUSTRIAHARCONPRI";
                 /// <summary>
-                /// Austria Manufacturing Pmi
+                /// Holidays
                 /// </summary>
-                public const string ManufacturingPmi = "AUSTRIAMANPMI";
+                public const string Holidays = "Austria//HOLIDAYSAUSTRIA";
                 /// <summary>
-                /// Austria Producer Prices
+                /// Industrial Production
                 /// </summary>
-                public const string ProducerPrices = "AUSTRIAPROPRI";
+                public const string IndustrialProduction = "Austria//ATIPIYY";
                 /// <summary>
-                /// Austria Producer Prices Change
+                /// Inflation Rate
                 /// </summary>
-                public const string ProducerPricesChange = "AUSTRIAPROPRICHA";
+                public const string InflationRate = "Austria//ECCPATYY";
                 /// <summary>
-                /// Austria Unemployed Persons
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string UnemployedPersons = "AUSTRIAUNEPER";
+                public const string InflationRateMom = "Austria//AUSTRIAINFRATMOM";
                 /// <summary>
-                /// Austria Calendar
+                /// Interest Rate
                 /// </summary>
-                public const string Calendar = "CALENDARAUSTRIA";
+                public const string InterestRate = "Austria//EURR002W-ATS";
                 /// <summary>
-                /// Austria Retail Sales MoM
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string RetailSalesMom = "AUTRETAILSALESMOM";
+                public const string ManufacturingPmi = "Austria//AUSTRIAMANPMI";
                 /// <summary>
-                /// Austria Retail Sales YoY
+                /// Producer Prices
                 /// </summary>
-                public const string RetailSalesYoy = "AUTRETSALYOY";
+                public const string ProducerPrices = "Austria//AUSTRIAPROPRI";
                 /// <summary>
-                /// Austria Inflation Rate
+                /// Producer Prices Change
                 /// </summary>
-                public const string InflationRate = "ECCPATYY";
+                public const string ProducerPricesChange = "Austria//AUSTRIAPROPRICHA";
                 /// <summary>
-                /// Austria Current Account
+                /// Retail Sales MoM
                 /// </summary>
-                public const string CurrentAccount = "OEATB007";
+                public const string RetailSalesMom = "Austria//AUTRETAILSALESMOM";
                 /// <summary>
-                /// Austria Unemployment Rate
+                /// Retail Sales YoY
                 /// </summary>
-                public const string UnemploymentRate = "UMRTAT";
+                public const string RetailSalesYoy = "Austria//AUTRETSALYOY";
+                /// <summary>
+                /// Unemployed Persons
+                /// </summary>
+                public const string UnemployedPersons = "Austria//AUSTRIAUNEPER";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Austria//UMRTAT";
+                /// <summary>
+                /// Wholesale Prices
+                /// </summary>
+                public const string WholesalePrices = "Austria//AUSTRIAWHOPRI";
             }
-            public static class Azerbaijan
-            {
-                /// <summary>
-                /// Azerbaijan Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "AZERBAIJANINFRATMOM";
-                /// <summary>
-                /// Azerbaijan Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "AZERBAIJANLEAECOIND";
-            }
-            public static class Bahrain
-            {
-                /// <summary>
-                /// Bahrain GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "BAHRAINGDPATE";
-                /// <summary>
-                /// Bahrain GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "BAHRAINGDPGRORAT";
-                /// <summary>
-                /// Bahrain Inflation Rate
-                /// </summary>
-                public const string InflationRate = "BAHRAININFNRATE";
-                /// <summary>
-                /// Bahrain Interest Rate
-                /// </summary>
-                public const string InterestRate = "BAHRAININTTRATE";
-                /// <summary>
-                /// Bahrain Loan Growth
-                /// </summary>
-                public const string LoanGrowth = "BAHRAINLOAGRO";
-                /// <summary>
-                /// Bahrain Money Supply M2
-                /// </summary>
-                public const string MoneySupplyM2 = "BAHRAINMONSUPM2";
-            }
-            public static class Bangladesh
-            {
-                /// <summary>
-                /// Bangladesh Inflation Rate
-                /// </summary>
-                public const string InflationRate = "BANGLADESHIR";
-            }
-            public static class Belarus
-            {
-                /// <summary>
-                /// Belarus Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "BELARUSBALRADE";
-                /// <summary>
-                /// Belarus Current Account
-                /// </summary>
-                public const string CurrentAccount = "BELARUSCURCOUNT";
-                /// <summary>
-                /// Belarus Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "BELARUSINDCTION";
-                /// <summary>
-                /// Belarus Inflation Rate
-                /// </summary>
-                public const string InflationRate = "BELARUSINFNRATE";
-                /// <summary>
-                /// Belarus Interest Rate
-                /// </summary>
-                public const string InterestRate = "BELARUSINTTRATE";
-                /// <summary>
-                /// Belarus Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "BELARUSLEAECOIND";
-            }
+            /// <summary>
+            /// Belgium
+            /// </summary>
             public static class Belgium
             {
                 /// <summary>
-                /// Belgium Business Confidence
+                /// Balance of Trade
                 /// </summary>
-                public const string BusinessConfidence = "BEBCI";
+                public const string BalanceOfTrade = "Belgium//BETBTBAL";
                 /// <summary>
-                /// Belgium Consumer Confidence
+                /// Business Confidence
                 /// </summary>
-                public const string ConsumerConfidence = "BECCN";
+                public const string BusinessConfidence = "Belgium//BEBCI";
                 /// <summary>
-                /// Belgium Inflation Rate
+                /// Calendar
                 /// </summary>
-                public const string InflationRate = "BECPYOY";
+                public const string Calendar = "Belgium//BEL-CALENDAR";
                 /// <summary>
-                /// Belgium GDP Growth Rate
+                /// Consumer Confidence
                 /// </summary>
-                public const string GdpGrowthRate = "BEGDPQS";
+                public const string ConsumerConfidence = "Belgium//BECCN";
                 /// <summary>
-                /// Belgium GDP Annual Growth Rate
+                /// Current Account
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "BEGDPYS";
+                public const string CurrentAccount = "Belgium//OEBEB026";
                 /// <summary>
-                /// Belgium Calendar
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string Calendar = "CALENDARBELGIUM";
+                public const string GDPAnnualGrowthRate = "Belgium//BEGDPYS";
                 /// <summary>
-                /// Belgium Industrial Production Mom
+                /// GDP Growth Rate
                 /// </summary>
-                public const string IndustrialProductionMom = "BELGIUMINDPROMOM";
+                public const string GDPGrowthRate = "Belgium//BEGDPQS";
                 /// <summary>
-                /// Belgium Inflation Rate Mom
+                /// Holidays
                 /// </summary>
-                public const string InflationRateMom = "BELGIUMINFRATMOM";
+                public const string Holidays = "Belgium//HOLIDAYSBELGIUM";
                 /// <summary>
-                /// Belgium Producer Prices Change
+                /// Industrial Production
                 /// </summary>
-                public const string ProducerPricesChange = "BELGIUMPROPRICHA";
+                public const string IndustrialProduction = "Belgium//BEPDRYY";
                 /// <summary>
-                /// Belgium Retail Sales MoM
+                /// Industrial Production Mom
                 /// </summary>
-                public const string RetailSalesMom = "BELRETAILSALESMOM";
+                public const string IndustrialProductionMom = "Belgium//BELGIUMINDPROMOM";
                 /// <summary>
-                /// Belgium Retail Sales YoY
+                /// Inflation Rate
                 /// </summary>
-                public const string RetailSalesYoy = "BELRETAILSALESYOY";
+                public const string InflationRate = "Belgium//BECPYOY";
                 /// <summary>
-                /// Belgium Industrial Production
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string IndustrialProduction = "BEPDRYY";
+                public const string InflationRateMom = "Belgium//BELGIUMINFRATMOM";
                 /// <summary>
-                /// Belgium Balance of Trade
+                /// Producer Prices Change
                 /// </summary>
-                public const string BalanceOfTrade = "BETBTBAL";
+                public const string ProducerPricesChange = "Belgium//BELGIUMPROPRICHA";
                 /// <summary>
-                /// Belgium Unemployment Rate
+                /// Retail Sales MoM
                 /// </summary>
-                public const string UnemploymentRate = "BEUER";
+                public const string RetailSalesMom = "Belgium//BELRETAILSALESMOM";
                 /// <summary>
-                /// Belgium Current Account
+                /// Retail Sales YoY
                 /// </summary>
-                public const string CurrentAccount = "OEBEB026";
+                public const string RetailSalesYoy = "Belgium//BELRETAILSALESYOY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Belgium//BEUER";
             }
-            public static class BosniaAndHerzegovina
-            {
-                /// <summary>
-                /// BosniaAndHerzegovina Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "BOSNABALRADE";
-                /// <summary>
-                /// BosniaAndHerzegovina Current Account
-                /// </summary>
-                public const string CurrentAccount = "BOSNACURCOUNT";
-                /// <summary>
-                /// BosniaAndHerzegovina GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "BOSNAGDPATE";
-                /// <summary>
-                /// BosniaAndHerzegovina Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "BOSNAINDCTION";
-                /// <summary>
-                /// BosniaAndHerzegovina Inflation Rate
-                /// </summary>
-                public const string InflationRate = "BOSNAINFNRATE";
-                /// <summary>
-                /// BosniaAndHerzegovina Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "BOSNARETSMOM";
-                /// <summary>
-                /// BosniaAndHerzegovina Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "BOSNARETSYOY";
-                /// <summary>
-                /// BosniaAndHerzegovina Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "BOSNIAANDPROPRICHA";
-            }
-            public static class Botswana
-            {
-                /// <summary>
-                /// Botswana Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "BOTSWANABT";
-                /// <summary>
-                /// Botswana GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "BOTSWANAGDPQOQ";
-                /// <summary>
-                /// Botswana GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "BOTSWANAGDPYOY";
-                /// <summary>
-                /// Botswana Interest Rate
-                /// </summary>
-                public const string InterestRate = "BOTSWANAINTRATE";
-                /// <summary>
-                /// Botswana Inflation Rate
-                /// </summary>
-                public const string InflationRate = "BOTSWANAIR";
-                /// <summary>
-                /// Botswana Mining Production
-                /// </summary>
-                public const string MiningProduction = "BOTSWANAMINPRO";
-            }
-            public static class Brazil
-            {
-                /// <summary>
-                /// Brazil Calendar
-                /// </summary>
-                public const string Calendar = "CALENDARBRAZIL";
-                /// <summary>
-                /// Brazil Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "BRARETAILSALESMOM";
-                /// <summary>
-                /// Brazil Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "BRARETAILSALESYOY";
-                /// <summary>
-                /// Brazil Capacity Utilization
-                /// </summary>
-                public const string CapacityUtilization = "BRAZILCAPUTI";
-                /// <summary>
-                /// Brazil Car Production
-                /// </summary>
-                public const string CarProduction = "BRAZILCARPRO";
-                /// <summary>
-                /// Brazil Car Registrations
-                /// </summary>
-                public const string CarRegistrations = "BRAZILCARREG";
-                /// <summary>
-                /// Brazil Composite Pmi
-                /// </summary>
-                public const string CompositePmi = "BRAZILCOMPMI";
-                /// <summary>
-                /// Brazil Foreign Direct Investment
-                /// </summary>
-                public const string ForeignDirectInvestment = "BRAZILFORDIRINV";
-                /// <summary>
-                /// Brazil Government Budget Value
-                /// </summary>
-                public const string GovernmentBudgetValue = "BRAZILGOVBUDVAL";
-                /// <summary>
-                /// Brazil Government Revenues
-                /// </summary>
-                public const string GovernmentRevenues = "BRAZILGOVREV";
-                /// <summary>
-                /// Brazil Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "BRAZILINDPROMOM";
-                /// <summary>
-                /// Brazil Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "BRAZILINFRATMOM";
-                /// <summary>
-                /// Brazil Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "BRAZILLEAECOIND";
-                /// <summary>
-                /// Brazil Loan Growth
-                /// </summary>
-                public const string LoanGrowth = "BRAZILPRISECCRE";
-                /// <summary>
-                /// Brazil Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "BRAZILMANPMI";
-                /// <summary>
-                /// Brazil Non Farm Payrolls
-                /// </summary>
-                public const string NonFarmPayrolls = "BRAZILNONFARPAY";
-                /// <summary>
-                /// Brazil Services Pmi
-                /// </summary>
-                public const string ServicesPmi = "BRAZILSERPMI";
-                /// <summary>
-                /// Brazil Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "BRLBC";
-                /// <summary>
-                /// Brazil Current Account
-                /// </summary>
-                public const string CurrentAccount = "BZCACURR";
-                /// <summary>
-                /// Brazil Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "BZCCI";
-                /// <summary>
-                /// Brazil Exports
-                /// </summary>
-                public const string Exports = "BZEXTOTD";
-                /// <summary>
-                /// Brazil GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "BZGDQOQPCT";
-                /// <summary>
-                /// Brazil GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "BZGDYOYPCT";
-                /// <summary>
-                /// Brazil Imports
-                /// </summary>
-                public const string Imports = "BZIMTOTD";
-                /// <summary>
-                /// Brazil Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "BZIPYOYPCT";
-                /// <summary>
-                /// Brazil Inflation Rate
-                /// </summary>
-                public const string InflationRate = "BZPIIPCY";
-                /// <summary>
-                /// Brazil Interest Rate
-                /// </summary>
-                public const string InterestRate = "BZSTSETA";
-                /// <summary>
-                /// Brazil Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "BZTBBALM";
-                /// <summary>
-                /// Brazil Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "BZUETOTN";
-            }
-            public static class Brunei
-            {
-                /// <summary>
-                /// Brunei Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "BRUUNEIBALRADE";
-                /// <summary>
-                /// Brunei GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "BRUUNEIGDPATE";
-                /// <summary>
-                /// Brunei Inflation Rate
-                /// </summary>
-                public const string InflationRate = "BRUUNEIINFNRATE";
-            }
-            public static class Bulgaria
-            {
-                /// <summary>
-                /// Bulgaria Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "BGRRETAILSALESMOM";
-                /// <summary>
-                /// Bulgaria Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "BGRRETAILSALESYOY";
-                /// <summary>
-                /// Bulgaria Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "BULGARIABC";
-                /// <summary>
-                /// Bulgaria Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "BULGARIABT";
-                /// <summary>
-                /// Bulgaria Current Account
-                /// </summary>
-                public const string CurrentAccount = "BULGARIACA";
-                /// <summary>
-                /// Bulgaria Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "BULGARIACC";
-                /// <summary>
-                /// Bulgaria Construction Output
-                /// </summary>
-                public const string ConstructionOutput = "BULGARIACONOUT";
-                /// <summary>
-                /// Bulgaria GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "BULGARIAGDPQOQ";
-                /// <summary>
-                /// Bulgaria GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "BULGARIAGDPYOY";
-                /// <summary>
-                /// Bulgaria Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "BULGARIAINDPROMOM";
-                /// <summary>
-                /// Bulgaria Interest Rate
-                /// </summary>
-                public const string InterestRate = "BULGARIAINTRATE";
-                /// <summary>
-                /// Bulgaria Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "BULGARIAIP";
-                /// <summary>
-                /// Bulgaria Inflation Rate
-                /// </summary>
-                public const string InflationRate = "BULGARIAIR";
-                /// <summary>
-                /// Bulgaria Producer Prices
-                /// </summary>
-                public const string ProducerPrices = "BULGARIAPROPRI";
-                /// <summary>
-                /// Bulgaria Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "BULGARIAPROPRICHA";
-                /// <summary>
-                /// Bulgaria Tourist Arrivals
-                /// </summary>
-                public const string TouristArrivals = "BULGARIATOUARR";
-                /// <summary>
-                /// Bulgaria Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "BULGARIAUR";
-            }
-            public static class Burundi
-            {
-                /// <summary>
-                /// Burundi Inflation Rate
-                /// </summary>
-                public const string InflationRate = "BURUNDIINFNRATE";
-            }
+            /// <summary>
+            /// Canada
+            /// </summary>
             public static class Canada
             {
                 /// <summary>
-                /// Canada Inflation Rate
+                /// Adp Employment Change
                 /// </summary>
-                public const string InflationRate = "CACPIYOY";
+                public const string AdpEmploymentChange = "Canada//CANADAADPEMPCHA";
                 /// <summary>
-                /// Canada Current Account
+                /// Average Hourly Earnings
                 /// </summary>
-                public const string CurrentAccount = "CACURENT";
+                public const string AverageHourlyEarnings = "Canada//CANADAAVEHOUEAR";
                 /// <summary>
-                /// Canada Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "CALENDARCANADA";
+                public const string BalanceOfTrade = "Canada//CATBTOTB";
                 /// <summary>
-                /// Canada Adp Employment Change
+                /// Building Permits
                 /// </summary>
-                public const string AdpEmploymentChange = "CANADAADPEMPCHA";
+                public const string BuildingPermits = "Canada//CANADABUIPER";
                 /// <summary>
-                /// Canada Average Hourly Earnings
+                /// Business Confidence
                 /// </summary>
-                public const string AverageHourlyEarnings = "CANADAAVEHOUEAR";
+                public const string BusinessConfidence = "Canada//IVEY";
                 /// <summary>
-                /// Canada Building Permits
+                /// Calendar
                 /// </summary>
-                public const string BuildingPermits = "CANADABUIPER";
+                public const string Calendar = "Canada//CAD-CALENDAR";
                 /// <summary>
-                /// Canada Capacity Utilization
+                /// Capacity Utilization
                 /// </summary>
-                public const string CapacityUtilization = "CANADACAPUTI";
+                public const string CapacityUtilization = "Canada//CANADACAPUTI";
                 /// <summary>
-                /// Canada Car Registrations
+                /// Car Registrations
                 /// </summary>
-                public const string CarRegistrations = "CANADACARREG";
+                public const string CarRegistrations = "Canada//CANADACARREG";
                 /// <summary>
-                /// Canada Employment Change
+                /// Core Inflation Rate
                 /// </summary>
-                public const string EmploymentChange = "CANADAEMPCHA";
+                public const string CoreInflationRate = "Canada//CANCORECPIRATE";
                 /// <summary>
-                /// Canada Foreign Stock Investment
+                /// Current Account
                 /// </summary>
-                public const string ForeignStockInvestment = "CANADAFORSTOINV";
+                public const string CurrentAccount = "Canada//CACURENT";
                 /// <summary>
-                /// Canada Full Time Employment
+                /// Employment Change
                 /// </summary>
-                public const string FullTimeEmployment = "CANADAFULTIMEMP";
+                public const string EmploymentChange = "Canada//CANADAEMPCHA";
                 /// <summary>
-                /// Canada GDP Deflator
+                /// Exports
                 /// </summary>
-                public const string GdpDeflator = "CANADAGDPDEF";
+                public const string Exports = "Canada//CATBTOTE";
                 /// <summary>
-                /// Canada Gdp Growth Annualized
+                /// Foreign Stock Investment
                 /// </summary>
-                public const string GdpGrowthAnnualized = "CANADAGDPGROANN";
+                public const string ForeignStockInvestment = "Canada//CANADAFORSTOINV";
                 /// <summary>
-                /// Canada Government Budget Value
+                /// Full Time Employment
                 /// </summary>
-                public const string GovernmentBudgetValue = "CANADAGOVBUDVAL";
+                public const string FullTimeEmployment = "Canada//CANADAFULTIMEMP";
                 /// <summary>
-                /// Canada Housing Index
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string HousingIndex = "CANADAHOUIND";
+                public const string GDPAnnualGrowthRate = "Canada//CGE9YOY";
                 /// <summary>
-                /// Canada Housing Starts
+                /// GDP Deflator
                 /// </summary>
-                public const string HousingStarts = "CANADAHOUSTA";
+                public const string GDPDeflator = "Canada//CANADAGDPDEF";
                 /// <summary>
-                /// Canada Inflation Rate Mom
+                /// Gdp Growth Annualized
                 /// </summary>
-                public const string InflationRateMom = "CANADAINFRATMOM";
+                public const string GdpGrowthAnnualized = "Canada//CANADAGDPGROANN";
                 /// <summary>
-                /// Canada Job Vacancies
+                /// GDP Growth Rate
                 /// </summary>
-                public const string JobVacancies = "CANADAJOBVAC";
+                public const string GDPGrowthRate = "Canada//CGE9QOQ";
                 /// <summary>
-                /// Canada Labor Force Participation Rate
+                /// Government Budget Value
                 /// </summary>
-                public const string LaborForceParticipationRate = "LABOR-FORCE-PARTICIPATION-RATECANADA";
+                public const string GovernmentBudgetValue = "Canada//CANADAGOVBUDVAL";
                 /// <summary>
-                /// Canada Leading Economic Index
+                /// Holidays
                 /// </summary>
-                public const string LeadingEconomicIndex = "CANADALEAECOIND";
+                public const string Holidays = "Canada//HOLIDAYSCANADA";
                 /// <summary>
-                /// Canada Manufacturing PMI
+                /// Housing Index
                 /// </summary>
-                public const string ManufacturingPmi = "CANADAMANPMI";
+                public const string HousingIndex = "Canada//CANADAHOUIND";
                 /// <summary>
-                /// Canada Part Time Employment
+                /// Housing Starts
                 /// </summary>
-                public const string PartTimeEmployment = "CANADAPARTIMEMP";
+                public const string HousingStarts = "Canada//CANADAHOUSTA";
                 /// <summary>
-                /// Canada Productivity
+                /// Imports
                 /// </summary>
-                public const string Productivity = "CANADAPRO";
+                public const string Imports = "Canada//CATBTOTI";
                 /// <summary>
-                /// Canada Producer Prices
+                /// Inflation Rate
                 /// </summary>
-                public const string ProducerPrices = "CANADAPROPRI";
+                public const string InflationRate = "Canada//CACPIYOY";
                 /// <summary>
-                /// Canada Producer Prices Change
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string ProducerPricesChange = "CANADAPROPRICHA";
+                public const string InflationRateMom = "Canada//CANADAINFRATMOM";
                 /// <summary>
-                /// Canada Retail Sales Ex Autos
+                /// Interest Rate
                 /// </summary>
-                public const string RetailSalesExAutos = "RETAIL-SALES-EX-AUTOSCANADA";
+                public const string InterestRate = "Canada//CCLR";
                 /// <summary>
-                /// Canada Wage Growth
+                /// Job Vacancies
                 /// </summary>
-                public const string WageGrowth = "CANADAWAGGRO";
+                public const string JobVacancies = "Canada//CANADAJOBVAC";
                 /// <summary>
-                /// Canada Core Inflation Rate
+                /// Labor Force Participation Rate
                 /// </summary>
-                public const string CoreInflationRate = "CANCORECPIRATE";
+                public const string LaborForceParticipationRate = "Canada//CANADALABFORPARRAT";
                 /// <summary>
-                /// Canada Unemployment Rate
+                /// Leading Economic Index
                 /// </summary>
-                public const string UnemploymentRate = "CANLXEMR";
+                public const string LeadingEconomicIndex = "Canada//CANADALEAECOIND";
                 /// <summary>
-                /// Canada Retail Sales YoY
+                /// Manufacturing PMI
                 /// </summary>
-                public const string RetailSalesYoy = "CANNADARETSYOY";
+                public const string ManufacturingPMI = "Canada//CANADAMANPMI";
                 /// <summary>
-                /// Canada Retail Sales MoM
+                /// Manufacturing Sales
                 /// </summary>
-                public const string RetailSalesMom = "CANRETAILSALESMOM";
+                public const string ManufacturingSales = "Canada//CANADAMANSAL";
                 /// <summary>
-                /// Canada Balance of Trade
+                /// Part Time Employment
                 /// </summary>
-                public const string BalanceOfTrade = "CATBTOTB";
+                public const string PartTimeEmployment = "Canada//CANADAPARTIMEMP";
                 /// <summary>
-                /// Canada Exports
+                /// Producer Prices
                 /// </summary>
-                public const string Exports = "CATBTOTE";
+                public const string ProducerPrices = "Canada//CANADAPROPRI";
                 /// <summary>
-                /// Canada Imports
+                /// Producer Prices Change
                 /// </summary>
-                public const string Imports = "CATBTOTI";
+                public const string ProducerPricesChange = "Canada//CANADAPROPRICHA";
                 /// <summary>
-                /// Canada Interest Rate
+                /// Productivity
                 /// </summary>
-                public const string InterestRate = "CCLR";
+                public const string Productivity = "Canada//CANADAPRO";
                 /// <summary>
-                /// Canada GDP Growth Rate
+                /// Retail Sales Ex Autos
                 /// </summary>
-                public const string GdpGrowthRate = "CGE9QOQ";
+                public const string RetailSalesExAutos = "Canada//CANADARETSALEXAUT";
                 /// <summary>
-                /// Canada GDP Annual Growth Rate
+                /// Retail Sales MoM
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "CGE9YOY";
+                public const string RetailSalesMom = "Canada//CANRETAILSALESMOM";
                 /// <summary>
-                /// Canada Business Confidence
+                /// Retail Sales YoY
                 /// </summary>
-                public const string BusinessConfidence = "IVEY";
+                public const string RetailSalesYoy = "Canada//CANNADARETSYOY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Canada//CANLXEMR";
+                /// <summary>
+                /// Wage Growth
+                /// </summary>
+                public const string WageGrowth = "Canada//CANADAWAGGRO";
+                /// <summary>
+                /// Wholesale Prices
+                /// </summary>
+                public const string WholesalePrices = "Canada//CANADAWHOPRI";
+                /// <summary>
+                /// Wholesale Sales
+                /// </summary>
+                public const string WholesaleSales = "Canada//CANADAWHOSAL";
             }
-            public static class CapeVerde
-            {
-                /// <summary>
-                /// CapeVerde Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "CAPRDEBUSDENCE";
-                /// <summary>
-                /// CapeVerde Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "CAPRDECONDENCE";
-                /// <summary>
-                /// CapeVerde GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "CAPRDEGDPATE";
-                /// <summary>
-                /// CapeVerde Inflation Rate
-                /// </summary>
-                public const string InflationRate = "CAPRDEINFNRATE";
-            }
-            public static class Chile
-            {
-                /// <summary>
-                /// Chile Copper Production
-                /// </summary>
-                public const string CopperProduction = "CHILECOPPRO";
-                /// <summary>
-                /// Chile Core Consumer Prices
-                /// </summary>
-                public const string CoreConsumerPrices = "CHILECORCONPRI";
-                /// <summary>
-                /// Chile Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "CHILEINFRATMOM";
-                /// <summary>
-                /// Chile Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "CHILELEAECOIND";
-                /// <summary>
-                /// Chile Manufacturing Production
-                /// </summary>
-                public const string ManufacturingProduction = "CHILEMANPRO";
-                /// <summary>
-                /// Chile Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "CHILEPROPRICHA";
-                /// <summary>
-                /// Chile Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "CHIPYOY";
-                /// <summary>
-                /// Chile Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "CHLRETAILSALESMOM";
-                /// <summary>
-                /// Chile Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "CHLRETAILSALESYOY";
-                /// <summary>
-                /// Chile Interest Rate
-                /// </summary>
-                public const string InterestRate = "CHOVCHOV";
-                /// <summary>
-                /// Chile Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "CHTBBALM";
-                /// <summary>
-                /// Chile Exports
-                /// </summary>
-                public const string Exports = "CHTBEXPM";
-                /// <summary>
-                /// Chile Imports
-                /// </summary>
-                public const string Imports = "CHTBIMPM";
-                /// <summary>
-                /// Chile Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "CHUETOTL";
-                /// <summary>
-                /// Chile Current Account
-                /// </summary>
-                public const string CurrentAccount = "CLBPCURA";
-                /// <summary>
-                /// Chile GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "CLGDPNAPCT";
-                /// <summary>
-                /// Chile GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "CLGDQSA";
-                /// <summary>
-                /// Chile Inflation Rate
-                /// </summary>
-                public const string InflationRate = "CNPINSYO";
-            }
+            /// <summary>
+            /// China
+            /// </summary>
             public static class China
             {
                 /// <summary>
-                /// China Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "CHN-CALENDAR";
+                public const string BalanceOfTrade = "China//CNFRBALD";
                 /// <summary>
-                /// China Business Confidence
+                /// Banks Balance Sheet
                 /// </summary>
-                public const string BusinessConfidence = "CHBUBCIN";
+                public const string BanksBalanceSheet = "China//CHINABANBALSHE";
                 /// <summary>
-                /// China Current Account
+                /// Business Confidence
                 /// </summary>
-                public const string CurrentAccount = "CHCURENT";
+                public const string BusinessConfidence = "China//CHBUBCIN";
                 /// <summary>
-                /// China Banks Balance Sheet
+                /// Calendar
                 /// </summary>
-                public const string BanksBalanceSheet = "CHINABANBALSHE";
+                public const string Calendar = "China//CHN-CALENDAR";
                 /// <summary>
-                /// China Capital Flows
+                /// Capacity Utilization
                 /// </summary>
-                public const string CapitalFlows = "CHINACAPFLO";
+                public const string CapacityUtilization = "China//CHINACAPUTI";
                 /// <summary>
-                /// China Capacity Utilization
+                /// Capital Flows
                 /// </summary>
-                public const string CapacityUtilization = "CHINACAPUTI";
+                public const string CapitalFlows = "China//CHINACAPFLO";
                 /// <summary>
-                /// China Composite Pmi
+                /// Composite Pmi
                 /// </summary>
-                public const string CompositePmi = "CHINACOMPMI";
+                public const string CompositePmi = "China//CHINACOMPMI";
                 /// <summary>
-                /// China Corporate Profits
+                /// Corporate Profits
                 /// </summary>
-                public const string CorporateProfits = "CHINACORPRO";
+                public const string CorporateProfits = "China//CHINACORPRO";
                 /// <summary>
-                /// China Fixed Asset Investment
+                /// Current Account
                 /// </summary>
-                public const string FixedAssetInvestment = "CHINAFIXASSINV";
+                public const string CurrentAccount = "China//CHCURENT";
                 /// <summary>
-                /// China Foreign Direct Investment
+                /// Exports
                 /// </summary>
-                public const string ForeignDirectInvestment = "CHINAFORDIRINV";
+                public const string Exports = "China//CNFREXPD";
                 /// <summary>
-                /// China Foreign Exchange Reserves
+                /// Fixed Asset Investment
                 /// </summary>
-                public const string ForeignExchangeReserves = "CHINAFOREXCRES";
+                public const string FixedAssetInvestment = "China//CHINAFIXASSINV";
                 /// <summary>
-                /// China Housing Index
+                /// Foreign Direct Investment
                 /// </summary>
-                public const string HousingIndex = "CHINAHOUIND";
+                public const string ForeignDirectInvestment = "China//CHINAFORDIRINV";
                 /// <summary>
-                /// China Inflation Rate Mom
+                /// Foreign Exchange Reserves
                 /// </summary>
-                public const string InflationRateMom = "CHINAINFRATMOM";
+                public const string ForeignExchangeReserves = "China//CHINAFOREXCRES";
                 /// <summary>
-                /// China Loan Growth
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string LoanGrowth = "CHINALOAGRO";
+                public const string GDPAnnualGrowthRate = "China//CNGDPYOY";
                 /// <summary>
-                /// China Loans to Private Sector
+                /// GDP Growth Rate
                 /// </summary>
-                public const string LoansToPrivateSector = "CHINALOATOPRISEC";
+                public const string GDPGrowthRate = "China//CNGDPQOQ";
                 /// <summary>
-                /// China Manufacturing Pmi
+                /// Holidays
                 /// </summary>
-                public const string ManufacturingPmi = "CHINAMANPMI";
+                public const string Holidays = "China//HOLIDAYSCHINA";
                 /// <summary>
-                /// China Mni Business Sentiment
+                /// Housing Index
                 /// </summary>
-                public const string MniBusinessSentiment = "CHINAMNIBUSSEN";
+                public const string HousingIndex = "China//CHINAHOUIND";
                 /// <summary>
-                /// China Mni Consumer Sentiment
+                /// Imports
                 /// </summary>
-                public const string MniConsumerSentiment = "CHINAMNICONSEN";
+                public const string Imports = "China//CNFRIMPD";
                 /// <summary>
-                /// China Money Supply M2
+                /// Industrial Production
                 /// </summary>
-                public const string MoneySupplyM2 = "CHINAMONSUPM2";
+                public const string IndustrialProduction = "China//CHVAIOY";
                 /// <summary>
-                /// China Non Manufacturing Pmi
+                /// Inflation Rate
                 /// </summary>
-                public const string NonManufacturingPmi = "CHINANONMANPMI";
+                public const string InflationRate = "China//CNCPIYOY";
                 /// <summary>
-                /// China Producer Prices Change
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string ProducerPricesChange = "CHINAPROPRICHA";
+                public const string InflationRateMom = "China//CHINAINFRATMOM";
                 /// <summary>
-                /// China Services Pmi
+                /// Interest Rate
                 /// </summary>
-                public const string ServicesPmi = "CHINASERPMI";
+                public const string InterestRate = "China//CHLR12M";
                 /// <summary>
-                /// China Total Vehicle Sales
+                /// Loan Growth
                 /// </summary>
-                public const string TotalVehicleSales = "CHINATOTVEHSAL";
+                public const string LoanGrowth = "China//CHINALOAGRO";
                 /// <summary>
-                /// China Interest Rate
+                /// Loans to Private Sector
                 /// </summary>
-                public const string InterestRate = "CHLR12M";
+                public const string LoansToPrivateSector = "China//CHINALOATOPRISEC";
                 /// <summary>
-                /// China Retail Sales YoY
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string RetailSalesYoy = "CHNRETAILSALESYOY";
+                public const string ManufacturingPmi = "China//CHINAMANPMI";
                 /// <summary>
-                /// China Industrial Production
+                /// Mni Business Sentiment
                 /// </summary>
-                public const string IndustrialProduction = "CHVAIOY";
+                public const string MniBusinessSentiment = "China//CHINAMNIBUSSEN";
                 /// <summary>
-                /// China Inflation Rate
+                /// Mni Consumer Sentiment
                 /// </summary>
-                public const string InflationRate = "CNCPIYOY";
+                public const string MniConsumerSentiment = "China//CHINAMNICONSEN";
                 /// <summary>
-                /// China Balance of Trade
+                /// Money Supply M2
                 /// </summary>
-                public const string BalanceOfTrade = "CNFRBALD";
+                public const string MoneySupplyMTwo = "China//CHINAMONSUPM2";
                 /// <summary>
-                /// China Exports
+                /// Non Manufacturing Pmi
                 /// </summary>
-                public const string Exports = "CNFREXPD";
+                public const string NonManufacturingPmi = "China//CHINANONMANPMI";
                 /// <summary>
-                /// China Imports
+                /// Producer Prices Change
                 /// </summary>
-                public const string Imports = "CNFRIMPD";
+                public const string ProducerPricesChange = "China//CHINAPROPRICHA";
                 /// <summary>
-                /// China GDP Growth Rate
+                /// Retail Sales YoY
                 /// </summary>
-                public const string GdpGrowthRate = "CNGDPQOQ";
+                public const string RetailSalesYoy = "China//CHNRETAILSALESYOY";
                 /// <summary>
-                /// China GDP Annual Growth Rate
+                /// Services Pmi
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "CNGDPYOY";
+                public const string ServicesPmi = "China//CHINASERPMI";
+                /// <summary>
+                /// Total Vehicle Sales
+                /// </summary>
+                public const string TotalVehicleSales = "China//CHINATOTVEHSAL";
             }
-            public static class Colombia
-            {
-                /// <summary>
-                /// Colombia Current Account
-                /// </summary>
-                public const string CurrentAccount = "COBPCURR";
-                /// <summary>
-                /// Colombia GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "COCIPIBQ";
-                /// <summary>
-                /// Colombia GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "COCIPIBY";
-                /// <summary>
-                /// Colombia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "COCPIYOY";
-                /// <summary>
-                /// Colombia Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "COIPEYOY";
-                /// <summary>
-                /// Colombia Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "COLMBIABUSDENCE";
-                /// <summary>
-                /// Colombia Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "COLMBIACONDENCE";
-                /// <summary>
-                /// Colombia Cement Production
-                /// </summary>
-                public const string CementProduction = "COLOMBIACEMPRO";
-                /// <summary>
-                /// Colombia Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "COLOMBIAINFRATMOM";
-                /// <summary>
-                /// Colombia Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "COLOMBIALEAECOIND";
-                /// <summary>
-                /// Colombia Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "COLOMBIAMANPMI";
-                /// <summary>
-                /// Colombia Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "COLOMBIAPROPRICHA";
-                /// <summary>
-                /// Colombia Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "COLRETAILSALESMOM";
-                /// <summary>
-                /// Colombia Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "COLRETAILSALESYOY";
-                /// <summary>
-                /// Colombia Interest Rate
-                /// </summary>
-                public const string InterestRate = "CORRRMIN";
-                /// <summary>
-                /// Colombia Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "COTRBALM";
-                /// <summary>
-                /// Colombia Exports
-                /// </summary>
-                public const string Exports = "COTREXPM";
-                /// <summary>
-                /// Colombia Imports
-                /// </summary>
-                public const string Imports = "COTRIMPM";
-                /// <summary>
-                /// Colombia Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "COUNTOTR";
-            }
-            public static class CostaRica
-            {
-                /// <summary>
-                /// CostaRica Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "COSICABALRADE";
-                /// <summary>
-                /// CostaRica GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "COSICAGDPATE";
-                /// <summary>
-                /// CostaRica Inflation Rate
-                /// </summary>
-                public const string InflationRate = "COSICAINFNRATE";
-                /// <summary>
-                /// CostaRica Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "COSICAUNETRATE";
-                /// <summary>
-                /// CostaRica Current Account
-                /// </summary>
-                public const string CurrentAccount = "COSTARICACURACC";
-                /// <summary>
-                /// CostaRica Gdp Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "COSTARICAGDPGRORAT";
-                /// <summary>
-                /// CostaRica Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "COSTARICAINFRATMOM";
-            }
-            public static class Croatia
-            {
-                /// <summary>
-                /// Croatia Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "CROATIABALRADE";
-                /// <summary>
-                /// Croatia Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "CROATIABUSCON";
-                /// <summary>
-                /// Croatia Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "CROATIACONCON";
-                /// <summary>
-                /// Croatia Current Account
-                /// </summary>
-                public const string CurrentAccount = "CROATIACURCOUNT";
-                /// <summary>
-                /// Croatia GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "CROATIAGDPATE";
-                /// <summary>
-                /// Croatia GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "CROATIAGDPRATE";
-                /// <summary>
-                /// Croatia Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "CROATIAINDCTION";
-                /// <summary>
-                /// Croatia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "CROATIAINFNRATE";
-                /// <summary>
-                /// Croatia Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "CROATIAINFRATMOM";
-                /// <summary>
-                /// Croatia Producer Prices
-                /// </summary>
-                public const string ProducerPrices = "CROATIAPROPRI";
-                /// <summary>
-                /// Croatia Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "CROATIAPROPRICHA";
-                /// <summary>
-                /// Croatia Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "CROATIARETSMOM";
-                /// <summary>
-                /// Croatia Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "CROATIARETSYOY";
-                /// <summary>
-                /// Croatia Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "CROATIAUNETRATE";
-                /// <summary>
-                /// Croatia Calendar
-                /// </summary>
-                public const string Calendar = "HRV-CALENDAR";
-            }
+            /// <summary>
+            /// Cyprus
+            /// </summary>
             public static class Cyprus
             {
                 /// <summary>
-                /// Cyprus Balance of Trade
+                /// Balance of Trade
                 /// </summary>
-                public const string BalanceOfTrade = "CYPPRUSBALRADE";
+                public const string BalanceOfTrade = "Cyprus//CYPPRUSBALRADE";
                 /// <summary>
-                /// Cyprus Current Account
+                /// Business Confidence
                 /// </summary>
-                public const string CurrentAccount = "CYPPRUSCURCOUNT";
+                public const string BusinessConfidence = "Cyprus//CYPRUSBUSCON";
                 /// <summary>
-                /// Cyprus GDP Annual Growth Rate
+                /// Calendar
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "CYPPRUSGDPATE";
+                public const string Calendar = "Cyprus//CYP-CALENDAR";
                 /// <summary>
-                /// Cyprus GDP Growth Rate
+                /// Construction Output
                 /// </summary>
-                public const string GdpGrowthRate = "CYPPRUSGDPRATE";
+                public const string ConstructionOutput = "Cyprus//CYPRUSCONOUT";
                 /// <summary>
-                /// Cyprus Industrial Production
+                /// Consumer Confidence
                 /// </summary>
-                public const string IndustrialProduction = "CYPPRUSINDCTION";
+                public const string ConsumerConfidence = "Cyprus//CYPRUSCONCON";
                 /// <summary>
-                /// Cyprus Inflation Rate
+                /// Current Account
                 /// </summary>
-                public const string InflationRate = "CYPPRUSINFNRATE";
+                public const string CurrentAccount = "Cyprus//CYPPRUSCURCOUNT";
                 /// <summary>
-                /// Cyprus Retail Sales YoY
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string RetailSalesYoy = "CYPPRUSRETSYOY";
+                public const string GDPAnnualGrowthRate = "Cyprus//CYPPRUSGDPATE";
                 /// <summary>
-                /// Cyprus Unemployment Rate
+                /// GDP Growth Rate
                 /// </summary>
-                public const string UnemploymentRate = "CYPPRUSUNETRATE";
+                public const string GDPGrowthRate = "Cyprus//CYPPRUSGDPRATE";
                 /// <summary>
-                /// Cyprus Business Confidence
+                /// Harmonised Consumer Prices
                 /// </summary>
-                public const string BusinessConfidence = "CYPRUSBUSCON";
+                public const string HarmonisedConsumerPrices = "Cyprus//CYPRUSHARCONPRI";
                 /// <summary>
-                /// Cyprus Consumer Confidence
+                /// Holidays
                 /// </summary>
-                public const string ConsumerConfidence = "CYPRUSCONCON";
+                public const string Holidays = "Cyprus//HOLIDAYSCYPRUS";
                 /// <summary>
-                /// Cyprus Construction Output
+                /// Industrial Production
                 /// </summary>
-                public const string ConstructionOutput = "CYPRUSCONOUT";
+                public const string IndustrialProduction = "Cyprus//CYPPRUSINDCTION";
                 /// <summary>
-                /// Cyprus Harmonised Consumer Prices
+                /// Inflation Rate
                 /// </summary>
-                public const string HarmonisedConsumerPrices = "CYPRUSHARCONPRI";
+                public const string InflationRate = "Cyprus//CYPPRUSINFNRATE";
                 /// <summary>
-                /// Cyprus Wage Growth
+                /// Retail Sales YoY
                 /// </summary>
-                public const string WageGrowth = "CYPRUSWAGGRO";
+                public const string RetailSalesYoy = "Cyprus//CYPPRUSRETSYOY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Cyprus//CYPPRUSUNETRATE";
+                /// <summary>
+                /// Wage Growth
+                /// </summary>
+                public const string WageGrowth = "Cyprus//CYPRUSWAGGRO";
             }
-            public static class CzechRepublic
-            {
-                /// <summary>
-                /// CzechRepublic Calendar
-                /// </summary>
-                public const string Calendar = "CZE-CALENDAR";
-                /// <summary>
-                /// CzechRepublic Interest Rate
-                /// </summary>
-                public const string InterestRate = "CZBRREPO";
-                /// <summary>
-                /// CzechRepublic Current Account
-                /// </summary>
-                public const string CurrentAccount = "CZCAEUR";
-                /// <summary>
-                /// CzechRepublic Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "CZCCBUS";
-                /// <summary>
-                /// CzechRepublic Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "CZCCCON";
-                /// <summary>
-                /// CzechRepublic Inflation Rate
-                /// </summary>
-                public const string InflationRate = "CZCPYOY";
-                /// <summary>
-                /// CzechRepublic Construction Output
-                /// </summary>
-                public const string ConstructionOutput = "CZECHREPUCONOUT";
-                /// <summary>
-                /// CzechRepublic External Debt
-                /// </summary>
-                public const string ExternalDebt = "CZECHREPUEXTDEB";
-                /// <summary>
-                /// CzechRepublic Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "CZECHREPUFOREXCRES";
-                /// <summary>
-                /// CzechRepublic Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "CZECHREPUINDPROMOM";
-                /// <summary>
-                /// CzechRepublic Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "CZECHREPUINFRATMOM";
-                /// <summary>
-                /// CzechRepublic Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "CZECHREPUMANPMI";
-                /// <summary>
-                /// CzechRepublic Money Supply M2
-                /// </summary>
-                public const string MoneySupplyM2 = "CZECHREPUMONSUPM2";
-                /// <summary>
-                /// CzechRepublic Money Supply M3
-                /// </summary>
-                public const string MoneySupplyM3 = "CZECHREPUMONSUPM3";
-                /// <summary>
-                /// CzechRepublic Producer Prices
-                /// </summary>
-                public const string ProducerPrices = "CZECHREPUPROPRI";
-                /// <summary>
-                /// CzechRepublic Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "CZECHREPUPROPRICHA";
-                /// <summary>
-                /// CzechRepublic Wage Growth
-                /// </summary>
-                public const string WageGrowth = "CZECHREPUWAGGRO";
-                /// <summary>
-                /// CzechRepublic Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "CZERETAILSALESMOM";
-                /// <summary>
-                /// CzechRepublic Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "CZERETAILSALESYOY";
-                /// <summary>
-                /// CzechRepublic GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "CZGDPQOQ";
-                /// <summary>
-                /// CzechRepublic GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "CZGDPYOY";
-                /// <summary>
-                /// CzechRepublic Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "CZIPITYY";
-                /// <summary>
-                /// CzechRepublic Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "CZJLR";
-                /// <summary>
-                /// CzechRepublic Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "CZTBAL";
-                /// <summary>
-                /// CzechRepublic Exports
-                /// </summary>
-                public const string Exports = "CZTBEX";
-                /// <summary>
-                /// CzechRepublic Imports
-                /// </summary>
-                public const string Imports = "CZTBIM";
-            }
-            public static class Denmark
-            {
-                /// <summary>
-                /// Denmark Calendar
-                /// </summary>
-                public const string Calendar = "CALENDARDENMARK";
-                /// <summary>
-                /// Denmark Current Account
-                /// </summary>
-                public const string CurrentAccount = "DECA";
-                /// <summary>
-                /// Denmark GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "DEGDPNQQ";
-                /// <summary>
-                /// Denmark GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "DEGDPNYY";
-                /// <summary>
-                /// Denmark Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "DEMFSAYY";
-                /// <summary>
-                /// Denmark Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "DENMARKBC";
-                /// <summary>
-                /// Denmark Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "DENMARKCC";
-                /// <summary>
-                /// Denmark Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "DENMARKFOREXCRES";
-                /// <summary>
-                /// Denmark Harmonised Consumer Prices
-                /// </summary>
-                public const string HarmonisedConsumerPrices = "DENMARKHARCONPRI";
-                /// <summary>
-                /// Denmark Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "DNK-CALENDAR";
-                /// <summary>
-                /// Denmark Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "DENMARKMANPMI";
-                /// <summary>
-                /// Denmark Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "DETBHAL";
-                /// <summary>
-                /// Denmark Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "DEUE";
-                /// <summary>
-                /// Denmark Inflation Rate
-                /// </summary>
-                public const string InflationRate = "DNCPIYOY";
-                /// <summary>
-                /// Denmark Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "DNKRETAILSALESMOM";
-                /// <summary>
-                /// Denmark Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "DNKRETAILSALESYOY";
-            }
-            public static class DominicanRepublic
-            {
-                /// <summary>
-                /// DominicanRepublic Inflation Rate
-                /// </summary>
-                public const string InflationRate = "DOMLICINFNRATE";
-                /// <summary>
-                /// DominicanRepublic Interest Rate
-                /// </summary>
-                public const string InterestRate = "DOMLICINTTRATE";
-            }
-            public static class EastTimor
-            {
-                /// <summary>
-                /// EastTimor Inflation Rate
-                /// </summary>
-                public const string InflationRate = "TIMIMORINFNRATE";
-            }
-            public static class Ecuador
-            {
-                /// <summary>
-                /// Ecuador Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "ECUADORBALRADE";
-                /// <summary>
-                /// Ecuador Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "ECUADORCONDENCE";
-                /// <summary>
-                /// Ecuador GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "ECUADORGDPATE";
-                /// <summary>
-                /// Ecuador GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "ECUADORGDPRATE";
-                /// <summary>
-                /// Ecuador Inflation Rate
-                /// </summary>
-                public const string InflationRate = "ECUADORINFNRATE";
-            }
-            public static class Egypt
-            {
-                /// <summary>
-                /// Egypt Core Inflation Rate
-                /// </summary>
-                public const string CoreInflationRate = "EGYPTCORINFRAT";
-                /// <summary>
-                /// Egypt Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "EGYPTFOREXCRES";
-                /// <summary>
-                /// Egypt Interest Rate
-                /// </summary>
-                public const string InterestRate = "EGYPTINTRATE";
-                /// <summary>
-                /// Egypt Inflation Rate
-                /// </summary>
-                public const string InflationRate = "EGYPTIR";
-                /// <summary>
-                /// Egypt Lending Rate
-                /// </summary>
-                public const string LendingRate = "EGYPTLENRAT";
-                /// <summary>
-                /// Egypt Manufacturing PMI
-                /// </summary>
-                public const string ManufacturingPmi = "EGYPTMANPMI";
-                /// <summary>
-                /// Egypt Money Supply M2
-                /// </summary>
-                public const string MoneySupplyM2 = "EGYPTMONSUPM2";
-                /// <summary>
-                /// Egypt Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "EGYPTUR";
-            }
-            public static class ElSalvador
-            {
-                /// <summary>
-                /// ElSalvador GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "ELSALVADOGDPGRORAT";
-                /// <summary>
-                /// ElSalvador Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "ELSALVADOINDPRO";
-                /// <summary>
-                /// ElSalvador Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "ELSDORBALRADE";
-                /// <summary>
-                /// ElSalvador Current Account
-                /// </summary>
-                public const string CurrentAccount = "ELSDORCURCOUNT";
-                /// <summary>
-                /// ElSalvador GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "ELSDORGDPATE";
-                /// <summary>
-                /// ElSalvador Inflation Rate
-                /// </summary>
-                public const string InflationRate = "ELSDORINFNRATE";
-            }
+            /// <summary>
+            /// Estonia
+            /// </summary>
             public static class Estonia
             {
                 /// <summary>
-                /// Estonia Industrial Production Mom
+                /// Balance of Trade
                 /// </summary>
-                public const string IndustrialProductionMom = "ESTONIAINDPROMOM";
+                public const string BalanceOfTrade = "Estonia//ESTONIABT";
                 /// <summary>
-                /// Estonia Balance of Trade
+                /// Business Confidence
                 /// </summary>
-                public const string BalanceOfTrade = "ESTONIABT";
+                public const string BusinessConfidence = "Estonia//ESTONIABUSCON";
                 /// <summary>
-                /// Estonia Business Confidence
+                /// Calendar
                 /// </summary>
-                public const string BusinessConfidence = "ESTONIABUSCON";
+                public const string Calendar = "Estonia//EST-CALENDAR";
                 /// <summary>
-                /// Estonia Current Account
+                /// Current Account
                 /// </summary>
-                public const string CurrentAccount = "ESTONIACA";
+                public const string CurrentAccount = "Estonia//ESTONIACA";
                 /// <summary>
-                /// Estonia GDP Growth Rate
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string GdpGrowthRate = "ESTONIAGDPQOQ";
+                public const string GDPAnnualGrowthRate = "Estonia//ESTONIAGDPYOY";
                 /// <summary>
-                /// Estonia GDP Annual Growth Rate
+                /// GDP Growth Rate
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "ESTONIAGDPYOY";
+                public const string GDPGrowthRate = "Estonia//ESTONIAGDPQOQ";
                 /// <summary>
-                /// Estonia Imports
+                /// Holidays
                 /// </summary>
-                public const string Imports = "ESTONIAIM";
+                public const string Holidays = "Estonia//HOLIDAYSESTONIA";
                 /// <summary>
-                /// Estonia Inflation Rate Mom
+                /// Imports
                 /// </summary>
-                public const string InflationRateMom = "ESTONIAINFRATMOM";
+                public const string Imports = "Estonia//ESTONIAIM";
                 /// <summary>
-                /// Estonia Industrial Production
+                /// Industrial Production
                 /// </summary>
-                public const string IndustrialProduction = "ESTONIAIP";
+                public const string IndustrialProduction = "Estonia//ESTONIAIP";
                 /// <summary>
-                /// Estonia Inflation Rate
+                /// Industrial Production Mom
                 /// </summary>
-                public const string InflationRate = "ESTONIAIR";
+                public const string IndustrialProductionMom = "Estonia//ESTONIAINDPROMOM";
                 /// <summary>
-                /// Estonia Producer Prices
+                /// Inflation Rate
                 /// </summary>
-                public const string ProducerPrices = "ESTONIAPROPRI";
+                public const string InflationRate = "Estonia//ESTONIAIR";
                 /// <summary>
-                /// Estonia Producer Prices Change
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string ProducerPricesChange = "ESTONIAPROPRICHA";
+                public const string InflationRateMom = "Estonia//ESTONIAINFRATMOM";
                 /// <summary>
-                /// Estonia Unemployment Rate
+                /// Interest Rate
                 /// </summary>
-                public const string UnemploymentRate = "ESTONIAUR";
+                public const string InterestRate = "Estonia//EURR002W-EEK";
                 /// <summary>
-                /// Estonia Retail Sales MoM
+                /// Producer Prices
                 /// </summary>
-                public const string RetailSalesMom = "ESTRETAILSALESMOM";
+                public const string ProducerPrices = "Estonia//ESTONIAPROPRI";
                 /// <summary>
-                /// Estonia Retail Sales YoY
+                /// Producer Prices Change
                 /// </summary>
-                public const string RetailSalesYoy = "ESTRETAILSALESYOY";
+                public const string ProducerPricesChange = "Estonia//ESTONIAPROPRICHA";
+                /// <summary>
+                /// Retail Sales MoM
+                /// </summary>
+                public const string RetailSalesMom = "Estonia//ESTRETAILSALESMOM";
+                /// <summary>
+                /// Retail Sales YoY
+                /// </summary>
+                public const string RetailSalesYoy = "Estonia//ESTRETAILSALESYOY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Estonia//ESTONIAUR";
             }
-            public static class Ethiopia
-            {
-                /// <summary>
-                /// Ethiopia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "ETHOPIAINFNRATE";
-            }
-            public static class EuroArea
-            {
-                /// <summary>
-                /// EuroArea Calendar
-                /// </summary>
-                public const string Calendar = "EUR-CALENDAR";
-                /// <summary>
-                /// EuroArea Consumer Confidence Price Trends
-                /// </summary>
-                public const string ConsumerConfidencePriceTrends = "CC141";
-                /// <summary>
-                /// EuroArea Inflation Rate
-                /// </summary>
-                public const string InflationRate = "ECCPEMUY";
-                /// <summary>
-                /// EuroArea Government Debt to GDP
-                /// </summary>
-                public const string GovernmentDebtToGdp = "EMUDEBT2GDP";
-                /// <summary>
-                /// EuroArea Loans to Private Sector
-                /// </summary>
-                public const string LoansToPrivateSector = "EMUEVOLVLOATOPRISEC";
-                /// <summary>
-                /// EuroArea Money Supply M3
-                /// </summary>
-                public const string MoneySupplyM3 = "EMUEVOLVMONSUPM3";
-                /// <summary>
-                /// EuroArea Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "EMURETAILSALESMOM";
-                /// <summary>
-                /// EuroArea Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "EMURETAILSALESYOY";
-                /// <summary>
-                /// EuroArea Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "EUCCEMU";
-                /// <summary>
-                /// EuroArea Current Account
-                /// </summary>
-                public const string CurrentAccount = "EUCQCA11";
-                /// <summary>
-                /// EuroArea Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "EUESEMU";
-                /// <summary>
-                /// EuroArea GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "EUGNEMUQ";
-                /// <summary>
-                /// EuroArea GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "EUGNEMUY";
-                /// <summary>
-                /// EuroArea Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "EUIPEMUY";
-                /// <summary>
-                /// EuroArea Composite Pmi
-                /// </summary>
-                public const string CompositePmi = "EUROAREACOMPMI";
-                /// <summary>
-                /// EuroArea Construction Output
-                /// </summary>
-                public const string ConstructionOutput = "EUROAREACONOUT";
-                /// <summary>
-                /// EuroArea Core Inflation Rate
-                /// </summary>
-                public const string CoreInflationRate = "EUROAREACORINFRAT";
-                /// <summary>
-                /// EuroArea Deposit Interest Rate
-                /// </summary>
-                public const string DepositInterestRate = "EUROAREADEPINTRAT";
-                /// <summary>
-                /// EuroArea Economic Optimism Index
-                /// </summary>
-                public const string EconomicOptimismIndex = "EUROAREAECOOPTIND";
-                /// <summary>
-                /// EuroArea Employment Change
-                /// </summary>
-                public const string EmploymentChange = "EUROAREAEMPCHA";
-                /// <summary>
-                /// EuroArea Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "EUROAREAINDPROMOM";
-                /// <summary>
-                /// EuroArea Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "EUROAREAINFRATMOM";
-                /// <summary>
-                /// EuroArea Labour Costs
-                /// </summary>
-                public const string LabourCosts = "EUROAREALABCOS";
-                /// <summary>
-                /// EuroArea Lending Rate
-                /// </summary>
-                public const string LendingRate = "EUROAREALENRAT";
-                /// <summary>
-                /// EuroArea Loan Growth
-                /// </summary>
-                public const string LoanGrowth = "EUROAREALOAGRO";
-                /// <summary>
-                /// EuroArea Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "EUROAREAMANPMI";
-                /// <summary>
-                /// EuroArea Producer Prices
-                /// </summary>
-                public const string ProducerPrices = "EUROAREAPROPRI";
-                /// <summary>
-                /// EuroArea Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "EUROAREAPROPRICHA";
-                /// <summary>
-                /// EuroArea Services Pmi
-                /// </summary>
-                public const string ServicesPmi = "EUROAREASERPMI";
-                /// <summary>
-                /// EuroArea Wage Growth
-                /// </summary>
-                public const string WageGrowth = "EUROAREAWAGGRO";
-                /// <summary>
-                /// EuroArea Zew Economic Sentiment Index
-                /// </summary>
-                public const string ZewEconomicSentimentIndex = "EUROAREAZEWECOSENIND";
-                /// <summary>
-                /// EuroArea Interest Rate
-                /// </summary>
-                public const string InterestRate = "EURR002W";
-                /// <summary>
-                /// EuroArea Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "UMRTEMU";
-                /// <summary>
-                /// EuroArea Government Budget
-                /// </summary>
-                public const string GovernmentBudget = "WDEBEURO";
-                /// <summary>
-                /// EuroArea Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "XTTBEZ";
-            }
-            public static class Fiji
-            {
-                /// <summary>
-                /// Fiji Inflation Rate
-                /// </summary>
-                public const string InflationRate = "FIJFIJIINFNRATE";
-                /// <summary>
-                /// Fiji Interest Rate
-                /// </summary>
-                public const string InterestRate = "FIJFIJIINTTRATE";
-            }
+            /// <summary>
+            /// Finland
+            /// </summary>
             public static class Finland
             {
                 /// <summary>
-                /// Finland Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "FIN-CALENDAR";
+                public const string BalanceOfTrade = "Finland//FITBAL";
                 /// <summary>
-                /// Finland Current Account
+                /// Business Confidence
                 /// </summary>
-                public const string CurrentAccount = "FICAEUR";
+                public const string BusinessConfidence = "Finland//FINLANDBUSCON";
                 /// <summary>
-                /// Finland Consumer Confidence
+                /// Calendar
                 /// </summary>
-                public const string ConsumerConfidence = "FICCI";
+                public const string Calendar = "Finland//EUR-CALENDAR";
                 /// <summary>
-                /// Finland Inflation Rate
+                /// Consumer Confidence
                 /// </summary>
-                public const string InflationRate = "FICP2YOY";
+                public const string ConsumerConfidence = "Finland//FICCI";
                 /// <summary>
-                /// Finland GDP Growth Rate
+                /// Current Account
                 /// </summary>
-                public const string GdpGrowthRate = "FIGDPCH";
+                public const string CurrentAccount = "Finland//FICAEUR";
                 /// <summary>
-                /// Finland GDP Annual Growth Rate
+                /// Export Prices
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "FIGDPYOY";
+                public const string ExportPrices = "Finland//FINLANDEXPPRI";
                 /// <summary>
-                /// Finland Industrial Production
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string IndustrialProduction = "FIIPYOY";
+                public const string GDPAnnualGrowthRate = "Finland//FIGDPYOY";
                 /// <summary>
-                /// Finland Business Confidence
+                /// GDP Growth Rate
                 /// </summary>
-                public const string BusinessConfidence = "FINLANDBUSCON";
+                public const string GDPGrowthRate = "Finland//FIGDPCH";
                 /// <summary>
-                /// Finland Export Prices
+                /// Holidays
                 /// </summary>
-                public const string ExportPrices = "FINLANDEXPPRI";
+                public const string Holidays = "Finland//HOLIDAYSFINLAND";
                 /// <summary>
-                /// Finland Import Prices
+                /// Import Prices
                 /// </summary>
-                public const string ImportPrices = "FINLANDIMPPRI";
+                public const string ImportPrices = "Finland//FINLANDIMPPRI";
                 /// <summary>
-                /// Finland Inflation Rate Mom
+                /// Industrial Production
                 /// </summary>
-                public const string InflationRateMom = "FINLANDINFRATMOM";
+                public const string IndustrialProduction = "Finland//FIIPYOY";
                 /// <summary>
-                /// Finland Leading Economic Index
+                /// Inflation Rate
                 /// </summary>
-                public const string LeadingEconomicIndex = "FINLANDLEAECOIND";
+                public const string InflationRate = "Finland//FICP2YOY";
                 /// <summary>
-                /// Finland Producer Prices Change
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string ProducerPricesChange = "FINLANDPROPRICHA";
+                public const string InflationRateMom = "Finland//FINLANDINFRATMOM";
                 /// <summary>
-                /// Finland Retail Sales Mom
+                /// Interest Rate
                 /// </summary>
-                public const string RetailSalesMom = "FINLANDRETSALMOM";
+                public const string InterestRate = "Finland//EURR002W-FIM";
                 /// <summary>
-                /// Finland Retail Sales Yoy
+                /// Leading Economic Index
                 /// </summary>
-                public const string RetailSalesYoy = "FINLANDRETSALYOY";
+                public const string LeadingEconomicIndex = "Finland//FINLANDLEAECOIND";
                 /// <summary>
-                /// Finland Balance of Trade
+                /// Producer Prices Change
                 /// </summary>
-                public const string BalanceOfTrade = "FITBAL";
+                public const string ProducerPricesChange = "Finland//FINLANDPROPRICHA";
                 /// <summary>
-                /// Finland Unemployment Rate
+                /// Retail Sales Mom
                 /// </summary>
-                public const string UnemploymentRate = "UMRTFI";
+                public const string RetailSalesMom = "Finland//FINLANDRETSALMOM";
+                /// <summary>
+                /// Retail Sales Yoy
+                /// </summary>
+                public const string RetailSalesYoy = "Finland//FINLANDRETSALYOY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Finland//UMRTFI";
             }
+            /// <summary>
+            /// France
+            /// </summary>
             public static class France
             {
                 /// <summary>
-                /// France Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "FRAINDICATORS";
+                public const string BalanceOfTrade = "France//FRTEBAL";
                 /// <summary>
-                /// France Industrial Production
+                /// Business Confidence
                 /// </summary>
-                public const string IndustrialProduction = "FPIPYOY";
+                public const string BusinessConfidence = "France//INSESYNT";
                 /// <summary>
-                /// France 3 Month Bill Yield
+                /// Calendar
                 /// </summary>
-                public const string ThreeMonthBillYield = "FRANCE3MONBILYIE";
+                public const string Calendar = "France//EUR-CALENDAR";
                 /// <summary>
-                /// France 3 Year Note Yield
+                /// Composite Pmi
                 /// </summary>
-                public const string ThreeYearNoteYield = "FRANCE3YNY";
+                public const string CompositePmi = "France//FRANCECOMPMI";
                 /// <summary>
-                /// France 52 Week Bill Yield
+                /// Consumer Confidence
                 /// </summary>
-                public const string FiftyTwoWeekBillYield = "FRANCE5WBY";
+                public const string ConsumerConfidence = "France//FRCCI";
                 /// <summary>
-                /// France 5 Year Note Yield
+                /// Current Account
                 /// </summary>
-                public const string FiveYearNoteYield = "FRANCE5YNY";
+                public const string CurrentAccount = "France//FRCAEURO";
                 /// <summary>
-                /// France 6 Month Bill Yield
+                /// 52 Week Bill Yield
                 /// </summary>
-                public const string SixMonthBillYield = "FRANCE6MONBILYIE";
+                public const string FiftyTwoWeekBillYield = "France//FRANCE5WBY";
                 /// <summary>
-                /// France Composite Pmi
+                /// 5 Year Note Yield
                 /// </summary>
-                public const string CompositePmi = "FRANCECOMPMI";
+                public const string FiveYearNoteYield = "France//FRANCE5YNY";
                 /// <summary>
-                /// France Government Budget Value
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string GovernmentBudgetValue = "FRANCEGOVBUDVAL";
+                public const string GDPAnnualGrowthRate = "France//FRGEGDPY";
                 /// <summary>
-                /// France Harmonised Consumer Prices
+                /// GDP Growth Rate
                 /// </summary>
-                public const string HarmonisedConsumerPrices = "FRANCEHARCONPRI";
+                public const string GDPGrowthRate = "France//FRGEGDPQ";
                 /// <summary>
-                /// France Industrial Production Mom
+                /// Government Bond 10Y
                 /// </summary>
-                public const string IndustrialProductionMom = "FRANCEINDPROMOM";
+                public const string GovernmentBondTenY = "France//GFRN10";
                 /// <summary>
-                /// France Inflation Rate Mom
+                /// Government Budget Value
                 /// </summary>
-                public const string InflationRateMom = "FRANCEINFRATMOM";
+                public const string GovernmentBudgetValue = "France//FRANCEGOVBUDVAL";
                 /// <summary>
-                /// France Initial Jobless Claims
+                /// Harmonised Consumer Prices
                 /// </summary>
-                public const string InitialJoblessClaims = "FRANCEINIJOBCLA";
+                public const string HarmonisedConsumerPrices = "France//FRANCEHARCONPRI";
                 /// <summary>
-                /// France Manufacturing PMI
+                /// Holidays
                 /// </summary>
-                public const string ManufacturingPmi = "FRANCEMANPMI";
+                public const string Holidays = "France//HOLIDAYSFRANCE";
                 /// <summary>
-                /// France Non Farm Payrolls
+                /// Industrial Production
                 /// </summary>
-                public const string NonFarmPayrolls = "FRANCENONFARPAY";
+                public const string IndustrialProduction = "France//FPIPYOY";
                 /// <summary>
-                /// France Nonfarm Payrolls Private
+                /// Industrial Production Mom
                 /// </summary>
-                public const string NonfarmPayrollsPrivate = "FRANCENONPAYPRI";
+                public const string IndustrialProductionMom = "France//FRANCEINDPROMOM";
                 /// <summary>
-                /// France Personal Spending
+                /// Inflation Rate
                 /// </summary>
-                public const string PersonalSpending = "FRANCEPERSPE";
+                public const string InflationRate = "France//FRCPIYOY";
                 /// <summary>
-                /// France Producer Prices
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string ProducerPrices = "FRANCEPROPRI";
+                public const string InflationRateMom = "France//FRANCEINFRATMOM";
                 /// <summary>
-                /// France Services Pmi
+                /// Initial Jobless Claims
                 /// </summary>
-                public const string ServicesPmi = "FRANCESERPMI";
+                public const string InitialJoblessClaims = "France//FRANCEINIJOBCLA";
                 /// <summary>
-                /// France Unemployed Persons
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string UnemployedPersons = "FRANCEUNEPER";
+                public const string ManufacturingPmi = "France//FRANCEMANPMI";
                 /// <summary>
-                /// France Retail Sales MoM
+                /// Non Farm Payrolls
                 /// </summary>
-                public const string RetailSalesMom = "FRARETAILSALESMOM";
+                public const string NonFarmPayrolls = "France//FRANCENONFARPAY";
                 /// <summary>
-                /// France Retail Sales YoY
+                /// Nonfarm Payrolls Private
                 /// </summary>
-                public const string RetailSalesYoy = "FRARETAILSALESYOY";
+                public const string NonfarmPayrollsPrivate = "France//FRANCENONPAYPRI";
                 /// <summary>
-                /// France Current Account
+                /// Personal Spending
                 /// </summary>
-                public const string CurrentAccount = "FRCAEURO";
+                public const string PersonalSpending = "France//FRANCEPERSPE";
                 /// <summary>
-                /// France Consumer Confidence
+                /// Producer Prices
                 /// </summary>
-                public const string ConsumerConfidence = "FRCCI";
+                public const string ProducerPrices = "France//FRANCEPROPRI";
                 /// <summary>
-                /// France Inflation Rate
+                /// Retail Sales MoM
                 /// </summary>
-                public const string InflationRate = "FRCPIYOY";
+                public const string RetailSalesMom = "France//FRARETAILSALESMOM";
                 /// <summary>
-                /// France GDP Growth Rate
+                /// Retail Sales YoY
                 /// </summary>
-                public const string GdpGrowthRate = "FRGEGDPQ";
+                public const string RetailSalesYoy = "France//FRARETAILSALESYOY";
                 /// <summary>
-                /// France GDP Annual Growth Rate
+                /// Services Pmi
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "FRGEGDPY";
+                public const string ServicesPmi = "France//FRANCESERPMI";
                 /// <summary>
-                /// France Balance of Trade
+                /// 6 Month Bill Yield
                 /// </summary>
-                public const string BalanceOfTrade = "FRTEBAL";
+                public const string SixMonthBillYield = "France//FRANCE6MONBILYIE";
                 /// <summary>
-                /// France Government Bond 10Y
+                /// 3 Month Bill Yield
                 /// </summary>
-                public const string GovernmentBond10y = "GFRN10";
+                public const string ThreeMonthBillYield = "France//FRANCE3MONBILYIE";
                 /// <summary>
-                /// France Business Confidence
+                /// 3 Year Note Yield
                 /// </summary>
-                public const string BusinessConfidence = "INSESYNT";
+                public const string ThreeYearNoteYield = "France//FRANCE3YNY";
                 /// <summary>
-                /// France Unemployment Rate
+                /// Unemployed Persons
                 /// </summary>
-                public const string UnemploymentRate = "UMRTFR";
+                public const string UnemployedPersons = "France//FRANCEUNEPER";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "France//UMRTFR";
             }
-            public static class Georgia
-            {
-                /// <summary>
-                /// Georgia Balance of Trade
-                /// </summary>BasicTemplateFrameworkAlgorithm
-                public const string BalanceOfTrade = "GEORGIABALRADE";
-                /// <summary>
-                /// Georgia Current Account
-                /// </summary>
-                public const string CurrentAccount = "GEORGIACURCOUNT";
-                /// <summary>
-                /// Georgia Current Account to GDP
-                /// </summary>
-                public const string CurrentAccountToGdp = "GEORGIACURGDP";
-                /// <summary>
-                /// Georgia GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "GEORGIAGDPATE";
-                /// <summary>
-                /// Georgia Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "GEORGIAINDCTION";
-                /// <summary>
-                /// Georgia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "GEORGIAINFNRATE";
-                /// <summary>
-                /// Georgia Interest Rate
-                /// </summary>
-                public const string InterestRate = "GEORGIAINTTRATE";
-                /// <summary>
-                /// Georgia Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "GEORGIALEAECOIND";
-                /// <summary>
-                /// Georgia Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "GEORGIAPROPRICHA";
-                /// <summary>
-                /// Georgia Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "GEORGIARETSYOY";
-                /// <summary>
-                /// Georgia Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "GEORGIAUNETRATE";
-            }
+            /// <summary>
+            /// Germany
+            /// </summary>
             public static class Germany
             {
                 /// <summary>
-                /// Germany Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "DEUINDICATORS";
+                public const string BalanceOfTrade = "Germany//GRTBALE";
                 /// <summary>
-                /// Germany Retail Sales MoM
+                /// Business Confidence
                 /// </summary>
-                public const string RetailSalesMom = "DEURETAILSALESMOM";
+                public const string BusinessConfidence = "Germany//GRIFPBUS";
                 /// <summary>
-                /// Germany Retail Sales YoY
+                /// Calendar
                 /// </summary>
-                public const string RetailSalesYoy = "DEURETAILSALESYOY";
+                public const string Calendar = "Germany//DEU-CALENDAR";
                 /// <summary>
-                /// Germany Government Bond 10Y
+                /// Composite Pmi
                 /// </summary>
-                public const string GovernmentBond10y = "GDBR10";
+                public const string CompositePmi = "Germany//GERMANYCOMPMI";
                 /// <summary>
-                /// Germany 2 Year Note Yield
+                /// Construction Pmi
                 /// </summary>
-                public const string TwoYearNoteYield = "GERMANY2YNY";
+                public const string ConstructionPmi = "Germany//GERMANYCONPMI";
                 /// <summary>
-                /// Germany 30 Year Bond Yield
+                /// Consumer Confidence
                 /// </summary>
-                public const string ThirtyYearBondYield = "GERMANY3YBY";
+                public const string ConsumerConfidence = "Germany//GRCCI";
                 /// <summary>
-                /// Germany 52 Week Bill Yield
+                /// Current Account
                 /// </summary>
-                public const string FiftyTwoWeekBillYield = "GERMANY5WBY";
+                public const string CurrentAccount = "Germany//GRCAEU";
                 /// <summary>
-                /// Germany 5 Year Note Yield
+                /// Employed Persons
                 /// </summary>
-                public const string FiveYearNoteYield = "GERMANY5YNY";
+                public const string EmployedPersons = "Germany//GERMANYEMPPER";
                 /// <summary>
-                /// Germany Composite Pmi
+                /// Exports
                 /// </summary>
-                public const string CompositePmi = "GERMANYCOMPMI";
+                public const string Exports = "Germany//GRTBEXE";
                 /// <summary>
-                /// Germany Construction Pmi
+                /// Factory Orders
                 /// </summary>
-                public const string ConstructionPmi = "GERMANYCONPMI";
+                public const string FactoryOrders = "Germany//GERMANYFACORD";
                 /// <summary>
-                /// Germany Employed Persons
+                /// 52 Week Bill Yield
                 /// </summary>
-                public const string EmployedPersons = "GERMANYEMPPER";
+                public const string FiftyTwoWeekBillYield = "Germany//GERMANY5WBY";
                 /// <summary>
-                /// Germany Factory Orders
+                /// 5 Year Note Yield
                 /// </summary>
-                public const string FactoryOrders = "GERMANYFACORD";
+                public const string FiveYearNoteYield = "Germany//GERMANY5YNY";
                 /// <summary>
-                /// Germany Harmonised Consumer Prices
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string HarmonisedConsumerPrices = "GERMANYHARCONPRI";
+                public const string GDPAnnualGrowthRate = "Germany//GRGDPPGY";
                 /// <summary>
-                /// Germany Import Prices
+                /// GDP Growth Rate
                 /// </summary>
-                public const string ImportPrices = "GERMANYIMPPRI";
+                public const string GDPGrowthRate = "Germany//GRGDPPGQ";
                 /// <summary>
-                /// Germany Industrial Production Mom
+                /// Government Bond 10Y
                 /// </summary>
-                public const string IndustrialProductionMom = "GERMANYINDPROMOM";
+                public const string GovernmentBondTenY = "Germany//GDBR10";
                 /// <summary>
-                /// Germany Inflation Rate Mom
+                /// Government Budget
                 /// </summary>
-                public const string InflationRateMom = "GERMANYINFRATMOM";
+                public const string GovernmentBudget = "Germany//WCSDDEU";
                 /// <summary>
-                /// Germany Job Vacancies
+                /// Harmonised Consumer Prices
                 /// </summary>
-                public const string JobVacancies = "GERMANYJOBVAC";
+                public const string HarmonisedConsumerPrices = "Germany//GERMANYHARCONPRI";
                 /// <summary>
-                /// Germany Manufacturing Pmi
+                /// Holidays
                 /// </summary>
-                public const string ManufacturingPmi = "GERMANYMANPMI";
+                public const string Holidays = "Germany//HOLIDAYSGERMANY";
                 /// <summary>
-                /// Germany Producer Prices
+                /// Import Prices
                 /// </summary>
-                public const string ProducerPrices = "GERMANYPROPRI";
+                public const string ImportPrices = "Germany//GERMANYIMPPRI";
                 /// <summary>
-                /// Germany Producer Prices Change
+                /// Industrial Production
                 /// </summary>
-                public const string ProducerPricesChange = "GERMANYPROPRICHA";
+                public const string IndustrialProduction = "Germany//GRIPIYOY";
                 /// <summary>
-                /// Germany Services Pmi
+                /// Industrial Production Mom
                 /// </summary>
-                public const string ServicesPmi = "GERMANYSERPMI";
+                public const string IndustrialProductionMom = "Germany//GERMANYINDPROMOM";
                 /// <summary>
-                /// Germany Unemployment Change
+                /// Inflation Rate
                 /// </summary>
-                public const string UnemploymentChange = "GERMANYUNECHA";
+                public const string InflationRate = "Germany//GRBC20YY";
                 /// <summary>
-                /// Germany Unemployed Persons
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string UnemployedPersons = "GERMANYUNEPER";
+                public const string InflationRateMom = "Germany//GERMANYINFRATMOM";
                 /// <summary>
-                /// Germany Wholesale Prices
+                /// Interest Rate
                 /// </summary>
-                public const string WholesalePrices = "GERMANYWHOPRI";
+                public const string InterestRate = "Germany//EURR002W-DEM";
                 /// <summary>
-                /// Germany Zew Economic Sentiment Index
+                /// Job Vacancies
                 /// </summary>
-                public const string ZewEconomicSentimentIndex = "GERMANYZEWECOSENIND";
+                public const string JobVacancies = "Germany//GERMANYJOBVAC";
                 /// <summary>
-                /// Germany Inflation Rate
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string InflationRate = "GRBC20YY";
+                public const string ManufacturingPmi = "Germany//GERMANYMANPMI";
                 /// <summary>
-                /// Germany Current Account
+                /// Producer Prices
                 /// </summary>
-                public const string CurrentAccount = "GRCAEU";
+                public const string ProducerPrices = "Germany//GERMANYPROPRI";
                 /// <summary>
-                /// Germany Consumer Confidence
+                /// Producer Prices Change
                 /// </summary>
-                public const string ConsumerConfidence = "GRCCI";
+                public const string ProducerPricesChange = "Germany//GERMANYPROPRICHA";
                 /// <summary>
-                /// Germany GDP Growth Rate
+                /// Retail Sales MoM
                 /// </summary>
-                public const string GdpGrowthRate = "GRGDPPGQ";
+                public const string RetailSalesMom = "Germany//DEURETAILSALESMOM";
                 /// <summary>
-                /// Germany GDP Annual Growth Rate
+                /// Retail Sales YoY
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "GRGDPPGY";
+                public const string RetailSalesYoy = "Germany//DEURETAILSALESYOY";
                 /// <summary>
-                /// Germany Business Confidence
+                /// Services Pmi
                 /// </summary>
-                public const string BusinessConfidence = "GRIFPBUS";
+                public const string ServicesPmi = "Germany//GERMANYSERPMI";
                 /// <summary>
-                /// Germany Industrial Production
+                /// 30 Year Bond Yield
                 /// </summary>
-                public const string IndustrialProduction = "GRIPIYOY";
+                public const string ThirtyYearBondYield = "Germany//GERMANY3YBY";
                 /// <summary>
-                /// Germany Balance of Trade
+                /// 2 Year Note Yield
                 /// </summary>
-                public const string BalanceOfTrade = "GRTBALE";
+                public const string TwoYearNoteYield = "Germany//GERMANY2YNY";
                 /// <summary>
-                /// Germany Exports
+                /// Unemployed Persons
                 /// </summary>
-                public const string Exports = "GRTBEXE";
+                public const string UnemployedPersons = "Germany//GERMANYUNEPER";
                 /// <summary>
-                /// Germany Unemployment Rate
+                /// Unemployment Change
                 /// </summary>
-                public const string UnemploymentRate = "GRUEPR";
+                public const string UnemploymentChange = "Germany//GERMANYUNECHA";
                 /// <summary>
-                /// Germany Government Budget
+                /// Unemployment Rate
                 /// </summary>
-                public const string GovernmentBudget = "WCSDDEU";
+                public const string UnemploymentRate = "Germany//GRUEPR";
+                /// <summary>
+                /// Wholesale Prices
+                /// </summary>
+                public const string WholesalePrices = "Germany//GERMANYWHOPRI";
+                /// <summary>
+                /// Zew Economic Sentiment Index
+                /// </summary>
+                public const string ZewEconomicSentimentIndex = "Germany//GERMANYZEWECOSENIND";
             }
-            public static class Ghana
-            {
-                /// <summary>
-                /// Ghana Composite Pmi
-                /// </summary>
-                public const string CompositePmi = "GHANACOMPMI";
-                /// <summary>
-                /// Ghana GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "GHANAGDPYOY";
-                /// <summary>
-                /// Ghana Interest Rate
-                /// </summary>
-                public const string InterestRate = "GHANAINTRATE";
-                /// <summary>
-                /// Ghana Inflation Rate
-                /// </summary>
-                public const string InflationRate = "GHANAIR";
-                /// <summary>
-                /// Ghana Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "GHANAPROPRICHA";
-            }
+            /// <summary>
+            /// Greece
+            /// </summary>
             public static class Greece
             {
                 /// <summary>
-                /// Greece Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "GRC-CALENDAR";
+                public const string BalanceOfTrade = "Greece//GKTBALE";
                 /// <summary>
-                /// Greece Current Account
+                /// Business Confidence
                 /// </summary>
-                public const string CurrentAccount = "GKCAEUR";
+                public const string BusinessConfidence = "Greece//GREECEBC";
                 /// <summary>
-                /// Greece Inflation Rate
+                /// Calendar
                 /// </summary>
-                public const string InflationRate = "GKCPNEWY";
+                public const string Calendar = "Greece//EUR-CALENDAR";
                 /// <summary>
-                /// Greece GDP Growth Rate
+                /// Construction Output
                 /// </summary>
-                public const string GdpGrowthRate = "GKGNVQQ";
+                public const string ConstructionOutput = "Greece//GREECECONOUT";
                 /// <summary>
-                /// Greece GDP Annual Growth Rate
+                /// Consumer Confidence
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "GKGNVYY";
+                public const string ConsumerConfidence = "Greece//GREECECC";
                 /// <summary>
-                /// Greece Industrial Production
+                /// Current Account
                 /// </summary>
-                public const string IndustrialProduction = "GKIPIYOY";
+                public const string CurrentAccount = "Greece//GKCAEUR";
                 /// <summary>
-                /// Greece Balance of Trade
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string BalanceOfTrade = "GKTBALE";
+                public const string GDPAnnualGrowthRate = "Greece//GKGNVYY";
                 /// <summary>
-                /// Greece Retail Sales MoM
+                /// GDP Growth Rate
                 /// </summary>
-                public const string RetailSalesMom = "GRCRETAILSALESMOM";
+                public const string GDPGrowthRate = "Greece//GKGNVQQ";
                 /// <summary>
-                /// Greece Retail Sales YoY
+                /// Harmonised Consumer Prices
                 /// </summary>
-                public const string RetailSalesYoy = "GRCRETAILSALESYOY";
+                public const string HarmonisedConsumerPrices = "Greece//GREECEHARCONPRI";
                 /// <summary>
-                /// Greece 3 Month Bill Yield
+                /// Holidays
                 /// </summary>
-                public const string ThreeMonthBillYield = "GREECE3MBY";
+                public const string Holidays = "Greece//HOLIDAYSGREECE";
                 /// <summary>
-                /// Greece 6 Month Bill Yield
+                /// Industrial Production
                 /// </summary>
-                public const string SixMonthBillYield = "GREECE6MBY";
+                public const string IndustrialProduction = "Greece//GKIPIYOY";
                 /// <summary>
-                /// Greece Business Confidence
+                /// Inflation Rate
                 /// </summary>
-                public const string BusinessConfidence = "GREECEBC";
+                public const string InflationRate = "Greece//GKCPNEWY";
                 /// <summary>
-                /// Greece Consumer Confidence
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string ConsumerConfidence = "GREECECC";
+                public const string InflationRateMom = "Greece//GREECEINFRATMOM";
                 /// <summary>
-                /// Greece Harmonised Consumer Prices
+                /// Loan Growth
                 /// </summary>
-                public const string HarmonisedConsumerPrices = "GREECEHARCONPRI";
+                public const string LoanGrowth = "Greece//GREECELOAGRO";
                 /// <summary>
-                /// Greece Inflation Rate Mom
+                /// Loans to Private Sector
                 /// </summary>
-                public const string InflationRateMom = "GREECEINFRATMOM";
+                public const string LoansToPrivateSector = "Greece//GREECELOATOPRISEC";
                 /// <summary>
-                /// Greece Loan Growth
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string LoanGrowth = "GREECELOAGRO";
+                public const string ManufacturingPmi = "Greece//GREECEMANPMI";
                 /// <summary>
-                /// Greece Loans to Private Sector
+                /// Private Sector Credit
                 /// </summary>
-                public const string LoansToPrivateSector = "GREECELOATOPRISEC";
+                public const string PrivateSectorCredit = "Greece//GREECEPRISECCRE";
                 /// <summary>
-                /// Greece Manufacturing PMI
+                /// Producer Prices Change
                 /// </summary>
-                public const string ManufacturingPmi = "GREECEMANPMI";
+                public const string ProducerPricesChange = "Greece//GREECEPROPRICHA";
                 /// <summary>
-                /// Greece Private Sector Credit
+                /// Retail Sales MoM
                 /// </summary>
-                public const string PrivateSectorCredit = "GREECEPRISECCRE";
+                public const string RetailSalesMom = "Greece//GRCRETAILSALESMOM";
                 /// <summary>
-                /// Greece Producer Prices Change
+                /// Retail Sales YoY
                 /// </summary>
-                public const string ProducerPricesChange = "GREECEPROPRICHA";
+                public const string RetailSalesYoy = "Greece//GRCRETAILSALESYOY";
                 /// <summary>
-                /// Greece Unemployment Rate
+                /// 6 Month Bill Yield
                 /// </summary>
-                public const string UnemploymentRate = "UMRTGR";
+                public const string SixMonthBillYield = "Greece//GREECE6MBY";
+                /// <summary>
+                /// 3 Month Bill Yield
+                /// </summary>
+                public const string ThreeMonthBillYield = "Greece//GREECE3MBY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Greece//UMRTGR";
             }
-            public static class Guatemala
-            {
-                /// <summary>
-                /// Guatemala Current Account
-                /// </summary>
-                public const string CurrentAccount = "GUAMALACURCOUNT";
-            }
-            public static class Honduras
-            {
-                /// <summary>
-                /// Honduras Interest Rate
-                /// </summary>
-                public const string InterestRate = "HONURASINTTRATE";
-            }
-            public static class HongKong
-            {
-                /// <summary>
-                /// HongKong Calendar
-                /// </summary>
-                public const string Calendar = "HKG-CALENDAR";
-                /// <summary>
-                /// HongKong Interest Rate
-                /// </summary>
-                public const string InterestRate = "HKBASE";
-                /// <summary>
-                /// HongKong Current Account
-                /// </summary>
-                public const string CurrentAccount = "HKBPCA";
-                /// <summary>
-                /// HongKong Inflation Rate
-                /// </summary>
-                public const string InflationRate = "HKCPIY";
-                /// <summary>
-                /// HongKong Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "HKETBOT";
-                /// <summary>
-                /// HongKong Exports
-                /// </summary>
-                public const string Exports = "HKETEXP";
-                /// <summary>
-                /// HongKong Imports
-                /// </summary>
-                public const string Imports = "HKETIMP";
-                /// <summary>
-                /// HongKong GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "HKGDQOQ";
-                /// <summary>
-                /// HongKong GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "HKGDYOY";
-                /// <summary>
-                /// HongKong Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "HKGRETAILSALESYOY";
-                /// <summary>
-                /// HongKong Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "HKIPIYOY";
-                /// <summary>
-                /// HongKong Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "HKUERATE";
-                /// <summary>
-                /// HongKong Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "HONGKONGBUSCON";
-                /// <summary>
-                /// HongKong Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "HONGKONGFOREXCRES";
-                /// <summary>
-                /// HongKong Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "HONGKONGMANPMI";
-            }
-            public static class Hungary
-            {
-                /// <summary>
-                /// Hungary GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "ENGKHUQ";
-                /// <summary>
-                /// Hungary Interest Rate
-                /// </summary>
-                public const string InterestRate = "HBBRATE";
-                /// <summary>
-                /// Hungary Inflation Rate
-                /// </summary>
-                public const string InflationRate = "HUCPIYY";
-                /// <summary>
-                /// Hungary Current Account
-                /// </summary>
-                public const string CurrentAccount = "HUCQEURO";
-                /// <summary>
-                /// Hungary Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "HUEMUNR";
-                /// <summary>
-                /// Hungary GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "HUGPTOTL";
-                /// <summary>
-                /// Hungary Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "HUIPIYOY";
-                /// <summary>
-                /// Hungary Calendar
-                /// </summary>
-                public const string Calendar = "HUN-CALENDAR";
-                /// <summary>
-                /// Hungary Core Inflation Rate
-                /// </summary>
-                public const string CoreInflationRate = "HUNCORECPIRATE";
-                /// <summary>
-                /// Hungary Deposit Interest Rate
-                /// </summary>
-                public const string DepositInterestRate = "HUNFRINRDPST";
-                /// <summary>
-                /// Hungary Construction Output
-                /// </summary>
-                public const string ConstructionOutput = "HUNGARYCONOUT";
-                /// <summary>
-                /// Hungary Government Budget Value
-                /// </summary>
-                public const string GovernmentBudgetValue = "HUNGARYGOVBUDVAL";
-                /// <summary>
-                /// Hungary Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "HUNGARYINFRATMOM";
-                /// <summary>
-                /// Hungary Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "HUNGARYMANPMI";
-                /// <summary>
-                /// Hungary Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "HUNGARYPROPRICHA";
-                /// <summary>
-                /// Hungary Wage Growth
-                /// </summary>
-                public const string WageGrowth = "HUNGARYWAGGRO";
-                /// <summary>
-                /// Hungary Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "HUNRETAILSALESMOM";
-                /// <summary>
-                /// Hungary Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "HUNRETAILSALESYOY";
-                /// <summary>
-                /// Hungary Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "HUTRBAL";
-            }
-            public static class Iceland
-            {
-                /// <summary>
-                /// Iceland Calendar
-                /// </summary>
-                public const string Calendar = "CALENDARICELAND";
-                /// <summary>
-                /// Iceland Interest Rate
-                /// </summary>
-                public const string InterestRate = "ICBRANN";
-                /// <summary>
-                /// Iceland Current Account
-                /// </summary>
-                public const string CurrentAccount = "ICCACURR";
-                /// <summary>
-                /// Iceland Inflation Rate
-                /// </summary>
-                public const string InflationRate = "ICCPIYOY";
-                /// <summary>
-                /// Iceland Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "ISL-CALENDAR";
-                /// <summary>
-                /// Iceland Producer Prices
-                /// </summary>
-                public const string ProducerPrices = "ICELANDPROPRI";
-                /// <summary>
-                /// Iceland Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "ICELANDPROPRICHA";
-                /// <summary>
-                /// Iceland Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "ICETBAL";
-                /// <summary>
-                /// Iceland GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "ICGPSAQ";
-                /// <summary>
-                /// Iceland GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "ICGPSAY";
-                /// <summary>
-                /// Iceland Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "ICUNEMRT";
-            }
-            public static class India
-            {
-                /// <summary>
-                /// India Calendar
-                /// </summary>
-                public const string Calendar = "IND-CALENDAR";
-                /// <summary>
-                /// India Current Account
-                /// </summary>
-                public const string CurrentAccount = "INBQCUR";
-                /// <summary>
-                /// India Inflation Rate
-                /// </summary>
-                public const string InflationRate = "INCPIINY";
-                /// <summary>
-                /// India Cash Reserve Ratio
-                /// </summary>
-                public const string CashReserveRatio = "INDIACASRESRAT";
-                /// <summary>
-                /// India Construction Output
-                /// </summary>
-                public const string ConstructionOutput = "INDIACONOUT";
-                /// <summary>
-                /// India External Debt
-                /// </summary>
-                public const string ExternalDebt = "INDIAEXTDEB";
-                /// <summary>
-                /// India Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "INDIAFOREXCRES";
-                /// <summary>
-                /// India Government Budget Value
-                /// </summary>
-                public const string GovernmentBudgetValue = "INDIAGOVBUDVAL";
-                /// <summary>
-                /// India Loan Growth
-                /// </summary>
-                public const string LoanGrowth = "INDIALOAGRO";
-                /// <summary>
-                /// India Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "INDIAMANPMI";
-                /// <summary>
-                /// India Manufacturing Production
-                /// </summary>
-                public const string ManufacturingProduction = "INDIAMANPRO";
-                /// <summary>
-                /// India Mni Consumer Sentiment
-                /// </summary>
-                public const string MniConsumerSentiment = "INDIAMNICONSEN";
-                /// <summary>
-                /// India Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "INDIAPROPRICHA";
-                /// <summary>
-                /// India Services Pmi
-                /// </summary>
-                public const string ServicesPmi = "INDIASERPMI";
-                /// <summary>
-                /// India GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "INGDPY";
-                /// <summary>
-                /// India Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "INMTBALD";
-                /// <summary>
-                /// India Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "INPIINDY";
-                /// <summary>
-                /// India Interest Rate
-                /// </summary>
-                public const string InterestRate = "RSPOYLD";
-            }
-            public static class Indonesia
-            {
-                /// <summary>
-                /// Indonesia Calendar
-                /// </summary>
-                public const string Calendar = "IDN-CALENDAR";
-                /// <summary>
-                /// Indonesia Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "IDBALTOL";
-                /// <summary>
-                /// Indonesia Interest Rate
-                /// </summary>
-                public const string InterestRate = "IDBIRATE";
-                /// <summary>
-                /// Indonesia Current Account
-                /// </summary>
-                public const string CurrentAccount = "IDCABAL";
-                /// <summary>
-                /// Indonesia Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "IDCCI";
-                /// <summary>
-                /// Indonesia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "IDCPIY";
-                /// <summary>
-                /// Indonesia Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "IDEMUNEPCT";
-                /// <summary>
-                /// Indonesia Exports
-                /// </summary>
-                public const string Exports = "IDEXP";
-                /// <summary>
-                /// Indonesia GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "IDGDPY";
-                /// <summary>
-                /// Indonesia GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "IDGDQY";
-                /// <summary>
-                /// Indonesia Imports
-                /// </summary>
-                public const string Imports = "IDIMP";
-                /// <summary>
-                /// Indonesia Deposit Interest Rate
-                /// </summary>
-                public const string DepositInterestRate = "IDNFRINRDPST";
-                /// <summary>
-                /// Indonesia Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "IDNRETAILSALESMOM";
-                /// <summary>
-                /// Indonesia Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "IDNRETAILSALESYOY";
-                /// <summary>
-                /// Indonesia Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "INDONESIABC";
-                /// <summary>
-                /// Indonesia Car Registrations
-                /// </summary>
-                public const string CarRegistrations = "INDONESIACARREG";
-                /// <summary>
-                /// Indonesia Core Inflation Rate
-                /// </summary>
-                public const string CoreInflationRate = "INDONESIACORINFRAT";
-                /// <summary>
-                /// Indonesia Foreign Direct Investment
-                /// </summary>
-                public const string ForeignDirectInvestment = "INDONESIAFORDIRINV";
-                /// <summary>
-                /// Indonesia Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "INDONESIAFOREXCRES";
-                /// <summary>
-                /// Indonesia Housing Index
-                /// </summary>
-                public const string HousingIndex = "INDONESIAHOUIND";
-                /// <summary>
-                /// Indonesia Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "INDONESIAINFRATMOM";
-                /// <summary>
-                /// Indonesia Lending Rate
-                /// </summary>
-                public const string LendingRate = "INDONESIALENRAT";
-                /// <summary>
-                /// Indonesia Loan Growth
-                /// </summary>
-                public const string LoanGrowth = "INDONESIALOAGRO";
-                /// <summary>
-                /// Indonesia Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "INDONESIAMANPMI";
-                /// <summary>
-                /// Indonesia Money Supply M2
-                /// </summary>
-                public const string MoneySupplyM2 = "INDONESIAMONSUPM2";
-                /// <summary>
-                /// Indonesia Tourist Arrivals
-                /// </summary>
-                public const string TouristArrivals = "INDONESIATOUARR";
-            }
-            public static class Iran
-            {
-                /// <summary>
-                /// Iran Inflation Rate
-                /// </summary>
-                public const string InflationRate = "IRAIRANINFNRATE";
-            }
-            public static class Iraq
-            {
-                /// <summary>
-                /// Iraq Inflation Rate
-                /// </summary>
-                public const string InflationRate = "IRAIRAQINFNRATE";
-            }
+            /// <summary>
+            /// Ireland
+            /// </summary>
             public static class Ireland
             {
                 /// <summary>
-                /// Ireland Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "IRL-CALENDAR";
+                public const string BalanceOfTrade = "Ireland//IETBALNS";
                 /// <summary>
-                /// Ireland Consumer Confidence
+                /// Calendar
                 /// </summary>
-                public const string ConsumerConfidence = "EUCCIE";
+                public const string Calendar = "Ireland//EUR-CALENDAR";
                 /// <summary>
-                /// Ireland Current Account
+                /// Construction Output
                 /// </summary>
-                public const string CurrentAccount = "IECA";
+                public const string ConstructionOutput = "Ireland//IRELANDCONOUT";
                 /// <summary>
-                /// Ireland Inflation Rate
+                /// Construction Pmi
                 /// </summary>
-                public const string InflationRate = "IECPIYOY";
+                public const string ConstructionPmi = "Ireland//IRELANDCONPMI";
                 /// <summary>
-                /// Ireland GDP Growth Rate
+                /// Consumer Confidence
                 /// </summary>
-                public const string GdpGrowthRate = "IEGRPQOQ";
+                public const string ConsumerConfidence = "Ireland//EUCCIE";
                 /// <summary>
-                /// Ireland GDP Annual Growth Rate
+                /// Core Inflation Rate
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "IEGRPYOY";
+                public const string CoreInflationRate = "Ireland//IRLCORECPIRATE";
                 /// <summary>
-                /// Ireland Industrial Production
+                /// Current Account
                 /// </summary>
-                public const string IndustrialProduction = "IEIPIYOY";
+                public const string CurrentAccount = "Ireland//IECA";
                 /// <summary>
-                /// Ireland Balance of Trade
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string BalanceOfTrade = "IETBALNS";
+                public const string GDPAnnualGrowthRate = "Ireland//IEGRPYOY";
                 /// <summary>
-                /// Ireland Unemployment Rate
+                /// GDP Growth Rate
                 /// </summary>
-                public const string UnemploymentRate = "IEUERT";
+                public const string GDPGrowthRate = "Ireland//IEGRPQOQ";
                 /// <summary>
-                /// Ireland Construction Output
+                /// Gross National Product
                 /// </summary>
-                public const string ConstructionOutput = "IRELANDCONOUT";
+                public const string GrossNationalProduct = "Ireland//IRELANDGRONATPRO";
                 /// <summary>
-                /// Ireland Construction Pmi
+                /// Harmonised Consumer Prices
                 /// </summary>
-                public const string ConstructionPmi = "IRELANDCONPMI";
+                public const string HarmonisedConsumerPrices = "Ireland//IRELANDHARCONPRI";
                 /// <summary>
-                /// Ireland Gross National Product
+                /// Holidays
                 /// </summary>
-                public const string GrossNationalProduct = "IRELANDGRONATPRO";
+                public const string Holidays = "Ireland//HOLIDAYSIRELAND";
                 /// <summary>
-                /// Ireland Harmonised Consumer Prices
+                /// Housing Index
                 /// </summary>
-                public const string HarmonisedConsumerPrices = "IRELANDHARCONPRI";
+                public const string HousingIndex = "Ireland//IRELANDHOUIND";
                 /// <summary>
-                /// Ireland Housing Index
+                /// Industrial Production
                 /// </summary>
-                public const string HousingIndex = "IRELANDHOUIND";
+                public const string IndustrialProduction = "Ireland//IEIPIYOY";
                 /// <summary>
-                /// Ireland Inflation Rate Mom
+                /// Inflation Rate
                 /// </summary>
-                public const string InflationRateMom = "IRELANDINFRATMOM";
+                public const string InflationRate = "Ireland//IECPIYOY";
                 /// <summary>
-                /// Ireland Manufacturing PMI
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string ManufacturingPmi = "IRELANDMANPMI";
+                public const string InflationRateMom = "Ireland//IRELANDINFRATMOM";
                 /// <summary>
-                /// Ireland Personal Savings
+                /// Interest Rate
                 /// </summary>
-                public const string PersonalSavings = "IRELANDPERSAV";
+                public const string InterestRate = "Ireland//EURR002W-IEP";
                 /// <summary>
-                /// Ireland Producer Prices
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string ProducerPrices = "IRELANDPROPRI";
+                public const string ManufacturingPmi = "Ireland//IRELANDMANPMI";
                 /// <summary>
-                /// Ireland Producer Prices Change
+                /// Personal Savings
                 /// </summary>
-                public const string ProducerPricesChange = "IRELANDPROPRICHA";
+                public const string PersonalSavings = "Ireland//IRELANDPERSAV";
                 /// <summary>
-                /// Ireland Services Pmi
+                /// Producer Prices
                 /// </summary>
-                public const string ServicesPmi = "IRELANDSERPMI";
+                public const string ProducerPrices = "Ireland//IRELANDPROPRI";
                 /// <summary>
-                /// Ireland Wage Growth
+                /// Producer Prices Change
                 /// </summary>
-                public const string WageGrowth = "IRELANDWAGGRO";
+                public const string ProducerPricesChange = "Ireland//IRELANDPROPRICHA";
                 /// <summary>
-                /// Ireland Core Inflation Rate
+                /// Retail Sales MoM
                 /// </summary>
-                public const string CoreInflationRate = "IRLCORECPIRATE";
+                public const string RetailSalesMom = "Ireland//IRLRETAILSALESMOM";
                 /// <summary>
-                /// Ireland Retail Sales MoM
+                /// Retail Sales YoY
                 /// </summary>
-                public const string RetailSalesMom = "IRLRETAILSALESMOM";
+                public const string RetailSalesYoy = "Ireland//IRLRETAILSALESYOY";
                 /// <summary>
-                /// Ireland Retail Sales YoY
+                /// Services Pmi
                 /// </summary>
-                public const string RetailSalesYoy = "IRLRETAILSALESYOY";
+                public const string ServicesPmi = "Ireland//IRELANDSERPMI";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Ireland//IEUERT";
+                /// <summary>
+                /// Wage Growth
+                /// </summary>
+                public const string WageGrowth = "Ireland//IRELANDWAGGRO";
             }
-            public static class Israel
-            {
-                /// <summary>
-                /// Israel Interest Rate
-                /// </summary>
-                public const string InterestRate = "ISBRATE";
-                /// <summary>
-                /// Israel Current Account
-                /// </summary>
-                public const string CurrentAccount = "ISCAL";
-                /// <summary>
-                /// Israel Inflation Rate
-                /// </summary>
-                public const string InflationRate = "ISCPIYYN";
-                /// <summary>
-                /// Israel GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "ISGDPNQQ";
-                /// <summary>
-                /// Israel GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "ISGDPNYY";
-                /// <summary>
-                /// Israel Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "ISINIYOY";
-                /// <summary>
-                /// Israel Calendar
-                /// </summary>
-                public const string Calendar = "ISR-CALENDAR";
-                /// <summary>
-                /// Israel Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "ISRAELBC";
-                /// <summary>
-                /// Israel Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "ISRAELCC";
-                /// <summary>
-                /// Israel Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "ISRAELFOREXCRES";
-                /// <summary>
-                /// Israel GDP Growth Annualized
-                /// </summary>
-                public const string GdpGrowthAnnualized = "ISRAELGDPGROANN";
-                /// <summary>
-                /// Israel Government Budget Value
-                /// </summary>
-                public const string GovernmentBudgetValue = "ISRAELGOVBUDVAL";
-                /// <summary>
-                /// Israel Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "ISRAELINDPROMOM";
-                /// <summary>
-                /// Israel Inflation Expectations
-                /// </summary>
-                public const string InflationExpectations = "ISRAELINFEXP";
-                /// <summary>
-                /// Israel Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "ISRAELINFRATMOM";
-                /// <summary>
-                /// Israel Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "ISRAELLEAECOIND";
-                /// <summary>
-                /// Israel Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "ISRAELMANPMI";
-                /// <summary>
-                /// Israel Money Supply M1
-                /// </summary>
-                public const string MoneySupplyM1 = "ISRAELMONSUPM1";
-                /// <summary>
-                /// Israel Tourist Arrivals
-                /// </summary>
-                public const string TouristArrivals = "ISRAELTOUARR";
-                /// <summary>
-                /// Israel Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "ISTBAL";
-                /// <summary>
-                /// Israel Exports
-                /// </summary>
-                public const string Exports = "ISTBEX";
-                /// <summary>
-                /// Israel Imports
-                /// </summary>
-                public const string Imports = "ISTBIM";
-                /// <summary>
-                /// Israel Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "ISUER";
-            }
+            /// <summary>
+            /// Italy
+            /// </summary>
             public static class Italy
             {
                 /// <summary>
-                /// Italy Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "ITAINDICATORS";
+                public const string BalanceOfTrade = "Italy//ITTRBSAT";
                 /// <summary>
-                /// Italy Government Bond 10Y
+                /// Business Confidence
                 /// </summary>
-                public const string GovernmentBond10y = "GBTPGR10";
+                public const string BusinessConfidence = "Italy//ITBCI";
                 /// <summary>
-                /// Italy 30 Year Bond Yield
+                /// Calendar
                 /// </summary>
-                public const string ThirtyYearBondYield = "ITALY3YBY";
+                public const string Calendar = "Italy//EUR-CALENDAR";
                 /// <summary>
-                /// Italy 3 Year Note Yield
+                /// Construction Output
                 /// </summary>
-                public const string ThreeYearNoteYield = "ITALY3YNY";
+                public const string ConstructionOutput = "Italy//ITALYCONOUT";
                 /// <summary>
-                /// Italy 52 Week Bill Yield
+                /// Consumer Confidence
                 /// </summary>
-                public const string FiftyTwoWeekBillYield = "ITALY5WBY";
+                public const string ConsumerConfidence = "Italy//ITPSSA";
                 /// <summary>
-                /// Italy 5 Year Note Yield
+                /// Current Account
                 /// </summary>
-                public const string FiveYearNoteYield = "ITALY5YNY";
+                public const string CurrentAccount = "Italy//ITCAEUR";
                 /// <summary>
-                /// Italy 6 Month Bill Yield
+                /// Factory Orders
                 /// </summary>
-                public const string SixMonthBillYield = "ITALY6MBY";
+                public const string FactoryOrders = "Italy//ITALYFACORD";
                 /// <summary>
-                /// Italy 7 Year Note Yield
+                /// 52 Week Bill Yield
                 /// </summary>
-                public const string SevenYearNoteYield = "ITALY7YNY";
+                public const string FiftyTwoWeekBillYield = "Italy//ITALY5WBY";
                 /// <summary>
-                /// Italy Construction Output
+                /// 5 Year Note Yield
                 /// </summary>
-                public const string ConstructionOutput = "ITALYCONOUT";
+                public const string FiveYearNoteYield = "Italy//ITALY5YNY";
                 /// <summary>
-                /// Italy Factory Orders
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string FactoryOrders = "ITALYFACORD";
+                public const string GDPAnnualGrowthRate = "Italy//ITPIRLYS";
                 /// <summary>
-                /// Italy Harmonised Consumer Prices
+                /// GDP Growth Rate
                 /// </summary>
-                public const string HarmonisedConsumerPrices = "ITALYHARCONPRI";
+                public const string GDPGrowthRate = "Italy//ITPIRLQS";
                 /// <summary>
-                /// Italy Industrial Production Mom
+                /// Government Bond 10Y
                 /// </summary>
-                public const string IndustrialProductionMom = "ITALYINDPROMOM";
+                public const string GovernmentBondTenY = "Italy//GBTPGR10";
                 /// <summary>
-                /// Italy Inflation Rate Mom
+                /// Government Budget
                 /// </summary>
-                public const string InflationRateMom = "ITALYINFRATMOM";
+                public const string GovernmentBudget = "Italy//WCSDITA";
                 /// <summary>
-                /// Italy Manufacturing Pmi
+                /// Harmonised Consumer Prices
                 /// </summary>
-                public const string ManufacturingPmi = "ITALYMANPMI";
+                public const string HarmonisedConsumerPrices = "Italy//ITALYHARCONPRI";
                 /// <summary>
-                /// Italy New Orders
+                /// Holidays
                 /// </summary>
-                public const string NewOrders = "ITALYNEWORD";
+                public const string Holidays = "Italy//HOLIDAYSITALY";
                 /// <summary>
-                /// Italy Producer Prices
+                /// Industrial Production
                 /// </summary>
-                public const string ProducerPrices = "ITALYPROPRI";
+                public const string IndustrialProduction = "Italy//ITPRWAY";
                 /// <summary>
-                /// Italy Producer Prices Change
+                /// Industrial Production Mom
                 /// </summary>
-                public const string ProducerPricesChange = "ITALYPROPRICHA";
+                public const string IndustrialProductionMom = "Italy//ITALYINDPROMOM";
                 /// <summary>
-                /// Italy Services Pmi
+                /// Inflation Rate
                 /// </summary>
-                public const string ServicesPmi = "ITALYSERPMI";
+                public const string InflationRate = "Italy//ITCPNICY";
                 /// <summary>
-                /// Italy Wage Growth
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string WageGrowth = "ITALYWAGGRO";
+                public const string InflationRateMom = "Italy//ITALYINFRATMOM";
                 /// <summary>
-                /// Italy Retail Sales MoM
+                /// Interest Rate
                 /// </summary>
-                public const string RetailSalesMom = "ITARETAILSALESMOM";
+                public const string InterestRate = "Italy//EURR002W-ITL";
                 /// <summary>
-                /// Italy Retail Sales YoY
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string RetailSalesYoy = "ITARETAILSALESYOY";
+                public const string ManufacturingPmi = "Italy//ITALYMANPMI";
                 /// <summary>
-                /// Italy Business Confidence
+                /// Manufacturing Sales
                 /// </summary>
-                public const string BusinessConfidence = "ITBCI";
+                public const string ManufacturingSales = "Italy//ITALYMANSAL";
                 /// <summary>
-                /// Italy Current Account
+                /// New Orders
                 /// </summary>
-                public const string CurrentAccount = "ITCAEUR";
+                public const string NewOrders = "Italy//ITALYNEWORD";
                 /// <summary>
-                /// Italy Inflation Rate
+                /// Producer Prices
                 /// </summary>
-                public const string InflationRate = "ITCPNICY";
+                public const string ProducerPrices = "Italy//ITALYPROPRI";
                 /// <summary>
-                /// Italy GDP Growth Rate
+                /// Producer Prices Change
                 /// </summary>
-                public const string GdpGrowthRate = "ITPIRLQS";
+                public const string ProducerPricesChange = "Italy//ITALYPROPRICHA";
                 /// <summary>
-                /// Italy GDP Annual Growth Rate
+                /// Retail Sales MoM
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "ITPIRLYS";
+                public const string RetailSalesMom = "Italy//ITARETAILSALESMOM";
                 /// <summary>
-                /// Italy Industrial Production
+                /// Retail Sales YoY
                 /// </summary>
-                public const string IndustrialProduction = "ITPRWAY";
+                public const string RetailSalesYoy = "Italy//ITARETAILSALESYOY";
                 /// <summary>
-                /// Italy Consumer Confidence
+                /// Services Pmi
                 /// </summary>
-                public const string ConsumerConfidence = "ITPSSA";
+                public const string ServicesPmi = "Italy//ITALYSERPMI";
                 /// <summary>
-                /// Italy Balance of Trade
+                /// 7 Year Note Yield
                 /// </summary>
-                public const string BalanceOfTrade = "ITTRBSAT";
+                public const string SevenYearNoteYield = "Italy//ITALY7YNY";
                 /// <summary>
-                /// Italy Unemployment Rate
+                /// 6 Month Bill Yield
                 /// </summary>
-                public const string UnemploymentRate = "UMRTIT";
+                public const string SixMonthBillYield = "Italy//ITALY6MBY";
                 /// <summary>
-                /// Italy Government Budget
+                /// 30 Year Bond Yield
                 /// </summary>
-                public const string GovernmentBudget = "WCSDITA";
+                public const string ThirtyYearBondYield = "Italy//ITALY3YBY";
+                /// <summary>
+                /// 3 Year Note Yield
+                /// </summary>
+                public const string ThreeYearNoteYield = "Italy//ITALY3YNY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Italy//UMRTIT";
+                /// <summary>
+                /// Wage Growth
+                /// </summary>
+                public const string WageGrowth = "Italy//ITALYWAGGRO";
             }
-            public static class IvoryCoast
-            {
-                /// <summary>
-                /// IvoryCoast Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "COTREINDCTION";
-                /// <summary>
-                /// IvoryCoast Inflation Rate
-                /// </summary>
-                public const string InflationRate = "COTREINFNRATE";
-            }
-            public static class Jamaica
-            {
-                /// <summary>
-                /// Jamaica Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "JAMAICABALRADE";
-                /// <summary>
-                /// Jamaica Current Account
-                /// </summary>
-                public const string CurrentAccount = "JAMAICACURCOUNT";
-                /// <summary>
-                /// Jamaica GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "JAMAICAGDPATE";
-                /// <summary>
-                /// Jamaica GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "JAMAICAGDPRATE";
-                /// <summary>
-                /// Jamaica Inflation Rate
-                /// </summary>
-                public const string InflationRate = "JAMAICAINFNRATE";
-                /// <summary>
-                /// Jamaica Interest Rate
-                /// </summary>
-                public const string InterestRate = "JAMAICAINTTRATE";
-            }
+            /// <summary>
+            /// Japan
+            /// </summary>
             public static class Japan
             {
                 /// <summary>
-                /// Japan Interest Rate
+                /// All Industry Activity Index
                 /// </summary>
-                public const string InterestRate = "BOJDTR";
+                public const string AllIndustryActivityIndex = "Japan//JAPANAIAI";
                 /// <summary>
-                /// Japan Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "JPY-CALENDAR";
+                public const string BalanceOfTrade = "Japan//JNTBAL";
                 /// <summary>
-                /// Japan Government Bond 10Y
+                /// Business Confidence
                 /// </summary>
-                public const string GovernmentBond10y = "GJGB10";
+                public const string BusinessConfidence = "Japan//JNSBALLI";
                 /// <summary>
-                /// Japan 30 Year Bond Yield
+                /// Calendar
                 /// </summary>
-                public const string ThirtyYearBondYield = "JAPAN3YBY";
+                public const string Calendar = "Japan//JPY-CALENDAR";
                 /// <summary>
-                /// Japan Capacity Utilization
+                /// Capacity Utilization
                 /// </summary>
-                public const string CapacityUtilization = "JAPANCAPUTI";
+                public const string CapacityUtilization = "Japan//JAPANCAPUTI";
                 /// <summary>
-                /// Japan Coincident Index
+                /// Coincident Index
                 /// </summary>
-                public const string CoincidentIndex = "JAPANCOIIND";
+                public const string CoincidentIndex = "Japan//JAPANCOIIND";
                 /// <summary>
-                /// Japan Construction Orders
+                /// Composite Pmi
                 /// </summary>
-                public const string ConstructionOrders = "JAPANCONORD";
+                public const string CompositePmi = "Japan//JAPANCOMPMI";
                 /// <summary>
-                /// Japan Consumer Spending
+                /// Construction Orders
                 /// </summary>
-                public const string ConsumerSpending = "JAPANCONSPE";
+                public const string ConstructionOrders = "Japan//JAPANCONORD";
                 /// <summary>
-                /// Japan Economy Watchers Survey
+                /// Consumer Confidence
                 /// </summary>
-                public const string EconomyWatchersSurvey = "JAPANECOWATSUR";
+                public const string ConsumerConfidence = "Japan//JCOMACF";
                 /// <summary>
-                /// Japan Foreign Bond Investment
+                /// Consumer Spending
                 /// </summary>
-                public const string ForeignBondInvestment = "JAPANFORBONINV";
+                public const string ConsumerSpending = "Japan//JAPANCONSPE";
                 /// <summary>
-                /// Japan Foreign Exchange Reserves
+                /// Core Inflation Rate
                 /// </summary>
-                public const string ForeignExchangeReserves = "JAPANFOREXCRES";
+                public const string CoreInflationRate = "Japan//JPNCORECPIRATE";
                 /// <summary>
-                /// Japan Foreign Stock Investment
+                /// Current Account
                 /// </summary>
-                public const string ForeignStockInvestment = "JAPANFORSTOINV";
+                public const string CurrentAccount = "Japan//JNBPAB";
                 /// <summary>
-                /// Japan GDP Deflator
+                /// Economy Watchers Survey
                 /// </summary>
-                public const string GdpDeflator = "JAPANGDPDEF";
+                public const string EconomyWatchersSurvey = "Japan//JAPANECOWATSUR";
                 /// <summary>
-                /// Japan Gdp Growth Annualized
+                /// Exports
                 /// </summary>
-                public const string GdpGrowthAnnualized = "JAPANGDPGROANN";
+                public const string Exports = "Japan//JNBPEXP";
                 /// <summary>
-                /// Japan Gross Fixed Capital Formation
+                /// Foreign Bond Investment
                 /// </summary>
-                public const string GrossFixedCapitalFormation = "JAPANGROFIXCAPFOR";
+                public const string ForeignBondInvestment = "Japan//JAPANFORBONINV";
                 /// <summary>
-                /// Japan Household Spending
+                /// Foreign Exchange Reserves
                 /// </summary>
-                public const string HouseholdSpending = "JAPANHOUSPE";
+                public const string ForeignExchangeReserves = "Japan//JAPANFOREXCRES";
                 /// <summary>
-                /// Japan Housing Starts
+                /// Foreign Stock Investment
                 /// </summary>
-                public const string HousingStarts = "JAPANHOUSTA";
+                public const string ForeignStockInvestment = "Japan//JAPANFORSTOINV";
                 /// <summary>
-                /// Japan Industrial Production Mom
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string IndustrialProductionMom = "JAPANINDPROMOM";
+                public const string GDPAnnualGrowthRate = "Japan//JGDPNSAQ";
                 /// <summary>
-                /// Japan Inflation Rate Mom
+                /// GDP Deflator
                 /// </summary>
-                public const string InflationRateMom = "JAPANINFRATMOM";
+                public const string GDPDeflator = "Japan//JAPANGDPDEF";
                 /// <summary>
-                /// Japan Leading Economic Index
+                /// Gdp Growth Annualized
                 /// </summary>
-                public const string LeadingEconomicIndex = "JAPANLEACOMIND";
+                public const string GdpGrowthAnnualized = "Japan//JAPANGDPGROANN";
                 /// <summary>
-                /// Japan Loan Growth
+                /// GDP Growth Rate
                 /// </summary>
-                public const string LoanGrowth = "JAPANLOAGRO";
+                public const string GDPGrowthRate = "Japan//JGDPAGDP";
                 /// <summary>
-                /// Japan Machinery Orders
+                /// Government Bond 10Y
                 /// </summary>
-                public const string MachineryOrders = "JAPANMACORD";
+                public const string GovernmentBondTenY = "Japan//GJGB10";
                 /// <summary>
-                /// Japan Manufacturing Pmi
+                /// Gross Fixed Capital Formation
                 /// </summary>
-                public const string ManufacturingPmi = "JAPANMANPMI";
+                public const string GrossFixedCapitalFormation = "Japan//JAPANGROFIXCAPFOR";
                 /// <summary>
-                /// Japan Non Manufacturing Pmi
+                /// Holidays
                 /// </summary>
-                public const string NonManufacturingPmi = "JAPANNONMANPMI";
+                public const string Holidays = "Japan//HOLIDAYSJAPAN";
                 /// <summary>
-                /// Japan Private Investment
+                /// Household Spending
                 /// </summary>
-                public const string PrivateInvestment = "JAPANPRIINV";
+                public const string HouseholdSpending = "Japan//JAPANHOUSPE";
                 /// <summary>
-                /// Japan Producer Prices
+                /// Housing Starts
                 /// </summary>
-                public const string ProducerPrices = "JAPANPROPRI";
+                public const string HousingStarts = "Japan//JAPANHOUSTA";
                 /// <summary>
-                /// Japan Producer Prices Change
+                /// Imports
                 /// </summary>
-                public const string ProducerPricesChange = "JAPANPROPRICHA";
+                public const string Imports = "Japan//JNBPIMP";
                 /// <summary>
-                /// Japan Services Pmi
+                /// Industrial Production
                 /// </summary>
-                public const string ServicesPmi = "JAPANSERPMI";
+                public const string IndustrialProduction = "Japan//JNIPYOY";
                 /// <summary>
-                /// Japan Small Business Sentiment
+                /// Industrial Production Mom
                 /// </summary>
-                public const string SmallBusinessSentiment = "JAPANSMABUSSEN";
+                public const string IndustrialProductionMom = "Japan//JAPANINDPROMOM";
                 /// <summary>
-                /// Japan Wage Growth
+                /// Inflation Rate
                 /// </summary>
-                public const string WageGrowth = "JAPANWAGGRO";
+                public const string InflationRate = "Japan//JNCPIYOY";
                 /// <summary>
-                /// Japan Consumer Confidence
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string ConsumerConfidence = "JCOMACF";
+                public const string InflationRateMom = "Japan//JAPANINFRATMOM";
                 /// <summary>
-                /// Japan GDP Growth Rate
+                /// Interest Rate
                 /// </summary>
-                public const string GdpGrowthRate = "JGDPAGDP";
+                public const string InterestRate = "Japan//BOJDTR";
                 /// <summary>
-                /// Japan GDP Annual Growth Rate
+                /// Jobs To Applications Ratio
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "JGDPNSAQ";
+                public const string JobsToApplicationsRatio = "Japan//JAPANJTAR";
                 /// <summary>
-                /// Japan Current Account
+                /// Leading Composite Index
                 /// </summary>
-                public const string CurrentAccount = "JNBPAB";
+                public const string LeadingCompositeIndex = "Japan//JAPANLEACOMIND";
                 /// <summary>
-                /// Japan Exports
+                /// Leading Economic Index
                 /// </summary>
-                public const string Exports = "JNBPEXP";
+                public const string LeadingEconomicIndex = "Japan//JAPANLEACOMIND";
                 /// <summary>
-                /// Japan Imports
+                /// Loan Growth
                 /// </summary>
-                public const string Imports = "JNBPIMP";
+                public const string LoanGrowth = "Japan//JAPANLOAGRO";
                 /// <summary>
-                /// Japan Inflation Rate
+                /// Machinery Orders
                 /// </summary>
-                public const string InflationRate = "JNCPIYOY";
+                public const string MachineryOrders = "Japan//JAPANMACORD";
                 /// <summary>
-                /// Japan Industrial Production
+                /// Machine Tool Orders
                 /// </summary>
-                public const string IndustrialProduction = "JNIPYOY";
+                public const string MachineToolOrders = "Japan//JAPANMACTOOORD";
                 /// <summary>
-                /// Japan Business Confidence
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string BusinessConfidence = "JNSBALLI";
+                public const string ManufacturingPmi = "Japan//JAPANMANPMI";
                 /// <summary>
-                /// Japan Balance of Trade
+                /// Non Manufacturing Pmi
                 /// </summary>
-                public const string BalanceOfTrade = "JNTBAL";
+                public const string NonManufacturingPmi = "Japan//JAPANNONMANPMI";
                 /// <summary>
-                /// Japan Unemployment Rate
+                /// Private Investment
                 /// </summary>
-                public const string UnemploymentRate = "JNUE";
+                public const string PrivateInvestment = "Japan//JAPANPRIINV";
                 /// <summary>
-                /// Japan Core Inflation Rate
+                /// Producer Prices
                 /// </summary>
-                public const string CoreInflationRate = "JPNCORECPIRATE";
+                public const string ProducerPrices = "Japan//JAPANPROPRI";
                 /// <summary>
-                /// Japan Retail Sales MoM
+                /// Producer Prices Change
                 /// </summary>
-                public const string RetailSalesMom = "JPNRETAILSALESMOM";
+                public const string ProducerPricesChange = "Japan//JAPANPROPRICHA";
                 /// <summary>
-                /// Japan Retail Sales YoY
+                /// Retail Sales MoM
                 /// </summary>
-                public const string RetailSalesYoy = "JPNRETAILSALESYOY";
+                public const string RetailSalesMom = "Japan//JPNRETAILSALESMOM";
+                /// <summary>
+                /// Retail Sales YoY
+                /// </summary>
+                public const string RetailSalesYoy = "Japan//JPNRETAILSALESYOY";
+                /// <summary>
+                /// Reuters Tankan Index
+                /// </summary>
+                public const string ReutersTankanIndex = "Japan//JAPANREUTANIND";
+                /// <summary>
+                /// Services Pmi
+                /// </summary>
+                public const string ServicesPmi = "Japan//JAPANSERPMI";
+                /// <summary>
+                /// Small Business Sentiment
+                /// </summary>
+                public const string SmallBusinessSentiment = "Japan//JAPANSMABUSSEN";
+                /// <summary>
+                /// Tertiary Industry Index
+                /// </summary>
+                public const string TertiaryIndustryIndex = "Japan//JAPANTERINDIND";
+                /// <summary>
+                /// 30 Year Bond Yield
+                /// </summary>
+                public const string ThirtyYearBondYield = "Japan//JAPAN3YBY";
+                /// <summary>
+                /// Tokyo Cpi
+                /// </summary>
+                public const string TokyoCpi = "Japan//JAPANTOKCPI";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Japan//JNUE";
+                /// <summary>
+                /// Wage Growth
+                /// </summary>
+                public const string WageGrowth = "Japan//JAPANWAGGRO";
             }
-            public static class Jordan
-            {
-                /// <summary>
-                /// Jordan Building Permits
-                /// </summary>
-                public const string BuildingPermits = "JORDANBUIPER";
-                /// <summary>
-                /// Jordan Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "JORDANPROPRICHA";
-                /// <summary>
-                /// Jordan Tourist Arrivals
-                /// </summary>
-                public const string TouristArrivals = "JORDANTOUARR";
-                /// <summary>
-                /// Jordan Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "JORRDANBALRADE";
-                /// <summary>
-                /// Jordan Current Account
-                /// </summary>
-                public const string CurrentAccount = "JORRDANCURCOUNT";
-                /// <summary>
-                /// Jordan GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "JORRDANGDPATE";
-                /// <summary>
-                /// Jordan Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "JORRDANINDCTION";
-                /// <summary>
-                /// Jordan Inflation Rate
-                /// </summary>
-                public const string InflationRate = "JORRDANINFNRATE";
-                /// <summary>
-                /// Jordan Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "JORRDANUNETRATE";
-            }
-            public static class Kazakhstan
-            {
-                /// <summary>
-                /// Kazakhstan Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "KAZAKHSTANBT";
-                /// <summary>
-                /// Kazakhstan Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "KAZAKHSTANBUSCON";
-                /// <summary>
-                /// Kazakhstan Current Account
-                /// </summary>
-                public const string CurrentAccount = "KAZAKHSTANCA";
-                /// <summary>
-                /// Kazakhstan GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "KAZAKHSTANGDPYOY";
-                /// <summary>
-                /// Kazakhstan Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "KAZAKHSTANINDPRO";
-                /// <summary>
-                /// Kazakhstan Interest Rate
-                /// </summary>
-                public const string InterestRate = "KAZAKHSTANINTRATE";
-                /// <summary>
-                /// Kazakhstan Inflation Rate
-                /// </summary>
-                public const string InflationRate = "KAZAKHSTANIR";
-                /// <summary>
-                /// Kazakhstan Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "KAZAKHSTANLEAECOIND";
-                /// <summary>
-                /// Kazakhstan Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "KAZAKHSTANPROPRICHA";
-                /// <summary>
-                /// Kazakhstan Retail Sales Yoy
-                /// </summary>
-                public const string RetailSalesYoy = "KAZAKHSTANRETSALYOY";
-                /// <summary>
-                /// Kazakhstan Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "KAZAKHSTANUR";
-            }
-            public static class Kenya
-            {
-                /// <summary>
-                /// Kenya Calendar
-                /// </summary>
-                public const string Calendar = "KEN-CALENDAR";
-                /// <summary>
-                /// Kenya Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "KENYABT";
-                /// <summary>
-                /// Kenya Exports
-                /// </summary>
-                public const string Exports = "KENYAEX";
-                /// <summary>
-                /// Kenya GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "KENYAGDPQOQ";
-                /// <summary>
-                /// Kenya GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "KENYAGDPYOY";
-                /// <summary>
-                /// Kenya Imports
-                /// </summary>
-                public const string Imports = "KENYAIM";
-                /// <summary>
-                /// Kenya Interest Rate
-                /// </summary>
-                public const string InterestRate = "KENYAINTRATE";
-                /// <summary>
-                /// Kenya Inflation Rate
-                /// </summary>
-                public const string InflationRate = "KENYAIR";
-                /// <summary>
-                /// Kenya Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "KENYAMANPMI";
-                /// <summary>
-                /// Kenya Mni Business Sentiment
-                /// </summary>
-                public const string MniBusinessSentiment = "KENYAMNIBUSSEN";
-                /// <summary>
-                /// Kenya Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "KENYAPROPRICHA";
-            }
-            public static class Kosovo
-            {
-                /// <summary>
-                /// Kosovo Producer Prices
-                /// </summary>
-                public const string ProducerPrices = "KOSOVOPROPRI";
-                /// <summary>
-                /// Kosovo Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "KOSOVOPROPRICHA";
-                /// <summary>
-                /// Kosovo Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "KOSSOVOBALRADE";
-                /// <summary>
-                /// Kosovo GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "KOSSOVOGDPATE";
-                /// <summary>
-                /// Kosovo Inflation Rate
-                /// </summary>
-                public const string InflationRate = "KOSSOVOINFNRATE";
-                /// <summary>
-                /// Kosovo Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "KOSSOVOUNETRATE";
-            }
-            public static class Kuwait
-            {
-                /// <summary>
-                /// Kuwait Loan Growth
-                /// </summary>
-                public const string LoanGrowth = "KUWAITLOAGRO";
-                /// <summary>
-                /// Kuwait Loans To Private Sector
-                /// </summary>
-                public const string LoansToPrivateSector = "KUWAITLTPS";
-                /// <summary>
-                /// Kuwait Money Supply M2
-                /// </summary>
-                public const string MoneySupplyM2 = "KUWAITMONSUPM2";
-                /// <summary>
-                /// Kuwait Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "KUWWAITBALRADE";
-                /// <summary>
-                /// Kuwait Inflation Rate
-                /// </summary>
-                public const string InflationRate = "KUWWAITINFNRATE";
-                /// <summary>
-                /// Kuwait Interest Rate
-                /// </summary>
-                public const string InterestRate = "KUWWAITINTTRATE";
-            }
-            public static class Kyrgyzstan
-            {
-                /// <summary>
-                /// Kyrgyzstan Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "KYRGYZSTANLEAECOIND";
-                /// <summary>
-                /// Kyrgyzstan Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "KYRGYZSTANPROPRICHA";
-                /// <summary>
-                /// Kyrgyzstan Retail Sales Yoy
-                /// </summary>
-                public const string RetailSalesYoy = "KYRGYZSTANRETSALYOY";
-                /// <summary>
-                /// Kyrgyzstan Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "KYRSTANBALRADE";
-                /// <summary>
-                /// Kyrgyzstan Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "KYRSTANINDCTION";
-                /// <summary>
-                /// Kyrgyzstan Inflation Rate
-                /// </summary>
-                public const string InflationRate = "KYRSTANINFNRATE";
-                /// <summary>
-                /// Kyrgyzstan Interest Rate
-                /// </summary>
-                public const string InterestRate = "KYRSTANINTTRATE";
-            }
+            /// <summary>
+            /// Latvia
+            /// </summary>
             public static class Latvia
             {
                 /// <summary>
-                /// Latvia Balance of Trade
+                /// Balance of Trade
                 /// </summary>
-                public const string BalanceOfTrade = "LATVIABT";
+                public const string BalanceOfTrade = "Latvia//LATVIABT";
                 /// <summary>
-                /// Latvia Current Account
+                /// Calendar
                 /// </summary>
-                public const string CurrentAccount = "LATVIACA";
+                public const string Calendar = "Latvia//LVA-CALENDAR";
                 /// <summary>
-                /// Latvia GDP Growth Rate
+                /// Current Account
                 /// </summary>
-                public const string GdpGrowthRate = "LATVIAGDPQOQ";
+                public const string CurrentAccount = "Latvia//LATVIACA";
                 /// <summary>
-                /// Latvia GDP Annual Growth Rate
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "LATVIAGDPYOY";
+                public const string GDPAnnualGrowthRate = "Latvia//LATVIAGDPYOY";
                 /// <summary>
-                /// Latvia Industrial Production Mom
+                /// GDP Growth Rate
                 /// </summary>
-                public const string IndustrialProductionMom = "LATVIAINDPROMOM";
+                public const string GDPGrowthRate = "Latvia//LATVIAGDPQOQ";
                 /// <summary>
-                /// Latvia Inflation Rate Mom
+                /// Holidays
                 /// </summary>
-                public const string InflationRateMom = "LATVIAINFRATMOM";
+                public const string Holidays = "Latvia//HOLIDAYSLATVIA";
                 /// <summary>
-                /// Latvia Industrial Production
+                /// Industrial Production
                 /// </summary>
-                public const string IndustrialProduction = "LATVIAIP";
+                public const string IndustrialProduction = "Latvia//LATVIAIP";
                 /// <summary>
-                /// Latvia Inflation Rate
+                /// Industrial Production Mom
                 /// </summary>
-                public const string InflationRate = "LATVIAIR";
+                public const string IndustrialProductionMom = "Latvia//LATVIAINDPROMOM";
                 /// <summary>
-                /// Latvia Producer Prices
+                /// Inflation Rate
                 /// </summary>
-                public const string ProducerPrices = "LATVIAPROPRI";
+                public const string InflationRate = "Latvia//LATVIAIR";
                 /// <summary>
-                /// Latvia Producer Prices Change
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string ProducerPricesChange = "LATVIAPROPRICHA";
+                public const string InflationRateMom = "Latvia//LATVIAINFRATMOM";
                 /// <summary>
-                /// Latvia Unemployment Rate
+                /// Producer Prices
                 /// </summary>
-                public const string UnemploymentRate = "LATVIAUR";
+                public const string ProducerPrices = "Latvia//LATVIAPROPRI";
                 /// <summary>
-                /// Latvia Calendar
+                /// Producer Prices Change
                 /// </summary>
-                public const string Calendar = "LVA-CALENDAR";
+                public const string ProducerPricesChange = "Latvia//LATVIAPROPRICHA";
                 /// <summary>
-                /// Latvia Retail Sales MoM
+                /// Retail Sales MoM
                 /// </summary>
-                public const string RetailSalesMom = "LVARETAILSALESMOM";
+                public const string RetailSalesMom = "Latvia//LVARETAILSALESMOM";
                 /// <summary>
-                /// Latvia Retail Sales YoY
+                /// Retail Sales YoY
                 /// </summary>
-                public const string RetailSalesYoy = "LVARETAILSALESYOY";
+                public const string RetailSalesYoy = "Latvia//LVARETAILSALESYOY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Latvia//LATVIAUR";
             }
-            public static class Lebanon
-            {
-                /// <summary>
-                /// Lebanon Inflation Rate
-                /// </summary>
-                public const string InflationRate = "LEBANONINFNRATE";
-                /// <summary>
-                /// Lebanon Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "LEBANONMANPMI";
-            }
-            public static class Liechtenstein
-            {
-                /// <summary>
-                /// Liechtenstein Inflation Rate
-                /// </summary>
-                public const string InflationRate = "LIETEININFNRATE";
-            }
+            /// <summary>
+            /// Lithuania
+            /// </summary>
             public static class Lithuania
             {
                 /// <summary>
-                /// Lithuania Business Confidence
+                /// Balance of Trade
                 /// </summary>
-                public const string BusinessConfidence = "LITHUANIABC";
+                public const string BalanceOfTrade = "Lithuania//LITHUANIABT";
                 /// <summary>
-                /// Lithuania Balance of Trade
+                /// Business Confidence
                 /// </summary>
-                public const string BalanceOfTrade = "LITHUANIABT";
+                public const string BusinessConfidence = "Lithuania//LITHUANIABC";
                 /// <summary>
-                /// Lithuania Current Account
+                /// Calendar
                 /// </summary>
-                public const string CurrentAccount = "LITHUANIACA";
+                public const string Calendar = "Lithuania//LTU-CALENDAR";
                 /// <summary>
-                /// Lithuania Consumer Confidence
+                /// Consumer Confidence
                 /// </summary>
-                public const string ConsumerConfidence = "LITHUANIACC";
+                public const string ConsumerConfidence = "Lithuania//LITHUANIACC";
                 /// <summary>
-                /// Lithuania GDP Growth Rate
+                /// Current Account
                 /// </summary>
-                public const string GdpGrowthRate = "LITHUANIAGDPQOQ";
+                public const string CurrentAccount = "Lithuania//LITHUANIACA";
                 /// <summary>
-                /// Lithuania GDP Annual Growth Rate
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "LITHUANIAGDPYOY";
+                public const string GDPAnnualGrowthRate = "Lithuania//LITHUANIAGDPYOY";
                 /// <summary>
-                /// Lithuania Industrial Production
+                /// GDP Growth Rate
                 /// </summary>
-                public const string IndustrialProduction = "LITHUANIAINDPRO";
+                public const string GDPGrowthRate = "Lithuania//LITHUANIAGDPQOQ";
                 /// <summary>
-                /// Lithuania Industrial Production Mom
+                /// Holidays
                 /// </summary>
-                public const string IndustrialProductionMom = "LITHUANIAINDPROMOM";
+                public const string Holidays = "Lithuania//HOLIDAYSLITHUANIA";
                 /// <summary>
-                /// Lithuania Inflation Rate Mom
+                /// Industrial Production
                 /// </summary>
-                public const string InflationRateMom = "LITHUANIAINFRATMOM";
+                public const string IndustrialProduction = "Lithuania//LITHUANIAINDPRO";
                 /// <summary>
-                /// Lithuania Inflation Rate
+                /// Industrial Production Mom
                 /// </summary>
-                public const string InflationRate = "LITHUANIAIR";
+                public const string IndustrialProductionMom = "Lithuania//LITHUANIAINDPROMOM";
                 /// <summary>
-                /// Lithuania Producer Prices
+                /// Inflation Rate
                 /// </summary>
-                public const string ProducerPrices = "LITHUANIAPROPRI";
+                public const string InflationRate = "Lithuania//LITHUANIAIR";
                 /// <summary>
-                /// Lithuania Producer Prices Change
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string ProducerPricesChange = "LITHUANIAPROPRICHA";
+                public const string InflationRateMom = "Lithuania//LITHUANIAINFRATMOM";
                 /// <summary>
-                /// Lithuania Unemployment Rate
+                /// Producer Prices
                 /// </summary>
-                public const string UnemploymentRate = "LITHUANIAUR";
+                public const string ProducerPrices = "Lithuania//LITHUANIAPROPRI";
                 /// <summary>
-                /// Lithuania Calendar
+                /// Producer Prices Change
                 /// </summary>
-                public const string Calendar = "LTU-CALENDAR";
+                public const string ProducerPricesChange = "Lithuania//LITHUANIAPROPRICHA";
                 /// <summary>
-                /// Lithuania Retail Sales MoM
+                /// Retail Sales MoM
                 /// </summary>
-                public const string RetailSalesMom = "LTURETAILSALESMOM";
+                public const string RetailSalesMom = "Lithuania//LTURETAILSALESMOM";
                 /// <summary>
-                /// Lithuania Retail Sales YoY
+                /// Retail Sales YoY
                 /// </summary>
-                public const string RetailSalesYoy = "LTURETAILSALESYOY";
+                public const string RetailSalesYoy = "Lithuania//LTURETAILSALESYOY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Lithuania//LITHUANIAUR";
             }
+            /// <summary>
+            /// Luxembourg
+            /// </summary>
             public static class Luxembourg
             {
                 /// <summary>
-                /// Luxembourg GDP Growth Rate
+                /// Balance of Trade
                 /// </summary>
-                public const string GdpGrowthRate = "ENGKLUQ";
+                public const string BalanceOfTrade = "Luxembourg//LXTBBALL";
                 /// <summary>
-                /// Luxembourg GDP Annual Growth Rate
+                /// Business Confidence
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "ENGKLUY";
+                public const string BusinessConfidence = "Luxembourg//LUXEMBOURGBUSCON";
                 /// <summary>
-                /// Luxembourg Business Confidence
+                /// Calendar
                 /// </summary>
-                public const string BusinessConfidence = "LUXEMBOURGBUSCON";
+                public const string Calendar = "Luxembourg//LUX-CALENDAR";
                 /// <summary>
-                /// Luxembourg Consumer Confidence
+                /// Consumer Confidence
                 /// </summary>
-                public const string ConsumerConfidence = "LUXEMBOURGCC";
+                public const string ConsumerConfidence = "Luxembourg//LUXEMBOURGCC";
                 /// <summary>
-                /// Luxembourg Producer Prices Change
+                /// Current Account
                 /// </summary>
-                public const string ProducerPricesChange = "LUXEMBOURGPROPRICHA";
+                public const string CurrentAccount = "Luxembourg//LXCAEU";
                 /// <summary>
-                /// Luxembourg Retail Sales Mom
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string RetailSalesMom = "LUXEMBOURGRETSALMOM";
+                public const string GDPAnnualGrowthRate = "Luxembourg//ENGKLUY";
                 /// <summary>
-                /// Luxembourg Current Account
+                /// GDP Growth Rate
                 /// </summary>
-                public const string CurrentAccount = "LXCAEU";
+                public const string GDPGrowthRate = "Luxembourg//ENGKLUQ";
                 /// <summary>
-                /// Luxembourg Inflation Rate
+                /// Holidays
                 /// </summary>
-                public const string InflationRate = "LXCPIYOY";
+                public const string Holidays = "Luxembourg//HOLIDAYSLUXEMBOURG";
                 /// <summary>
-                /// Luxembourg Industrial Production
+                /// Industrial Production
                 /// </summary>
-                public const string IndustrialProduction = "LXIPRYOY";
+                public const string IndustrialProduction = "Luxembourg//LXIPRYOY";
                 /// <summary>
-                /// Luxembourg Balance of Trade
+                /// Inflation Rate
                 /// </summary>
-                public const string BalanceOfTrade = "LXTBBALL";
+                public const string InflationRate = "Luxembourg//LXCPIYOY";
                 /// <summary>
-                /// Luxembourg Unemployment Rate
+                /// Producer Prices Change
                 /// </summary>
-                public const string UnemploymentRate = "OELUU003";
+                public const string ProducerPricesChange = "Luxembourg//LUXEMBOURGPROPRICHA";
+                /// <summary>
+                /// Retail Sales Mom
+                /// </summary>
+                public const string RetailSalesMom = "Luxembourg//LUXEMBOURGRETSALMOM";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Luxembourg//OELUU003";
             }
-            public static class Macau
-            {
-                /// <summary>
-                /// Macau Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "MACACAOBALRADE";
-                /// <summary>
-                /// Macau GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "MACACAOGDPATE";
-                /// <summary>
-                /// Macau Inflation Rate
-                /// </summary>
-                public const string InflationRate = "MACACAOINFNRATE";
-                /// <summary>
-                /// Macau Interest Rate
-                /// </summary>
-                public const string InterestRate = "MACACAOINTTRATE";
-                /// <summary>
-                /// Macau Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "MACACAORETSMOM";
-                /// <summary>
-                /// Macau Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "MACACAORETSYOY";
-                /// <summary>
-                /// Macau Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "MACACAOUNETRATE";
-                /// <summary>
-                /// Macau Tourist Arrivals
-                /// </summary>
-                public const string TouristArrivals = "MACAOTOUARR";
-            }
-            public static class Macedonia
-            {
-                /// <summary>
-                /// Macedonia Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "MACEDONIABT";
-                /// <summary>
-                /// Macedonia Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "MACEDONIABUSCON";
-                /// <summary>
-                /// Macedonia Current Account
-                /// </summary>
-                public const string CurrentAccount = "MACEDONIACA";
-                /// <summary>
-                /// Macedonia Exports
-                /// </summary>
-                public const string Exports = "MACEDONIAEX";
-                /// <summary>
-                /// Macedonia GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "MACEDONIAGDPYOY";
-                /// <summary>
-                /// Macedonia Imports
-                /// </summary>
-                public const string Imports = "MACEDONIAIM";
-                /// <summary>
-                /// Macedonia Interest Rate
-                /// </summary>
-                public const string InterestRate = "MACEDONIAINTRATE";
-                /// <summary>
-                /// Macedonia Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "MACEDONIAIP";
-                /// <summary>
-                /// Macedonia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "MACEDONIAIR";
-                /// <summary>
-                /// Macedonia Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "MACEDONIAPROPRICHA";
-                /// <summary>
-                /// Macedonia Retail Sales Yoy
-                /// </summary>
-                public const string RetailSalesYoy = "MACEDONIARETSALYOY";
-                /// <summary>
-                /// Macedonia Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "MACEDONIAUR";
-            }
-            public static class Malawi
-            {
-                /// <summary>
-                /// Malawi Inflation Rate
-                /// </summary>
-                public const string InflationRate = "MALLAWIINFNRATE";
-                /// <summary>
-                /// Malawi Interest Rate
-                /// </summary>
-                public const string InterestRate = "MALLAWIINTTRATE";
-            }
-            public static class Malaysia
-            {
-                /// <summary>
-                /// Malaysia Current Account
-                /// </summary>
-                public const string CurrentAccount = "MACATOT";
-                /// <summary>
-                /// Malaysia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "MACPIYOY";
-                /// <summary>
-                /// Malaysia Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "MAEPRATE";
-                /// <summary>
-                /// Malaysia Exports
-                /// </summary>
-                public const string Exports = "MAETEXP";
-                /// <summary>
-                /// Malaysia Imports
-                /// </summary>
-                public const string Imports = "MAETIMP";
-                /// <summary>
-                /// Malaysia Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "MAETTRBL";
-                /// <summary>
-                /// Malaysia GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "MAGDHIY";
-                /// <summary>
-                /// Malaysia GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "MAGDPQPCT";
-                /// <summary>
-                /// Malaysia Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "MAIPINDY";
-                /// <summary>
-                /// Malaysia Coincident Index
-                /// </summary>
-                public const string CoincidentIndex = "MALAYSIACOIIND";
-                /// <summary>
-                /// Malaysia Construction Output
-                /// </summary>
-                public const string ConstructionOutput = "MALAYSIACONOUT";
-                /// <summary>
-                /// Malaysia Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "MALAYSIAFOREXCRES";
-                /// <summary>
-                /// Malaysia Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "MALAYSIAINDPROMOM";
-                /// <summary>
-                /// Malaysia Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "MALAYSIALEAECOIND";
-                /// <summary>
-                /// Malaysia Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "MALAYSIAMANPMI";
-                /// <summary>
-                /// Malaysia Money Supply M3
-                /// </summary>
-                public const string MoneySupplyM3 = "MALAYSIAMONSUPM3";
-                /// <summary>
-                /// Malaysia Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "MALAYSIAPROPRICHA";
-                /// <summary>
-                /// Malaysia Retail Sales Yoy
-                /// </summary>
-                public const string RetailSalesYoy = "MALAYSIARETSALYOY";
-                /// <summary>
-                /// Malaysia Interest Rate
-                /// </summary>
-                public const string InterestRate = "MAOPRATE";
-            }
+            /// <summary>
+            /// Malta
+            /// </summary>
             public static class Malta
             {
                 /// <summary>
-                /// Malta Balance of Trade
+                /// Balance of Trade
                 /// </summary>
-                public const string BalanceOfTrade = "MALALTABALRADE";
+                public const string BalanceOfTrade = "Malta//MALALTABALRADE";
                 /// <summary>
-                /// Malta GDP Annual Growth Rate
+                /// Business Confidence
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "MALALTAGDPATE";
+                public const string BusinessConfidence = "Malta//MALTABUSCON";
                 /// <summary>
-                /// Malta Industrial Production
+                /// Calendar
                 /// </summary>
-                public const string IndustrialProduction = "MALALTAINDCTION";
+                public const string Calendar = "Malta//MLT-CALENDAR";
                 /// <summary>
-                /// Malta Inflation Rate
+                /// Consumer Confidence
                 /// </summary>
-                public const string InflationRate = "MALALTAINFNRATE";
+                public const string ConsumerConfidence = "Malta//MALTACONCON";
                 /// <summary>
-                /// Malta Retail Sales MoM
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string RetailSalesMom = "MALALTARETSMOM";
+                public const string GDPAnnualGrowthRate = "Malta//MALALTAGDPATE";
                 /// <summary>
-                /// Malta Retail Sales YoY
+                /// Holidays
                 /// </summary>
-                public const string RetailSalesYoy = "MALALTARETSYOY";
+                public const string Holidays = "Malta//HOLIDAYSMALTA";
                 /// <summary>
-                /// Malta Unemployment Rate
+                /// Industrial Production
                 /// </summary>
-                public const string UnemploymentRate = "MALALTAUNETRATE";
+                public const string IndustrialProduction = "Malta//MALALTAINDCTION";
                 /// <summary>
-                /// Malta Business Confidence
+                /// Inflation Rate
                 /// </summary>
-                public const string BusinessConfidence = "MALTABUSCON";
+                public const string InflationRate = "Malta//MALALTAINFNRATE";
                 /// <summary>
-                /// Malta Consumer Confidence
+                /// Producer Prices Change
                 /// </summary>
-                public const string ConsumerConfidence = "MALTACONCON";
+                public const string ProducerPricesChange = "Malta//MALTAPROPRICHA";
                 /// <summary>
-                /// Malta Producer Prices Change
+                /// Retail Sales MoM
                 /// </summary>
-                public const string ProducerPricesChange = "MALTAPROPRICHA";
+                public const string RetailSalesMom = "Malta//MALALTARETSMOM";
+                /// <summary>
+                /// Retail Sales YoY
+                /// </summary>
+                public const string RetailSalesYoy = "Malta//MALALTARETSYOY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Malta//MALALTAUNETRATE";
             }
-            public static class Mauritius
-            {
-                /// <summary>
-                /// Mauritius Tourist Arrivals
-                /// </summary>
-                public const string TouristArrivals = "MAURITIUSTOUARR";
-                /// <summary>
-                /// Mauritius Tourism Revenues
-                /// </summary>
-                public const string TourismRevenues = "MAURITIUSTOUREV";
-                /// <summary>
-                /// Mauritius Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "MAUTIUSBALRADE";
-                /// <summary>
-                /// Mauritius GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "MAUTIUSGDPATE";
-                /// <summary>
-                /// Mauritius Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "MAUTIUSINDCTION";
-                /// <summary>
-                /// Mauritius Inflation Rate
-                /// </summary>
-                public const string InflationRate = "MAUTIUSINFNRATE";
-                /// <summary>
-                /// Mauritius Interest Rate
-                /// </summary>
-                public const string InterestRate = "MAUTIUSINTTRATE";
-                /// <summary>
-                /// Mauritius Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "MAUTIUSUNETRATE";
-            }
-            public static class Mexico
-            {
-                /// <summary>
-                /// Mexico Calendar
-                /// </summary>
-                public const string Calendar = "MEX-CALENDAR";
-                /// <summary>
-                /// Mexico Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "MEXICOBC";
-                /// <summary>
-                /// Mexico Car Production
-                /// </summary>
-                public const string CarProduction = "MEXICOCARPRO";
-                /// <summary>
-                /// Mexico Consumer Spending
-                /// </summary>
-                public const string ConsumerSpending = "MEXICOCONSPE";
-                /// <summary>
-                /// Mexico Core Consumer Prices
-                /// </summary>
-                public const string CoreConsumerPrices = "MEXICOCORCONPRI";
-                /// <summary>
-                /// Mexico Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "MEXICOFOREXCRES";
-                /// <summary>
-                /// Mexico Government Budget Value
-                /// </summary>
-                public const string GovernmentBudgetValue = "MEXICOGOVBUDVAL";
-                /// <summary>
-                /// Mexico Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "MEXICOINDPROMOM";
-                /// <summary>
-                /// Mexico Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "MEXICOINFRATMOM";
-                /// <summary>
-                /// Mexico Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "MEXICOLEAECOIND";
-                /// <summary>
-                /// Mexico Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "MEXICOMANPMI";
-                /// <summary>
-                /// Mexico Private Investment
-                /// </summary>
-                public const string PrivateInvestment = "MEXICOPRIINV";
-                /// <summary>
-                /// Mexico Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "MEXRETAILSALESMOM";
-                /// <summary>
-                /// Mexico Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "MEXRETAILSALESYOY";
-                /// <summary>
-                /// Mexico Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "MXCFCONF";
-                /// <summary>
-                /// Mexico Inflation Rate
-                /// </summary>
-                public const string InflationRate = "MXCPYOY";
-                /// <summary>
-                /// Mexico GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "MXGCTOT";
-                /// <summary>
-                /// Mexico GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "MXGPQTR";
-                /// <summary>
-                /// Mexico Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "MXIPTYOY";
-                /// <summary>
-                /// Mexico Interest Rate
-                /// </summary>
-                public const string InterestRate = "MXONBR";
-                /// <summary>
-                /// Mexico Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "MXTBBAL";
-                /// <summary>
-                /// Mexico Exports
-                /// </summary>
-                public const string Exports = "MXTBBEXP";
-                /// <summary>
-                /// Mexico Imports
-                /// </summary>
-                public const string Imports = "MXTBBIMP";
-                /// <summary>
-                /// Mexico Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "MXUEUNSA";
-                /// <summary>
-                /// Mexico Current Account
-                /// </summary>
-                public const string CurrentAccount = "OEMXB039";
-            }
-            public static class Moldova
-            {
-                /// <summary>
-                /// Moldova Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "MOLDOVABALRADE";
-                /// <summary>
-                /// Moldova Current Account
-                /// </summary>
-                public const string CurrentAccount = "MOLDOVACURCOUNT";
-                /// <summary>
-                /// Moldova GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "MOLDOVAGDPANNGRORAT";
-                /// <summary>
-                /// Moldova Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "MOLDOVAINDCTION";
-                /// <summary>
-                /// Moldova Inflation Rate
-                /// </summary>
-                public const string InflationRate = "MOLDOVAINFNRATE";
-                /// <summary>
-                /// Moldova Interest Rate
-                /// </summary>
-                public const string InterestRate = "MOLDOVAINTTRATE";
-                /// <summary>
-                /// Moldova Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "MOLDOVAPROPRICHA";
-                /// <summary>
-                /// Moldova Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "MOLDOVAUNETRATE";
-            }
-            public static class Mongolia
-            {
-                /// <summary>
-                /// Mongolia Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "MONGOLIABT";
-                /// <summary>
-                /// Mongolia GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "MONGOLIAGDPYOY";
-                /// <summary>
-                /// Mongolia Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "MONGOLIAINDPRO";
-                /// <summary>
-                /// Mongolia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "MONGOLIAIR";
-                /// <summary>
-                /// Mongolia Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "MONGOLIAUR";
-            }
-            public static class Montenegro
-            {
-                /// <summary>
-                /// Montenegro Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "MONEGROBALRADE";
-                /// <summary>
-                /// Montenegro Current Account
-                /// </summary>
-                public const string CurrentAccount = "MONEGROCURCOUNT";
-                /// <summary>
-                /// Montenegro GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "MONEGROGDPATE";
-                /// <summary>
-                /// Montenegro Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "MONEGROINDCTION";
-                /// <summary>
-                /// Montenegro Inflation Rate
-                /// </summary>
-                public const string InflationRate = "MONEGROINFNRATE";
-                /// <summary>
-                /// Montenegro Harmonised Consumer Prices
-                /// </summary>
-                public const string HarmonisedConsumerPrices = "MONTENEGROHARCONPRI";
-                /// <summary>
-                /// Montenegro Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "MONTENEGROPROPRICHA";
-                /// <summary>
-                /// Montenegro Retail Sales Mom
-                /// </summary>
-                public const string RetailSalesMom = "MONTENEGRORETSALMOM";
-                /// <summary>
-                /// Montenegro Retail Sales Yoy
-                /// </summary>
-                public const string RetailSalesYoy = "MONTENEGRORETSALYOY";
-                /// <summary>
-                /// Montenegro Tourist Arrivals
-                /// </summary>
-                public const string TouristArrivals = "MONTENEGROTOUARR";
-            }
-            public static class Morocco
-            {
-                /// <summary>
-                /// Morocco Current Account
-                /// </summary>
-                public const string CurrentAccount = "MOROCCOCA";
-                /// <summary>
-                /// Morocco GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "MOROCCOGDPYOY";
-                /// <summary>
-                /// Morocco Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "MOROCCOINDPRO";
-                /// <summary>
-                /// Morocco Interest Rate
-                /// </summary>
-                public const string InterestRate = "MOROCCOINTRATE";
-                /// <summary>
-                /// Morocco Inflation Rate
-                /// </summary>
-                public const string InflationRate = "MOROCCOIR";
-                /// <summary>
-                /// Morocco Money Supply M2
-                /// </summary>
-                public const string MoneySupplyM2 = "MOROCCOMONSUPM2";
-                /// <summary>
-                /// Morocco Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "MOROCCOUR";
-            }
-            public static class Mozambique
-            {
-                /// <summary>
-                /// Mozambique Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "MOZAMBIQUEBUSCON";
-                /// <summary>
-                /// Mozambique Composite Pmi
-                /// </summary>
-                public const string CompositePmi = "MOZAMBIQUECOMPMI";
-                /// <summary>
-                /// Mozambique GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "MOZAMBIQUEGDPQOQ";
-                /// <summary>
-                /// Mozambique GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "MOZAMBIQUEGDPYOY";
-                /// <summary>
-                /// Mozambique Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "MOZAMBIQUEINFRATMOM";
-                /// <summary>
-                /// Mozambique Interest Rate
-                /// </summary>
-                public const string InterestRate = "MOZAMBIQUEINTRATE";
-                /// <summary>
-                /// Mozambique Inflation Rate
-                /// </summary>
-                public const string InflationRate = "MOZAMBIQUEIR";
-            }
-            public static class Myanmar
-            {
-                /// <summary>
-                /// Myanmar Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "MYANMARMANPMI";
-            }
-            public static class Namibia
-            {
-                /// <summary>
-                /// Namibia GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "NAMIBIAGDPQOQ";
-                /// <summary>
-                /// Namibia GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "NAMIBIAGDPYOY";
-                /// <summary>
-                /// Namibia Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "NAMIBIAINFRATMOM";
-                /// <summary>
-                /// Namibia Interest Rate
-                /// </summary>
-                public const string InterestRate = "NAMIBIAINTRATE";
-                /// <summary>
-                /// Namibia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "NAMIBIAIR";
-            }
+            /// <summary>
+            /// Netherlands
+            /// </summary>
             public static class Netherlands
             {
                 /// <summary>
-                /// Netherlands Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "CALENDARNETHERLANDS";
+                public const string BalanceOfTrade = "Netherlands//NETBEU";
                 /// <summary>
-                /// Netherlands Government Bond 10Y
+                /// Business Confidence
                 /// </summary>
-                public const string GovernmentBond10y = "GNTH10YR";
+                public const string BusinessConfidence = "Netherlands//NEPRI";
                 /// <summary>
-                /// Netherlands Current Account
+                /// Calendar
                 /// </summary>
-                public const string CurrentAccount = "NECATOTE";
+                public const string Calendar = "Netherlands//EUR-CALENDAR";
                 /// <summary>
-                /// Netherlands Consumer Confidence
+                /// Consumer Confidence
                 /// </summary>
-                public const string ConsumerConfidence = "NECCI";
+                public const string ConsumerConfidence = "Netherlands//NECCI";
                 /// <summary>
-                /// Netherlands Inflation Rate
+                /// Current Account
                 /// </summary>
-                public const string InflationRate = "NECPIYOY";
+                public const string CurrentAccount = "Netherlands//NECATOTE";
                 /// <summary>
-                /// Netherlands GDP Growth Rate
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string GdpGrowthRate = "NEGDPEQ";
+                public const string GDPAnnualGrowthRate = "Netherlands//NEGDPEY";
                 /// <summary>
-                /// Netherlands GDP Annual Growth Rate
+                /// GDP Growth Rate
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "NEGDPEY";
+                public const string GDPGrowthRate = "Netherlands//NEGDPEQ";
                 /// <summary>
-                /// Netherlands Industrial Production
+                /// Government Bond 10Y
                 /// </summary>
-                public const string IndustrialProduction = "NEIP20YY";
+                public const string GovernmentBondTenY = "Netherlands//GNTH10YR";
                 /// <summary>
-                /// Netherlands Business Confidence
+                /// Holidays
                 /// </summary>
-                public const string BusinessConfidence = "NEPRI";
+                public const string Holidays = "Netherlands//HOLIDAYSNETHERLANDS";
                 /// <summary>
-                /// Netherlands Balance of Trade
+                /// Industrial Production
                 /// </summary>
-                public const string BalanceOfTrade = "NETBEU";
+                public const string IndustrialProduction = "Netherlands//NEIP20YY";
                 /// <summary>
-                /// Netherlands 3 Month Bill Yield
+                /// Industrial Production Mom
                 /// </summary>
-                public const string ThreeMonthBillYield = "NETHERLAND3MBY";
+                public const string IndustrialProductionMom = "Netherlands//NETHERLANDINDPROMOM";
                 /// <summary>
-                /// Netherlands 6 Month Bill Yield
+                /// Inflation Rate
                 /// </summary>
-                public const string SixMonthBillYield = "NETHERLAND6MBY";
+                public const string InflationRate = "Netherlands//NECPIYOY";
                 /// <summary>
-                /// Netherlands Industrial Production Mom
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string IndustrialProductionMom = "NETHERLANDINDPROMOM";
+                public const string ManufacturingPmi = "Netherlands//NETHERLANDMANPMI";
                 /// <summary>
-                /// Netherlands Manufacturing PMI
+                /// Manufacturing Production
                 /// </summary>
-                public const string ManufacturingPmi = "NLD-CALENDAR";
+                public const string ManufacturingProduction = "Netherlands//NETHERLANDMANPRO";
                 /// <summary>
-                /// Netherlands Manufacturing Production
+                /// Personal Spending
                 /// </summary>
-                public const string ManufacturingProduction = "NETHERLANDMANPRO";
+                public const string PersonalSpending = "Netherlands//NETHERLANDPERSPE";
                 /// <summary>
-                /// Netherlands Personal Spending
+                /// Retail Sales MoM
                 /// </summary>
-                public const string PersonalSpending = "NETHERLANDPERSPE";
+                public const string RetailSalesMom = "Netherlands//NLDRETAILSALESMOM";
                 /// <summary>
-                /// Netherlands Unemployment Rate
+                /// Retail Sales YoY
                 /// </summary>
-                public const string UnemploymentRate = "NEUETOTR";
+                public const string RetailSalesYoy = "Netherlands//NLDRETAILSALESYOY";
                 /// <summary>
-                /// Netherlands Retail Sales MoM
+                /// 6 Month Bill Yield
                 /// </summary>
-                public const string RetailSalesMom = "NLDRETAILSALESMOM";
+                public const string SixMonthBillYield = "Netherlands//NETHERLAND6MBY";
                 /// <summary>
-                /// Netherlands Retail Sales YoY
+                /// 3 Month Bill Yield
                 /// </summary>
-                public const string RetailSalesYoy = "NLDRETAILSALESYOY";
+                public const string ThreeMonthBillYield = "Netherlands//NETHERLAND3MBY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Netherlands//NEUETOTR";
             }
+            /// <summary>
+            /// New Zealand
+            /// </summary>
             public static class NewZealand
             {
                 /// <summary>
-                /// NewZealand Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "NZD-CALENDAR";
+                public const string BalanceOfTrade = "New-Zealand//NZMTBAL";
                 /// <summary>
-                /// NewZealand Building Permits
+                /// Building Permits
                 /// </summary>
-                public const string BuildingPermits = "NEWZEALANBUIPER";
+                public const string BuildingPermits = "New-Zealand//NEWZEALANBUIPER";
                 /// <summary>
-                /// NewZealand Capacity Utilization
+                /// Business Confidence
                 /// </summary>
-                public const string CapacityUtilization = "NEWZEALANCAPUTI";
+                public const string BusinessConfidence = "New-Zealand//NZIEBCAC";
                 /// <summary>
-                /// NewZealand Employment Change
+                /// Calendar
                 /// </summary>
-                public const string EmploymentChange = "NEWZEALANEMPCHA";
+                public const string Calendar = "New-Zealand//NZD-CALENDAR";
                 /// <summary>
-                /// NewZealand Export Prices
+                /// Capacity Utilization
                 /// </summary>
-                public const string ExportPrices = "NEWZEALANEXPPRI";
+                public const string CapacityUtilization = "New-Zealand//NEWZEALANCAPUTI";
                 /// <summary>
-                /// NewZealand Food Inflation
+                /// Consumer Confidence
                 /// </summary>
-                public const string FoodInflation = "NEWZEALANFOOINF";
+                public const string ConsumerConfidence = "New-Zealand//NZCC";
                 /// <summary>
-                /// NewZealand Global Dairy Trade Price Index
+                /// Credit Card Spending
                 /// </summary>
-                public const string GlobalDairyTradePriceIndex = "NEWZEALANGDTPI";
+                public const string CreditCardSpending = "New-Zealand//NEWZEALANCRECARSPE";
                 /// <summary>
-                /// NewZealand Housing Index
+                /// Current Account
                 /// </summary>
-                public const string HousingIndex = "NEWZEALANHOUIND";
+                public const string CurrentAccount = "New-Zealand//NZBPCA";
                 /// <summary>
-                /// NewZealand Import Prices
+                /// Employment Change
                 /// </summary>
-                public const string ImportPrices = "NEWZEALANIMPPRI";
+                public const string EmploymentChange = "New-Zealand//NEWZEALANEMPCHA";
                 /// <summary>
-                /// NewZealand Inflation Expectations
+                /// Export Prices
                 /// </summary>
-                public const string InflationExpectations = "NEWZEALANINFEXP";
+                public const string ExportPrices = "New-Zealand//NEWZEALANEXPPRI";
                 /// <summary>
-                /// NewZealand Inflation Rate Mom
+                /// Exports
                 /// </summary>
-                public const string InflationRateMom = "NEWZEALANINFRATMOM";
+                public const string Exports = "New-Zealand//NZMTEXP";
                 /// <summary>
-                /// NewZealand Labour Costs
+                /// Food Inflation
                 /// </summary>
-                public const string LabourCosts = "NEWZEALANLABCOS";
+                public const string FoodInflation = "New-Zealand//NEWZEALANFOOINF";
                 /// <summary>
-                /// NewZealand Labor Force Participation Rate
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string LaborForceParticipationRate = "NEWZEALANLABFORPARRA";
+                public const string GDPAnnualGrowthRate = "New-Zealand//NZNTGDPY";
                 /// <summary>
-                /// NewZealand Manufacturing PMI
+                /// GDP Growth Rate
                 /// </summary>
-                public const string ManufacturingPmi = "NEWZEALANMANPMI";
+                public const string GDPGrowthRate = "New-Zealand//NZNTGDPC";
                 /// <summary>
-                /// NewZealand Producer Prices
+                /// Global Dairy Trade Price Index
                 /// </summary>
-                public const string ProducerPrices = "NEWZEALANPROPRI";
+                public const string GlobalDairyTradePriceIndex = "New-Zealand//NEWZEALANGDTPI";
                 /// <summary>
-                /// NewZealand Services Pmi
+                /// Holidays
                 /// </summary>
-                public const string ServicesPmi = "NEWZEALANSERPMI";
+                public const string Holidays = "New-Zealand//HOLIDAYSNEW-ZEALAND";
                 /// <summary>
-                /// NewZealand Terms of Trade
+                /// Housing Index
                 /// </summary>
-                public const string TermsOfTrade = "NEWZEALANTEROFTRA";
+                public const string HousingIndex = "New-Zealand//NEWZEALANHOUIND";
                 /// <summary>
-                /// NewZealand Tourist Arrivals
+                /// Import Prices
                 /// </summary>
-                public const string TouristArrivals = "NEWZEALANTOUARR";
+                public const string ImportPrices = "New-Zealand//NEWZEALANIMPPRI";
                 /// <summary>
-                /// NewZealand Current Account
+                /// Imports
                 /// </summary>
-                public const string CurrentAccount = "NZBPCA";
+                public const string Imports = "New-Zealand//NZMTIMP";
                 /// <summary>
-                /// NewZealand Consumer Confidence
+                /// Industrial Production
                 /// </summary>
-                public const string ConsumerConfidence = "NZCC";
+                public const string IndustrialProduction = "New-Zealand//OENZV012";
                 /// <summary>
-                /// NewZealand Inflation Rate
+                /// Inflation Expectations
                 /// </summary>
-                public const string InflationRate = "NZCPIYOY";
+                public const string InflationExpectations = "New-Zealand//NEWZEALANINFEXP";
                 /// <summary>
-                /// NewZealand Business Confidence
+                /// Inflation Rate
                 /// </summary>
-                public const string BusinessConfidence = "NZIEBCAC";
+                public const string InflationRate = "New-Zealand//NZCPIYOY";
                 /// <summary>
-                /// NewZealand Unemployment Rate
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string UnemploymentRate = "NZLFUNER";
+                public const string InflationRateMom = "New-Zealand//NEWZEALANINFRATMOM";
                 /// <summary>
-                /// NewZealand Retail Sales MoM
+                /// Interest Rate
                 /// </summary>
-                public const string RetailSalesMom = "NZLRETAILSALESMOM";
+                public const string InterestRate = "New-Zealand//NZOCRS";
                 /// <summary>
-                /// NewZealand Retail Sales YoY
+                /// Labor Force Participation Rate
                 /// </summary>
-                public const string RetailSalesYoy = "NZLRETAILSALESYOY";
+                public const string LaborForceParticipationRate = "New-Zealand//NEWZEALANLABFORPARRA";
                 /// <summary>
-                /// NewZealand Balance of Trade
+                /// Labour Costs
                 /// </summary>
-                public const string BalanceOfTrade = "NZMTBAL";
+                public const string LabourCosts = "New-Zealand//NEWZEALANLABCOS";
                 /// <summary>
-                /// NewZealand Exports
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string Exports = "NZMTEXP";
+                public const string ManufacturingPmi = "New-Zealand//NEWZEALANMANPMI";
                 /// <summary>
-                /// NewZealand Imports
+                /// Producer Prices
                 /// </summary>
-                public const string Imports = "NZMTIMP";
+                public const string ProducerPrices = "New-Zealand//NEWZEALANPROPRI";
                 /// <summary>
-                /// NewZealand GDP Growth Rate
+                /// Retail Sales MoM
                 /// </summary>
-                public const string GdpGrowthRate = "NZNTGDPC";
+                public const string RetailSalesMom = "New-Zealand//NZLRETAILSALESMOM";
                 /// <summary>
-                /// NewZealand GDP Annual Growth Rate
+                /// Retail Sales YoY
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "NZNTGDPY";
+                public const string RetailSalesYoy = "New-Zealand//NZLRETAILSALESYOY";
                 /// <summary>
-                /// NewZealand Interest Rate
+                /// Services Pmi
                 /// </summary>
-                public const string InterestRate = "NZOCRS";
+                public const string ServicesPmi = "New-Zealand//NEWZEALANSERPMI";
                 /// <summary>
-                /// NewZealand Industrial Production
+                /// Terms of Trade
                 /// </summary>
-                public const string IndustrialProduction = "OENZV012";
+                public const string TermsOfTrade = "New-Zealand//NEWZEALANTEROFTRA";
+                /// <summary>
+                /// Tourist Arrivals
+                /// </summary>
+                public const string TouristArrivals = "New-Zealand//NEWZEALANTOUARR";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "New-Zealand//NZLFUNER";
             }
-            public static class Nicaragua
-            {
-                /// <summary>
-                /// Nicaragua Current Account
-                /// </summary>
-                public const string CurrentAccount = "NICAGUACURCOUNT";
-                /// <summary>
-                /// Nicaragua GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "NICAGUAGDPATE";
-                /// <summary>
-                /// Nicaragua Inflation Rate
-                /// </summary>
-                public const string InflationRate = "NICAGUAINFNRATE";
-                /// <summary>
-                /// Nicaragua Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "NICAGUAUNETRATE";
-                /// <summary>
-                /// Nicaragua Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "NICARAGUAINDPRO";
-            }
-            public static class Nigeria
-            {
-                /// <summary>
-                /// Nigeria Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "NIGERIABT";
-                /// <summary>
-                /// Nigeria Composite Pmi
-                /// </summary>
-                public const string CompositePmi = "NIGERIACOMPMI";
-                /// <summary>
-                /// Nigeria Employment Change
-                /// </summary>
-                public const string EmploymentChange = "NIGERIAEMPCHA";
-                /// <summary>
-                /// Nigeria Food Inflation
-                /// </summary>
-                public const string FoodInflation = "NIGERIAFOOINF";
-                /// <summary>
-                /// Nigeria Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "NIGERIAFOREXCRES";
-                /// <summary>
-                /// Nigeria GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "NIGERIAGDPQOQ";
-                /// <summary>
-                /// Nigeria GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "NIGERIAGDPYOY";
-                /// <summary>
-                /// Nigeria Interest Rate
-                /// </summary>
-                public const string InterestRate = "NIGERIAINTRATE";
-                /// <summary>
-                /// Nigeria Inflation Rate
-                /// </summary>
-                public const string InflationRate = "NIGERIAIR";
-                /// <summary>
-                /// Nigeria Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "NIGERIAMANPMI";
-                /// <summary>
-                /// Nigeria Services Pmi
-                /// </summary>
-                public const string ServicesPmi = "NIGERIASERPMI";
-                /// <summary>
-                /// Nigeria Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "NIGERIAUR";
-            }
-            public static class Norway
-            {
-                /// <summary>
-                /// Norway Calendar
-                /// </summary>
-                public const string Calendar = "NOR-CALENDAR";
-                /// <summary>
-                /// Norway Current Account
-                /// </summary>
-                public const string CurrentAccount = "NOBPLVL";
-                /// <summary>
-                /// Norway Interest Rate
-                /// </summary>
-                public const string InterestRate = "NOBRDEP";
-                /// <summary>
-                /// Norway Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "NOCONF";
-                /// <summary>
-                /// Norway Inflation Rate
-                /// </summary>
-                public const string InflationRate = "NOCPIYOY";
-                /// <summary>
-                /// Norway GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "NOGDCOSQ";
-                /// <summary>
-                /// Norway GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "NOGDCOSY";
-                /// <summary>
-                /// Norway Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "NOIPGYOY";
-                /// <summary>
-                /// Norway Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "NOLBRATE";
-                /// <summary>
-                /// Norway Core Inflation Rate
-                /// </summary>
-                public const string CoreInflationRate = "NORCORECPIRATE";
-                /// <summary>
-                /// Norway Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "NORRETAILSALESMOM";
-                /// <summary>
-                /// Norway Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "NORRETAILSALESYOY";
-                /// <summary>
-                /// Norway Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "NORWAYBC";
-                /// <summary>
-                /// Norway Core Consumer Prices
-                /// </summary>
-                public const string CoreConsumerPrices = "NORWAYCORCONPRI";
-                /// <summary>
-                /// Norway Household Spending
-                /// </summary>
-                public const string HouseholdSpending = "NORWAYHOUSPE";
-                /// <summary>
-                /// Norway Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "NORWAYINDPROMOM";
-                /// <summary>
-                /// Norway Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "NORWAYINFRATMOM";
-                /// <summary>
-                /// Norway Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "NORWAYLEAECOIND";
-                /// <summary>
-                /// Norway Loan Growth
-                /// </summary>
-                public const string LoanGrowth = "NORWAYLOAGRO";
-                /// <summary>
-                /// Norway Manufacturing PMI
-                /// </summary>
-                public const string ManufacturingPmi = "NORWAYMANPMI";
-                /// <summary>
-                /// Norway Manufacturing Production
-                /// </summary>
-                public const string ManufacturingProduction = "NORWAYMANPRO";
-                /// <summary>
-                /// Norway Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "NORWAYPROPRICHA";
-                /// <summary>
-                /// Norway Unemployed Persons
-                /// </summary>
-                public const string UnemployedPersons = "NORWAYUNEPER";
-                /// <summary>
-                /// Norway Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "NOTBTOT";
-            }
-            public static class Oman
-            {
-                /// <summary>
-                /// Oman Government Budget Value
-                /// </summary>
-                public const string GovernmentBudgetValue = "OMANGOVBUDVAL";
-                /// <summary>
-                /// Oman Loan Growth
-                /// </summary>
-                public const string LoanGrowth = "OMANLOAGRO";
-                /// <summary>
-                /// Oman Money Supply M2
-                /// </summary>
-                public const string MoneySupplyM2 = "OMANMONSUPM2";
-                /// <summary>
-                /// Oman Inflation Rate
-                /// </summary>
-                public const string InflationRate = "OMAOMANINFNRATE";
-            }
-            public static class Pakistan
-            {
-                /// <summary>
-                /// Pakistan Inflation Rate
-                /// </summary>
-                public const string InflationRate = "PACPGENY";
-                /// <summary>
-                /// Pakistan Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "PAKISTANCONCON";
-                /// <summary>
-                /// Pakistan Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "PAKISTANPROPRICHA";
-                /// <summary>
-                /// Pakistan Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "PTRDBAL";
-            }
-            public static class Palestine
-            {
-                /// <summary>
-                /// Palestine Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "PALESTINEPROPRICHA";
-                /// <summary>
-                /// Palestine Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "PALTINEBALRADE";
-                /// <summary>
-                /// Palestine Current Account
-                /// </summary>
-                public const string CurrentAccount = "PALTINECURCOUNT";
-                /// <summary>
-                /// Palestine GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "PALTINEGDPATE";
-                /// <summary>
-                /// Palestine Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "PALTINEINDCTION";
-                /// <summary>
-                /// Palestine Inflation Rate
-                /// </summary>
-                public const string InflationRate = "PALTINEINFNRATE";
-                /// <summary>
-                /// Palestine Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "PALTINEUNETRATE";
-            }
-            public static class Panama
-            {
-                /// <summary>
-                /// Panama Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "PANAMALEAECOIND";
-                /// <summary>
-                /// Panama Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "PANNAMABALRADE";
-                /// <summary>
-                /// Panama Current Account
-                /// </summary>
-                public const string CurrentAccount = "PANNAMACURCOUNT";
-                /// <summary>
-                /// Panama GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "PANNAMAGDPATE";
-                /// <summary>
-                /// Panama Inflation Rate
-                /// </summary>
-                public const string InflationRate = "PANNAMAINFNRATE";
-            }
-            public static class Paraguay
-            {
-                /// <summary>
-                /// Paraguay Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "PARAGUAYBT";
-                /// <summary>
-                /// Paraguay Current Account
-                /// </summary>
-                public const string CurrentAccount = "PARAGUAYCA";
-                /// <summary>
-                /// Paraguay GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "PARAGUAYGDPQOQ";
-                /// <summary>
-                /// Paraguay GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "PARAGUAYGDPYOY";
-                /// <summary>
-                /// Paraguay Interest Rate
-                /// </summary>
-                public const string InterestRate = "PARAGUAYINTRATE";
-                /// <summary>
-                /// Paraguay Inflation Rate
-                /// </summary>
-                public const string InflationRate = "PARAGUAYIR";
-            }
-            public static class Peru
-            {
-                /// <summary>
-                /// Peru Calendar
-                /// </summary>
-                public const string Calendar = "PER-CALENDAR";
-                /// <summary>
-                /// Peru Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "PERPERUBUSDENCE";
-                /// <summary>
-                /// Peru Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "PERPERUINDCTION";
-                /// <summary>
-                /// Peru Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "PERTBAL";
-                /// <summary>
-                /// Peru Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "PERUINFRATMOM";
-                /// <summary>
-                /// Peru Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "PERULEAECOIND";
-                /// <summary>
-                /// Peru Inflation Rate
-                /// </summary>
-                public const string InflationRate = "PRCPYOY";
-                /// <summary>
-                /// Peru Current Account
-                /// </summary>
-                public const string CurrentAccount = "PRCU";
-                /// <summary>
-                /// Peru GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "PRGDPQOQ";
-                /// <summary>
-                /// Peru GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "PRGDPYOY";
-                /// <summary>
-                /// Peru Interest Rate
-                /// </summary>
-                public const string InterestRate = "PRRRONUS";
-                /// <summary>
-                /// Peru Exports
-                /// </summary>
-                public const string Exports = "PRTREXPT";
-                /// <summary>
-                /// Peru Imports
-                /// </summary>
-                public const string Imports = "PRTRIMPT";
-                /// <summary>
-                /// Peru Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "PRUEUER";
-            }
-            public static class Philippines
-            {
-                /// <summary>
-                /// Philippines Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "PHIINESINDCTION";
-                /// <summary>
-                /// Philippines Core Inflation Rate
-                /// </summary>
-                public const string CoreInflationRate = "PHILIPPINECORINFRAT";
-                /// <summary>
-                /// Philippines Foreign Direct Investment
-                /// </summary>
-                public const string ForeignDirectInvestment = "PHILIPPINEFORDIRINV";
-                /// <summary>
-                /// Philippines Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "PHILIPPINEFOREXCRES";
-                /// <summary>
-                /// Philippines Government Budget Value
-                /// </summary>
-                public const string GovernmentBudgetValue = "PHILIPPINEGOVBUDVAL";
-                /// <summary>
-                /// Philippines Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "PHILIPPINEINFRATMOM";
-                /// <summary>
-                /// Philippines Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "PHILIPPINEMANPMI";
-                /// <summary>
-                /// Philippines Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "PHILIPPINEPROPRICHA";
-                /// <summary>
-                /// Philippines Retail Sales Yoy
-                /// </summary>
-                public const string RetailSalesYoy = "PHILIPPINERETSALYOY";
-                /// <summary>
-                /// Philippines Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "PHILIPPINESBT";
-                /// <summary>
-                /// Philippines Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "PHILIPPINESCC";
-                /// <summary>
-                /// Philippines Exports
-                /// </summary>
-                public const string Exports = "PHILIPPINESEX";
-                /// <summary>
-                /// Philippines Government Budget
-                /// </summary>
-                public const string GovernmentBudget = "PHILIPPINESGB";
-                /// <summary>
-                /// Philippines GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "PHILIPPINESGDPQOQ";
-                /// <summary>
-                /// Philippines GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "PHILIPPINESGDPYOY";
-                /// <summary>
-                /// Philippines Imports
-                /// </summary>
-                public const string Imports = "PHILIPPINESIM";
-                /// <summary>
-                /// Philippines Interest Rate
-                /// </summary>
-                public const string InterestRate = "PHILIPPINESINTRATE";
-                /// <summary>
-                /// Philippines Inflation Rate
-                /// </summary>
-                public const string InflationRate = "PHILIPPINESIR";
-                /// <summary>
-                /// Philippines Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "PHILIPPINESUR";
-            }
-            public static class Poland
-            {
-                /// <summary>
-                /// Poland Calendar
-                /// </summary>
-                public const string Calendar = "POL-CALENDAR";
-                /// <summary>
-                /// Poland GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "EUGNPLQQ";
-                /// <summary>
-                /// Poland Inflation Rate
-                /// </summary>
-                public const string InflationRate = "POCPIYOY";
-                /// <summary>
-                /// Poland GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "POGDYOY";
-                /// <summary>
-                /// Poland Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "POISCYOY";
-                /// <summary>
-                /// Poland Employment Change
-                /// </summary>
-                public const string EmploymentChange = "POLANDEMPCHA";
-                /// <summary>
-                /// Poland Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "POLANDFOREXCRES";
-                /// <summary>
-                /// Poland Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "POLANDINDPROMOM";
-                /// <summary>
-                /// Poland Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "POLANDINFRATMOM";
-                /// <summary>
-                /// Poland Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "POLANDMANPMI";
-                /// <summary>
-                /// Poland Money Supply M3
-                /// </summary>
-                public const string MoneySupplyM3 = "POLANDMONSUPM3";
-                /// <summary>
-                /// Poland Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "POLANDPROPRICHA";
-                /// <summary>
-                /// Poland Wage Growth
-                /// </summary>
-                public const string WageGrowth = "POLANDWAGGRO";
-                /// <summary>
-                /// Poland Core Inflation Rate
-                /// </summary>
-                public const string CoreInflationRate = "POLCORECPIRATE";
-                /// <summary>
-                /// Poland Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "POLRETAILSALESMOM";
-                /// <summary>
-                /// Poland Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "POLRETAILSALESYOY";
-                /// <summary>
-                /// Poland Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "POMECBGB";
-                /// <summary>
-                /// Poland Current Account
-                /// </summary>
-                public const string CurrentAccount = "POQECBCA";
-                /// <summary>
-                /// Poland Interest Rate
-                /// </summary>
-                public const string InterestRate = "PORERATE";
-                /// <summary>
-                /// Poland Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "POUER";
-            }
+            /// <summary>
+            /// Portugal
+            /// </summary>
             public static class Portugal
             {
                 /// <summary>
-                /// Portugal Inflation Rate
+                /// Balance of Trade
                 /// </summary>
-                public const string InflationRate = "PLCPYOY";
+                public const string BalanceOfTrade = "Portugal//PTTBEUAL";
                 /// <summary>
-                /// Portugal Business Confidence
+                /// Business Confidence
                 /// </summary>
-                public const string BusinessConfidence = "PORTUGALBC";
+                public const string BusinessConfidence = "Portugal//PORTUGALBC";
                 /// <summary>
-                /// Portugal Industrial Production Mom
+                /// Calendar
                 /// </summary>
-                public const string IndustrialProductionMom = "PORTUGALINDPROMOM";
+                public const string Calendar = "Portugal//EUR-CALENDAR";
                 /// <summary>
-                /// Portugal Inflation Rate Mom
+                /// Consumer Confidence
                 /// </summary>
-                public const string InflationRateMom = "PORTUGALINFRATMOM";
+                public const string ConsumerConfidence = "Portugal//PTCCI";
                 /// <summary>
-                /// Portugal Producer Prices
+                /// Current Account
                 /// </summary>
-                public const string ProducerPrices = "PORTUGALPROPRI";
+                public const string CurrentAccount = "Portugal//PTCUEURO";
                 /// <summary>
-                /// Portugal Producer Prices Change
+                /// Exports
                 /// </summary>
-                public const string ProducerPricesChange = "PORTUGALPROPRICHA";
+                public const string Exports = "Portugal//PTTBEUEX";
                 /// <summary>
-                /// Portugal Retail Sales MoM
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string RetailSalesMom = "PRTRETAILSALESMOM";
+                public const string GDPAnnualGrowthRate = "Portugal//PTGDPYOY";
                 /// <summary>
-                /// Portugal Retail Sales YoY
+                /// GDP Growth Rate
                 /// </summary>
-                public const string RetailSalesYoy = "PRTRETAILSALESYOY";
+                public const string GDPGrowthRate = "Portugal//PTGDPQOQ";
                 /// <summary>
-                /// Portugal Consumer Confidence
+                /// Government Budget Value
                 /// </summary>
-                public const string ConsumerConfidence = "PTCCI";
+                public const string GovernmentBudgetValue = "Portugal//PORTUGALGOVBUDVAL";
                 /// <summary>
-                /// Portugal Current Account
+                /// Holidays
                 /// </summary>
-                public const string CurrentAccount = "PTCUEURO";
+                public const string Holidays = "Portugal//HOLIDAYSPORTUGAL";
                 /// <summary>
-                /// Portugal GDP Growth Rate
+                /// Imports
                 /// </summary>
-                public const string GdpGrowthRate = "PTGDPQOQ";
+                public const string Imports = "Portugal//PTTBEUIM";
                 /// <summary>
-                /// Portugal GDP Annual Growth Rate
+                /// Industrial Production
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "PTGDPYOY";
+                public const string IndustrialProduction = "Portugal//PTIPTOTY";
                 /// <summary>
-                /// Portugal Industrial Production
+                /// Industrial Production Mom
                 /// </summary>
-                public const string IndustrialProduction = "PTIPTOTY";
+                public const string IndustrialProductionMom = "Portugal//PORTUGALINDPROMOM";
                 /// <summary>
-                /// Portugal Balance of Trade
+                /// Inflation Rate
                 /// </summary>
-                public const string BalanceOfTrade = "PTTBEUAL";
+                public const string InflationRate = "Portugal//PLCPYOY";
                 /// <summary>
-                /// Portugal Exports
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string Exports = "PTTBEUEX";
+                public const string InflationRateMom = "Portugal//PORTUGALINFRATMOM";
                 /// <summary>
-                /// Portugal Imports
+                /// Interest Rate
                 /// </summary>
-                public const string Imports = "PTTBEUIM";
+                public const string InterestRate = "Portugal//EURR002W-PTE";
                 /// <summary>
-                /// Portugal Unemployment Rate
+                /// Leading Economic Index
                 /// </summary>
-                public const string UnemploymentRate = "PTUE";
+                public const string LeadingEconomicIndex = "Portugal//PORTUGALLEAECOIND";
+                /// <summary>
+                /// Personal Spending
+                /// </summary>
+                public const string PersonalSpending = "Portugal//PORTUGALPERSPE";
+                /// <summary>
+                /// Producer Prices
+                /// </summary>
+                public const string ProducerPrices = "Portugal//PORTUGALPROPRI";
+                /// <summary>
+                /// Producer Prices Change
+                /// </summary>
+                public const string ProducerPricesChange = "Portugal//PORTUGALPROPRICHA";
+                /// <summary>
+                /// Retail Sales MoM
+                /// </summary>
+                public const string RetailSalesMom = "Portugal//PRTRETAILSALESMOM";
+                /// <summary>
+                /// Retail Sales YoY
+                /// </summary>
+                public const string RetailSalesYoy = "Portugal//PRTRETAILSALESYOY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Portugal//PTUE";
             }
-            public static class Qatar
-            {
-                /// <summary>
-                /// Qatar Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "QATARBT";
-                /// <summary>
-                /// Qatar GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "QATARGDPQOQ";
-                /// <summary>
-                /// Qatar GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "QATARGDPYOY";
-                /// <summary>
-                /// Qatar Inflation Rate
-                /// </summary>
-                public const string InflationRate = "QATARIR";
-                /// <summary>
-                /// Qatar Loan Growth
-                /// </summary>
-                public const string LoanGrowth = "QATARLOAGRO";
-                /// <summary>
-                /// Qatar Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "QATARMANPMI";
-                /// <summary>
-                /// Qatar Money Supply M2
-                /// </summary>
-                public const string MoneySupplyM2 = "QATARMONSUPM2";
-                /// <summary>
-                /// Qatar Deposit Interest Rate
-                /// </summary>
-                public const string DepositInterestRate = "QATFRINRDPST";
-            }
-            public static class Romania
-            {
-                /// <summary>
-                /// Romania Calendar
-                /// </summary>
-                public const string Calendar = "ROM-CALENDAR";
-                /// <summary>
-                /// Romania Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "ROMANIABT";
-                /// <summary>
-                /// Romania Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "ROMANIABUSCON";
-                /// <summary>
-                /// Romania Current Account
-                /// </summary>
-                public const string CurrentAccount = "ROMANIACA";
-                /// <summary>
-                /// Romania Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "ROMANIACONCON";
-                /// <summary>
-                /// Romania GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "ROMANIAGDPQOQ";
-                /// <summary>
-                /// Romania GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "ROMANIAGDPYOY";
-                /// <summary>
-                /// Romania Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "ROMANIAINDPROMOM";
-                /// <summary>
-                /// Romania Interest Rate
-                /// </summary>
-                public const string InterestRate = "ROMANIAINTRATE";
-                /// <summary>
-                /// Romania Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "ROMANIAIP";
-                /// <summary>
-                /// Romania Inflation Rate
-                /// </summary>
-                public const string InflationRate = "ROMANIAIR";
-                /// <summary>
-                /// Romania Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "ROMANIAPROPRICHA";
-                /// <summary>
-                /// Romania Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "ROMANIAUR";
-                /// <summary>
-                /// Romania Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "ROMRETAILSALESMOM";
-                /// <summary>
-                /// Romania Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "ROMRETAILSALESYOY";
-            }
-            public static class Russia
-            {
-                /// <summary>
-                /// Russia Calendar
-                /// </summary>
-                public const string Calendar = "RUS-CALENDAR";
-                /// <summary>
-                /// Russia Interest Rate
-                /// </summary>
-                public const string InterestRate = "RREFRATE";
-                /// <summary>
-                /// Russia Current Account
-                /// </summary>
-                public const string CurrentAccount = "RUCACAL";
-                /// <summary>
-                /// Russia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "RUCPIYOY";
-                /// <summary>
-                /// Russia GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "RUDPRYOY";
-                /// <summary>
-                /// Russia Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "RUIPRNYY";
-                /// <summary>
-                /// Russia Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "RUSRETAILSALESMOM";
-                /// <summary>
-                /// Russia Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "RUSRETAILSALESYOY";
-                /// <summary>
-                /// Russia Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "RUSSIABC";
-                /// <summary>
-                /// Russia Corporate Profits
-                /// </summary>
-                public const string CorporateProfits = "RUSSIACORPRO";
-                /// <summary>
-                /// Russia Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "RUSSIAFOREXCRES";
-                /// <summary>
-                /// Russia Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "RUSSIAINFRATMOM";
-                /// <summary>
-                /// Russia Leading Economic Index
-                /// </summary>
-                public const string LeadingEconomicIndex = "RUSSIALEAECOIND";
-                /// <summary>
-                /// Russia Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "RUSSIAMANPMI";
-                /// <summary>
-                /// Russia Mni Consumer Sentiment
-                /// </summary>
-                public const string MniConsumerSentiment = "RUSSIAMNICONSEN";
-                /// <summary>
-                /// Russia Money Supply M2
-                /// </summary>
-                public const string MoneySupplyM2 = "RUSSIAMONSUPM2";
-                /// <summary>
-                /// Russia Producer Prices
-                /// </summary>
-                public const string ProducerPrices = "RUSSIAPROPRI";
-                /// <summary>
-                /// Russia Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "RUSSIAPROPRICHA";
-                /// <summary>
-                /// Russia Services Pmi
-                /// </summary>
-                public const string ServicesPmi = "RUSSIASERPMI";
-                /// <summary>
-                /// Russia Total Vehicle Sales
-                /// </summary>
-                public const string TotalVehicleSales = "RUSSIATOTVEHSAL";
-                /// <summary>
-                /// Russia Wage Growth
-                /// </summary>
-                public const string WageGrowth = "RUSSIAWAGGRO";
-                /// <summary>
-                /// Russia Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "RUSSSIABUSDENCE";
-                /// <summary>
-                /// Russia Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "RUTBAL";
-                /// <summary>
-                /// Russia Exports
-                /// </summary>
-                public const string Exports = "RUTBEX";
-                /// <summary>
-                /// Russia Imports
-                /// </summary>
-                public const string Imports = "RUTBIM";
-                /// <summary>
-                /// Russia Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "RUUER";
-            }
-            public static class Rwanda
-            {
-                /// <summary>
-                /// Rwanda GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "RWANDAGDPQOQ";
-                /// <summary>
-                /// Rwanda GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "RWANDAGDPYOY";
-                /// <summary>
-                /// Rwanda Interest Rate
-                /// </summary>
-                public const string InterestRate = "RWANDAINTRATE";
-                /// <summary>
-                /// Rwanda Inflation Rate
-                /// </summary>
-                public const string InflationRate = "RWANDAIR";
-                /// <summary>
-                /// Rwanda Producer Prices
-                /// </summary>
-                public const string ProducerPrices = "RWANDAPROPRI";
-                /// <summary>
-                /// Rwanda Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "RWANDAPROPRICHA";
-            }
-            public static class SaoTomeAndPrincipe
-            {
-                /// <summary>
-                /// SaoTomeAndPrincipe Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "SAOEBALRADE";
-                /// <summary>
-                /// SaoTomeAndPrincipe Inflation Rate
-                /// </summary>
-                public const string InflationRate = "SAOEINFNRATE";
-            }
-            public static class SaudiArabia
-            {
-                /// <summary>
-                /// SaudiArabia Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "4567A12";
-                /// <summary>
-                /// SaudiArabia Loan Growth
-                /// </summary>
-                public const string LoanGrowth = "SAUDIARABLOAGRO";
-                /// <summary>
-                /// SaudiArabia Manufacturing PMI
-                /// </summary>
-                public const string ManufacturingPmi = "SAUDIARABMANPMI";
-                /// <summary>
-                /// SaudiArabia Money Supply M3
-                /// </summary>
-                public const string MoneySupplyM3 = "SAUDIARABMONSUPM3";
-                /// <summary>
-                /// SaudiArabia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "SRCPIYOY";
-                /// <summary>
-                /// SaudiArabia GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "SRGDPCYY";
-                /// <summary>
-                /// SaudiArabia Interest Rate
-                /// </summary>
-                public const string InterestRate = "SRREPO";
-            }
-            public static class Senegal
-            {
-                /// <summary>
-                /// Senegal Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "SENEGALBALRADE";
-                /// <summary>
-                /// Senegal GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "SENEGALGDPATE";
-                /// <summary>
-                /// Senegal Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "SENEGALINDCTION";
-                /// <summary>
-                /// Senegal Inflation Rate
-                /// </summary>
-                public const string InflationRate = "SENEGALINFNRATE";
-            }
-            public static class Serbia
-            {
-                /// <summary>
-                /// Serbia Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "SERBIAINFRATMOM";
-                /// <summary>
-                /// Serbia Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "SERRBIABALRADE";
-                /// <summary>
-                /// Serbia Current Account
-                /// </summary>
-                public const string CurrentAccount = "SERRBIACURCOUNT";
-                /// <summary>
-                /// Serbia GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "SERRBIAGDPATE";
-                /// <summary>
-                /// Serbia GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "SERRBIAGDPRATE";
-                /// <summary>
-                /// Serbia Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "SERRBIAINDCTION";
-                /// <summary>
-                /// Serbia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "SERRBIAINFNRATE";
-                /// <summary>
-                /// Serbia Interest Rate
-                /// </summary>
-                public const string InterestRate = "SERRBIAINTTRATE";
-                /// <summary>
-                /// Serbia Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "SERRBIARETSYOY";
-                /// <summary>
-                /// Serbia Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "SERRBIAUNETRATE";
-            }
-            public static class Seychelles
-            {
-                /// <summary>
-                /// Seychelles Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "SEYLLESBALRADE";
-                /// <summary>
-                /// Seychelles Inflation Rate
-                /// </summary>
-                public const string InflationRate = "SEYLLESINFNRATE";
-            }
-            public static class Singapore
-            {
-                /// <summary>
-                /// Singapore Calendar
-                /// </summary>
-                public const string Calendar = "SGP-CALENDAR";
-                /// <summary>
-                /// Singapore GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "SGDPQOQ";
-                /// <summary>
-                /// Singapore GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "SGDPYOY";
-                /// <summary>
-                /// Singapore Core Inflation Rate
-                /// </summary>
-                public const string CoreInflationRate = "SGPCORECPIRATE";
-                /// <summary>
-                /// Singapore Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "SGPRETAILSALESMOM";
-                /// <summary>
-                /// Singapore Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "SGPRETAILSALESYOY";
-                /// <summary>
-                /// Singapore Inflation Rate
-                /// </summary>
-                public const string InflationRate = "SICPIYOY";
-                /// <summary>
-                /// Singapore Current Account
-                /// </summary>
-                public const string CurrentAccount = "SICUBAL";
-                /// <summary>
-                /// Singapore Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "SIIPYOYPCT";
-                /// <summary>
-                /// Singapore Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "SINGAPOREBUSCON";
-                /// <summary>
-                /// Singapore Composite Pmi
-                /// </summary>
-                public const string CompositePmi = "SINGAPORECOMPMI";
-                /// <summary>
-                /// Singapore Export Prices
-                /// </summary>
-                public const string ExportPrices = "SINGAPOREEXPPRI";
-                /// <summary>
-                /// Singapore Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "SINGAPOREFOREXCRES";
-                /// <summary>
-                /// Singapore Housing Index
-                /// </summary>
-                public const string HousingIndex = "SINGAPOREHOUIND";
-                /// <summary>
-                /// Singapore Import Prices
-                /// </summary>
-                public const string ImportPrices = "SINGAPOREIMPPRI";
-                /// <summary>
-                /// Singapore Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "SINGAPOREINDPROMOM";
-                /// <summary>
-                /// Singapore Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "SINGAPOREINFRATMOM";
-                /// <summary>
-                /// Singapore Loans to Private Sector
-                /// </summary>
-                public const string LoansToPrivateSector = "SINGAPORELOATOPRISEC";
-                /// <summary>
-                /// Singapore Manufacturing PMI
-                /// </summary>
-                public const string ManufacturingPmi = "SINGAPOREMANPMI";
-                /// <summary>
-                /// Singapore Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "SINGAPOREPROPRICHA";
-                /// <summary>
-                /// Singapore Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "SIQUTOTA";
-                /// <summary>
-                /// Singapore Exports of Non-oil Domestic Exports Of
-                /// </summary>
-                public const string ExportsOfNon_oilDomesticExportsOf = "SPEXPNOOA";
-                /// <summary>
-                /// Singapore Domestic Exports of Non Oil (nodx) (%yoy)
-                /// </summary>
-                public const string DomesticExportsOfNonOilNODXPercentYoy = "SPEXPNOOR";
-                /// <summary>
-                /// Singapore Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "STRDE";
-            }
+            /// <summary>
+            /// Slovakia
+            /// </summary>
             public static class Slovakia
             {
                 /// <summary>
-                /// Slovakia Business Confidence
+                /// Balance of Trade
                 /// </summary>
-                public const string BusinessConfidence = "SLOVAKIABC";
+                public const string BalanceOfTrade = "Slovakia//SLOVAKIABT";
                 /// <summary>
-                /// Slovakia Balance of Trade
+                /// Business Confidence
                 /// </summary>
-                public const string BalanceOfTrade = "SLOVAKIABT";
+                public const string BusinessConfidence = "Slovakia//SLOVAKIABC";
                 /// <summary>
-                /// Slovakia Current Account
+                /// Calendar
                 /// </summary>
-                public const string CurrentAccount = "SLOVAKIACA";
+                public const string Calendar = "Slovakia//SVK-CALENDAR";
                 /// <summary>
-                /// Slovakia Consumer Confidence
+                /// Construction Output
                 /// </summary>
-                public const string ConsumerConfidence = "SLOVAKIACC";
+                public const string ConstructionOutput = "Slovakia//SLOVAKIACONOUT";
                 /// <summary>
-                /// Slovakia Construction Output
+                /// Consumer Confidence
                 /// </summary>
-                public const string ConstructionOutput = "SLOVAKIACONOUT";
+                public const string ConsumerConfidence = "Slovakia//SLOVAKIACC";
                 /// <summary>
-                /// Slovakia Core Consumer Prices
+                /// Core Consumer Prices
                 /// </summary>
-                public const string CoreConsumerPrices = "SLOVAKIACORCONPRI";
+                public const string CoreConsumerPrices = "Slovakia//SLOVAKIACORCONPRI";
                 /// <summary>
-                /// Slovakia Exports
+                /// Core Inflation Rate
                 /// </summary>
-                public const string Exports = "SLOVAKIAEX";
+                public const string CoreInflationRate = "Slovakia//SVKCORECPIRATE";
                 /// <summary>
-                /// Slovakia GDP Growth Rate
+                /// Current Account
                 /// </summary>
-                public const string GdpGrowthRate = "SLOVAKIAGDPQOQ";
+                public const string CurrentAccount = "Slovakia//SLOVAKIACA";
                 /// <summary>
-                /// Slovakia GDP Annual Growth Rate
+                /// Exports
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "SLOVAKIAGDPYOY";
+                public const string Exports = "Slovakia//SLOVAKIAEX";
                 /// <summary>
-                /// Slovakia Harmonised Consumer Prices
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string HarmonisedConsumerPrices = "SLOVAKIAHARCONPRI";
+                public const string GDPAnnualGrowthRate = "Slovakia//SLOVAKIAGDPYOY";
                 /// <summary>
-                /// Slovakia Imports
+                /// GDP Growth Rate
                 /// </summary>
-                public const string Imports = "SLOVAKIAIM";
+                public const string GDPGrowthRate = "Slovakia//SLOVAKIAGDPQOQ";
                 /// <summary>
-                /// Slovakia Industrial Production Mom
+                /// Harmonised Consumer Prices
                 /// </summary>
-                public const string IndustrialProductionMom = "SLOVAKIAINDPROMOM";
+                public const string HarmonisedConsumerPrices = "Slovakia//SLOVAKIAHARCONPRI";
                 /// <summary>
-                /// Slovakia Inflation Rate Mom
+                /// Holidays
                 /// </summary>
-                public const string InflationRateMom = "SLOVAKIAINFRATMOM";
+                public const string Holidays = "Slovakia//HOLIDAYSSLOVAKIA";
                 /// <summary>
-                /// Slovakia Industrial Production
+                /// Imports
                 /// </summary>
-                public const string IndustrialProduction = "SLOVAKIAIP";
+                public const string Imports = "Slovakia//SLOVAKIAIM";
                 /// <summary>
-                /// Slovakia Inflation Rate
+                /// Industrial Production
                 /// </summary>
-                public const string InflationRate = "SLOVAKIAIR";
+                public const string IndustrialProduction = "Slovakia//SLOVAKIAIP";
                 /// <summary>
-                /// Slovakia Unemployment Rate
+                /// Industrial Production Mom
                 /// </summary>
-                public const string UnemploymentRate = "SLOVAKIAUR";
+                public const string IndustrialProductionMom = "Slovakia//SLOVAKIAINDPROMOM";
                 /// <summary>
-                /// Slovakia Wage Growth
+                /// Inflation Rate
                 /// </summary>
-                public const string WageGrowth = "SLOVAKIAWAGGRO";
+                public const string InflationRate = "Slovakia//SLOVAKIAIR";
                 /// <summary>
-                /// Slovakia Calendar
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string Calendar = "SVK-CALENDAR";
+                public const string InflationRateMom = "Slovakia//SLOVAKIAINFRATMOM";
                 /// <summary>
-                /// Slovakia Core Inflation Rate
+                /// Interest Rate
                 /// </summary>
-                public const string CoreInflationRate = "SVKCORECPIRATE";
+                public const string InterestRate = "Slovakia//EURR002W-SKK";
                 /// <summary>
-                /// Slovakia Retail Sales MoM
+                /// Retail Sales MoM
                 /// </summary>
-                public const string RetailSalesMom = "SVKRETAILSALESMOM";
+                public const string RetailSalesMom = "Slovakia//SVKRETAILSALESMOM";
                 /// <summary>
-                /// Slovakia Retail Sales YoY
+                /// Retail Sales YoY
                 /// </summary>
-                public const string RetailSalesYoy = "SVKRETAILSALESYOY";
+                public const string RetailSalesYoy = "Slovakia//SVKRETAILSALESYOY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Slovakia//SLOVAKIAUR";
+                /// <summary>
+                /// Wage Growth
+                /// </summary>
+                public const string WageGrowth = "Slovakia//SLOVAKIAWAGGRO";
             }
+            /// <summary>
+            /// Slovenia
+            /// </summary>
             public static class Slovenia
             {
                 /// <summary>
-                /// Slovenia Consumer Confidence
+                /// Balance of Trade
                 /// </summary>
-                public const string ConsumerConfidence = "EUCCSI";
+                public const string BalanceOfTrade = "Slovenia//SVTBBALE";
                 /// <summary>
-                /// Slovenia GDP Growth Rate
+                /// Business Confidence
                 /// </summary>
-                public const string GdpGrowthRate = "EUGNSIQQ";
+                public const string BusinessConfidence = "Slovenia//SLOVENIABC";
                 /// <summary>
-                /// Slovenia Business Confidence
+                /// Calendar
                 /// </summary>
-                public const string BusinessConfidence = "SLOVENIABC";
+                public const string Calendar = "Slovenia//SVN-CALENDAR";
                 /// <summary>
-                /// Slovenia Harmonised Consumer Prices
+                /// Consumer Confidence
                 /// </summary>
-                public const string HarmonisedConsumerPrices = "SLOVENIAHARCONPRI";
+                public const string ConsumerConfidence = "Slovenia//EUCCSI";
                 /// <summary>
-                /// Slovenia Producer Prices Change
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string ProducerPricesChange = "SLOVENIAPROPRICHA";
+                public const string GDPAnnualGrowthRate = "Slovenia//SVGDCYOY";
                 /// <summary>
-                /// Slovenia Tourist Arrivals
+                /// GDP Growth Rate
                 /// </summary>
-                public const string TouristArrivals = "SLOVENIATOUARR";
+                public const string GDPGrowthRate = "Slovenia//EUGNSIQQ";
                 /// <summary>
-                /// Slovenia Inflation Rate
+                /// Harmonised Consumer Prices
                 /// </summary>
-                public const string InflationRate = "SVCPYOY";
+                public const string HarmonisedConsumerPrices = "Slovenia//SLOVENIAHARCONPRI";
                 /// <summary>
-                /// Slovenia GDP Annual Growth Rate
+                /// Holidays
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "SVGDCYOY";
+                public const string Holidays = "Slovenia//HOLIDAYSSLOVENIA";
                 /// <summary>
-                /// Slovenia Industrial Production
+                /// Industrial Production
                 /// </summary>
-                public const string IndustrialProduction = "SVIPTYOY";
+                public const string IndustrialProduction = "Slovenia//SVIPTYOY";
                 /// <summary>
-                /// Slovenia Calendar
+                /// Inflation Rate
                 /// </summary>
-                public const string Calendar = "SVN-CALENDAR";
+                public const string InflationRate = "Slovenia//SVCPYOY";
                 /// <summary>
-                /// Slovenia Retail Sales MoM
+                /// Interest Rate
                 /// </summary>
-                public const string RetailSalesMom = "SVNRETAILSALESMOM";
+                public const string InterestRate = "Slovenia//EURR002W-SIT";
                 /// <summary>
-                /// Slovenia Retail Sales YoY
+                /// Producer Prices Change
                 /// </summary>
-                public const string RetailSalesYoy = "SVNRETAILSALESYOY";
+                public const string ProducerPricesChange = "Slovenia//SLOVENIAPROPRICHA";
                 /// <summary>
-                /// Slovenia Balance of Trade
+                /// Retail Sales MoM
                 /// </summary>
-                public const string BalanceOfTrade = "SVTBBALE";
+                public const string RetailSalesMom = "Slovenia//SVNRETAILSALESMOM";
                 /// <summary>
-                /// Slovenia Unemployment Rate
+                /// Retail Sales YoY
                 /// </summary>
-                public const string UnemploymentRate = "SVUER";
+                public const string RetailSalesYoy = "Slovenia//SVNRETAILSALESYOY";
+                /// <summary>
+                /// Tourist Arrivals
+                /// </summary>
+                public const string TouristArrivals = "Slovenia//SLOVENIATOUARR";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Slovenia//SVUER";
             }
-            public static class SouthAfrica
-            {
-                /// <summary>
-                /// SouthAfrica Calendar
-                /// </summary>
-                public const string Calendar = "ZAF-CALENDAR";
-                /// <summary>
-                /// SouthAfrica Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "EHUPZA";
-                /// <summary>
-                /// SouthAfrica Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "SABZCONF";
-                /// <summary>
-                /// SouthAfrica Inflation Rate
-                /// </summary>
-                public const string InflationRate = "SACPIYOY";
-                /// <summary>
-                /// SouthAfrica Current Account
-                /// </summary>
-                public const string CurrentAccount = "SACTLVL";
-                /// <summary>
-                /// SouthAfrica Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "SACWC";
-                /// <summary>
-                /// SouthAfrica GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "SAGDPQOQ";
-                /// <summary>
-                /// SouthAfrica GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "SAGDPYOY";
-                /// <summary>
-                /// SouthAfrica Interest Rate
-                /// </summary>
-                public const string InterestRate = "SARPRT";
-                /// <summary>
-                /// SouthAfrica Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "SATBAL";
-                /// <summary>
-                /// SouthAfrica Bank Lending Rate
-                /// </summary>
-                public const string BankLendingRate = "SOUTHAFRIBANLENRAT";
-                /// <summary>
-                /// SouthAfrica Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "SOUTHAFRICAIP";
-                /// <summary>
-                /// SouthAfrica Car Registrations
-                /// </summary>
-                public const string CarRegistrations = "SOUTHAFRICARREG";
-                /// <summary>
-                /// SouthAfrica Coincident Index
-                /// </summary>
-                public const string CoincidentIndex = "SOUTHAFRICOIIND";
-                /// <summary>
-                /// SouthAfrica Composite Pmi
-                /// </summary>
-                public const string CompositePmi = "SOUTHAFRICOMPMI";
-                /// <summary>
-                /// SouthAfrica Core Inflation Rate
-                /// </summary>
-                public const string CoreInflationRate = "SOUTHAFRICORINFRAT";
-                /// <summary>
-                /// SouthAfrica Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "SOUTHAFRIFOREXCRES";
-                /// <summary>
-                /// SouthAfrica Gold Production
-                /// </summary>
-                public const string GoldProduction = "SOUTHAFRIGOLPRO";
-                /// <summary>
-                /// SouthAfrica Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "SOUTHAFRIINDPROMOM";
-                /// <summary>
-                /// SouthAfrica Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "SOUTHAFRIINFRATMOM";
-                /// <summary>
-                /// SouthAfrica Lending Rate
-                /// </summary>
-                public const string LendingRate = "SOUTHAFRILENRAT";
-                /// <summary>
-                /// SouthAfrica Loans to Private Sector
-                /// </summary>
-                public const string LoansToPrivateSector = "SOUTHAFRILOATOPRISEC";
-                /// <summary>
-                /// SouthAfrica Manufacturing PMI
-                /// </summary>
-                public const string ManufacturingPmi = "SOUTHAFRIMANPMI";
-                /// <summary>
-                /// SouthAfrica Mining Production
-                /// </summary>
-                public const string MiningProduction = "SOUTHAFRIMINPRO";
-                /// <summary>
-                /// SouthAfrica Money Supply M3
-                /// </summary>
-                public const string MoneySupplyM3 = "SOUTHAFRIMONSUPM3";
-                /// <summary>
-                /// SouthAfrica Private Sector Credit
-                /// </summary>
-                public const string PrivateSectorCredit = "SOUTHAFRIPRISECCRE";
-                /// <summary>
-                /// SouthAfrica Producer Prices
-                /// </summary>
-                public const string ProducerPrices = "SOUTHAFRIPROPRI";
-                /// <summary>
-                /// SouthAfrica Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "SOUTHAFRIPROPRICHA";
-                /// <summary>
-                /// SouthAfrica Total Vehicle Sales
-                /// </summary>
-                public const string TotalVehicleSales = "SOUTHAFRITOTVEHSAL";
-                /// <summary>
-                /// SouthAfrica Unemployed Persons
-                /// </summary>
-                public const string UnemployedPersons = "SOUTHAFRIUNEPER";
-                /// <summary>
-                /// SouthAfrica Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "ZAFRETAILSALESMOM";
-                /// <summary>
-                /// SouthAfrica Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "ZAFRETAILSALESYOY";
-            }
-            public static class SouthKorea
-            {
-                /// <summary>
-                /// SouthKorea Calendar
-                /// </summary>
-                public const string Calendar = "KOR-CALENDAR";
-                /// <summary>
-                /// SouthKorea Current Account
-                /// </summary>
-                public const string CurrentAccount = "KOBPCB";
-                /// <summary>
-                /// SouthKorea Inflation Rate
-                /// </summary>
-                public const string InflationRate = "KOCPIYOY";
-                /// <summary>
-                /// SouthKorea Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "KOEAUERS";
-                /// <summary>
-                /// SouthKorea Exports
-                /// </summary>
-                public const string Exports = "KOEXTOT";
-                /// <summary>
-                /// SouthKorea GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "KOGDPQOQ";
-                /// <summary>
-                /// SouthKorea GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "KOGDPYOY";
-                /// <summary>
-                /// SouthKorea Imports
-                /// </summary>
-                public const string Imports = "KOIMTOT";
-                /// <summary>
-                /// SouthKorea Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "KOIPIY";
-                /// <summary>
-                /// SouthKorea Interest Rate
-                /// </summary>
-                public const string InterestRate = "KORP7DR";
-                /// <summary>
-                /// SouthKorea Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "KORRETAILSALESMOM";
-                /// <summary>
-                /// SouthKorea Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "KORRETAILSALESYOY";
-                /// <summary>
-                /// SouthKorea Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "KOTRBAL";
-                /// <summary>
-                /// SouthKorea Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "SKCOEXPC";
-                /// <summary>
-                /// SouthKorea Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "SOUTHKOREABC";
-                /// <summary>
-                /// SouthKorea Construction Output
-                /// </summary>
-                public const string ConstructionOutput = "SOUTHKORECONOUT";
-                /// <summary>
-                /// SouthKorea Export Prices
-                /// </summary>
-                public const string ExportPrices = "SOUTHKOREEXPPRI";
-                /// <summary>
-                /// SouthKorea External Debt
-                /// </summary>
-                public const string ExternalDebt = "SOUTHKOREEXTDEB";
-                /// <summary>
-                /// SouthKorea Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "SOUTHKOREFOREXCRES";
-                /// <summary>
-                /// SouthKorea Import Prices
-                /// </summary>
-                public const string ImportPrices = "SOUTHKOREIMPPRI";
-                /// <summary>
-                /// SouthKorea Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "SOUTHKOREINDPROMOM";
-                /// <summary>
-                /// SouthKorea Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "SOUTHKOREINFRATMOM";
-                /// <summary>
-                /// SouthKorea Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "SOUTHKOREMANPMI";
-                /// <summary>
-                /// SouthKorea Manufacturing Production
-                /// </summary>
-                public const string ManufacturingProduction = "SOUTHKOREMANPRO";
-                /// <summary>
-                /// SouthKorea Producer Prices
-                /// </summary>
-                public const string ProducerPrices = "SOUTHKOREPROPRI";
-                /// <summary>
-                /// SouthKorea Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "SOUTHKOREPROPRICHA";
-            }
+            /// <summary>
+            /// Spain
+            /// </summary>
             public static class Spain
             {
                 /// <summary>
-                /// Spain Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "ESP-CALENDAR";
+                public const string BalanceOfTrade = "Spain//SPTBEUBL";
                 /// <summary>
-                /// Spain Retail Sales MoM
+                /// Business Confidence
                 /// </summary>
-                public const string RetailSalesMom = "ESPRETAILSALESMOM";
+                public const string BusinessConfidence = "Spain//SPAINBC";
                 /// <summary>
-                /// Spain Retail Sales YoY
+                /// Calendar
                 /// </summary>
-                public const string RetailSalesYoy = "ESPRETAILSALESYOY";
+                public const string Calendar = "Spain//ESP-CALENDAR";
                 /// <summary>
-                /// Spain Government Bond 10Y
+                /// Consumer Confidence
                 /// </summary>
-                public const string GovernmentBond10y = "GSPG10YR";
+                public const string ConsumerConfidence = "Spain//SPAINCC";
                 /// <summary>
-                /// Spain 3 Month Bill Yield
+                /// Current Account
                 /// </summary>
-                public const string ThreeMonthBillYield = "SPAIN3MBY";
+                public const string CurrentAccount = "Spain//SPCAEURO";
                 /// <summary>
-                /// Spain 3 Year Note Yield
+                /// Factory Orders
                 /// </summary>
-                public const string ThreeYearNoteYield = "SPAIN3YNY";
+                public const string FactoryOrders = "Spain//SPAINFACORD";
                 /// <summary>
-                /// Spain 52 Week Bill Yield
+                /// 52 Week Bill Yield
                 /// </summary>
-                public const string FiftyTwoWeekBillYield = "SPAIN5WBY";
+                public const string FiftyTwoWeekBillYield = "Spain//SPAIN5WBY";
                 /// <summary>
-                /// Spain 5 Year Note Yield
+                /// 5 Year Note Yield
                 /// </summary>
-                public const string FiveYearNoteYield = "SPAIN5YNY";
+                public const string FiveYearNoteYield = "Spain//SPAIN5YNY";
                 /// <summary>
-                /// Spain 6 Month Bill Yield
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string SixMonthBillYield = "SPAIN6MBY";
+                public const string GDPAnnualGrowthRate = "Spain//SPNAGDPY";
                 /// <summary>
-                /// Spain Business Confidence
+                /// GDP Growth Rate
                 /// </summary>
-                public const string BusinessConfidence = "SPAINBC";
+                public const string GDPGrowthRate = "Spain//SPNAGDPQ";
                 /// <summary>
-                /// Spain Consumer Confidence
+                /// Government Bond 10Y
                 /// </summary>
-                public const string ConsumerConfidence = "SPAINCC";
+                public const string GovernmentBondTenY = "Spain//GSPG10YR";
                 /// <summary>
-                /// Spain Factory Orders
+                /// Harmonised Consumer Prices
                 /// </summary>
-                public const string FactoryOrders = "SPAINFACORD";
+                public const string HarmonisedConsumerPrices = "Spain//SPAINHARCONPRI";
                 /// <summary>
-                /// Spain Harmonised Consumer Prices
+                /// Holidays
                 /// </summary>
-                public const string HarmonisedConsumerPrices = "SPAINHARCONPRI";
+                public const string Holidays = "Spain//HOLIDAYSSPAIN";
                 /// <summary>
-                /// Spain Inflation Rate Mom
+                /// Industrial Production
                 /// </summary>
-                public const string InflationRateMom = "SPAININFRATMOM";
+                public const string IndustrialProduction = "Spain//SPAINIP";
                 /// <summary>
-                /// Spain Industrial Production
+                /// Inflation Rate
                 /// </summary>
-                public const string IndustrialProduction = "SPAINIP";
+                public const string InflationRate = "Spain//SPIPCYOY";
                 /// <summary>
-                /// Spain Manufacturing PMI
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string ManufacturingPmi = "SPAINMANPMI";
+                public const string InflationRateMom = "Spain//SPAININFRATMOM";
                 /// <summary>
-                /// Spain Producer Prices Change
+                /// Interest Rate
                 /// </summary>
-                public const string ProducerPricesChange = "SPAINPROPRICHA";
+                public const string InterestRate = "Spain//EURR002W-ESP";
                 /// <summary>
-                /// Spain Services Pmi
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string ServicesPmi = "SPAINSERPMI";
+                public const string ManufacturingPmi = "Spain//SPAINMANPMI";
                 /// <summary>
-                /// Spain Total Vehicle Sales
+                /// Producer Prices Change
                 /// </summary>
-                public const string TotalVehicleSales = "SPAINTOTVEHSAL";
+                public const string ProducerPricesChange = "Spain//SPAINPROPRICHA";
                 /// <summary>
-                /// Spain Tourist Arrivals
+                /// Retail Sales MoM
                 /// </summary>
-                public const string TouristArrivals = "SPAINTOUARR";
+                public const string RetailSalesMom = "Spain//ESPRETAILSALESMOM";
                 /// <summary>
-                /// Spain Unemployment Change
+                /// Retail Sales YoY
                 /// </summary>
-                public const string UnemploymentChange = "SPAINUNECHA";
+                public const string RetailSalesYoy = "Spain//ESPRETAILSALESYOY";
                 /// <summary>
-                /// Spain Current Account
+                /// Services Pmi
                 /// </summary>
-                public const string CurrentAccount = "SPCAEURO";
+                public const string ServicesPmi = "Spain//SPAINSERPMI";
                 /// <summary>
-                /// Spain Inflation Rate
+                /// 6 Month Bill Yield
                 /// </summary>
-                public const string InflationRate = "SPIPCYOY";
+                public const string SixMonthBillYield = "Spain//SPAIN6MBY";
                 /// <summary>
-                /// Spain GDP Growth Rate
+                /// 3 Month Bill Yield
                 /// </summary>
-                public const string GdpGrowthRate = "SPNAGDPQ";
+                public const string ThreeMonthBillYield = "Spain//SPAIN3MBY";
                 /// <summary>
-                /// Spain GDP Annual Growth Rate
+                /// 3 Year Note Yield
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "SPNAGDPY";
+                public const string ThreeYearNoteYield = "Spain//SPAIN3YNY";
                 /// <summary>
-                /// Spain Balance of Trade
+                /// Total Vehicle Sales
                 /// </summary>
-                public const string BalanceOfTrade = "SPTBEUBL";
+                public const string TotalVehicleSales = "Spain//SPAINTOTVEHSAL";
                 /// <summary>
-                /// Spain Unemployment Rate
+                /// Tourist Arrivals
                 /// </summary>
-                public const string UnemploymentRate = "UMRTES";
+                public const string TouristArrivals = "Spain//SPAINTOUARR";
+                /// <summary>
+                /// Unemployment Change
+                /// </summary>
+                public const string UnemploymentChange = "Spain//SPAINUNECHA";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Spain//UMRTES";
             }
-            public static class SriLanka
-            {
-                /// <summary>
-                /// SriLanka Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "SRI-LANKABT";
-                /// <summary>
-                /// SriLanka Current Account
-                /// </summary>
-                public const string CurrentAccount = "SRI-LANKACA";
-                /// <summary>
-                /// SriLanka GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "SRI-LANKAGDPYOY";
-                /// <summary>
-                /// SriLanka Interest Rate
-                /// </summary>
-                public const string InterestRate = "SRI-LANKAINTRATE";
-                /// <summary>
-                /// SriLanka Inflation Rate
-                /// </summary>
-                public const string InflationRate = "SRI-LANKAIR";
-                /// <summary>
-                /// SriLanka Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "SRI-LANKAUR";
-                /// <summary>
-                /// SriLanka Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "SRILANKAINDPRO";
-                /// <summary>
-                /// SriLanka Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "SRILANKAMANPMI";
-                /// <summary>
-                /// SriLanka Manufacturing Production
-                /// </summary>
-                public const string ManufacturingProduction = "SRILANKAMANPRO";
-                /// <summary>
-                /// SriLanka Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "SRILANKAPROPRICHA";
-                /// <summary>
-                /// SriLanka Services Pmi
-                /// </summary>
-                public const string ServicesPmi = "SRILANKASERPMI";
-                /// <summary>
-                /// SriLanka Tourist Arrivals
-                /// </summary>
-                public const string TouristArrivals = "SRILANKATOUARR";
-            }
-            public static class Suriname
-            {
-                /// <summary>
-                /// Suriname Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "SURNAMEBALRADE";
-                /// <summary>
-                /// Suriname Current Account
-                /// </summary>
-                public const string CurrentAccount = "SURNAMECURCOUNT";
-                /// <summary>
-                /// Suriname Inflation Rate
-                /// </summary>
-                public const string InflationRate = "SURNAMEINFNRATE";
-            }
+            /// <summary>
+            /// Sweden
+            /// </summary>
             public static class Sweden
             {
                 /// <summary>
-                /// Sweden Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "CALENDARSWEDEN";
+                public const string BalanceOfTrade = "Sweden//SWTBAL";
                 /// <summary>
-                /// Sweden Current Account
+                /// Business Confidence
                 /// </summary>
-                public const string CurrentAccount = "SWCA";
+                public const string BusinessConfidence = "Sweden//SWEDENBC";
                 /// <summary>
-                /// Sweden Inflation Rate
+                /// Business Inventories
                 /// </summary>
-                public const string InflationRate = "SWCPYOY";
+                public const string BusinessInventories = "Sweden//SWEDENBUSINV";
                 /// <summary>
-                /// Sweden Industrial Production Mom
+                /// Calendar
                 /// </summary>
-                public const string IndustrialProductionMom = "SWEDENINDPROMOM";
+                public const string Calendar = "Sweden//SEK-CALENDAR";
                 /// <summary>
-                /// Sweden Consumer Confidence
+                /// Capacity Utilization
                 /// </summary>
-                public const string ConsumerConfidence = "SWECCI";
+                public const string CapacityUtilization = "Sweden//SWEDENCAPUTI";
                 /// <summary>
-                /// Sweden Core Inflation Rate
+                /// Consumer Confidence
                 /// </summary>
-                public const string CoreInflationRate = "SWECORECPIRATE";
+                public const string ConsumerConfidence = "Sweden//SWECCI";
                 /// <summary>
-                /// Sweden Business Confidence
+                /// Core Consumer Prices
                 /// </summary>
-                public const string BusinessConfidence = "SWEDENBC";
+                public const string CoreConsumerPrices = "Sweden//SWEDENCORCONPRI";
                 /// <summary>
-                /// Sweden Business Inventories
+                /// Core Inflation Rate
                 /// </summary>
-                public const string BusinessInventories = "SWEDENBUSINV";
+                public const string CoreInflationRate = "Sweden//SWECORECPIRATE";
                 /// <summary>
-                /// Sweden Capacity Utilization
+                /// Current Account
                 /// </summary>
-                public const string CapacityUtilization = "SWEDENCAPUTI";
+                public const string CurrentAccount = "Sweden//SWCA";
                 /// <summary>
-                /// Sweden Core Consumer Prices
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string CoreConsumerPrices = "SWEDENCORCONPRI";
+                public const string GDPAnnualGrowthRate = "Sweden//SWGDPAYY";
                 /// <summary>
-                /// Sweden Household Spending
+                /// GDP Growth Rate
                 /// </summary>
-                public const string HouseholdSpending = "SWEDENHOUSPE";
+                public const string GDPGrowthRate = "Sweden//SWGDPAQQ";
                 /// <summary>
-                /// Sweden Inflation Expectations
+                /// Holidays
                 /// </summary>
-                public const string InflationExpectations = "SWEDENINFEXP";
+                public const string Holidays = "Sweden//HOLIDAYSSWEDEN";
                 /// <summary>
-                /// Sweden Inflation Rate Mom
+                /// Household Spending
                 /// </summary>
-                public const string InflationRateMom = "SWEDENINFRATMOM";
+                public const string HouseholdSpending = "Sweden//SWEDENHOUSPE";
                 /// <summary>
-                /// Sweden Loan Growth
+                /// Industrial Production
                 /// </summary>
-                public const string LoanGrowth = "SWEDENLOAGRO";
+                public const string IndustrialProduction = "Sweden//SWIPIYOY";
                 /// <summary>
-                /// Sweden Manufacturing Pmi
+                /// Industrial Production Mom
                 /// </summary>
-                public const string ManufacturingPmi = "SWEDENMANPMI";
+                public const string IndustrialProductionMom = "Sweden//SWEDENINDPROMOM";
                 /// <summary>
-                /// Sweden New Orders
+                /// Inflation Expectations
                 /// </summary>
-                public const string NewOrders = "SWEDENNEWORD";
+                public const string InflationExpectations = "Sweden//SWEDENINFEXP";
                 /// <summary>
-                /// Sweden Private Sector Credit
+                /// Inflation Rate
                 /// </summary>
-                public const string PrivateSectorCredit = "SWEDENPRISECCRE";
+                public const string InflationRate = "Sweden//SWCPYOY";
                 /// <summary>
-                /// Sweden Producer Prices
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string ProducerPrices = "SWEDENPROPRI";
+                public const string InflationRateMom = "Sweden//SWEDENINFRATMOM";
                 /// <summary>
-                /// Sweden Producer Prices Change
+                /// Interest Rate
                 /// </summary>
-                public const string ProducerPricesChange = "SWEDENPROPRICHA";
+                public const string InterestRate = "Sweden//SWRRATEI";
                 /// <summary>
-                /// Sweden Services Pmi
+                /// Loan Growth
                 /// </summary>
-                public const string ServicesPmi = "SWEDENSERPMI";
+                public const string LoanGrowth = "Sweden//SWEDENLOAGRO";
                 /// <summary>
-                /// Sweden Retail Sales MoM
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string RetailSalesMom = "SWERETAILSALESMOM";
+                public const string ManufacturingPmi = "Sweden//SWEDENMANPMI";
                 /// <summary>
-                /// Sweden Retail Sales YoY
+                /// New Orders
                 /// </summary>
-                public const string RetailSalesYoy = "SWERETAILSALESYOY";
+                public const string NewOrders = "Sweden//SWEDENNEWORD";
                 /// <summary>
-                /// Sweden GDP Growth Rate
+                /// Private Sector Credit
                 /// </summary>
-                public const string GdpGrowthRate = "SWGDPAQQ";
+                public const string PrivateSectorCredit = "Sweden//SWEDENPRISECCRE";
                 /// <summary>
-                /// Sweden GDP Annual Growth Rate
+                /// Producer Prices
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "SWGDPAYY";
+                public const string ProducerPrices = "Sweden//SWEDENPROPRI";
                 /// <summary>
-                /// Sweden Industrial Production
+                /// Producer Prices Change
                 /// </summary>
-                public const string IndustrialProduction = "SWIPIYOY";
+                public const string ProducerPricesChange = "Sweden//SWEDENPROPRICHA";
                 /// <summary>
-                /// Sweden Interest Rate
+                /// Retail Sales MoM
                 /// </summary>
-                public const string InterestRate = "SWRRATEI";
+                public const string RetailSalesMom = "Sweden//SWERETAILSALESMOM";
                 /// <summary>
-                /// Sweden Balance of Trade
+                /// Retail Sales YoY
                 /// </summary>
-                public const string BalanceOfTrade = "SWTBAL";
+                public const string RetailSalesYoy = "Sweden//SWERETAILSALESYOY";
                 /// <summary>
-                /// Sweden Unemployment Rate
+                /// Services Pmi
                 /// </summary>
-                public const string UnemploymentRate = "UMRTSE";
+                public const string ServicesPmi = "Sweden//SWEDENSERPMI";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "Sweden//UMRTSE";
             }
+            /// <summary>
+            /// Switzerland
+            /// </summary>
             public static class Switzerland
             {
                 /// <summary>
-                /// Switzerland Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "CHF-CALENDAR";
+                public const string BalanceOfTrade = "Switzerland//SZTBAL";
                 /// <summary>
-                /// Switzerland Retail Sales MoM
+                /// Business Confidence
                 /// </summary>
-                public const string RetailSalesMom = "CHERETAILSALESMOM";
+                public const string BusinessConfidence = "Switzerland//SWITZERLANDBC";
                 /// <summary>
-                /// Switzerland Retail Sales YoY
+                /// Calendar
                 /// </summary>
-                public const string RetailSalesYoy = "CHERETAILSALESYOY";
+                public const string Calendar = "Switzerland//CHEINDICATORS";
                 /// <summary>
-                /// Switzerland Business Confidence
+                /// Consumer Confidence
                 /// </summary>
-                public const string BusinessConfidence = "SWITZERLANDBC";
+                public const string ConsumerConfidence = "Switzerland//SZCCI";
                 /// <summary>
-                /// Switzerland Factory Orders
+                /// Current Account
                 /// </summary>
-                public const string FactoryOrders = "SWITZERLANFACORD";
+                public const string CurrentAccount = "Switzerland//SZCA";
                 /// <summary>
-                /// Switzerland Foreign Exchange Reserves
+                /// Factory Orders
                 /// </summary>
-                public const string ForeignExchangeReserves = "SWITZERLANFOREXCRES";
+                public const string FactoryOrders = "Switzerland//SWITZERLANFACORD";
                 /// <summary>
-                /// Switzerland Inflation Rate Mom
+                /// Foreign Exchange Reserves
                 /// </summary>
-                public const string InflationRateMom = "SWITZERLANINFRATMOM";
+                public const string ForeignExchangeReserves = "Switzerland//SWITZERLANFOREXCRES";
                 /// <summary>
-                /// Switzerland Manufacturing Pmi
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string ManufacturingPmi = "SWITZERLANMANPMI";
+                public const string GDPAnnualGrowthRate = "Switzerland//SZGDPCYY";
                 /// <summary>
-                /// Switzerland Non Farm Payrolls
+                /// GDP Growth Rate
                 /// </summary>
-                public const string NonFarmPayrolls = "SWITZERLANNONFARPAY";
+                public const string GDPGrowthRate = "Switzerland//SZGDPCQQ";
                 /// <summary>
-                /// Switzerland Producer Prices
+                /// Holidays
                 /// </summary>
-                public const string ProducerPrices = "SWITZERLANPROPRI";
+                public const string Holidays = "Switzerland//HOLIDAYSSWITZERLAND";
                 /// <summary>
-                /// Switzerland Producer Prices Change
+                /// Industrial Production
                 /// </summary>
-                public const string ProducerPricesChange = "SWITZERLANPROPRICHA";
+                public const string IndustrialProduction = "Switzerland//SZIPIYOY";
                 /// <summary>
-                /// Switzerland Zew Economic Sentiment Index
+                /// Inflation Rate
                 /// </summary>
-                public const string ZewEconomicSentimentIndex = "SWITZERLANZEWECOSENI";
+                public const string InflationRate = "Switzerland//SZCPIYOY";
                 /// <summary>
-                /// Switzerland Current Account
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string CurrentAccount = "SZCA";
+                public const string InflationRateMom = "Switzerland//SWITZERLANINFRATMOM";
                 /// <summary>
-                /// Switzerland Consumer Confidence
+                /// Interest Rate
                 /// </summary>
-                public const string ConsumerConfidence = "SZCCI";
+                public const string InterestRate = "Switzerland//SZLTTR";
                 /// <summary>
-                /// Switzerland Inflation Rate
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string InflationRate = "SZCPIYOY";
+                public const string ManufacturingPmi = "Switzerland//SWITZERLANMANPMI";
                 /// <summary>
-                /// Switzerland GDP Growth Rate
+                /// Non Farm Payrolls
                 /// </summary>
-                public const string GdpGrowthRate = "SZGDPCQQ";
+                public const string NonFarmPayrolls = "Switzerland//SWITZERLANNONFARPAY";
                 /// <summary>
-                /// Switzerland GDP Annual Growth Rate
+                /// Producer Prices
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "SZGDPCYY";
+                public const string ProducerPrices = "Switzerland//SWITZERLANPROPRI";
                 /// <summary>
-                /// Switzerland Industrial Production
+                /// Producer Prices Change
                 /// </summary>
-                public const string IndustrialProduction = "SZIPIYOY";
+                public const string ProducerPricesChange = "Switzerland//SWITZERLANPROPRICHA";
                 /// <summary>
-                /// Switzerland Interest Rate
+                /// Retail Sales MoM
                 /// </summary>
-                public const string InterestRate = "SZLTTR";
+                public const string RetailSalesMom = "Switzerland//CHERETAILSALESMOM";
                 /// <summary>
-                /// Switzerland Balance of Trade
+                /// Retail Sales YoY
                 /// </summary>
-                public const string BalanceOfTrade = "SZTBAL";
+                public const string RetailSalesYoy = "Switzerland//CHERETAILSALESYOY";
                 /// <summary>
-                /// Switzerland Unemployment Rate
+                /// Unemployment Rate
                 /// </summary>
-                public const string UnemploymentRate = "SZUEUEA";
+                public const string UnemploymentRate = "Switzerland//SZUEUEA";
+                /// <summary>
+                /// Zew Economic Sentiment Index
+                /// </summary>
+                public const string ZewEconomicSentimentIndex = "Switzerland//SWITZERLANZEWECOSENI";
             }
-            public static class Taiwan
-            {
-                /// <summary>
-                /// Taiwan Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "TAIIWANCONDENCE";
-                /// <summary>
-                /// Taiwan Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "TAIWANBT";
-                /// <summary>
-                /// Taiwan Current Account
-                /// </summary>
-                public const string CurrentAccount = "TAIWANCA";
-                /// <summary>
-                /// Taiwan Inflation Rate
-                /// </summary>
-                public const string InflationRate = "TAIWANCPI";
-                /// <summary>
-                /// Taiwan Exports
-                /// </summary>
-                public const string Exports = "TAIWANEX";
-                /// <summary>
-                /// Taiwan Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "TAIWANFOREXCRES";
-                /// <summary>
-                /// Taiwan GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "TAIWANGDPQOQ";
-                /// <summary>
-                /// Taiwan GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "TAIWANGDPYOY";
-                /// <summary>
-                /// Taiwan Imports
-                /// </summary>
-                public const string Imports = "TAIWANIM";
-                /// <summary>
-                /// Taiwan Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "TAIWANINFRATMOM";
-                /// <summary>
-                /// Taiwan Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "TAIWANIP";
-                /// <summary>
-                /// Taiwan Interest Rate
-                /// </summary>
-                public const string InterestRate = "TAIWANIR";
-                /// <summary>
-                /// Taiwan Manufacturing PMI
-                /// </summary>
-                public const string ManufacturingPmi = "TAIWANMANPMI";
-                /// <summary>
-                /// Taiwan Money Supply M2
-                /// </summary>
-                public const string MoneySupplyM2 = "TAIWANMONSUPM2";
-                /// <summary>
-                /// Taiwan New Orders
-                /// </summary>
-                public const string NewOrders = "TAIWANNEWORD";
-                /// <summary>
-                /// Taiwan Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "TAIWANPROPRICHA";
-                /// <summary>
-                /// Taiwan Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "TAIWANUR";
-                /// <summary>
-                /// Taiwan Calendar
-                /// </summary>
-                public const string Calendar = "TWN-CALENDAR";
-                /// <summary>
-                /// Taiwan Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "TWNRETAILSALESYOY";
-            }
-            public static class Tajikistan
-            {
-                /// <summary>
-                /// Tajikistan Inflation Rate
-                /// </summary>
-                public const string InflationRate = "TAJSTANINFNRATE";
-            }
-            public static class Tanzania
-            {
-                /// <summary>
-                /// Tanzania GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "TANZANIAGDPYOY";
-                /// <summary>
-                /// Tanzania Inflation Rate
-                /// </summary>
-                public const string InflationRate = "TANZANIAIR";
-            }
-            public static class Thailand
-            {
-                /// <summary>
-                /// Thailand Interest Rate
-                /// </summary>
-                public const string InterestRate = "BTRR1DAY";
-                /// <summary>
-                /// Thailand Core Inflation Rate
-                /// </summary>
-                public const string CoreInflationRate = "THACORECPIRATE";
-                /// <summary>
-                /// Thailand Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "THAILANDBC";
-                /// <summary>
-                /// Thailand Coincident Index
-                /// </summary>
-                public const string CoincidentIndex = "THAILANDCOIIND";
-                /// <summary>
-                /// Thailand Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "THAILANDFOREXCRES";
-                /// <summary>
-                /// Thailand Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "THAILANDMANPMI";
-                /// <summary>
-                /// Thailand Personal Spending
-                /// </summary>
-                public const string PersonalSpending = "THAILANDPERSPE";
-                /// <summary>
-                /// Thailand Private Investment
-                /// </summary>
-                public const string PrivateInvestment = "THAILANDPRIINV";
-                /// <summary>
-                /// Thailand Total Vehicle Sales
-                /// </summary>
-                public const string TotalVehicleSales = "THAILANDTOTVEHSAL";
-                /// <summary>
-                /// Thailand Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "THALANDRETSYOY";
-                /// <summary>
-                /// Thailand Current Account
-                /// </summary>
-                public const string CurrentAccount = "THCA";
-                /// <summary>
-                /// Thailand Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "THCCI";
-                /// <summary>
-                /// Thailand Inflation Rate
-                /// </summary>
-                public const string InflationRate = "THCPIYOY";
-                /// <summary>
-                /// Thailand GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "THG-PQQ";
-                /// <summary>
-                /// Thailand GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "THG-PQY";
-                /// <summary>
-                /// Thailand Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "THLMUERT";
-                /// <summary>
-                /// Thailand Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "THMPIYOY";
-                /// <summary>
-                /// Thailand Exports
-                /// </summary>
-                public const string Exports = "THNFEXP";
-                /// <summary>
-                /// Thailand Imports
-                /// </summary>
-                public const string Imports = "THNFIMP";
-                /// <summary>
-                /// Thailand Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "THNFTB";
-            }
-            public static class TrinidadAndTobago
-            {
-                /// <summary>
-                /// TrinidadAndTobago Interest Rate
-                /// </summary>
-                public const string InterestRate = "TRIGOINTTRATE";
-            }
-            public static class Tunisia
-            {
-                /// <summary>
-                /// Tunisia Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "TUNISIABT";
-                /// <summary>
-                /// Tunisia GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "TUNISIAGDPQOQ";
-                /// <summary>
-                /// Tunisia GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "TUNISIAGDPYOY";
-                /// <summary>
-                /// Tunisia Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "TUNISIAINDPRO";
-                /// <summary>
-                /// Tunisia Interest Rate
-                /// </summary>
-                public const string InterestRate = "TUNISIAINTRATE";
-                /// <summary>
-                /// Tunisia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "TUNISIAIR";
-                /// <summary>
-                /// Tunisia Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "TUNISIAPROPRICHA";
-            }
-            public static class Turkey
-            {
-                /// <summary>
-                /// Turkey Calendar
-                /// </summary>
-                public const string Calendar = "TUR-CALENDAR";
-                /// <summary>
-                /// Turkey Current Account
-                /// </summary>
-                public const string CurrentAccount = "TUCAL";
-                /// <summary>
-                /// Turkey Inflation Rate
-                /// </summary>
-                public const string InflationRate = "TUCPIY";
-                /// <summary>
-                /// Turkey GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "TUGPCOQS";
-                /// <summary>
-                /// Turkey GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "TUGPCOYR";
-                /// <summary>
-                /// Turkey Interest Rate
-                /// </summary>
-                public const string InterestRate = "TUIBON";
-                /// <summary>
-                /// Turkey Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "TUIPIYOY";
-                /// <summary>
-                /// Turkey Deposit Interest Rate
-                /// </summary>
-                public const string DepositInterestRate = "TURFRINRDPST";
-                /// <summary>
-                /// Turkey Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "TURKEYBC";
-                /// <summary>
-                /// Turkey Capacity Utilization
-                /// </summary>
-                public const string CapacityUtilization = "TURKEYCAPUTI";
-                /// <summary>
-                /// Turkey Car Production
-                /// </summary>
-                public const string CarProduction = "TURKEYCARPRO";
-                /// <summary>
-                /// Turkey Consumer Confidence
-                /// </summary>
-                public const string ConsumerConfidence = "TURKEYCC";
-                /// <summary>
-                /// Turkey Construction Output
-                /// </summary>
-                public const string ConstructionOutput = "TURKEYCONOUT";
-                /// <summary>
-                /// Turkey Economic Optimism Index
-                /// </summary>
-                public const string EconomicOptimismIndex = "TURKEYECOOPTIND";
-                /// <summary>
-                /// Turkey Government Budget Value
-                /// </summary>
-                public const string GovernmentBudgetValue = "TURKEYGOVBUDVAL";
-                /// <summary>
-                /// Turkey Government Debt
-                /// </summary>
-                public const string GovernmentDebt = "TURKEYGOVDEB";
-                /// <summary>
-                /// Turkey Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "TURKEYINDPROMOM";
-                /// <summary>
-                /// Turkey Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "TURKEYINFRATMOM";
-                /// <summary>
-                /// Turkey Lending Rate
-                /// </summary>
-                public const string LendingRate = "TURKEYLENRAT";
-                /// <summary>
-                /// Turkey Manufacturing Pmi
-                /// </summary>
-                public const string ManufacturingPmi = "TURKEYMANPMI";
-                /// <summary>
-                /// Turkey Producer Prices
-                /// </summary>
-                public const string ProducerPrices = "TURKEYPROPRI";
-                /// <summary>
-                /// Turkey Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "TURKEYPROPRICHA";
-                /// <summary>
-                /// Turkey Tourist Arrivals
-                /// </summary>
-                public const string TouristArrivals = "TURKEYTOUARR";
-                /// <summary>
-                /// Turkey Tourism Revenues
-                /// </summary>
-                public const string TourismRevenues = "TURKEYTOUREV";
-                /// <summary>
-                /// Turkey Retail Sales MoM
-                /// </summary>
-                public const string RetailSalesMom = "TURRETAILSALESMOM";
-                /// <summary>
-                /// Turkey Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "TURRETAILSALESYOY";
-                /// <summary>
-                /// Turkey Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "TUTBAL";
-                /// <summary>
-                /// Turkey Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "TUUNR";
-            }
-            public static class Uganda
-            {
-                /// <summary>
-                /// Uganda Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "UGAANDABALRADE";
-                /// <summary>
-                /// Uganda GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "UGAANDAGDPATE";
-                /// <summary>
-                /// Uganda Inflation Rate
-                /// </summary>
-                public const string InflationRate = "UGAANDAINFNRATE";
-                /// <summary>
-                /// Uganda Interest Rate
-                /// </summary>
-                public const string InterestRate = "UGAANDAINTTRATE";
-                /// <summary>
-                /// Uganda Business Confidence
-                /// </summary>
-                public const string BusinessConfidence = "UGANDABUSCON";
-                /// <summary>
-                /// Uganda Composite Pmi
-                /// </summary>
-                public const string CompositePmi = "UGANDACOMPMI";
-                /// <summary>
-                /// Uganda Producer Prices Change
-                /// </summary>
-                public const string ProducerPricesChange = "UGANDAPROPRICHA";
-            }
-            public static class Ukraine
-            {
-                /// <summary>
-                /// Ukraine Calendar
-                /// </summary>
-                public const string Calendar = "UKR-CALENDAR";
-                /// <summary>
-                /// Ukraine Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "UKRAINEBT";
-                /// <summary>
-                /// Ukraine Current Account
-                /// </summary>
-                public const string CurrentAccount = "UKRAINECA";
-                /// <summary>
-                /// Ukraine Foreign Exchange Reserves
-                /// </summary>
-                public const string ForeignExchangeReserves = "UKRAINEFOREXCRES";
-                /// <summary>
-                /// Ukraine GDP Growth Rate
-                /// </summary>
-                public const string GdpGrowthRate = "UKRAINEGDPQOQ";
-                /// <summary>
-                /// Ukraine GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "UKRAINEGDPYOY";
-                /// <summary>
-                /// Ukraine Industrial Production Mom
-                /// </summary>
-                public const string IndustrialProductionMom = "UKRAINEINDPROMOM";
-                /// <summary>
-                /// Ukraine Inflation Rate Mom
-                /// </summary>
-                public const string InflationRateMom = "UKRAINEINFRATMOM";
-                /// <summary>
-                /// Ukraine Interest Rate
-                /// </summary>
-                public const string InterestRate = "UKRAINEINTRATE";
-                /// <summary>
-                /// Ukraine Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "UKRAINEIP";
-                /// <summary>
-                /// Ukraine Inflation Rate
-                /// </summary>
-                public const string InflationRate = "UKRAINEIR";
-                /// <summary>
-                /// Ukraine Money Supply M3
-                /// </summary>
-                public const string MoneySupplyM3 = "UKRAINEMONSUPM3";
-                /// <summary>
-                /// Ukraine Retail Sales Mom
-                /// </summary>
-                public const string RetailSalesMom = "UKRAINERETSALMOM";
-                /// <summary>
-                /// Ukraine Retail Sales Yoy
-                /// </summary>
-                public const string RetailSalesYoy = "UKRAINERETSALYOY";
-                /// <summary>
-                /// Ukraine Unemployment Rate
-                /// </summary>
-                public const string UnemploymentRate = "UKRAINEUR";
-            }
-            public static class UnitedArabEmirates
-            {
-                /// <summary>
-                /// UnitedArabEmirates Interest Rate
-                /// </summary>
-                public const string InterestRate = "EIBO1M";
-                /// <summary>
-                /// UnitedArabEmirates Inflation Rate
-                /// </summary>
-                public const string InflationRate = "UACIGPY";
-                /// <summary>
-                /// UnitedArabEmirates Loan Growth
-                /// </summary>
-                public const string LoanGrowth = "UNITEDARALOAGRO";
-                /// <summary>
-                /// UnitedArabEmirates Manufacturing PMI
-                /// </summary>
-                public const string ManufacturingPmi = "UNITEDARAMANPMI";
-                /// <summary>
-                /// UnitedArabEmirates Money Supply M3
-                /// </summary>
-                public const string MoneySupplyM3 = "UNITEDARAMONSUPM3";
-            }
+            /// <summary>
+            /// United Kingdom
+            /// </summary>
             public static class UnitedKingdom
             {
                 /// <summary>
-                /// UnitedKingdom Calendar
+                /// Balance of Trade
                 /// </summary>
-                public const string Calendar = "GBRINDICATORS";
+                public const string BalanceOfTrade = "United-Kingdom//UKTBTTBA";
                 /// <summary>
-                /// UnitedKingdom Business Confidence
+                /// Business Confidence
                 /// </summary>
-                public const string BusinessConfidence = "EUR1UK";
+                public const string BusinessConfidence = "United-Kingdom//EUR1UK";
                 /// <summary>
-                /// UnitedKingdom Core Inflation Rate
+                /// Calendar
                 /// </summary>
-                public const string CoreInflationRate = "GBRCORECPIRATE";
+                public const string Calendar = "United-Kingdom//GBP-CALENDAR";
                 /// <summary>
-                /// UnitedKingdom Retail Sales MoM
+                /// Car Registrations
                 /// </summary>
-                public const string RetailSalesMom = "GBRRETAILSALESMOM";
+                public const string CarRegistrations = "United-Kingdom//UNITEDKINCARREG";
                 /// <summary>
-                /// UnitedKingdom Retail Sales YoY
+                /// CBI Distributive Trades
                 /// </summary>
-                public const string RetailSalesYoy = "GBRRETAILSALESYOY";
+                public const string CBIDistributiveTrades = "United-Kingdom//UNITEDKINCBIDISTRA";
                 /// <summary>
-                /// UnitedKingdom Government Bond 10Y
+                /// Claimant Count Change
                 /// </summary>
-                public const string GovernmentBond10y = "GUKG10";
+                public const string ClaimantCountChange = "United-Kingdom//UNITEDKINCLACOUCHA";
                 /// <summary>
-                /// UnitedKingdom Interest Rate
+                /// Composite Pmi
                 /// </summary>
-                public const string InterestRate = "UKBRBASE";
+                public const string CompositePmi = "United-Kingdom//UNITEDKINCOMPMI";
                 /// <summary>
-                /// UnitedKingdom Current Account
+                /// Construction Orders
                 /// </summary>
-                public const string CurrentAccount = "UKCA";
+                public const string ConstructionOrders = "United-Kingdom//UNITEDKINCONORD";
                 /// <summary>
-                /// UnitedKingdom Consumer Confidence
+                /// Construction Output
                 /// </summary>
-                public const string ConsumerConfidence = "UKCCI";
+                public const string ConstructionOutput = "United-Kingdom//UNITEDKINCONOUT";
                 /// <summary>
-                /// UnitedKingdom GDP Growth Rate
+                /// Construction Pmi
                 /// </summary>
-                public const string GdpGrowthRate = "UKGRYBZQ";
+                public const string ConstructionPmi = "United-Kingdom//UNITEDKINCONPMI";
                 /// <summary>
-                /// UnitedKingdom GDP Annual Growth Rate
+                /// Consumer Confidence
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "UKGRYBZY";
+                public const string ConsumerConfidence = "United-Kingdom//UKCCI";
                 /// <summary>
-                /// UnitedKingdom Industrial Production
+                /// Consumer Credit
                 /// </summary>
-                public const string IndustrialProduction = "UKIPIYOY";
+                public const string ConsumerCredit = "United-Kingdom//UNITEDKINCONCRE";
                 /// <summary>
-                /// UnitedKingdom Inflation Rate
+                /// Core Consumer Prices
                 /// </summary>
-                public const string InflationRate = "UKRPCJYR";
+                public const string CoreConsumerPrices = "United-Kingdom//UNITEDKINCORCONPRI";
                 /// <summary>
-                /// UnitedKingdom Balance of Trade
+                /// Core Inflation Rate
                 /// </summary>
-                public const string BalanceOfTrade = "UKTBTTBA";
+                public const string CoreInflationRate = "United-Kingdom//GBRCORECPIRATE";
                 /// <summary>
-                /// UnitedKingdom Unemployment Rate
+                /// Core Producer Prices
                 /// </summary>
-                public const string UnemploymentRate = "UKUEILOR";
+                public const string CoreProducerPrices = "United-Kingdom//UNITEDKINCORPROPRI";
                 /// <summary>
-                /// UnitedKingdom 30 Year Bond Yield
+                /// Current Account
                 /// </summary>
-                public const string ThirtyYearBondYield = "UNITEDKIN3YBY";
+                public const string CurrentAccount = "United-Kingdom//UKCA";
                 /// <summary>
-                /// UnitedKingdom 5 Year Note Yield
+                /// Economic Activity Index
                 /// </summary>
-                public const string FiveYearNoteYield = "UNITEDKIN5YEANOTYIE";
+                public const string EconomicActivityIndex = "United-Kingdom//UNITEDKINECOACTIND";
                 /// <summary>
-                /// UnitedKingdom Car Registrations
+                /// Employment Change
                 /// </summary>
-                public const string CarRegistrations = "UNITEDKINCARREG";
+                public const string EmploymentChange = "United-Kingdom//UNITEDKINEMPCHA";
                 /// <summary>
-                /// UnitedKingdom Claimant Count Change
+                /// Factory Orders
                 /// </summary>
-                public const string ClaimantCountChange = "UNITEDKINCLACOUCHA";
+                public const string FactoryOrders = "United-Kingdom//UNITEDKINFACORD";
                 /// <summary>
-                /// UnitedKingdom Composite Pmi
+                /// 5 Year Note Yield
                 /// </summary>
-                public const string CompositePmi = "UNITEDKINCOMPMI";
+                public const string FiveYearNoteYield = "United-Kingdom//UNITEDKIN5YEANOTYIE";
                 /// <summary>
-                /// UnitedKingdom Consumer Credit
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string ConsumerCredit = "UNITEDKINCONCRE";
+                public const string GDPAnnualGrowthRate = "United-Kingdom//UKGRYBZY";
                 /// <summary>
-                /// UnitedKingdom Construction Orders
+                /// GDP Growth Rate
                 /// </summary>
-                public const string ConstructionOrders = "UNITEDKINCONORD";
+                public const string GDPGrowthRate = "United-Kingdom//UKGRYBZQ";
                 /// <summary>
-                /// UnitedKingdom Construction Output
+                /// Goods Trade Balance
                 /// </summary>
-                public const string ConstructionOutput = "UNITEDKINCONOUT";
+                public const string GoodsTradeBalance = "United-Kingdom//UNITEDKINGOOTRABAL";
                 /// <summary>
-                /// UnitedKingdom Construction Pmi
+                /// Government Bond 10Y
                 /// </summary>
-                public const string ConstructionPmi = "UNITEDKINCONPMI";
+                public const string GovernmentBondTenY = "United-Kingdom//GUKG10";
                 /// <summary>
-                /// UnitedKingdom Core Consumer Prices
+                /// Government Debt
                 /// </summary>
-                public const string CoreConsumerPrices = "UNITEDKINCORCONPRI";
+                public const string GovernmentDebt = "United-Kingdom//UNITEDKINGOVDEB";
                 /// <summary>
-                /// UnitedKingdom Core Producer Prices
+                /// Holidays
                 /// </summary>
-                public const string CoreProducerPrices = "UNITEDKINCORPROPRI";
+                public const string Holidays = "United-Kingdom//HOLIDAYSUNITED-KING";
                 /// <summary>
-                /// UnitedKingdom Employment Change
+                /// Home Loans
                 /// </summary>
-                public const string EmploymentChange = "UNITEDKINEMPCHA";
+                public const string HomeLoans = "United-Kingdom//UNITEDKINHOMLOA";
                 /// <summary>
-                /// UnitedKingdom Factory Orders
+                /// Housing Index
                 /// </summary>
-                public const string FactoryOrders = "UNITEDKINFACORD";
+                public const string HousingIndex = "United-Kingdom//UNITEDKINHOUIND";
                 /// <summary>
-                /// UnitedKingdom Government Debt
+                /// Industrial Production
                 /// </summary>
-                public const string GovernmentDebt = "UNITEDKINGOVDEB";
+                public const string IndustrialProduction = "United-Kingdom//UKIPIYOY";
                 /// <summary>
-                /// UnitedKingdom Housing Index
+                /// Industrial Production Mom
                 /// </summary>
-                public const string HousingIndex = "UNITEDKINHOUIND";
+                public const string IndustrialProductionMom = "United-Kingdom//UNITEDKININDPROMOM";
                 /// <summary>
-                /// UnitedKingdom Industrial Production Mom
+                /// Inflation Expectations
                 /// </summary>
-                public const string IndustrialProductionMom = "UNITEDKININDPROMOM";
+                public const string InflationExpectations = "United-Kingdom//UNITEDKININFEXP";
                 /// <summary>
-                /// UnitedKingdom Inflation Expectations
+                /// Inflation Rate
                 /// </summary>
-                public const string InflationExpectations = "UNITEDKININFEXP";
+                public const string InflationRate = "United-Kingdom//UKRPCJYR";
                 /// <summary>
-                /// UnitedKingdom Inflation Rate Mom
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string InflationRateMom = "UNITEDKININFRATMOM";
+                public const string InflationRateMom = "United-Kingdom//UNITEDKININFRATMOM";
                 /// <summary>
-                /// UnitedKingdom Labour Costs
+                /// Interest Rate
                 /// </summary>
-                public const string LabourCosts = "UNITEDKINLABCOS";
+                public const string InterestRate = "United-Kingdom//UKBRBASE";
                 /// <summary>
-                /// UnitedKingdom Leading Economic Index
+                /// Labour Costs
                 /// </summary>
-                public const string LeadingEconomicIndex = "UNITEDKINLEAECOIND";
+                public const string LabourCosts = "United-Kingdom//UNITEDKINLABCOS";
                 /// <summary>
-                /// UnitedKingdom Manufacturing Pmi
+                /// Leading Economic Index
                 /// </summary>
-                public const string ManufacturingPmi = "UNITEDKINMANPMI";
+                public const string LeadingEconomicIndex = "United-Kingdom//UNITEDKINLEAECOIND";
                 /// <summary>
-                /// UnitedKingdom Manufacturing Production
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string ManufacturingProduction = "UNITEDKINMANPRO";
+                public const string ManufacturingPmi = "United-Kingdom//UNITEDKINMANPMI";
                 /// <summary>
-                /// UnitedKingdom Mortgage Approvals
+                /// Manufacturing Production
                 /// </summary>
-                public const string MortgageApprovals = "UNITEDKINMORAPP";
+                public const string ManufacturingProduction = "United-Kingdom//UNITEDKINMANPRO";
                 /// <summary>
-                /// UnitedKingdom Mortgage Applications
+                /// Mortgage Applications
                 /// </summary>
-                public const string MortgageApplications = "UNITEDKINMORAPPLI";
+                public const string MortgageApplications = "United-Kingdom//UNITEDKINMORAPPLI";
                 /// <summary>
-                /// UnitedKingdom Private Investment
+                /// Mortgage Approvals
                 /// </summary>
-                public const string PrivateInvestment = "UNITEDKINPRIINV";
+                public const string MortgageApprovals = "United-Kingdom//UNITEDKINMORAPP";
                 /// <summary>
-                /// UnitedKingdom Productivity
+                /// Nationwide Housing Prices
                 /// </summary>
-                public const string Productivity = "UNITEDKINPRO";
+                public const string NationwideHousingPrices = "United-Kingdom//UNITEDKINNATHOUPRI";
                 /// <summary>
-                /// UnitedKingdom Producer Prices
+                /// Private Investment
                 /// </summary>
-                public const string ProducerPrices = "UNITEDKINPROPRI";
+                public const string PrivateInvestment = "United-Kingdom//UNITEDKINPRIINV";
                 /// <summary>
-                /// UnitedKingdom Producer Prices Change
+                /// Producer Prices
                 /// </summary>
-                public const string ProducerPricesChange = "UNITEDKINPROPRICHA";
+                public const string ProducerPrices = "United-Kingdom//UNITEDKINPROPRI";
                 /// <summary>
-                /// UnitedKingdom Retail Price Index
+                /// Producer Prices Change
                 /// </summary>
-                public const string RetailPriceIndex = "UNITEDKINRETPRIIND";
+                public const string ProducerPricesChange = "United-Kingdom//UNITEDKINPROPRICHA";
                 /// <summary>
-                /// UnitedKingdom Services Pmi
+                /// Productivity
                 /// </summary>
-                public const string ServicesPmi = "UNITEDKINSERPMI";
+                public const string Productivity = "United-Kingdom//UNITEDKINPRO";
                 /// <summary>
-                /// UnitedKingdom Wage Growth
+                /// Retail Price Index
                 /// </summary>
-                public const string WageGrowth = "UNITEDKINWAGGRO";
+                public const string RetailPriceIndex = "United-Kingdom//UNITEDKINRETPRIIND";
+                /// <summary>
+                /// Retail Sales Ex Fuel
+                /// </summary>
+                public const string RetailSalesExFuel = "United-Kingdom//UNITEDKINRSEF";
+                /// <summary>
+                /// Retail Sales MoM
+                /// </summary>
+                public const string RetailSalesMom = "United-Kingdom//GBRRETAILSALESMOM";
+                /// <summary>
+                /// Retail Sales YoY
+                /// </summary>
+                public const string RetailSalesYoy = "United-Kingdom//GBRRETAILSALESYOY";
+                /// <summary>
+                /// Services Pmi
+                /// </summary>
+                public const string ServicesPmi = "United-Kingdom//UNITEDKINSERPMI";
+                /// <summary>
+                /// 30 Year Bond Yield
+                /// </summary>
+                public const string ThirtyYearBondYield = "United-Kingdom//UNITEDKIN3YBY";
+                /// <summary>
+                /// Unemployment Rate
+                /// </summary>
+                public const string UnemploymentRate = "United-Kingdom//UKUEILOR";
+                /// <summary>
+                /// Wage Growth
+                /// </summary>
+                public const string WageGrowth = "United-Kingdom//UNITEDKINWAGGRO";
             }
+            /// <summary>
+            /// United States
+            /// </summary>
             public static class UnitedStates
             {
                 /// <summary>
-                /// UnitedStates API Crude Oil Stock Change
+                /// Adp Employment Change
                 /// </summary>
-                public const string ApiCrudeOilStockChange = "APICRUDEOIL";
+                public const string AdpEmploymentChange = "United-States//UNITEDSTAADPEMPCHA";
                 /// <summary>
-                /// UnitedStates Calendar
+                /// API Crude Oil Stock Change
                 /// </summary>
-                public const string Calendar = "USD-CALENDAR";
+                public const string APICrudeOilStockChange = "United-States//APICRUDEOIL";
                 /// <summary>
-                /// UnitedStates Consumer Confidence
+                /// Average Hourly Earnings
                 /// </summary>
-                public const string ConsumerConfidence = "CONCCONF";
+                public const string AverageHourlyEarnings = "United-States//UNITEDSTAAVEHOUEAR";
                 /// <summary>
-                /// UnitedStates Inflation Rate
+                /// Average Weekly Hours
                 /// </summary>
-                public const string InflationRate = "CPI-YOY";
+                public const string AverageWeeklyHours = "United-States//UNITEDSTAAVEWEEHOU";
                 /// <summary>
-                /// UnitedStates Interest Rate
+                /// Balance of Trade
                 /// </summary>
-                public const string InterestRate = "FDTR";
+                public const string BalanceOfTrade = "United-States//USTBTOT";
                 /// <summary>
-                /// UnitedStates GDP Growth Rate
+                /// Building Permits
                 /// </summary>
-                public const string GdpGrowthRate = "GDP-CQOQ";
+                public const string BuildingPermits = "United-States//UNITEDSTABUIPER";
                 /// <summary>
-                /// UnitedStates GDP Annual Growth Rate
+                /// Business Confidence
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "GDP-CYOY";
+                public const string BusinessConfidence = "United-States//NAPMPMI";
                 /// <summary>
-                /// UnitedStates Initial Jobless Claims
+                /// Business Inventories
                 /// </summary>
-                public const string InitialJoblessClaims = "IJCUSA";
+                public const string BusinessInventories = "United-States//UNITEDSTABUSINV";
                 /// <summary>
-                /// UnitedStates Industrial Production
+                /// Calendar
                 /// </summary>
-                public const string IndustrialProduction = "IP-YOY";
+                public const string Calendar = "United-States//USD-CALENDAR";
                 /// <summary>
-                /// UnitedStates Business Confidence
+                /// Capacity Utilization
                 /// </summary>
-                public const string BusinessConfidence = "NAPMPMI";
+                public const string CapacityUtilization = "United-States//UNITEDSTACAPUTI";
                 /// <summary>
-                /// UnitedStates Non Farm Payrolls
+                /// Capital Flows
                 /// </summary>
-                public const string NonFarmPayrolls = "NFP-TCH";
+                public const string CapitalFlows = "United-States//UNITEDSTACAPFLO";
                 /// <summary>
-                /// UnitedStates Retail Sales Ex Autos
+                /// Case Shiller Home Price Index
                 /// </summary>
-                public const string RetailSalesExAutos = "UNITEDSTARETSALEXAUT";
+                public const string CaseShillerHomePriceIndex = "United-States//UNITEDSTACASSHIHOMPR";
                 /// <summary>
-                /// UnitedStates Retail Sales MoM
+                /// Chain Store Sales
                 /// </summary>
-                public const string RetailSalesMom = "RSTAMOM";
+                public const string ChainStoreSales = "United-States//UNITEDSTACHASTOSAL";
                 /// <summary>
-                /// UnitedStates Exports
+                /// Challenger Job Cuts
                 /// </summary>
-                public const string Exports = "TBEXTOT";
+                public const string ChallengerJobCuts = "United-States//UNITEDSTACHAJOBCUT";
                 /// <summary>
-                /// UnitedStates Imports
+                /// Chicago Fed National Activity Index
                 /// </summary>
-                public const string Imports = "TBIMTOT";
+                public const string ChicagoFedNationalActivityIndex = "United-States//UNITEDSTACHIFEDNATAC";
                 /// <summary>
-                /// UnitedStates 2 Year Note Yield
+                /// Chicago Pmi
                 /// </summary>
-                public const string TwoYearNoteYield = "UNITEDSTA2YEANOTYIE";
+                public const string ChicagoPmi = "United-States//UNITEDSTACHIPMI";
                 /// <summary>
-                /// UnitedStates 30 Year Bond Yield
+                /// Composite Pmi
                 /// </summary>
-                public const string ThirtyYearBondYield = "UNITEDSTA30YEABONYIE";
+                public const string CompositePmi = "United-States//UNITEDSTACOMPMI";
                 /// <summary>
-                /// UnitedStates 3 Month Bill Yield
+                /// Construction Spending
                 /// </summary>
-                public const string ThreeMonthBillYield = "UNITEDSTA3MONBILYIE";
+                public const string ConstructionSpending = "United-States//UNITEDSTACONTSPE";
                 /// <summary>
-                /// UnitedStates 3 Year Note Yield
+                /// Consumer Confidence
                 /// </summary>
-                public const string ThreeYearNoteYield = "UNITEDSTA3YEANOTYIE";
+                public const string ConsumerConfidence = "United-States//CONCCONF";
                 /// <summary>
-                /// UnitedStates 4 Week Bill Yield
+                /// Consumer Credit
                 /// </summary>
-                public const string FourWeekBillYield = "UNITEDSTA4WEEBILYIE";
+                public const string ConsumerCredit = "United-States//UNITEDSTACONCRE";
                 /// <summary>
-                /// UnitedStates 52 Week Bill Yield
+                /// Consumer Price Index (CPI)
                 /// </summary>
-                public const string FiftyTwoWeekBillYield = "UNITEDSTA52WEEBILYIE";
+                public const string ConsumerPriceIndexCPI = "United-States//UNITEDSTACONPRIINDCP";
                 /// <summary>
-                /// UnitedStates 5 Year Note Yield
+                /// Consumer Spending
                 /// </summary>
-                public const string FiveYearNoteYield = "UNITEDSTA5YEANOTYIE";
+                public const string ConsumerSpending = "United-States//UNITEDSTACONSPE";
                 /// <summary>
-                /// UnitedStates 6 Month Bill Yield
+                /// Continuing Jobless Claims
                 /// </summary>
-                public const string SixMonthBillYield = "UNITEDSTA6MONBILYIE";
+                public const string ContinuingJoblessClaims = "United-States//UNITEDSTACONJOBCLA";
                 /// <summary>
-                /// UnitedStates 7 Year Note Yield
+                /// Core Consumer Prices
                 /// </summary>
-                public const string SevenYearNoteYield = "UNITEDSTA7YEANOTYIE";
+                public const string CoreConsumerPrices = "United-States//UNITEDSTACORCONPRI";
                 /// <summary>
-                /// UnitedStates Adp Employment Change
+                /// Core Inflation Rate
                 /// </summary>
-                public const string AdpEmploymentChange = "UNITEDSTAADPEMPCHA";
+                public const string CoreInflationRate = "United-States//USACORECPIRATE";
                 /// <summary>
-                /// UnitedStates Average Hourly Earnings
+                /// Core Pce Price Index
                 /// </summary>
-                public const string AverageHourlyEarnings = "UNITEDSTAAVEHOUEAR";
+                public const string CorePcePriceIndex = "United-States//UNITEDSTACORPCEPRIIN";
                 /// <summary>
-                /// UnitedStates Average Weekly Hours
+                /// Core Producer Prices
                 /// </summary>
-                public const string AverageWeeklyHours = "UNITEDSTAAVEWEEHOU";
+                public const string CoreProducerPrices = "United-States//UNITEDSTACORPROPRI";
                 /// <summary>
-                /// UnitedStates Building Permits
+                /// Corporate Profits
                 /// </summary>
-                public const string BuildingPermits = "UNITEDSTABUIPER";
+                public const string CorporateProfits = "United-States//UNITEDSTACORPRO";
                 /// <summary>
-                /// UnitedStates Business Inventories
+                /// Crude Oil Imports
                 /// </summary>
-                public const string BusinessInventories = "UNITEDSTABUSINV";
+                public const string CrudeOilImports = "United-States//UNITEDSTACRUOILIMP";
                 /// <summary>
-                /// UnitedStates Capital Flows
+                /// Crude Oil Rigs
                 /// </summary>
-                public const string CapitalFlows = "UNITEDSTACAPFLO";
+                public const string CrudeOilRigs = "United-States//USOILRIGS";
                 /// <summary>
-                /// UnitedStates Capacity Utilization
+                /// Crude Oil Stocks Change
                 /// </summary>
-                public const string CapacityUtilization = "UNITEDSTACAPUTI";
+                public const string CrudeOilStocksChange = "United-States//UNITEDSTACRUOILSTOCH";
                 /// <summary>
-                /// UnitedStates Case Shiller Home Price Index
+                /// Current Account
                 /// </summary>
-                public const string CaseShillerHomePriceIndex = "UNITEDSTACASSHIHOMPR";
+                public const string CurrentAccount = "United-States//USCABAL";
                 /// <summary>
-                /// UnitedStates Challenger Job Cuts
+                /// Cushing Crude Oil Stocks
                 /// </summary>
-                public const string ChallengerJobCuts = "UNITEDSTACHAJOBCUT";
+                public const string CushingCrudeOilStocks = "United-States//UNITEDSTACCOS";
                 /// <summary>
-                /// UnitedStates Chain Store Sales
+                /// Dallas Fed Manufacturing Index
                 /// </summary>
-                public const string ChainStoreSales = "UNITEDSTACHASTOSAL";
+                public const string DallasFedManufacturingIndex = "United-States//UNITEDSTADALFEDMANIN";
                 /// <summary>
-                /// UnitedStates Chicago Fed National Activity Index
+                /// Distillate Fuel Production
                 /// </summary>
-                public const string ChicagoFedNationalActivityIndex = "UNITEDSTACHIFEDNATAC";
+                public const string DistillateFuelProduction = "United-States//UNITEDSTADISFUEPRO";
                 /// <summary>
-                /// UnitedStates Chicago Pmi
+                /// Distillate Stocks
                 /// </summary>
-                public const string ChicagoPmi = "UNITEDSTACHIPMI";
+                public const string DistillateStocks = "United-States//UNITEDSTADISSTO";
                 /// <summary>
-                /// UnitedStates Composite Pmi
+                /// Durable Goods Orders
                 /// </summary>
-                public const string CompositePmi = "UNITEDSTACOMPMI";
+                public const string DurableGoodsOrders = "United-States//UNITEDSTADURGOOORD";
                 /// <summary>
-                /// UnitedStates Consumer Credit
+                /// Durable Goods Orders Ex Defense
                 /// </summary>
-                public const string ConsumerCredit = "UNITEDSTACONCRE";
+                public const string DurableGoodsOrdersExDefense = "United-States//UNITEDSTADURGOOORDED";
                 /// <summary>
-                /// UnitedStates Continuing Jobless Claims
+                /// Durable Goods Orders Ex Transportation
                 /// </summary>
-                public const string ContinuingJoblessClaims = "UNITEDSTACONJOBCLA";
+                public const string DurableGoodsOrdersExTransportation = "United-States//UNITEDSTADURGOOORDEX";
                 /// <summary>
-                /// UnitedStates Consumer Price Index (CPI)
+                /// Economic Optimism Index
                 /// </summary>
-                public const string ConsumerPriceIndex = "UNITEDSTACONPRIINDCP";
+                public const string EconomicOptimismIndex = "United-States//UNITEDSTAECOOPTIND";
                 /// <summary>
-                /// UnitedStates Consumer Spending
+                /// Employment Cost Index
                 /// </summary>
-                public const string ConsumerSpending = "UNITEDSTACONSPE";
+                public const string EmploymentCostIndex = "United-States//UNITEDSTAEMPCOSIND";
                 /// <summary>
-                /// UnitedStates Construction Spending
+                /// Existing Home Sales
                 /// </summary>
-                public const string ConstructionSpending = "UNITEDSTACONTSPE";
+                public const string ExistingHomeSales = "United-States//UNITEDSTAEXIHOMSAL";
                 /// <summary>
-                /// UnitedStates Core Consumer Prices
+                /// Export Prices
                 /// </summary>
-                public const string CoreConsumerPrices = "UNITEDSTACORCONPRI";
+                public const string ExportPrices = "United-States//UNITEDSTAEXPPRI";
                 /// <summary>
-                /// UnitedStates Core Pce Price Index
+                /// Exports
                 /// </summary>
-                public const string CorePcePriceIndex = "UNITEDSTACORPCEPRIIN";
+                public const string Exports = "United-States//TBEXTOT";
                 /// <summary>
-                /// UnitedStates Corporate Profits
+                /// Factory Orders
                 /// </summary>
-                public const string CorporateProfits = "UNITEDSTACORPRO";
+                public const string FactoryOrders = "United-States//UNITEDSTAFACORD";
                 /// <summary>
-                /// UnitedStates Core Producer Prices
+                /// Factory Orders Ex Transportation
                 /// </summary>
-                public const string CoreProducerPrices = "UNITEDSTACORPROPRI";
+                public const string FactoryOrdersExTransportation = "United-States//UNITEDSTAFACORDEXTRA";
                 /// <summary>
-                /// UnitedStates Crude Oil Stocks Change
+                /// 52 Week Bill Yield
                 /// </summary>
-                public const string CrudeOilStocksChange = "UNITEDSTACRUOILSTOCH";
+                public const string FiftyTwoWeekBillYield = "United-States//UNITEDSTA52WEEBILYIE";
                 /// <summary>
-                /// UnitedStates Dallas Fed Manufacturing Index
+                /// 5 Year Note Yield
                 /// </summary>
-                public const string DallasFedManufacturingIndex = "UNITEDSTADALFEDMANIN";
+                public const string FiveYearNoteYield = "United-States//UNITEDSTA5YEANOTYIE";
                 /// <summary>
-                /// UnitedStates Durable Goods Orders
+                /// Foreign Bond Investment
                 /// </summary>
-                public const string DurableGoodsOrders = "UNITEDSTADURGOOORD";
+                public const string ForeignBondInvestment = "United-States//UNITEDSTAFORBONINV";
                 /// <summary>
-                /// UnitedStates Durable Goods Orders Ex Defense
+                /// 4 Week Bill Yield
                 /// </summary>
-                public const string DurableGoodsOrdersExDefense = "UNITEDSTADURGOOORDED";
+                public const string FourWeekBillYield = "United-States//UNITEDSTA4WEEBILYIE";
                 /// <summary>
-                /// UnitedStates Durable Goods Orders Ex Transportation
+                /// Gasoline Production
                 /// </summary>
-                public const string DurableGoodsOrdersExTransportation = "UNITEDSTADURGOOORDEX";
+                public const string GasolineProduction = "United-States//UNITEDSTAGASPRO";
                 /// <summary>
-                /// UnitedStates Economic Optimism Index
+                /// Gasoline Stocks Change
                 /// </summary>
-                public const string EconomicOptimismIndex = "UNITEDSTAECOOPTIND";
+                public const string GasolineStocksChange = "United-States//UNITEDSTAGASSTOCHA";
                 /// <summary>
-                /// UnitedStates Employment Cost Index
+                /// GDP Annual Growth Rate
                 /// </summary>
-                public const string EmploymentCostIndex = "UNITEDSTAEMPCOSIND";
+                public const string GDPAnnualGrowthRate = "United-States//GDP-CYOY";
                 /// <summary>
-                /// UnitedStates Existing Home Sales
+                /// Gdp Deflator
                 /// </summary>
-                public const string ExistingHomeSales = "UNITEDSTAEXIHOMSAL";
+                public const string GdpDeflator = "United-States//UNITEDSTAGDPDEF";
                 /// <summary>
-                /// UnitedStates Export Prices
+                /// GDP Growth Rate
                 /// </summary>
-                public const string ExportPrices = "UNITEDSTAEXPPRI";
+                public const string GDPGrowthRate = "United-States//GDP-CQOQ";
                 /// <summary>
-                /// UnitedStates Factory Orders
+                /// Goods Trade Balance
                 /// </summary>
-                public const string FactoryOrders = "UNITEDSTAFACORD";
+                public const string GoodsTradeBalance = "United-States//UNITEDSTAGOOTRABAL";
                 /// <summary>
-                /// UnitedStates Factory Orders Ex Transportation
+                /// Government Bond 10Y
                 /// </summary>
-                public const string FactoryOrdersExTransportation = "UNITEDSTAFACORDEXTRA";
+                public const string GovernmentBondTenY = "United-States//USGG10YR";
                 /// <summary>
-                /// UnitedStates Foreign Bond Investment
+                /// Government Budget Value
                 /// </summary>
-                public const string ForeignBondInvestment = "UNITEDSTAFORBONINV";
+                public const string GovernmentBudgetValue = "United-States//UNITEDSTAGOVBUDVAL";
                 /// <summary>
-                /// UnitedStates Gasoline Stocks Change
+                /// Government Payrolls
                 /// </summary>
-                public const string GasolineStocksChange = "UNITEDSTAGASSTOCHA";
+                public const string GovernmentPayrolls = "United-States//UNITEDSTAGOVPAY";
                 /// <summary>
-                /// UnitedStates Gdp Deflator
+                /// Holidays
                 /// </summary>
-                public const string GdpDeflator = "UNITEDSTAGDPDEF";
+                public const string Holidays = "United-States//HOLIDAYSUNITED-STAT";
                 /// <summary>
-                /// UnitedStates Government Budget Value
+                /// Housing Index
                 /// </summary>
-                public const string GovernmentBudgetValue = "UNITEDSTAGOVBUDVAL";
+                public const string HousingIndex = "United-States//UNITEDSTAHOUIND";
                 /// <summary>
-                /// UnitedStates Government Payrolls
+                /// Housing Starts
                 /// </summary>
-                public const string GovernmentPayrolls = "UNITEDSTAGOVPAY";
+                public const string HousingStarts = "United-States//UNITEDSTAHOUSTA";
                 /// <summary>
-                /// UnitedStates Housing Index
+                /// Import Prices
                 /// </summary>
-                public const string HousingIndex = "UNITEDSTAHOUIND";
+                public const string ImportPrices = "United-States//UNITEDSTAIMPPRI";
                 /// <summary>
-                /// UnitedStates Housing Starts
+                /// Imports
                 /// </summary>
-                public const string HousingStarts = "UNITEDSTAHOUSTA";
+                public const string Imports = "United-States//TBIMTOT";
                 /// <summary>
-                /// UnitedStates Import Prices
+                /// Industrial Production
                 /// </summary>
-                public const string ImportPrices = "UNITEDSTAIMPPRI";
+                public const string IndustrialProduction = "United-States//IP-YOY";
                 /// <summary>
-                /// UnitedStates Industrial Production Mom
+                /// Industrial Production Mom
                 /// </summary>
-                public const string IndustrialProductionMom = "UNITEDSTAINDPROMOM";
+                public const string IndustrialProductionMom = "United-States//UNITEDSTAINDPROMOM";
                 /// <summary>
-                /// UnitedStates Inflation Expectations
+                /// Inflation Expectations
                 /// </summary>
-                public const string InflationExpectations = "UNITEDSTAINFEXP";
+                public const string InflationExpectations = "United-States//UNITEDSTAINFEXP";
                 /// <summary>
-                /// UnitedStates Inflation Rate Mom
+                /// Inflation Rate
                 /// </summary>
-                public const string InflationRateMom = "UNITEDSTAINFRATMOM";
+                public const string InflationRate = "United-States//CPI-YOY";
                 /// <summary>
-                /// UnitedStates Ism New York Index
+                /// Inflation Rate Mom
                 /// </summary>
-                public const string IsmNewYorkIndex = "UNITEDSTAISMNEWYORIN";
+                public const string InflationRateMom = "United-States//UNITEDSTAINFRATMOM";
                 /// <summary>
-                /// UnitedStates Job Offers
+                /// Initial Jobless Claims
                 /// </summary>
-                public const string JobOffers = "UNITEDSTAJOBOFF";
+                public const string InitialJoblessClaims = "United-States//IJCUSA";
                 /// <summary>
-                /// UnitedStates Labour Costs
+                /// Interest Rate
                 /// </summary>
-                public const string LabourCosts = "UNITEDSTALABCOS";
+                public const string InterestRate = "United-States//FDTR";
                 /// <summary>
-                /// UnitedStates Labor Force Participation Rate
+                /// Ism New York Index
                 /// </summary>
-                public const string LaborForceParticipationRate = "UNITEDSTALABFORPARRA";
+                public const string IsmNewYorkIndex = "United-States//UNITEDSTAISMNEWYORIN";
                 /// <summary>
-                /// UnitedStates Leading Economic Index
+                /// Job Offers
                 /// </summary>
-                public const string LeadingEconomicIndex = "UNITEDSTALEAECOIND";
+                public const string JobOffers = "United-States//UNITEDSTAJOBOFF";
                 /// <summary>
-                /// UnitedStates Labor Market Conditions Index
+                /// Kansas Fed Manufacturing Index
                 /// </summary>
-                public const string LaborMarketConditionsIndex = "UNITEDSTALMCI";
+                public const string KansasFedManufacturingIndex = "United-States//UNITEDSTAKFMI";
                 /// <summary>
-                /// UnitedStates Manufacturing Payrolls
+                /// Labor Force Participation Rate
                 /// </summary>
-                public const string ManufacturingPayrolls = "UNITEDSTAMANPAY";
+                public const string LaborForceParticipationRate = "United-States//UNITEDSTALABFORPARRA";
                 /// <summary>
-                /// UnitedStates Manufacturing Pmi
+                /// Labor Market Conditions Index
                 /// </summary>
-                public const string ManufacturingPmi = "UNITEDSTAMANPMI";
+                public const string LaborMarketConditionsIndex = "United-States//UNITEDSTALMCI";
                 /// <summary>
-                /// UnitedStates Manufacturing Production
+                /// Labour Costs
                 /// </summary>
-                public const string ManufacturingProduction = "UNITEDSTAMANPRO";
+                public const string LabourCosts = "United-States//UNITEDSTALABCOS";
                 /// <summary>
-                /// UnitedStates Mortgage Applications
+                /// Leading Economic Index
                 /// </summary>
-                public const string MortgageApplications = "UNITEDSTAMORAPP";
+                public const string LeadingEconomicIndex = "United-States//UNITEDSTALEAECOIND";
                 /// <summary>
-                /// UnitedStates Mortgage Rate
+                /// Manufacturing Payrolls
                 /// </summary>
-                public const string MortgageRate = "UNITEDSTAMORRAT";
+                public const string ManufacturingPayrolls = "United-States//UNITEDSTAMANPAY";
                 /// <summary>
-                /// UnitedStates Nahb Housing Market Index
+                /// Manufacturing Pmi
                 /// </summary>
-                public const string NahbHousingMarketIndex = "UNITEDSTANAHHOUMARIN";
+                public const string ManufacturingPmi = "United-States//UNITEDSTAMANPMI";
                 /// <summary>
-                /// UnitedStates Natural Gas Stocks Change
+                /// Manufacturing Production
                 /// </summary>
-                public const string NaturalGasStocksChange = "UNITEDSTANATGASSTOCH";
+                public const string ManufacturingProduction = "United-States//UNITEDSTAMANPRO";
                 /// <summary>
-                /// UnitedStates Net Long-term Tic Flows
+                /// Mortgage Applications
                 /// </summary>
-                public const string NetLong_termTicFlows = "UNITEDSTANETLONTICFL";
+                public const string MortgageApplications = "United-States//UNITEDSTAMORAPP";
                 /// <summary>
-                /// UnitedStates New Home Sales
+                /// Mortgage Rate
                 /// </summary>
-                public const string NewHomeSales = "UNITEDSTANEWHOMSAL";
+                public const string MortgageRate = "United-States//UNITEDSTAMORRAT";
                 /// <summary>
-                /// UnitedStates Nfib Business Optimism Index
+                /// Nahb Housing Market Index
                 /// </summary>
-                public const string NfibBusinessOptimismIndex = "UNITEDSTANFIBUSOPTIN";
+                public const string NahbHousingMarketIndex = "United-States//UNITEDSTANAHHOUMARIN";
                 /// <summary>
-                /// UnitedStates Non Manufacturing PMI
+                /// Natural Gas Stocks Change
                 /// </summary>
-                public const string NonManufacturingPmi = "UNITEDSTANONMANPMI";
+                public const string NaturalGasStocksChange = "United-States//UNITEDSTANATGASSTOCH";
                 /// <summary>
-                /// UnitedStates Nonfarm Payrolls Private
+                /// Net Long-term Tic Flows
                 /// </summary>
-                public const string NonfarmPayrollsPrivate = "UNITEDSTANONPAY-PRI";
+                public const string NetLongTermTicFlows = "United-States//UNITEDSTANETLONTICFL";
                 /// <summary>
-                /// UnitedStates Ny Empire State Manufacturing Index
+                /// New Home Sales
                 /// </summary>
-                public const string NyEmpireStateManufacturingIndex = "UNITEDSTANYEMPSTAMAN";
+                public const string NewHomeSales = "United-States//UNITEDSTANEWHOMSAL";
                 /// <summary>
-                /// UnitedStates Pce Price Index
+                /// Nfib Business Optimism Index
                 /// </summary>
-                public const string PcePriceIndex = "UNITEDSTAPCEPRIIND";
+                public const string NfibBusinessOptimismIndex = "United-States//UNITEDSTANFIBUSOPTIN";
                 /// <summary>
-                /// UnitedStates Pending Home Sales
+                /// Non Farm Payrolls
                 /// </summary>
-                public const string PendingHomeSales = "UNITEDSTAPENHOMSAL";
+                public const string NonFarmPayrolls = "United-States//NFP-TCH";
                 /// <summary>
-                /// UnitedStates Personal Income
+                /// Nonfarm Payrolls - Private
                 /// </summary>
-                public const string PersonalIncome = "UNITEDSTAPERINC";
+                public const string NonfarmPayrollsPrivate = "United-States//UNITEDSTANONPAY-PRI";
                 /// <summary>
-                /// UnitedStates Personal Spending
+                /// Non Manufacturing Pmi
                 /// </summary>
-                public const string PersonalSpending = "UNITEDSTAPERSPE";
+                public const string NonManufacturingPmi = "United-States//UNITEDSTANONMANPMI";
                 /// <summary>
-                /// UnitedStates Philadelphia Fed Manufacturing Index
+                /// Ny Empire State Manufacturing Index
                 /// </summary>
-                public const string PhiladelphiaFedManufacturingIndex = "UNITEDSTAPHIFEDMANIN";
+                public const string NyEmpireStateManufacturingIndex = "United-States//UNITEDSTANYEMPSTAMAN";
                 /// <summary>
-                /// UnitedStates Productivity
+                /// Pce Price Index
                 /// </summary>
-                public const string Productivity = "UNITEDSTAPRO";
+                public const string PcePriceIndex = "United-States//UNITEDSTAPCEPRIIND";
                 /// <summary>
-                /// UnitedStates Producer Prices
+                /// Pending Home Sales
                 /// </summary>
-                public const string ProducerPrices = "UNITEDSTAPROPRI";
+                public const string PendingHomeSales = "United-States//UNITEDSTAPENHOMSAL";
                 /// <summary>
-                /// UnitedStates Producer Prices Change
+                /// Personal Income
                 /// </summary>
-                public const string ProducerPricesChange = "UNITEDSTAPROPRICHA";
+                public const string PersonalIncome = "United-States//UNITEDSTAPERINC";
                 /// <summary>
-                /// UnitedStates Redbook Index
+                /// Personal Spending
                 /// </summary>
-                public const string RedbookIndex = "UNITEDSTAREDIND";
+                public const string PersonalSpending = "United-States//UNITEDSTAPERSPE";
                 /// <summary>
-                /// UnitedStates Richmond Fed Manufacturing Index
+                /// Philadelphia Fed Manufacturing Index
                 /// </summary>
-                public const string RichmondFedManufacturingIndex = "UNITEDSTARICFEDMANIN";
+                public const string PhiladelphiaFedManufacturingIndex = "United-States//UNITEDSTAPHIFEDMANIN";
                 /// <summary>
-                /// UnitedStates Services Pmi
+                /// Producer Prices
                 /// </summary>
-                public const string ServicesPmi = "UNITEDSTASERPMI";
+                public const string ProducerPrices = "United-States//UNITEDSTAPROPRI";
                 /// <summary>
-                /// UnitedStates Total Vehicle Sales
+                /// Producer Prices Change
                 /// </summary>
-                public const string TotalVehicleSales = "UNITEDSTATOTVEHSAL";
+                public const string ProducerPricesChange = "United-States//UNITEDSTAPROPRICHA";
                 /// <summary>
-                /// UnitedStates Wholesale Inventories
+                /// Productivity
                 /// </summary>
-                public const string WholesaleInventories = "UNITEDSTAWHOINV";
+                public const string Productivity = "United-States//UNITEDSTAPRO";
                 /// <summary>
-                /// UnitedStates Core Inflation Rate
+                /// Redbook Index
                 /// </summary>
-                public const string CoreInflationRate = "USACORECPIRATE";
+                public const string RedbookIndex = "United-States//UNITEDSTAREDIND";
                 /// <summary>
-                /// UnitedStates Retail Sales YoY
+                /// Refinery Crude Runs
                 /// </summary>
-                public const string RetailSalesYoy = "USARETAILSALESYOY";
+                public const string RefineryCrudeRuns = "United-States//UNITEDSTAREFCRURUN";
                 /// <summary>
-                /// UnitedStates Current Account
+                /// Retail Sales Ex Autos
                 /// </summary>
-                public const string CurrentAccount = "USCABAL";
+                public const string RetailSalesExAutos = "United-States//UNITEDSTARETSALEXAUT";
                 /// <summary>
-                /// UnitedStates Government Bond 10Y
+                /// Retail Sales MoM
                 /// </summary>
-                public const string GovernmentBond10y = "USGG10YR";
+                public const string RetailSalesMom = "United-States//RSTAMOM";
                 /// <summary>
-                /// UnitedStates Crude Oil Rigs
+                /// Retail Sales YoY
                 /// </summary>
-                public const string CrudeOilRigs = "USOILRIGS";
+                public const string RetailSalesYoy = "United-States//USARETAILSALESYOY";
                 /// <summary>
-                /// UnitedStates Balance of Trade
+                /// Richmond Fed Manufacturing Index
                 /// </summary>
-                public const string BalanceOfTrade = "USTBTOT";
+                public const string RichmondFedManufacturingIndex = "United-States//UNITEDSTARICFEDMANIN";
                 /// <summary>
-                /// UnitedStates Unemployment Rate
+                /// Services Pmi
                 /// </summary>
-                public const string UnemploymentRate = "USURTOT";
-            }
-            public static class Uruguay
-            {
+                public const string ServicesPmi = "United-States//UNITEDSTASERPMI";
                 /// <summary>
-                /// Uruguay Balance of Trade
+                /// 7 Year Note Yield
                 /// </summary>
-                public const string BalanceOfTrade = "URUGUAYBALRADE";
+                public const string SevenYearNoteYield = "United-States//UNITEDSTA7YEANOTYIE";
                 /// <summary>
-                /// Uruguay Current Account
+                /// 6 Month Bill Yield
                 /// </summary>
-                public const string CurrentAccount = "URUGUAYCURCOUNT";
+                public const string SixMonthBillYield = "United-States//UNITEDSTA6MONBILYIE";
                 /// <summary>
-                /// Uruguay GDP Annual Growth Rate
+                /// 30 Year Bond Yield
                 /// </summary>
-                public const string GdpAnnualGrowthRate = "URUGUAYGDPATE";
+                public const string ThirtyYearBondYield = "United-States//UNITEDSTA30YEABONYIE";
                 /// <summary>
-                /// Uruguay GDP Growth Rate
+                /// 3 Month Bill Yield
                 /// </summary>
-                public const string GdpGrowthRate = "URUGUAYGDPGRORAT";
+                public const string ThreeMonthBillYield = "United-States//UNITEDSTA3MONBILYIE";
                 /// <summary>
-                /// Uruguay Industrial Production
+                /// 3 Year Note Yield
                 /// </summary>
-                public const string IndustrialProduction = "URUGUAYINDCTION";
+                public const string ThreeYearNoteYield = "United-States//UNITEDSTA3YEANOTYIE";
                 /// <summary>
-                /// Uruguay Inflation Rate
+                /// Total Vehicle Sales
                 /// </summary>
-                public const string InflationRate = "URUGUAYINFNRATE";
+                public const string TotalVehicleSales = "United-States//UNITEDSTATOTVEHSAL";
                 /// <summary>
-                /// Uruguay Unemployment Rate
+                /// 2 Year Note Yield
                 /// </summary>
-                public const string UnemploymentRate = "URUGUAYUNETRATE";
-            }
-            public static class Venezuela
-            {
+                public const string TwoYearNoteYield = "United-States//UNITEDSTA2YEANOTYIE";
                 /// <summary>
-                /// Venezuela Industrial Production
+                /// Unemployment Rate
                 /// </summary>
-                public const string IndustrialProduction = "VENEZUELAINDPRO";
+                public const string UnemploymentRate = "United-States//USURTOT";
                 /// <summary>
-                /// Venezuela Retail Sales Mom
+                /// Wholesale Inventories
                 /// </summary>
-                public const string RetailSalesMom = "VENEZUELARETSALMOM";
-                /// <summary>
-                /// Venezuela Retail Sales YoY
-                /// </summary>
-                public const string RetailSalesYoy = "VENUELARETSYOY";
-                /// <summary>
-                /// Venezuela Inflation Rate
-                /// </summary>
-                public const string InflationRate = "VNVPIYOY";
-            }
-            public static class Vietnam
-            {
-                /// <summary>
-                /// Vietnam Balance of Trade
-                /// </summary>
-                public const string BalanceOfTrade = "VIETNAMBT";
-                /// <summary>
-                /// Vietnam Foreign Direct Investment
-                /// </summary>
-                public const string ForeignDirectInvestment = "VIETNAMFORDIRINV";
-                /// <summary>
-                /// Vietnam GDP Annual Growth Rate
-                /// </summary>
-                public const string GdpAnnualGrowthRate = "VIETNAMGDPYOY";
-                /// <summary>
-                /// Vietnam Industrial Production
-                /// </summary>
-                public const string IndustrialProduction = "VIETNAMIP";
-                /// <summary>
-                /// Vietnam Inflation Rate
-                /// </summary>
-                public const string InflationRate = "VIETNAMIR";
-                /// <summary>
-                /// Vietnam Manufacturing PMI
-                /// </summary>
-                public const string ManufacturingPmi = "VIETNAMMANPMI";
-                /// <summary>
-                /// Vietnam Retail Sales Yoy
-                /// </summary>
-                public const string RetailSalesYoy = "VIETNAMRETSALYOY";
-                /// <summary>
-                /// Vietnam Tourist Arrivals
-                /// </summary>
-                public const string TouristArrivals = "VIETNAMTOUARR";
-            }
-            public static class Zambia
-            {
-                /// <summary>
-                /// Zambia Composite Pmi
-                /// </summary>
-                public const string CompositePmi = "ZAMBIACOMPMI";
-                /// <summary>
-                /// Zambia Inflation Rate
-                /// </summary>
-                public const string InflationRate = "ZAMMBIAINFNRATE";
-                /// <summary>
-                /// Zambia Interest Rate
-                /// </summary>
-                public const string InterestRate = "ZAMMBIAINTTRATE";
-            }
-            public static class Zimbabwe
-            {
-                /// <summary>
-                /// Zimbabwe Inflation Rate
-                /// </summary>
-                public const string InflationRate = "ZIMABWEINFNRATE";
+                public const string WholesaleInventories = "United-States//UNITEDSTAWHOINV";
             }
         }
 

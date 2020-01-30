@@ -13,12 +13,15 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.TradingEconomics;
-using QuantConnect.Data.UniverseSelection;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace QuantConnect.Tests.Common.Data.Custom
 {
@@ -72,10 +75,13 @@ namespace QuantConnect.Tests.Common.Data.Custom
         public void DeserializesProperly()
         {
             var instance = new TradingEconomicsCalendar();
+            var csvBytes = Encoding.UTF8.GetBytes(JsonConvert.DeserializeObject<List<TradingEconomicsCalendar>>(TestCalendarJson).First().ToCsv());
+            var calendarStream = new StreamReader(new MemoryStream(csvBytes));
+
             var result = instance.Reader(
                 new SubscriptionDataConfig(
                     typeof(TradingEconomicsCalendar),
-                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.None, QuantConnect.Market.USA),
+                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UnitedStates//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
                     Resolution.Daily,
                     TimeZones.Utc,
                     TimeZones.Utc,
@@ -84,12 +90,12 @@ namespace QuantConnect.Tests.Common.Data.Custom
                     false,
                     isCustom: true
                 ),
-                TestCalendarJson,
+                calendarStream,
                 new DateTime(2019, 1, 1),
                 false
             );
 
-            var calendar = (TradingEconomicsCalendar)((BaseDataCollection)result).Data.Single();
+            var calendar = (TradingEconomicsCalendar)result;
 
             Assert.AreEqual("0", calendar.CalendarId);
             Assert.AreEqual(new DateTime(2019, 1, 1), calendar.EndTime.Date);
@@ -110,6 +116,22 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual("PPI PCE", calendar.OCategory);
             Assert.AreEqual("US", calendar.Ticker);
             Assert.AreEqual(true, calendar.IsPercentage);
+        }
+
+        [TestCase("2.5.0", 2.5, false)]
+        [TestCase("Foobar", null, false)]
+        [TestCase("1.0%", 0.01, true)]
+        [TestCase("--1.0", -1.0, false)]
+        [TestCase("1.0T", 1000000000000.0, false)]
+        [TestCase("1.0B", 1000000000.0, false)]
+        [TestCase("1.0M", 1000000.0, false)]
+        [TestCase("1.0K", 1000.0, false)]
+        [TestCase("1.0K%", 0.01, true)]
+        [TestCase("1", 0.01, true)]
+        public void DecimalIsParsedCorrectly(string value, double? expected, bool inPercentage)
+        {
+            // Cast inside since we can't pass in decimal values through TestCase attributes
+            Assert.AreEqual((decimal?)expected, TradingEconomicsCalendar.ParseDecimal(value, inPercentage));
         }
     }
 }

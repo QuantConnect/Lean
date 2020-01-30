@@ -77,6 +77,46 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Reads the next string value from the CSV file
+        /// </summary>
+        /// <param name="stream">The data stream</param>
+        /// <param name="delimiter">The data delimiter character to use, default is ','</param>
+        /// <returns>The string value read from CSV</returns>
+        public static string GetNextCsv(this StreamReader stream, char delimiter = DefaultDelimiter)
+        {
+            var builder = new StringBuilder();
+            var current = (char)stream.Read();
+            var inQuotes = false;
+
+            while (!((!inQuotes && current == delimiter) || current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData))
+            {
+                if (!inQuotes && current == '"')
+                {
+                    inQuotes = true;
+                    current = (char)stream.Read();
+
+                    if (current == '"' && stream.Peek() == delimiter)
+                    {
+                        inQuotes = false;
+                        current = (char)stream.Read();
+                        continue;
+                    }
+                }
+                else if (current == '"' && stream.Peek() == delimiter)
+                {
+                    inQuotes = false;
+                    current = (char)stream.Read();
+                    continue;
+                }
+
+                builder.Append(current);
+                current = (char)stream.Read();
+            }
+
+            return builder.ToString();
+        }
+
+        /// <summary>
         /// Gets a date time instance from a stream reader
         /// </summary>
         /// <param name="stream">The data stream</param>
@@ -102,6 +142,20 @@ namespace QuantConnect.Util
             return DateTime.ParseExact(builder.ToString(),
                 format,
                 CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Advance the stream to the end of the line
+        /// </summary>
+        /// <param name="stream">The stream</param>
+        /// <param name="delimiter">Delimiter</param>
+        public static void ReadToEndOfLine(this StreamReader stream, char delimiter = DefaultDelimiter)
+        {
+            var current = (char)stream.Read();
+            while (!(current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData))
+            {
+                current = (char)stream.Read();
+            }
         }
 
         /// <summary>

@@ -191,7 +191,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 filteredName = SingleWordFilter(filteredName, kvp.Key, kvp.Value);
             }
 
-            return filteredName;
+            return filteredName.Trim();
         }
 
         /// <summary>
@@ -212,7 +212,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 var i = 0;
                 foreach (var word in words)
                 {
-                    if (i != 0 && word == company)
+                    if (word == company)
                     {
                         break;
                     }
