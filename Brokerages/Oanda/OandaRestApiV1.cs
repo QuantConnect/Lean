@@ -627,10 +627,7 @@ namespace QuantConnect.Brokerages.Oanda
         {
             if (data.IsHeartbeat())
             {
-                lock (LockerConnectionMonitor)
-                {
-                    LastHeartbeatUtcTime = DateTime.UtcNow;
-                }
+                TransactionsConnectionHandler.KeepAlive(DateTime.UtcNow);
                 return;
             }
 
@@ -684,10 +681,7 @@ namespace QuantConnect.Brokerages.Oanda
         {
             if (data.IsHeartbeat())
             {
-                lock (LockerConnectionMonitor)
-                {
-                    LastHeartbeatUtcTime = DateTime.UtcNow;
-                }
+                PricingConnectionHandler.KeepAlive(DateTime.UtcNow);
                 return;
             }
 

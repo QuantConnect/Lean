@@ -38,6 +38,11 @@ namespace QuantConnect.Brokerages
         event EventHandler ReconnectRequested;
 
         /// <summary>
+        /// Returns true if the connection has been lost
+        /// </summary>
+        bool IsConnectionLost { get; }
+
+        /// <summary>
         /// Initializes the connection handler
         /// </summary>
         /// <param name="connectionId">The connection id</param>

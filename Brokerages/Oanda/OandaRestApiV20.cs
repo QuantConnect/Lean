@@ -344,10 +344,7 @@ namespace QuantConnect.Brokerages.Oanda
             switch (type)
             {
                 case "HEARTBEAT":
-                    lock (LockerConnectionMonitor)
-                    {
-                        LastHeartbeatUtcTime = DateTime.UtcNow;
-                    }
+                    TransactionsConnectionHandler.KeepAlive(DateTime.UtcNow);
                     break;
 
                 case "ORDER_FILL":
@@ -396,10 +393,7 @@ namespace QuantConnect.Brokerages.Oanda
             switch (type)
             {
                 case "HEARTBEAT":
-                    lock (LockerConnectionMonitor)
-                    {
-                        LastHeartbeatUtcTime = DateTime.UtcNow;
-                    }
+                    PricingConnectionHandler.KeepAlive(DateTime.UtcNow);
                     break;
 
                 case "PRICE":
