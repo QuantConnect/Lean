@@ -42,9 +42,9 @@ namespace QuantConnect.Tests.Common.Securities
                 return base.GetMaintenanceMargin(security);
             }
 
-            public new decimal GetInitialMarginRequirement(Security security)
+            public new decimal GetInitialMarginRequirement(Security security, decimal quantity)
             {
-                return base.GetInitialMarginRequirement(security);
+                return base.GetInitialMarginRequirement(security, quantity);
             }
 
             public new decimal GetInitialMarginRequiredForOrder(
@@ -258,9 +258,9 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, quantity);
 
-            var initialMargin = buyingPowerModel.GetInitialMarginRequirement(futureSecurity);
+            var initialMargin = buyingPowerModel.GetInitialMarginRequirement(futureSecurity, futureSecurity.Holdings.AbsoluteQuantity);
             Assert.IsTrue(initialMargin > 0);
-            var overnightMargin = buyingPowerModel.GetMaintenanceMarginRequirement(futureSecurity);
+            var overnightMargin = Math.Abs(buyingPowerModel.GetMaintenanceMargin(futureSecurity));
 
             // initial margin is greater than the maintenance margin
             Assert.Greater(initialMargin, overnightMargin);
@@ -286,10 +286,9 @@ namespace QuantConnect.Tests.Common.Securities
                     futureSecurity,
                     new MarketOrder(futureSecurity.Symbol, quantity, algorithm.UtcTime)));
 
-            var initialMarginPercentage = buyingPowerModel.GetInitialMarginRequirement(futureSecurity);
+            var initialMarginExpected = buyingPowerModel.GetInitialMarginRequirement(futureSecurity, quantity);
 
-            Assert.AreEqual(initialMarginPercentage
-                            * (new MarketOrder(futureSecurity.Symbol, quantity, algorithm.UtcTime).GetValue(futureSecurity))
+            Assert.AreEqual(initialMarginExpected
                             + 18.50m * Math.Sign(quantity), // fees -> 10 quantity * 1.85
                 initialMargin);
         }
@@ -353,7 +352,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(
                 algorithm.Portfolio.MarginRemaining
                 + buyingPowerModel.GetMaintenanceMargin(futureSecurity) // close position
-                + buyingPowerModel.GetInitialMarginRequirement(futureSecurity) * futureSecurity.Holdings.AbsoluteHoldingsValue, // open position
+                + buyingPowerModel.GetInitialMarginRequirement(futureSecurity, futureSecurity.Holdings.AbsoluteQuantity), // open position
                 buyingPower);
             Assert.IsTrue(buyingPower > 0);
         }
@@ -483,6 +482,11 @@ namespace QuantConnect.Tests.Common.Securities
 
             leverage = futureSecurity.BuyingPowerModel.GetLeverage(futureSecurity);
 
+            // we don't own the security, default value is 1
+            Assert.AreEqual(1, leverage);
+
+            futureSecurity.Holdings.SetHoldings(100, 100);
+            leverage = futureSecurity.BuyingPowerModel.GetLeverage(futureSecurity);
             // eur usd leverage is high!
             Assert.Greater(leverage, 350);
 
@@ -668,7 +672,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
 
-            var expected = (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target) - model.GetInitialMarginRequirement(futureSecurity) * futureSecurity.Holdings.AbsoluteHoldingsValue)
+            var expected = (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target) - model.GetInitialMarginRequirement(futureSecurity, futureSecurity.Holdings.AbsoluteQuantity))
                            / model.InitialMarginRequirement - 1 * Math.Abs(target); // -1 fees
             expected -= expected % futureSecurity.SymbolProperties.LotSize;
             Console.WriteLine($"Expected {expected}");
@@ -707,7 +711,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
 
-            var expected = (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target) + model.GetInitialMarginRequirement(futureSecurity) * futureSecurity.Holdings.AbsoluteHoldingsValue)
+            var expected = (algorithm.Portfolio.TotalPortfolioValue * Math.Abs(target) + model.GetInitialMarginRequirement(futureSecurity, futureSecurity.Holdings.AbsoluteQuantity))
                            / model.InitialMarginRequirement - 1 * Math.Abs(target); // -1 fees
             expected -= expected % futureSecurity.SymbolProperties.LotSize;
             Console.WriteLine($"Expected {expected}");

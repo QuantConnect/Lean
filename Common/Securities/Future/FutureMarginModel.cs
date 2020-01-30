@@ -58,14 +58,15 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
-        /// Gets the current leverage of the security. Does not require holding the security.
+        /// Gets the current leverage of the security
         /// </summary>
         /// <param name="security">The security to get leverage for</param>
         /// <returns>The current leverage in the security</returns>
-        /// <remarks>Calculated using the initial margin requirement and current security price.</remarks>
+        /// <remarks>Calculated using the maintenance margin requirement and current security holdings.
+        /// For no holdings will return 1.</remarks>
         public override decimal GetLeverage(Security security)
         {
-            var marginRequirement = GetInitialMarginRequirement(security);
+            var marginRequirement = GetMaintenanceMarginRequirement(security);
             return marginRequirement == 0 ? 1m : 1 / marginRequirement;
         }
 
@@ -100,10 +101,9 @@ namespace QuantConnect.Securities.Future
             var feesInAccountCurrency = parameters.CurrencyConverter.
                 ConvertToAccountCurrency(fees).Amount;
 
-            var value = parameters.Order.GetValue(parameters.Security);
-            var marginRequired = value * GetInitialMarginRequirement(parameters.Security, value, parameters.Order.AbsoluteQuantity);
+            var marginRequired = GetInitialMarginRequirement(parameters.Security, parameters.Order.AbsoluteQuantity);
 
-            return marginRequired + Math.Sign(marginRequired) * feesInAccountCurrency;
+            return (marginRequired + feesInAccountCurrency) * Math.Sign(parameters.Order.Quantity);
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace QuantConnect.Securities.Future
                                 // portion of margin to close the existing position
                                 GetMaintenanceMargin(security) +
                                 // portion of margin to open the new position
-                                security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security, security.Holdings.HoldingsValue, security.Holdings.AbsoluteQuantity);
+                                GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
                             break;
                     }
                 }
@@ -160,7 +160,7 @@ namespace QuantConnect.Securities.Future
                                 // portion of margin to close the existing position
                                 GetMaintenanceMargin(security) +
                                 // portion of margin to open the new position
-                                security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security, security.Holdings.HoldingsValue, security.Holdings.AbsoluteQuantity);
+                                GetInitialMarginRequirement(security, security.Holdings.AbsoluteQuantity);
                             break;
                     }
                 }
@@ -183,7 +183,8 @@ namespace QuantConnect.Securities.Future
         /// Note that for example equities, factor leverage into the target portfolio value</remarks>
         protected sealed override decimal GetNormalizedInitialMarginForOrder(Order order, Security security)
         {
-            return order.GetValue(security) * GetInitialMarginRequirement(security);
+            // we use Quantity here and not AbsoluteQuantity on purpose to get the sign
+            return GetInitialMarginRequirement(security, order.Quantity);
         }
 
         /// <summary>
@@ -191,10 +192,9 @@ namespace QuantConnect.Securities.Future
         /// </summary>
         protected override decimal GetInitialMarginRequirement(Security security)
         {
-            var utcTime = security.LocalTime.ConvertToUtc(security.Exchange.TimeZone);
-            var order = new MarketOrder(security.Symbol, 1, utcTime);
-
-            return GetInitialMarginRequirement(security, order.GetValue(security), 1);
+            // this method shouldn't be called since we override all methods where it's used
+            throw new InvalidOperationException("This method shouldn't be called for Futures." +
+                                                " See 'protected decimal GetInitialMarginRequirement(Security security, decimal absoluteQuantity)'");
         }
 
         /// <summary>
@@ -231,15 +231,16 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
         /// </summary>
-        private decimal GetInitialMarginRequirement(Security security, decimal holdingValue, decimal absoluteQuantity)
+        /// <remarks>This method is protected for testing</remarks>
+        protected decimal GetInitialMarginRequirement(Security security, decimal quantity)
         {
-            if (security?.GetLastData() == null || holdingValue == 0m)
+            if (security?.GetLastData() == null || quantity == 0m)
                 return 0m;
 
             var marginReq = GetCurrentMarginRequirements(security);
 
             // margin is per contract and margin requirement is a percentage of orders holdings value
-            return Math.Abs((marginReq.InitialOvernight * absoluteQuantity) / holdingValue);
+            return marginReq.InitialOvernight * quantity;
         }
 
         private MarginRequirementsEntry GetCurrentMarginRequirements(Security security)
