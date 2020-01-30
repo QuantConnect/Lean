@@ -70,6 +70,11 @@ namespace QuantConnect.Brokerages
         public string ConnectionId { get; private set; }
 
         /// <summary>
+        /// Returns true if the connection has been lost
+        /// </summary>
+        public bool IsConnectionLost => _connectionLost;
+
+        /// <summary>
         /// Initializes the connection handler
         /// </summary>
         /// <param name="connectionId">The connection id</param>
