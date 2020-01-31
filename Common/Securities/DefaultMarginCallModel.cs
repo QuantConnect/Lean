@@ -102,8 +102,7 @@ namespace QuantConnect.Securities
                         var buyingPowerModel = security.BuyingPowerModel as SecurityMarginModel;
                         if (buyingPowerModel != null)
                         {
-                            var maintenanceMarginRequirement = buyingPowerModel.GetMaintenanceMarginRequirement(security);
-                            var marginCallOrder = GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed, maintenanceMarginRequirement);
+                            var marginCallOrder = GenerateMarginCallOrder(security, totalPortfolioValue, totalMarginUsed);
                             if (marginCallOrder != null && marginCallOrder.Quantity != 0)
                             {
                                 marginCallOrders.Add(marginCallOrder);
@@ -122,16 +121,15 @@ namespace QuantConnect.Securities
         /// used by the account. Returns null when no margin call is to be issued.
         /// </summary>
         /// <param name="security">The security to generate a margin call order for</param>
-        /// <param name="netLiquidationValue">The net liquidation value for the entire account</param>
-        /// <param name="totalMargin">The total margin used by the account in units of base currency</param>
-        /// <param name="maintenanceMarginRequirement">The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call</param>
+        /// <param name="totalPortfolioValue">The net liquidation value for the entire account</param>
+        /// <param name="totalUsedMargin">The total margin used by the account in units of base currency</param>
         /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
-        public virtual SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin, decimal maintenanceMarginRequirement)
+        protected virtual SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal totalPortfolioValue, decimal totalUsedMargin)
         {
             // leave a buffer in default implementation
             const decimal marginBuffer = 0.10m;
 
-            if (totalMargin <= netLiquidationValue * (1 + marginBuffer))
+            if (totalUsedMargin <= totalPortfolioValue * (1 + marginBuffer))
             {
                 return null;
             }
@@ -148,19 +146,21 @@ namespace QuantConnect.Securities
             }
 
             // compute the amount of quote currency we need to liquidate in order to get within margin requirements
-            var deltaInQuoteCurrency = (totalMargin - netLiquidationValue) / security.QuoteCurrency.ConversionRate;
+            var deltaAccountCurrency = totalUsedMargin - totalPortfolioValue;
 
-            // compute the number of shares required for the order, rounding up
-            var unitPriceInQuoteCurrency = security.Price * security.SymbolProperties.ContractMultiplier;
-            var quantity = Math.Round(deltaInQuoteCurrency / unitPriceInQuoteCurrency, MidpointRounding.AwayFromZero) / maintenanceMarginRequirement;
+            var currentlyUsedBuyingPower = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(
+                new ReservedBuyingPowerForPositionParameters(security)).Value;
 
-            // don't try and liquidate more share than we currently hold, minimum value of LotSize, maximum value for absolute quantity
-            quantity = Math.Max(security.SymbolProperties.LotSize, Math.Min(security.Holdings.AbsoluteQuantity, quantity));
-            if (security.Holdings.IsLong)
-            {
-                // adjust to a sell for long positions
-                quantity *= -1;
-            }
+            // if currentlyUsedBuyingPower > deltaAccountCurrency, means we can keep using the diff in buying power
+            var buyingPowerToKeep = Math.Max(0, currentlyUsedBuyingPower - deltaAccountCurrency);
+
+            // we want a reduction so we send the inverse side of our position
+            var deltaBuyingPower = (currentlyUsedBuyingPower - buyingPowerToKeep) * (security.Holdings.IsLong ? -1 : 1);
+
+            var quantity = security.BuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower(
+                new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(Portfolio,
+                    security,
+                    deltaBuyingPower)).Quantity;
 
             return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, security.LocalTime.ConvertToUtc(security.Exchange.TimeZone), "Margin Call", DefaultOrderProperties?.Clone());
         }

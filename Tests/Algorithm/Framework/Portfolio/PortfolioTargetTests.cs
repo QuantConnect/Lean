@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var buyingPowerMock = new Mock<IBuyingPowerModel>();
             buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetValue(It.IsAny<GetMaximumOrderQuantityForTargetValueParameters>()))
-                .Returns(new GetMaximumOrderQuantityForTargetValueResult(bpmQuantity, null, false));
+                .Returns(new GetMaximumOrderQuantityResult(bpmQuantity, null, false));
             security.BuyingPowerModel = buyingPowerMock.Object;
 
             var target = PortfolioTarget.Percent(algorithm, security.Symbol, targetPercent);
@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var buyingPowerMock = new Mock<IBuyingPowerModel>();
             buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetValue(It.IsAny<GetMaximumOrderQuantityForTargetValueParameters>()))
-                .Returns(new GetMaximumOrderQuantityForTargetValueResult(0, "The portfolio does not have enough margin available."));
+                .Returns(new GetMaximumOrderQuantityResult(0, "The portfolio does not have enough margin available."));
             security.BuyingPowerModel = buyingPowerMock.Object;
 
             var target = PortfolioTarget.Percent(algorithm, security.Symbol, targetPercent);
@@ -113,7 +113,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var buyingPowerMock = new Mock<IBuyingPowerModel>();
             buyingPowerMock.Setup(bpm => bpm.GetMaximumOrderQuantityForTargetValue(It.IsAny<GetMaximumOrderQuantityForTargetValueParameters>()))
-                .Returns(new GetMaximumOrderQuantityForTargetValueResult(1, null, false));
+                .Returns(new GetMaximumOrderQuantityResult(1, null, false));
             security.BuyingPowerModel = buyingPowerMock.Object;
 
             var target = PortfolioTarget.Percent(algorithm, security.Symbol, value);

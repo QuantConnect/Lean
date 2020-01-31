@@ -65,7 +65,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
         /// </summary>
-        public override decimal GetMaintenanceMarginRequirement(Security security)
+        protected override decimal GetMaintenanceMarginRequirement(Security security)
         {
             return base.GetMaintenanceMarginRequirement(security)*GetMarginCorrectionFactor(security);
         }

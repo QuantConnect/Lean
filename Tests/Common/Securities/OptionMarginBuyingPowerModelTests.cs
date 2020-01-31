@@ -398,25 +398,5 @@ namespace QuantConnect.Tests.Common.Securities
             // Margin = 2 * 100 * (4.68 + 0.2 * 200) = 8936
             Assert.AreEqual(8936, (double)buyingPowerModel.GetMaintenanceMargin(optionPut), 0.01);
         }
-
-        [TestCase(0)]
-        [TestCase(10000)]
-        public void NonAccountCurrency_GetBuyingPower(decimal nonAccountCurrencyCash)
-        {
-            var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-            algorithm.Portfolio.SetAccountCurrency("EUR");
-            algorithm.Portfolio.SetCash(10000);
-            algorithm.Portfolio.SetCash(Currencies.USD, nonAccountCurrencyCash, 0.88m);
-
-            var option = algorithm.AddOption("SPY");
-
-            var buyingPowerModel = new OptionMarginModel();
-            var quantity = buyingPowerModel.GetBuyingPower(new BuyingPowerParameters(
-                algorithm.Portfolio, option, OrderDirection.Buy));
-
-            Assert.AreEqual(10000m + algorithm.Portfolio.CashBook[Currencies.USD].ValueInAccountCurrency,
-                quantity.Value);
-        }
     }
 }

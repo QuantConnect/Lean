@@ -214,75 +214,120 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void VerifyMarginCallOrderLong()
+        public void VerifyMarginCallOrderLongOpenMarket()
         {
-            var netLiquidationValue = 5000m;
-            var totalMargin = 10000m;
             var securityPrice = 100m;
             var quantity = 300;
 
             var orderProcessor = new FakeOrderProcessor();
-            var portfolio = GetPortfolio(orderProcessor, quantity);
+            var portfolio = GetPortfolio(orderProcessor, quantity, Noon);
             var model = new PatternDayTradingMarginModel();
 
             // Open Market
             var security = CreateSecurity(Noon);
+            security.BuyingPowerModel = model;
             security.Holdings.SetHoldings(securityPrice, quantity);
+            portfolio.Securities.Add(security);
+            portfolio.CashBook["USD"].AddAmount(-25000);
+            portfolio.InvalidateTotalPortfolioValue();
+            var netLiquidationValue = portfolio.TotalPortfolioValue;
+            var totalMargin = portfolio.TotalMarginUsed;
+            portfolio.MarginCallModel = new TestDefaultMarginCallModel(portfolio, new OrderProperties());
 
             var expected = -(int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 4m);
-            var actual = portfolio.MarginCallModel.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin, model.GetMaintenanceMarginRequirement(security)).Quantity;
-
-            Assert.AreEqual(expected, actual);
-
-            // Closed Market
-            security = CreateSecurity(Midnight);
-            security.Holdings.SetHoldings(securityPrice, quantity);
-
-            expected = -(int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
-            actual = portfolio.MarginCallModel.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin, model.GetMaintenanceMarginRequirement(security)).Quantity;
+            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
 
             Assert.AreEqual(expected, actual);
         }
 
         [Test]
-        public void VerifyMarginCallOrderShort()
+        public void VerifyMarginCallOrderLongClosedMarket()
         {
-            var netLiquidationValue = 5000m;
-            var totalMargin = 10000m;
             var securityPrice = 100m;
-            var quantity = -300;
+            var quantity = 300;
 
             var orderProcessor = new FakeOrderProcessor();
-            var portfolio = GetPortfolio(orderProcessor, quantity);
+            var portfolio = GetPortfolio(orderProcessor, quantity, Midnight);
             var model = new PatternDayTradingMarginModel();
 
             // Open Market
-            var security = CreateSecurity(Noon);
+            var security = CreateSecurity(Midnight);
+            security.BuyingPowerModel = model;
             security.Holdings.SetHoldings(securityPrice, quantity);
+            portfolio.Securities.Add(security);
+            portfolio.CashBook["USD"].AddAmount(-25000);
+            portfolio.InvalidateTotalPortfolioValue();
+            var netLiquidationValue = portfolio.TotalPortfolioValue;
+            var totalMargin = portfolio.TotalMarginUsed;
+            portfolio.MarginCallModel = new TestDefaultMarginCallModel(portfolio, new OrderProperties());
 
-            var expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 4m);
-            var actual = portfolio.MarginCallModel.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin, model.GetMaintenanceMarginRequirement(security)).Quantity;
-
-            Assert.AreEqual(expected, actual);
-
-            // Closed Market
-            security = CreateSecurity(Midnight);
-            security.Holdings.SetHoldings(securityPrice, quantity);
-
-            expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
-            actual = portfolio.MarginCallModel.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin, model.GetMaintenanceMarginRequirement(security)).Quantity;
+            var expected = -(int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
+            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
 
             Assert.AreEqual(expected, actual);
         }
 
-        private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int quantity)
+        [Test]
+        public void VerifyMarginCallOrderShortOpenMarket()
         {
-            var securities = new SecurityManager(new TimeKeeper(DateTime.Now, new[] { TimeZones.NewYork }));
+            var securityPrice = 100m;
+            var quantity = -300;
+
+            var orderProcessor = new FakeOrderProcessor();
+            var portfolio = GetPortfolio(orderProcessor, quantity, Noon);
+            var model = new PatternDayTradingMarginModel();
+
+            // Open Market
+            var security = CreateSecurity(Noon);
+            security.BuyingPowerModel = model;
+            security.Holdings.SetHoldings(securityPrice, quantity);
+            portfolio.Securities.Add(security);
+            portfolio.CashBook["USD"].AddAmount(35000);
+            portfolio.InvalidateTotalPortfolioValue();
+            var netLiquidationValue = portfolio.TotalPortfolioValue;
+            var totalMargin = portfolio.TotalMarginUsed;
+
+            var expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 4m);
+            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void VerifyMarginCallOrderShortClosedMarket()
+        {
+            var securityPrice = 100m;
+            var quantity = -300;
+
+            var orderProcessor = new FakeOrderProcessor();
+            var portfolio = GetPortfolio(orderProcessor, quantity, Midnight);
+            var model = new PatternDayTradingMarginModel();
+
+            // Open Market
+            var security = CreateSecurity(Midnight);
+            security.BuyingPowerModel = model;
+            security.Holdings.SetHoldings(securityPrice, quantity);
+            portfolio.Securities.Add(security);
+            portfolio.CashBook["USD"].AddAmount(35000);
+            portfolio.InvalidateTotalPortfolioValue();
+            var netLiquidationValue = portfolio.TotalPortfolioValue;
+            var totalMargin = portfolio.TotalMarginUsed;
+
+            var expected = (int)(Math.Round((totalMargin - netLiquidationValue) / securityPrice, MidpointRounding.AwayFromZero) * 2m);
+            var actual = (portfolio.MarginCallModel as TestDefaultMarginCallModel).GenerateMarginCallOrder(security, netLiquidationValue, totalMargin).Quantity;
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        private SecurityPortfolioManager GetPortfolio(IOrderProcessor orderProcessor, int quantity, DateTime time)
+        {
+            var securities = new SecurityManager(new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork));
             var transactions = new SecurityTransactionManager(null, securities);
             transactions.SetOrderProcessor(orderProcessor);
 
             var portfolio = new SecurityPortfolioManager(securities, transactions);
             portfolio.SetCash(quantity);
+            portfolio.MarginCallModel = new TestDefaultMarginCallModel(portfolio, new OrderProperties());
 
             return portfolio;
         }
