@@ -36,7 +36,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                foreach (var attributeName in new[] { "ExecuteMarginCall", "GenerateMarginCallOrder", "GetMarginCallOrders" })
+                foreach (var attributeName in new[] { "ExecuteMarginCall", "GetMarginCallOrders" })
                 {
                     if (!model.HasAttr(attributeName))
                     {
@@ -75,24 +75,6 @@ namespace QuantConnect.Python
                 iterator.Dispose();
                 marginCalls.Dispose();
                 return tickets;
-            }
-        }
-
-        /// <summary>
-        /// Generates a new order for the specified security taking into account the total margin
-        /// used by the account. Returns null when no margin call is to be issued.
-        /// </summary>
-        /// <param name="security">The security to generate a margin call order for</param>
-        /// <param name="netLiquidationValue">The net liquidation value for the entire account</param>
-        /// <param name="totalMargin">The totl margin used by the account in units of base currency</param>
-        /// <param name="maintenanceMarginRequirement">The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call</param>
-        /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
-        public SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin, decimal maintenanceMarginRequirement)
-        {
-            using (Py.GIL())
-            {
-                return (_model.GenerateMarginCallOrder(security, netLiquidationValue, totalMargin, maintenanceMarginRequirement)
-                    as PyObject).GetAndDispose<SubmitOrderRequest>();
             }
         }
 

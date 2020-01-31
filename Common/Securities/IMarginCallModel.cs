@@ -32,17 +32,6 @@ namespace QuantConnect.Securities
         /// <returns>True for a margin call on the holdings.</returns>
         List<SubmitOrderRequest> GetMarginCallOrders(out bool issueMarginCallWarning);
 
-            /// <summary>
-        /// Generates a new order for the specified security taking into account the total margin
-        /// used by the account. Returns null when no margin call is to be issued.
-        /// </summary>
-        /// <param name="security">The security to generate a margin call order for</param>
-        /// <param name="netLiquidationValue">The net liquidation value for the entire account</param>
-        /// <param name="totalMargin">The totl margin used by the account in units of base currency</param>
-        /// <param name="maintenanceMarginRequirement">The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call</param>
-        /// <returns>An order object representing a liquidation order to be executed to bring the account within margin requirements</returns>
-        SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin, decimal maintenanceMarginRequirement);
-
         /// <summary>
         /// Executes synchronous orders to bring the account within margin requirements.
         /// </summary>
@@ -69,12 +58,6 @@ namespace QuantConnect.Securities
             {
                 issueMarginCallWarning = false;
                 return new List<SubmitOrderRequest>();
-            }
-
-            public SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue, decimal totalMargin,
-                decimal maintenanceMarginRequirement)
-            {
-                return null;
             }
 
             public List<OrderTicket> ExecuteMarginCall(IEnumerable<SubmitOrderRequest> generatedMarginCallOrders)

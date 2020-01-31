@@ -18,7 +18,6 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
@@ -35,6 +34,11 @@ namespace QuantConnect.Tests.Common.Securities
             public new decimal GetMaintenanceMargin(Security security)
             {
                 return base.GetMaintenanceMargin(security);
+            }
+
+            public new decimal GetMaintenanceMarginRequirement(Security security)
+            {
+                return base.GetMaintenanceMarginRequirement(security);
             }
         }
 
@@ -127,29 +131,6 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(585m, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
-        [TestCase(0)]
-        [TestCase(10000)]
-        public void NonAccountCurrency_GetBuyingPower(decimal nonAccountCurrencyCash)
-        {
-            var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-            algorithm.Portfolio.SetAccountCurrency("EUR");
-            algorithm.Portfolio.SetCash(10000);
-            algorithm.Portfolio.SetCash(Currencies.USD, nonAccountCurrencyCash, 0.88m);
-
-            // For this symbol we dont have history
-            var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
-
-            var futureSecurity = algorithm.AddFuture(ticker);
-
-            var buyingPowerModel = new FutureMarginModel();
-            var quantity =  buyingPowerModel.GetBuyingPower(new BuyingPowerParameters(
-                algorithm.Portfolio, futureSecurity, OrderDirection.Buy));
-
-            Assert.AreEqual(10000m + algorithm.Portfolio.CashBook[Currencies.USD].ValueInAccountCurrency,
-                quantity.Value);
-        }
-
         [Test]
         public void NonAccountCurrency_GetMaintenanceMarginRequirement()
         {
@@ -168,7 +149,7 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
-            var buyingPowerModel = new FutureMarginModel();
+            var buyingPowerModel = new TestFutureMarginModel();
             // 625 overnight / (1.5 price * 1 quantity * 0.88 rate * 2500 multiplier) ~= 0.18939
             var res = buyingPowerModel.GetMaintenanceMarginRequirement(futureSecurity);
             Assert.AreEqual(0.18939, (double) res, 0.00001);

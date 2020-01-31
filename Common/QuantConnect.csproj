@@ -346,6 +346,7 @@
     <Compile Include="Securities\BuyingPowerParameters.cs" />
     <Compile Include="Securities\BuyingPowerModel.cs" />
     <Compile Include="Securities\BuyingPowerModelExtensions.cs" />
+    <Compile Include="Securities\GetMaximumOrderQuantityForDeltaBuyingPowerParameters.cs" />
     <Compile Include="Securities\RegisteredSecurityDataTypesProvider.cs" />
     <Compile Include="Securities\ErrorCurrencyConverter.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForTargetValueParameters.cs" />
@@ -419,7 +420,7 @@
     <Compile Include="Python\PandasConverter.cs" />
     <Compile Include="Python\FeeModelPythonWrapper.cs" />
     <Compile Include="Securities\CashBuyingPowerModel.cs" />
-    <Compile Include="Securities\GetMaximumOrderQuantityForTargetValueResult.cs" />
+    <Compile Include="Securities\GetMaximumOrderQuantityResult.cs" />
     <Compile Include="Securities\HasSufficientBuyingPowerForOrderResult.cs" />
     <Compile Include="Securities\IBaseCurrencySymbol.cs" />
     <Compile Include="Securities\Future\EmptyFutureChainProvider.cs" />

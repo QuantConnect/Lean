@@ -36,28 +36,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the buying power available for a trade
-        /// </summary>
-        /// <param name="model">The <see cref="IBuyingPowerModel"/></param>
-        /// <param name="portfolio">The algorithm's portfolio</param>
-        /// <param name="security">The security to be traded</param>
-        /// <param name="direction">The direction of the trade</param>
-        /// <returns>The buying power available for the trade</returns>
-        public static decimal GetBuyingPower(
-            this IBuyingPowerModel model,
-            SecurityPortfolioManager portfolio,
-            Security security,
-            OrderDirection direction
-            )
-        {
-            var context = new BuyingPowerParameters(portfolio, security, direction);
-            var buyingPower = model.GetBuyingPower(context);
-
-            // existing implementations assume certain non-account currency units, so return raw value
-            return buyingPower.Value;
-        }
-
-        /// <summary>
         /// Check if there is sufficient buying power to execute this order.
         /// </summary>
         /// <param name="model">The <see cref="IBuyingPowerModel"/></param>
@@ -85,7 +63,7 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to be traded</param>
         /// <param name="target">The target percent holdings</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        public static GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(
+        public static GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetValue(
             this IBuyingPowerModel model,
             SecurityPortfolioManager portfolio,
             Security security,

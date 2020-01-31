@@ -16,9 +16,9 @@
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Defines the parameters for <see cref="IBuyingPowerModel.GetMaximumOrderQuantityForTargetValue"/>
+    /// Defines the parameters for <see cref="IBuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower"/>
     /// </summary>
-    public class GetMaximumOrderQuantityForTargetValueParameters
+    public class GetMaximumOrderQuantityForDeltaBuyingPowerParameters
     {
         /// <summary>
         /// Gets the algorithm's portfolio
@@ -31,9 +31,10 @@ namespace QuantConnect.Securities
         public Security Security { get; }
 
         /// <summary>
-        /// Gets the target percentage holdings
+        /// The delta buying power.
         /// </summary>
-        public decimal Target { get; }
+        /// <remarks> Sign defines the position side to apply the delta, positive long, negative short side.</remarks>
+        public decimal DeltaBuyingPower { get; }
 
         /// <summary>
         /// True enables the <see cref="IBuyingPowerModel"/> to skip setting <see cref="GetMaximumOrderQuantityResult.Reason"/>
@@ -46,14 +47,15 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security</param>
-        /// <param name="target">The target percentage holdings</param>
+        /// <param name="deltaBuyingPower">The delta buying power to apply.
+        /// Sign defines the position side to apply the delta</param>
         /// <param name="silenceNonErrorReasons">True will not return <see cref="GetMaximumOrderQuantityResult.Reason"/>
         /// set for non error situation, this is for performance</param>
-        public GetMaximumOrderQuantityForTargetValueParameters(SecurityPortfolioManager portfolio, Security security, decimal target, bool silenceNonErrorReasons = false)
+        public GetMaximumOrderQuantityForDeltaBuyingPowerParameters(SecurityPortfolioManager portfolio, Security security, decimal deltaBuyingPower, bool silenceNonErrorReasons = false)
         {
             Portfolio = portfolio;
             Security = security;
-            Target = target;
+            DeltaBuyingPower = deltaBuyingPower;
             SilenceNonErrorReasons = silenceNonErrorReasons;
         }
     }

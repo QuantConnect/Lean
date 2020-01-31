@@ -66,9 +66,9 @@ namespace QuantConnect.Tests.Python
         {
             var spy = GetSecurity<Equity>(Symbols.SPY, Resolution.Daily);
 
-            // Renaming GetBuyingPower will cause a NotImplementedException exception
+            // Renaming GetMaximumOrderQuantityForTargetDeltaBuyingPower will cause a NotImplementedException exception
             var code = CreateCustomBuyingPowerModelCode();
-            code = code.Replace("GetBuyingPower", "SetBuyingPower");
+            code = code.Replace("GetMaximumOrderQuantityForDeltaBuyingPower", "AnotherName");
             var pyObject = CreateCustomBuyingPowerModel(code);
             Assert.Throws<NotImplementedException>(() => spy.SetBuyingPowerModel(pyObject));
         }
@@ -95,14 +95,14 @@ class CustomBuyingPowerModel:
     def __init__(self):
         self.margin = 1.0
 
-    def GetBuyingPower(self, context):
-        return BuyingPower(context.Portfolio.MarginRemaining)
+    def GetMaximumOrderQuantityForDeltaBuyingPower(self, context):
+        return GetMaximumOrderQuantityResult(200)
 
     def GetLeverage(self, security):
         return 1.0 / self.margin
 
     def GetMaximumOrderQuantityForTargetValue(self, context):
-        return GetMaximumOrderQuantityForTargetValueResult(200)
+        return GetMaximumOrderQuantityResult(200)
 
     def GetReservedBuyingPowerForPosition(self, context):
         return ReservedBuyingPowerForPosition(context.Security.Holdings.AbsoluteHoldingsCost * self.margin)
@@ -124,7 +124,7 @@ from QuantConnect.Securities import *
 
 class CustomBuyingPowerModel(SecurityMarginModel):
     def GetMaximumOrderQuantityForTargetValue(self, context):
-        return GetMaximumOrderQuantityForTargetValueResult(100)";
+        return GetMaximumOrderQuantityResult(100)";
 
         private Security GetSecurity<T>(Symbol symbol, Resolution resolution)
         {

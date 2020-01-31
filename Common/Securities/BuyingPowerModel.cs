@@ -28,6 +28,7 @@ namespace QuantConnect.Securities
     {
         private decimal _initialMarginRequirement;
         private decimal _maintenanceMarginRequirement;
+
         /// <summary>
         /// The percentage used to determine the required unused buying power for the account.
         /// </summary>
@@ -226,7 +227,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
         /// </summary>
-        public virtual decimal GetMaintenanceMarginRequirement(Security security)
+        protected virtual decimal GetMaintenanceMarginRequirement(Security security)
         {
             return _maintenanceMarginRequirement;
         }
@@ -309,12 +310,44 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Get the maximum market order quantity to obtain a delta in the buying power used by a security.
+        /// The deltas sign defines the position side to apply it to, positive long, negative short.
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the security and the delta buying power</param>
+        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        public virtual GetMaximumOrderQuantityResult GetMaximumOrderQuantityForDeltaBuyingPower(
+            GetMaximumOrderQuantityForDeltaBuyingPowerParameters parameters)
+        {
+            var usedBuyingPower = parameters.Security.BuyingPowerModel.GetReservedBuyingPowerForPosition(
+                new ReservedBuyingPowerForPositionParameters(parameters.Security)).Value;
+
+            var signedUsedBuyingPower = usedBuyingPower * (parameters.Security.Holdings.IsLong ? 1 : -1);
+
+            var targetBuyingPower = signedUsedBuyingPower + parameters.DeltaBuyingPower;
+
+            var target = 0m;
+            if (parameters.Portfolio.TotalPortfolioValue != 0)
+            {
+                // incoming buying power is factored down by leverage, we need to remove the factor
+                // since GetMaximumOrderQuantityForTargetValue expects leveraged targets, that's why we
+                // divide by 'GetMaintenanceMarginRequirement'
+                target = targetBuyingPower / (parameters.Portfolio.TotalPortfolioValue * GetMaintenanceMarginRequirement(parameters.Security));
+            }
+
+            return GetMaximumOrderQuantityForTargetValue(
+                new GetMaximumOrderQuantityForTargetValueParameters(parameters.Portfolio,
+                    parameters.Security,
+                    target,
+                    parameters.SilenceNonErrorReasons));
+        }
+
+        /// <summary>
         /// Get the maximum market order quantity to obtain a position with a given value in account currency.
         /// Will not take into account buying power.
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the target percentage holdings</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        public virtual GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(GetMaximumOrderQuantityForTargetValueParameters parameters)
+        public virtual GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetValue(GetMaximumOrderQuantityForTargetValueParameters parameters)
         {
             // this is expensive so lets fetch it once
             var totalPortfolioValue = parameters.Portfolio.TotalPortfolioValue;
@@ -326,7 +359,7 @@ namespace QuantConnect.Securities
             // if targeting zero, simply return the negative of the quantity
             if (targetPortfolioValue == 0)
             {
-                return new GetMaximumOrderQuantityForTargetValueResult(-parameters.Security.Holdings.Quantity, string.Empty, false);
+                return new GetMaximumOrderQuantityResult(-parameters.Security.Holdings.Quantity, string.Empty, false);
             }
 
             var currentHoldingsValue = parameters.Security.Holdings.HoldingsValue;
@@ -342,7 +375,7 @@ namespace QuantConnect.Securities
             {
                 var reason = $"The price of the {parameters.Security.Symbol.Value} security is zero because it does not have any market " +
                     "data yet. When the security price is set this security will be ready for trading.";
-                return new GetMaximumOrderQuantityForTargetValueResult(0, reason);
+                return new GetMaximumOrderQuantityResult(0, reason);
             }
 
             var minimumValue = unitPrice * parameters.Security.SymbolProperties.LotSize;
@@ -353,7 +386,7 @@ namespace QuantConnect.Securities
                 {
                     reason = $"The target order value {targetOrderValue} is less than the minimum {minimumValue}.";
                 }
-                return new GetMaximumOrderQuantityForTargetValueResult(0, reason, false);
+                return new GetMaximumOrderQuantityResult(0, reason, false);
             }
 
             // calculate the total margin available
@@ -361,7 +394,7 @@ namespace QuantConnect.Securities
             if (marginRemaining <= 0)
             {
                 var reason = "The portfolio does not have enough margin available.";
-                return new GetMaximumOrderQuantityForTargetValueResult(0, reason);
+                return new GetMaximumOrderQuantityResult(0, reason);
             }
 
             // continue iterating while we do not have enough margin for the order
@@ -380,7 +413,7 @@ namespace QuantConnect.Securities
                     reason = $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} " +
                              "and has been rounded to zero.";
                 }
-                return new GetMaximumOrderQuantityForTargetValueResult(0, reason, false);
+                return new GetMaximumOrderQuantityResult(0, reason, false);
             }
 
             var loopCount = 0;
@@ -405,7 +438,7 @@ namespace QuantConnect.Securities
 
                 if (orderQuantity <= 0)
                 {
-                    return new GetMaximumOrderQuantityForTargetValueResult(0,
+                    return new GetMaximumOrderQuantityResult(0,
                         Invariant($"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} ") +
                         Invariant($"and has been rounded to zero.Target order value {targetOrderValue}. Order fees ") +
                         Invariant($"{orderFees}. Order quantity {orderQuantity}."),
@@ -457,7 +490,7 @@ namespace QuantConnect.Securities
             while (loopCount < 2 || orderValue > targetOrderValue);
 
             // add directionality back in
-            return new GetMaximumOrderQuantityForTargetValueResult((direction == OrderDirection.Sell ? -1 : 1) * orderQuantity);
+            return new GetMaximumOrderQuantityResult((direction == OrderDirection.Sell ? -1 : 1) * orderQuantity);
         }
 
         /// <summary>
@@ -469,17 +502,6 @@ namespace QuantConnect.Securities
         {
             var maintenanceMargin = GetMaintenanceMargin(parameters.Security);
             return parameters.ResultInAccountCurrency(maintenanceMargin);
-        }
-
-        /// <summary>
-        /// Gets the buying power available for a trade
-        /// </summary>
-        /// <param name="parameters">A parameters object containing the algorithm's portfolio, security, and order direction</param>
-        /// <returns>The buying power available for the trade</returns>
-        public virtual BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
-        {
-            var marginRemaining = GetMarginRemaining(parameters.Portfolio, parameters.Security, parameters.Direction);
-            return parameters.ResultInAccountCurrency(marginRemaining);
         }
     }
 }
