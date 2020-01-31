@@ -541,11 +541,13 @@ namespace QuantConnect
         {
             var resolver = mapFileProvider.Get(market);
             var mapFile = resolver.ResolveMapFile(tickerToday, mappingResolveDate ?? DateTime.Today);
-
+            
             // if we have mapping data, use the first ticker/date from there, otherwise use provided ticker and DefaultDate
-            return mapFile.Any()
-                ? Tuple.Create(mapFile.FirstTicker, mapFile.FirstDate)
-                : Tuple.Create(tickerToday, DefaultDate);
+            if (mapFile != null && mapFile.Any())
+            {
+                return Tuple.Create(mapFile.FirstTicker, mapFile.FirstDate);
+            }
+            return Tuple.Create(tickerToday, DefaultDate);
         }
 
         /// <summary>
