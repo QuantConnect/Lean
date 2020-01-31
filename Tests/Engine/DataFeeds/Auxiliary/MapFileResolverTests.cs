@@ -140,10 +140,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Auxiliary
             Assert.AreEqual("TWX", mapFile.GetMappedSymbol(new DateTime(2014, 1, 1)));
         }
 
+        [Test]
+        public void ResolvesDelistedTickerAsNull()
+        {
+            var date = new DateTime(2007, 01, 03);
+            var ticker = "AMZ";
+            Assert.IsNull(_resolver.ResolveMapFile(ticker, date));
+        }
+
         private static MapFileResolver CreateMapFileResolver()
         {
             return new MapFileResolver(new List<MapFile>
             {
+                new MapFile("amz", new List<MapFileRow>
+                {
+                    new MapFileRow(new DateTime(1998, 01, 02), "uwz"),
+                    new MapFileRow(new DateTime(1998, 09, 11), "uwz"),
+                    new MapFileRow(new DateTime(2004, 12, 31), "amz")
+                }),
+
                 // remapped
                 new MapFile("goog", new List<MapFileRow>
                 {

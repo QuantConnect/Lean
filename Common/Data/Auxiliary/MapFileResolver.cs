@@ -148,6 +148,7 @@ namespace QuantConnect.Data.Auxiliary
                     {
                         // the searched date is greater than the last date in the list, return the last entry
                         indexOf = entries.Keys.Count - 1;
+                        if (indexOf == 0) return null;
                     }
                     else
                     {
