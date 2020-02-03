@@ -41,13 +41,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         private string _filteredEvent;
         private string _originalEvent;
         private const string _baseUrl = "https://api.tradingeconomics.com";
-        private static bool _useStreaming = Config.GetBool("trading-economics-use-streaming");
         private static string _apiKey = Config.Get("trading-economics-api-key");
-
-        /// <summary>
-        /// Delimiter used to separate country from ticker in <see cref="TradingEconomics.Calendar"/> entries
-        /// </summary>
-        public const string Delimiter = "//";
 
         /// <summary>
         /// Unique calendar ID used by Trading Economics
@@ -91,7 +85,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// Raw event name as provided by Trading Economics
         /// </summary>
         [JsonIgnore]
-        protected string EventRaw
+        public string EventRaw
         {
             get { return _originalEvent; }
             set { _originalEvent = value; }
@@ -200,15 +194,13 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             var country = config.Symbol.Value.ToLowerInvariant()
-                .Split(new[] { "//" }, StringSplitOptions.None)
+                .Split(new[] { TradingEconomics.Calendar.Delimiter }, StringSplitOptions.None)
                 .First();
 
             if (isLiveMode)
             {
-                var transportMedium = _useStreaming ? SubscriptionTransportMedium.Streaming : SubscriptionTransportMedium.RemoteFile;
-                var liveSource = $"{_baseUrl}/calendar/country/{country.Replace('-', ' ')}/{date:yyyy-MM-dd}/{date.AddDays(1):yyyy-MM-dd}?c={_apiKey}&format=json";
-
-                return new SubscriptionDataSource(liveSource, transportMedium, FileFormat.Collection);
+                var liveSource = $"{_baseUrl}/calendar/country/{country.Replace("-", "%20")}/{date:yyyy-MM-dd}/{date.AddDays(1):yyyy-MM-dd}?c={_apiKey}&format=json";
+                return new SubscriptionDataSource(liveSource, SubscriptionTransportMedium.RemoteFile, FileFormat.Collection);
             }
 
             country = country.Replace("-", "");
@@ -231,7 +223,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// </remarks>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
-            var ticker = config.Symbol.Value.Split(new[] { "//" }, StringSplitOptions.None)[1].Replace('-', ' ');
+            var ticker = config.Symbol.Value.Split(new[] { TradingEconomics.Calendar.Delimiter }, StringSplitOptions.None)[1].Replace('-', ' ');
             var instances = ProcessAPIResponse(line);
             return new BaseDataCollection(date, config.Symbol, instances.Where(x => ticker == x.Ticker && x.EndTime >= date));
         }
@@ -248,7 +240,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// </returns>
         public override BaseData Reader(SubscriptionDataConfig config, StreamReader streamReader, DateTime date, bool isLiveMode)
         {
-            var ticker = config.Symbol.Value.Split(new[] { "//" }, StringSplitOptions.None)[1].Replace('-', ' ');
+            var ticker = config.Symbol.Value.Split(new[] { TradingEconomics.Calendar.Delimiter }, StringSplitOptions.None)[1].Replace('-', ' ');
 
             var instance = new TradingEconomicsCalendar();
             instance.EndTime = streamReader.GetDateTime("yyyyMMdd HH:mm:ss");
@@ -260,7 +252,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
             }
 
             instance.Ticker = streamReader.GetNextCsv();
-            if (ticker != instance.Ticker)
+            if (ticker != instance.Ticker.Replace('-', ' ').ToUpperInvariant())
             {
                 streamReader.ReadToEndOfLine();
                 return null;
@@ -336,7 +328,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         }
 
         /// <summary>
-        /// Convert this instance to a CSV file (tab delimited)
+        /// Convert this instance to a CSV file
         /// </summary>
         /// <returns>string as CSV</returns>
         public string ToCsv()
@@ -503,7 +495,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         public static string CountryToCurrencyCode(string country)
         {
             var regions = CultureInfo.GetCultures(CultureTypes.SpecificCultures).Select(x => new RegionInfo(x.LCID));
-            return regions.FirstOrDefault(region => region.EnglishName.Contains(country)).ISOCurrencySymbol;
+            return regions.FirstOrDefault(region => region.EnglishName.ToLowerInvariant().Contains(country.ToLowerInvariant()))?.ISOCurrencySymbol;
         }
     }
 

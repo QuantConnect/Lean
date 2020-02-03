@@ -159,7 +159,9 @@ namespace QuantConnect.Data.Custom.TradingEconomics
             { "mbs", "mortgage backed securities" },
             { "psi", "performance of services index" },
             { "mi", "melbourne institute" },
-            { "est", "estimate" }
+            { "est", "estimate" },
+            { "1st", "first" },
+            { "2nd", "second" },
         };
 
         /// <summary>
