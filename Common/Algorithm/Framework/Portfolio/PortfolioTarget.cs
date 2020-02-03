@@ -107,8 +107,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             var adjustedPercent = percent * (algorithm.Portfolio.TotalPortfolioValue - algorithm.Settings.FreePortfolioValue)
                                   / algorithm.Portfolio.TotalPortfolioValue;
 
-            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(
-                new GetMaximumOrderQuantityForTargetValueParameters(algorithm.Portfolio, security, adjustedPercent, silenceNonErrorReasons:true)
+            // we normalize the target buying power by the leverage so we work in the land of margin
+            var targetFinalMarginPercentage = adjustedPercent / security.BuyingPowerModel.GetLeverage(security);
+
+            var result = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
+                new GetMaximumOrderQuantityForTargetBuyingPowerParameters(algorithm.Portfolio, security, targetFinalMarginPercentage, silenceNonErrorReasons:true)
             );
 
             if (result.IsError)

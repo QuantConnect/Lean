@@ -34,7 +34,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                foreach (var attributeName in new[] { "GetMaximumOrderQuantityForDeltaBuyingPower", "GetLeverage", "GetMaximumOrderQuantityForTargetValue", "GetReservedBuyingPowerForPosition", "HasSufficientBuyingPowerForOrder", "SetLeverage" })
+                foreach (var attributeName in new[] { "GetMaximumOrderQuantityForDeltaBuyingPower", "GetLeverage", "GetMaximumOrderQuantityForTargetBuyingPower", "GetReservedBuyingPowerForPosition", "HasSufficientBuyingPowerForOrder", "SetLeverage" })
                 {
                     if (!model.HasAttr(attributeName))
                     {
@@ -63,11 +63,11 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the target percentage holdings</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        public GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetValue(GetMaximumOrderQuantityForTargetValueParameters parameters)
+        public GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
         {
             using (Py.GIL())
             {
-                return (_model.GetMaximumOrderQuantityForTargetValue(parameters)
+                return (_model.GetMaximumOrderQuantityForTargetBuyingPower(parameters)
                     as PyObject).GetAndDispose<GetMaximumOrderQuantityResult>();
             }
         }

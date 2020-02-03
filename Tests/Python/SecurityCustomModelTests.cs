@@ -101,7 +101,7 @@ class CustomBuyingPowerModel:
     def GetLeverage(self, security):
         return 1.0 / self.margin
 
-    def GetMaximumOrderQuantityForTargetValue(self, context):
+    def GetMaximumOrderQuantityForTargetBuyingPower(self, context):
         return GetMaximumOrderQuantityResult(200)
 
     def GetReservedBuyingPowerForPosition(self, context):
@@ -123,7 +123,7 @@ from QuantConnect import *
 from QuantConnect.Securities import *
 
 class CustomBuyingPowerModel(SecurityMarginModel):
-    def GetMaximumOrderQuantityForTargetValue(self, context):
+    def GetMaximumOrderQuantityForTargetBuyingPower(self, context):
         return GetMaximumOrderQuantityResult(100)";
 
         private Security GetSecurity<T>(Symbol symbol, Resolution resolution)

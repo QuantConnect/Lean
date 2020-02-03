@@ -33,7 +33,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The delta buying power.
         /// </summary>
-        /// <remarks> Sign defines the position side to apply the delta, positive long, negative short side.</remarks>
+        /// <remarks>Sign defines the position side to apply the delta, positive long, negative short side.</remarks>
         public decimal DeltaBuyingPower { get; }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace QuantConnect.Securities
         public bool SilenceNonErrorReasons { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForTargetValueParameters"/> class
+        /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForDeltaBuyingPowerParameters"/> class
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security</param>

@@ -342,14 +342,12 @@
     <Compile Include="Python\PythonWrapper.cs" />
     <Compile Include="RealTimeProvider.cs" />
     <Compile Include="Scheduling\ScheduledEventException.cs" />
-    <Compile Include="Securities\BuyingPower.cs" />
-    <Compile Include="Securities\BuyingPowerParameters.cs" />
     <Compile Include="Securities\BuyingPowerModel.cs" />
     <Compile Include="Securities\BuyingPowerModelExtensions.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForDeltaBuyingPowerParameters.cs" />
     <Compile Include="Securities\RegisteredSecurityDataTypesProvider.cs" />
     <Compile Include="Securities\ErrorCurrencyConverter.cs" />
-    <Compile Include="Securities\GetMaximumOrderQuantityForTargetValueParameters.cs" />
+    <Compile Include="Securities\GetMaximumOrderQuantityForTargetBuyingPowerParameters.cs" />
     <Compile Include="Securities\HasSufficientBuyingPowerForOrderParameters.cs" />
     <Compile Include="Securities\ICurrencyConverter.cs" />
     <Compile Include="Python\BuyingPowerModelPythonWrapper.cs" />

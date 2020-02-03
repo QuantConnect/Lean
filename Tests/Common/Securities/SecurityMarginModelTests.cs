@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Common.Securities
             var security = InitAndGetSecurity(algorithm, 0);
 
             var model = new SecurityMarginModel();
-            var result = model.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, 0);
+            var result = model.GetMaximumOrderQuantityForTargetBuyingPower(algorithm.Portfolio, security, 0);
 
             Assert.AreEqual(0, result.Quantity);
             Assert.IsTrue(result.Reason.IsNullOrEmpty());
@@ -115,7 +115,7 @@ namespace QuantConnect.Tests.Common.Securities
             var algorithm = GetAlgorithm();
             var security = InitAndGetSecurity(algorithm, 0);
             var model = new SecurityMarginModel();
-            var result = model.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, 0.00000001m);
+            var result = model.GetMaximumOrderQuantityForTargetBuyingPower(algorithm.Portfolio, security, 0.00000001m);
             Assert.AreEqual(0m, result.Quantity);
             Assert.IsFalse(result.IsError);
             Assert.IsTrue(result.Reason.Contains("is less than the minimum"));
@@ -129,7 +129,7 @@ namespace QuantConnect.Tests.Common.Securities
             security.Holdings.SetHoldings(200, 10);
 
             var model = new SecurityMarginModel();
-            var result = model.GetMaximumOrderQuantityForTargetValue(algorithm.Portfolio, security, 0);
+            var result = model.GetMaximumOrderQuantityForTargetBuyingPower(algorithm.Portfolio, security, 0);
 
             Assert.AreEqual(-10, result.Quantity);
             Assert.IsTrue(result.Reason.IsNullOrEmpty());
@@ -372,8 +372,8 @@ namespace QuantConnect.Tests.Common.Securities
             var actual = algo.CalculateOrderQuantity(_symbol, 1m * security.BuyingPowerModel.GetLeverage(security));
             Assert.AreEqual(7182m, actual);
             // ((100000 - 100 * 100) * 2 / (25)
-            var quantity = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetValue(
-                algo.Portfolio, security, 2m).Quantity;
+            var quantity = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
+                algo.Portfolio, security, 1m).Quantity;
             Assert.AreEqual(7200m, quantity);
 
             // the maximum order quantity can be executed
@@ -400,10 +400,10 @@ namespace QuantConnect.Tests.Common.Securities
 
         [TestCase(100, 510, false)]
         [TestCase(-100, 510, false)]
-        [TestCase(-100, 51000, true)]
+        [TestCase(-100, 50000, true)]
         [TestCase(100, -510, false)]
         [TestCase(-100, -510, false)]
-        [TestCase(100, -51000, true)]
+        [TestCase(100, -50000, true)]
         public void GetMaximumOrderQuantityForTargetDeltaBuyingPower_WithHoldings(decimal quantity, decimal buyingPowerDelta, bool invertsSide)
         {
             var algo = GetAlgorithm();

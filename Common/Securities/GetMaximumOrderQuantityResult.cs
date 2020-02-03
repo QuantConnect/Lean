@@ -16,7 +16,7 @@
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Contains the information returned by <see cref="IBuyingPowerModel.GetMaximumOrderQuantityForTargetValue"/>
+    /// Contains the information returned by <see cref="IBuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower"/>
     /// and  <see cref="IBuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower"/>
     /// </summary>
     public class GetMaximumOrderQuantityResult

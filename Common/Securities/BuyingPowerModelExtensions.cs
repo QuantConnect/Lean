@@ -63,16 +63,16 @@ namespace QuantConnect.Securities
         /// <param name="security">The security to be traded</param>
         /// <param name="target">The target percent holdings</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        public static GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetValue(
+        public static GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(
             this IBuyingPowerModel model,
             SecurityPortfolioManager portfolio,
             Security security,
             decimal target
             )
         {
-            var parameters = new GetMaximumOrderQuantityForTargetValueParameters(portfolio, security, target);
+            var parameters = new GetMaximumOrderQuantityForTargetBuyingPowerParameters(portfolio, security, target);
 
-            return model.GetMaximumOrderQuantityForTargetValue(parameters);
+            return model.GetMaximumOrderQuantityForTargetBuyingPower(parameters);
         }
     }
 }

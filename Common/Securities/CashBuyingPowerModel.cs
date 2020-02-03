@@ -115,8 +115,8 @@ namespace QuantConnect.Securities
 
                 // maximum quantity that can be bought (in quote currency)
                 var maximumQuantity =
-                    GetMaximumOrderQuantityForTargetValue(
-                        new GetMaximumOrderQuantityForTargetValueParameters(parameters.Portfolio, parameters.Security, targetPercent)).Quantity * GetOrderPrice(parameters.Security, parameters.Order);
+                    GetMaximumOrderQuantityForTargetBuyingPower(
+                        new GetMaximumOrderQuantityForTargetBuyingPowerParameters(parameters.Portfolio, parameters.Security, targetPercent)).Quantity * GetOrderPrice(parameters.Security, parameters.Order);
 
                 isSufficient = orderQuantity <= Math.Abs(maximumQuantity);
                 if (!isSufficient)
@@ -167,9 +167,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the target percentage holdings</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        public override GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetValue(GetMaximumOrderQuantityForTargetValueParameters parameters)
+        public override GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
         {
-            var targetPortfolioValue = parameters.Target * parameters.Portfolio.TotalPortfolioValue;
+            var targetPortfolioValue = parameters.TargetBuyingPower * parameters.Portfolio.TotalPortfolioValue;
             // no shorting allowed
             if (targetPortfolioValue < 0)
             {

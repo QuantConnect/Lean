@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Securities.Option
@@ -81,10 +80,9 @@ namespace QuantConnect.Securities.Option
             var feesInAccountCurrency = parameters.CurrencyConverter.
                 ConvertToAccountCurrency(fees).Amount;
 
-            var value = parameters.Order.GetValue(parameters.Security);
-            var orderValue = value * GetInitialMarginRequirement(parameters.Security, value);
+            var orderMargin = GetInitialMarginRequirement(parameters.Security, parameters.Order.Quantity);
 
-            return orderValue + Math.Sign(orderValue) * feesInAccountCurrency;
+            return orderMargin + Math.Sign(orderMargin) * feesInAccountCurrency;
         }
 
         /// <summary>
@@ -98,75 +96,15 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Gets the margin cash available for a trade
+        /// The margin that must be held in order to increase the position by the provided quantity
         /// </summary>
-        /// <param name="portfolio">The algorithm's portfolio</param>
-        /// <param name="security">The security to be traded</param>
-        /// <param name="direction">The direction of the trade</param>
-        /// <returns>The margin available for the trade</returns>
-        protected override decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
+        protected override decimal GetInitialMarginRequirement(Security security, decimal quantity)
         {
-            var result = portfolio.MarginRemaining;
-
-            if (direction != OrderDirection.Hold)
-            {
-                var holdings = security.Holdings;
-                //If the order is in the same direction as holdings, our remaining cash is our cash
-                //In the opposite direction, our remaining cash is 2 x current value of assets + our cash
-                if (holdings.IsLong)
-                {
-                    switch (direction)
-                    {
-                        case OrderDirection.Sell:
-                            result +=
-                                // portion of margin to close the existing position
-                                GetMaintenanceMargin(security) +
-                                // portion of margin to open the new position
-                                security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security, security.Holdings.HoldingsValue);
-                            break;
-                    }
-                }
-                else if (holdings.IsShort)
-                {
-                    switch (direction)
-                    {
-                        case OrderDirection.Buy:
-                            result +=
-                                // portion of margin to close the existing position
-                                GetMaintenanceMargin(security) +
-                                // portion of margin to open the new position
-                                security.Holdings.AbsoluteHoldingsValue * GetInitialMarginRequirement(security, security.Holdings.HoldingsValue);
-                            break;
-                    }
-                }
-            }
-
-            result -= portfolio.TotalPortfolioValue * RequiredFreeBuyingPowerPercent;
-            return result < 0 ? 0 : result;
-        }
-
-        /// <summary>
-        /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
-        /// </summary>
-        protected override decimal GetInitialMarginRequirement(Security security)
-        {
-            return GetInitialMarginRequirement(security, security.Holdings.HoldingsValue);
-        }
-
-        /// <summary>
-        /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
-        /// </summary>
-        protected override decimal GetMaintenanceMarginRequirement(Security security)
-        {
-            return GetMaintenanceMarginRequirement(security, security.Holdings.HoldingsValue);
-        }
-
-        /// <summary>
-        /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
-        /// </summary>
-        private decimal GetInitialMarginRequirement(Security security, decimal holding)
-        {
-            return GetMarginRequirement(security, holding);
+            var value = security.QuoteCurrency.ConversionRate
+                        * security.SymbolProperties.ContractMultiplier
+                        * security.Price
+                        * quantity;
+            return value * GetMarginRequirement(security, security.Holdings.HoldingsValue);
         }
 
         /// <summary>

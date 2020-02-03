@@ -55,19 +55,29 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the current leverage of the security
+        /// </summary>
+        /// <param name="security">The security to get leverage for</param>
+        /// <returns>The current leverage in the security</returns>
+        public override decimal GetLeverage(Security security)
+        {
+            return base.GetLeverage(security) * (1 / GetMarginCorrectionFactor(security));
+        }
+
+        /// <summary>
         /// The percentage of an order's absolute cost that must be held in free cash in order to place the order
         /// </summary>
-        protected override decimal GetInitialMarginRequirement(Security security)
+        protected override decimal GetInitialMarginRequirement(Security security, decimal quantity)
         {
-            return base.GetInitialMarginRequirement(security)*GetMarginCorrectionFactor(security);
+            return base.GetInitialMarginRequirement(security, quantity) * GetMarginCorrectionFactor(security);
         }
 
         /// <summary>
         /// The percentage of the holding's absolute cost that must be held in free cash in order to avoid a margin call
         /// </summary>
-        protected override decimal GetMaintenanceMarginRequirement(Security security)
+        protected override decimal GetMaintenanceMargin(Security security)
         {
-            return base.GetMaintenanceMarginRequirement(security)*GetMarginCorrectionFactor(security);
+            return base.GetMaintenanceMargin(security)*GetMarginCorrectionFactor(security);
         }
 
         /// <summary>
