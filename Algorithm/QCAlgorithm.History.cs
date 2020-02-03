@@ -564,7 +564,7 @@ namespace QuantConnect.Algorithm
                 return lastKnownPrice;
             }
 
-            // If the first attempt to get the last know price returns null, it maybe the case of an iliquid security.
+            // If the first attempt to get the last know price returns null, it maybe the case of an illiquid security.
             // We increase the look-back period for this case accordingly to the resolution to cover 3 trading days
             var periods =
                 resolution == Resolution.Daily ? 3 :

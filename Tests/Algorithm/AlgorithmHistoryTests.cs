@@ -109,7 +109,7 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void GetLastKnownPriceOfIliquidAsset_RealData()
+        public void GetLastKnownPriceOfIlliquidAsset_RealData()
         {
             var algorithm = new QCAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
@@ -139,7 +139,7 @@ namespace QuantConnect.Tests.Algorithm
 
 
         [Test]
-        public void GetLastKnownPriceOfIliquidAsset_TestData()
+        public void GetLastKnownPriceOfIlliquidAsset_TestData()
         {
             // Set the start date on Tuesday
             _algorithm.SetStartDate(2014, 6, 10);
