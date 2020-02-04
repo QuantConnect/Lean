@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
             var buyingPowerModel = new TestFutureMarginModel(futureSecurity);
-            Assert.AreEqual(buyingPowerModel.MaintenanceIntradayMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
+            Assert.AreEqual(buyingPowerModel.MaintenanceOvernightMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
         [Test]
@@ -130,18 +130,18 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.Holdings.SetHoldings(1.5m, 1);
 
             var buyingPowerModel = new TestFutureMarginModel(futureSecurity);
-            Assert.AreEqual(buyingPowerModel.MaintenanceIntradayMarginRequirement,
+            Assert.AreEqual(buyingPowerModel.MaintenanceOvernightMarginRequirement,
                 buyingPowerModel.GetMaintenanceMargin(futureSecurity));
 
             // now we move forward to exact date when margin req changed
             time = new DateTime(2014, 06, 13);
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
-            Assert.AreEqual(buyingPowerModel.MaintenanceIntradayMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
+            Assert.AreEqual(buyingPowerModel.MaintenanceOvernightMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
 
             // now we fly beyond the last line of the history file (currently) to see how margin model resolves future dates
             time = new DateTime(2016, 06, 04);
             futureSecurity.SetMarketPrice(new Tick { Value = price, Time = time });
-            Assert.AreEqual(buyingPowerModel.MaintenanceIntradayMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
+            Assert.AreEqual(buyingPowerModel.MaintenanceOvernightMarginRequirement, buyingPowerModel.GetMaintenanceMargin(futureSecurity));
         }
 
         [TestCase(1)]
@@ -162,12 +162,12 @@ namespace QuantConnect.Tests.Common.Securities
             futureSecurity.Holdings.SetHoldings(1.5m, quantity);
 
             var res = buyingPowerModel.GetMaintenanceMargin(futureSecurity);
-            Assert.AreEqual(buyingPowerModel.MaintenanceIntradayMarginRequirement * futureSecurity.Holdings.AbsoluteQuantity, res);
+            Assert.AreEqual(buyingPowerModel.MaintenanceOvernightMarginRequirement * futureSecurity.Holdings.AbsoluteQuantity, res);
 
             // We increase the quantity * 2, maintenance margin should DOUBLE
             futureSecurity.Holdings.SetHoldings(1.5m, quantity * 2);
             res = buyingPowerModel.GetMaintenanceMargin(futureSecurity);
-            Assert.AreEqual(buyingPowerModel.MaintenanceIntradayMarginRequirement * futureSecurity.Holdings.AbsoluteQuantity, res);
+            Assert.AreEqual(buyingPowerModel.MaintenanceOvernightMarginRequirement * futureSecurity.Holdings.AbsoluteQuantity, res);
         }
 
         [TestCase(1)]

@@ -36,6 +36,13 @@ namespace QuantConnect.Securities.Future
         private readonly Security _security;
 
         /// <summary>
+        /// True will enable usage of intraday margins.
+        /// </summary>
+        /// <remarks>Disabled by default. Note that intraday margins are less than overnight margins
+        /// and could lead to margin calls</remarks>
+        public bool EnableIntradayMargins { get; set; }
+
+        /// <summary>
         /// Initial Overnight margin requirement for the contract effective from the date of change
         /// </summary>
         public decimal InitialOvernightMarginRequirement => GetCurrentMarginRequirements(_security)?.InitialOvernight ?? 0m;
@@ -142,7 +149,8 @@ namespace QuantConnect.Securities.Future
 
             var marginReq = GetCurrentMarginRequirements(security);
 
-            if (security.Exchange.ExchangeOpen)
+            if (EnableIntradayMargins
+                && security.Exchange.ExchangeOpen)
             {
                 return marginReq.MaintenanceIntraday * security.Holdings.AbsoluteQuantity;
             }
@@ -161,7 +169,8 @@ namespace QuantConnect.Securities.Future
 
             var marginReq = GetCurrentMarginRequirements(security);
 
-            if (security.Exchange.ExchangeOpen)
+            if (EnableIntradayMargins
+                && security.Exchange.ExchangeOpen)
             {
                 return marginReq.InitialIntraday * quantity;
             }

@@ -30,6 +30,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class EqualWeightingPortfolioConstructionModelFutureRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private int _fillCount;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 07);
@@ -44,7 +46,11 @@ namespace QuantConnect.Algorithm.CSharp
         // future symbol universe selection function
         private static IEnumerable<Symbol> SelectFutureChainSymbols(DateTime utcTime)
         {
-            yield return QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA);
+            return new []
+            {
+                QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.USA),
+                QuantConnect.Symbol.Create(Futures.Metals.Gold, SecurityType.Future, Market.USA)
+            };
         }
 
         /// <summary>
@@ -94,6 +100,17 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             Log($"{orderEvent}");
+            if (orderEvent.Status == OrderStatus.Filled)
+            {
+                _fillCount++;
+                if (_fillCount == 2)
+                {
+                    if (Portfolio.TotalHoldingsValue / Portfolio.TotalPortfolioValue < 10)
+                    {
+                        throw new Exception("Expected to be trading using the futures margin leverage");
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -111,44 +128,44 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "7"},
+            {"Total Trades", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-10.53%"},
-            {"Compounding Annual Return", "5954496901.426%"},
-            {"Drawdown", "62.100%"},
-            {"Expectancy", "-1"},
-            {"Net Profit", "25.977%"},
-            {"Sharpe Ratio", "5.943"},
-            {"Probabilistic Sharpe Ratio", "73.556%"},
-            {"Loss Rate", "100%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "-99.954%"},
+            {"Drawdown", "29.300%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "-9.427%"},
+            {"Sharpe Ratio", "-5.247"},
+            {"Probabilistic Sharpe Ratio", "25.583%"},
+            {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "9.98"},
-            {"Beta", "32.209"},
-            {"Annual Standard Deviation", "7.43"},
-            {"Annual Variance", "55.209"},
-            {"Information Ratio", "5.969"},
-            {"Tracking Error", "7.221"},
-            {"Treynor Ratio", "1.371"},
-            {"Total Fees", "$262.70"},
-            {"Fitness Score", "0.307"},
-            {"Kelly Criterion Estimate", "14.108"},
-            {"Kelly Criterion Probability Value", "0.374"},
-            {"Sortino Ratio", "-0.7"},
-            {"Return Over Maximum Drawdown", "-2.102"},
-            {"Portfolio Turnover", "34.419"},
-            {"Total Insights Generated", "5"},
-            {"Total Insights Closed", "4"},
-            {"Total Insights Analysis Completed", "4"},
-            {"Long Insight Count", "5"},
+            {"Alpha", "-11.567"},
+            {"Beta", "4.748"},
+            {"Annual Standard Deviation", "1.244"},
+            {"Annual Variance", "1.548"},
+            {"Information Ratio", "-7.118"},
+            {"Tracking Error", "1.066"},
+            {"Treynor Ratio", "-1.375"},
+            {"Total Fees", "$25.90"},
+            {"Fitness Score", "0.117"},
+            {"Kelly Criterion Estimate", "-9.366"},
+            {"Kelly Criterion Probability Value", "0.607"},
+            {"Sortino Ratio", "-2.699"},
+            {"Return Over Maximum Drawdown", "-5.889"},
+            {"Portfolio Turnover", "3.461"},
+            {"Total Insights Generated", "10"},
+            {"Total Insights Closed", "8"},
+            {"Total Insights Analysis Completed", "8"},
+            {"Long Insight Count", "10"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$-70.18462"},
-            {"Total Accumulated Estimated Alpha Value", "$-11.405"},
-            {"Mean Population Estimated Insight Value", "$-2.85125"},
+            {"Estimated Monthly Alpha Value", "$-78.89231"},
+            {"Total Accumulated Estimated Alpha Value", "$-12.82"},
+            {"Mean Population Estimated Insight Value", "$-1.6025"},
             {"Mean Population Direction", "25%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "25%"},
+            {"Rolling Averaged Population Direction", "25.058%"},
             {"Rolling Averaged Population Magnitude", "0%"}
         };
     }
