@@ -94,19 +94,12 @@ namespace QuantConnect.Util
                 {
                     inQuotes = true;
                     current = (char)stream.Read();
-
-                    var peek = stream.Peek();
-
-                    if (current == '"' && (peek == delimiter || peek == '\n' || peek == '\r' &&
-                        (stream.Peek() != '\n' || stream.Read() == '\n')))
-                    {
-                        inQuotes = false;
-                        current = (char)stream.Read();
-                        continue;
-                    }
                 }
-                else if (current == '"' && (stream.Peek() == delimiter || stream.Peek() == '\n' || stream.Peek() == '\r' &&
-                    (stream.Peek() != '\n' || stream.Read() == '\n')))
+
+                var peek = stream.Peek();
+
+                if (current == '"' && (peek == delimiter || peek == '\n' || peek == '\r' &&
+                    (peek != '\n' || stream.Read() == '\n')))
                 {
                     inQuotes = false;
                     current = (char)stream.Read();

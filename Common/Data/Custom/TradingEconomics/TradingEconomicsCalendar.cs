@@ -499,7 +499,8 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         public static string CountryToCurrencyCode(string country)
         {
             var regions = CultureInfo.GetCultures(CultureTypes.SpecificCultures).Select(x => new RegionInfo(x.LCID));
-            return regions.FirstOrDefault(region => region.EnglishName.ToLowerInvariant().Contains(country.ToLowerInvariant()))?.ISOCurrencySymbol;
+            var countryLower = country.ToLowerInvariant();
+            return regions.FirstOrDefault(region => region.EnglishName.ToLowerInvariant().Contains(countryLower))?.ISOCurrencySymbol;
         }
     }
 

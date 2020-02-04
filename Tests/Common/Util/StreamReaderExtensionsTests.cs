@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void GetNextCsv()
         {
-            var stream = "1,2,3,\"hello\",\"world\"\r\n3,2,1,\"goodbye\",\"world\"\n2,3,1,\"hello again, world!\",\"goodbye again, world!\"\r\n".ToStream();
+            var stream = "1,2,3,\"hello\",\"world\"\r\n1,2,3,4,5\n3,2,1,\"goodbye\",\"world\"\n2,3,1,\"hello again, world!\",\"goodbye again, world!\"\r\n\"hello!\",200,300,500,\"goodbye.\",\n,,,,".ToStream();
             var smartStream = new StreamReader(stream);
 
             Assert.AreEqual("1", smartStream.GetNextCsv());
@@ -124,6 +124,12 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual("3", smartStream.GetNextCsv());
             Assert.AreEqual("hello", smartStream.GetNextCsv());
             Assert.AreEqual("world", smartStream.GetNextCsv());
+
+            Assert.AreEqual("1", smartStream.GetNextCsv());
+            Assert.AreEqual("2", smartStream.GetNextCsv());
+            Assert.AreEqual("3", smartStream.GetNextCsv());
+            Assert.AreEqual("4", smartStream.GetNextCsv());
+            Assert.AreEqual("5", smartStream.GetNextCsv());
 
             Assert.AreEqual("3", smartStream.GetNextCsv());
             Assert.AreEqual("2", smartStream.GetNextCsv());
@@ -136,6 +142,21 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual("1", smartStream.GetNextCsv());
             Assert.AreEqual("hello again, world!", smartStream.GetNextCsv());
             Assert.AreEqual("goodbye again, world!", smartStream.GetNextCsv());
+
+            Assert.AreEqual("hello!", smartStream.GetNextCsv());
+            Assert.AreEqual("200", smartStream.GetNextCsv());
+            Assert.AreEqual("300", smartStream.GetNextCsv());
+            Assert.AreEqual("500", smartStream.GetNextCsv());
+            Assert.AreEqual("goodbye.", smartStream.GetNextCsv());
+            Assert.AreEqual(string.Empty, smartStream.GetNextCsv());
+
+            Assert.AreEqual(string.Empty, smartStream.GetNextCsv());
+            Assert.AreEqual(string.Empty, smartStream.GetNextCsv());
+            Assert.AreEqual(string.Empty, smartStream.GetNextCsv());
+            Assert.AreEqual(string.Empty, smartStream.GetNextCsv());
+            Assert.AreEqual(string.Empty, smartStream.GetNextCsv());
+
+            Assert.IsTrue(smartStream.EndOfStream);
         }
 
         [Test]
