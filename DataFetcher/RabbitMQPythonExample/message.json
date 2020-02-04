@@ -1,0 +1,34 @@
+{
+    "equities": [
+        {
+            "name":"AAPL",
+            "orderValue":"100",
+            "orderType":"Market"
+        },
+        {
+            "name":"MSFT",
+            "orderValue":"70",
+            "orderType":"Limit"
+        },
+        {
+            "name":"AMZN",
+            "orderValue":"20",
+            "orderType":"StopMarket"
+        },
+        {
+            "name":"FB",
+            "orderValue":"50",
+            "orderType":"StopLimit"
+        },
+        {
+            "name":"BRK.B",
+            "orderValue":"35",
+            "orderType":"MarketOnClose"
+        },
+        {
+            "name":"SPY",
+            "orderValue":"140",
+            "orderType":"MarketOnOpen"
+        }
+    ]
+}
