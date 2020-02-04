@@ -19,7 +19,6 @@ using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,11 +85,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 },
                 out algorithm,
                 out coarseCountByDateTime,
-                out fineCountByDateTime); ;
+                out fineCountByDateTime);
 
+            var months = (algorithm.EndDate - algorithm.StartDate).Days / 30;
             // Universe Changed 4 times
-            Assert.AreEqual(4, coarseCountByDateTime.Count);
-            Assert.AreEqual(4, fineCountByDateTime.Count);
+            Assert.AreEqual(months, coarseCountByDateTime.Count);
+            Assert.AreEqual(months, fineCountByDateTime.Count);
             // Universe Changed on the 1st. Coarse returned 1000 and Fine 500
             Assert.IsTrue(coarseCountByDateTime.All(kvp => kvp.Key.Day == 1 && kvp.Value == 1000));
             Assert.IsTrue(fineCountByDateTime.All(kvp => kvp.Key.Day == 1 && kvp.Value == 500));
@@ -190,7 +190,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
         {
             algorithm = new QCAlgorithm();
             algorithm.SetStartDate(2019, 10, 1);
-            algorithm.SetEndDate(2020, 2, 1);
+            algorithm.SetEndDate(2020, 1, 30);
             algorithm.SetDateTime(algorithm.StartDate.AddHours(6));
 
             coarseCountByDateTime = new Dictionary<DateTime, int>();
