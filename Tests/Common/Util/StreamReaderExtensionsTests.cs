@@ -157,6 +157,31 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(string.Empty, smartStream.GetNextCsv());
 
             Assert.IsTrue(smartStream.EndOfStream);
+
+            var endings = new string[] {
+                ",\r",
+                ",\n",
+                ",\r\n",
+                ",",
+                ",\"\"",
+                ",\"\"\r",
+                ",\"\"\r\n",
+            };
+
+            foreach (var ending in endings)
+            {
+                using (var ms = ending.ToStream())
+                using (var endingStream = new StreamReader(ms))
+                {
+                    var first = endingStream.GetNextCsv();
+                    var last = endingStream.GetNextCsv();
+
+                    Assert.AreEqual(string.Empty, first);
+                    Assert.AreEqual(string.Empty, last);
+
+                    Assert.IsTrue(endingStream.EndOfStream);
+                }
+            }
         }
 
         [Test]
