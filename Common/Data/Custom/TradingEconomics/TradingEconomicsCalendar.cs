@@ -225,7 +225,11 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         {
             var ticker = config.Symbol.Value.Split(new[] { TradingEconomics.Calendar.Delimiter }, StringSplitOptions.None)[1].Replace('-', ' ');
             var instances = ProcessAPIResponse(line);
-            return new BaseDataCollection(date, config.Symbol, instances.Where(x => ticker == x.Ticker && x.EndTime >= date));
+            foreach (var item in instances)
+            {
+                item.Symbol = config.Symbol;
+            }
+            return new BaseDataCollection(DateTime.UtcNow, config.Symbol, instances.Where(x => ticker == x.Ticker));
         }
 
         /// <summary>
@@ -247,14 +251,14 @@ namespace QuantConnect.Data.Custom.TradingEconomics
             instance.LastUpdate = streamReader.GetDateTime("yyyyMMdd HH:mm:ss");
             if (instance.EndTime < date)
             {
-                streamReader.ReadToEndOfLine();
+                streamReader.ReadLine();
                 return null;
             }
 
             instance.Ticker = streamReader.GetNextCsv();
             if (ticker != instance.Ticker.Replace('-', ' ').ToUpperInvariant())
             {
-                streamReader.ReadToEndOfLine();
+                streamReader.ReadLine();
                 return null;
             }
 

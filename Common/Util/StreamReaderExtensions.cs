@@ -149,20 +149,6 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Advance the stream to the end of the line
-        /// </summary>
-        /// <param name="stream">The stream</param>
-        /// <param name="delimiter">Delimiter</param>
-        public static void ReadToEndOfLine(this StreamReader stream, char delimiter = DefaultDelimiter)
-        {
-            var current = (char)stream.Read();
-            while (!(current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData))
-            {
-                current = (char)stream.Read();
-            }
-        }
-
-        /// <summary>
         /// Gets an integer from a stream reader
         /// </summary>
         /// <param name="stream">The data stream</param>

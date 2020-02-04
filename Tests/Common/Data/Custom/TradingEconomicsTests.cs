@@ -263,6 +263,107 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(calendarStream.IsPercentage, calendarString.IsPercentage);
         }
 
+        [Test]
+        public void ReturnsNullOnInvalidSymbolOrDate_AndContinuesWithoutErrors()
+        {
+            var instance = new TradingEconomicsCalendar();
+            var lines = new List<string>();
+            var deserialized = JsonConvert.DeserializeObject<List<TradingEconomicsCalendar>>(TestCalendarJson).First();
+
+            for (var i = 0; i < 5; i++)
+            {
+                lines.Add(deserialized.ToCsv());
+            }
+
+            var normalStream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(string.Join("\n", lines))));
+
+            lines.Clear();
+            deserialized.Ticker = "Foobar" + deserialized.Ticker;
+
+            for (var i = 0; i < 5; i++)
+            {
+                lines.Add(deserialized.ToCsv());
+            }
+
+            var corruptedStream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(string.Join("\n", lines))));
+
+            var corruptedResult = instance.Reader(
+                new SubscriptionDataConfig(
+                    typeof(TradingEconomicsCalendar),
+                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UnitedStates//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
+                    Resolution.Daily,
+                    TimeZones.Utc,
+                    TimeZones.Utc,
+                    false,
+                    false,
+                    false,
+                    isCustom: true
+                ),
+                corruptedStream,
+                new DateTime(2019, 1, 1),
+                false
+            );
+
+            var corruptedNormalResult = instance.Reader(
+                new SubscriptionDataConfig(
+                    typeof(TradingEconomicsCalendar),
+                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UnitedStates//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
+                    Resolution.Daily,
+                    TimeZones.Utc,
+                    TimeZones.Utc,
+                    false,
+                    false,
+                    false,
+                    isCustom: true
+                ),
+                normalStream,
+                DateTime.MaxValue,
+                false
+            );
+
+            Assert.AreEqual(null, corruptedResult);
+            Assert.AreEqual(null, corruptedNormalResult);
+
+            while (!normalStream.EndOfStream)
+            {
+                var calendar = (TradingEconomicsCalendar)instance.Reader(
+                    new SubscriptionDataConfig(
+                        typeof(TradingEconomicsCalendar),
+                        Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UnitedStates//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
+                        Resolution.Daily,
+                        TimeZones.Utc,
+                        TimeZones.Utc,
+                        false,
+                        false,
+                        false,
+                        isCustom: true
+                    ),
+                    normalStream,
+                    new DateTime(2019, 1, 1),
+                    false
+                );
+                Assert.AreEqual("0", calendar.CalendarId);
+                Assert.AreEqual(new DateTime(2019, 1, 1), calendar.EndTime.Date);
+                Assert.AreEqual("United States", calendar.Country);
+                Assert.AreEqual("PPI PCE", calendar.Category);
+                Assert.AreEqual("producer price index personal consumption expenditure price index yoy", calendar.Event);
+                Assert.AreEqual("Jan", calendar.Reference);
+                Assert.AreEqual("U.S.", calendar.Source);
+                Assert.AreEqual(0m, calendar.Actual);
+                Assert.AreEqual(0m, calendar.Previous);
+                Assert.AreEqual(null, calendar.Forecast);
+                Assert.AreEqual(0m, calendar.TradingEconomicsForecast);
+                Assert.AreEqual("0", calendar.DateSpan);
+                Assert.AreEqual(TradingEconomicsImportance.High, calendar.Importance);
+                Assert.AreEqual(new DateTime(2019, 1, 1), calendar.LastUpdate.Date);
+                Assert.AreEqual(0m, calendar.Revised);
+                Assert.AreEqual("United States", calendar.OCountry);
+                Assert.AreEqual("PPI PCE", calendar.OCategory);
+                Assert.AreEqual("US", calendar.Ticker);
+                Assert.AreEqual(true, calendar.IsPercentage);
+            }
+        }
+
         [TestCase("United States", "USD")]
         [TestCase("Canada", "CAD")]
         [TestCase("Australia", "AUD")]
