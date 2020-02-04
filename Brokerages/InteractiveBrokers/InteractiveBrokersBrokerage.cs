@@ -2288,7 +2288,9 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
             // During the Friday evening reset period, all services will be unavailable in all regions for the duration of the reset.
             if (time.DayOfWeek == DayOfWeek.Friday && timeOfDay > new TimeSpan(22, 45, 0) ||
-                time.DayOfWeek == DayOfWeek.Saturday && timeOfDay < new TimeSpan(3, 15, 0))
+                // Occasionally the disconnection due to the IB reset period might last
+                // much longer than expected during weekends (even up to the cash sync time).
+                time.DayOfWeek == DayOfWeek.Saturday)
             {
                 // Friday: 23:00 - 03:00 ET for all regions
                 result = true;
