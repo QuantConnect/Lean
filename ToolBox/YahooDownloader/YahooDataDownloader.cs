@@ -129,8 +129,8 @@ namespace QuantConnect.ToolBox.YahooDownloader
         /// <returns>Decimal representing the split ratio</returns>
         private decimal ParseAmount(string splitFactor)
         {
-            var factors = splitFactor.Split('/');
-            return Parse.Decimal(factors[1]) / Parse.Decimal(factors[0]);
+            var factors = splitFactor.Split(':');
+            return Parse.Decimal(factors[0]) / Parse.Decimal(factors[1]);
         }
 
     }
