@@ -48,7 +48,7 @@ namespace QuantConnect.Securities
         /// Get the maximum market order quantity to obtain a position with a given buying power percentage.
         /// Will not take into account free buying power.
         /// </summary>
-        /// <param name="parameters">An object containing the portfolio, the security and the target buying power percentage</param>
+        /// <param name="parameters">An object containing the portfolio, the security and the target signed buying power percentage</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
         GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters);
 
@@ -58,6 +58,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the delta buying power</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        /// <remarks>Used by the margin call model to reduce the position by a delta percent.</remarks>
         GetMaximumOrderQuantityResult GetMaximumOrderQuantityForDeltaBuyingPower(GetMaximumOrderQuantityForDeltaBuyingPowerParameters parameters);
 
         /// <summary>

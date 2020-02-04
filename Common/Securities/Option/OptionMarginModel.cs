@@ -19,7 +19,7 @@ using QuantConnect.Orders.Fees;
 namespace QuantConnect.Securities.Option
 {
     /// <summary>
-    /// Represents a simple option margining model.
+    /// Represents a simple option margin model.
     /// </summary>
     /// <remarks>
     /// Options are not traded on margin. Margin requirements exist though for those portfolios with short positions.
@@ -80,7 +80,8 @@ namespace QuantConnect.Securities.Option
             var feesInAccountCurrency = parameters.CurrencyConverter.
                 ConvertToAccountCurrency(fees).Amount;
 
-            var orderMargin = GetInitialMarginRequirement(parameters.Security, parameters.Order.Quantity);
+            var value = parameters.Order.GetValue(parameters.Security);
+            var orderMargin = value * GetMarginRequirement(parameters.Security, value);
 
             return orderMargin + Math.Sign(orderMargin) * feesInAccountCurrency;
         }

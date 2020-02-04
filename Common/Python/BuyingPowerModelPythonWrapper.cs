@@ -59,9 +59,10 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Get the maximum market order quantity to obtain a position with a given value in account currency
+        /// Get the maximum market order quantity to obtain a position with a given buying power percentage.
+        /// Will not take into account free buying power.
         /// </summary>
-        /// <param name="parameters">An object containing the portfolio, the security and the target percentage holdings</param>
+        /// <param name="parameters">An object containing the portfolio, the security and the target signed buying power percentage</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
         public GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
         {

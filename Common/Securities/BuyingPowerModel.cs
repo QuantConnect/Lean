@@ -310,11 +310,12 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="parameters">An object containing the portfolio, the security and the delta buying power</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        /// <remarks>Used by the margin call model to reduce the position by a delta percent.</remarks>
         public virtual GetMaximumOrderQuantityResult GetMaximumOrderQuantityForDeltaBuyingPower(
             GetMaximumOrderQuantityForDeltaBuyingPowerParameters parameters)
         {
             var usedBuyingPower = parameters.Security.BuyingPowerModel.GetReservedBuyingPowerForPosition(
-                new ReservedBuyingPowerForPositionParameters(parameters.Security)).Value;
+                new ReservedBuyingPowerForPositionParameters(parameters.Security)).AbsoluteUsedBuyingPower;
 
             var signedUsedBuyingPower = usedBuyingPower * (parameters.Security.Holdings.IsLong ? 1 : -1);
 
@@ -337,7 +338,7 @@ namespace QuantConnect.Securities
         /// Get the maximum market order quantity to obtain a position with a given buying power percentage.
         /// Will not take into account free buying power.
         /// </summary>
-        /// <param name="parameters">An object containing the portfolio, the security and the target buying power percentage</param>
+        /// <param name="parameters">An object containing the portfolio, the security and the target signed buying power percentage</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
         public virtual GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
         {
@@ -345,41 +346,41 @@ namespace QuantConnect.Securities
             var totalPortfolioValue = parameters.Portfolio.TotalPortfolioValue;
 
             // adjust target buying power to comply with required Free Buying Power Percent
-            var targetFinalMarginValue =
+            var signedTargetFinalMarginValue =
                 parameters.TargetBuyingPower * (totalPortfolioValue - totalPortfolioValue * RequiredFreeBuyingPowerPercent);
 
             // if targeting zero, simply return the negative of the quantity
-            if (targetFinalMarginValue == 0)
+            if (signedTargetFinalMarginValue == 0)
             {
                 return new GetMaximumOrderQuantityResult(-parameters.Security.Holdings.Quantity, string.Empty, false);
             }
 
             // we use initial margin requirement here to avoid the duplicate PortfolioTarget.Percent situation:
             // PortfolioTarget.Percent(1) -> fills -> PortfolioTarget.Percent(1) _could_ detect free buying power if we use Maintenance requirement here
-            var currentUsedMargin = GetInitialMarginRequirement(parameters.Security, parameters.Security.Holdings.Quantity);
+            var currentSignedUsedMargin = GetInitialMarginRequirement(parameters.Security, parameters.Security.Holdings.Quantity);
 
             // remove directionality, we'll work in the land of absolutes
-            var finalOrderMargin = Math.Abs(targetFinalMarginValue - currentUsedMargin);
-            var direction = targetFinalMarginValue > currentUsedMargin ? OrderDirection.Buy : OrderDirection.Sell;
+            var absFinalOrderMargin = Math.Abs(signedTargetFinalMarginValue - currentSignedUsedMargin);
+            var direction = signedTargetFinalMarginValue > currentSignedUsedMargin ? OrderDirection.Buy : OrderDirection.Sell;
 
             // determine the unit price in terms of the account currency
             var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
             // determine the margin required for 1 unit, positive since we are working with absolutes
-            var unitMargin = GetInitialMarginRequirement(parameters.Security, 1);
-            if (unitMargin == 0)
+            var absUnitMargin = GetInitialMarginRequirement(parameters.Security, 1);
+            if (absUnitMargin == 0)
             {
                 var reason = $"The price of the {parameters.Security.Symbol.Value} security is zero because it does not have any market " +
                     "data yet. When the security price is set this security will be ready for trading.";
                 return new GetMaximumOrderQuantityResult(0, reason);
             }
 
-            var minimumValue = unitMargin * parameters.Security.SymbolProperties.LotSize;
-            if (minimumValue > finalOrderMargin)
+            var minimumValue = absUnitMargin * parameters.Security.SymbolProperties.LotSize;
+            if (minimumValue > absFinalOrderMargin)
             {
                 string reason = null;
                 if (!parameters.SilenceNonErrorReasons)
                 {
-                    reason = $"The target order margin {finalOrderMargin} is less than the minimum {minimumValue}.";
+                    reason = $"The target order margin {absFinalOrderMargin} is less than the minimum {minimumValue}.";
                 }
                 return new GetMaximumOrderQuantityResult(0, reason, false);
             }
@@ -396,7 +397,7 @@ namespace QuantConnect.Securities
             decimal orderMargin = 0;
             decimal orderFees = 0;
             // compute the initial order quantity
-            var orderQuantity = finalOrderMargin / unitMargin;
+            var orderQuantity = absFinalOrderMargin / absUnitMargin;
 
             // rounding off Order Quantity to the nearest multiple of Lot Size
             orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
@@ -417,10 +418,10 @@ namespace QuantConnect.Securities
             do
             {
                 // Each loop will reduce the order quantity based on the difference between orderMargin and targetOrderMargin
-                if (orderMargin > finalOrderMargin)
+                if (orderMargin > absFinalOrderMargin)
                 {
                     var currentOrderMarginPerUnit = orderMargin / orderQuantity;
-                    var amountOfOrdersToRemove = (orderMargin - finalOrderMargin) / currentOrderMarginPerUnit;
+                    var amountOfOrdersToRemove = (orderMargin - absFinalOrderMargin) / currentOrderMarginPerUnit;
                     if (amountOfOrdersToRemove < parameters.Security.SymbolProperties.LotSize)
                     {
                         // we will always subtract at least 1 LotSize
@@ -435,8 +436,8 @@ namespace QuantConnect.Securities
                 {
                     return new GetMaximumOrderQuantityResult(0,
                         Invariant($"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} ") +
-                        Invariant($"and has been rounded to zero.Target order margin {finalOrderMargin}. Order fees ") +
-                        Invariant($"{orderFees}. Order quantity {orderQuantity}. Margin unit {unitMargin}."),
+                        Invariant($"and has been rounded to zero.Target order margin {absFinalOrderMargin}. Order fees ") +
+                        Invariant($"{orderFees}. Order quantity {orderQuantity}. Margin unit {absUnitMargin}."),
                         false
                     );
                 }
@@ -451,16 +452,16 @@ namespace QuantConnect.Securities
 
                 // The TPV, take out the fees(unscaled) => yields available margin for trading(less fees)
                 // then scale that by the target -- finally remove currentUsedMargin to get finalOrderMargin
-                finalOrderMargin = Math.Abs(
+                absFinalOrderMargin = Math.Abs(
                     (totalPortfolioValue - orderFees - totalPortfolioValue * RequiredFreeBuyingPowerPercent)
-                    * parameters.TargetBuyingPower - currentUsedMargin
+                    * parameters.TargetBuyingPower - currentSignedUsedMargin
                 );
 
                 // After the first loop we need to recalculate order quantity since now we have fees included
                 if (loopCount == 0)
                 {
                     // re compute the initial order quantity
-                    orderQuantity = finalOrderMargin / unitMargin;
+                    orderQuantity = absFinalOrderMargin / absUnitMargin;
                     orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
                 }
                 else
@@ -469,20 +470,20 @@ namespace QuantConnect.Securities
                     if (lastOrderQuantity == orderQuantity)
                     {
                         var message = "GetMaximumOrderQuantityForTargetBuyingPower failed to converge to target order margin " +
-                            Invariant($"{finalOrderMargin}. Current order margin is {orderMargin}. Order quantity {orderQuantity}. ") +
+                            Invariant($"{absFinalOrderMargin}. Current order margin is {orderMargin}. Order quantity {orderQuantity}. ") +
                             Invariant($"Lot size is {parameters.Security.SymbolProperties.LotSize}. Order fees {orderFees}. Security symbol ") +
-                            $"{parameters.Security.Symbol}. Margin unit {unitMargin}.";
+                            $"{parameters.Security.Symbol}. Margin unit {absUnitMargin}.";
                         throw new ArgumentException(message);
                     }
 
                     lastOrderQuantity = orderQuantity;
                 }
 
-                orderMargin = orderQuantity * unitMargin;
+                orderMargin = orderQuantity * absUnitMargin;
                 loopCount++;
                 // we always have to loop at least twice
             }
-            while (loopCount < 2 || orderMargin > finalOrderMargin);
+            while (loopCount < 2 || orderMargin > absFinalOrderMargin);
 
             // add directionality back in
             return new GetMaximumOrderQuantityResult((direction == OrderDirection.Sell ? -1 : 1) * orderQuantity);

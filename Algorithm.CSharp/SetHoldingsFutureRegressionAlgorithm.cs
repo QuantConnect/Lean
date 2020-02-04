@@ -122,16 +122,16 @@ namespace QuantConnect.Algorithm.CSharp
 
                 var security = Securities[_contractSymbol];
                 var model = security.BuyingPowerModel as FutureMarginModel;
-                var marginUsed = model.MaintenanceMarginRequirement * security.Holdings.AbsoluteQuantity * (security.Exchange.ExchangeOpen ? (1m/20m) : 1);
+                var marginUsed = model.MaintenanceIntradayMarginRequirement * security.Holdings.AbsoluteQuantity;
 
                 if ((Portfolio.TotalMarginUsed - marginUsed) != 0)
                 {
                     throw new Exception($"We expect TotalMarginUsed to be {marginUsed}, but was {Portfolio.TotalMarginUsed}");
                 }
 
-                var initialMarginRequired = model.InitialMarginRequirement * security.Holdings.AbsoluteQuantity;
+                var initialMarginRequired = model.InitialIntradayMarginRequirement * security.Holdings.AbsoluteQuantity;
 
-                if (Portfolio.TotalPortfolioValue - initialMarginRequired > model.InitialMarginRequirement * security.SymbolProperties.LotSize)
+                if (Portfolio.TotalPortfolioValue - initialMarginRequired > model.InitialIntradayMarginRequirement * security.SymbolProperties.LotSize)
                 {
                     throw new Exception("We expect to be trading using the biggest position we can, there seems to be room for another contract");
                 }
@@ -155,11 +155,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Trades", "3"},
             {"Average Win", "0%"},
-            {"Average Loss", "-11.48%"},
-            {"Compounding Annual Return", "-100.000%"},
-            {"Drawdown", "10.700%"},
+            {"Average Loss", "-1.45%"},
+            {"Compounding Annual Return", "-96.424%"},
+            {"Drawdown", "1.400%"},
             {"Expectancy", "-1"},
-            {"Net Profit", "-20.406%"},
+            {"Net Profit", "-2.701%"},
             {"Sharpe Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "100%"},
@@ -172,13 +172,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$26307.00"},
-            {"Fitness Score", "0.539"},
+            {"Total Fees", "$3481.70"},
+            {"Fitness Score", "0.5"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "1"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "-4.9"},
-            {"Portfolio Turnover", "494.281"},
+            {"Return Over Maximum Drawdown", "-35.939"},
+            {"Portfolio Turnover", "53.513"},
             {"Total Insights Generated", "3"},
             {"Total Insights Closed", "2"},
             {"Total Insights Analysis Completed", "2"},

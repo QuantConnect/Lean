@@ -32,7 +32,7 @@ namespace QuantConnect.Securities
         {
             var context = new ReservedBuyingPowerForPositionParameters(security);
             var reservedBuyingPower = model.GetReservedBuyingPowerForPosition(context);
-            return reservedBuyingPower.Value;
+            return reservedBuyingPower.AbsoluteUsedBuyingPower;
         }
 
         /// <summary>

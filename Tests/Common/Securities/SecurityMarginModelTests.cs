@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Common.Securities
             Update(spy, 12);
 
             var marginForPosition = spy.BuyingPowerModel.GetReservedBuyingPowerForPosition(
-                new ReservedBuyingPowerForPositionParameters(spy)).Value;
+                new ReservedBuyingPowerForPositionParameters(spy)).AbsoluteUsedBuyingPower;
             Assert.AreEqual(1000 * 12 / leverage, marginForPosition);
         }
 
@@ -91,7 +91,7 @@ namespace QuantConnect.Tests.Common.Securities
             Update(spy, 40);
 
             var marginForPosition = spy.BuyingPowerModel.GetReservedBuyingPowerForPosition(
-                new ReservedBuyingPowerForPositionParameters(spy)).Value;
+                new ReservedBuyingPowerForPositionParameters(spy)).AbsoluteUsedBuyingPower;
             Assert.AreEqual(1000 * 40 / leverage, marginForPosition);
         }
 
@@ -182,7 +182,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var actual = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(new ReservedBuyingPowerForPositionParameters(security));
             // 100quantity * 25price * 0.88rate * 0.5 MaintenanceMarginRequirement = 1100
-            Assert.AreEqual(1100, actual.Value);
+            Assert.AreEqual(1100, actual.AbsoluteUsedBuyingPower);
         }
 
         [Test]

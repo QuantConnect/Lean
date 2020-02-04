@@ -31,7 +31,7 @@ namespace QuantConnect.Securities
         public Security Security { get; }
 
         /// <summary>
-        /// Gets the target percentage buying power
+        /// Gets the target signed percentage buying power
         /// </summary>
         public decimal TargetBuyingPower { get; }
 

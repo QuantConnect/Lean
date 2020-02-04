@@ -149,7 +149,7 @@ namespace QuantConnect.Securities
             var deltaAccountCurrency = totalUsedMargin - totalPortfolioValue;
 
             var currentlyUsedBuyingPower = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(
-                new ReservedBuyingPowerForPositionParameters(security)).Value;
+                new ReservedBuyingPowerForPositionParameters(security)).AbsoluteUsedBuyingPower;
 
             // if currentlyUsedBuyingPower > deltaAccountCurrency, means we can keep using the diff in buying power
             var buyingPowerToKeep = Math.Max(0, currentlyUsedBuyingPower - deltaAccountCurrency);

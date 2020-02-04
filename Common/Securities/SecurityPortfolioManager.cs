@@ -470,7 +470,7 @@ namespace QuantConnect.Securities
                     }
                     var context = new ReservedBuyingPowerForPositionParameters(security);
                     var reservedBuyingPower = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(context);
-                    sum += reservedBuyingPower.Value;
+                    sum += reservedBuyingPower.AbsoluteUsedBuyingPower;
                 }
                 return sum;
             }
@@ -797,7 +797,7 @@ namespace QuantConnect.Securities
                 );
 
                 Log.Trace("Order request margin information: " +
-                    Invariant($"MarginUsed: {marginUsed.Value:F2}")
+                    Invariant($"MarginUsed: {marginUsed.AbsoluteUsedBuyingPower:F2}")
                 );
             }
         }

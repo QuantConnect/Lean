@@ -104,8 +104,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception($"Invalid buying power model. Found: {buyingPowerModel.GetType().Name}. Expected: {nameof(FutureMarginModel)}");
             }
-            var initialOvernight = futureMarginModel?.InitialMarginRequirement;
-            var maintenanceOvernight = futureMarginModel?.MaintenanceMarginRequirement;
+            var initialOvernight = futureMarginModel.InitialOvernightMarginRequirement;
+            var maintenanceOvernight = futureMarginModel.MaintenanceOvernightMarginRequirement;
+            var initialIntraday = futureMarginModel.InitialIntradayMarginRequirement;
+            var maintenanceIntraday = futureMarginModel.MaintenanceIntradayMarginRequirement;
         }
 
         /// <summary>

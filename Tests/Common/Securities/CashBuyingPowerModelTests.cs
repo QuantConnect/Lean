@@ -730,7 +730,7 @@ namespace QuantConnect.Tests.Common.Securities
                 new ReservedBuyingPowerForPositionParameters(_btcusd));
 
             // Always returns 0. Since we're purchasing currencies outright, the position doesn't consume buying power
-            Assert.AreEqual(0m, res.Value);
+            Assert.AreEqual(0m, res.AbsoluteUsedBuyingPower);
         }
 
         [TestCase("EUR")]

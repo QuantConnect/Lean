@@ -39,9 +39,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetAlpha(new ConstantFutureContractAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromDays(1)));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel());
             SetExecution(new ImmediateExecutionModel());
-
-            // leave a nice buffer to avoid getting wiped out, futures have a lot of leverage!
-            Settings.FreePortfolioValuePercentage = 0.5m;
         }
 
         // future symbol universe selection function
@@ -114,32 +111,32 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "11"},
-            {"Average Win", "48.13%"},
-            {"Average Loss", "-16.50%"},
-            {"Compounding Annual Return", "79228162514264337593543950335%"},
-            {"Drawdown", "79.100%"},
-            {"Expectancy", "0.119"},
-            {"Net Profit", "191.526%"},
-            {"Sharpe Ratio", "17.858"},
-            {"Probabilistic Sharpe Ratio", "88.094%"},
-            {"Loss Rate", "71%"},
-            {"Win Rate", "29%"},
-            {"Profit-Loss Ratio", "2.92"},
-            {"Alpha", "178.049"},
-            {"Beta", "28.197"},
-            {"Annual Standard Deviation", "11.646"},
-            {"Annual Variance", "135.634"},
-            {"Information Ratio", "17.945"},
-            {"Tracking Error", "11.531"},
-            {"Treynor Ratio", "7.376"},
-            {"Total Fees", "$1944.35"},
-            {"Fitness Score", "0.999"},
+            {"Total Trades", "7"},
+            {"Average Win", "0%"},
+            {"Average Loss", "-10.53%"},
+            {"Compounding Annual Return", "5954496901.426%"},
+            {"Drawdown", "62.100%"},
+            {"Expectancy", "-1"},
+            {"Net Profit", "25.977%"},
+            {"Sharpe Ratio", "5.943"},
+            {"Probabilistic Sharpe Ratio", "73.556%"},
+            {"Loss Rate", "100%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "9.98"},
+            {"Beta", "32.209"},
+            {"Annual Standard Deviation", "7.43"},
+            {"Annual Variance", "55.209"},
+            {"Information Ratio", "5.969"},
+            {"Tracking Error", "7.221"},
+            {"Treynor Ratio", "1.371"},
+            {"Total Fees", "$262.70"},
+            {"Fitness Score", "0.307"},
             {"Kelly Criterion Estimate", "14.108"},
             {"Kelly Criterion Probability Value", "0.374"},
-            {"Sortino Ratio", "126431249752217"},
-            {"Return Over Maximum Drawdown", "992643312426759.791"},
-            {"Portfolio Turnover", "278.562"},
+            {"Sortino Ratio", "-0.7"},
+            {"Return Over Maximum Drawdown", "-2.102"},
+            {"Portfolio Turnover", "34.419"},
             {"Total Insights Generated", "5"},
             {"Total Insights Closed", "4"},
             {"Total Insights Analysis Completed", "4"},
