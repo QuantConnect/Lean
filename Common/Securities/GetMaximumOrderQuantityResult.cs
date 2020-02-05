@@ -16,9 +16,10 @@
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Contains the information returned by <see cref="IBuyingPowerModel.GetMaximumOrderQuantityForTargetValue"/>
+    /// Contains the information returned by <see cref="IBuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower"/>
+    /// and  <see cref="IBuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower"/>
     /// </summary>
-    public class GetMaximumOrderQuantityForTargetValueResult
+    public class GetMaximumOrderQuantityResult
     {
         /// <summary>
         /// Returns the maximum quantity for the order
@@ -36,11 +37,11 @@ namespace QuantConnect.Securities
         public bool IsError { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForTargetValueResult"/> class
+        /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityResult"/> class
         /// </summary>
         /// <param name="quantity">Returns the maximum quantity for the order</param>
         /// <param name="reason">The reason for which the maximum order quantity is zero</param>
-        public GetMaximumOrderQuantityForTargetValueResult(decimal quantity, string reason = null)
+        public GetMaximumOrderQuantityResult(decimal quantity, string reason = null)
         {
             Quantity = quantity;
             Reason = reason ?? string.Empty;
@@ -48,12 +49,12 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForTargetValueResult"/> class
+        /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityResult"/> class
         /// </summary>
         /// <param name="quantity">Returns the maximum quantity for the order</param>
         /// <param name="reason">The reason for which the maximum order quantity is zero</param>
         /// <param name="isError">True if the zero order quantity is an error condition</param>
-        public GetMaximumOrderQuantityForTargetValueResult(decimal quantity, string reason, bool isError = true)
+        public GetMaximumOrderQuantityResult(decimal quantity, string reason, bool isError = true)
         {
             Quantity = quantity;
             Reason = reason ?? string.Empty;

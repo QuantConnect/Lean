@@ -70,6 +70,9 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
         buyingPowerModel = self.Securities[self.contractSymbol].BuyingPowerModel
         name = type(buyingPowerModel).__name__
         if name != 'FutureMarginModel':
-            raise Exception(f"Invalid buying power model. Found: {name}. Expected: FutureMarginModel")    
-        initialMarginRequirement = buyingPowerModel.InitialMarginRequirement
-        maintenanceMarginRequirement = buyingPowerModel.MaintenanceMarginRequirement
+            raise Exception(f"Invalid buying power model. Found: {name}. Expected: FutureMarginModel")
+
+        initialOvernight = buyingPowerModel.InitialOvernightMarginRequirement
+        maintenanceOvernight = buyingPowerModel.MaintenanceOvernightMarginRequirement
+        initialIntraday = buyingPowerModel.InitialIntradayMarginRequirement
+        maintenanceIntraday = buyingPowerModel.MaintenanceIntradayMarginRequirement

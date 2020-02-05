@@ -47,7 +47,10 @@ namespace QuantConnect.Securities
         /// <param name="leverage">The new leverage</param>
         public override void SetLeverage(Security security, decimal leverage)
         {
-            // No action performed. This model always uses a leverage = 1
+            if (leverage != 1)
+            {
+                throw new InvalidOperationException("CashBuyingPowerModel does not allow setting leverage. Cash accounts have no leverage.");
+            }
         }
 
         /// <summary>
@@ -112,8 +115,8 @@ namespace QuantConnect.Securities
 
                 // maximum quantity that can be bought (in quote currency)
                 var maximumQuantity =
-                    GetMaximumOrderQuantityForTargetValue(
-                        new GetMaximumOrderQuantityForTargetValueParameters(parameters.Portfolio, parameters.Security, targetPercent)).Quantity * GetOrderPrice(parameters.Security, parameters.Order);
+                    GetMaximumOrderQuantityForTargetBuyingPower(
+                        new GetMaximumOrderQuantityForTargetBuyingPowerParameters(parameters.Portfolio, parameters.Security, targetPercent)).Quantity * GetOrderPrice(parameters.Security, parameters.Order);
 
                 isSufficient = orderQuantity <= Math.Abs(maximumQuantity);
                 if (!isSufficient)
@@ -147,29 +150,44 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Get the maximum market order quantity to obtain a position with a given value in account currency. Will not take into account buying power.
+        /// Get the maximum market order quantity to obtain a delta in the buying power used by a security.
+        /// The deltas sign defines the position side to apply it to, positive long, negative short.
         /// </summary>
-        /// <param name="parameters">An object containing the portfolio, the security and the target percentage holdings</param>
+        /// <param name="parameters">An object containing the portfolio, the security and the delta buying power</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        public override GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(GetMaximumOrderQuantityForTargetValueParameters parameters)
+        /// <remarks>Used by the margin call model to reduce the position by a delta percent.</remarks>
+        public override GetMaximumOrderQuantityResult GetMaximumOrderQuantityForDeltaBuyingPower(
+            GetMaximumOrderQuantityForDeltaBuyingPowerParameters parameters)
         {
-            var targetPortfolioValue = parameters.Target * parameters.Portfolio.TotalPortfolioValue;
+            throw new NotImplementedException(
+                $"The {nameof(CashBuyingPowerModel)} does not require '{nameof(GetMaximumOrderQuantityForDeltaBuyingPower)}'.");
+        }
+
+        /// <summary>
+        /// Get the maximum market order quantity to obtain a position with a given buying power percentage.
+        /// Will not take into account free buying power.
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the security and the target signed buying power percentage</param>
+        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        public override GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
+        {
+            var targetPortfolioValue = parameters.TargetBuyingPower * parameters.Portfolio.TotalPortfolioValue;
             // no shorting allowed
             if (targetPortfolioValue < 0)
             {
-                return new GetMaximumOrderQuantityForTargetValueResult(0, "The cash model does not allow shorting.");
+                return new GetMaximumOrderQuantityResult(0, "The cash model does not allow shorting.");
             }
 
             var baseCurrency = parameters.Security as IBaseCurrencySymbol;
             if (baseCurrency == null)
             {
-                return new GetMaximumOrderQuantityForTargetValueResult(0, "The security type must be SecurityType.Crypto or SecurityType.Forex.");
+                return new GetMaximumOrderQuantityResult(0, "The security type must be SecurityType.Crypto or SecurityType.Forex.");
             }
 
             // if target value is zero, return amount of base currency available to sell
             if (targetPortfolioValue == 0)
             {
-                return new GetMaximumOrderQuantityForTargetValueResult(-parameters.Portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount);
+                return new GetMaximumOrderQuantityResult(-parameters.Portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount);
             }
 
             // convert base currency cash to account currency
@@ -194,18 +212,18 @@ namespace QuantConnect.Securities
             {
                 if (parameters.Security.QuoteCurrency.ConversionRate == 0)
                 {
-                    return new GetMaximumOrderQuantityForTargetValueResult(0, "The internal cash feed required for converting" +
+                    return new GetMaximumOrderQuantityResult(0, "The internal cash feed required for converting" +
                         Invariant($" {parameters.Security.QuoteCurrency.Symbol} to {parameters.Portfolio.CashBook.AccountCurrency} does not") +
                         " have any data yet (or market may be closed).");
                 }
 
                 if (parameters.Security.SymbolProperties.ContractMultiplier == 0)
                 {
-                    return new GetMaximumOrderQuantityForTargetValueResult(0, $"The contract multiplier for the {parameters.Security.Symbol.Value} security is zero. The symbol properties database may be out of date.");
+                    return new GetMaximumOrderQuantityResult(0, $"The contract multiplier for the {parameters.Security.Symbol.Value} security is zero. The symbol properties database may be out of date.");
                 }
 
                 // security.Price == 0
-                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The price of the {parameters.Security.Symbol.Value} security is zero because it does not have any market data yet. When the security price is set this security will be ready for trading.");
+                return new GetMaximumOrderQuantityResult(0, $"The price of the {parameters.Security.Symbol.Value} security is zero because it does not have any market data yet. When the security price is set this security will be ready for trading.");
             }
 
             // calculate the total cash available
@@ -213,7 +231,7 @@ namespace QuantConnect.Securities
             var currency = direction == OrderDirection.Buy ? parameters.Security.QuoteCurrency.Symbol : baseCurrency.BaseCurrencySymbol;
             if (cashRemaining <= 0)
             {
-                return new GetMaximumOrderQuantityForTargetValueResult(0, $"The portfolio does not hold any {currency} for the order.");
+                return new GetMaximumOrderQuantityResult(0, $"The portfolio does not hold any {currency} for the order.");
             }
 
             // continue iterating while we do not have enough cash for the order
@@ -233,7 +251,7 @@ namespace QuantConnect.Securities
                         $"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} and has been rounded to zero."
                     );
                 }
-                return new GetMaximumOrderQuantityForTargetValueResult(0, reason, false);
+                return new GetMaximumOrderQuantityResult(0, reason, false);
             }
 
             // Just in case...
@@ -259,7 +277,7 @@ namespace QuantConnect.Securities
                 orderQuantity -= orderQuantity % parameters.Security.SymbolProperties.LotSize;
                 if (orderQuantity <= 0)
                 {
-                    return new GetMaximumOrderQuantityForTargetValueResult(0,
+                    return new GetMaximumOrderQuantityResult(0,
                         Invariant($"The order quantity is less than the lot size of {parameters.Security.SymbolProperties.LotSize} and has been rounded to zero.") +
                         Invariant($"Target order value {targetOrderValue}. Order fees {orderFees}. Order quantity {orderQuantity}.")
                     );
@@ -288,7 +306,7 @@ namespace QuantConnect.Securities
             } while (currentOrderValue > targetOrderValue);
 
             // add directionality back in
-            return new GetMaximumOrderQuantityForTargetValueResult((direction == OrderDirection.Sell ? -1 : 1) * orderQuantity);
+            return new GetMaximumOrderQuantityResult((direction == OrderDirection.Sell ? -1 : 1) * orderQuantity);
         }
 
         /// <summary>
@@ -299,50 +317,6 @@ namespace QuantConnect.Securities
         public override ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionParameters parameters)
         {
             // Always returns 0. Since we're purchasing currencies outright, the position doesn't consume buying power
-            return parameters.ResultInAccountCurrency(0m);
-        }
-
-        /// <summary>
-        /// Gets the buying power available for a trade
-        /// </summary>
-        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
-        /// <returns>The buying power available for the trade</returns>
-        public override BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
-        {
-            var security = parameters.Security;
-            var portfolio = parameters.Portfolio;
-            var direction = parameters.Direction;
-
-            var baseCurrency = security as IBaseCurrencySymbol;
-            if (baseCurrency == null)
-            {
-                return parameters.ResultInAccountCurrency(0m);
-            }
-
-            var baseCurrencyPosition = portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount;
-            var quoteCurrencyPosition = portfolio.CashBook[security.QuoteCurrency.Symbol].Amount;
-
-            // determine the unit price in terms of the quote currency
-            var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
-            var unitPrice = new MarketOrder(security.Symbol, 1, utcTime).GetValue(security) / security.QuoteCurrency.ConversionRate;
-            if (unitPrice == 0)
-            {
-                return parameters.ResultInAccountCurrency(0m);
-            }
-
-            // NOTE: This is returning in units of the BASE currency
-            if (direction == OrderDirection.Buy)
-            {
-                // invert units for math, 6500USD per BTC, currency pairs aren't real fractions
-                // (USD)/(BTC/USD) => 10kUSD/ (6500 USD/BTC) => 10kUSD * (1BTC/6500USD) => ~ 1.5BTC
-                return parameters.Result(quoteCurrencyPosition / unitPrice, baseCurrency.BaseCurrencySymbol);
-            }
-
-            if (direction == OrderDirection.Sell)
-            {
-                return parameters.Result(baseCurrencyPosition, baseCurrency.BaseCurrencySymbol);
-            }
-
             return parameters.ResultInAccountCurrency(0m);
         }
 

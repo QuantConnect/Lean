@@ -16,9 +16,9 @@
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Defines the parameters for <see cref="IBuyingPowerModel.GetMaximumOrderQuantityForTargetValue"/>
+    /// Defines the parameters for <see cref="IBuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower"/>
     /// </summary>
-    public class GetMaximumOrderQuantityForTargetValueParameters
+    public class GetMaximumOrderQuantityForTargetBuyingPowerParameters
     {
         /// <summary>
         /// Gets the algorithm's portfolio
@@ -31,29 +31,29 @@ namespace QuantConnect.Securities
         public Security Security { get; }
 
         /// <summary>
-        /// Gets the target percentage holdings
+        /// Gets the target signed percentage buying power
         /// </summary>
-        public decimal Target { get; }
+        public decimal TargetBuyingPower { get; }
 
         /// <summary>
-        /// True enables the <see cref="IBuyingPowerModel"/> to skip setting <see cref="GetMaximumOrderQuantityForTargetValueResult.Reason"/>
+        /// True enables the <see cref="IBuyingPowerModel"/> to skip setting <see cref="GetMaximumOrderQuantityResult.Reason"/>
         /// for non error situations, for performance
         /// </summary>
         public bool SilenceNonErrorReasons { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForTargetValueParameters"/> class
+        /// Initializes a new instance of the <see cref="GetMaximumOrderQuantityForTargetBuyingPowerParameters"/> class
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The security</param>
-        /// <param name="target">The target percentage holdings</param>
-        /// <param name="silenceNonErrorReasons">True will not return <see cref="GetMaximumOrderQuantityForTargetValueResult.Reason"/>
+        /// <param name="targetBuyingPower">The target percentage buying power</param>
+        /// <param name="silenceNonErrorReasons">True will not return <see cref="GetMaximumOrderQuantityResult.Reason"/>
         /// set for non error situation, this is for performance</param>
-        public GetMaximumOrderQuantityForTargetValueParameters(SecurityPortfolioManager portfolio, Security security, decimal target, bool silenceNonErrorReasons = false)
+        public GetMaximumOrderQuantityForTargetBuyingPowerParameters(SecurityPortfolioManager portfolio, Security security, decimal targetBuyingPower, bool silenceNonErrorReasons = false)
         {
             Portfolio = portfolio;
             Security = security;
-            Target = target;
+            TargetBuyingPower = targetBuyingPower;
             SilenceNonErrorReasons = silenceNonErrorReasons;
         }
     }
