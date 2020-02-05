@@ -7,7 +7,7 @@ def send(message):
     pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
 
-    channel.queue_declare(queue='hello')
+    channel.queue_declare(queue='stock')
 
     channel.basic_publish(exchange='', routing_key='hello', body=str(message))
     print(" [x] Sent message")
