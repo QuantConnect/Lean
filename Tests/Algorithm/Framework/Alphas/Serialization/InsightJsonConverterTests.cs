@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
                 Period = jObject["period"].Value<double>(),
                 Magnitude = jObject["magnitude"].Value<double>()
             });
-            var result = JsonConvert.SerializeObject(insight, Formatting.Indented);
+            var result = JsonConvert.SerializeObject(insight, Formatting.None);
             Assert.AreEqual(jsonNoScore, result);
         }
 
@@ -122,7 +122,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
                 EstimatedValue = jObject["estimated-value"].Value<decimal>(),
                 ReferenceValueFinal = jObject["reference-final"].Value<decimal>()
             });
-            var result = JsonConvert.SerializeObject(insight, Formatting.Indented);
+            var result = JsonConvert.SerializeObject(insight, Formatting.None);
             Assert.AreEqual(jsonWithScore, result);
         }
 
@@ -131,106 +131,102 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas.Serialization
         {
             var serializedInsight = JsonConvert.DeserializeObject<SerializedInsight>(jsonWithMissingCreatedTime);
             var insight = Insight.FromSerializedInsight(serializedInsight);
-            var result = JsonConvert.SerializeObject(insight, Formatting.Indented);
+            var result = JsonConvert.SerializeObject(insight, Formatting.None);
 
             Assert.AreEqual(serializedInsight.CreatedTime, serializedInsight.GeneratedTime);
             Assert.AreEqual(jsonWithExpectedOutputFromMissingCreatedTimeValue, result);
         }
 
         private const string jsonNoScore =
-@"{
-  ""id"": ""e02be50f56a8496b9ba995d19a904ada"",
-  ""group-id"": null,
-  ""source-model"": ""mySourceModel-1"",
-  ""generated-time"": 1520711961.00055,
-  ""created-time"": 1520711961.00055,
-  ""close-time"": 1520711961.00055,
-  ""symbol"": ""BTCUSD XJ"",
-  ""ticker"": ""BTCUSD"",
-  ""type"": ""price"",
-  ""reference"": 9143.53,
-  ""reference-final"": 0.0,
-  ""direction"": ""up"",
-  ""period"": 5.0,
-  ""magnitude"": 0.025,
-  ""confidence"": null,
-  ""weight"": null,
-  ""score-final"": false,
-  ""score-magnitude"": 0.0,
-  ""score-direction"": 0.0,
-  ""estimated-value"": 0.0
-}";
+            "{" +
+            "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
+            "\"group-id\":null," +
+            "\"source-model\":\"mySourceModel-1\"," +
+            "\"generated-time\":1520711961.00055," +
+            "\"created-time\":1520711961.00055," +
+            "\"close-time\":1520711961.00055," +
+            "\"symbol\":\"BTCUSD XJ\"," +
+            "\"ticker\":\"BTCUSD\"," +
+            "\"type\":\"price\"," +
+            "\"reference\":9143.53," +
+            "\"reference-final\":0.0," +
+            "\"direction\":\"up\"," +
+            "\"period\":5.0," +
+            "\"magnitude\":0.025," +
+            "\"confidence\":null," +
+            "\"weight\":null," +
+            "\"score-final\":false," +
+            "\"score-magnitude\":0.0," +
+            "\"score-direction\":0.0," +
+            "\"estimated-value\":0.0}";
 
         private const string jsonWithScore =
-@"{
-  ""id"": ""e02be50f56a8496b9ba995d19a904ada"",
-  ""group-id"": ""a02be50f56a8496b9ba995d19a904ada"",
-  ""source-model"": ""mySourceModel-1"",
-  ""generated-time"": 1520711961.00055,
-  ""created-time"": 1520711961.00055,
-  ""close-time"": 1520711961.00055,
-  ""symbol"": ""BTCUSD XJ"",
-  ""ticker"": ""BTCUSD"",
-  ""type"": ""price"",
-  ""reference"": 9143.53,
-  ""reference-final"": 9243.53,
-  ""direction"": ""up"",
-  ""period"": 5.0,
-  ""magnitude"": 0.025,
-  ""confidence"": null,
-  ""weight"": null,
-  ""score-final"": true,
-  ""score-magnitude"": 1.0,
-  ""score-direction"": 1.0,
-  ""estimated-value"": 1113.2484
-}";
+            "{" +
+            "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
+            "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +
+            "\"source-model\":\"mySourceModel-1\"," +
+            "\"generated-time\":1520711961.00055," +
+            "\"created-time\":1520711961.00055," +
+            "\"close-time\":1520711961.00055," +
+            "\"symbol\":\"BTCUSD XJ\"," +
+            "\"ticker\":\"BTCUSD\"," +
+            "\"type\":\"price\"," +
+            "\"reference\":9143.53," +
+            "\"reference-final\":9243.53," +
+            "\"direction\":\"up\"," +
+            "\"period\":5.0," +
+            "\"magnitude\":0.025," +
+            "\"confidence\":null," +
+            "\"weight\":null," +
+            "\"score-final\":true," +
+            "\"score-magnitude\":1.0," +
+            "\"score-direction\":1.0," +
+            "\"estimated-value\":1113.2484}";
 
         private const string jsonWithMissingCreatedTime =
-@"{
-  ""id"": ""e02be50f56a8496b9ba995d19a904ada"",
-  ""group-id"": ""a02be50f56a8496b9ba995d19a904ada"",
-  ""source-model"": ""mySourceModel-1"",
-  ""generated-time"": 1520711961.00055,
-  ""close-time"": 1520711961.00055,
-  ""symbol"": ""BTCUSD XJ"",
-  ""ticker"": ""BTCUSD"",
-  ""type"": ""price"",
-  ""reference"": 9143.53,
-  ""reference-final"": 9243.53,
-  ""direction"": ""up"",
-  ""period"": 5.0,
-  ""magnitude"": 0.025,
-  ""confidence"": null,
-  ""weight"": null,
-  ""score-final"": true,
-  ""score-magnitude"": 1.0,
-  ""score-direction"": 1.0,
-  ""estimated-value"": 1113.2484
-}";
+            "{" +
+            "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
+            "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +
+            "\"source-model\":\"mySourceModel-1\"," +
+            "\"generated-time\":1520711961.00055," +
+            "\"close-time\":1520711961.00055," +
+            "\"symbol\":\"BTCUSD XJ\"," +
+            "\"ticker\":\"BTCUSD\"," +
+            "\"type\":\"price\"," +
+            "\"reference\":9143.53," +
+            "\"reference-final\":9243.53," +
+            "\"direction\":\"up\"," +
+            "\"period\":5.0," +
+            "\"magnitude\":0.025," +
+            "\"confidence\":null," +
+            "\"weight\":null," +
+            "\"score-final\":true," +
+            "\"score-magnitude\":1.0," +
+            "\"score-direction\":1.0," +
+            "\"estimated-value\":1113.2484}";
 
         private const string jsonWithExpectedOutputFromMissingCreatedTimeValue =
-@"{
-  ""id"": ""e02be50f56a8496b9ba995d19a904ada"",
-  ""group-id"": ""a02be50f56a8496b9ba995d19a904ada"",
-  ""source-model"": ""mySourceModel-1"",
-  ""generated-time"": 1520711961.00055,
-  ""created-time"": 1520711961.00055,
-  ""close-time"": 1520711961.00055,
-  ""symbol"": ""BTCUSD XJ"",
-  ""ticker"": ""BTCUSD"",
-  ""type"": ""price"",
-  ""reference"": 9143.53,
-  ""reference-final"": 9243.53,
-  ""direction"": ""up"",
-  ""period"": 5.0,
-  ""magnitude"": 0.025,
-  ""confidence"": null,
-  ""weight"": null,
-  ""score-final"": true,
-  ""score-magnitude"": 1.0,
-  ""score-direction"": 1.0,
-  ""estimated-value"": 1113.2484
-}";
+            "{" +
+            "\"id\":\"e02be50f56a8496b9ba995d19a904ada\"," +
+            "\"group-id\":\"a02be50f56a8496b9ba995d19a904ada\"," +
+            "\"source-model\":\"mySourceModel-1\"," +
+            "\"generated-time\":1520711961.00055," +
+            "\"created-time\":1520711961.00055," +
+            "\"close-time\":1520711961.00055," +
+            "\"symbol\":\"BTCUSD XJ\"," +
+            "\"ticker\":\"BTCUSD\"," +
+            "\"type\":\"price\"," +
+            "\"reference\":9143.53," +
+            "\"reference-final\":9243.53," +
+            "\"direction\":\"up\"," +
+            "\"period\":5.0," +
+            "\"magnitude\":0.025," +
+            "\"confidence\":null," +
+            "\"weight\":null," +
+            "\"score-final\":true," +
+            "\"score-magnitude\":1.0," +
+            "\"score-direction\":1.0," +
+            "\"estimated-value\":1113.2484}";
     }
 
 }

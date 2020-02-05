@@ -16,7 +16,7 @@
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Represents a simple, constant margining model by specifying the percentages of required margin.
+    /// Represents a simple, constant margin model by specifying the percentages of required margin.
     /// </summary>
     public class SecurityMarginModel : BuyingPowerModel
     {
