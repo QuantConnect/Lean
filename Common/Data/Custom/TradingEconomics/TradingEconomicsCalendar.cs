@@ -212,76 +212,63 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// Reader converts each line of the data source into BaseData objects.
         /// </summary>
         /// <param name="config">Subscription data config setup object</param>
-        /// <param name="line">String containing JSON response from API</param>
+        /// <param name="line">Line from the data source</param>
         /// <param name="date">Date of the requested data</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>
-        /// List&lt;TradingEconomicsCalendar&gt; object
+        /// TradingEconomicsCalendar or BaseDataCollection object containing TradingEconomicsCalendar as its Data.
         /// </returns>
-        /// <remarks>
-        /// This is only for Trading Economics calendar live data.
-        /// </remarks>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             var ticker = config.Symbol.Value.Split(new[] { TradingEconomics.Calendar.Delimiter }, StringSplitOptions.None)[1].Replace('-', ' ');
-            var instances = ProcessAPIResponse(line);
-            foreach (var item in instances)
+
+            if (isLiveMode)
             {
-                item.Symbol = config.Symbol;
+                var instances = ProcessAPIResponse(line);
+                foreach (var item in instances)
+                {
+                    item.Symbol = config.Symbol;
+                }
+                return new BaseDataCollection(DateTime.UtcNow, config.Symbol, instances.Where(x => ticker == x.Ticker));
             }
-            return new BaseDataCollection(DateTime.UtcNow, config.Symbol, instances.Where(x => ticker == x.Ticker));
-        }
 
-        /// <summary>
-        /// Reader converts each line of the data source into BaseData objects.
-        /// </summary>
-        /// <param name="config">Subscription data config setup object</param>
-        /// <param name="streamReader">Stream of the source document</param>
-        /// <param name="date">Date of the requested data</param>
-        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
-        /// <returns>
-        /// TradingEconomicsCalendar object
-        /// </returns>
-        public override BaseData Reader(SubscriptionDataConfig config, StreamReader streamReader, DateTime date, bool isLiveMode)
-        {
-            var ticker = config.Symbol.Value.Split(new[] { TradingEconomics.Calendar.Delimiter }, StringSplitOptions.None)[1].Replace('-', ' ');
-
+            var i = 0;
+            var csv = line.ToCsvData(18);
             var instance = new TradingEconomicsCalendar();
-            instance.EndTime = streamReader.GetDateTime("yyyyMMdd HH:mm:ss");
-            instance.LastUpdate = streamReader.GetDateTime("yyyyMMdd HH:mm:ss");
+
+            instance.EndTime = Parse.DateTimeExact(csv[i++], "yyyyMMdd HH:mm:ss");
+            instance.LastUpdate = Parse.DateTimeExact(csv[i++], "yyyyMMdd HH:mm:ss");
             if (instance.EndTime < date)
             {
-                streamReader.ReadLine();
                 return null;
             }
 
-            instance.Ticker = streamReader.GetNextCsv();
+            instance.Ticker = csv[i++];
             if (ticker != instance.Ticker.Replace('-', ' ').ToUpperInvariant())
             {
-                streamReader.ReadLine();
                 return null;
             }
 
             // Initialize with long form instead of using shorthand `var something = new Obj { X = ..., Y = ..., Z = ... };`
             // so that we can more easily debug and step through the code should the parsing fail.
-            instance.Actual = streamReader.GetNextCsv().IfNotNullOrEmpty<decimal?>(x => Parse.Decimal(x));
-            instance.CalendarId = streamReader.GetNextCsv();
-            instance.Category = streamReader.GetNextCsv();
-            instance.Country = streamReader.GetNextCsv();
-            instance.DataType = (MarketDataType)streamReader.GetInt32();
-            instance.DateSpan = streamReader.GetNextCsv();
-            instance.Event = streamReader.GetNextCsv();
-            instance.Forecast = streamReader.GetNextCsv().IfNotNullOrEmpty<decimal?>(x => Parse.Decimal(x));
-            instance.Importance = (TradingEconomicsImportance)streamReader.GetInt32();
-            instance.IsPercentage = streamReader.GetNextCsv() == "true";
-            instance.OCategory = streamReader.GetNextCsv();
-            instance.OCountry = streamReader.GetNextCsv();
-            instance.Previous = streamReader.GetNextCsv().IfNotNullOrEmpty<decimal?>(x => Parse.Decimal(x));
-            instance.Reference = streamReader.GetNextCsv();
-            instance.Revised = streamReader.GetNextCsv().IfNotNullOrEmpty<decimal?>(x => Parse.Decimal(x));
-            instance.Source = streamReader.GetNextCsv();
-            instance.TESymbol = streamReader.GetNextCsv();
-            instance.TradingEconomicsForecast = streamReader.GetNextCsv().IfNotNullOrEmpty<decimal?>(x => Parse.Decimal(x));
+            instance.Actual = csv[i++].IfNotNullOrEmpty<decimal?>(x => Parse.Decimal(x));
+            instance.CalendarId = csv[i++];
+            instance.Category = csv[i++];
+            instance.Country = csv[i++];
+            instance.DataType = (MarketDataType)Parse.Int(csv[i++]);
+            instance.DateSpan = csv[i++];
+            instance.Event = csv[i++].Trim('"');
+            instance.Forecast = csv[i++].IfNotNullOrEmpty<decimal?>(x => Parse.Decimal(x));
+            instance.Importance = (TradingEconomicsImportance)Parse.Int(csv[i++]);
+            instance.IsPercentage = csv[i++] == "true";
+            instance.OCategory = csv[i++];
+            instance.OCountry = csv[i++];
+            instance.Previous = csv[i++].IfNotNullOrEmpty<decimal?>(x => Parse.Decimal(x));
+            instance.Reference = csv[i++].Trim('"');
+            instance.Revised = csv[i++].IfNotNullOrEmpty<decimal?>(x => Parse.Decimal(x));
+            instance.Source = csv[i++].Trim('"');
+            instance.TESymbol = csv[i++];
+            instance.TradingEconomicsForecast = csv[i++].IfNotNullOrEmpty<decimal?>(x => Parse.Decimal(x));
             instance.Symbol = config.Symbol;
 
             return instance;

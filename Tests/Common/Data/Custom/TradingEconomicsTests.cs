@@ -106,16 +106,15 @@ namespace QuantConnect.Tests.Common.Data.Custom
         }
 
         [Test]
-        public void DeserializesProperlyUsingStreamReader()
+        public void DeserializesProperlyUsingCSV()
         {
             var instance = new TradingEconomicsCalendar();
-            var csvBytes = Encoding.UTF8.GetBytes(JsonConvert.DeserializeObject<List<TradingEconomicsCalendar>>(TestCalendarJson).First().ToCsv());
-            var calendarStream = new StreamReader(new MemoryStream(csvBytes));
+            var csv = JsonConvert.DeserializeObject<List<TradingEconomicsCalendar>>(TestCalendarJson).First().ToCsv();
 
             var result = instance.Reader(
                 new SubscriptionDataConfig(
                     typeof(TradingEconomicsCalendar),
-                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UnitedStates//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
+                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create($"UNITED-STATES{TradingEconomics.Calendar.Delimiter}US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
                     Resolution.Daily,
                     TimeZones.Utc,
                     TimeZones.Utc,
@@ -124,7 +123,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
                     false,
                     isCustom: true
                 ),
-                calendarStream,
+                csv,
                 new DateTime(2019, 1, 1),
                 false
             );
@@ -160,7 +159,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var result = instance.Reader(
                 new SubscriptionDataConfig(
                     typeof(TradingEconomicsCalendar),
-                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UnitedStates//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
+                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UNITED-STATES//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
                     Resolution.Daily,
                     TimeZones.Utc,
                     TimeZones.Utc,
@@ -171,7 +170,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
                 ),
                 TestCalendarRawAPIResponseJSON,
                 new DateTime(2019, 1, 1),
-                false
+                true
             );
 
             var calendar = (TradingEconomicsCalendar)((BaseDataCollection)result).Data.Single();
@@ -202,13 +201,12 @@ namespace QuantConnect.Tests.Common.Data.Custom
         {
             var instance = new TradingEconomicsCalendar();
 
-            var csvBytes = Encoding.UTF8.GetBytes(JsonConvert.DeserializeObject<List<TradingEconomicsCalendar>>(TestCalendarJson).Single().ToCsv());
-            var csvStream = new StreamReader(new MemoryStream(csvBytes));
+            var csv = JsonConvert.DeserializeObject<List<TradingEconomicsCalendar>>(TestCalendarJson).Single().ToCsv();
 
-            var resultStream = instance.Reader(
+            var resultBacktest = instance.Reader(
                 new SubscriptionDataConfig(
                     typeof(TradingEconomicsCalendar),
-                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UnitedStates//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
+                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UNITED-STATES//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
                     Resolution.Daily,
                     TimeZones.Utc,
                     TimeZones.Utc,
@@ -217,15 +215,15 @@ namespace QuantConnect.Tests.Common.Data.Custom
                     false,
                     isCustom: true
                 ),
-                csvStream,
+                csv,
                 new DateTime(2019, 1, 1),
                 false
             );
 
-            var resultString = instance.Reader(
+            var resultLive = instance.Reader(
                 new SubscriptionDataConfig(
                     typeof(TradingEconomicsCalendar),
-                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UnitedStates//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
+                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UNITED-STATES//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
                     Resolution.Daily,
                     TimeZones.Utc,
                     TimeZones.Utc,
@@ -236,61 +234,56 @@ namespace QuantConnect.Tests.Common.Data.Custom
                 ),
                 TestCalendarRawAPIResponseJSON,
                 new DateTime(2019, 1, 1),
-                false
+                true
             );
 
-            var calendarStream = (TradingEconomicsCalendar)resultStream;
-            var calendarString = (TradingEconomicsCalendar)((BaseDataCollection)resultString).Data.Single();
+            var calendarBacktest = (TradingEconomicsCalendar)resultBacktest;
+            var calendarLive = (TradingEconomicsCalendar)((BaseDataCollection)resultLive).Data.Single();
 
-            Assert.AreEqual(calendarStream.CalendarId, calendarString.CalendarId);
-            Assert.AreEqual(calendarStream.EndTime.Date, calendarString.EndTime.Date);
-            Assert.AreEqual(calendarStream.Country, calendarString.Country);
-            Assert.AreEqual(calendarStream.Category, calendarString.Category);
-            Assert.AreEqual(calendarStream.Event, calendarString.Event);
-            Assert.AreEqual(calendarStream.Reference, calendarString.Reference);
-            Assert.AreEqual(calendarStream.Source, calendarString.Source);
-            Assert.AreEqual(calendarStream.Actual, calendarString.Actual);
-            Assert.AreEqual(calendarStream.Previous, calendarString.Previous);
-            Assert.AreEqual(calendarStream.Forecast, calendarString.Forecast);
-            Assert.AreEqual(calendarStream.TradingEconomicsForecast, calendarString.TradingEconomicsForecast);
-            Assert.AreEqual(calendarStream.DateSpan, calendarString.DateSpan);
-            Assert.AreEqual(calendarStream.Importance, calendarString.Importance);
-            Assert.AreEqual(calendarStream.LastUpdate.Date, calendarString.LastUpdate.Date);
-            Assert.AreEqual(calendarStream.Revised, calendarString.Revised);
-            Assert.AreEqual(calendarStream.OCountry, calendarString.OCountry);
-            Assert.AreEqual(calendarStream.OCategory, calendarString.OCategory);
-            Assert.AreEqual(calendarStream.Ticker, calendarString.Ticker);
-            Assert.AreEqual(calendarStream.IsPercentage, calendarString.IsPercentage);
+            Assert.AreEqual(calendarBacktest.CalendarId, calendarLive.CalendarId);
+            Assert.AreEqual(calendarBacktest.EndTime.Date, calendarLive.EndTime.Date);
+            Assert.AreEqual(calendarBacktest.Country, calendarLive.Country);
+            Assert.AreEqual(calendarBacktest.Category, calendarLive.Category);
+            Assert.AreEqual(calendarBacktest.Event, calendarLive.Event);
+            Assert.AreEqual(calendarBacktest.Reference, calendarLive.Reference);
+            Assert.AreEqual(calendarBacktest.Source, calendarLive.Source);
+            Assert.AreEqual(calendarBacktest.Actual, calendarLive.Actual);
+            Assert.AreEqual(calendarBacktest.Previous, calendarLive.Previous);
+            Assert.AreEqual(calendarBacktest.Forecast, calendarLive.Forecast);
+            Assert.AreEqual(calendarBacktest.TradingEconomicsForecast, calendarLive.TradingEconomicsForecast);
+            Assert.AreEqual(calendarBacktest.DateSpan, calendarLive.DateSpan);
+            Assert.AreEqual(calendarBacktest.Importance, calendarLive.Importance);
+            Assert.AreEqual(calendarBacktest.LastUpdate.Date, calendarLive.LastUpdate.Date);
+            Assert.AreEqual(calendarBacktest.Revised, calendarLive.Revised);
+            Assert.AreEqual(calendarBacktest.OCountry, calendarLive.OCountry);
+            Assert.AreEqual(calendarBacktest.OCategory, calendarLive.OCategory);
+            Assert.AreEqual(calendarBacktest.Ticker, calendarLive.Ticker);
+            Assert.AreEqual(calendarBacktest.IsPercentage, calendarLive.IsPercentage);
         }
 
         [Test]
         public void ReturnsNullOnInvalidSymbolOrDate_AndContinuesWithoutErrors()
         {
             var instance = new TradingEconomicsCalendar();
-            var lines = new List<string>();
+            var normalLines = new List<string>();
+            var corruptedLines = new List<string>();
             var deserialized = JsonConvert.DeserializeObject<List<TradingEconomicsCalendar>>(TestCalendarJson).First();
 
             for (var i = 0; i < 5; i++)
             {
-                lines.Add(deserialized.ToCsv());
+                normalLines.Add(deserialized.ToCsv());
             }
 
-            var normalStream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(string.Join("\n", lines))));
-
-            lines.Clear();
             deserialized.Ticker = "Foobar" + deserialized.Ticker;
-
             for (var i = 0; i < 5; i++)
             {
-                lines.Add(deserialized.ToCsv());
+                corruptedLines.Add(deserialized.ToCsv());
             }
-
-            var corruptedStream = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(string.Join("\n", lines))));
 
             var corruptedResult = instance.Reader(
                 new SubscriptionDataConfig(
                     typeof(TradingEconomicsCalendar),
-                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UnitedStates//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
+                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UNITED-STATES//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
                     Resolution.Daily,
                     TimeZones.Utc,
                     TimeZones.Utc,
@@ -299,7 +292,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
                     false,
                     isCustom: true
                 ),
-                corruptedStream,
+                corruptedLines.First(),
                 new DateTime(2019, 1, 1),
                 false
             );
@@ -307,7 +300,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var corruptedNormalResult = instance.Reader(
                 new SubscriptionDataConfig(
                     typeof(TradingEconomicsCalendar),
-                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UnitedStates//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
+                    Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UNITED-STATES//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
                     Resolution.Daily,
                     TimeZones.Utc,
                     TimeZones.Utc,
@@ -316,7 +309,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
                     false,
                     isCustom: true
                 ),
-                normalStream,
+                normalLines.First(),
                 DateTime.MaxValue,
                 false
             );
@@ -324,12 +317,12 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(null, corruptedResult);
             Assert.AreEqual(null, corruptedNormalResult);
 
-            while (!normalStream.EndOfStream)
+            foreach (var line in normalLines.Skip(1))
             {
                 var calendar = (TradingEconomicsCalendar)instance.Reader(
                     new SubscriptionDataConfig(
                         typeof(TradingEconomicsCalendar),
-                        Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UnitedStates//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
+                        Symbol.CreateBase(typeof(TradingEconomicsCalendar), Symbol.Create("UNITED-STATES//US", SecurityType.Base, QuantConnect.Market.USA), QuantConnect.Market.USA),
                         Resolution.Daily,
                         TimeZones.Utc,
                         TimeZones.Utc,
@@ -338,7 +331,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
                         false,
                         isCustom: true
                     ),
-                    normalStream,
+                    line,
                     new DateTime(2019, 1, 1),
                     false
                 );

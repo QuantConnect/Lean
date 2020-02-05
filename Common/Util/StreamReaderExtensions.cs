@@ -77,43 +77,6 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Reads the next string value from the CSV file
-        /// </summary>
-        /// <param name="stream">The data stream</param>
-        /// <param name="delimiter">The data delimiter character to use, default is ','</param>
-        /// <returns>The string value read from CSV</returns>
-        public static string GetNextCsv(this StreamReader stream, char delimiter = DefaultDelimiter)
-        {
-            var builder = new StringBuilder();
-            var current = (char)stream.Read();
-            var inQuotes = false;
-
-            while (!((!inQuotes && current == delimiter) || current == '\n' || current == '\r' && (stream.Peek() != '\n' || stream.Read() == '\n') || current == NoMoreData))
-            {
-                if (!inQuotes && current == '"')
-                {
-                    inQuotes = true;
-                    current = (char)stream.Read();
-                }
-
-                var peek = (char)stream.Peek();
-
-                if (current == '"' && (peek == delimiter || peek == NoMoreData || peek == '\n' || peek == '\r' &&
-                    (peek != '\n' || stream.Read() == '\n')))
-                {
-                    inQuotes = false;
-                    current = (char)stream.Read();
-                    continue;
-                }
-
-                builder.Append(current);
-                current = (char)stream.Read();
-            }
-
-            return builder.ToString();
-        }
-
-        /// <summary>
         /// Gets a date time instance from a stream reader
         /// </summary>
         /// <param name="stream">The data stream</param>
