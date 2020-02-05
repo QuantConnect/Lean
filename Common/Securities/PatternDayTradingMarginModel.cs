@@ -88,8 +88,8 @@ namespace QuantConnect.Securities
         private decimal GetMarginCorrectionFactor(Security security)
         {
             // when the market is open the base type returns the correct values
-            // when the market is closed, we need to multiply by a correction factor
-            return security.Exchange.ExchangeOpen ? 1m : _closedMarginCorrectionFactor;
+            // when the market is closed or when its closing soon, we need to multiply by a correction factor
+            return security.Exchange.ExchangeOpen && !security.Exchange.ClosingSoon ? 1m :_closedMarginCorrectionFactor;
         }
     }
 }
