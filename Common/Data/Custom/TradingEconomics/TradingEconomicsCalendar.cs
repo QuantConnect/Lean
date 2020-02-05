@@ -41,7 +41,16 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         private string _filteredEvent;
         private string _originalEvent;
         private const string _baseUrl = "https://api.tradingeconomics.com";
-        private static string _apiKey = Config.Get("trading-economics-api-key");
+
+        /// <summary>
+        /// Determines if the API key has been set
+        /// </summary>
+        public static bool IsAuthCodeSet { get; private set; }
+
+        /// <summary>
+        /// API key for Trading Economics
+        /// </summary>
+        public static string AuthCode { get; set; } = string.Empty;
 
         /// <summary>
         /// Unique calendar ID used by Trading Economics
@@ -199,7 +208,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
 
             if (isLiveMode)
             {
-                var liveSource = $"{_baseUrl}/calendar/country/{country.Replace("-", "%20")}/{date:yyyy-MM-dd}/{date.AddDays(1):yyyy-MM-dd}?c={_apiKey}&format=json";
+                var liveSource = $"{_baseUrl}/calendar/country/{country.Replace("-", "%20")}/{date:yyyy-MM-dd}/{date.AddDays(1):yyyy-MM-dd}?c={AuthCode}&format=json";
                 return new SubscriptionDataSource(liveSource, SubscriptionTransportMedium.RemoteFile, FileFormat.Collection);
             }
 
@@ -356,6 +365,18 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         public override DateTimeZone DataTimeZone()
         {
             return TimeZones.Utc;
+        }
+
+        /// <summary>
+        /// Sets the Trading Economics API key.
+        /// </summary>
+        /// <param name="authCode">The Trading Economics API key</param>
+        public static void SetAuthCode(string authCode)
+        {
+            if (string.IsNullOrWhiteSpace(authCode)) return;
+
+            AuthCode = authCode;
+            IsAuthCodeSet = true;
         }
 
         /// <summary>
