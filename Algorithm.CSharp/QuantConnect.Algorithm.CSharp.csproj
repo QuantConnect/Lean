@@ -178,6 +178,7 @@
     <Compile Include="LiquidETFUniverseFrameworkAlgorithm.cs" />
     <Compile Include="MarginCallClosedMarketRegressionAlgorithm.cs" />
     <Compile Include="MarginRemainingRegressionAlgorithm.cs" />
+    <Compile Include="NoMarginCallExpectedRegressionAlgorithm.cs" />
     <Compile Include="ObjectStoreExampleAlgorithm.cs" />
     <Compile Include="OnEndOfDayAddDataRegressionAlgorithm.cs" />
     <Compile Include="ResolutionSwitchingAlgorithm.cs" />

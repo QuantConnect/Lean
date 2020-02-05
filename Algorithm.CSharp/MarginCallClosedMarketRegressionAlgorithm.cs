@@ -25,7 +25,8 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Margin model regression algorithm testing <see cref="PatternDayTradingMarginModel"/> and
-    /// margin calls being triggered when the market is about to close, GH issue 4064
+    /// margin calls being triggered when the market is about to close, GH issue 4064.
+    /// Brother too <see cref="NoMarginCallExpectedRegressionAlgorithm"/>
     /// </summary>
     public class MarginCallClosedMarketRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -58,8 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings(_spy, 5);
-                Debug("Purchased Stock");
+                SetHoldings(_spy, _openMarketLeverage);
             }
         }
 
