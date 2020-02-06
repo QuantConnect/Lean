@@ -16,4 +16,6 @@ def send(message):
 
 
 if __name__=="__main__":
-    send("test")
+    with open("message.json", "r") as message:
+        message = json.loads(message.read())
+        send(message)

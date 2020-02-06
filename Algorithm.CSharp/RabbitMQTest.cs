@@ -33,25 +33,35 @@ namespace QuantConnect.Algorithm.CSharp
         private static RabbitMQProducer<string> producer;
         private static RabbitMQConsumer<string> consumer;
         private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        //private Symbol _aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+        private Symbol symbol;
+        private string symbolName = "SPY";
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
+            
             producer = new RabbitMQProducer<string>("localhost", 5672, "test");
             producer.Connect();
 
             consumer = new RabbitMQConsumer<string>("localhost", 5672, "test");
             consumer.Connect();
+
             consumer.MessageReceived += (sender, Message, Obj) =>
             {
-                Debug(Message);
+                //symbol = QuantConnect.Symbol.Create(Message, SecurityType.Equity, Market.USA);
+                symbolName = Message;
+                Debug(symbolName);
             };
 
-            producer.SendObject("test");
+            producer.SendObject("SPY");
+
             producer.Disconnect();
             consumer.Disconnect();
+
+            //symbol = QuantConnect.Symbol.Create(symbolName, SecurityType.Equity, Market.USA);
 
             Debug("this worked");
             SetStartDate(2013, 10, 07);  //Set Start Date
