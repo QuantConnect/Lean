@@ -658,12 +658,14 @@ namespace QuantConnect.Algorithm
                     where type.IsAssignableFrom(sub.Type)
                     select sub;
 
-                if (resolution.HasValue)
+                if (resolution.HasValue
+                    && (resolution == Resolution.Daily || resolution == Resolution.Hour)
+                    && (symbol.SecurityType == SecurityType.Equity || symbol.SecurityType == SecurityType.Crypto))
                 {
-                    matchingSubscriptions = matchingSubscriptions.Where(
-                        s => !(s.TickType == TickType.Quote &&
-                               (s.SecurityType == SecurityType.Equity || s.SecurityType == SecurityType.Crypto) &&
-                               (resolution == Resolution.Daily || resolution == Resolution.Hour)));
+                    // for Daily and Hour resolution, for equities and crypto, we have to
+                    // filter out any existing subscriptions that could be of Quote type
+                    // This could happen if they were Resolution.Minute/Second/Tick
+                    matchingSubscriptions = matchingSubscriptions.Where(s => s.TickType != TickType.Quote);
                 }
 
                 return matchingSubscriptions;
