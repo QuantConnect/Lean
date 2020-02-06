@@ -26,18 +26,15 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityExchange
     {
-        private DateTime _localFrontier;
-        private SecurityExchangeHours _exchangeHours;
-
         /// <summary>
         /// Gets the <see cref="SecurityExchangeHours"/> for this exchange
         /// </summary>
-        public SecurityExchangeHours Hours => _exchangeHours;
+        public SecurityExchangeHours Hours { get; private set; }
 
         /// <summary>
         /// Gets the time zone for this exchange
         /// </summary>
-        public DateTimeZone TimeZone => _exchangeHours.TimeZone;
+        public DateTimeZone TimeZone => Hours.TimeZone;
 
         /// <summary>
         /// Number of trading days per year for this security. By default the market is open 365 days per year.
@@ -48,12 +45,17 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Time from the most recent data
         /// </summary>
-        public DateTime LocalTime => _localFrontier;
+        public DateTime LocalTime { get; private set; }
 
         /// <summary>
         /// Boolean property for quickly testing if the exchange is open.
         /// </summary>
-        public bool ExchangeOpen => _exchangeHours.IsOpen(_localFrontier, false);
+        public bool ExchangeOpen => Hours.IsOpen(LocalTime, false);
+
+        /// <summary>
+        /// Boolean property for quickly testing if the exchange is 10 minutes away from closing.
+        /// </summary>
+        public bool ClosingSoon => IsClosingSoon(minutesToClose:10);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityExchange"/> class using the specified
@@ -62,7 +64,7 @@ namespace QuantConnect.Securities
         /// <param name="exchangeHours">Contains the weekly exchange schedule plus holidays</param>
         public SecurityExchange(SecurityExchangeHours exchangeHours)
         {
-            _exchangeHours = exchangeHours;
+            Hours = exchangeHours;
         }
 
         /// <summary>
@@ -71,7 +73,7 @@ namespace QuantConnect.Securities
         /// <param name="newLocalTime">Most recent data tick</param>
         public void SetLocalDateTimeFrontier(DateTime newLocalTime)
         {
-            _localFrontier = newLocalTime;
+            LocalTime = newLocalTime;
         }
 
         /// <summary>
@@ -82,7 +84,7 @@ namespace QuantConnect.Securities
         /// <returns>Return true if the exchange is open for this date</returns>
         public bool DateIsOpen(DateTime dateToCheck)
         {
-            return _exchangeHours.IsDateOpen(dateToCheck);
+            return Hours.IsDateOpen(dateToCheck);
         }
 
         /// <summary>
@@ -92,7 +94,7 @@ namespace QuantConnect.Securities
         /// <returns>Boolean true if the market is open</returns>
         public bool DateTimeIsOpen(DateTime dateTime)
         {
-            return _exchangeHours.IsOpen(dateTime, false);
+            return Hours.IsOpen(dateTime, false);
         }
 
         /// <summary>
@@ -100,7 +102,17 @@ namespace QuantConnect.Securities
         /// </summary>
         public bool IsOpenDuringBar(DateTime barStartTime, DateTime barEndTime, bool isExtendedMarketHours)
         {
-            return _exchangeHours.IsOpen(barStartTime, barEndTime, isExtendedMarketHours);
+            return Hours.IsOpen(barStartTime, barEndTime, isExtendedMarketHours);
+        }
+
+        /// <summary>
+        /// Determines if the exchange is going to close in the next provided minutes
+        /// </summary>
+        /// <param name="minutesToClose">Minutes to close to check</param>
+        /// <returns>Returns true if the exchange is going to close in the next provided minutes</returns>
+        public bool IsClosingSoon(int minutesToClose)
+        {
+            return !Hours.IsOpen(LocalTime.AddMinutes(minutesToClose), false);
         }
 
         /// <summary>
@@ -113,7 +125,7 @@ namespace QuantConnect.Securities
         {
             if (days.IsNullOrEmpty()) days = Enum.GetValues(typeof(DayOfWeek)).OfType<DayOfWeek>().ToArray();
 
-            var marketHours = _exchangeHours.MarketHours.ToDictionary();
+            var marketHours = Hours.MarketHours.ToDictionary();
             marketHoursSegments = marketHoursSegments as IList<MarketHoursSegment> ?? marketHoursSegments.ToList();
             foreach (var day in days)
             {
@@ -121,7 +133,7 @@ namespace QuantConnect.Securities
             }
 
             // create a new exchange hours instance for the new hours
-            _exchangeHours = new SecurityExchangeHours(_exchangeHours.TimeZone, _exchangeHours.Holidays, marketHours, _exchangeHours.EarlyCloses, _exchangeHours.LateOpens);
+            Hours = new SecurityExchangeHours(Hours.TimeZone, Hours.Holidays, marketHours, Hours.EarlyCloses, Hours.LateOpens);
         }
     }
 }
