@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Algorithm
             var equityMinute = algo.AddSecurity(SecurityType.Equity, "goog");
             Assert.IsTrue(equityMinute.Subscriptions.Count() == 2);
             Assert.IsTrue(GetMatchingSubscription(equityMinute, typeof(TradeBar)) != null);
-            Assert.IsTrue(GetMatchingSubscription(equityMinute, typeof(TradeBar)) != null);
+            Assert.IsTrue(GetMatchingSubscription(equityMinute, typeof(QuoteBar)) != null);
 
             // equity low resolution
             var equityDaily = algo.AddSecurity(SecurityType.Equity, "goog", Resolution.Daily);
@@ -113,7 +113,7 @@ namespace QuantConnect.Tests.Algorithm
             var cryptoMinute = algo.AddSecurity(SecurityType.Equity, "goog");
             Assert.IsTrue(cryptoMinute.Subscriptions.Count() == 2);
             Assert.IsTrue(GetMatchingSubscription(cryptoMinute, typeof(TradeBar)) != null);
-            Assert.IsTrue(GetMatchingSubscription(cryptoMinute, typeof(TradeBar)) != null);
+            Assert.IsTrue(GetMatchingSubscription(cryptoMinute, typeof(QuoteBar)) != null);
 
             // Crypto low resolution
             var cryptoHourly = algo.AddSecurity(SecurityType.Crypto, "btcusd", Resolution.Hour);
