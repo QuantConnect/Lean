@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Compression
         {
             const string file = "../../../Data/equity/usa/minute/spy/20131008_trade.zip";
 
-            const int expected = 391;
+            const int expected = 827;
             int actual = QuantConnect.Compression.ReadLines(file).Count();
 
             Assert.AreEqual(expected, actual);
