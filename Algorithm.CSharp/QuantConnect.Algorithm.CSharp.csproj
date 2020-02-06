@@ -180,6 +180,7 @@
     <Compile Include="MarginRemainingRegressionAlgorithm.cs" />
     <Compile Include="NoMarginCallExpectedRegressionAlgorithm.cs" />
     <Compile Include="ObjectStoreExampleAlgorithm.cs" />
+    <Compile Include="SectorWeightingFrameworkAlgorithm.cs" />
     <Compile Include="OnEndOfDayAddDataRegressionAlgorithm.cs" />
     <Compile Include="PortfolioRebalanceOnCustomFuncRegressionAlgorithm.cs" />
     <Compile Include="PortfolioRebalanceOnDateRulesRegressionAlgorithm.cs" />
