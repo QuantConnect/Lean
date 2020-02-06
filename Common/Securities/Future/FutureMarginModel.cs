@@ -150,7 +150,8 @@ namespace QuantConnect.Securities.Future
             var marginReq = GetCurrentMarginRequirements(security);
 
             if (EnableIntradayMargins
-                && security.Exchange.ExchangeOpen)
+                && security.Exchange.ExchangeOpen
+                && !security.Exchange.ClosingSoon)
             {
                 return marginReq.MaintenanceIntraday * security.Holdings.AbsoluteQuantity;
             }
@@ -170,7 +171,8 @@ namespace QuantConnect.Securities.Future
             var marginReq = GetCurrentMarginRequirements(security);
 
             if (EnableIntradayMargins
-                && security.Exchange.ExchangeOpen)
+                && security.Exchange.ExchangeOpen
+                && !security.Exchange.ClosingSoon)
             {
                 return marginReq.InitialIntraday * quantity;
             }

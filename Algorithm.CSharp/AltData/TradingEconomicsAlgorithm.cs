@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             var announcement = data.Get<TradingEconomicsCalendar>(_interestRate);
 
             // Confirm it's a FED Rate Decision
-            if (announcement.Event != "fed interest rate decision")
+            if (announcement.Event != TradingEconomics.Event.UnitedStates.FedInterestRateDecision)
             {
                 return;
             }

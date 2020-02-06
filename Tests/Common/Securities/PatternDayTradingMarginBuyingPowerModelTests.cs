@@ -196,6 +196,28 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void VerifyClosingSoonMarketLeverage()
+        {
+            var closedLeverage = 2m;
+            var openLeverage = 5m;
+
+            var model = new TestPatternDayTradingMarginModel(closedLeverage, openLeverage);
+
+            // Market is Closed on Tuesday, Feb, 16th 2016 at 16
+            var security = CreateSecurity(new DateTime(2016, 2, 16, 15, 49, 0));
+            Assert.AreEqual(openLeverage, model.GetLeverage(security));
+            Assert.IsFalse(security.Exchange.ClosingSoon);
+
+            security.Exchange.SetLocalDateTimeFrontier(new DateTime(2016, 2, 16, 15, 50, 0));
+            Assert.AreEqual(closedLeverage, model.GetLeverage(security));
+            Assert.IsTrue(security.Exchange.ClosingSoon);
+            Assert.IsTrue(security.Exchange.ExchangeOpen);
+
+            security.Exchange.SetLocalDateTimeFrontier(new DateTime(2016, 2, 16, 16, 0, 0));
+            Assert.IsFalse(security.Exchange.ExchangeOpen);
+        }
+
+        [Test]
         public void VerifyMaintenaceMargin()
         {
             var model = new TestPatternDayTradingMarginModel();

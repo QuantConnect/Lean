@@ -383,6 +383,41 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
+        public void ToCsvDataParsesCorrectly()
+        {
+            var csv = "\"hello\",\"world\"".ToCsvData();
+            Assert.AreEqual(2, csv.Count);
+            Assert.AreEqual("\"hello\"", csv[0]);
+            Assert.AreEqual("\"world\"", csv[1]);
+
+            var csv2 = "1,2,3,4".ToCsvData();
+            Assert.AreEqual(4, csv2.Count);
+            Assert.AreEqual("1", csv2[0]);
+            Assert.AreEqual("2", csv2[1]);
+            Assert.AreEqual("3", csv2[2]);
+            Assert.AreEqual("4", csv2[3]);
+        }
+
+        [Test]
+        public void ToCsvDataParsesEmptyFinalValue()
+        {
+            var line = "\"hello\",world,";
+            var csv = line.ToCsvData();
+
+            Assert.AreEqual(3, csv.Count);
+            Assert.AreEqual("\"hello\"", csv[0]);
+            Assert.AreEqual("hello", csv[0].Trim('"'));
+            Assert.AreEqual("world", csv[1]);
+            Assert.AreEqual(string.Empty, csv[2]);
+        }
+
+        [Test]
+        public void ToCsvDataParsesEmptyValue()
+        {
+            Assert.AreEqual(string.Empty, string.Empty.ToCsvData()[0]);
+        }
+
+        [Test]
         public void ConvertsDecimalFromString()
         {
             const string input = "123.45678";

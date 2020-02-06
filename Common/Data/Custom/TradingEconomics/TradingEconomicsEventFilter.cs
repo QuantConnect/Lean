@@ -159,7 +159,9 @@ namespace QuantConnect.Data.Custom.TradingEconomics
             { "mbs", "mortgage backed securities" },
             { "psi", "performance of services index" },
             { "mi", "melbourne institute" },
-            { "est", "estimate" }
+            { "est", "estimate" },
+            { "1st", "first" },
+            { "2nd", "second" },
         };
 
         /// <summary>
@@ -191,7 +193,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 filteredName = SingleWordFilter(filteredName, kvp.Key, kvp.Value);
             }
 
-            return filteredName;
+            return filteredName.Trim();
         }
 
         /// <summary>
@@ -212,7 +214,7 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 var i = 0;
                 foreach (var word in words)
                 {
-                    if (i != 0 && word == company)
+                    if (word == company)
                     {
                         break;
                     }

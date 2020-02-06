@@ -175,6 +175,11 @@ namespace QuantConnect.ToolBox
                         );
                         break;
 
+                    case "tecdl":
+                    case "tradingeconomicscalendardownloader":
+                        TradingEconomicsDataDownloader.TradingEconomicsCalendarDownloaderProgram.TradingEconomicsCalendarDownloader();
+                        break;
+
                     default:
                         PrintMessageAndExit(1, "ERROR: Unrecognized --app value");
                         break;

@@ -630,6 +630,56 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.Greater(maintenanceOvernight, model.MaintenanceIntradayMarginRequirement);
         }
 
+        [TestCase(1)]
+        [TestCase(-1)]
+        public void ClosingSoonIntradayClosedMarketMargins(decimal target)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SetFinishedWarmingUp();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            var orderProcessor = new FakeOrderProcessor();
+            algorithm.Transactions.SetOrderProcessor(orderProcessor);
+
+            var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
+            var futureSecurity = algorithm.AddFuture(ticker);
+            Update(futureSecurity, 100, algorithm);
+            var model = futureSecurity.BuyingPowerModel as FutureMarginModel;
+            // this is important
+            model.EnableIntradayMargins = true;
+
+            // Open market
+            futureSecurity.Exchange.SetLocalDateTimeFrontier(new DateTime(2020, 2, 3));
+
+            var quantity = algorithm.CalculateOrderQuantity(futureSecurity.Symbol, target);
+            var request = GetOrderRequest(futureSecurity.Symbol, quantity);
+            request.SetOrderId(0);
+            orderProcessor.AddTicket(new OrderTicket(algorithm.Transactions, request));
+
+            Assert.IsTrue(model.HasSufficientBuyingPowerForOrder(
+                new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
+                    futureSecurity,
+                    new MarketOrder(futureSecurity.Symbol, quantity, DateTime.UtcNow))).IsSufficient);
+
+            // Closing soon market
+            futureSecurity.Exchange.SetLocalDateTimeFrontier(new DateTime(2020, 2, 3, 15,50, 0));
+
+            Assert.IsFalse(model.HasSufficientBuyingPowerForOrder(
+                new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
+                    futureSecurity,
+                    new MarketOrder(futureSecurity.Symbol, quantity, DateTime.UtcNow))).IsSufficient);
+            Assert.IsTrue(futureSecurity.Exchange.ExchangeOpen);
+            Assert.IsTrue(futureSecurity.Exchange.ClosingSoon);
+
+            // Close market
+            futureSecurity.Exchange.SetLocalDateTimeFrontier(new DateTime(2020, 2, 1));
+            Assert.IsFalse(futureSecurity.Exchange.ExchangeOpen);
+
+            Assert.IsFalse(model.HasSufficientBuyingPowerForOrder(
+                new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
+                    futureSecurity,
+                    new MarketOrder(futureSecurity.Symbol, quantity, DateTime.UtcNow))).IsSufficient);
+        }
+
         private static void Update(Security security, decimal close, QCAlgorithm algorithm, DateTime? time = null)
         {
             security.SetMarketPrice(new TradeBar
