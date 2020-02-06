@@ -552,34 +552,32 @@ namespace QuantConnect
         /// </summary>
         /// <param name="str">The string to be broken into csv</param>
         /// <param name="size">The expected size of the output list</param>
+        /// <param name="delimiter">The delimiter used to separate entries in the line</param>
         /// <returns>A list of the csv pieces</returns>
-        public static List<string> ToCsvData(this string str, int size = 4)
+        public static List<string> ToCsvData(this string str, int size = 4, char delimiter = ',')
         {
             var csv = new List<string>(size);
 
-            int last = -1;
-            bool textDataField = false;
+            var last = -1;
+            var count = 0;
+            var textDataField = false;
 
             for (var i = 0; i < str.Length; i++)
             {
-                switch (str[i])
+                var current = str[i];
+                if (current == '"')
                 {
-                    case '"':
-                        textDataField = !textDataField;
-                        break;
-                    case ',':
-                        if (!textDataField)
-                        {
-                            csv.Add(str.Substring(last + 1, (i - last)).Trim(' ', ','));
-                            last = i;
-                        }
-                        break;
-                    default:
-                        break;
+                    textDataField = !textDataField;
+                }
+                else if (!textDataField && current == delimiter)
+                {
+                    csv.Add(str.Substring(last + 1, (i - last)).Trim(' ', ','));
+                    last = i;
+                    count++;
                 }
             }
 
-            if (last != str.Length - 1)
+            if (last != 0)
             {
                 csv.Add(str.Substring(last + 1).Trim());
             }
