@@ -255,6 +255,7 @@
     <Compile Include="Data\Custom\Fred\Wilshire.cs" />
     <Compile Include="Data\Custom\Benzinga\BenzingaNews.cs" />
     <Compile Include="Data\Custom\FxcmVolume.cs" />
+    <Compile Include="Data\Custom\NullData.cs" />
     <Compile Include="Data\Custom\SEC\ISECReport.cs" />
     <Compile Include="Data\Custom\SEC\SECReportBusinessAddress.cs" />
     <Compile Include="Data\Custom\SEC\SECReportCompanyData.cs" />
