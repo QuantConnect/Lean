@@ -249,14 +249,8 @@ namespace QuantConnect.Data.Market
                             BidSize = csv[index++].ToDecimal();
                             AskPrice = csv[index++].ToDecimal() / scaleFactor;
                             AskSize = csv[index++].ToDecimal();
-                            if (BidPrice == 0 || AskPrice == 0)
-                            {
-                                Value = BidPrice + AskPrice;
-                            }
-                            else
-                            {
-                                Value = (BidPrice + AskPrice) / 2;
-                            }
+
+                            SetValue();
 
                             if (csv.Count > index)
                             {
@@ -282,14 +276,8 @@ namespace QuantConnect.Data.Market
                             .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                         BidPrice = csv[1].ToDecimal();
                         AskPrice = csv[2].ToDecimal();
-                        if (BidPrice == 0 || AskPrice == 0)
-                        {
-                            Value = BidPrice + AskPrice;
-                        }
-                        else
-                        {
-                            Value = (BidPrice + AskPrice) / 2;
-                        }
+
+                        SetValue();
                         break;
                     }
 
@@ -316,14 +304,8 @@ namespace QuantConnect.Data.Market
                             BidSize = csv[2].ToDecimal();
                             AskPrice = csv[3].ToDecimal();
                             AskSize = csv[4].ToDecimal();
-                            if (BidPrice == 0 || AskPrice == 0)
-                            {
-                                Value = BidPrice + AskPrice;
-                            }
-                            else
-                            {
-                                Value = (BidPrice + AskPrice) / 2;
-                            }
+
+                            SetValue();
                         }
                         break;
                     }
@@ -362,21 +344,7 @@ namespace QuantConnect.Data.Market
                             Exchange = csv[5];
                             Suspicious = csv[6] == "1";
 
-                            if (BidPrice != 0)
-                            {
-                                if (AskPrice != 0)
-                                {
-                                    Value = (BidPrice + AskPrice)/2m;
-                                }
-                                else
-                                {
-                                    Value = BidPrice;
-                                }
-                            }
-                            else
-                            {
-                                Value = AskPrice;
-                            }
+                            SetValue();
                         }
 
                         break;
@@ -493,9 +461,22 @@ namespace QuantConnect.Data.Market
             }
         }
 
+        /// <summary>
+        /// Sets the tick Value based on ask and bid price
+        /// </summary>
+        private void SetValue()
+        {
+            Value = BidPrice + AskPrice;
+            if (BidPrice * AskPrice != 0)
+            {
+                Value /= 2m;
+            }
+        }
+
         private static decimal GetScaleFactor(SecurityType securityType)
         {
             return securityType == SecurityType.Equity || securityType == SecurityType.Option ? 10000m : 1;
         }
+
     }
 }
