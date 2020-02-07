@@ -22,10 +22,20 @@ namespace QuantConnect.Data.Custom
     /// </summary>
     public class NullData : BaseData
     {
-        /// <inheritdoc/>
+        /// <summary>
+        /// The end time of this data. Some data covers spans (trade bars)
+        /// and as such we want to know the entire time span covered
+        /// </summary>
         public override DateTime EndTime { get; set; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Return the URL string source of localhost as placeholder,
+        /// since this custom data class does not use any data.
+        /// </summary>
+        /// <param name="config">Configuration object</param>
+        /// <param name="date">Date of this source file</param>
+        /// <param name="isLiveMode">True if we're in live mode</param>
+        /// <returns>String URL of localhost</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             return new SubscriptionDataSource("http://localhost/", SubscriptionTransportMedium.Rest);
