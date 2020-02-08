@@ -62,7 +62,8 @@ def writeData(equityCall, ticker):
 
 	# Write csvzip to path
 	df.to_csv(fullname, header=False)
-	Zipfile(zipname, mode="w").write(fullname)
+	ZipFile(zipname, mode="w").write(fullname, os.path.basename(fullname))
+	os.remove(fullname)
 
 
 def recieve():
