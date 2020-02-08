@@ -107,11 +107,11 @@ namespace QuantConnect.Tests.Common.Securities
             var symbol = new Symbol(SecurityIdentifier.GenerateBase(null, "BTC", Market.USA), "BTC");
             _marketHoursDatabase.SetEntryAlwaysOpen(Market.USA, "BTC", SecurityType.Base, TimeZones.NewYork);
 
-            var configs = _subscriptionManager.SubscriptionDataConfigService.Add(typeof(LiveTradingFeaturesAlgorithm.Bitcoin), symbol, Resolution.Second, false, false, false);
+            var configs = _subscriptionManager.SubscriptionDataConfigService.Add(typeof(RabbitMQLive.Bitcoin), symbol, Resolution.Second, false, false, false);
             var security = _securityService.CreateSecurity(symbol, configs, 1.0m, false);
 
             Assert.AreEqual(security.Subscriptions.Count(), 1);
-            Assert.AreEqual(security.Subscriptions.First().Type, typeof(LiveTradingFeaturesAlgorithm.Bitcoin));
+            Assert.AreEqual(security.Subscriptions.First().Type, typeof(RabbitMQLive.Bitcoin));
             Assert.AreEqual(security.Subscriptions.First().TickType, TickType.Trade);
         }
 

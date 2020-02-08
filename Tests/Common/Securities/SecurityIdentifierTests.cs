@@ -267,7 +267,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void DeserializesFromSimpleStringWithinContainerClass()
         {
-            var sid = new Container{sid =SPY};
+            var sid = new Container { sid = SPY };
             var str =
 @"
 {
@@ -351,7 +351,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var symbol = "BTC";
             var expected = "BTC.Bitcoin";
-            var baseDataType = typeof(LiveTradingFeaturesAlgorithm.Bitcoin);
+            var baseDataType = typeof(RabbitMQLive.Bitcoin);
             var sid = SecurityIdentifier.GenerateBase(baseDataType, symbol, Market.USA);
             Assert.AreEqual(expected, sid.Symbol);
         }
@@ -361,7 +361,7 @@ namespace QuantConnect.Tests.Common.Securities
         {
             var symbol = "BTC";
             var expected = "BTC";
-            var baseDataType = (Type) null;
+            var baseDataType = (Type)null;
             var sid = SecurityIdentifier.GenerateBase(baseDataType, symbol, Market.USA);
             Assert.AreEqual(expected, sid.Symbol);
         }

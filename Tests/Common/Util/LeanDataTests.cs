@@ -21,7 +21,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Util;
-using Bitcoin = QuantConnect.Algorithm.CSharp.LiveTradingFeaturesAlgorithm.Bitcoin;
+using Bitcoin = QuantConnect.Algorithm.CSharp.RabbitMQLive.Bitcoin;
 
 namespace QuantConnect.Tests.Common.Util
 {
@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Common.Util
         public void ParsesGeneratedLines(LeanDataLineTestParameters parameters)
         {
             // ignore time zone issues here, we'll just say everything is UTC, so no conversions are performed
-            var factory = (BaseData) Activator.CreateInstance(parameters.Data.GetType());
+            var factory = (BaseData)Activator.CreateInstance(parameters.Data.GetType());
             var parsed = factory.Reader(parameters.Config, parameters.ExpectedLine, parameters.Data.Time.Date, false);
 
             Assert.IsInstanceOf(parameters.Config.Type, parsed);
@@ -99,8 +99,8 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(parameters.Data.Value, parsed.Value);
             if (parsed is Tick)
             {
-                var expected = (Tick) parameters.Data;
-                var actual = (Tick) parsed;
+                var expected = (Tick)parameters.Data;
+                var actual = (Tick)parsed;
                 Assert.AreEqual(expected.Quantity, actual.Quantity);
                 Assert.AreEqual(expected.BidPrice, actual.BidPrice);
                 Assert.AreEqual(expected.AskPrice, actual.AskPrice);
@@ -112,15 +112,15 @@ namespace QuantConnect.Tests.Common.Util
             }
             else if (parsed is TradeBar)
             {
-                var expected = (TradeBar) parameters.Data;
-                var actual = (TradeBar) parsed;
+                var expected = (TradeBar)parameters.Data;
+                var actual = (TradeBar)parsed;
                 AssertBarsAreEqual(expected, actual);
                 Assert.AreEqual(expected.Volume, actual.Volume);
             }
             else if (parsed is QuoteBar)
             {
-                var expected = (QuoteBar) parameters.Data;
-                var actual = (QuoteBar) parsed;
+                var expected = (QuoteBar)parameters.Data;
+                var actual = (QuoteBar)parsed;
                 AssertBarsAreEqual(expected.Bid, actual.Bid);
                 AssertBarsAreEqual(expected.Ask, actual.Ask);
                 Assert.AreEqual(expected.LastBidSize, actual.LastBidSize);
@@ -209,7 +209,7 @@ namespace QuantConnect.Tests.Common.Util
             var notAPath = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
             Assert.IsFalse(LeanData.TryParsePath(notAPath, out symbol, out date, out resolution));
 
-            var  emptyPath = "";
+            var emptyPath = "";
             Assert.IsFalse(LeanData.TryParsePath(emptyPath, out symbol, out date, out resolution));
 
             string nullPath = null;
@@ -596,7 +596,7 @@ namespace QuantConnect.Tests.Common.Util
                 ExpectedLine = expectedLine;
                 if (data is Tick)
                 {
-                    var tick = (Tick) data;
+                    var tick = (Tick)data;
                     TickType = tick.TickType;
                 }
                 else if (data is TradeBar)
@@ -622,14 +622,14 @@ namespace QuantConnect.Tests.Common.Util
 
                 Name = SecurityType + "_" + data.GetType().Name;
 
-                if (data.GetType() != typeof (Tick) || Resolution != Resolution.Tick)
+                if (data.GetType() != typeof(Tick) || Resolution != Resolution.Tick)
                 {
                     Name += "_" + Resolution;
                 }
 
                 if (data is Tick)
                 {
-                    Name += "_" + ((Tick) data).TickType;
+                    Name += "_" + ((Tick)data).TickType;
                 }
             }
         }

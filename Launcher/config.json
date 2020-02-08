@@ -6,10 +6,10 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "live-paper", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "RabbitMQTest",
+  "algorithm-type-name": "RabbitMQLive",
 
   // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
   "algorithm-language": "CSharp",
@@ -59,8 +59,8 @@
   "transaction-log": "",
 
   // To get your api access token go to quantconnect.com/account
-  "job-user-id": "0",
-  "api-access-token": "",
+  "job-user-id": "89153",
+  "api-access-token": "4bfaabca1c3a71e327c51b0f96da1415e2b82ffde362568aa4714a30a3f73917",
 
   // live data configuration
   "live-data-url": "ws://www.quantconnect.com/api/v2/live/data/",
@@ -114,7 +114,7 @@
 
   // Required to access data from Quandl
   // To get your access token go to https://www.quandl.com/account/api
-  "quandl-auth-token": "",
+  "quandl-auth-token": "PgJuoJUUrmZVu75mRUD2",
 
   // Required to access data from Tiingo
   // To get your access token go to https://www.tiingo.com

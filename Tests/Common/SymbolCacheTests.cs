@@ -18,7 +18,7 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data.Custom;
-using Bitcoin = QuantConnect.Algorithm.CSharp.LiveTradingFeaturesAlgorithm.Bitcoin;
+using Bitcoin = QuantConnect.Algorithm.CSharp.RabbitMQLive.Bitcoin;
 
 namespace QuantConnect.Tests.Common
 {

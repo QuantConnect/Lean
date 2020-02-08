@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="web hooks" />
     /// <meta name="tag" content="email alerts" />
     /// <meta name="tag" content="runtime statistics" />
-    public class LiveTradingFeaturesAlgorithm : QCAlgorithm
+    public class LiveFeaturesAlgorithm : QCAlgorithm
     {
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data.

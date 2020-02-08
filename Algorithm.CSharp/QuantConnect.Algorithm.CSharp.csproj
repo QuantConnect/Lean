@@ -370,6 +370,7 @@
     <Compile Include="RabbitMQTest.cs" />
     <Compile Include="RabbitMQConsumer.cs" />
     <Compile Include="RabbitMQProducer.cs" />
+    <Compile Include="RabbitMQLive.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm.Framework\QuantConnect.Algorithm.Framework.csproj">
