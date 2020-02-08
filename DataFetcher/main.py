@@ -4,6 +4,7 @@ import json
 import zipfile
 import quandl
 import os
+import pandas
 from zipfile import ZipFile
 
 API_KEY = "PgJuoJUUrmZVu75mRUD2"
@@ -19,7 +20,7 @@ def main():
 
 
 def callback(ch, method, properties, body):
-	# try:
+	try:
 		equityCall = body.decode("utf8").replace("\'", "\"")
 		equityCall = json.loads(equityCall)
 
@@ -28,7 +29,7 @@ def callback(ch, method, properties, body):
 			for ticker in timeFrame["equities"].split(" "):
 				writeData(timeFrame, ticker)
 
-	# except:
+	except:
 		print("RECIEVE: Incorrect RabbitMQ message format")
 
 
@@ -36,7 +37,8 @@ def writeData(equityCall, ticker):
 	# If path for equity does not exist create one
 	outname = ticker.lower() + ".csv"
 	zipname = ticker.lower() + ".zip"
-	outdir = os.getcwd() + "/Data/equity/usa/"+equityCall["resolution"]+"/"
+
+	outdir = "../Data/equity/usa/"+equityCall["resolution"]+"/"
 	if not os.path.exists(outdir):
 	    os.makedirs(outdir)
 
@@ -51,6 +53,15 @@ def writeData(equityCall, ticker):
 		end_date=equityCall["endTime"],
 		api_key=API_KEY)
 
+	# Multiply values by 10000 to fit Lean format
+	for header in df.columns[0:4].tolist():
+		df[header] = df[header].apply(lambda x: int(x * 10000))
+
+	df["Volume"] = df["Volume"].apply(lambda x: int(x))
+	df.index = pandas.to_datetime(df.index,
+		format = '%m/%d/%Y').strftime('%Y%m%d 00:00')
+
+	# Drop unused columns from dataframe
 	df = df.drop(["Ex-Dividend",
 			"Split Ratio",
 			"Adj. Open",
@@ -59,6 +70,8 @@ def writeData(equityCall, ticker):
 			"Adj. Close",
 			"Adj. Volume"],
 			axis=1)
+
+	print(df)
 
 	# Write csvzip to path
 	df.to_csv(fullname, header=False)

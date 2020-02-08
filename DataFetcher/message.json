@@ -3,7 +3,7 @@
         {
             "equities":"AAPL",
             "startTime":"1998-01-02",
-            "endTime":"1998-03-30",
+            "endTime":"2018-07-03",
             "period":"1d",
             "resolution":"daily"
         },
