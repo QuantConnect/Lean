@@ -1,6 +1,18 @@
 {
-    "equities":"GOOG",
-    "startTime":"2004-08-19",
-    "endTime":"2004-10-30",
-    "period":"1d"
+    "timeFrames":[
+        {
+            "equities":"AAPL",
+            "startTime":"1998-01-02",
+            "endTime":"1998-03-30",
+            "period":"1d",
+            "resolution":"daily"
+        },
+        {
+            "equities":"MSFT AMZN",
+            "startTime":"2002-01-02",
+            "endTime":"2003-03-30",
+            "period":"1d",
+            "resolution":"daily"
+        }
+    ]
 }
