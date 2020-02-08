@@ -120,7 +120,7 @@ namespace QuantConnect.ToolBox.TradingEconomicsDataDownloader
                 {
                     var tempFile = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv"));
                     var finalTempBackup = new FileInfo(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv"));
-                    var finalFile = new FileInfo(Path.Combine(Globals.DataFolder, "alternative", "trading-economics", "calendar", $"{kvp.Key.Replace(" ", "")}.csv"));
+                    var finalFile = new FileInfo(Path.Combine(_destinationFolder, $"{kvp.Key.Replace(" ", "")}.csv"));
 
                     try
                     {
