@@ -61,14 +61,6 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         }
 
         [TestCase]
-        public void FuturesExpiryFunction_MissingSymbol_ShouldThrowArgumentException()
-        {
-            const string badSymbol = "AAAAA";
-            Assert.Throws<ArgumentException>(() => { FuturesExpiryFunctions.FuturesExpiryFunction(badSymbol); },
-                                             $"Expiry function not implemented for {badSymbol} in FuturesExpiryFunctions.FuturesExpiryDictionary");
-        }
-
-        [TestCase]
         public void FuturesExpiryFunctions_AllFutures_ShouldHaveExpiryFunction()
         {
             var missingFutures = new List<string>();
