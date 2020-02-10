@@ -34,8 +34,8 @@ namespace QuantConnect.Securities.Future
                 return FuturesExpiryDictionary[symbol.ToUpperInvariant()];
             }
 
-            // If the function cannot be found, throw an exception as it hasn't yet been implemented
-            throw new ArgumentException($"Expiry function not implemented for {symbol} in FuturesExpiryFunctions.FuturesExpiryDictionary");
+            // If the expiry function hasn't yet been implemented, pass the date through
+            return date => date;
         }
 
         /// <summary>
