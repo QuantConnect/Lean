@@ -140,6 +140,12 @@ class Remapper(wrapt.ObjectProxy):
         name = self._self_mapper(name)
         return self.__wrapped__.__delitem__(name)
 
+    def __str__(self):
+        return self.__wrapped__.__str__()
+
+    def __repr__(self):
+        return self.__wrapped__.__repr__()
+
     # we wrap the result and input of 'xs'
     def xs(self, key, axis=0, level=None, drop_level=True):
         key = self._self_mapper(key)

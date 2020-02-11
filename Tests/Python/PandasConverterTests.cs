@@ -913,6 +913,50 @@ def Test(dataFrame, symbol):
         }
 
         [Test]
+        public void BackwardsCompatibilitySeries__str__()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+import pandas as pd
+from datetime import datetime as dt
+def Test(dataFrame, symbol):
+    close = dataFrame.lastprice.unstack(0)
+    to_append = pd.Series([100], name=str(symbol), index=pd.Index([dt.now()], name='time'))
+    result = pd.concat([close, to_append], ignore_index=True)
+    return str([result[x] for x in [symbol]])").GetAttr("Test");
+                var result = "Remapper";
+                Assert.DoesNotThrow(() => result = test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+                // result should not contain "Remapper" string because the test
+                // returns the string representation of a Series object
+                Assert.False(result.Contains("Remapper"));
+            }
+        }
+
+        [Test]
+        public void BackwardsCompatibilitySeries__repr__()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+import pandas as pd
+from datetime import datetime as dt
+def Test(dataFrame, symbol):
+    close = dataFrame.lastprice.unstack(0)
+    to_append = pd.Series([100], name=str(symbol), index=pd.Index([dt.now()], name='time'))
+    result = pd.concat([close, to_append], ignore_index=True)
+    return repr([result[x] for x in [symbol]])").GetAttr("Test");
+                var result = "Remapper";
+                Assert.DoesNotThrow(() => result = test(GetTestDataFrame(Symbols.SPY), Symbols.SPY));
+                // result should not contain "Remapper" string because the test
+                // returns the string representation of a Series object
+                Assert.False(result.Contains("Remapper"));
+            }
+        }
+
+        [Test]
         public void NotBackwardsCompatibilityDataFrame_index_levels_contains_ticker_notInCache()
         {
             using (Py.GIL())
