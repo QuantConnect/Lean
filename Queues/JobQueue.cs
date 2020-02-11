@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using QuantConnect.Python;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -93,21 +94,11 @@ namespace QuantConnect.Queues
 
             if ((Language)Enum.Parse(typeof(Language), Config.Get("algorithm-language")) == Language.Python)
             {
-                // Set the python path for loading python algorithms.
+                // Set the python path for loading python algorithms ("algorithm-location" config parameter)
                 var pythonFile = new FileInfo(location);
-                var pythonPath = new List<string>
-                {
-                    pythonFile.Directory.FullName,
-                    new DirectoryInfo(Environment.CurrentDirectory).FullName,
-                };
-                // Don't include an empty environment variable in pythonPath, otherwise the PYTHONPATH
-                // environment variable won't be used in the module import process
-                var pythonPathEnvironmentVariable = Environment.GetEnvironmentVariable("PYTHONPATH");
-                if (!string.IsNullOrEmpty(pythonPathEnvironmentVariable))
-                {
-                    pythonPath.Add(pythonPathEnvironmentVariable);
-                }
-                Environment.SetEnvironmentVariable("PYTHONPATH", string.Join(OS.IsLinux ? ":" : ";", pythonPath));
+
+                // PythonInitializer automatically adds the current working directory for us
+                PythonInitializer.SetPythonPathEnvironmentVariable(new string[] { pythonFile.Directory.FullName });
             }
 
             //If this isn't a backtesting mode/request, attempt a live job.

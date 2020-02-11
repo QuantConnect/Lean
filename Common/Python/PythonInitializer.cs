@@ -14,7 +14,9 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Logging;
@@ -60,6 +62,39 @@ namespace QuantConnect.Python
                     PythonEngine.Exec($"import sys;{code}");
                 }
             }
+        }
+
+        /// <summary>
+        /// Adds the provided paths to the end of the PYTHONPATH environment variable, as well
+        /// as the current working directory.
+        /// </summary>
+        /// <param name="extraDirectories">Additional paths to add to the end of PYTHONPATH</param>
+        public static void SetPythonPathEnvironmentVariable(IEnumerable<string> extraDirectories = null)
+        {
+            // create new python path environment variable containing directories
+            var pythonDirectories = new List<string>();
+
+            // Don't include an empty environment variable in pythonPath, otherwise the PYTHONPATH
+            // environment variable won't be used in the module import process
+            var pythonPathEnvironmentVariable = Environment.GetEnvironmentVariable("PYTHONPATH");
+            if (!string.IsNullOrEmpty(pythonPathEnvironmentVariable))
+            {
+                pythonDirectories.Add(pythonPathEnvironmentVariable);
+            }
+
+            // Since the order of the PYTHONPATH matters, let's add any new
+            // entries to the end of the new environment variable to prevent
+            // any potential Python standard library paths from being de-prioritized.
+            if (extraDirectories != null)
+            {
+                pythonDirectories.AddRange(extraDirectories);
+            }
+
+            // Add current directory too, allows python algorithms to find Lean's pre-defined submodules
+            pythonDirectories.Add(new DirectoryInfo(Environment.CurrentDirectory).FullName);
+            var finalPath = string.Join(OS.IsLinux ? ":" : ";", pythonDirectories.Distinct());
+
+            Environment.SetEnvironmentVariable("PYTHONPATH", finalPath);
         }
     }
 }
