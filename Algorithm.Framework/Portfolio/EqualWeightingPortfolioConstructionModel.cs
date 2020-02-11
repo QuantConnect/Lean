@@ -29,8 +29,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class EqualWeightingPortfolioConstructionModel : PortfolioConstructionModel
     {
-        private readonly Func<DateTime, DateTime> _rebalancingFunc;
-        private DateTime _rebalancingTime;
         private List<Symbol> _removedSymbols;
         private readonly InsightCollection _insightCollection = new InsightCollection();
         private DateTime? _nextExpiryTime;
@@ -38,10 +36,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
         /// </summary>
-        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time</param>
         public EqualWeightingPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc)
+            : base(time => rebalancingFunc(time))
         {
-            _rebalancingFunc = rebalancingFunc;
         }
 
         /// <summary>
@@ -100,18 +98,21 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
         public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
         {
-            var targets = new List<IPortfolioTarget>();
-
-            if (algorithm.UtcTime <= _nextExpiryTime &&
-                algorithm.UtcTime <= _rebalancingTime &&
-                insights.Length == 0 &&
-                _removedSymbols == null)
+            // always add new insights
+            if (insights.Length > 0)
             {
-                return targets;
+                // Validate we should create a target for this insight
+                _insightCollection.AddRange(insights.Where(ShouldCreateTargetForInsight));
             }
 
-            // Validate we should create a target for this insight
-            _insightCollection.AddRange(insights.Where(ShouldCreateTargetForInsight));
+            if (algorithm.UtcTime <= _nextExpiryTime
+                && insights.Length == 0
+                && !IsRebalanceDue(algorithm.UtcTime))
+            {
+                return Enumerable.Empty<IPortfolioTarget>();
+            }
+
+            var targets = new List<IPortfolioTarget>();
 
             // Create flatten target for each security that was removed from the universe
             if (_removedSymbols != null)
@@ -158,7 +159,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             targets.AddRange(expiredTargets);
 
             _nextExpiryTime = _insightCollection.GetNextExpiryTime();
-            _rebalancingTime = _rebalancingFunc(algorithm.UtcTime);
+            RefreshRebalance(algorithm.UtcTime);
 
             return targets;
         }
@@ -170,6 +171,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
+            base.OnSecuritiesChanged(algorithm, changes);
             // Get removed symbol and invalidate them in the insight collection
             _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol).ToList();
             _insightCollection.Clear(_removedSymbols.ToArray());

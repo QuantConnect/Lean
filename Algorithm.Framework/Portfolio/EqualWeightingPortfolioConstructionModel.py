@@ -37,15 +37,16 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         self.insightCollection = InsightCollection()
         self.removedSymbols = []
         self.nextExpiryTime = UTCMIN
-        self.rebalancingTime = UTCMIN
-        self.rebalancingFunc = rebalancingParam
 
-        # If the argument is an instance if Resolution or Timedelta
-        # Redefine self.rebalancingFunc
+        # If the argument is an instance of Resolution or Timedelta
+        # Redefine rebalancingFunc
+        rebalancingFunc = rebalancingParam
         if isinstance(rebalancingParam, int):
             rebalancingParam = Extensions.ToTimeSpan(rebalancingParam)
         if isinstance(rebalancingParam, timedelta):
-            self.rebalancingFunc = lambda dt: dt + rebalancingParam
+            rebalancingFunc = lambda dt: dt + rebalancingParam
+        if rebalancingFunc:
+            self.SetRebalancingFunc(rebalancingFunc)
 
     def ShouldCreateTargetForInsight(self, insight):
         '''Method that will determine if the portfolio construction model should create a
@@ -74,18 +75,17 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
             insights: The insights to create portfolio targets from
         Returns:
             An enumerable of portfolio targets to be sent to the execution model'''
-
         targets = []
 
-        if (algorithm.UtcTime <= self.nextExpiryTime and
-            algorithm.UtcTime <= self.rebalancingTime and
-            len(insights) == 0 and
-            self.removedSymbols is None):
-            return targets
-
+        # Always add new insights
         for insight in insights:
             if self.ShouldCreateTargetForInsight(insight):
                 self.insightCollection.Add(insight)
+
+        if (algorithm.UtcTime <= self.nextExpiryTime
+            and len(insights) == 0
+            and not self.IsRebalanceDue(algorithm.UtcTime)):
+            return targets
 
         # Create flatten target for each security that was removed from the universe
         if self.removedSymbols is not None:
@@ -127,7 +127,7 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         if self.nextExpiryTime is None:
             self.nextExpiryTime = UTCMIN
 
-        self.rebalancingTime = self.rebalancingFunc(algorithm.UtcTime)
+        self.RefreshRebalance(algorithm.UtcTime)
 
         return targets
 
@@ -138,5 +138,6 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
             changes: The security additions and removals from the algorithm'''
 
         # Get removed symbol and invalidate them in the insight collection
+        super().OnSecuritiesChanged(algorithm, changes)
         self.removedSymbols = [x.Symbol for x in changes.RemovedSecurities]
         self.insightCollection.Clear(self.removedSymbols)

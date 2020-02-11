@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -27,6 +28,33 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class PortfolioConstructionModel : IPortfolioConstructionModel
     {
+        private Func<DateTime, DateTime?> _rebalancingFunc;
+        private DateTime? _rebalancingTime;
+        private bool _securityChanges;
+
+        /// <summary>
+        /// True if should rebalance portfolio on security changes. True by default
+        /// </summary>
+        public static bool RebalanceOnSecurityChanges { get; set; } = true;
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="PortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
+        public PortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc)
+        {
+            _rebalancingFunc = rebalancingFunc;
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="PortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
+        public PortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc = null)
+        : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(time => rebalancingFunc(time)) : null)
+        {
+        }
+
         /// <summary>
         /// Create portfolio targets from the specified insights
         /// </summary>
@@ -35,7 +63,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
         public virtual IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
         {
-            throw new System.NotImplementedException("Types deriving from 'PortfolioConstructionModel' must implement the 'IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm, Insight[]) method.");
+            throw new NotImplementedException("Types deriving from 'PortfolioConstructionModel' must implement the 'IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm, Insight[]) method.");
         }
 
         /// <summary>
@@ -45,6 +73,59 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public virtual void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
+            _securityChanges = changes != SecurityChanges.None;
+        }
+
+        /// <summary>
+        /// Python helper method to set the rebalancing function.
+        /// This is required due to a python net limitation being able to use the base type constructor
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
+        protected void SetRebalancingFunc(PyObject rebalancingFunc)
+        {
+            _rebalancingFunc = rebalancingFunc.ConvertToDelegate<Func<DateTime, DateTime?>>();
+        }
+
+        /// <summary>
+        /// Determines if the portfolio should be rebalanced base on the provided rebalancing func
+        /// and if any security change have been taken place.
+        /// If the rebalancing function has not been provided will return true.
+        /// </summary>
+        /// <param name="algorithmUtc">The current algorithm UTC time</param>
+        /// <returns>True if should rebalance</returns>
+        protected virtual bool IsRebalanceDue(DateTime algorithmUtc)
+        {
+            if (_rebalancingFunc == null)
+            {
+                return true;
+            }
+
+            if (_rebalancingTime == null)
+            {
+                RefreshRebalance(algorithmUtc);
+            }
+
+            if ((_rebalancingTime != null && _rebalancingTime < algorithmUtc)
+                || (RebalanceOnSecurityChanges && _securityChanges))
+            {
+                RefreshRebalance(algorithmUtc);
+                _securityChanges = false;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Refresh the next rebalance time
+        /// </summary>
+        protected void RefreshRebalance(DateTime algorithmUtc)
+        {
+            if (_rebalancingFunc != null)
+            {
+                _rebalancingTime = _rebalancingFunc(algorithmUtc);
+            }
+            _securityChanges = false;
         }
 
         /// <summary>
