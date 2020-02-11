@@ -31,7 +31,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     {
         private List<Symbol> _removedSymbols;
         private readonly InsightCollection _insightCollection = new InsightCollection();
-        private DateTime? _nextExpiryTime;
 
         /// <summary>
         /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
@@ -66,7 +65,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="insight">The insight to create a target for</param>
         /// <returns>True if the portfolio should create a target for the insight</returns>
-        public virtual bool ShouldCreateTargetForInsight(Insight insight)
+        protected virtual bool ShouldCreateTargetForInsight(Insight insight)
         {
             return true;
         }
@@ -76,7 +75,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        public virtual Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
+        protected virtual Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
         {
             var result = new Dictionary<Insight, double>();
 
@@ -105,9 +104,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 _insightCollection.AddRange(insights.Where(ShouldCreateTargetForInsight));
             }
 
-            if (algorithm.UtcTime <= _nextExpiryTime
-                && insights.Length == 0
-                && !IsRebalanceDue(algorithm.UtcTime))
+            if (!IsRebalanceDue(insights, algorithm.UtcTime))
             {
                 return Enumerable.Empty<IPortfolioTarget>();
             }
@@ -158,8 +155,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             targets.AddRange(expiredTargets);
 
-            _nextExpiryTime = _insightCollection.GetNextExpiryTime();
-            RefreshRebalance(algorithm.UtcTime);
+            var nextExpiryTimeUtc = _insightCollection.GetNextExpiryTime();
+            RefreshRebalance(algorithm.UtcTime, nextExpiryTimeUtc);
 
             return targets;
         }

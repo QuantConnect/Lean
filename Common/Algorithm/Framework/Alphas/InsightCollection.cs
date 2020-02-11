@@ -183,7 +183,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         }
 
         /// <summary>
-        /// Gets the next expiry time
+        /// Gets the next expiry time UTC
         /// </summary>
         public DateTime? GetNextExpiryTime()
         {

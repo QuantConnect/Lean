@@ -34,7 +34,6 @@ import numpy as np
 from numpy import dot, transpose
 from numpy.linalg import inv
 from pytz import utc
-UTCMIN = datetime.min.replace(tzinfo=utc)
 
 ### <summary>
 ### Provides an implementation of Black-Litterman portfolio optimization. The model adjusts equilibrium market
@@ -75,7 +74,6 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         self.symbolDataBySymbol = {}
 
         self.insightCollection = InsightCollection()
-        self.nextExpiryTime = UTCMIN
 
         # If the argument is an instance of Resolution or Timedelta
         # Redefine rebalancingFunc
@@ -102,9 +100,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         insights = PortfolioConstructionModel.FilterInvalidInsightMagnitude(algorithm, insights)
         self.insightCollection.AddRange(insights)
 
-        if (algorithm.UtcTime <= self.nextExpiryTime
-            and len(insights) == 0
-            and not self.IsRebalanceDue(algorithm.UtcTime)):
+        if not self.IsRebalanceDue(insights, algorithm.UtcTime):
             return targets
 
         # Create flatten target for each security that was removed from the universe
@@ -166,10 +162,8 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
 
         targets.extend(expiredTargets)
 
-        self.nextExpiryTime = self.insightCollection.GetNextExpiryTime()
-        if self.nextExpiryTime is None:
-            self.nextExpiryTime = UTCMIN
-        self.RefreshRebalance(algorithm.UtcTime)
+        nextExpiryTime = self.insightCollection.GetNextExpiryTime()
+        self.RefreshRebalance(algorithm.UtcTime, nextExpiryTime)
 
         return targets
 

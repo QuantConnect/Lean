@@ -17,6 +17,7 @@ using System;
 using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
@@ -34,8 +35,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             var constructionModel = new TestPortfolioConstructionModel();
 
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1)));
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2019, 1, 1)));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2019, 1, 1), new Insight[0]));
 
             var security = new Security(Symbols.SPY,
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
@@ -46,16 +47,16 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new SecurityCache());
 
             constructionModel.OnSecuritiesChanged(null, SecurityChanges.Added(security));
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1)));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
             constructionModel.OnSecuritiesChanged(null, SecurityChanges.None);
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1)));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
 
             PortfolioConstructionModel.RebalanceOnSecurityChanges = true;
         }
 
         [TestCase(Language.Python)]
         [TestCase(Language.CSharp)]
-        public void RebalanceFunction(Language language)
+        public void RebalanceFunctionPeriodDue(Language language)
         {
             TestPortfolioConstructionModel constructionModel;
             if (language == Language.Python)
@@ -77,13 +78,44 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel(time => time.AddDays(1));
             }
 
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1)));
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1, 23, 0, 0)));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
+                new DateTime(2020, 1, 1, 23, 0, 0), new Insight[0]));
 
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2)));
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2, 0, 0, 1)));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(
+                new DateTime(2020, 1, 2, 0, 0, 1), new Insight[0]));
 
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2, 1, 0, 0)));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
+                new DateTime(2020, 1, 2, 1, 0, 0), new Insight[0]));
+        }
+
+        [TestCase(Language.Python)]
+        [TestCase(Language.CSharp)]
+        public void RebalanceFunctionSecurityChanges(Language language)
+        {
+            TestPortfolioConstructionModel constructionModel;
+            if (language == Language.Python)
+            {
+                constructionModel = new TestPortfolioConstructionModel();
+                using (Py.GIL())
+                {
+                    var func = PythonEngine.ModuleFromString("RebalanceFunc",
+                        @"
+from datetime import timedelta
+
+def RebalanceFunc(time):
+    return time + timedelta(days=1)").GetAttr("RebalanceFunc");
+                    constructionModel.SetRebalancingFunc(func);
+                }
+            }
+            else
+            {
+                constructionModel = new TestPortfolioConstructionModel(time => time.AddDays(1));
+            }
+
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
+                new DateTime(2020, 1, 2, 1, 0, 0), new Insight[0]));
 
             var security = new Security(Symbols.SPY,
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
@@ -94,8 +126,73 @@ def RebalanceFunc(time):
                 new SecurityCache());
 
             constructionModel.OnSecuritiesChanged(null, SecurityChanges.Added(security));
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2)));
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2)));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
+        }
+
+        [TestCase(Language.Python)]
+        [TestCase(Language.CSharp)]
+        public void RebalanceFunctionNewInsights(Language language)
+        {
+            TestPortfolioConstructionModel constructionModel;
+            if (language == Language.Python)
+            {
+                constructionModel = new TestPortfolioConstructionModel();
+                using (Py.GIL())
+                {
+                    var func = PythonEngine.ModuleFromString("RebalanceFunc",
+                        @"
+from datetime import timedelta
+
+def RebalanceFunc(time):
+    return time + timedelta(days=1)").GetAttr("RebalanceFunc");
+                    constructionModel.SetRebalancingFunc(func);
+                }
+            }
+            else
+            {
+                constructionModel = new TestPortfolioConstructionModel(time => time.AddDays(1));
+            }
+
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
+
+            var insights = new[] { Insight.Price(Symbols.SPY, Resolution.Daily, 1, InsightDirection.Down)};
+
+            PortfolioConstructionModel.RebalanceOnInsightChanges = false;
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), insights));
+            PortfolioConstructionModel.RebalanceOnInsightChanges = true;
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), insights));
+        }
+
+        [TestCase(Language.Python)]
+        [TestCase(Language.CSharp)]
+        public void RebalanceFunctionInsightExpiration(Language language)
+        {
+            TestPortfolioConstructionModel constructionModel;
+            if (language == Language.Python)
+            {
+                constructionModel = new TestPortfolioConstructionModel();
+                using (Py.GIL())
+                {
+                    var func = PythonEngine.ModuleFromString("RebalanceFunc",
+                        @"
+from datetime import timedelta
+
+def RebalanceFunc(time):
+    return time + timedelta(days=10)").GetAttr("RebalanceFunc");
+                    constructionModel.SetRebalancingFunc(func);
+                }
+            }
+            else
+            {
+                constructionModel = new TestPortfolioConstructionModel(time => time.AddDays(10));
+            }
+
+            constructionModel.RefreshRebalanceWrapper(new DateTime(2020, 1, 1), new DateTime(2020, 1, 2));
+            PortfolioConstructionModel.RebalanceOnInsightChanges = false;
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 3), new Insight[0]));
+            PortfolioConstructionModel.RebalanceOnInsightChanges = true;
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 3), new Insight[0]));
         }
 
         [TestCase(Language.Python)]
@@ -124,11 +221,14 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel(time => null);
             }
 
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1)));
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1, 23, 0, 0)));
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2)));
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2, 0, 0, 1)));
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2, 1, 0, 0)));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
+                new DateTime(2020, 1, 1, 23, 0, 0), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
+                new DateTime(2020, 1, 2, 0, 0, 1), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
+                new DateTime(2020, 1, 2, 1, 0, 0), new Insight[0]));
         }
 
         [Test]
@@ -137,14 +237,18 @@ def RebalanceFunc(time):
             var constructionModel = new TestPortfolioConstructionModel(time => time.AddDays(1));
 
             constructionModel.RefreshRebalanceWrapper(new DateTime(2020, 1, 1));
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1)));
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1, 23, 0, 0)));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
+                new DateTime(2020, 1, 1, 23, 0, 0), new Insight[0]));
 
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2, 0, 0, 1)));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(
+                new DateTime(2020, 1, 2, 0, 0, 1), new Insight[0]));
 
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2, 1, 0, 0)));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
+                new DateTime(2020, 1, 2, 1, 0, 0), new Insight[0]));
             constructionModel.RefreshRebalanceWrapper(new DateTime(2020, 1, 1));
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2, 1, 0, 0)));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(
+                new DateTime(2020, 1, 2, 1, 0, 0), new Insight[0]));
 
             var security = new Security(Symbols.SPY,
                 SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
@@ -156,8 +260,9 @@ def RebalanceFunc(time):
 
             constructionModel.OnSecuritiesChanged(null, SecurityChanges.Added(security));
             constructionModel.RefreshRebalanceWrapper(new DateTime(2020, 1, 3));
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 3)));
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 4, 0, 0, 1)));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 3), new Insight[0]));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(
+                new DateTime(2020, 1, 4, 0, 0, 1), new Insight[0]));
         }
 
         class TestPortfolioConstructionModel : PortfolioConstructionModel
@@ -176,14 +281,14 @@ def RebalanceFunc(time):
                 base.SetRebalancingFunc(rebalancingFunc);
             }
 
-            public bool IsRebalanceDueWrapper(DateTime now)
+            public bool IsRebalanceDueWrapper(DateTime now, Insight[] insights)
             {
-                return base.IsRebalanceDue(now);
+                return base.IsRebalanceDue(insights, now);
             }
 
-            public void RefreshRebalanceWrapper(DateTime now)
+            public void RefreshRebalanceWrapper(DateTime now, DateTime? nextExpiration = null)
             {
-                RefreshRebalance(now);
+                RefreshRebalance(now, nextExpiration);
             }
         }
     }

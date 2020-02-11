@@ -30,12 +30,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     {
         private Func<DateTime, DateTime?> _rebalancingFunc;
         private DateTime? _rebalancingTime;
+        private DateTime? _nextExpiryTime;
         private bool _securityChanges;
 
         /// <summary>
         /// True if should rebalance portfolio on security changes. True by default
         /// </summary>
         public static bool RebalanceOnSecurityChanges { get; set; } = true;
+
+        /// <summary>
+        /// True if should rebalance portfolio on new insights or expiration of insights. True by default
+        /// </summary>
+        public static bool RebalanceOnInsightChanges { get; set; } = true;
 
         /// <summary>
         /// Initialize a new instance of <see cref="PortfolioConstructionModel"/>
@@ -91,10 +97,18 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// and if any security change have been taken place.
         /// If the rebalancing function has not been provided will return true.
         /// </summary>
+        /// <param name="insights">The insights to create portfolio targets from</param>
         /// <param name="algorithmUtc">The current algorithm UTC time</param>
         /// <returns>True if should rebalance</returns>
-        protected virtual bool IsRebalanceDue(DateTime algorithmUtc)
+        protected virtual bool IsRebalanceDue(Insight[] insights, DateTime algorithmUtc)
         {
+            if (RebalanceOnInsightChanges
+                && (insights.Length != 0
+                    || _nextExpiryTime != null && _nextExpiryTime < algorithmUtc))
+            {
+                return true;
+            }
+
             if (_rebalancingFunc == null)
             {
                 return true;
@@ -102,13 +116,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             if (_rebalancingTime == null)
             {
-                RefreshRebalance(algorithmUtc);
+                RefreshRebalance(algorithmUtc, _nextExpiryTime);
             }
 
             if ((_rebalancingTime != null && _rebalancingTime < algorithmUtc)
                 || (RebalanceOnSecurityChanges && _securityChanges))
             {
-                RefreshRebalance(algorithmUtc);
+                RefreshRebalance(algorithmUtc, _nextExpiryTime);
                 _securityChanges = false;
                 return true;
             }
@@ -119,8 +133,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Refresh the next rebalance time
         /// </summary>
-        protected void RefreshRebalance(DateTime algorithmUtc)
+        protected void RefreshRebalance(DateTime algorithmUtc, DateTime? nextExpiration = null)
         {
+            _nextExpiryTime = nextExpiration;
             if (_rebalancingFunc != null)
             {
                 _rebalancingTime = _rebalancingFunc(algorithmUtc);

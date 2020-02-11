@@ -133,8 +133,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 }
             }
 
-            if (insights.Length == 0
-                && !IsRebalanceDue(algorithm.UtcTime))
+            if (!IsRebalanceDue(insights, algorithm.UtcTime))
             {
                 return Enumerable.Empty<IPortfolioTarget>();
             }
@@ -149,7 +148,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             _pendingRemoval.Clear();
 
             var symbols = insights.Select(x => x.Symbol).ToHashSet();
-            if (symbols.Count == 0 || insights.All(x => x.Magnitude == 0))
+            if (symbols.Count == 0)
             {
                 return targets;
             }

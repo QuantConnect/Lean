@@ -20,8 +20,6 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
 from itertools import groupby
 from datetime import datetime, timedelta
-from pytz import utc
-UTCMIN = datetime.min.replace(tzinfo=utc)
 
 class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that gives equal weighting to all securities.
@@ -36,7 +34,6 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
                               The function returns the next expected rebalance time for a given algorithm UTC DateTime'''
         self.insightCollection = InsightCollection()
         self.removedSymbols = []
-        self.nextExpiryTime = UTCMIN
 
         # If the argument is an instance of Resolution or Timedelta
         # Redefine rebalancingFunc
@@ -82,9 +79,7 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
             if self.ShouldCreateTargetForInsight(insight):
                 self.insightCollection.Add(insight)
 
-        if (algorithm.UtcTime <= self.nextExpiryTime
-            and len(insights) == 0
-            and not self.IsRebalanceDue(algorithm.UtcTime)):
+        if not self.IsRebalanceDue(insights, algorithm.UtcTime):
             return targets
 
         # Create flatten target for each security that was removed from the universe
@@ -123,11 +118,8 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
 
         targets.extend(expiredTargets)
 
-        self.nextExpiryTime = self.insightCollection.GetNextExpiryTime()
-        if self.nextExpiryTime is None:
-            self.nextExpiryTime = UTCMIN
-
-        self.RefreshRebalance(algorithm.UtcTime)
+        nextExpiryTime = self.insightCollection.GetNextExpiryTime()
+        self.RefreshRebalance(algorithm.UtcTime, nextExpiryTime)
 
         return targets
 

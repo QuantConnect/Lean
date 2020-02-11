@@ -142,9 +142,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 _insightCollection.AddRange(insights);
             }
 
-            if (algorithm.UtcTime <= _nextExpiryTime
-                && insights.Length == 0
-                && !IsRebalanceDue(algorithm.UtcTime))
+            if (!IsRebalanceDue(insights, algorithm.UtcTime))
             {
                 return Enumerable.Empty<IPortfolioTarget>();
             }
@@ -222,7 +220,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             targets.AddRange(expiredTargets);
 
             _nextExpiryTime = _insightCollection.GetNextExpiryTime();
-            RefreshRebalance(algorithm.UtcTime);
+            RefreshRebalance(algorithm.UtcTime, _nextExpiryTime);
 
             return targets;
         }

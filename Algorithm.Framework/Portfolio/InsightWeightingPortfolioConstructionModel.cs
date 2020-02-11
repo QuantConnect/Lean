@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="insight">The insight to create a target for</param>
         /// <returns>True if the portfolio should create a target for the insight</returns>
-        public override bool ShouldCreateTargetForInsight(Insight insight)
+        protected override bool ShouldCreateTargetForInsight(Insight insight)
         {
             return insight.Weight.HasValue;
         }
@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        public override Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
+        protected override Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
         {
             var result = new Dictionary<Insight, double>();
             // We will adjust weights proportionally in case the sum is > 1 so it sums to 1.

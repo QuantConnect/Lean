@@ -83,7 +83,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             symbolData.Add(algorithm.Time, insight.Magnitude)
 
         targets = []
-        if (len(insights) == 0 and not self.IsRebalanceDue(algorithm.UtcTime)):
+        if not self.IsRebalanceDue(insights, algorithm.UtcTime):
             return targets
 
         for symbol in self.pendingRemoval:
@@ -91,7 +91,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         self.pendingRemoval.clear()
 
         symbols = [insight.Symbol for insight in insights]
-        if len(symbols) == 0 or all([insight.Magnitude == 0 for insight in insights]):
+        if len(symbols) == 0:
             return targets
 
         # Create a dictionary keyed by the symbols in the insights with an pandas.Series as value to create a data frame
