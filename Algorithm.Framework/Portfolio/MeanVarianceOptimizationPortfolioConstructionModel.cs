@@ -183,7 +183,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     sidx++;
                 }
             }
-            RefreshRebalance(algorithm.UtcTime);
 
             return targets;
         }

@@ -30,7 +30,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     public class EqualWeightingPortfolioConstructionModel : PortfolioConstructionModel
     {
         private List<Symbol> _removedSymbols;
-        private readonly InsightCollection _insightCollection = new InsightCollection();
 
         /// <summary>
         /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
@@ -101,7 +100,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             if (insights.Length > 0)
             {
                 // Validate we should create a target for this insight
-                _insightCollection.AddRange(insights.Where(ShouldCreateTargetForInsight));
+                InsightCollection.AddRange(insights.Where(ShouldCreateTargetForInsight));
             }
 
             if (!IsRebalanceDue(insights, algorithm.UtcTime))
@@ -120,7 +119,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             // Get insight that haven't expired of each symbol that is still in the universe
-            var activeInsights = _insightCollection.GetActiveInsights(algorithm.UtcTime);
+            var activeInsights = InsightCollection.GetActiveInsights(algorithm.UtcTime);
 
             // Get the last generated active insight for each symbol
             var lastActiveInsights = (from insight in activeInsights
@@ -146,17 +145,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             // Get expired insights and create flatten targets for each symbol
-            var expiredInsights = _insightCollection.RemoveExpiredInsights(algorithm.UtcTime);
+            var expiredInsights = InsightCollection.RemoveExpiredInsights(algorithm.UtcTime);
 
             var expiredTargets = from insight in expiredInsights
                                  group insight.Symbol by insight.Symbol into g
-                                 where !_insightCollection.HasActiveInsights(g.Key, algorithm.UtcTime) && !errorSymbols.Contains(g.Key)
+                                 where !InsightCollection.HasActiveInsights(g.Key, algorithm.UtcTime) && !errorSymbols.Contains(g.Key)
                                  select new PortfolioTarget(g.Key, 0);
 
             targets.AddRange(expiredTargets);
-
-            var nextExpiryTimeUtc = _insightCollection.GetNextExpiryTime();
-            RefreshRebalance(algorithm.UtcTime, nextExpiryTimeUtc);
 
             return targets;
         }
@@ -171,7 +167,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             base.OnSecuritiesChanged(algorithm, changes);
             // Get removed symbol and invalidate them in the insight collection
             _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol).ToList();
-            _insightCollection.Clear(_removedSymbols.ToArray());
+            InsightCollection.Clear(_removedSymbols.ToArray());
         }
     }
 }

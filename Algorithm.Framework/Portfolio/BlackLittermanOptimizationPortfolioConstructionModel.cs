@@ -43,11 +43,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         private readonly double _tau;
         private readonly IPortfolioOptimizer _optimizer;
 
-        private DateTime? _nextExpiryTime;
-
         private List<Symbol> _removedSymbols;
         private readonly Dictionary<Symbol, ReturnsSymbolData> _symbolDataDict;
-        private readonly InsightCollection _insightCollection = new InsightCollection();
 
         /// <summary>
         /// Initialize the model
@@ -139,7 +136,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             if (insights.Length > 0)
             {
                 insights = FilterInvalidInsightMagnitude(algorithm, insights);
-                _insightCollection.AddRange(insights);
+                InsightCollection.AddRange(insights);
             }
 
             if (!IsRebalanceDue(insights, algorithm.UtcTime))
@@ -158,7 +155,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             // Get insight that haven't expired of each symbol that is still in the universe
-            var activeInsights = _insightCollection.GetActiveInsights(algorithm.UtcTime);
+            var activeInsights = InsightCollection.GetActiveInsights(algorithm.UtcTime);
 
             // Get the last generated active insight for each symbol
             var lastActiveInsights = (from insight in activeInsights
@@ -210,17 +207,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 }
             }
             // Get expired insights and create flatten targets for each symbol
-            var expiredInsights = _insightCollection.RemoveExpiredInsights(algorithm.UtcTime);
+            var expiredInsights = InsightCollection.RemoveExpiredInsights(algorithm.UtcTime);
 
             var expiredTargets = from insight in expiredInsights
                                  group insight.Symbol by insight.Symbol into g
-                                 where !_insightCollection.HasActiveInsights(g.Key, algorithm.UtcTime)
+                                 where !InsightCollection.HasActiveInsights(g.Key, algorithm.UtcTime)
                                  select new PortfolioTarget(g.Key, 0);
 
             targets.AddRange(expiredTargets);
-
-            _nextExpiryTime = _insightCollection.GetNextExpiryTime();
-            RefreshRebalance(algorithm.UtcTime, _nextExpiryTime);
 
             return targets;
         }
@@ -235,7 +229,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             base.OnSecuritiesChanged(algorithm, changes);
             // Get removed symbol and invalidate them in the insight collection
             _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol).ToList();
-            _insightCollection.Clear(_removedSymbols.ToArray());
+            InsightCollection.Clear(_removedSymbols.ToArray());
 
             foreach (var symbol in _removedSymbols)
             {

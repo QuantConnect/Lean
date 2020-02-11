@@ -30,7 +30,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     {
         private Func<DateTime, DateTime?> _rebalancingFunc;
         private DateTime? _rebalancingTime;
-        private DateTime? _nextExpiryTime;
         private bool _securityChanges;
 
         /// <summary>
@@ -44,12 +43,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         public static bool RebalanceOnInsightChanges { get; set; } = true;
 
         /// <summary>
+        /// Provides a collection for managing insights
+        /// </summary>
+        /// <remarks>Derived classes should use this collection if they want insight
+        /// expiration to trigger a rebalance</remarks>
+        protected InsightCollection InsightCollection { get; }
+
+        /// <summary>
         /// Initialize a new instance of <see cref="PortfolioConstructionModel"/>
         /// </summary>
         /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
         public PortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc)
         {
             _rebalancingFunc = rebalancingFunc;
+            InsightCollection = new InsightCollection();
         }
 
         /// <summary>
@@ -93,8 +100,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         }
 
         /// <summary>
-        /// Determines if the portfolio should be rebalanced base on the provided rebalancing func
-        /// and if any security change have been taken place.
+        /// Determines if the portfolio should be rebalanced base on the provided rebalancing func,
+        /// if any security change have been taken place or if an insight has expired or a new insight arrived
         /// If the rebalancing function has not been provided will return true.
         /// </summary>
         /// <param name="insights">The insights to create portfolio targets from</param>
@@ -102,28 +109,30 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>True if should rebalance</returns>
         protected virtual bool IsRebalanceDue(Insight[] insights, DateTime algorithmUtc)
         {
-            if (RebalanceOnInsightChanges
-                && (insights.Length != 0
-                    || _nextExpiryTime != null && _nextExpiryTime < algorithmUtc))
+            // if there is no rebalance func set, just return true but refresh state
+            // just in case the rebalance func is going to be set.
+            if (_rebalancingFunc == null)
             {
+                RefreshRebalance(algorithmUtc);
                 return true;
             }
 
-            if (_rebalancingFunc == null)
-            {
-                return true;
-            }
+            // we always get the next expiry time
+            // we don't know if a new insight was added or removed
+            var nextInsightExpiryTime = InsightCollection.GetNextExpiryTime();
 
             if (_rebalancingTime == null)
             {
-                RefreshRebalance(algorithmUtc, _nextExpiryTime);
+                _rebalancingTime = _rebalancingFunc(algorithmUtc);
             }
 
-            if ((_rebalancingTime != null && _rebalancingTime < algorithmUtc)
-                || (RebalanceOnSecurityChanges && _securityChanges))
+            if (_rebalancingTime != null && _rebalancingTime < algorithmUtc
+                || RebalanceOnSecurityChanges && _securityChanges
+                || RebalanceOnInsightChanges
+                    && (insights.Length != 0
+                        || nextInsightExpiryTime != null && nextInsightExpiryTime < algorithmUtc))
             {
-                RefreshRebalance(algorithmUtc, _nextExpiryTime);
-                _securityChanges = false;
+                RefreshRebalance(algorithmUtc);
                 return true;
             }
 
@@ -131,11 +140,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         }
 
         /// <summary>
-        /// Refresh the next rebalance time
+        /// Refresh the next rebalance time and clears the security changes flag
         /// </summary>
-        protected void RefreshRebalance(DateTime algorithmUtc, DateTime? nextExpiration = null)
+        private void RefreshRebalance(DateTime algorithmUtc)
         {
-            _nextExpiryTime = nextExpiration;
             if (_rebalancingFunc != null)
             {
                 _rebalancingTime = _rebalancingFunc(algorithmUtc);

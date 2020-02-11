@@ -108,7 +108,6 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             target = PortfolioTarget.Percent(algorithm, insight.Symbol, weight)
             if target is not None:
                 targets.append(target)
-        self.RefreshRebalance(algorithm.UtcTime)
 
         return targets
 

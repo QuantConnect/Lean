@@ -73,8 +73,6 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         self.removedSymbols = []
         self.symbolDataBySymbol = {}
 
-        self.insightCollection = InsightCollection()
-
         # If the argument is an instance of Resolution or Timedelta
         # Redefine rebalancingFunc
         rebalancingFunc = rebalancingParam
@@ -98,7 +96,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
 
         # Always add new insights
         insights = PortfolioConstructionModel.FilterInvalidInsightMagnitude(algorithm, insights)
-        self.insightCollection.AddRange(insights)
+        self.InsightCollection.AddRange(insights)
 
         if not self.IsRebalanceDue(insights, algorithm.UtcTime):
             return targets
@@ -110,7 +108,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             self.removedSymbols = None
 
         # Get insight that haven't expired of each symbol that is still in the universe
-        activeInsights = self.insightCollection.GetActiveInsights(algorithm.UtcTime)
+        activeInsights = self.InsightCollection.GetActiveInsights(algorithm.UtcTime)
 
         # Get the last generated active insight for each symbol
         lastActiveInsights = []
@@ -152,18 +150,15 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                     targets.append(target)
 
         # Get expired insights and create flatten targets for each symbol
-        expiredInsights = self.insightCollection.RemoveExpiredInsights(algorithm.UtcTime)
+        expiredInsights = self.InsightCollection.RemoveExpiredInsights(algorithm.UtcTime)
 
         expiredTargets = []
         for symbol, f in groupby(expiredInsights, lambda x: x.Symbol):
-            if not self.insightCollection.HasActiveInsights(symbol, algorithm.UtcTime):
+            if not self.InsightCollection.HasActiveInsights(symbol, algorithm.UtcTime):
                 expiredTargets.append(PortfolioTarget(symbol, 0))
                 continue
 
         targets.extend(expiredTargets)
-
-        nextExpiryTime = self.insightCollection.GetNextExpiryTime()
-        self.RefreshRebalance(algorithm.UtcTime, nextExpiryTime)
 
         return targets
 
@@ -177,7 +172,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         # Get removed symbol and invalidate them in the insight collection
         super().OnSecuritiesChanged(algorithm, changes)
         self.removedSymbols = [x.Symbol for x in changes.RemovedSecurities]
-        self.insightCollection.Clear(self.removedSymbols)
+        self.InsightCollection.Clear(self.removedSymbols)
 
         for symbol in self.removedSymbols:
             symbolData = self.symbolDataBySymbol.pop(symbol, None)

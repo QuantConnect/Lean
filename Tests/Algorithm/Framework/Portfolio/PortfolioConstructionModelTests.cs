@@ -188,7 +188,7 @@ def RebalanceFunc(time):
                 constructionModel = new TestPortfolioConstructionModel(time => time.AddDays(10));
             }
 
-            constructionModel.RefreshRebalanceWrapper(new DateTime(2020, 1, 1), new DateTime(2020, 1, 2));
+            constructionModel.SetNextExpiration(new DateTime(2020, 1, 2));
             PortfolioConstructionModel.RebalanceOnInsightChanges = false;
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 3), new Insight[0]));
             PortfolioConstructionModel.RebalanceOnInsightChanges = true;
@@ -231,40 +231,6 @@ def RebalanceFunc(time):
                 new DateTime(2020, 1, 2, 1, 0, 0), new Insight[0]));
         }
 
-        [Test]
-        public void RefreshRebalance()
-        {
-            var constructionModel = new TestPortfolioConstructionModel(time => time.AddDays(1));
-
-            constructionModel.RefreshRebalanceWrapper(new DateTime(2020, 1, 1));
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
-                new DateTime(2020, 1, 1, 23, 0, 0), new Insight[0]));
-
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(
-                new DateTime(2020, 1, 2, 0, 0, 1), new Insight[0]));
-
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
-                new DateTime(2020, 1, 2, 1, 0, 0), new Insight[0]));
-            constructionModel.RefreshRebalanceWrapper(new DateTime(2020, 1, 1));
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(
-                new DateTime(2020, 1, 2, 1, 0, 0), new Insight[0]));
-
-            var security = new Security(Symbols.SPY,
-                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                new Cash(Currencies.USD, 1, 1),
-                SymbolProperties.GetDefault(Currencies.USD),
-                new IdentityCurrencyConverter(Currencies.USD),
-                new RegisteredSecurityDataTypesProvider(),
-                new SecurityCache());
-
-            constructionModel.OnSecuritiesChanged(null, SecurityChanges.Added(security));
-            constructionModel.RefreshRebalanceWrapper(new DateTime(2020, 1, 3));
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 3), new Insight[0]));
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(
-                new DateTime(2020, 1, 4, 0, 0, 1), new Insight[0]));
-        }
-
         class TestPortfolioConstructionModel : PortfolioConstructionModel
         {
             public TestPortfolioConstructionModel(Func<DateTime, DateTime> func = null)
@@ -286,9 +252,10 @@ def RebalanceFunc(time):
                 return base.IsRebalanceDue(insights, now);
             }
 
-            public void RefreshRebalanceWrapper(DateTime now, DateTime? nextExpiration = null)
+            public void SetNextExpiration(DateTime nextExpiration)
             {
-                RefreshRebalance(now, nextExpiration);
+                InsightCollection.Add(
+                    new Insight(Symbols.SPY, time => nextExpiration, InsightType.Price, InsightDirection.Down));
             }
         }
     }
