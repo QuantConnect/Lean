@@ -57,6 +57,7 @@ namespace QuantConnect.Report
                 new TextReportElement("strategy name", ReportKey.StrategyName, name),
                 new TextReportElement("description", ReportKey.StrategyDescription, description),
                 new TextReportElement("version", ReportKey.StrategyVersion, version),
+                new TextReportElement("stylesheet", ReportKey.Stylesheet, File.ReadAllText("css/report.css")),
 
                 //KPI's Backtest:
                 new EstimatedCapacityReportElement("estimated capacity kpi", ReportKey.EstimatedCapacity, backtest, live),
