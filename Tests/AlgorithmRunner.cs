@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -63,6 +64,8 @@ namespace QuantConnect.Tests
 
             Composer.Instance.Reset();
             SymbolCache.Clear();
+            PortfolioConstructionModel.RebalanceOnSecurityChanges = true;
+            PortfolioConstructionModel.RebalanceOnInsightChanges = true;
 
             var ordersLogFile = string.Empty;
             var logFile = $"./regression/{algorithm}.{language.ToLower()}.log";
