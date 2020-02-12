@@ -31,10 +31,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="universes" />
     /// <meta name="tag" content="custom universes" />
-    public class DropboxUniverseSelectionAlgorithm : QCAlgorithm//, IRegressionAlgorithmDefinition
+    public class DropboxUniverseSelectionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        // Regression algorithm disabled due to file missing from dropbox
-
         // the changes from the previous universe selection
         private SecurityChanges _changes = SecurityChanges.None;
         // only used in backtest for caching the file results
@@ -52,8 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.Resolution = Resolution.Daily;
 
             // set our start and end for backtest mode
-            SetStartDate(2013, 01, 01);
-            SetEndDate(2013, 12, 31);
+            SetStartDate(2017, 07, 04);
+            SetEndDate(2018, 07, 04);
 
             // define a new custom universe that will trigger each day at midnight
             AddUniverse("my-dropbox-universe", Resolution.Daily, dateTime =>
@@ -62,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (LiveMode)
                 {
                     // fetch the file from dropbox
-                    var file = Download(@"https://www.dropbox.com/s/2az14r5xbx4w5j6/daily-stock-picker-live.csv?dl=1");
+                    var file = Download(@"https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1");
                     // if we have a file for today, break apart by commas and return symbols
                     if (file.Length > 0) return file.ToCsv();
                     // no symbol today, leave universe unchanged
@@ -80,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
                         new KeyValuePair<string, string>("Authorization", $"Basic ({Convert.ToBase64String(byteKey)})")
                     };
 
-                    var file = Download(@"https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1", headers);
+                    var file = Download(@"https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1", headers);
 
                     // split the file into lines and add to our cache
                     foreach (var line in file.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
@@ -159,25 +157,25 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "66"},
-            {"Average Win", "1.06%"},
-            {"Average Loss", "-0.50%"},
-            {"Compounding Annual Return", "18.511%"},
-            {"Drawdown", "7.100%"},
-            {"Expectancy", "0.810"},
-            {"Net Profit", "18.511%"},
-            {"Sharpe Ratio", "1.439"},
-            {"Loss Rate", "42%"},
-            {"Win Rate", "58%"},
-            {"Profit-Loss Ratio", "2.12"},
-            {"Alpha", "-0.011"},
-            {"Beta", "0.673"},
-            {"Annual Standard Deviation", "0.1"},
-            {"Annual Variance", "0.01"},
-            {"Information Ratio", "-1.065"},
-            {"Tracking Error", "0.081"},
-            {"Treynor Ratio", "0.213"},
-            {"Total Fees", "$193.75"}
+            {"Total Trades", "5035"},
+            {"Average Win", "0.08%"},
+            {"Average Loss", "-0.08%"},
+            {"Compounding Annual Return", "14.839%"},
+            {"Drawdown", "10.600%"},
+            {"Expectancy", "0.075"},
+            {"Net Profit", "14.839%"},
+            {"Sharpe Ratio", "0.991"},
+            {"Loss Rate", "46%"},
+            {"Win Rate", "54%"},
+            {"Profit-Loss Ratio", "0.98"},
+            {"Alpha", "0.13"},
+            {"Beta", "-0.08"},
+            {"Annual Standard Deviation", "0.123"},
+            {"Annual Variance", "0.015"},
+            {"Information Ratio", "0.069"},
+            {"Tracking Error", "0.173"},
+            {"Treynor Ratio", "-1.517"},
+            {"Total Fees", "$6773.59"}
         };
     }
 }

@@ -33,8 +33,8 @@ import base64
 class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2013,1,1)
-        self.SetEndDate(2013,12,31)
+        self.SetStartDate(2017, 7, 4)
+        self.SetEndDate(2018, 7, 4)
 
         self.backtestSymbolsPerDay = {}
         self.current_universe = []
@@ -46,7 +46,7 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
         # handle live mode file format
         if self.LiveMode:
             # fetch the file from dropbox
-            str = self.Download("https://www.dropbox.com/s/2az14r5xbx4w5j6/daily-stock-picker-live.csv?dl=1")
+            str = self.Download("https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1")
             # if we have a file for today, return symbols, else leave universe unchanged
             self.current_universe = str.split(',') if len(str) > 0 else self.current_universe
             return self.current_universe
@@ -59,7 +59,7 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
             # The headers must be passed to the Download method as dictionary
             headers = { 'Authorization' : f'Basic ({byteKey.decode("ASCII")})' }
 
-            str = self.Download("https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1", headers)
+            str = self.Download("https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1", headers)
             for line in str.splitlines():
                 data = line.split(',')
                 self.backtestSymbolsPerDay[data[0]] = data[1:]

@@ -30,10 +30,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="universes" />
     /// <meta name="tag" content="custom universes" />
-    public class DropboxBaseDataUniverseSelectionAlgorithm : QCAlgorithm//, IRegressionAlgorithmDefinition
+    public class DropboxBaseDataUniverseSelectionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        // Regression algorithm disabled due to dropbox file missing
-
         // the changes from the previous universe selection
         private SecurityChanges _changes = SecurityChanges.None;
 
@@ -47,8 +45,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2013, 01, 01);
-            SetEndDate(2013, 12, 31);
+            SetStartDate(2017, 07, 04);
+            SetEndDate(2018, 07, 04);
 
             AddUniverse<StockDataSource>("my-stock-data-source", stockDataSource =>
             {
@@ -104,8 +102,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         class StockDataSource : BaseData
         {
-            private const string LiveUrl = @"https://www.dropbox.com/s/2az14r5xbx4w5j6/daily-stock-picker-live.csv?dl=1";
-            private const string BacktestUrl = @"https://www.dropbox.com/s/rmiiktz0ntpff3a/daily-stock-picker-backtest.csv?dl=1";
+            private const string LiveUrl = @"https://www.dropbox.com/s/2l73mu97gcehmh7/daily-stock-picker-live.csv?dl=1";
+            private const string BacktestUrl = @"https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1";
 
             /// <summary>
             /// The symbols to be selected
@@ -186,25 +184,25 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "90"},
-            {"Average Win", "0.78%"},
-            {"Average Loss", "-0.39%"},
-            {"Compounding Annual Return", "18.547%"},
-            {"Drawdown", "4.700%"},
-            {"Expectancy", "1.068"},
-            {"Net Profit", "18.547%"},
-            {"Sharpe Ratio", "1.993"},
-            {"Loss Rate", "30%"},
-            {"Win Rate", "70%"},
-            {"Profit-Loss Ratio", "1.96"},
-            {"Alpha", "0.071"},
-            {"Beta", "0.362"},
-            {"Annual Standard Deviation", "0.086"},
-            {"Annual Variance", "0.007"},
-            {"Information Ratio", "-1.021"},
-            {"Tracking Error", "0.103"},
-            {"Treynor Ratio", "0.471"},
-            {"Total Fees", "$251.12"}
+            {"Total Trades", "6417"},
+            {"Average Win", "0.07%"},
+            {"Average Loss", "-0.07%"},
+            {"Compounding Annual Return", "13.258%"},
+            {"Drawdown", "10.700%"},
+            {"Expectancy", "0.061"},
+            {"Net Profit", "13.258%"},
+            {"Sharpe Ratio", "0.897"},
+            {"Loss Rate", "46%"},
+            {"Win Rate", "54%"},
+            {"Profit-Loss Ratio", "0.97"},
+            {"Alpha", "0.119"},
+            {"Beta", "-0.081"},
+            {"Annual Standard Deviation", "0.123"},
+            {"Annual Variance", "0.015"},
+            {"Information Ratio", "0.003"},
+            {"Tracking Error", "0.173"},
+            {"Treynor Ratio", "-1.367"},
+            {"Total Fees", "$8637.21"}
         };
     }
 }
