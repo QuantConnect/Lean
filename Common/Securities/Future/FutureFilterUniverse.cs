@@ -104,9 +104,9 @@ namespace QuantConnect.Securities
         /// Applies filter selecting futures contracts based on a range of expiration dates relative to the current day
         /// </summary>
         /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
-        /// would exclude contracts expiring in less than 10 days</param>
-        /// <param name="maxExpiry">The maxmium time until expiry to include, for example, TimeSpan.FromDays(10)
         /// would exclude contracts expiring in more than 10 days</param>
+        /// <param name="maxExpiry">The maxmium time until expiry to include, for example, TimeSpan.FromDays(10)
+        /// would exclude contracts expiring in less than 10 days</param>
         /// <returns></returns>
         public FutureFilterUniverse Expiration(TimeSpan minExpiry, TimeSpan maxExpiry)
         {
@@ -129,6 +129,19 @@ namespace QuantConnect.Securities
 
             _allSymbols = filtered.ToList();
             return this;
+        }
+
+        /// <summary>
+        /// Applies filter selecting futures contracts based on a range of expiration dates relative to the current day
+        /// </summary>
+        /// <param name="minExpiryDays">The minimum time, expressed in days, until expiry to include, for example, 10
+        /// would exclude contracts expiring in more than 10 days</param>
+        /// <param name="maxExpiryDays">The maximum time, expressed in days, until expiry to include, for example, 10
+        /// would exclude contracts expiring in less than 10 days</param>
+        /// <returns></returns>
+        public FutureFilterUniverse Expiration(int minExpiryDays, int maxExpiryDays)
+        {
+            return Expiration(TimeSpan.FromDays(minExpiryDays), TimeSpan.FromDays(maxExpiryDays));
         }
 
         /// <summary>
