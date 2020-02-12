@@ -40,7 +40,11 @@ class BasicTemplateOptionsConsolidationAlgorithm(QCAlgorithm):
 
         # Subscribe and set our filter for the options chain
         option = self.AddOption('SPY')
-        option.SetFilter(-2, 2, timedelta(0), timedelta(180))
+        # set our strike/expiry filter for this option chain
+        # SetFilter method accepts timedelta objects or integer for days.
+        # The following statements yeild the same filtering criteria
+        option.SetFilter(-2, +2, 0, 180)
+        # option.SetFilter(-2, +2, timedelta(0), timedelta(180))
         self.consolidators = dict()
     
     def OnData(self,slice):

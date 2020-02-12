@@ -48,7 +48,10 @@ namespace QuantConnect.Algorithm.CSharp
             _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180));
+            // SetFilter method accepts TimeSpan objects or integer for days.
+            // The following statements yeild the same filtering criteria
+            option.SetFilter(-2, +2, 0, 180);
+            // option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180));
 
             // Adding this to reproduce GH issue #2314
             SetWarmup(TimeSpan.FromMinutes(1));

@@ -49,7 +49,10 @@ namespace QuantConnect.Algorithm.CSharp
             // set our custom filter for this option chain
             option.SetFilter(universe => from symbol in universe
                                                           .WeeklysOnly()
-                                                          .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10))
+                                                           // Expiration method accepts TimeSpan objects or integer for days.
+                                                           // The following statements yeild the same filtering criteria
+                                                          .Expiration(0, 10)
+                                                          // .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10))
                                          where symbol.ID.OptionRight != OptionRight.Put &&
                                               universe.Underlying.Price - symbol.ID.StrikePrice < 60
                                          select symbol);

@@ -41,9 +41,12 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
 
         # Subscribe and set our expiry filter for the futures chain
         futureES = self.AddFuture(Futures.Indices.SP500EMini)
-        futureES.SetFilter(timedelta(0), timedelta(182))
-
         futureGC = self.AddFuture(Futures.Metals.Gold)
+
+        # set our expiry filter for this futures chain
+        # SetFilter method accepts timedelta objects or integer for days.
+        # The following statements yeild the same filtering criteria 
+        futureES.SetFilter(0, 182)
         futureGC.SetFilter(timedelta(0), timedelta(182))
 
         benchmark = self.AddEquity("SPY");

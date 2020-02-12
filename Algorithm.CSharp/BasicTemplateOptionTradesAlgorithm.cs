@@ -41,7 +41,10 @@ namespace QuantConnect.Algorithm.CSharp
             _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
-            option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(10));
+            // SetFilter method accepts TimeSpan objects or integer for days.
+            // The following statements yeilds the same filtering criteria
+            option.SetFilter(-2, +2, 0, 10);
+            // option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(10));
 
             // use the underlying equity as the benchmark
             SetBenchmark("GOOG");

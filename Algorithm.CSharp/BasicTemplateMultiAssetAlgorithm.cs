@@ -58,7 +58,10 @@ namespace QuantConnect.Algorithm.CSharp
             _futureSymbol = futureSP500.Symbol;
 
             // set our expiry filter for this futures chain
-            futureSP500.SetFilter(TimeSpan.FromDays(10), TimeSpan.FromDays(182));
+            // SetFilter method accepts TimeSpan objects or integer for days.
+            // The following statements yeild the same filtering criteria
+            futureSP500.SetFilter(10, 182);
+            // futureSP500.SetFilter(TimeSpan.FromDays(10), TimeSpan.FromDays(182));
 
             // setting up Dow Jones ETF Options
             var option = AddOption("DIA");
@@ -66,8 +69,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             option.PriceModel = OptionPriceModels.BinomialCoxRossRubinstein();
             // option.EnableGreekApproximation = true;
-            // set our expiry filter for this option chain
-            option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180));
+            // set our strike/expiry filter for this option chain
+            // SetFilter method accepts TimeSpan objects or integer for days.
+            // The following statements yeild the same filtering criteria
+            option.SetFilter(-2, +2, 0, 180);
+            // option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(180));
 
             // specifying zero benchmark
             SetBenchmark(date => 0m);
