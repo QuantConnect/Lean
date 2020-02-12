@@ -31,7 +31,10 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         '''Initialize a new instance of EqualWeightingPortfolioConstructionModel
         Args:
             rebalancingParam: Rebalancing parameter. If it is a timedelta or Resolution, it will be converted into a function.
-                              The function returns the next expected rebalance time for a given algorithm UTC DateTime'''
+                              If None will be ignored.
+                              The function returns the next expected rebalance time for a given algorithm UTC DateTime.
+                              The function returns null if unknown, in which case the function will be called again in the
+                              next loop. Returning current time will trigger rebalance.'''
         self.removedSymbols = []
 
         # If the argument is an instance of Resolution or Timedelta

@@ -56,12 +56,12 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (orderEvent.Status.IsFill())
+            if (orderEvent.Status == OrderStatus.Submitted)
             {
                 DateTime lastOrderFilled;
                 if (_lastOrderFilled.TryGetValue(orderEvent.Symbol, out lastOrderFilled))
                 {
-                    if (UtcTime - lastOrderFilled < TimeSpan.FromDays(30 - 1))
+                    if (UtcTime - lastOrderFilled < TimeSpan.FromDays(30))
                     {
                         throw new Exception($"{UtcTime} {orderEvent.Symbol} {UtcTime - lastOrderFilled}");
                     }
@@ -87,31 +87,31 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "84"},
-            {"Average Win", "0.14%"},
-            {"Average Loss", "-0.04%"},
-            {"Compounding Annual Return", "9.798%"},
-            {"Drawdown", "18.100%"},
-            {"Expectancy", "2.258"},
-            {"Net Profit", "20.557%"},
-            {"Sharpe Ratio", "0.575"},
-            {"Probabilistic Sharpe Ratio", "25.475%"},
-            {"Loss Rate", "22%"},
-            {"Win Rate", "78%"},
-            {"Profit-Loss Ratio", "3.16"},
-            {"Alpha", "0.088"},
+            {"Total Trades", "82"},
+            {"Average Win", "0.16%"},
+            {"Average Loss", "-0.05%"},
+            {"Compounding Annual Return", "9.913%"},
+            {"Drawdown", "18.200%"},
+            {"Expectancy", "2.470"},
+            {"Net Profit", "20.808%"},
+            {"Sharpe Ratio", "0.58"},
+            {"Probabilistic Sharpe Ratio", "25.710%"},
+            {"Loss Rate", "18%"},
+            {"Win Rate", "82%"},
+            {"Profit-Loss Ratio", "3.21"},
+            {"Alpha", "0.089"},
             {"Beta", "0.012"},
             {"Annual Standard Deviation", "0.155"},
             {"Annual Variance", "0.024"},
-            {"Information Ratio", "0.143"},
+            {"Information Ratio", "0.147"},
             {"Tracking Error", "0.201"},
-            {"Treynor Ratio", "7.403"},
-            {"Total Fees", "$84.80"},
+            {"Treynor Ratio", "7.756"},
+            {"Total Fees", "$82.80"},
             {"Fitness Score", "0.001"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "1"},
-            {"Sortino Ratio", "0.812"},
-            {"Return Over Maximum Drawdown", "0.541"},
+            {"Sortino Ratio", "0.822"},
+            {"Return Over Maximum Drawdown", "0.546"},
             {"Portfolio Turnover", "0.002"},
             {"Total Insights Generated", "2028"},
             {"Total Insights Closed", "2024"},

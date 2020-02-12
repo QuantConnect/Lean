@@ -81,13 +81,40 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize the model
         /// </summary>
-        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time</param>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
+        /// Returning current time will trigger rebalance. If null will be ignored</param>
         /// <param name="lookback">Historical return lookback period</param>
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="targetReturn">The target portfolio return</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
         public MeanVarianceOptimizationPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc = null,
+            int lookback = 1,
+            int period = 63,
+            Resolution resolution = Resolution.Daily,
+            double targetReturn = 0.02,
+            IPortfolioOptimizer optimizer = null)
+            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(time => rebalancingFunc(time)) : null,
+                lookback,
+                period,
+                resolution,
+                targetReturn,
+                optimizer)
+        {
+        }
+
+        /// <summary>
+        /// Initialize the model
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance.</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="targetReturn">The target portfolio return</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
+        public MeanVarianceOptimizationPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,

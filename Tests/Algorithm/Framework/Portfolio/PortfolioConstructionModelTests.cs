@@ -82,9 +82,7 @@ def RebalanceFunc(time):
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
                 new DateTime(2020, 1, 1, 23, 0, 0), new Insight[0]));
 
-            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(
-                new DateTime(2020, 1, 2, 0, 0, 1), new Insight[0]));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
 
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
                 new DateTime(2020, 1, 2, 1, 0, 0), new Insight[0]));
@@ -156,7 +154,7 @@ def RebalanceFunc(time):
 
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
 
-            var insights = new[] { Insight.Price(Symbols.SPY, Resolution.Daily, 1, InsightDirection.Down)};
+            var insights = new[] { Insight.Price(Symbols.SPY, Resolution.Daily, 1, InsightDirection.Down) };
 
             PortfolioConstructionModel.RebalanceOnInsightChanges = false;
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), insights));
@@ -211,6 +209,10 @@ def RebalanceFunc(time):
 from datetime import timedelta
 
 def RebalanceFunc(time):
+    if time.day == 17:
+        return time + timedelta(hours=1)
+    if time.day == 18:
+        return time
     return None"
                     ).GetAttr("RebalanceFunc");
                     constructionModel.SetRebalancingFunc(func);
@@ -218,7 +220,19 @@ def RebalanceFunc(time):
             }
             else
             {
-                constructionModel = new TestPortfolioConstructionModel(time => null);
+                constructionModel = new TestPortfolioConstructionModel(
+                    time =>
+                    {
+                        if (time.Day == 18)
+                        {
+                            return time;
+                        }
+                        if (time.Day == 17)
+                        {
+                            return time.AddHours(1);
+                        }
+                        return null;
+                    });
             }
 
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
@@ -227,8 +241,19 @@ def RebalanceFunc(time):
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
                 new DateTime(2020, 1, 2, 0, 0, 1), new Insight[0]));
+
+            // day number '17' should trigger rebalance in the next hour
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 17), new Insight[0]));
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(
-                new DateTime(2020, 1, 2, 1, 0, 0), new Insight[0]));
+                new DateTime(2020, 1, 17, 0, 59, 59), new Insight[0]));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(
+                new DateTime(2020, 1, 17, 1, 0, 0), new Insight[0]));
+
+            constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 20), new Insight[0]);
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 21), new Insight[0]));
+
+            // day number '18' should trigger rebalance immediately
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 18), new Insight[0]));
         }
 
         class TestPortfolioConstructionModel : PortfolioConstructionModel

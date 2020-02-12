@@ -31,16 +31,28 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     public class ConfidenceWeightedPortfolioConstructionModel : InsightWeightingPortfolioConstructionModel
     {
         /// <summary>
-        /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
+        /// Initialize a new instance of <see cref="ConfidenceWeightedPortfolioConstructionModel"/>
         /// </summary>
-        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance. If null will be ignored</param>
+        public ConfidenceWeightedPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc)
+            : base(rebalancingFunc)
+        {
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="ConfidenceWeightedPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
+        /// Returning current time will trigger rebalance. If null will be ignored</param>
         public ConfidenceWeightedPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc)
             : base(rebalancingFunc)
         {
         }
 
         /// <summary>
-        /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
+        /// Initialize a new instance of <see cref="ConfidenceWeightedPortfolioConstructionModel"/>
         /// </summary>
         /// <param name="timeSpan">Rebalancing frequency</param>
         public ConfidenceWeightedPortfolioConstructionModel(TimeSpan timeSpan)

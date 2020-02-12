@@ -52,7 +52,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize a new instance of <see cref="PortfolioConstructionModel"/>
         /// </summary>
-        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance. If null will be ignored</param>
         public PortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc)
         {
             _rebalancingFunc = rebalancingFunc;
@@ -62,7 +64,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize a new instance of <see cref="PortfolioConstructionModel"/>
         /// </summary>
-        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
+        /// Returning current time will trigger rebalance. If null will be ignored</param>
         public PortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc = null)
         : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(time => rebalancingFunc(time)) : null)
         {
@@ -126,7 +129,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 _rebalancingTime = _rebalancingFunc(algorithmUtc);
             }
 
-            if (_rebalancingTime != null && _rebalancingTime < algorithmUtc
+            if (_rebalancingTime != null && _rebalancingTime <= algorithmUtc
                 || RebalanceOnSecurityChanges && _securityChanges
                 || RebalanceOnInsightChanges
                     && (insights.Length != 0

@@ -95,7 +95,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize the model
         /// </summary>
-        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time</param>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
+        /// Returning current time will trigger rebalance. If null will be ignored</param>
         /// <param name="lookback">Historical return lookback period</param>
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
@@ -111,7 +112,39 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             double delta = 2.5,
             double tau = 0.05,
             IPortfolioOptimizer optimizer = null)
-            : base(time => rebalancingFunc?.Invoke(time) ?? time)
+            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(time => rebalancingFunc(time)) : null,
+                lookback,
+                period,
+                resolution,
+                riskFreeRate,
+                delta,
+                tau,
+                optimizer)
+        {
+        }
+
+        /// <summary>
+        /// Initialize the model
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance.</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="delta">The risk aversion coeffficient of the market portfolio</param>
+        /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
+        public BlackLittermanOptimizationPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc,
+            int lookback = 1,
+            int period = 63,
+            Resolution resolution = Resolution.Daily,
+            double riskFreeRate = 0.0,
+            double delta = 2.5,
+            double tau = 0.05,
+            IPortfolioOptimizer optimizer = null)
+            : base(rebalancingFunc)
         {
             _lookback = lookback;
             _period = period;

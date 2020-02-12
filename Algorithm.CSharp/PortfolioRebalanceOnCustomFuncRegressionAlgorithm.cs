@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
@@ -27,11 +26,11 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm testing portfolio construction model control over rebalancing,
-    /// when setting 'PortfolioConstructionModel.RebalanceOnSecurityChanges' to false, see GH 4075.
+    /// specifying a custom rebalance function that returns null in some cases, see GH 4075.
     /// </summary>
-    public class PortfolioRebalanceOnSecurityChangesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class PortfolioRebalanceOnCustomFuncRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Dictionary<Symbol, DateTime> _lastOrderFilled;
+        private DateTime _lastRebalanceTime;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -40,45 +39,44 @@ namespace QuantConnect.Algorithm.CSharp
         {
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2015, 1, 1);
+            SetStartDate(2015, 1, 5);
             SetEndDate(2017, 1, 1);
 
-            PortfolioConstructionModel.RebalanceOnSecurityChanges = false;
             PortfolioConstructionModel.RebalanceOnInsightChanges = false;
 
             SetUniverseSelection(new CustomUniverseSelectionModel("CustomUniverseSelectionModel",
-                time =>
-                {
-                    if (new[] { DayOfWeek.Friday, DayOfWeek.Thursday }.Contains(time.DayOfWeek))
-                    {
-                        return new List<string> { "FB", "SPY" };
-                    }
-                    return new List<string> { "AAPL", "IBM" };
-                }
+                time => new List<string> { "AAPL", "IBM", "FB", "SPY" }
             ));
             SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(
-                time => time.AddDays(30)));
+                time =>
+                {
+                    if (Portfolio.MarginRemaining > 60000
+                        && _lastRebalanceTime != time)
+                    {
+                        _lastRebalanceTime = time;
+                        return time;
+                    }
+                    if (Portfolio.MarginRemaining < 40000
+                        && _lastRebalanceTime != time)
+                    {
+                        _lastRebalanceTime = time;
+                        return time;
+                    }
+                    return null;
+                }));
             SetExecution(new ImmediateExecutionModel());
-
-            _lastOrderFilled = new Dictionary<Symbol, DateTime>();
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
+            Debug($"{orderEvent}");
             if (orderEvent.Status == OrderStatus.Submitted)
             {
-                DateTime lastOrderFilled;
-                if (_lastOrderFilled.TryGetValue(orderEvent.Symbol, out lastOrderFilled))
+                if (UtcTime - _lastRebalanceTime > TimeSpan.Zero)
                 {
-                    if (UtcTime - lastOrderFilled < TimeSpan.FromDays(30))
-                    {
-                        throw new Exception($"{UtcTime} {orderEvent.Symbol} {UtcTime - lastOrderFilled}");
-                    }
+                    throw new Exception($"{UtcTime} {orderEvent.Symbol} {UtcTime - _lastRebalanceTime}");
                 }
-                _lastOrderFilled[orderEvent.Symbol] = UtcTime;
-
-                Debug($"{orderEvent}");
             }
         }
 
@@ -97,36 +95,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "74"},
-            {"Average Win", "2.44%"},
-            {"Average Loss", "-2.29%"},
-            {"Compounding Annual Return", "-4.559%"},
-            {"Drawdown", "30.400%"},
-            {"Expectancy", "-0.081"},
-            {"Net Profit", "-8.910%"},
-            {"Sharpe Ratio", "-0.15"},
-            {"Probabilistic Sharpe Ratio", "3.646%"},
-            {"Loss Rate", "56%"},
-            {"Win Rate", "44%"},
-            {"Profit-Loss Ratio", "1.07"},
-            {"Alpha", "-0.027"},
-            {"Beta", "0.029"},
-            {"Annual Standard Deviation", "0.165"},
-            {"Annual Variance", "0.027"},
-            {"Information Ratio", "-0.41"},
-            {"Tracking Error", "0.208"},
-            {"Treynor Ratio", "-0.841"},
-            {"Total Fees", "$136.86"},
-            {"Fitness Score", "0.027"},
+            {"Total Trades", "170"},
+            {"Average Win", "0.08%"},
+            {"Average Loss", "0.00%"},
+            {"Compounding Annual Return", "11.252%"},
+            {"Drawdown", "17.700%"},
+            {"Expectancy", "35.224"},
+            {"Net Profit", "23.625%"},
+            {"Sharpe Ratio", "0.636"},
+            {"Probabilistic Sharpe Ratio", "28.623%"},
+            {"Loss Rate", "3%"},
+            {"Win Rate", "97%"},
+            {"Profit-Loss Ratio", "36.18"},
+            {"Alpha", "0.1"},
+            {"Beta", "0.01"},
+            {"Annual Standard Deviation", "0.158"},
+            {"Annual Variance", "0.025"},
+            {"Information Ratio", "0.158"},
+            {"Tracking Error", "0.203"},
+            {"Treynor Ratio", "10.469"},
+            {"Total Fees", "$170.86"},
+            {"Fitness Score", "0.001"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "1"},
-            {"Sortino Ratio", "-0.322"},
-            {"Return Over Maximum Drawdown", "-0.15"},
-            {"Portfolio Turnover", "0.06"},
-            {"Total Insights Generated", "534"},
-            {"Total Insights Closed", "534"},
-            {"Total Insights Analysis Completed", "534"},
-            {"Long Insight Count", "534"},
+            {"Sortino Ratio", "0.917"},
+            {"Return Over Maximum Drawdown", "0.635"},
+            {"Portfolio Turnover", "0.002"},
+            {"Total Insights Generated", "2020"},
+            {"Total Insights Closed", "2016"},
+            {"Total Insights Analysis Completed", "2016"},
+            {"Long Insight Count", "2020"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
             {"Estimated Monthly Alpha Value", "$0"},
