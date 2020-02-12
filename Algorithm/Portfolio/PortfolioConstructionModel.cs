@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -27,6 +28,46 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class PortfolioConstructionModel : IPortfolioConstructionModel
     {
+        private Func<DateTime, DateTime?> _rebalancingFunc;
+        private DateTime? _rebalancingTime;
+        private bool _securityChanges;
+
+        /// <summary>
+        /// True if should rebalance portfolio on security changes. True by default
+        /// </summary>
+        public static bool RebalanceOnSecurityChanges { get; set; } = true;
+
+        /// <summary>
+        /// True if should rebalance portfolio on new insights or expiration of insights. True by default
+        /// </summary>
+        public static bool RebalanceOnInsightChanges { get; set; } = true;
+
+        /// <summary>
+        /// Provides a collection for managing insights
+        /// </summary>
+        /// <remarks>Derived classes should use this collection if they want insight
+        /// expiration to trigger a rebalance</remarks>
+        protected InsightCollection InsightCollection { get; }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="PortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
+        public PortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc)
+        {
+            _rebalancingFunc = rebalancingFunc;
+            InsightCollection = new InsightCollection();
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="PortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
+        public PortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc = null)
+        : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(time => rebalancingFunc(time)) : null)
+        {
+        }
+
         /// <summary>
         /// Create portfolio targets from the specified insights
         /// </summary>
@@ -35,7 +76,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
         public virtual IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
         {
-            throw new System.NotImplementedException("Types deriving from 'PortfolioConstructionModel' must implement the 'IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm, Insight[]) method.");
+            throw new NotImplementedException("Types deriving from 'PortfolioConstructionModel' must implement the 'IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm, Insight[]) method.");
         }
 
         /// <summary>
@@ -45,6 +86,69 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public virtual void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
+            _securityChanges = changes != SecurityChanges.None;
+        }
+
+        /// <summary>
+        /// Python helper method to set the rebalancing function.
+        /// This is required due to a python net limitation being able to use the base type constructor
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
+        protected void SetRebalancingFunc(PyObject rebalancingFunc)
+        {
+            _rebalancingFunc = rebalancingFunc.ConvertToDelegate<Func<DateTime, DateTime?>>();
+        }
+
+        /// <summary>
+        /// Determines if the portfolio should be rebalanced base on the provided rebalancing func,
+        /// if any security change have been taken place or if an insight has expired or a new insight arrived
+        /// If the rebalancing function has not been provided will return true.
+        /// </summary>
+        /// <param name="insights">The insights to create portfolio targets from</param>
+        /// <param name="algorithmUtc">The current algorithm UTC time</param>
+        /// <returns>True if should rebalance</returns>
+        protected virtual bool IsRebalanceDue(Insight[] insights, DateTime algorithmUtc)
+        {
+            // if there is no rebalance func set, just return true but refresh state
+            // just in case the rebalance func is going to be set.
+            if (_rebalancingFunc == null)
+            {
+                RefreshRebalance(algorithmUtc);
+                return true;
+            }
+
+            // we always get the next expiry time
+            // we don't know if a new insight was added or removed
+            var nextInsightExpiryTime = InsightCollection.GetNextExpiryTime();
+
+            if (_rebalancingTime == null)
+            {
+                _rebalancingTime = _rebalancingFunc(algorithmUtc);
+            }
+
+            if (_rebalancingTime != null && _rebalancingTime < algorithmUtc
+                || RebalanceOnSecurityChanges && _securityChanges
+                || RebalanceOnInsightChanges
+                    && (insights.Length != 0
+                        || nextInsightExpiryTime != null && nextInsightExpiryTime < algorithmUtc))
+            {
+                RefreshRebalance(algorithmUtc);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Refresh the next rebalance time and clears the security changes flag
+        /// </summary>
+        private void RefreshRebalance(DateTime algorithmUtc)
+        {
+            if (_rebalancingFunc != null)
+            {
+                _rebalancingTime = _rebalancingFunc(algorithmUtc);
+            }
+            _securityChanges = false;
         }
 
         /// <summary>

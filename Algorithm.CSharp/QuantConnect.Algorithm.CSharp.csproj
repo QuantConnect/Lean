@@ -181,6 +181,8 @@
     <Compile Include="NoMarginCallExpectedRegressionAlgorithm.cs" />
     <Compile Include="ObjectStoreExampleAlgorithm.cs" />
     <Compile Include="OnEndOfDayAddDataRegressionAlgorithm.cs" />
+    <Compile Include="PortfolioRebalanceOnInsightChangesRegressionAlgorithm.cs" />
+    <Compile Include="PortfolioRebalanceOnSecurityChangesRegressionAlgorithm.cs" />
     <Compile Include="ResolutionSwitchingAlgorithm.cs" />
     <Compile Include="SetHoldingsFutureRegressionAlgorithm.cs" />
     <Compile Include="TimeRulesDefaultTimeZoneRegressionAlgorithm.cs" />

@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="insight">The insight to create a target for</param>
         /// <returns>True if the portfolio should create a target for the insight</returns>
-        public override bool ShouldCreateTargetForInsight(Insight insight)
+        protected override bool ShouldCreateTargetForInsight(Insight insight)
         {
             return insight.Confidence.HasValue;
         }
