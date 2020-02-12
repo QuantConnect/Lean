@@ -19,6 +19,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Python;
 
 namespace QuantConnect.Report
 {
@@ -29,6 +30,9 @@ namespace QuantConnect.Report
     {
         static void Main(string[] args)
         {
+            // Adds the current working directory to the PYTHONPATH env var.
+            PythonInitializer.SetPythonPathEnvironmentVariable();
+
             // Parse report arguments and merge with config to use in report creator:
             if (args.Length > 0)
             {
