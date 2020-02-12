@@ -255,6 +255,7 @@
     <Compile Include="Data\Custom\Fred\Wilshire.cs" />
     <Compile Include="Data\Custom\Benzinga\BenzingaNews.cs" />
     <Compile Include="Data\Custom\FxcmVolume.cs" />
+    <Compile Include="Data\Custom\NullData.cs" />
     <Compile Include="Data\Custom\SEC\ISECReport.cs" />
     <Compile Include="Data\Custom\SEC\SECReportBusinessAddress.cs" />
     <Compile Include="Data\Custom\SEC\SECReportCompanyData.cs" />
@@ -278,8 +279,11 @@
     <Compile Include="Data\Custom\Tiingo\TiingoNews.cs" />
     <Compile Include="Data\Custom\Tiingo\TiingoNewsJsonConverter.cs" />
     <Compile Include="Data\Custom\Tiingo\TiingoSymbolMapper.cs" />
-    <Compile Include="Data\Custom\TradingEconomics\TradingEconomics.cs" />
+    <Compile Include="Data\Custom\TradingEconomics\TradingEconomics.Indicators.cs" />
+    <Compile Include="Data\Custom\TradingEconomics\TradingEconomics.Event.cs" />
+    <Compile Include="Data\Custom\TradingEconomics\TradingEconomics.Calendar.cs" />
     <Compile Include="Data\Custom\TradingEconomics\TradingEconomicsEarnings.cs" />
+    <Compile Include="Data\Custom\TradingEconomics\TradingEconomicsEventFilter.cs" />
     <Compile Include="Data\Custom\TradingEconomics\TradingEconomicsIndicator.cs" />
     <Compile Include="Data\Custom\TradingEconomics\TradingEconomicsDateTimeConverter.cs" />
     <Compile Include="Data\Custom\TradingEconomics\TradingEconomicsCalendar.cs" />
@@ -341,13 +345,12 @@
     <Compile Include="Python\PythonWrapper.cs" />
     <Compile Include="RealTimeProvider.cs" />
     <Compile Include="Scheduling\ScheduledEventException.cs" />
-    <Compile Include="Securities\BuyingPower.cs" />
-    <Compile Include="Securities\BuyingPowerParameters.cs" />
     <Compile Include="Securities\BuyingPowerModel.cs" />
     <Compile Include="Securities\BuyingPowerModelExtensions.cs" />
+    <Compile Include="Securities\GetMaximumOrderQuantityForDeltaBuyingPowerParameters.cs" />
     <Compile Include="Securities\RegisteredSecurityDataTypesProvider.cs" />
     <Compile Include="Securities\ErrorCurrencyConverter.cs" />
-    <Compile Include="Securities\GetMaximumOrderQuantityForTargetValueParameters.cs" />
+    <Compile Include="Securities\GetMaximumOrderQuantityForTargetBuyingPowerParameters.cs" />
     <Compile Include="Securities\HasSufficientBuyingPowerForOrderParameters.cs" />
     <Compile Include="Securities\ICurrencyConverter.cs" />
     <Compile Include="Python\BuyingPowerModelPythonWrapper.cs" />
@@ -418,7 +421,7 @@
     <Compile Include="Python\PandasConverter.cs" />
     <Compile Include="Python\FeeModelPythonWrapper.cs" />
     <Compile Include="Securities\CashBuyingPowerModel.cs" />
-    <Compile Include="Securities\GetMaximumOrderQuantityForTargetValueResult.cs" />
+    <Compile Include="Securities\GetMaximumOrderQuantityResult.cs" />
     <Compile Include="Securities\HasSufficientBuyingPowerForOrderResult.cs" />
     <Compile Include="Securities\IBaseCurrencySymbol.cs" />
     <Compile Include="Securities\Future\EmptyFutureChainProvider.cs" />

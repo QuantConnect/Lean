@@ -27,6 +27,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories;
 using QuantConnect.Securities;
+using QuantConnect.Util;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
@@ -83,7 +84,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             Assert.AreEqual(parameters.EquityPerShareGrowth1Y, row.EarningRatios.EquityPerShareGrowth.OneYear);
             Assert.AreEqual(parameters.EquityPerShareGrowth1Y, row.EarningRatios.EquityPerShareGrowth);
             Assert.AreEqual(parameters.PeRatio, row.ValuationRatios.PERatio);
-            Assert.AreEqual(parameters.NetIncomeExtraordinary3M, row.FinancialStatements.IncomeStatement.NetIncomeExtraordinary.ThreeMonths);
+            if (!parameters.FinancialHealthGrade.IsNullOrEmpty())
+            {
+                Assert.AreEqual(parameters.FinancialHealthGrade, row.AssetClassification.FinancialHealthGrade);
+            }
             enumerator.Dispose();
         }
 
@@ -250,6 +254,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     CostOfRevenue12M = 106606000000m,
                     EquityPerShareGrowth1Y = 0.091652m,
                     PeRatio = 13.272502m,
+                    FinancialHealthGrade = "A",
                     LiveMode = liveMode
                 },
                 new FineFundamentalTestParameters("AAPL-LastDate")
@@ -266,7 +271,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     EquityPerShareGrowth1Y = 0.091652m,
                     PeRatio = 13.272502m,
                     // different than AAPL-BeforeLastDate
-                    NetIncomeExtraordinary3M = 3000000,
+                    FinancialHealthGrade = "B",
                     LiveMode = liveMode
                 },
                 new FineFundamentalTestParameters("AAPL-AfterLastDate")
@@ -283,7 +288,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                     EquityPerShareGrowth1Y = 0.091652m,
                     PeRatio = 13.272502m,
                     // different than AAPL-BeforeLastDate
-                    NetIncomeExtraordinary3M = 3000000,
+                    FinancialHealthGrade = "B",
                     LiveMode = liveMode
                 },
                 new FineFundamentalTestParameters("No-Fine")
@@ -312,7 +317,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             public decimal CostOfRevenue12M { get; set; }
             public decimal EquityPerShareGrowth1Y { get; set; }
             public decimal PeRatio { get; set; }
-            public decimal NetIncomeExtraordinary3M { get; set; }
+            public string FinancialHealthGrade { get; set; }
 
             public FineFundamentalTestParameters(string name)
             {

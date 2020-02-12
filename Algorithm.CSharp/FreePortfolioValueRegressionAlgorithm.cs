@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -86,34 +86,38 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "55.100%"},
             {"Expectancy", "-1"},
             {"Net Profit", "125.441%"},
-            {"Sharpe Ratio", "0.495"},
+            {"Sharpe Ratio", "0.449"},
+            {"Probabilistic Sharpe Ratio", "2.566%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.001"},
-            {"Beta", "0.996"},
-            {"Annual Standard Deviation", "0.199"},
-            {"Annual Variance", "0.039"},
-            {"Information Ratio", "-0.385"},
-            {"Tracking Error", "0.004"},
-            {"Treynor Ratio", "0.099"},
+            {"Alpha", "0.089"},
+            {"Beta", "-0.099"},
+            {"Annual Standard Deviation", "0.18"},
+            {"Annual Variance", "0.032"},
+            {"Information Ratio", "-0.001"},
+            {"Tracking Error", "0.267"},
+            {"Treynor Ratio", "-0.815"},
             {"Total Fees", "$41.17"},
             {"Fitness Score", "0"},
-            {"Kelly Criterion Estimate", "54.431"},
-            {"Kelly Criterion Probability Value", "0"},
+            {"Kelly Criterion Estimate", "39.01"},
+            {"Kelly Criterion Probability Value", "0.009"},
+            {"Sortino Ratio", "0.501"},
+            {"Return Over Maximum Drawdown", "0.148"},
+            {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "2604"},
             {"Total Insights Closed", "2603"},
             {"Total Insights Analysis Completed", "2603"},
             {"Long Insight Count", "2604"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$867731.1459"},
-            {"Total Accumulated Estimated Alpha Value", "$109253377.1754"},
-            {"Mean Population Estimated Insight Value", "$41972.1003"},
-            {"Mean Population Direction", "55.436%"},
-            {"Mean Population Magnitude", "55.436%"},
-            {"Rolling Averaged Population Direction", "64.4024%"},
-            {"Rolling Averaged Population Magnitude", "64.4024%"}
+            {"Estimated Monthly Alpha Value", "$895373.5325"},
+            {"Total Accumulated Estimated Alpha Value", "$112733745.6112"},
+            {"Mean Population Estimated Insight Value", "$43309.1608"},
+            {"Mean Population Direction", "43.2194%"},
+            {"Mean Population Magnitude", "43.2194%"},
+            {"Rolling Averaged Population Direction", "48.8488%"},
+            {"Rolling Averaged Population Magnitude", "48.8488%"}
         };
     }
 }

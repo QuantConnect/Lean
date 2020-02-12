@@ -72,15 +72,13 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     // check order entry conditions
                     if (PriceIsFavorable(data, unorderedQuantity))
                     {
-                        // get the maximum order size based on a percentage of current volume
-                        var maxOrderSize = OrderSizing.PercentVolume(data.Security, MaximumOrderQuantityPercentVolume);
-                        var orderSize = Math.Min(maxOrderSize, Math.Abs(unorderedQuantity));
+                        // adjust order size to respect maximum order size based on a percentage of current volume
+                        var orderSize = OrderSizing.GetOrderSizeForPercentVolume(
+                            data.Security, MaximumOrderQuantityPercentVolume, unorderedQuantity);
 
-                        // round down to even lot size
-                        orderSize -= orderSize % data.Security.SymbolProperties.LotSize;
                         if (orderSize != 0)
                         {
-                            algorithm.MarketOrder(data.Security.Symbol, Math.Sign(unorderedQuantity) * orderSize);
+                            algorithm.MarketOrder(data.Security.Symbol, orderSize);
                         }
                     }
                 }

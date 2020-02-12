@@ -23,7 +23,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Gets the reserved buying power
         /// </summary>
-        public decimal Value { get; }
+        public decimal AbsoluteUsedBuyingPower { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReservedBuyingPowerForPosition"/> class
@@ -31,7 +31,7 @@ namespace QuantConnect.Securities
         /// <param name="reservedBuyingPowerForPosition">The reserved buying power for the security's holdings</param>
         public ReservedBuyingPowerForPosition(decimal reservedBuyingPowerForPosition)
         {
-            Value = reservedBuyingPowerForPosition;
+            AbsoluteUsedBuyingPower = reservedBuyingPowerForPosition;
         }
     }
 }

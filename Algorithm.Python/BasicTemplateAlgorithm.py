@@ -38,7 +38,7 @@ class BasicTemplateAlgorithm(QCAlgorithm):
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
         # Find more symbols here: http://quantconnect.com/data
-        self.AddEquity("SPY", Resolution.Second)
+        self.AddEquity("SPY", Resolution.Minute)
         self.Debug("numpy test >>> print numpy.pi: " + str(np.pi))
 
     def OnData(self, data):

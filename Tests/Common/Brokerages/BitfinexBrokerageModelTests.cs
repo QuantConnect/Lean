@@ -19,6 +19,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -26,12 +27,13 @@ namespace QuantConnect.Tests.Common.Brokerages
     public class BitfinexBrokerageModelTests
     {
         protected Symbol Symbol => Symbol.Create("ETHUSD", SecurityType.Crypto, Market.Bitfinex);
-        protected Security Security
+        protected Crypto Security
         {
             get
             {
-                return new Security(
+                return new Crypto(
                     SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                    new Cash(Currencies.USD, 0, 1m),
                     new SubscriptionDataConfig(
                         typeof(TradeBar),
                         Symbol,
@@ -42,11 +44,9 @@ namespace QuantConnect.Tests.Common.Brokerages
                         false,
                         false
                     ),
-                    new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
                     ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null,
-                    new SecurityCache()
+                    RegisteredSecurityDataTypesProvider.Null
                 );
             }
         }
@@ -117,6 +117,59 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             var model = new BitfinexBrokerageModel();
             Assert.AreEqual(1M, model.GetLeverage(dummy));
+        }
+
+        [Test]
+        public void SetLeverage_ThrowsInvalidOperationException_Test()
+        {
+            Assert.Throws<InvalidOperationException>(() => Security.SetLeverage(2));
+        }
+
+        [Test]
+        public void SetLeverage_ThrowsInvalidOperationException_BrokerageModelSecurityInitializer_Test()
+        {
+            var crypto = GetCrypto(Symbol);
+
+            var brokerageInitializer = new BrokerageModelSecurityInitializer(
+                new BitfinexBrokerageModel(AccountType.Cash),
+                SecuritySeeder.Null);
+
+            brokerageInitializer.Initialize(crypto);
+            Assert.Throws<InvalidOperationException>(() => crypto.SetLeverage(2));
+        }
+
+        [Test]
+        public void SetLeverage_DoesNotThrowInvalidOperationException_BrokerageModelSecurityInitializer_Test()
+        {
+            var crypto = GetCrypto(Symbol);
+
+            var brokerageInitializer = new BrokerageModelSecurityInitializer(
+                new BitfinexBrokerageModel(AccountType.Margin),
+                SecuritySeeder.Null);
+
+            brokerageInitializer.Initialize(crypto);
+            Assert.DoesNotThrow(() => crypto.SetLeverage(2));
+        }
+
+        private Crypto GetCrypto(Symbol symbol)
+        {
+            return new Crypto(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash(Currencies.USD, 0, 1m),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    symbol,
+                    Resolution.Minute,
+                    TimeZones.NewYork,
+                    TimeZones.NewYork,
+                    false,
+                    false,
+                    false
+                ),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
         }
     }
 }

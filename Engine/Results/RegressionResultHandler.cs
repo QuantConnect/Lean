@@ -80,7 +80,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Runs on date changes, use this to log TPV and holdings values each day
         /// </summary>
-        public override void SamplePerformance(DateTime time, decimal value)
+        protected override void SamplePerformance(DateTime time, decimal value)
         {
             lock (_sync)
             {

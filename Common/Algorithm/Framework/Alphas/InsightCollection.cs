@@ -27,6 +27,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
     /// </summary>
     public class InsightCollection : ICollection<Insight>
     {
+        // for performance lets keep the next insight expiration time
+        private DateTime? _nextExpiryTime;
         private readonly ConcurrentDictionary<Symbol, List<Insight>> _insights = new ConcurrentDictionary<Symbol, List<Insight>>();
 
         /// <summary>Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
@@ -42,6 +44,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</exception>
         public void Add(Insight item)
         {
+            _nextExpiryTime = null;
             _insights.AddOrUpdate(item.Symbol, s => new List<Insight> {item}, (s, list) =>
             {
                 list.Add(item);
@@ -65,6 +68,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only. </exception>
         public void Clear()
         {
+            _nextExpiryTime = null;
             _insights.Clear();
         }
 
@@ -116,6 +120,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             List<Insight> symbolInsights;
             if (_insights.TryGetValue(item.Symbol, out symbolInsights))
             {
+                _nextExpiryTime = null;
+
                 if (symbolInsights.Remove(item))
                 {
                     // remove empty list from dictionary
@@ -175,6 +181,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="symbols">List of symbols that will be removed</param>
         public void Clear(Symbol[] symbols)
         {
+            _nextExpiryTime = null;
             foreach (var symbol in symbols)
             {
                 List<Insight> insights;
@@ -183,7 +190,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         }
 
         /// <summary>
-        /// Gets the next expiry time
+        /// Gets the next expiry time UTC
         /// </summary>
         public DateTime? GetNextExpiryTime()
         {
@@ -191,7 +198,14 @@ namespace QuantConnect.Algorithm.Framework.Alphas
             {
                 return null;
             }
-            return _insights.Min(x => x.Value.Min(i => i.CloseTimeUtc));
+
+            if (_nextExpiryTime != null)
+            {
+                return _nextExpiryTime;
+            }
+
+            _nextExpiryTime = _insights.Min(x => x.Value.Min(i => i.CloseTimeUtc));
+            return _nextExpiryTime;
         }
 
         /// <summary>

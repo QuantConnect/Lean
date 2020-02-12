@@ -13,25 +13,23 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Securities
-{
-    /// <summary>
-    /// Defines the result for <see cref="IBuyingPowerModel.GetBuyingPower"/>
-    /// </summary>
-    public class BuyingPower
-    {
-        /// <summary>
-        /// Gets the buying power
-        /// </summary>
-        public decimal Value { get; }
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BuyingPower"/> class
-        /// </summary>
-        /// <param name="buyingPower">The buying power</param>
-        public BuyingPower(decimal buyingPower)
+namespace QuantConnect.Tests.Common.Securities
+{
+    internal class TestDefaultMarginCallModel : DefaultMarginCallModel
+    {
+        public TestDefaultMarginCallModel(SecurityPortfolioManager portfolio, IOrderProperties defaultOrderProperties)
+            : base(portfolio, defaultOrderProperties)
         {
-            Value = buyingPower;
+        }
+
+        public new SubmitOrderRequest GenerateMarginCallOrder(Security security, decimal netLiquidationValue,
+            decimal totalUsedMargin)
+        {
+            return base.GenerateMarginCallOrder(security, netLiquidationValue, totalUsedMargin);
         }
     }
 }

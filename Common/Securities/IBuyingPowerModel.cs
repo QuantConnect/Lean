@@ -45,11 +45,21 @@ namespace QuantConnect.Securities
         HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(HasSufficientBuyingPowerForOrderParameters parameters);
 
         /// <summary>
-        /// Get the maximum market order quantity to obtain a position with a given value in account currency
+        /// Get the maximum market order quantity to obtain a position with a given buying power percentage.
+        /// Will not take into account free buying power.
         /// </summary>
-        /// <param name="parameters">An object containing the portfolio, the security and the target percentage holdings</param>
+        /// <param name="parameters">An object containing the portfolio, the security and the target signed buying power percentage</param>
         /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
-        GetMaximumOrderQuantityForTargetValueResult GetMaximumOrderQuantityForTargetValue(GetMaximumOrderQuantityForTargetValueParameters parameters);
+        GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters);
+
+        /// <summary>
+        /// Get the maximum market order quantity to obtain a delta in the buying power used by a security.
+        /// The deltas sign defines the position side to apply it to, positive long, negative short.
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the security and the delta buying power</param>
+        /// <returns>Returns the maximum allowed market order quantity and if zero, also the reason</returns>
+        /// <remarks>Used by the margin call model to reduce the position by a delta percent.</remarks>
+        GetMaximumOrderQuantityResult GetMaximumOrderQuantityForDeltaBuyingPower(GetMaximumOrderQuantityForDeltaBuyingPowerParameters parameters);
 
         /// <summary>
         /// Gets the amount of buying power reserved to maintain the specified position
@@ -57,12 +67,5 @@ namespace QuantConnect.Securities
         /// <param name="parameters">A parameters object containing the security</param>
         /// <returns>The reserved buying power in account currency</returns>
         ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionParameters parameters);
-
-        /// <summary>
-        /// Gets the buying power available for a trade
-        /// </summary>
-        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
-        /// <returns>The buying power available for the trade</returns>
-        BuyingPower GetBuyingPower(BuyingPowerParameters parameters);
     }
 }

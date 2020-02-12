@@ -13,9 +13,9 @@
  * limitations under the License.
 */
 
-using System.Linq;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -40,10 +40,8 @@ namespace QuantConnect.Algorithm.Framework.Execution
             {
                 foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
                 {
-                    var existing = algorithm.Securities[target.Symbol].Holdings.Quantity
-                        + algorithm.Transactions.GetOpenOrderTickets(target.Symbol)
-                            .Aggregate(0m, (d, ticket) => d + ticket.Quantity - ticket.QuantityFilled);
-                    var quantity = target.Quantity - existing;
+                    // calculate remaining quantity to be ordered
+                    var quantity = OrderSizing.GetUnorderedQuantity(algorithm, target);
                     if (quantity != 0)
                     {
                         algorithm.MarketOrder(target.Symbol, quantity);

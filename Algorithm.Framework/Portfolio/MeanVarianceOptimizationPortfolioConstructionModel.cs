@@ -20,6 +20,7 @@ using Accord.Math;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -42,18 +43,57 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize the model
         /// </summary>
+        /// <param name="rebalanceResolution">Rebalancing frequency</param>
         /// <param name="lookback">Historical return lookback period</param>
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="targetReturn">The target portfolio return</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public MeanVarianceOptimizationPortfolioConstructionModel(
+        public MeanVarianceOptimizationPortfolioConstructionModel(Resolution rebalanceResolution,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
             double targetReturn = 0.02,
-            IPortfolioOptimizer optimizer = null
-            )
+            IPortfolioOptimizer optimizer = null)
+            : this(rebalanceResolution.ToTimeSpan(), lookback, period, resolution, targetReturn, optimizer)
+        {
+        }
+
+        /// <summary>
+        /// Initialize the model
+        /// </summary>
+        /// <param name="timeSpan">Rebalancing frequency</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="targetReturn">The target portfolio return</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
+        public MeanVarianceOptimizationPortfolioConstructionModel(TimeSpan timeSpan,
+            int lookback = 1,
+            int period = 63,
+            Resolution resolution = Resolution.Daily,
+            double targetReturn = 0.02,
+            IPortfolioOptimizer optimizer = null)
+            : this(dt => dt.Add(timeSpan), lookback, period, resolution, targetReturn, optimizer)
+        {
+        }
+
+        /// <summary>
+        /// Initialize the model
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="targetReturn">The target portfolio return</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
+        public MeanVarianceOptimizationPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc = null,
+            int lookback = 1,
+            int period = 63,
+            Resolution resolution = Resolution.Daily,
+            double targetReturn = 0.02,
+            IPortfolioOptimizer optimizer = null)
+            : base(rebalancingFunc)
         {
             _lookback = lookback;
             _period = period;
@@ -73,23 +113,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
         public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
         {
-            var targets = new List<IPortfolioTarget>();
-
-            // remove pending
-            foreach (var symbol in _pendingRemoval)
-            {
-                targets.Add(new PortfolioTarget(symbol, 0));
-            }
-            _pendingRemoval.Clear();
-
+            // always add new insights
             insights = FilterInvalidInsightMagnitude(algorithm, insights);
-
-            var symbols = insights.Select(x => x.Symbol).Distinct();
-            if (symbols.Count() == 0 || insights.All(x => x.Magnitude == 0))
-            {
-                return targets;
-            }
-
             foreach (var insight in insights)
             {
                 ReturnsSymbolData data;
@@ -100,12 +125,32 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                         algorithm.SetRunTimeError(
                             new ArgumentNullException(
                                 insight.Symbol.Value,
-                                "MeanVarianceOptimizationPortfolioConstructionModel does not accept 'null' as Insight.Magnitude. "+
+                                "MeanVarianceOptimizationPortfolioConstructionModel does not accept 'null' as Insight.Magnitude. " +
                                 "Please checkout the selected Alpha Model specifications: " + insight.SourceModel));
                         continue;
                     }
                     data.Add(algorithm.Time, insight.Magnitude.Value.SafeDecimalCast());
                 }
+            }
+
+            if (!IsRebalanceDue(insights, algorithm.UtcTime))
+            {
+                return Enumerable.Empty<IPortfolioTarget>();
+            }
+
+            var targets = new List<IPortfolioTarget>();
+
+            // remove pending
+            foreach (var symbol in _pendingRemoval)
+            {
+                targets.Add(new PortfolioTarget(symbol, 0));
+            }
+            _pendingRemoval.Clear();
+
+            var symbols = insights.Select(x => x.Symbol).ToHashSet();
+            if (symbols.Count == 0)
+            {
+                return targets;
             }
 
             // Get symbols' returns
@@ -149,6 +194,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
+            base.OnSecuritiesChanged(algorithm, changes);
             // clean up data for removed securities
             foreach (var removed in changes.RemovedSecurities)
             {

@@ -20,8 +20,6 @@ from QuantConnect.Algorithm.Framework.Alphas import *
 from QuantConnect.Algorithm.Framework.Portfolio import *
 from itertools import groupby
 from datetime import datetime, timedelta
-from pytz import utc
-UTCMIN = datetime.min.replace(tzinfo=utc)
 
 class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that gives equal weighting to all securities.
@@ -34,18 +32,17 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         Args:
             rebalancingParam: Rebalancing parameter. If it is a timedelta or Resolution, it will be converted into a function.
                               The function returns the next expected rebalance time for a given algorithm UTC DateTime'''
-        self.insightCollection = InsightCollection()
         self.removedSymbols = []
-        self.nextExpiryTime = UTCMIN
-        self.rebalancingTime = UTCMIN
-        self.rebalancingFunc = rebalancingParam
 
-        # If the argument is an instance if Resolution or Timedelta
-        # Redefine self.rebalancingFunc
+        # If the argument is an instance of Resolution or Timedelta
+        # Redefine rebalancingFunc
+        rebalancingFunc = rebalancingParam
         if isinstance(rebalancingParam, int):
             rebalancingParam = Extensions.ToTimeSpan(rebalancingParam)
         if isinstance(rebalancingParam, timedelta):
-            self.rebalancingFunc = lambda dt: dt + rebalancingParam
+            rebalancingFunc = lambda dt: dt + rebalancingParam
+        if rebalancingFunc:
+            self.SetRebalancingFunc(rebalancingFunc)
 
     def ShouldCreateTargetForInsight(self, insight):
         '''Method that will determine if the portfolio construction model should create a
@@ -74,18 +71,15 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
             insights: The insights to create portfolio targets from
         Returns:
             An enumerable of portfolio targets to be sent to the execution model'''
-
         targets = []
 
-        if (algorithm.UtcTime <= self.nextExpiryTime and
-            algorithm.UtcTime <= self.rebalancingTime and
-            len(insights) == 0 and
-            self.removedSymbols is None):
-            return targets
-
+        # Always add new insights
         for insight in insights:
             if self.ShouldCreateTargetForInsight(insight):
-                self.insightCollection.Add(insight)
+                self.InsightCollection.Add(insight)
+
+        if not self.IsRebalanceDue(insights, algorithm.UtcTime):
+            return targets
 
         # Create flatten target for each security that was removed from the universe
         if self.removedSymbols is not None:
@@ -94,7 +88,7 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
             self.removedSymbols = None
 
         # Get insight that haven't expired of each symbol that is still in the universe
-        activeInsights = self.insightCollection.GetActiveInsights(algorithm.UtcTime)
+        activeInsights = self.InsightCollection.GetActiveInsights(algorithm.UtcTime)
 
         # Get the last generated active insight for each symbol
         lastActiveInsights = []
@@ -113,21 +107,15 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
                 errorSymbols[insight.Symbol] = insight.Symbol
 
         # Get expired insights and create flatten targets for each symbol
-        expiredInsights = self.insightCollection.RemoveExpiredInsights(algorithm.UtcTime)
+        expiredInsights = self.InsightCollection.RemoveExpiredInsights(algorithm.UtcTime)
 
         expiredTargets = []
         for symbol, f in groupby(expiredInsights, lambda x: x.Symbol):
-            if not self.insightCollection.HasActiveInsights(symbol, algorithm.UtcTime) and not symbol in errorSymbols:
+            if not self.InsightCollection.HasActiveInsights(symbol, algorithm.UtcTime) and not symbol in errorSymbols:
                 expiredTargets.append(PortfolioTarget(symbol, 0))
                 continue
 
         targets.extend(expiredTargets)
-
-        self.nextExpiryTime = self.insightCollection.GetNextExpiryTime()
-        if self.nextExpiryTime is None:
-            self.nextExpiryTime = UTCMIN
-
-        self.rebalancingTime = self.rebalancingFunc(algorithm.UtcTime)
 
         return targets
 
@@ -138,5 +126,6 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
             changes: The security additions and removals from the algorithm'''
 
         # Get removed symbol and invalidate them in the insight collection
+        super().OnSecuritiesChanged(algorithm, changes)
         self.removedSymbols = [x.Symbol for x in changes.RemovedSecurities]
-        self.insightCollection.Clear(self.removedSymbols)
+        self.InsightCollection.Clear(self.removedSymbols)

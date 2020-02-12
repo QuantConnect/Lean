@@ -470,7 +470,7 @@ namespace QuantConnect.Securities
                     }
                     var context = new ReservedBuyingPowerForPositionParameters(security);
                     var reservedBuyingPower = security.BuyingPowerModel.GetReservedBuyingPowerForPosition(context);
-                    sum += reservedBuyingPower.Value;
+                    sum += reservedBuyingPower.AbsoluteUsedBuyingPower;
                 }
                 return sum;
             }
@@ -600,31 +600,6 @@ namespace QuantConnect.Securities
             {
                 CashBook.Add(symbol, cash, conversionRate);
             }
-        }
-
-        /// <summary>
-        /// Gets the margin available for trading a specific symbol in a specific direction.
-        /// </summary>
-        /// <param name="symbol">The symbol to compute margin remaining for</param>
-        /// <param name="direction">The order/trading direction</param>
-        /// <returns>The maximum order size that is currently executable in the specified direction</returns>
-        public decimal GetMarginRemaining(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
-        {
-            var security = Securities[symbol];
-            var context = new BuyingPowerParameters(this, security, direction);
-            return security.BuyingPowerModel.GetBuyingPower(context).Value;
-        }
-
-        /// <summary>
-        /// Gets the margin available for trading a specific symbol in a specific direction.
-        /// Alias for <see cref="GetMarginRemaining"/>
-        /// </summary>
-        /// <param name="symbol">The symbol to compute margin remaining for</param>
-        /// <param name="direction">The order/trading direction</param>
-        /// <returns>The maximum order size that is currently executable in the specified direction</returns>
-        public decimal GetBuyingPower(Symbol symbol, OrderDirection direction = OrderDirection.Buy)
-        {
-            return GetMarginRemaining(symbol, direction);
         }
 
         /// <summary>
@@ -821,13 +796,8 @@ namespace QuantConnect.Securities
                     new ReservedBuyingPowerForPositionParameters(security)
                 );
 
-                var marginRemaining = security.BuyingPowerModel.GetBuyingPower(
-                    new BuyingPowerParameters(this, security, direction)
-                );
-
                 Log.Trace("Order request margin information: " +
-                    Invariant($"MarginUsed: {marginUsed.Value:F2}, ") +
-                    Invariant($"MarginRemaining: {marginRemaining.Value:F2}")
+                    Invariant($"MarginUsed: {marginUsed.AbsoluteUsedBuyingPower:F2}")
                 );
             }
         }

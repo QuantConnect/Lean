@@ -17,6 +17,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 
 namespace QuantConnect.Util
 {
@@ -27,6 +28,7 @@ namespace QuantConnect.Util
     /// <typeparam name="T">The item type</typeparam>
     public class ConcurrentSet<T> : ISet<T>
     {
+        private readonly IEnumerator<T> _emptyEnumerator = Enumerable.Empty<T>().GetEnumerator();
         private readonly OrderedDictionary _set = new OrderedDictionary();
         // for performance we will keep a enumerator list which we will refresh only if required
         private readonly List<T> _enumerator = new List<T>();
@@ -374,7 +376,8 @@ namespace QuantConnect.Util
 
                     _refreshEnumerator = false;
                 }
-                return _enumerator.GetEnumerator();
+
+                return _enumerator.Count == 0 ? _emptyEnumerator : _enumerator.GetEnumerator();
             }
         }
 

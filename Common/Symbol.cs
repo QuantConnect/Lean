@@ -28,6 +28,9 @@ namespace QuantConnect
     [JsonConverter(typeof(SymbolJsonConverter))]
     public sealed class Symbol : IEquatable<Symbol>, IComparable
     {
+        // for performance we register how we compare with empty
+        private bool? _isEmpty;
+
         /// <summary>
         /// Represents an unassigned symbol. This is intended to be used as an
         /// uninitialized, default value
@@ -427,8 +430,21 @@ namespace QuantConnect
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(Symbol other)
         {
-            if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
+
+            if (ReferenceEquals(other, null)
+                || ReferenceEquals(other, Empty))
+            {
+                // other is null or empty (equivalents)
+                // so we need to know how We compare with Empty
+                if (!_isEmpty.HasValue)
+                {
+                    // for accuracy we compare IDs not references here
+                    _isEmpty = ID.Equals(Empty.ID);
+                }
+                return _isEmpty.Value;
+            }
+
             // only SID is used for comparisons
             return ID.Equals(other.ID);
         }
@@ -441,7 +457,15 @@ namespace QuantConnect
         /// <returns>True if both symbols are equal, otherwise false</returns>
         public static bool operator ==(Symbol left, Symbol right)
         {
-            if (ReferenceEquals(left, null) || left.Equals(Empty)) return ReferenceEquals(right, null) || right.Equals(Empty);
+            if (ReferenceEquals(left, right))
+            {
+                // this is a performance shortcut
+                return true;
+            }
+            if (ReferenceEquals(left, null) || left.Equals(Empty))
+            {
+                return ReferenceEquals(right, null) || right.Equals(Empty);
+            }
             return left.Equals(right);
         }
 

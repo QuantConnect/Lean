@@ -325,6 +325,28 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        public void EqualsAgainstNullOrEmpty()
+        {
+            var validSymbol = Symbols.SPY;
+            var emptySymbol = Symbol.Empty;
+            var emptySymbolInstance = new Symbol(SecurityIdentifier.Empty, string.Empty);
+            Symbol nullSymbol = null;
+
+            Assert.IsTrue(emptySymbol.Equals(nullSymbol));
+            Assert.IsTrue(Symbol.Empty.Equals(nullSymbol));
+            Assert.IsTrue(emptySymbolInstance.Equals(nullSymbol));
+
+            Assert.IsTrue(emptySymbol.Equals(emptySymbol));
+            Assert.IsTrue(Symbol.Empty.Equals(emptySymbol));
+            Assert.IsTrue(emptySymbolInstance.Equals(emptySymbol));
+
+            Assert.IsFalse(validSymbol.Equals(nullSymbol));
+            Assert.IsFalse(validSymbol.Equals(emptySymbol));
+            Assert.IsFalse(validSymbol.Equals(emptySymbolInstance));
+            Assert.IsFalse(Symbol.Empty.Equals(validSymbol));
+        }
+
+        [Test]
         public void ComparesAgainstNullOrEmpty()
         {
             var validSymbol = Symbols.SPY;

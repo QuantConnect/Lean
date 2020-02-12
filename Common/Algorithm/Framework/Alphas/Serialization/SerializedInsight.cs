@@ -15,6 +15,7 @@
 
 using Newtonsoft.Json;
 using QuantConnect.Util;
+using System;
 
 namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
 {
@@ -25,6 +26,8 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
     /// </summary>
     public class SerializedInsight
     {
+        private double _createdTime;
+
         /// <summary>
         /// See <see cref="Insight.Id"/>
         /// </summary>
@@ -44,10 +47,25 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
         public string SourceModel { get; set; }
 
         /// <summary>
+        /// Pass-through for <see cref="CreatedTime"/>
+        /// </summary>
+        [Obsolete("Deprecated as of 2020-01-23. Please use the `CreatedTime` property instead.")]
+        [JsonProperty("generated-time")]
+        public double GeneratedTime
+        {
+            get { return _createdTime; }
+            set { _createdTime = value; }
+        }
+
+        /// <summary>
         /// See <see cref="Insight.GeneratedTimeUtc"/>
         /// </summary>
-        [JsonProperty("generated-time")]
-        public double GeneratedTime { get; set; }
+        [JsonProperty("created-time")]
+        public double CreatedTime
+        {
+            get { return _createdTime; }
+            set { _createdTime = value; }
+        }
 
         /// <summary>
         /// See <see cref="Insight.CloseTimeUtc"/>
@@ -162,7 +180,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Serialization
             Id = insight.Id.ToStringInvariant("N");
             SourceModel = insight.SourceModel;
             GroupId = insight.GroupId?.ToStringInvariant("N");
-            GeneratedTime = Time.DateTimeToUnixTimeStamp(insight.GeneratedTimeUtc);
+            CreatedTime = Time.DateTimeToUnixTimeStamp(insight.GeneratedTimeUtc);
             CloseTime = Time.DateTimeToUnixTimeStamp(insight.CloseTimeUtc);
             Symbol = insight.Symbol.ID.ToString();
             Ticker = insight.Symbol.Value;

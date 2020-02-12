@@ -41,9 +41,7 @@ namespace QuantConnect.Brokerages.Oanda
         private bool _subscriptionsPending;
 
         private bool _isConnected;
-        private Thread _connectionMonitorThread;
-        private volatile bool _connectionLost;
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
         /// <summary>
         /// This lock is used to sync 'PlaceOrder' and callback 'OnTransactionDataReceived'
         /// </summary>
@@ -54,14 +52,14 @@ namespace QuantConnect.Brokerages.Oanda
         protected readonly ConcurrentDictionary<int, OrderStatus> PendingFilledMarketOrders = new ConcurrentDictionary<int, OrderStatus>();
 
         /// <summary>
-        /// The UTC time of the last received heartbeat message
+        /// The connection handler for pricing
         /// </summary>
-        protected DateTime LastHeartbeatUtcTime;
+        protected readonly IConnectionHandler PricingConnectionHandler;
 
         /// <summary>
-        /// A lock object used to synchronize access to LastHeartbeatUtcTime
+        /// The connection handler for transactions
         /// </summary>
-        protected readonly object LockerConnectionMonitor = new object();
+        protected readonly IConnectionHandler TransactionsConnectionHandler;
 
         /// <summary>
         /// The list of ticks received
@@ -143,15 +141,104 @@ namespace QuantConnect.Brokerages.Oanda
             AccessToken = accessToken;
             AccountId = accountId;
             Agent = agent;
+
+            PricingConnectionHandler = new DefaultConnectionHandler { MaximumIdleTimeSpan = TimeSpan.FromSeconds(20) };
+            PricingConnectionHandler.ConnectionLost += OnPricingConnectionLost;
+            PricingConnectionHandler.ConnectionRestored += OnPricingConnectionRestored;
+            PricingConnectionHandler.ReconnectRequested += OnPricingReconnectRequested;
+            PricingConnectionHandler.Initialize(null);
+
+            TransactionsConnectionHandler = new DefaultConnectionHandler { MaximumIdleTimeSpan = TimeSpan.FromSeconds(20) };
+            TransactionsConnectionHandler.ConnectionLost += OnTransactionsConnectionLost;
+            TransactionsConnectionHandler.ConnectionRestored += OnTransactionsConnectionRestored;
+            TransactionsConnectionHandler.ReconnectRequested += OnTransactionsReconnectRequested;
+            TransactionsConnectionHandler.Initialize(null);
+        }
+
+        private void OnPricingConnectionLost(object sender, EventArgs e)
+        {
+            Log.Trace("OnPricingConnectionLost(): pricing connection lost.");
+
+            OnMessage(BrokerageMessageEvent.Disconnected("Pricing connection with Oanda server lost. " +
+                                                         "This could be because of internet connectivity issues. "));
+        }
+
+        private void OnPricingConnectionRestored(object sender, EventArgs e)
+        {
+            Log.Trace("OnPricingConnectionRestored(): pricing connection restored");
+
+            OnMessage(BrokerageMessageEvent.Reconnected("Pricing connection with Oanda server restored."));
+        }
+
+        private void OnPricingReconnectRequested(object sender, EventArgs e)
+        {
+            Log.Trace("OnPricingReconnectRequested(): resubscribing symbols.");
+
+            // check if we have a connection
+            GetInstrumentList();
+
+            // restore rates session
+            List<Symbol> symbolsToSubscribe;
+            lock (LockerSubscriptions)
+            {
+                symbolsToSubscribe = SubscribedSymbols.ToList();
+            }
+            SubscribeSymbols(symbolsToSubscribe);
+
+            Log.Trace("OnPricingReconnectRequested(): symbols resubscribed.");
+        }
+
+        private void OnTransactionsConnectionLost(object sender, EventArgs e)
+        {
+            Log.Trace("OnTransactionsConnectionLost(): transactions connection lost.");
+
+            OnMessage(BrokerageMessageEvent.Disconnected("Transactions connection with Oanda server lost. " +
+                                                         "This could be because of internet connectivity issues. "));
+        }
+
+        private void OnTransactionsConnectionRestored(object sender, EventArgs e)
+        {
+            Log.Trace("OnTransactionsConnectionRestored(): transactions connection restored");
+
+            OnMessage(BrokerageMessageEvent.Reconnected("Transactions connection with Oanda server restored."));
+        }
+
+        private void OnTransactionsReconnectRequested(object sender, EventArgs e)
+        {
+            Log.Trace("OnTransactionsReconnectRequested(): restarting transaction stream.");
+
+            // check if we have a connection
+            GetInstrumentList();
+
+            // restore events session
+            StopTransactionStream();
+            StartTransactionStream();
+
+            Log.Trace("OnTransactionsReconnectRequested(): transaction stream restarted.");
+        }
+
+        /// <summary>
+        /// Dispose of the brokerage instance
+        /// </summary>
+        public override void Dispose()
+        {
+            PricingConnectionHandler.ConnectionLost -= OnPricingConnectionLost;
+            PricingConnectionHandler.ConnectionRestored -= OnPricingConnectionRestored;
+            PricingConnectionHandler.ReconnectRequested -= OnPricingReconnectRequested;
+            PricingConnectionHandler.Dispose();
+
+            TransactionsConnectionHandler.ConnectionLost -= OnTransactionsConnectionLost;
+            TransactionsConnectionHandler.ConnectionRestored -= OnTransactionsConnectionRestored;
+            TransactionsConnectionHandler.ReconnectRequested -= OnTransactionsReconnectRequested;
+            TransactionsConnectionHandler.Dispose();
         }
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected
-        {
-            get { return _isConnected && !_connectionLost; }
-        }
+        public override bool IsConnected => _isConnected &&
+            !TransactionsConnectionHandler.IsConnectionLost &&
+            !PricingConnectionHandler.IsConnectionLost;
 
         /// <summary>
         /// Connects the client to the broker's remote servers
@@ -163,96 +250,7 @@ namespace QuantConnect.Brokerages.Oanda
 
             _isConnected = true;
 
-            // create new thread to manage disconnections and reconnections
-            _cancellationTokenSource = new CancellationTokenSource();
-            _connectionMonitorThread = new Thread(() =>
-            {
-                var nextReconnectionAttemptUtcTime = DateTime.UtcNow;
-                double nextReconnectionAttemptSeconds = 1;
-
-                lock (LockerConnectionMonitor)
-                {
-                    LastHeartbeatUtcTime = DateTime.UtcNow;
-                }
-
-                try
-                {
-                    while (!_cancellationTokenSource.IsCancellationRequested)
-                    {
-                        TimeSpan elapsed;
-                        lock (LockerConnectionMonitor)
-                        {
-                            elapsed = DateTime.UtcNow - LastHeartbeatUtcTime;
-                        }
-
-                        if (!_connectionLost && elapsed > TimeSpan.FromSeconds(20))
-                        {
-                            _connectionLost = true;
-                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
-
-                            OnMessage(BrokerageMessageEvent.Disconnected("Connection with Oanda server lost. " +
-                                                                         "This could be because of internet connectivity issues. "));
-                        }
-                        else if (_connectionLost)
-                        {
-                            try
-                            {
-                                if (elapsed <= TimeSpan.FromSeconds(20))
-                                {
-                                    _connectionLost = false;
-                                    nextReconnectionAttemptSeconds = 1;
-
-                                    OnMessage(BrokerageMessageEvent.Reconnected("Connection with Oanda server restored."));
-                                }
-                                else
-                                {
-                                    if (DateTime.UtcNow > nextReconnectionAttemptUtcTime)
-                                    {
-                                        try
-                                        {
-                                            // check if we have a connection
-                                            GetInstrumentList();
-
-                                            // restore events session
-                                            StopTransactionStream();
-                                            StartTransactionStream();
-
-                                            // restore rates session
-                                            List<Symbol> symbolsToSubscribe;
-                                            lock (LockerSubscriptions)
-                                            {
-                                                symbolsToSubscribe = SubscribedSymbols.ToList();
-                                            }
-                                            SubscribeSymbols(symbolsToSubscribe);
-                                        }
-                                        catch (Exception)
-                                        {
-                                            // double the interval between attempts (capped to 1 minute)
-                                            nextReconnectionAttemptSeconds = Math.Min(nextReconnectionAttemptSeconds * 2, 60);
-                                            nextReconnectionAttemptUtcTime = DateTime.UtcNow.AddSeconds(nextReconnectionAttemptSeconds);
-                                        }
-                                    }
-                                }
-                            }
-                            catch (Exception exception)
-                            {
-                                Log.Error(exception);
-                            }
-                        }
-
-                        Thread.Sleep(1000);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    Log.Error(exception);
-                }
-            }) { IsBackground = true };
-            _connectionMonitorThread.Start();
-            while (!_connectionMonitorThread.IsAlive)
-            {
-                Thread.Sleep(1);
-            }
+            TransactionsConnectionHandler.EnableMonitoring(true);
         }
 
         /// <summary>
@@ -260,15 +258,11 @@ namespace QuantConnect.Brokerages.Oanda
         /// </summary>
         public override void Disconnect()
         {
+            TransactionsConnectionHandler.EnableMonitoring(false);
+            PricingConnectionHandler.EnableMonitoring(false);
+
             StopTransactionStream();
             StopPricingStream();
-
-            // request and wait for thread to stop
-            _cancellationTokenSource.Cancel();
-            if (_connectionMonitorThread != null)
-            {
-                _connectionMonitorThread.Join();
-            }
 
             _isConnected = false;
         }
@@ -462,11 +456,15 @@ namespace QuantConnect.Brokerages.Oanda
                 .Select(symbol => SymbolMapper.GetBrokerageSymbol(symbol))
                 .ToList();
 
+            PricingConnectionHandler.EnableMonitoring(false);
+
             StopPricingStream();
 
             if (instruments.Count > 0)
             {
                 StartPricingStream(instruments);
+
+                PricingConnectionHandler.EnableMonitoring(true);
             }
         }
     }

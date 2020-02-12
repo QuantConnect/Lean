@@ -43,7 +43,6 @@ class CustomDataRegressionAlgorithm(QCAlgorithm):
 
         resolution = Resolution.Second if self.LiveMode else Resolution.Daily
         self.AddData(Bitcoin, "BTC", resolution)
-        self.SetWarmup(1)
 
     def OnData(self, data):
         if not self.Portfolio.Invested:

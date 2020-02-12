@@ -214,7 +214,7 @@ namespace QuantConnect.Data.Custom.SmartInsider
         /// <summary>
         /// Parses a line of TSV (tab delimited) from Smart Insider data
         /// </summary>
-        /// <param name="csvLine">Tab delimited line of data</param>
+        /// <param name="tsvLine">Tab delimited line of data</param>
         public SmartInsiderEvent(string tsvLine)
         {
             var tsv = tsvLine.Split('\t');
@@ -251,15 +251,35 @@ namespace QuantConnect.Data.Custom.SmartInsider
         }
 
         /// <summary>
-        /// Converts data to CSV
+        /// Converts data to TSV
         /// </summary>
-        /// <returns>String of CSV</returns>
+        /// <returns>String of TSV</returns>
         public abstract string ToLine();
 
         /// <summary>
-        /// Derived class instances populate their fields from raw CSV
+        /// Derived class instances populate their fields from raw TSV
         /// </summary>
-        /// <param name="line">Line of raw CSV (raw with fields 46, 36, 14, 7 removed in descending order)</param>
+        /// <param name="line">Line of raw TSV (raw with fields 46, 36, 14, 7 removed in descending order)</param>
         public abstract void FromRawData(string line);
+
+        /// <summary>
+        /// Attempts to normalize and parse SmartInsider dates that include a time component.
+        /// </summary>
+        /// <param name="date">Date string to parse</param>
+        /// <returns>DateTime object</returns>
+        /// <exception cref="ArgumentException">Date string was unable to be parsed</exception>
+        public static DateTime ParseDate(string date)
+        {
+            date = date.Replace(" ", "");
+
+            DateTime time;
+            if (!Parse.TryParseExact(date, "yyyy-MM-ddHH:mm:ss", DateTimeStyles.None, out time) &&
+                !Parse.TryParseExact(date, "dd/MM/yyyyHH:mm:ss", DateTimeStyles.None, out time))
+            {
+                throw new ArgumentException($"SmartInsider data contains unparsable DateTime: {date}");
+            }
+
+            return time;
+        }
     }
 }

@@ -79,7 +79,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             var time = new DateTime(2018, 8, 2, 16, 0, 0);
             var historyProvider = new Mock<IHistoryProvider>();
             historyProvider.Setup(m => m.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
-                .Returns(historicalPrices.Select((x,i) =>
+                .Returns(historicalPrices.Select((x, i) =>
                     new Slice(time.AddMinutes(i),
                         new List<BaseData>
                         {
@@ -184,6 +184,40 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             // Remaining quantity for partially filled order = 100 - 70 = 30
             // Quantity submitted = 80 - 30 = 50
             Assert.AreEqual(50, actualOrdersSubmitted.Sum(x => x.Quantity));
+        }
+
+        [TestCase(Language.CSharp, -1)]
+        [TestCase(Language.Python, -1)]
+        [TestCase(Language.CSharp, 1)]
+        [TestCase(Language.Python, 1)]
+        public void LotSizeIsRespected(Language language, int side)
+        {
+            var actualOrdersSubmitted = new List<SubmitOrderRequest>();
+
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetPandasConverter();
+
+            var security = algorithm.AddForex(Symbols.EURUSD.Value);
+            algorithm.Portfolio.SetCash("EUR", 1, 1);
+            security.SetMarketPrice(new TradeBar { Value = 250 });
+
+            algorithm.SetFinishedWarmingUp();
+
+            var orderProcessor = new Mock<IOrderProcessor>();
+            orderProcessor.Setup(m => m.Process(It.IsAny<SubmitOrderRequest>()))
+                .Returns((SubmitOrderRequest request) => new OrderTicket(algorithm.Transactions, request))
+                .Callback((SubmitOrderRequest request) => actualOrdersSubmitted.Add(request));
+            algorithm.Transactions.SetOrderProcessor(orderProcessor.Object);
+
+            var model = GetExecutionModel(language);
+            algorithm.SetExecution(model);
+
+            model.Execute(algorithm,
+                new IPortfolioTarget[] { new PortfolioTarget(Symbols.EURUSD, security.SymbolProperties.LotSize * 1.5m * side) });
+
+            Assert.AreEqual(1, actualOrdersSubmitted.Count);
+            Assert.AreEqual(security.SymbolProperties.LotSize * side, actualOrdersSubmitted.Single().Quantity);
         }
 
         private static IExecutionModel GetExecutionModel(Language language)

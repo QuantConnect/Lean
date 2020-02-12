@@ -17,8 +17,6 @@ using System;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Future;
-using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Brokerages
 {
@@ -30,7 +28,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Initializes a new instance of the <see cref="AlphaStreamsBrokerageModel"/> class
         /// </summary>
-        /// <param name="accountType"></param>
+        /// <param name="accountType">The type of account to be modelled, defaults to <see cref="AccountType.Margin"/> does not accept <see cref="AccountType.Cash"/>.</param>
         public AlphaStreamsBrokerageModel(AccountType accountType = AccountType.Margin)
             : base(accountType)
         {
@@ -39,63 +37,34 @@ namespace QuantConnect.Brokerages
                 throw new ArgumentException("The Alpha Streams brokerage does not currently support Cash trading.", nameof(accountType));
             }
         }
-        
+
         /// <summary>
         /// Gets a new fee model that represents this brokerage's fee structure
         /// </summary>
-        /// <param name="security"></param>
-        /// <returns></returns>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
         public override IFeeModel GetFeeModel(Security security) => new AlphaStreamsFeeModel();
+
         /// <summary>
-        /// Gets a new slippage model that represents this brokerage's slippage costs
+        /// Gets a new slippage model that represents this brokerage's fill slippage behavior
         /// </summary>
-        /// <param name="security"></param>
-        /// <returns></returns>
+        /// <param name="security">The security to get a slippage model for</param>
+        /// <returns>The new slippage model for this brokerage</returns>
         public override ISlippageModel GetSlippageModel(Security security) => new AlphaStreamsSlippageModel();
-        /// <summary>
+
         /// Force all security types to be restricted to 1.1x leverage
         ///     - Current restriction to 1.1x is for the AS competition
         ///     - Will be update in the future
         /// </summary>
         /// <param name="security"></param>
-        /// <returns></returns>
+        /// <returns>The leverage for the specified security</returns>
         public override decimal GetLeverage(Security security) => 1.1m;
-        /// <summary>
-        /// Gets a new settlement model
-        /// </summary>
-        /// <param name="security"></param>
-        /// <returns></returns>
-        public override ISettlementModel GetSettlementModel(Security security) => new ImmediateSettlementModel();
-        /// <summary>
-        /// Get buying power model for the specific security type
-        /// </summary>
-        /// <param name="security"></param>
-        /// <returns></returns>
-        public override IBuyingPowerModel GetBuyingPowerModel(Security security)
-        {
-            var leverage = GetLeverage(security);
-            IBuyingPowerModel model;
 
-            switch (security.Type)
-            {
-                case SecurityType.Crypto:
-                    model = new CashBuyingPowerModel();
-                    break;
-                case SecurityType.Forex:
-                case SecurityType.Cfd:
-                    model = new SecurityMarginModel(leverage, RequiredFreeBuyingPowerPercent);
-                    break;
-                case SecurityType.Option:
-                    model = new OptionMarginModel(RequiredFreeBuyingPowerPercent);
-                    break;
-                case SecurityType.Future:
-                    model = new FutureMarginModel(RequiredFreeBuyingPowerPercent);
-                    break;
-                default:
-                    model = new SecurityMarginModel(leverage, RequiredFreeBuyingPowerPercent);
-                    break;
-            }
-            return model;
-        }
+        /// <summary>
+        /// Gets a new settlement model for the security
+        /// </summary>
+        /// <param name="security">The security to get a settlement model for</param>
+        /// <returns>The settlement model for this brokerage</returns>
+        public override ISettlementModel GetSettlementModel(Security security) => new ImmediateSettlementModel();
     }
 }

@@ -33,7 +33,7 @@ class OptionExerciseAssignRegressionAlgorithm(QCAlgorithm):
 
         self.SetCash(100000)
         self.SetStartDate(2015,12,24)
-        self.SetEndDate(2015,12,24)
+        self.SetEndDate(2015,12,28)
 
         option = self.AddOption("GOOG")
 

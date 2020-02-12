@@ -1,11 +1,11 @@
 ﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,17 +47,17 @@ namespace QuantConnect.Tests.Common.Packets
                     { "Drawdown", "30.400%"},
                     { "Expectancy", "0"},
                     { "Net Profit", "38.142%"},
-                    { "Sharpe Ratio", "0.689"},
+                    { "Sharpe Ratio", "0.625"},
                     { "Loss Rate", "0%"},
                     { "Win Rate", "0%"},
                     { "Profit-Loss Ratio", "0"},
-                    { "Alpha", "0.026"},
-                    { "Beta", "0.942"},
-                    { "Annual Standard Deviation", "0.3"},
-                    { "Annual Variance", "0.09"},
-                    { "Information Ratio", "0.347"},
-                    { "Tracking Error", "0.042"},
-                    { "Treynor Ratio", "0.219"},
+                    { "Alpha", "0.192"},
+                    { "Beta", "-0.136"},
+                    { "Annual Standard Deviation", "0.272"},
+                    { "Annual Variance", "0.074"},
+                    { "Information Ratio", "0.015"},
+                    { "Tracking Error", "0.422"},
+                    { "Treynor Ratio", "-1.247"},
                     { "Total Fees", "$6.62"} },
                 Language.CSharp,
                 AlgorithmStatus.Completed);
@@ -83,17 +83,17 @@ namespace QuantConnect.Tests.Common.Packets
                     { "Drawdown", "0.300%"},
                     { "Expectancy", "0"},
                     { "Net Profit", "-0.285%"},
-                    { "Sharpe Ratio", "-9.165"},
+                    { "Sharpe Ratio", "-11.225"},
                     { "Loss Rate", "0%"},
                     { "Win Rate", "0%"},
                     { "Profit-Loss Ratio", "0"},
-                    { "Alpha", "-0.221"},
-                    { "Beta", "-0.314"},
-                    { "Annual Standard Deviation", "0.026"},
+                    { "Alpha", "-0.719"},
+                    { "Beta", "0.569"},
+                    { "Annual Standard Deviation", "0.032"},
                     { "Annual Variance", "0.001"},
-                    { "Information Ratio", "-3.063"},
-                    { "Tracking Error", "0.098"},
-                    { "Treynor Ratio", "0.764"},
+                    { "Information Ratio", "-40.816"},
+                    { "Tracking Error", "0.024"},
+                    { "Treynor Ratio", "-0.632"},
                     { "Total Fees", "$3.00"} },
                 Language.CSharp,
                 AlgorithmStatus.Completed);
@@ -179,13 +179,13 @@ namespace QuantConnect.Tests.Common.Packets
                     {"Loss Rate", "0%"},
                     {"Win Rate", "0%"},
                     {"Profit-Loss Ratio", "0"},
-                    {"Alpha", "0.012"},
-                    {"Beta", "0.992"},
+                    {"Alpha", "1.132"},
+                    {"Beta", "-0.128"},
                     {"Annual Standard Deviation", "0.16"},
                     {"Annual Variance", "0.026"},
-                    {"Information Ratio", "2.734"},
-                    {"Tracking Error", "0.002"},
-                    {"Treynor Ratio", "0.974"},
+                    {"Information Ratio", "-1.471"},
+                    {"Tracking Error", "0.221"},
+                    {"Treynor Ratio", "-7.522"},
                     {"Total Fees", "$32.59"} // 10x times more than original BasicTemplateDailyAlgorithm
                 },
                 Language.CSharp,
@@ -211,17 +211,17 @@ namespace QuantConnect.Tests.Common.Packets
                     {"Drawdown", "1.100%"},
                     {"Expectancy", "0"},
                     {"Net Profit", "3.463%"},
-                    {"Sharpe Ratio", "5.713"},
+                    {"Sharpe Ratio", "6.033"},
                     {"Loss Rate", "0%"},
                     {"Win Rate", "0%"},
                     {"Profit-Loss Ratio", "0"},
-                    {"Alpha", "0.011"},
-                    {"Beta", "0.992"},
-                    {"Annual Standard Deviation", "0.152"},
-                    {"Annual Variance", "0.023"},
-                    {"Information Ratio", "2.606"},
-                    {"Tracking Error", "0.002"},
-                    {"Treynor Ratio", "0.876"},
+                    {"Alpha", "1.132"},
+                    {"Beta", "-0.128"},
+                    {"Annual Standard Deviation", "0.16"},
+                    {"Annual Variance", "0.026"},
+                    {"Information Ratio", "-1.471"},
+                    {"Tracking Error", "0.221"},
+                    {"Treynor Ratio", "-7.522"},
                     {"Total Fees", "$32.59"} // 10x times more than original BasicTemplateDailyAlgorithm
                 },
                 Language.CSharp,

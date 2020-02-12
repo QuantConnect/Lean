@@ -29,7 +29,6 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class OptionChainUniverse : Universe
     {
-        private BaseData _underlying;
         private readonly UniverseSettings _universeSettings;
         private readonly bool _liveMode;
         // as an array to make it easy to prepend to selected symbols
@@ -105,14 +104,6 @@ namespace QuantConnect.Data.UniverseSelection
                 throw new ArgumentException($"Expected data of type '{typeof(OptionChainUniverseDataCollection).Name}'");
             }
 
-            _underlying = optionsUniverseDataCollection.Underlying ?? _underlying;
-            optionsUniverseDataCollection.Underlying = _underlying;
-
-            if (_underlying == null || data.Data.Count == 0)
-            {
-                return Unchanged;
-            }
-
             // date change detection needs to be done in exchange time zone
             if (_cacheDate == data.Time.ConvertFromUtc(Option.Exchange.TimeZone).Date)
             {
@@ -120,7 +111,7 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             var availableContracts = optionsUniverseDataCollection.Data.Select(x => x.Symbol);
-            var results = Option.ContractFilter.Filter(new OptionFilterUniverse(availableContracts, _underlying));
+            var results = Option.ContractFilter.Filter(new OptionFilterUniverse(availableContracts, optionsUniverseDataCollection.Underlying));
 
             // if results are not dynamic, we cache them and won't call filtering till the end of the day
             if (!results.IsDynamic)

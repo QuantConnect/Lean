@@ -15,6 +15,7 @@
 
 using NUnit.Framework;
 using QuantConnect.Data.Custom.SmartInsider;
+using System;
 
 namespace QuantConnect.Tests.Common.Data.Custom
 {
@@ -34,6 +35,25 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.IsTrue(transaction.ExecutionHolding.HasValue);
             Assert.AreEqual(intention.ExecutionHolding, SmartInsiderExecutionHolding.SatisfyStockVesting);
             Assert.AreEqual(transaction.ExecutionHolding, SmartInsiderExecutionHolding.SatisfyStockVesting);
+        }
+
+        [TestCase("2019-01-01  23:59:59")]
+        [TestCase("01/01/2019  23:59:59")]
+        public void ParsesOldAndNewTransactionDateTimeValues(string date)
+        {
+            var expected = new DateTime(2019, 1, 1, 23, 59, 59);
+            var actual = SmartInsiderEvent.ParseDate(date);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void ParseDateThrowsOnInvalidDateTimeValue()
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                SmartInsiderEvent.ParseDate("05/21/2019 00:00:00");
+            });
         }
     }
 }

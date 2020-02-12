@@ -39,10 +39,22 @@ namespace QuantConnect.Securities
             public const string BlackSeaWheatFinanciallySettledPlatts = "BWF";
 
             /// <summary>
-            /// Wheat Futures
+            /// Chicago SRW Wheat Futures
             /// </summary>
             /// <returns>The symbol</returns>
-            public const string Wheat = "ZW";
+            public const string SRWWheat = "ZW";
+
+            /// <summary>
+            /// Default wheat contract is SRWWheat
+            /// </summary>
+            /// <returns>The SRW Wheat symbol</returns>
+            public const string Wheat = SRWWheat;
+
+            /// <summary>
+            /// KC HRW Wheat Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string HRWWheat = "KE";
 
             /// <summary>
             /// Corn Futures
@@ -636,6 +648,18 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string NaturalGas = "NG";
+
+            /// <summary>
+            /// Brent Crude Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string BrentCrude = "B";
+
+            /// <summary>
+            /// Low Sulfur Gasoil
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string LowSulfurGasoil = "G";
         }
 
         /// <summary>
@@ -756,6 +780,17 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string USDDenominatedIbovespa = "IBV";
+        }
+
+        /// <summary>
+        /// Forestry group
+        /// </summary>
+        public static class Forestry
+        {
+            /// <summary>
+            /// Random Length Lumber Futures
+            /// </summary>
+            public const string RandomLengthLumber = "LBS";
         }
 
         /// <summary>

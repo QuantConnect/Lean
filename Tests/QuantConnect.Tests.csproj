@@ -285,8 +285,10 @@
     <Compile Include="Algorithm\Framework\NotifiedSecurityChangesTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\DuplicateKeyPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\BlackLittermanOptimizationPortfolioConstructionModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\AccumulativeInsightPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\ConfidenceWeightedPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\InsightWeightingPortfolioConstructionModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\PortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetCollectionTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\EqualWeightingPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetTests.cs" />
@@ -296,6 +298,7 @@
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />
     <Compile Include="Brokerages\DowngradeErrorCodeToWarningBrokerageMessageHandlerTests.cs" />
     <Compile Include="Brokerages\Paper\PaperBrokerageTests.cs" />
+    <Compile Include="AlgorithmRunnerResults.cs" />
     <Compile Include="Common\Benchmarks\SecurityBenchmarkTests.cs" />
     <Compile Include="Common\Brokerages\AlpacaBrokerageModelTests.cs" />
     <Compile Include="Common\Brokerages\BitfinexBrokerageModelTests.cs" />
@@ -307,7 +310,11 @@
     <Compile Include="Brokerages\Alpaca\AlpacaBrokerageTests.cs" />
     <Compile Include="Common\Data\Auxiliary\FactorFileTests.cs" />
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
+    <Compile Include="Common\Data\Custom\TradingEconomicsTests.cs" />
     <Compile Include="Common\Data\Fundamental\FineFundamentalTests.cs" />
+    <Compile Include="Common\Orders\OrderSizingTests.cs" />
+    <Compile Include="Common\Securities\TestDefaultMarginCallModel.cs" />
+    <Compile Include="Common\Statistics\StatisticsBuilderTests.cs" />
     <Compile Include="Common\Storage\LocalObjectStoreTests.cs" />
     <Compile Include="Common\Data\BaseDataTests.cs" />
     <Compile Include="Common\Data\CalendarConsolidatorsTests.cs" />
@@ -391,6 +398,7 @@
     <Compile Include="Engine\DataFeeds\SubscriptionTests.cs" />
     <Compile Include="Engine\HistoricalData\SubscriptionDataReaderHistoryProviderTests.cs" />
     <Compile Include="Engine\RealTime\BacktestingRealTimeHandlerTests.cs" />
+    <Compile Include="Engine\Results\BacktestingResultHandlerTests.cs" />
     <Compile Include="Indicators\PythonIndicatorNoinheritanceTestsLegacy.cs" />
     <Compile Include="Indicators\PythonIndicatorNoinheritanceTests.cs" />
     <Compile Include="Indicators\PythonIndicatorTests.cs" />
@@ -552,7 +560,6 @@
     <Compile Include="Engine\DataFeeds\Enumerators\FrontierAwareEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\LiveEquityDataSynchronizingEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\LiveFillForwardEnumeratorTests.cs" />
-    <Compile Include="Engine\DataFeeds\Enumerators\OptionChainUniverseDataCollectionAggregatorEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\QuoteBarFillForwardEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\RateLimitEnumeratorTests.cs" />
     <Compile Include="Engine\DataFeeds\Enumerators\RefreshEnumeratorTests.cs" />
@@ -642,7 +649,6 @@
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />
-    <Compile Include="ToolBox\TradingEconomicsCalendarTests.cs" />
     <Compile Include="ToolBox\PsychSignalDataTests.cs" />
     <Compile Include="ToolBox\CoinApiSymbolMapperTests.cs" />
     <Compile Include="ToolBox\ForexVolume\FxcmVolumeDownloaderTest.cs" />

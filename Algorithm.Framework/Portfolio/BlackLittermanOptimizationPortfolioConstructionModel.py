@@ -34,7 +34,6 @@ import numpy as np
 from numpy import dot, transpose
 from numpy.linalg import inv
 from pytz import utc
-UTCMIN = datetime.min.replace(tzinfo=utc)
 
 ### <summary>
 ### Provides an implementation of Black-Litterman portfolio optimization. The model adjusts equilibrium market
@@ -47,6 +46,7 @@ UTCMIN = datetime.min.replace(tzinfo=utc)
 ### </summary>
 class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstructionModel):
     def __init__(self,
+                 rebalancingParam = Resolution.Daily,
                  lookback = 1,
                  period = 63,
                  resolution = Resolution.Daily,
@@ -73,10 +73,15 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         self.removedSymbols = []
         self.symbolDataBySymbol = {}
 
-        self.insightCollection = InsightCollection()
-        self.nextExpiryTime = UTCMIN
-        self.rebalancingTime = UTCMIN
-        self.rebalancingPeriod = Extensions.ToTimeSpan(resolution)
+        # If the argument is an instance of Resolution or Timedelta
+        # Redefine rebalancingFunc
+        rebalancingFunc = rebalancingParam
+        if isinstance(rebalancingParam, int):
+            rebalancingParam = Extensions.ToTimeSpan(rebalancingParam)
+        if isinstance(rebalancingParam, timedelta):
+            rebalancingFunc = lambda dt: dt + rebalancingParam
+        if rebalancingFunc:
+            self.SetRebalancingFunc(rebalancingFunc)
 
     def CreateTargets(self, algorithm, insights):
         """
@@ -89,15 +94,12 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         """
         targets = []
 
-        if (algorithm.UtcTime <= self.nextExpiryTime and
-            algorithm.UtcTime <= self.rebalancingTime and
-            len(insights) == 0 and
-            self.removedSymbols is None):
-            return targets
-
+        # Always add new insights
         insights = PortfolioConstructionModel.FilterInvalidInsightMagnitude(algorithm, insights)
+        self.InsightCollection.AddRange(insights)
 
-        self.insightCollection.AddRange(insights)
+        if not self.IsRebalanceDue(insights, algorithm.UtcTime):
+            return targets
 
         # Create flatten target for each security that was removed from the universe
         if self.removedSymbols is not None:
@@ -106,7 +108,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             self.removedSymbols = None
 
         # Get insight that haven't expired of each symbol that is still in the universe
-        activeInsights = self.insightCollection.GetActiveInsights(algorithm.UtcTime)
+        activeInsights = self.InsightCollection.GetActiveInsights(algorithm.UtcTime)
 
         # Get the last generated active insight for each symbol
         lastActiveInsights = []
@@ -148,21 +150,15 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                     targets.append(target)
 
         # Get expired insights and create flatten targets for each symbol
-        expiredInsights = self.insightCollection.RemoveExpiredInsights(algorithm.UtcTime)
+        expiredInsights = self.InsightCollection.RemoveExpiredInsights(algorithm.UtcTime)
 
         expiredTargets = []
         for symbol, f in groupby(expiredInsights, lambda x: x.Symbol):
-            if not self.insightCollection.HasActiveInsights(symbol, algorithm.UtcTime):
+            if not self.InsightCollection.HasActiveInsights(symbol, algorithm.UtcTime):
                 expiredTargets.append(PortfolioTarget(symbol, 0))
                 continue
 
         targets.extend(expiredTargets)
-
-        self.nextExpiryTime = self.insightCollection.GetNextExpiryTime()
-        if self.nextExpiryTime is None:
-            self.nextExpiryTime = UTCMIN
-
-        self.rebalancingTime = algorithm.UtcTime + self.rebalancingPeriod
 
         return targets
 
@@ -174,8 +170,9 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             changes: The security additions and removals from the algorithm'''
 
         # Get removed symbol and invalidate them in the insight collection
+        super().OnSecuritiesChanged(algorithm, changes)
         self.removedSymbols = [x.Symbol for x in changes.RemovedSecurities]
-        self.insightCollection.Clear(self.removedSymbols)
+        self.InsightCollection.Clear(self.removedSymbols)
 
         for symbol in self.removedSymbols:
             symbolData = self.symbolDataBySymbol.pop(symbol, None)

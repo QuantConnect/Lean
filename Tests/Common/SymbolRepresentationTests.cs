@@ -16,6 +16,7 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common
 {
@@ -113,13 +114,61 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(result, null);
         }
 
-        [Test]
-        public void GenerateFutureTickerExpiringInPreviousMonth()
+        [TestCase(Futures.Energies.ArgusLLSvsWTIArgusTradeMonth, 2017, 1, 29, "AE529G7", false)] // Previous month
+        [TestCase(Futures.Energies.ArgusPropaneSaudiAramco, 2017, 1, 29, "A9N29G7", false)] // Previous month
+        [TestCase(Futures.Energies.BrentCrude, 2017, 1, 29, "B29H7", false)] // Second prior month
+        [TestCase(Futures.Energies.BrentLastDayFinancial, 2017, 1, 29, "BZ29H7", false)] // Second prior month
+        [TestCase(Futures.Energies.CrudeOilWTI, 2017, 11, 20, "CL20Z17", true)] // Prior month
+        [TestCase(Futures.Energies.Gasoline, 2017, 11, 20, "RB20Z17", true)] // Prior month
+        [TestCase(Futures.Energies.HeatingOil, 2017, 11, 20, "HO20Z17", true)] // Prior month
+        [TestCase(Futures.Energies.MarsArgusVsWTITradeMonth, 2017, 11, 20, "AYV20Z17", true)] // Prior month
+        [TestCase(Futures.Energies.NaturalGas, 2017, 11, 20, "NG20Z17", true)] // Prior month
+        [TestCase(Futures.Energies.NaturalGasHenryHubLastDayFinancial, 2017, 11, 20, "HH20Z17", true)] // Prior month
+        [TestCase(Futures.Energies.NaturalGasHenryHubPenultimateFinancial, 2017, 11, 20, "HP20Z17", true)] // Prior month
+        [TestCase(Futures.Energies.WTIHoustonArgusVsWTITradeMonth, 2017, 11, 20, "HTT20Z17", true)] // Prior month
+        [TestCase(Futures.Energies.WTIHoustonCrudeOil, 2017, 11, 20, "HCL20Z17", true)] // Prior month
+        [TestCase(Futures.Softs.Sugar11, 2017, 11, 20, "SB20Z17", true)] // Prior month
+        [TestCase(Futures.Softs.Sugar11CME, 2017, 11, 20, "YO20Z17", true)] // Prior month
+        public void GenerateFutureTickerExpiringInPreviousMonth(string underlying, int year, int month, int day, string ticker, bool doubleDigitsYear)
         {
             // CL Dec17 expires in Nov17
-            var result = SymbolRepresentation.GenerateFutureTicker("CL", new DateTime(2017, 11, 20));
+            var result = SymbolRepresentation.GenerateFutureTicker(underlying, new DateTime(year, month, day), doubleDigitsYear);
 
-            Assert.AreEqual("CL20Z17", result);
+            Assert.AreEqual(ticker, result);
+        }
+
+        [TestCase(Futures.Energies.ArgusLLSvsWTIArgusTradeMonth, 2016, 12, 29, "AE529F7", false)] // Previous month
+        [TestCase(Futures.Energies.ArgusPropaneSaudiAramco, 2016, 12, 29, "A9N29F7", false)] // Previous month
+        [TestCase(Futures.Energies.BrentCrude, 2016, 11, 29, "B29F7", false)] // Second prior month
+        [TestCase(Futures.Energies.BrentCrude, 2016, 12, 29, "B29G7", false)] // Second prior month
+        [TestCase(Futures.Energies.BrentLastDayFinancial, 2016, 11, 29, "BZ29F7", false)] // Second prior month
+        [TestCase(Futures.Energies.BrentLastDayFinancial, 2016, 12, 29, "BZ29G7", false)] // Second prior month
+        [TestCase(Futures.Energies.CrudeOilWTI, 2016, 12, 20, "CL20F17", true)] // Prior month
+        [TestCase(Futures.Energies.Gasoline, 2016, 12, 20, "RB20F17", true)] // Prior month
+        [TestCase(Futures.Energies.HeatingOil, 2016, 12, 20, "HO20F17", true)] // Prior month
+        [TestCase(Futures.Energies.MarsArgusVsWTITradeMonth, 2016, 12, 20, "AYV20F17", true)] // Prior month
+        [TestCase(Futures.Energies.NaturalGas, 2016, 12, 20, "NG20F17", true)] // Prior month
+        [TestCase(Futures.Energies.NaturalGasHenryHubLastDayFinancial, 2016, 12, 20, "HH20F17", true)] // Prior month
+        [TestCase(Futures.Energies.NaturalGasHenryHubPenultimateFinancial, 2016, 12, 20, "HP20F17", true)] // Prior month
+        [TestCase(Futures.Energies.WTIHoustonArgusVsWTITradeMonth, 2016, 12, 20, "HTT20F17", true)] // Prior month
+        [TestCase(Futures.Energies.WTIHoustonCrudeOil, 2016, 12, 20, "HCL20F17", true)] // Prior month
+        [TestCase(Futures.Softs.Sugar11, 2016, 12, 20, "SB20F17", true)] // Prior month
+        [TestCase(Futures.Softs.Sugar11CME, 2016, 12, 20, "YO20F17", true)] // Prior month
+        public void GenerateFutureTickerExpiringInPreviousMonthOverYearBoundary(string underlying, int year, int month, int day, string ticker, bool doubleDigitsYear)
+        {
+            // CL Dec17 expires in Nov17
+            var result = SymbolRepresentation.GenerateFutureTicker(underlying, new DateTime(year, month, day), doubleDigitsYear);
+
+            Assert.AreEqual(ticker, result);
+        }
+
+        [TestCase("ABC", 2017, 12, 20, "ABC20Z17", true)] // Generic contract (i.e. expires current month
+        public void GenerateFutureTickerExpiringInCurrentMonth(string underlying, int year, int month, int day, string ticker, bool doubleDigitsYear)
+        {
+            // CL Dec17 expires in Nov17
+            var result = SymbolRepresentation.GenerateFutureTicker(underlying, new DateTime(year, month, day), doubleDigitsYear);
+
+            Assert.AreEqual(ticker, result);
         }
     }
 }
