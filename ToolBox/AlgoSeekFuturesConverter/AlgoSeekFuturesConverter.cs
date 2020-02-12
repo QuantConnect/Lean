@@ -39,6 +39,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         private readonly string _destination;
         private readonly List<Resolution> _resolutions;
         private readonly DateTime _referenceDate;
+        private readonly HashSet<string> _symbolFilter;
 
         /// <summary>
         /// Create a new instance of the AlgoSeekFutures Converter. Parse a single input directory into an output.
@@ -48,13 +49,15 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <param name="remote">Remote directory of the .bz algoseek files</param>
         /// <param name="source">Source directory of the .csv algoseek files</param>
         /// <param name="destination">Destination directory of the processed future files</param>
-        public AlgoSeekFuturesConverter(List<Resolution> resolutions, DateTime referenceDate, string remote, string source, string destination)
+        /// <param name="symbolFilter">Collection of underlying ticker to process.</param>
+        public AlgoSeekFuturesConverter(List<Resolution> resolutions, DateTime referenceDate, string remote, string source, string destination, HashSet<string> symbolFilter = null)
         {
             _source = new DirectoryInfo(source);
             _remote = new DirectoryInfo(remote);
             _referenceDate = referenceDate;
             _destination = destination;
             _resolutions = resolutions;
+            _symbolFilter = symbolFilter;
         }
 
         /// <summary>
@@ -133,7 +136,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
                     // setting up local processors
                     var processors = new Processors();
 
-                    var reader = new AlgoSeekFuturesReader(csvFile, symbolMultipliers);
+                    var reader = new AlgoSeekFuturesReader(csvFile, symbolMultipliers, _symbolFilter);
                     if (start == DateTime.MinValue)
                     {
                         start = DateTime.Now;

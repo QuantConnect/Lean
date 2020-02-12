@@ -103,7 +103,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         public Tick Current
         {
             get; private set;
-
         }
 
         /// <summary>
@@ -112,10 +111,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <returns>
         /// The current element in the collection.
         /// </returns>
-        object IEnumerator.Current
-        {
-            get { return Current; }
-        }
+        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Reset the enumerator for the AlgoSeekFuturesReader
@@ -167,11 +163,6 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
                 ticker = ticker.Trim(new char[] { '"' });
 
-                if (_symbolFilter != null && !_symbolFilter.Contains(ticker))
-                {
-                    return null;
-                }
-
                 if (string.IsNullOrEmpty(ticker))
                 {
                     return null;
@@ -179,7 +170,8 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
 
                 var parsed = SymbolRepresentation.ParseFutureTicker(ticker);
 
-                if (parsed == null || !_symbolMultipliers.ContainsKey(parsed.Underlying))
+                if (parsed == null || !_symbolMultipliers.ContainsKey(parsed.Underlying) ||
+                    _symbolFilter != null && !_symbolFilter.Contains(parsed.Underlying, StringComparer.InvariantCultureIgnoreCase))
                 {
                     return null;
                 }
