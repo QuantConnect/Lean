@@ -972,6 +972,22 @@ namespace QuantConnect.Securities.Future
                     return secondBusinessDayBeforeThirdWednesday.Add(new TimeSpan(19, 0, 0));
                 })
             },
+            // Ultra U.S. Treasury Bond (UB): https://www.cmegroup.com/trading/interest-rates/us-treasury/ultra-t-bond_contract_specifications.html
+            {Futures.Financials.UltraUSTreasuryBond, (time =>
+                {
+                    // Seventh business day preceding the last business day of the delivery month. Trading in expiring contracts closes at 12:01 p.m. on the last trading day.
+                    var sevenBusinessDaysBeforeLastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 8);
+
+                    return sevenBusinessDaysBeforeLastBusinessDay.Add(new TimeSpan(12, 1, 0));
+                })
+            },
+            // Ultra 10-Year U.S. Treasury Note (TN): https://www.cmegroup.com/trading/interest-rates/us-treasury/ultra-10-year-us-treasury-note_contract_specifications.html
+            {Futures.Financials.UltraTenYearUSTreasuryNote, (time =>
+                {
+                     // Trading terminates on the 7th business day before the last business day of the contract month.
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 8);
+                })
+            },
             // Energies group
             // Propane Non LDH Mont Belvieu (1S): https://www.cmegroup.com/trading/energy/petrochemicals/propane-non-ldh-mt-belvieu-opis-balmo-swap_contract_specifications.html
             {Futures.Energies.PropaneNonLDHMontBelvieu, (time =>
