@@ -78,22 +78,11 @@ class StandardDeviationExecutionModel(ExecutionModel):
 
                 # check order entry conditions
                 if data.STD.IsReady and self.PriceIsFavorable(data, unorderedQuantity):
-                    # get the maximum order size based on total order value
-                    maxOrderSize = OrderSizing.Value(data.Security, self.MaximumOrderValue)
-                    orderSize = np.min([maxOrderSize, np.abs(unorderedQuantity)])
+                    # Adjust order size to respect the maximum total order value
+                    orderSize = OrderSizing.GetOrderSizeForMaximumValue(data.Security, self.MaximumOrderValue, unorderedQuantity)
 
-                    remainder = orderSize % data.Security.SymbolProperties.LotSize
-                    missingForLotSize = data.Security.SymbolProperties.LotSize - remainder
-                    # if the amount we are missing for +1 lot size is 1M part of a lot size
-                    # we suppose its due to floating point error and round up
-                    # Note: this is required to avoid a diff with C# equivalent
-                    if missingForLotSize < (data.Security.SymbolProperties.LotSize / 1000000):
-                        remainder -= data.Security.SymbolProperties.LotSize
-
-                    # round down to even lot size
-                    orderSize -= remainder
                     if orderSize != 0:
-                        algorithm.MarketOrder(symbol, np.sign(unorderedQuantity) * orderSize)
+                        algorithm.MarketOrder(symbol, orderSize)
 
             self.targetsCollection.ClearFulfilled(algorithm)
 

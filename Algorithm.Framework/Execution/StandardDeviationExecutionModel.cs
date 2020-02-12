@@ -93,15 +93,12 @@ namespace QuantConnect.Algorithm.Framework.Execution
                     // check order entry conditions
                     if (data.STD.IsReady && PriceIsFavorable(data, unorderedQuantity))
                     {
-                        // get the maximum order size based on total order value
-                        var maxOrderSize = OrderSizing.Value(data.Security, MaximumOrderValue);
-                        var orderSize = Math.Min(maxOrderSize, Math.Abs(unorderedQuantity));
+                        // Adjust order size to respect the maximum total order value
+                        var orderSize = OrderSizing.GetOrderSizeForMaximumValue(data.Security, MaximumOrderValue, unorderedQuantity);
 
-                        // round down to even lot size
-                        orderSize -= orderSize % data.Security.SymbolProperties.LotSize;
                         if (orderSize != 0)
                         {
-                            algorithm.MarketOrder(symbol, Math.Sign(unorderedQuantity) * orderSize);
+                            algorithm.MarketOrder(symbol, orderSize);
                         }
                     }
                 }

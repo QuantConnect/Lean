@@ -27,32 +27,42 @@ namespace QuantConnect.Orders
     public static class OrderSizing
     {
         /// <summary>
-        /// Gets the maximum order size as a percentage of the current bar's volume.
+        /// Adjust the provided order size to respect maximum order size based on a percentage of current volume.
         /// </summary>
         /// <param name="security">The security object</param>
         /// <param name="maximumPercentCurrentVolume">The maximum percentage of the current bar's volume</param>
-        /// <returns>The fractional quantity of shares that equal the specified percentage of the current bar's volume</returns>
-        public static decimal PercentVolume(Security security, decimal maximumPercentCurrentVolume)
+        /// <param name="desiredOrderSize">The desired order size to adjust</param>
+        /// <returns>The signed adjusted order size</returns>
+        public static decimal GetOrderSizeForPercentVolume(Security security, decimal maximumPercentCurrentVolume, decimal desiredOrderSize)
         {
-            return maximumPercentCurrentVolume * security.Volume;
+            var maxOrderSize = maximumPercentCurrentVolume * security.Volume;
+            var orderSize = Math.Min(maxOrderSize, Math.Abs(desiredOrderSize));
+
+            return Math.Sign(desiredOrderSize) * AdjustByLotSize(security, orderSize);
         }
 
         /// <summary>
-        /// Gets the maximum order size using a maximum order value in units of the account currency
+        /// Adjust the provided order size to respect the maximum total order value
         /// </summary>
         /// <param name="security">The security object</param>
         /// <param name="maximumOrderValueInAccountCurrency">The maximum order value in units of the account currency</param>
-        /// <returns>The quantity of fractional of shares that yield the specified maximum order value</returns>
-        public static decimal Value(Security security, decimal maximumOrderValueInAccountCurrency)
+        /// <param name="desiredOrderSize">The desired order size to adjust</param>
+        /// <returns>The signed adjusted order size</returns>
+        public static decimal GetOrderSizeForMaximumValue(Security security, decimal maximumOrderValueInAccountCurrency, decimal desiredOrderSize)
         {
-            var priceInAccountCurrency = security.Price * security.QuoteCurrency.ConversionRate;
+            var priceInAccountCurrency = security.Price
+                                         * security.QuoteCurrency.ConversionRate
+                                         * security.SymbolProperties.ContractMultiplier;
 
             if (priceInAccountCurrency == 0m)
             {
                 return 0m;
             }
 
-            return maximumOrderValueInAccountCurrency / priceInAccountCurrency;
+            var maxOrderSize =  maximumOrderValueInAccountCurrency / priceInAccountCurrency;
+            var orderSize = Math.Min(maxOrderSize, Math.Abs(desiredOrderSize));
+
+            return Math.Sign(desiredOrderSize) * AdjustByLotSize(security, orderSize);
         }
 
         /// <summary>
@@ -60,7 +70,7 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="algorithm">The algorithm instance</param>
         /// <param name="target">The portfolio target</param>
-        /// <returns>The remaining quantity to be ordered</returns>
+        /// <returns>The signed remaining quantity to be ordered</returns>
         public static decimal GetUnorderedQuantity(IAlgorithm algorithm, IPortfolioTarget target)
         {
             var security = algorithm.Securities[target.Symbol];
@@ -69,13 +79,33 @@ namespace QuantConnect.Orders
                 .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
             var quantity = target.Quantity - holdings - openOrderQuantity;
 
-            // check if we're below the lot size threshold
-            if (Math.Abs(quantity) < security.SymbolProperties.LotSize)
-            {
-                return 0m;
-            }
+            return AdjustByLotSize(security, quantity);
+        }
 
-            return quantity;
+        /// <summary>
+        /// Adjusts the provided order quantity to respect the securities lot size.
+        /// If the quantity is missing 1M part of the lot size it will be rounded up
+        /// since we suppose it's due to floating point error, this is required to avoid diff
+        /// between Py and C#
+        /// </summary>
+        /// <param name="security">The security instance</param>
+        /// <param name="quantity">The desired quantity to adjust, can be signed</param>
+        /// <returns>The signed adjusted quantity</returns>
+        public static decimal AdjustByLotSize(Security security, decimal quantity)
+        {
+            var absQuantity = Math.Abs(quantity);
+            // if the amount we are missing for +1 lot size is 1M part of a lot size
+            // we suppose its due to floating point error and round up
+            // Note: this is required to avoid a diff between Py and C# equivalent
+            var remainder = absQuantity % security.SymbolProperties.LotSize;
+            var missingForLotSize = security.SymbolProperties.LotSize - remainder;
+            if (missingForLotSize < (security.SymbolProperties.LotSize / 1000000))
+            {
+                remainder -= security.SymbolProperties.LotSize;
+            }
+            absQuantity -= remainder;
+
+            return absQuantity * Math.Sign(quantity);
         }
     }
 }
