@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             var futureSP500 = AddFuture(RootSP500);
             // set our expiry filter for this future chain
             // SetFilter method accepts TimeSpan objects or integer for days.
-            // The following statements yeild the same filtering criteria
+            // The following statements yield the same filtering criteria
             futureSP500.SetFilter(0, 182);
             // futureSP500.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
 

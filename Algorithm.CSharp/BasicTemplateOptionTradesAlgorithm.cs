@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // set our strike/expiry filter for this option chain
             // SetFilter method accepts TimeSpan objects or integer for days.
-            // The following statements yeilds the same filtering criteria
+            // The following statements yields the same filtering criteria
             option.SetFilter(-2, +2, 0, 10);
             // option.SetFilter(-2, +2, TimeSpan.Zero, TimeSpan.FromDays(10));
 

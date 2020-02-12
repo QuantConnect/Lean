@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return filter
                     .Strikes(+1, +1)
                     // Expiration method accepts TimeSpan objects or integer for days.
-                    // The following statements yeild the same filtering criteria
+                    // The following statements yield the same filtering criteria
                     .Expiration(0, 7)
                     //.Expiration(TimeSpan.Zero, TimeSpan.FromDays(7))
                     .WeeklysOnly()
