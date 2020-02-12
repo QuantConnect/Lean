@@ -20,6 +20,7 @@ namespace QuantConnect.Report
     /// </summary>
     internal static class ReportKey
     {
+        public const string Stylesheet = @"{{$REPORT-STYLESHEET}}";
         public const string StrategyName = @"{{$TEXT-STRATEGY-NAME}}";
         public const string StrategyDescription = @"{{$TEXT-STRATEGY-DESCRIPTION}}";
         public const string StrategyVersion = @"{{$TEXT-STRATEGY-VERSION}}";
