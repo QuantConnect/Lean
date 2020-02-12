@@ -30,23 +30,25 @@ from datetime import timedelta
 ### <meta name="tag" content="options" />
 ### <meta name="tag" content="filter selection" />
 class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
+    UnderlyingTicker = "GOOG"
 
     def Initialize(self):
         self.SetStartDate(2015, 12, 16)
         self.SetEndDate(2015, 12, 24)
         self.SetCash(100000)
 
-        option = self.AddOption("GOOG")
+        equity = self.AddEquity(self.UnderlyingTicker);
+        option = self.AddOption(self.UnderlyingTicker)
         self.option_symbol = option.Symbol
 
         # set our strike/expiry filter for this option chain
         # SetFilter method accepts timedelta objects or integer for days.
-        # The following statements yeild the same filtering criteria
+        # The following statements yield the same filtering criteria
         option.SetFilter(-10, +10, 0, 10)
         # option.SetFilter(-10, 10, timedelta(0), timedelta(10))
 
         # use the underlying equity as the benchmark
-        self.SetBenchmark("GOOG")
+        self.SetBenchmark(equity.Symbol)
 
     def OnData(self,slice):
         if self.Portfolio.Invested: return

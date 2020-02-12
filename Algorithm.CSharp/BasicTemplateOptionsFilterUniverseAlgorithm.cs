@@ -34,8 +34,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateOptionsFilterUniverseAlgorithm : QCAlgorithm
     {
         private const string UnderlyingTicker = "GOOG";
-        public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
-        public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
+        public Symbol OptionSymbol;
 
         public override void Initialize()
         {
@@ -50,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             option.SetFilter(universe => from symbol in universe
                                                           .WeeklysOnly()
                                                            // Expiration method accepts TimeSpan objects or integer for days.
-                                                           // The following statements yeild the same filtering criteria
+                                                           // The following statements yield the same filtering criteria
                                                           .Expiration(0, 10)
                                                           // .Expiration(TimeSpan.Zero, TimeSpan.FromDays(10))
                                          where symbol.ID.OptionRight != OptionRight.Put &&
