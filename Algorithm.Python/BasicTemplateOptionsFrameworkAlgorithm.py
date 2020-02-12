@@ -67,7 +67,10 @@ class EarliestExpiringWeeklyAtTheMoneyPutOptionUniverseSelectionModel(OptionUniv
     def Filter(self, filter):
         '''Defines the option chain universe filter'''
         return (filter.Strikes(+1, +1)
-                      .Expiration(timedelta(0), timedelta(7))
+                      # Expiration method accepts timedelta objects or integer for days.
+                      # The following statements yield the same filtering criteria
+                      .Expiration(0, 7)
+                      # .Expiration(timedelta(0), timedelta(7))
                       .WeeklysOnly()
                       .PutsOnly()
                       .OnlyApplyFilterAtMarketOpen())

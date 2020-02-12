@@ -49,7 +49,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             // set our strike/expiry filter for this option chain
             option.SetFilter(u => u.Strikes(-2, +2)
-                                   .Expiration(TimeSpan.Zero, TimeSpan.FromDays(180)));
+                                   // Expiration method accepts TimeSpan objects or integer for days.
+                                   // The following statements yeild the same filtering criteria
+                                   .Expiration(0, 180));
+                                   // .Expiration(TimeSpan.Zero, TimeSpan.FromDays(180)));
 
             // use the underlying equity as the benchmark
             SetBenchmark(equity.Symbol);

@@ -78,6 +78,7 @@
     <None Include="CustomDataAddDataRegressionAlgorithm.py" />
     <None Include="TrainingExampleAlgorithm.py" />
     <Content Include="BasicTemplateConstituentUniverseAlgorithm.py" />
+    <Content Include="BasicTemplateOptionsConsolidationAlgorithm.py" />
     <Content Include="Benchmarks\SECReportBenchmarkAlgorithm.py" />
     <Content Include="Benchmarks\SmartInsiderEventBenchmarkAlgorithm.py" />
     <Content Include="CustomDataAddDataOnSecuritiesChangedRegressionAlgorithm.py" />
@@ -88,6 +89,7 @@
     <None Include="PsychSignalSentimentRegressionAlgorithm.py" />
     <Content Include="CustomDataUsingMapFileRegressionAlgorithm.py" />
     <Content Include="LiquidETFUniverseFrameworkAlgorithm.py" />
+    <Content Include="LiveFeaturesAlgorithm.py" />
     <Content Include="SetHoldingsMultipleTargetsRegressionAlgorithm.py" />
     <Content Include="TradingEconomicsCalendarIndicatorAlgorithm.py" />
     <Content Include="OnEndOfDayRegressionAlgorithm.py" />

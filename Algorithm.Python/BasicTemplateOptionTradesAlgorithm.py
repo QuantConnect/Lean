@@ -38,8 +38,11 @@ class BasicTemplateOptionTradesAlgorithm(QCAlgorithm):
 
         option = self.AddOption("GOOG")
 
-        # set our strike/expiry filter for this option chain
-        option.SetFilter(-2, +2, timedelta(0), timedelta(30))
+        # add the initial contract filter 
+        # SetFilter method accepts timedelta objects or integer for days.
+        # The following statements yeild the same filtering criteria
+        option.SetFilter(-2, +2, 0, 30)
+        # option.SetFilter(-2, +2, timedelta(0), timedelta(30))
 
         # use the underlying equity as the benchmark
         self.SetBenchmark("GOOG")

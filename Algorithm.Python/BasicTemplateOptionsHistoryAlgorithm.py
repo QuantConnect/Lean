@@ -41,7 +41,10 @@ class BasicTemplateOptionsHistoryAlgorithm(QCAlgorithm):
 
         option = self.AddOption("GOOG")
         # add the initial contract filter 
-        option.SetFilter(-2,2, timedelta(0), timedelta(180))
+        # SetFilter method accepts timedelta objects or integer for days.
+        # The following statements yeild the same filtering criteria
+        option.SetFilter(-2, +2, 0, 180)
+        # option.SetFilter(-2,2, timedelta(0), timedelta(180))
 
         # set the pricing model for Greeks and volatility
         # find more pricing models https://www.quantconnect.com/lean/documentation/topic27704.html

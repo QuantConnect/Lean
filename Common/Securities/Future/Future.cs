@@ -174,12 +174,25 @@ namespace QuantConnect.Securities.Future
         /// using the specified expiration range values
         /// </summary>
         /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
-        /// would exclude contracts expiring in less than 10 days</param>
-        /// <param name="maxExpiry">The maximum time until expiry to include, for example, TimeSpan.FromDays(10)
         /// would exclude contracts expiring in more than 10 days</param>
+        /// <param name="maxExpiry">The maximum time until expiry to include, for example, TimeSpan.FromDays(10)
+        /// would exclude contracts expiring in less than 10 days</param>
         public void SetFilter(TimeSpan minExpiry, TimeSpan maxExpiry)
         {
             SetFilter(universe => universe.Expiration(minExpiry, maxExpiry));
+        }
+
+        /// <summary>
+        /// Sets the <see cref="ContractFilter"/> to a new instance of the filter
+        /// using the specified expiration range values
+        /// </summary>
+        /// <param name="minExpiryDays">The minimum time, expressed in days, until expiry to include, for example, 10
+        /// would exclude contracts expiring in more than 10 days</param>
+        /// <param name="maxExpiryDays">The maximum time, expressed in days, until expiry to include, for example, 10
+        /// would exclude contracts expiring in less than 10 days</param>
+        public void SetFilter(int minExpiryDays, int maxExpiryDays)
+        {
+            SetFilter(universe => universe.Expiration(minExpiryDays, maxExpiryDays));
         }
 
         /// <summary>

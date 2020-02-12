@@ -40,7 +40,10 @@ class BasicTemplateOptionsFilterUniverseAlgorithm(QCAlgorithm):
         self.option_symbol = option.Symbol
 
         # set our strike/expiry filter for this option chain
-        option.SetFilter(-10, 10, timedelta(0), timedelta(10))
+        # SetFilter method accepts timedelta objects or integer for days.
+        # The following statements yeild the same filtering criteria
+        option.SetFilter(-10, +10, 0, 10)
+        # option.SetFilter(-10, 10, timedelta(0), timedelta(10))
 
         # use the underlying equity as the benchmark
         self.SetBenchmark("GOOG")

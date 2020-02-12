@@ -57,8 +57,10 @@ namespace QuantConnect.Algorithm.CSharp
             var futureGold = AddFuture(RootGold);
 
             // set our expiry filter for this futures chain
+            // SetFilter method accepts TimeSpan objects or integer for days.
+            // The following statements yeild the same filtering criteria 
             futureSP500.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
-            futureGold.SetFilter(TimeSpan.Zero, TimeSpan.FromDays(182));
+            futureGold.SetFilter(0, 182);
 
             var benchmark = AddEquity("SPY");
             SetBenchmark(benchmark.Symbol);
