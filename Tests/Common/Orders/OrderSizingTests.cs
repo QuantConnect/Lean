@@ -52,11 +52,11 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(5, result);
         }
 
-        [TestCase(100000, 100)]
-        [TestCase(1000000, 100)]
-        [TestCase(1000000, 1)]
-        [TestCase(1000000, -1)]
-        public void GetOrderSizeForMaximumValue(decimal maximumOrderValue, decimal target)
+        [TestCase(100000, 100, 0)]
+        [TestCase(1000000, 100, 4)]
+        [TestCase(1000000, 1, 1)]
+        [TestCase(1000000, -1, -1)]
+        public void GetOrderSizeForMaximumValue(decimal maximumOrderValue, decimal target, decimal expected)
         {
             var algo = new AlgorithmStub();
             var security = algo.AddFutureContract(Symbols.Future_CLF19_Jan2019);
@@ -64,10 +64,11 @@ namespace QuantConnect.Tests.Common.Orders
 
             var result = OrderSizing.GetOrderSizeForMaximumValue(security, maximumOrderValue, target);
 
-            var expected = maximumOrderValue / (250 * 1000);
-            expected -= expected % security.SymbolProperties.LotSize;
+            var expectedCalculated = maximumOrderValue / (security.Price * security.SymbolProperties.ContractMultiplier);
+            expectedCalculated -= expectedCalculated % security.SymbolProperties.LotSize;
 
-            Assert.AreEqual(Math.Min(expected, Math.Abs(target)) * Math.Sign(target), result);
+            Assert.AreEqual(Math.Min(expectedCalculated, Math.Abs(target)) * Math.Sign(target), result);
+            Assert.AreEqual(expected, result);
         }
 
         [TestCase(2, 1, -1)]
