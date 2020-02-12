@@ -18,6 +18,7 @@ using System.Globalization;
 using Newtonsoft.Json;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,11 +31,20 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="web hooks" />
     /// <meta name="tag" content="email alerts" />
     /// <meta name="tag" content="runtime statistics" />
+    ///
+
     public class RabbitMQLive : QCAlgorithm
     {
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data.
         /// </summary>
+        /// 
+        Symbol _ibm = "IBM";
+        Symbol _eurusd;
+        OrderTicket _limitTicket;
+        OrderTicket _stopMarketTicket;
+        OrderTicket _stopLimitTicket;
+
         public override void Initialize()
         {
             SetStartDate(2013, 10, 7);
@@ -49,6 +59,17 @@ namespace QuantConnect.Algorithm.CSharp
 
             //Custom/Bitcoin Live Data: 24/7
             AddData<Bitcoin>("BTC", Resolution.Second, TimeZones.Utc);
+        }
+
+        public override void OnData(Slice slice)
+        {
+            if (_limitTicket == null)
+            {
+                MarketOrder(_ibm, 100, true, tag: "market order");
+                _limitTicket = LimitOrder(_ibm, 100, Securities["IBM"].Close * 0.9m, tag: "limit order");
+                _stopMarketTicket = StopMarketOrder(_ibm, -100, Securities["IBM"].Close * 0.95m, tag: "stop market");
+                _stopLimitTicket = StopLimitOrder(_ibm, 100, Securities["IBM"].Close * 0.90m, Securities["IBM"].Close * 0.80m, tag: "stop limit");
+            }
         }
 
         /// <summary>
