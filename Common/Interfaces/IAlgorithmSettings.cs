@@ -24,6 +24,16 @@ namespace QuantConnect.Interfaces
     public interface IAlgorithmSettings
     {
         /// <summary>
+        /// True if should rebalance portfolio on security changes. True by default
+        /// </summary>
+        bool? RebalancePortfolioOnSecurityChanges { get; set; }
+
+        /// <summary>
+        /// True if should rebalance portfolio on new insights or expiration of insights. True by default
+        /// </summary>
+        bool? RebalancePortfolioOnInsightChanges { get; set; }
+
+        /// <summary>
         /// The absolute maximum valid total portfolio value target percentage
         /// </summary>
         /// <remarks>This setting is currently being used to filter out undesired target percent values,

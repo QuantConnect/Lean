@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2015, 1, 1);
             SetEndDate(2017, 1, 1);
 
-            PortfolioConstructionModel.RebalanceOnInsightChanges = false;
+            Settings.RebalancePortfolioOnInsightChanges = false;
 
             SetUniverseSelection(new CustomUniverseSelectionModel("CustomUniverseSelectionModel",
                 time => new List<string> { "FB", "SPY", "AAPL", "IBM" }));

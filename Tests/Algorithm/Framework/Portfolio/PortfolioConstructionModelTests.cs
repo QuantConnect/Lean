@@ -31,9 +31,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [Test]
         public void NoRebalanceFunction()
         {
-            PortfolioConstructionModel.RebalanceOnSecurityChanges = false;
-
-            var constructionModel = new TestPortfolioConstructionModel();
+            var constructionModel = new TestPortfolioConstructionModel
+            {
+                RebalanceOnSecurityChanges = false
+            };
 
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2019, 1, 1), new Insight[0]));
@@ -51,7 +52,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             constructionModel.OnSecuritiesChanged(null, SecurityChanges.None);
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
 
-            PortfolioConstructionModel.RebalanceOnSecurityChanges = true;
+            constructionModel.RebalanceOnSecurityChanges = true;
         }
 
         [TestCase(Language.Python)]
@@ -156,9 +157,9 @@ def RebalanceFunc(time):
 
             var insights = new[] { Insight.Price(Symbols.SPY, Resolution.Daily, 1, InsightDirection.Down) };
 
-            PortfolioConstructionModel.RebalanceOnInsightChanges = false;
+            constructionModel.RebalanceOnInsightChanges = false;
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), insights));
-            PortfolioConstructionModel.RebalanceOnInsightChanges = true;
+            constructionModel.RebalanceOnInsightChanges = true;
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), insights));
         }
 
@@ -187,9 +188,9 @@ def RebalanceFunc(time):
             }
 
             constructionModel.SetNextExpiration(new DateTime(2020, 1, 2));
-            PortfolioConstructionModel.RebalanceOnInsightChanges = false;
+            constructionModel.RebalanceOnInsightChanges = false;
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 3), new Insight[0]));
-            PortfolioConstructionModel.RebalanceOnInsightChanges = true;
+            constructionModel.RebalanceOnInsightChanges = true;
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 3), new Insight[0]));
         }
 
@@ -254,6 +255,7 @@ def RebalanceFunc(time):
 
             // day number '18' should trigger rebalance immediately
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 18), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 21), new Insight[0]));
         }
 
         class TestPortfolioConstructionModel : PortfolioConstructionModel

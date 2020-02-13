@@ -35,12 +35,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// True if should rebalance portfolio on security changes. True by default
         /// </summary>
-        public static bool RebalanceOnSecurityChanges { get; set; } = true;
+        public bool RebalanceOnSecurityChanges { get; set; } = true;
 
         /// <summary>
         /// True if should rebalance portfolio on new insights or expiration of insights. True by default
         /// </summary>
-        public static bool RebalanceOnInsightChanges { get; set; } = true;
+        public bool RebalanceOnInsightChanges { get; set; } = true;
 
         /// <summary>
         /// Provides a collection for managing insights
@@ -127,6 +127,17 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             if (_rebalancingTime == null)
             {
                 _rebalancingTime = _rebalancingFunc(algorithmUtc);
+
+                if (_rebalancingTime != null && _rebalancingTime <= algorithmUtc)
+                {
+                    // if the rebalancing time stopped being null and is current time
+                    // we will ask for the next rebalance time in the next loop.
+                    // we don't want to call the '_rebalancingFunc' twice in the same loop,
+                    // since its internal state machine will probably be in the same state.
+                    _rebalancingTime = null;
+                    _securityChanges = false;
+                    return true;
+                }
             }
 
             if (_rebalancingTime != null && _rebalancingTime <= algorithmUtc

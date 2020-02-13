@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2015, 1, 5);
             SetEndDate(2017, 1, 1);
 
-            PortfolioConstructionModel.RebalanceOnInsightChanges = false;
+            Settings.RebalancePortfolioOnInsightChanges = false;
 
             SetUniverseSelection(new CustomUniverseSelectionModel("CustomUniverseSelectionModel",
                 time => new List<string> { "AAPL", "IBM", "FB", "SPY" }
@@ -51,16 +51,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(
                 time =>
                 {
-                    if (Portfolio.MarginRemaining > 60000
-                        && _lastRebalanceTime != time)
+                    _lastRebalanceTime = time;
+                    if (Portfolio.MarginRemaining > 60000 ||
+                        Portfolio.MarginRemaining < 40000)
                     {
-                        _lastRebalanceTime = time;
-                        return time;
-                    }
-                    if (Portfolio.MarginRemaining < 40000
-                        && _lastRebalanceTime != time)
-                    {
-                        _lastRebalanceTime = time;
                         return time;
                     }
                     return null;
