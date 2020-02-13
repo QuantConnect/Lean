@@ -20,6 +20,7 @@ using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -67,7 +68,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
         /// Returning current time will trigger rebalance. If null will be ignored</param>
         public PortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc = null)
-        : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(time => rebalancingFunc(time)) : null)
+        : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null)
         {
         }
 
@@ -99,7 +100,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
         protected void SetRebalancingFunc(PyObject rebalancingFunc)
         {
-            if (!rebalancingFunc.TryConvertToDelegate(out _rebalancingFunc))
+            IDateRule dateRules;
+            if (rebalancingFunc.TryConvert(out dateRules))
+            {
+                _rebalancingFunc = dateRules.ToFunc();
+            }
+            else if (!rebalancingFunc.TryConvertToDelegate(out _rebalancingFunc))
             {
                 _rebalancingFunc = null;
             }

@@ -30,7 +30,7 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
     def __init__(self, rebalancingParam = Resolution.Daily):
         '''Initialize a new instance of EqualWeightingPortfolioConstructionModel
         Args:
-            rebalancingParam: Rebalancing parameter. If it is a timedelta or Resolution, it will be converted into a function.
+            rebalancingParam: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
                               If None will be ignored.
                               The function returns the next expected rebalance time for a given algorithm UTC DateTime.
                               The function returns null if unknown, in which case the function will be called again in the

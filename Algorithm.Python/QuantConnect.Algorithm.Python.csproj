@@ -91,6 +91,7 @@
     <Content Include="LiquidETFUniverseFrameworkAlgorithm.py" />
     <Content Include="LiveFeaturesAlgorithm.py" />
     <Content Include="PortfolioRebalanceOnCustomFuncRegressionAlgorithm.py" />
+    <Content Include="PortfolioRebalanceOnDateRulesRegressionAlgorithm.py" />
     <Content Include="SetHoldingsMultipleTargetsRegressionAlgorithm.py" />
     <Content Include="TradingEconomicsCalendarIndicatorAlgorithm.py" />
     <Content Include="OnEndOfDayRegressionAlgorithm.py" />

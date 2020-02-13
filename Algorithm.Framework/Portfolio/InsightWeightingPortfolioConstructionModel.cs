@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -32,6 +33,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class InsightWeightingPortfolioConstructionModel : EqualWeightingPortfolioConstructionModel
     {
+        /// <summary>
+        /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time
+        /// in UTC</param>
+        public InsightWeightingPortfolioConstructionModel(IDateRule rebalancingDateRules)
+            : base(rebalancingDateRules)
+        {
+        }
+
         /// <summary>
         /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
         /// </summary>

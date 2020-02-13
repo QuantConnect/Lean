@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -30,6 +31,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     public class EqualWeightingPortfolioConstructionModel : PortfolioConstructionModel
     {
         private List<Symbol> _removedSymbols;
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time
+        /// in UTC</param>
+        public EqualWeightingPortfolioConstructionModel(IDateRule rebalancingDateRules)
+            : this(rebalancingDateRules.ToFunc())
+        {
+        }
 
         /// <summary>
         /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
@@ -48,7 +59,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
         /// Returning current time will trigger rebalance. If null will be ignored</param>
         public EqualWeightingPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc)
-            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(time => rebalancingFunc(time)) : null)
+            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null)
         {
         }
 

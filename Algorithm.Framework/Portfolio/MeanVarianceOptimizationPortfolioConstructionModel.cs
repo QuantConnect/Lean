@@ -20,6 +20,7 @@ using Accord.Math;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Scheduling;
 using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
@@ -39,6 +40,26 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
         private readonly List<Symbol> _pendingRemoval;
         private readonly Dictionary<Symbol, ReturnsSymbolData> _symbolDataDict;
+
+        /// <summary>
+        /// Initialize the model
+        /// </summary>
+        /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time
+        /// in UTC</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="targetReturn">The target portfolio return</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
+        public MeanVarianceOptimizationPortfolioConstructionModel(IDateRule rebalancingDateRules,
+            int lookback = 1,
+            int period = 63,
+            Resolution resolution = Resolution.Daily,
+            double targetReturn = 0.02,
+            IPortfolioOptimizer optimizer = null)
+            : this(rebalancingDateRules.ToFunc(), lookback, period, resolution, targetReturn, optimizer)
+        {
+        }
 
         /// <summary>
         /// Initialize the model
@@ -94,7 +115,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             Resolution resolution = Resolution.Daily,
             double targetReturn = 0.02,
             IPortfolioOptimizer optimizer = null)
-            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(time => rebalancingFunc(time)) : null,
+            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null,
                 lookback,
                 period,
                 resolution,

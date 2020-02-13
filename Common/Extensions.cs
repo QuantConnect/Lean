@@ -34,9 +34,9 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Python;
+using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using Timer = System.Timers.Timer;
@@ -51,6 +51,46 @@ namespace QuantConnect
     {
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
+
+        /// <summary>
+        /// Converts a date rule into a function that receives current time
+        /// and returns the next date.
+        /// </summary>
+        /// <param name="dateRule">The date rule to convert</param>
+        /// <returns>A function that will enumerate the provided date rules</returns>
+        public static Func<DateTime, DateTime?> ToFunc(this IDateRule dateRule)
+        {
+            IEnumerator<DateTime> dates = null;
+            return timeUtc =>
+            {
+                if (dates == null)
+                {
+                    dates = dateRule.GetDates(timeUtc, Time.EndOfTime).GetEnumerator();
+                    if (!dates.MoveNext())
+                    {
+                        return Time.EndOfTime;
+                    }
+                }
+
+                try
+                {
+                    // only advance enumerator if provided time is past or at our current
+                    if (timeUtc >= dates.Current)
+                    {
+                        if (!dates.MoveNext())
+                        {
+                            return Time.EndOfTime;
+                        }
+                    }
+                    return dates.Current;
+                }
+                catch (InvalidOperationException)
+                {
+                    // enumeration ended
+                    return Time.EndOfTime;
+                }
+            };
+        }
 
         /// <summary>
         /// Returns true if the specified <see cref="Series"/> instance holds no <see cref="ChartPoint"/>

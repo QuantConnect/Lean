@@ -56,7 +56,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                  optimizer = None):
         """Initialize the model
         Args:
-            rebalancingParam: Rebalancing parameter. If it is a timedelta or Resolution, it will be converted into a function.
+            rebalancingParam: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
                               If None will be ignored.
                               The function returns the next expected rebalance time for a given algorithm UTC DateTime.
                               The function returns null if unknown, in which case the function will be called again in the

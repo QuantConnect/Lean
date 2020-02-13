@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Accord.Statistics;
 using Accord.Math;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -112,7 +113,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             double delta = 2.5,
             double tau = 0.05,
             IPortfolioOptimizer optimizer = null)
-            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(time => rebalancingFunc(time)) : null,
+            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null,
                 lookback,
                 period,
                 resolution,
@@ -120,6 +121,30 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 delta,
                 tau,
                 optimizer)
+        {
+        }
+
+        /// <summary>
+        /// Initialize the model
+        /// </summary>
+        /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time
+        /// in UTC</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="delta">The risk aversion coeffficient of the market portfolio</param>
+        /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
+        public BlackLittermanOptimizationPortfolioConstructionModel(IDateRule rebalancingDateRules,
+            int lookback = 1,
+            int period = 63,
+            Resolution resolution = Resolution.Daily,
+            double riskFreeRate = 0.0,
+            double delta = 2.5,
+            double tau = 0.05,
+            IPortfolioOptimizer optimizer = null)
+            : this(rebalancingDateRules.ToFunc(), lookback, period, resolution, riskFreeRate, delta, tau, optimizer)
         {
         }
 

@@ -20,6 +20,7 @@ using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using DateTime = System.DateTime;
 
@@ -289,12 +290,55 @@ def RebalanceFunc(time):
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 21), new Insight[0]));
         }
 
+        [TestCase(Language.Python)]
+        [TestCase(Language.CSharp)]
+        public void RebalanceFunctionDateRules(Language language)
+        {
+            var dateRules = new DateRules(new SecurityManager(
+                new TimeKeeper(new DateTime(2015, 1, 1), DateTimeZone.Utc)), DateTimeZone.Utc);
+
+            TestPortfolioConstructionModel constructionModel;
+            if (language == Language.Python)
+            {
+                constructionModel = new TestPortfolioConstructionModel();
+                using (Py.GIL())
+                {
+                    dynamic func = PythonEngine.ModuleFromString("RebalanceFunc",
+                        @"
+import datetime
+
+def RebalanceFunc(dateRules):
+    return dateRules.On(datetime.datetime(2015, 1, 10), datetime.datetime(2015, 1, 30))").GetAttr("RebalanceFunc");
+                    constructionModel.SetRebalancingFunc(func(dateRules));
+                }
+            }
+            else
+            {
+                var dateRule = dateRules.On(new DateTime(2015, 1, 10), new DateTime(2015, 1, 30));
+                constructionModel = new TestPortfolioConstructionModel(dateRule);
+            }
+
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 1), new Insight[0]));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 10), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 20), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 29), new Insight[0]));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 2, 1), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 2, 2), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 10, 2), new Insight[0]));
+        }
+
         class TestPortfolioConstructionModel : PortfolioConstructionModel
         {
+            public TestPortfolioConstructionModel(IDateRule dateRule)
+                : this(dateRule.ToFunc())
+            {
+            }
+
             public TestPortfolioConstructionModel(Func<DateTime, DateTime> func = null)
                 : base(func)
             {
             }
+
             public TestPortfolioConstructionModel(Func<DateTime, DateTime?> func)
                 : base(func)
             {

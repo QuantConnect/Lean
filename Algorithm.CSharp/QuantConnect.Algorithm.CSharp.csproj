@@ -182,6 +182,7 @@
     <Compile Include="ObjectStoreExampleAlgorithm.cs" />
     <Compile Include="OnEndOfDayAddDataRegressionAlgorithm.cs" />
     <Compile Include="PortfolioRebalanceOnCustomFuncRegressionAlgorithm.cs" />
+    <Compile Include="PortfolioRebalanceOnDateRulesRegressionAlgorithm.cs" />
     <Compile Include="PortfolioRebalanceOnInsightChangesRegressionAlgorithm.cs" />
     <Compile Include="PortfolioRebalanceOnSecurityChangesRegressionAlgorithm.cs" />
     <Compile Include="ResolutionSwitchingAlgorithm.cs" />
