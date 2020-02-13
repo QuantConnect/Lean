@@ -35,12 +35,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// True if should rebalance portfolio on security changes. True by default
         /// </summary>
-        public bool RebalanceOnSecurityChanges { get; set; } = true;
+        public virtual bool RebalanceOnSecurityChanges { get; set; } = true;
 
         /// <summary>
         /// True if should rebalance portfolio on new insights or expiration of insights. True by default
         /// </summary>
-        public bool RebalanceOnInsightChanges { get; set; } = true;
+        public virtual bool RebalanceOnInsightChanges { get; set; } = true;
 
         /// <summary>
         /// Provides a collection for managing insights
@@ -99,7 +99,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
         protected void SetRebalancingFunc(PyObject rebalancingFunc)
         {
-            _rebalancingFunc = rebalancingFunc.ConvertToDelegate<Func<DateTime, DateTime?>>();
+            if (!rebalancingFunc.TryConvertToDelegate(out _rebalancingFunc))
+            {
+                _rebalancingFunc = null;
+            }
         }
 
         /// <summary>

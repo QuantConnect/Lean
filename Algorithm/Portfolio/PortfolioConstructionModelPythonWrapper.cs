@@ -29,6 +29,48 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         private readonly dynamic _model;
 
         /// <summary>
+        /// True if should rebalance portfolio on security changes. True by default
+        /// </summary>
+        public override bool RebalanceOnSecurityChanges
+        {
+            get
+            {
+                using (Py.GIL())
+                {
+                    return _model.RebalanceOnSecurityChanges;
+                }
+            }
+            set
+            {
+                using (Py.GIL())
+                {
+                    _model.RebalanceOnSecurityChanges = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// True if should rebalance portfolio on new insights or expiration of insights. True by default
+        /// </summary>
+        public override bool RebalanceOnInsightChanges
+        {
+            get
+            {
+                using (Py.GIL())
+                {
+                    return _model.RebalanceOnInsightChanges;
+                }
+            }
+            set
+            {
+                using (Py.GIL())
+                {
+                    _model.RebalanceOnInsightChanges = value;
+                }
+            }
+        }
+
+        /// <summary>
         /// Constructor for initialising the <see cref="IPortfolioConstructionModel"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Model defining how to build a portfolio from alphas</param>

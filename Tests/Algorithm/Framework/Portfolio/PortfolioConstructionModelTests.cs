@@ -196,6 +196,37 @@ def RebalanceFunc(time):
 
         [TestCase(Language.Python)]
         [TestCase(Language.CSharp)]
+        public void NoRebalanceFunction(Language language)
+        {
+            TestPortfolioConstructionModel constructionModel;
+            if (language == Language.Python)
+            {
+                constructionModel = new TestPortfolioConstructionModel();
+                using (Py.GIL())
+                {
+                    var func = PythonEngine.ModuleFromString(
+                        "RebalanceFunc",
+                        @"
+from datetime import timedelta
+
+def RebalanceFunc():
+    return None"
+                    ).GetAttr("RebalanceFunc");
+                    constructionModel.SetRebalancingFunc(func.Invoke());
+                }
+            }
+            else
+            {
+                constructionModel = new TestPortfolioConstructionModel();
+            }
+
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 3), new Insight[0]));
+        }
+
+        [TestCase(Language.Python)]
+        [TestCase(Language.CSharp)]
         public void RebalanceFunctionNull(Language language)
         {
             TestPortfolioConstructionModel constructionModel;
