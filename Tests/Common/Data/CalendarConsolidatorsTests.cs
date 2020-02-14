@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Data
             using (Py.GIL())
             {
                 var module = PythonEngine.ModuleFromString(
-                    "PythonCalendarType",
+                    "PythonCalendar",
                     @"
 from datetime import timedelta
 from clr import AddReference

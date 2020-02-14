@@ -1022,12 +1022,12 @@ namespace QuantConnect.Algorithm
         /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol who's data is to be consolidated</param>
-        /// <param name="calendarType">The consolidation calendar type</param>
+        /// <param name="calendar">The consolidation calendar</param>
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
-        public IDataConsolidator Consolidate(Symbol symbol, Func<DateTime, CalendarInfo> calendarType, PyObject handler)
+        public IDataConsolidator Consolidate(Symbol symbol, Func<DateTime, CalendarInfo> calendar, PyObject handler)
         {
-            return Consolidate(symbol, calendarType, null, handler);
+            return Consolidate(symbol, calendar, null, handler);
         }
 
         /// <summary>
@@ -1054,26 +1054,26 @@ namespace QuantConnect.Algorithm
         /// Registers the <paramref name="handler"/> to receive consolidated data for the specified symbol
         /// </summary>
         /// <param name="symbol">The symbol who's data is to be consolidated</param>
-        /// <param name="calendarType">The consolidation calendar type</param>
+        /// <param name="calendar">The consolidation calendar</param>
         /// <param name="tickType">The tick type of subscription used as data source for consolidator. Specify null to use first subscription found.</param>
         /// <param name="handler">Data handler receives new consolidated data when generated</param>
         /// <returns>A new consolidator matching the requested parameters with the handler already registered</returns>
-        private IDataConsolidator Consolidate(Symbol symbol, Func<DateTime, CalendarInfo> calendarType, TickType? tickType, PyObject handler)
+        private IDataConsolidator Consolidate(Symbol symbol, Func<DateTime, CalendarInfo> calendar, TickType? tickType, PyObject handler)
         {
             // resolve consolidator input subscription
             var type = GetSubscription(symbol, tickType).Type;
 
             if (type == typeof(TradeBar))
             {
-                return Consolidate(symbol, calendarType, tickType, handler.ConvertToDelegate<Action<TradeBar>>());
+                return Consolidate(symbol, calendar, tickType, handler.ConvertToDelegate<Action<TradeBar>>());
             }
 
             if (type == typeof(QuoteBar))
             {
-                return Consolidate(symbol, calendarType, tickType, handler.ConvertToDelegate<Action<QuoteBar>>());
+                return Consolidate(symbol, calendar, tickType, handler.ConvertToDelegate<Action<QuoteBar>>());
             }
 
-            return Consolidate(symbol, calendarType, tickType, handler.ConvertToDelegate<Action<BaseData>>());
+            return Consolidate(symbol, calendar, tickType, handler.ConvertToDelegate<Action<BaseData>>());
         }
 
         /// <summary>

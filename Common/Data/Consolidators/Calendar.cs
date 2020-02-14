@@ -18,7 +18,7 @@ using System;
 namespace QuantConnect.Data.Consolidators
 {
     /// <summary>
-    /// Helper class that provides <see cref="Func{DateTime,CalendarInfo}"/> used to define consolidation periods
+    /// Helper class that provides <see cref="Func{DateTime,CalendarInfo}"/> used to define consolidation calendar
     /// </summary>
     public static class Calendar
     {
