@@ -549,6 +549,31 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("Please select an algorithm end date greater than start date.");
             }
 
+            var portfolioConstructionModel = PortfolioConstruction as PortfolioConstructionModel;
+            if (portfolioConstructionModel != null)
+            {
+                // only override default values if user set the algorithm setting
+                if (Settings.RebalancePortfolioOnSecurityChanges.HasValue)
+                {
+                    portfolioConstructionModel.RebalanceOnSecurityChanges
+                        = Settings.RebalancePortfolioOnSecurityChanges.Value;
+                }
+                if (Settings.RebalancePortfolioOnInsightChanges.HasValue)
+                {
+                    portfolioConstructionModel.RebalanceOnInsightChanges
+                        = Settings.RebalancePortfolioOnInsightChanges.Value;
+                }
+            }
+            else
+            {
+                if (Settings.RebalancePortfolioOnInsightChanges.HasValue
+                    || Settings.RebalancePortfolioOnSecurityChanges.HasValue)
+                {
+                    Debug("Warning: rebalance portfolio settings are set but not supported by the current IPortfolioConstructionModel type: " +
+                          $"{PortfolioConstruction.GetType()}");
+                }
+            }
+
             FrameworkPostInitialize();
 
             // if the benchmark hasn't been set yet, set it
@@ -566,6 +591,7 @@ namespace QuantConnect.Algorithm
 
                 Benchmark = new SecurityBenchmark(security);
             }
+
             // perform end of time step checks, such as enforcing underlying securities are in raw data mode
             OnEndOfTimeStep();
         }

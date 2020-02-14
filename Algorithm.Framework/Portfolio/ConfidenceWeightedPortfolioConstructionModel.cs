@@ -14,7 +14,9 @@
 */
 
 using System;
+using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -31,16 +33,54 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     public class ConfidenceWeightedPortfolioConstructionModel : InsightWeightingPortfolioConstructionModel
     {
         /// <summary>
-        /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
+        /// Initialize a new instance of <see cref="ConfidenceWeightedPortfolioConstructionModel"/>
         /// </summary>
-        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
+        /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time
+        /// in UTC</param>
+        public ConfidenceWeightedPortfolioConstructionModel(IDateRule rebalancingDateRules)
+            : base(rebalancingDateRules)
+        {
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="ConfidenceWeightedPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingParam">Rebalancing func or if a date rule, timedelta will be converted into func.
+        /// For a given algorithm UTC DateTime the func returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance. If null will be ignored</param>
+        /// <remarks>This is required since python net can not convert python methods into func nor resolve the correct
+        /// constructor for the date rules parameter.
+        /// For performance we prefer python algorithms using the C# implementation</remarks>
+        public ConfidenceWeightedPortfolioConstructionModel(PyObject rebalancingParam)
+            : this((Func<DateTime, DateTime?>)null)
+        {
+            SetRebalancingFunc(rebalancingParam);
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="ConfidenceWeightedPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance. If null will be ignored</param>
+        public ConfidenceWeightedPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc)
+            : base(rebalancingFunc)
+        {
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="ConfidenceWeightedPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
+        /// Returning current time will trigger rebalance. If null will be ignored</param>
         public ConfidenceWeightedPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc)
             : base(rebalancingFunc)
         {
         }
 
         /// <summary>
-        /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
+        /// Initialize a new instance of <see cref="ConfidenceWeightedPortfolioConstructionModel"/>
         /// </summary>
         /// <param name="timeSpan">Rebalancing frequency</param>
         public ConfidenceWeightedPortfolioConstructionModel(TimeSpan timeSpan)

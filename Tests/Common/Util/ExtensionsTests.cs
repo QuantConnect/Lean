@@ -17,12 +17,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
+using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Util
@@ -1018,6 +1020,23 @@ actualDictionary.update({'IBM': 5})
 
             value = decimal.MinValue + 1;
             Assert.DoesNotThrow(() => value.TruncateTo3DecimalPlaces());
+        }
+
+        [Test]
+        public void DateRulesToFunc()
+        {
+            var dateRules = new DateRules(new SecurityManager(
+                new TimeKeeper(new DateTime(2015, 1, 1), DateTimeZone.Utc)), DateTimeZone.Utc);
+            var first = new DateTime(2015, 1, 10);
+            var second = new DateTime(2015, 1, 30);
+            var dateRule = dateRules.On(first, second);
+            var func = dateRule.ToFunc();
+
+            Assert.AreEqual(first, func(new DateTime(2015, 1, 1)));
+            Assert.AreEqual(first, func(new DateTime(2015, 1, 5)));
+            Assert.AreEqual(second, func(first));
+            Assert.AreEqual(Time.EndOfTime, func(second));
+            Assert.AreEqual(Time.EndOfTime, func(second));
         }
 
         private PyObject ConvertToPyObject(object value)
