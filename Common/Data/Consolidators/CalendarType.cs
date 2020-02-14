@@ -17,7 +17,8 @@ using System;
 
 namespace QuantConnect.Data.Consolidators
 {
-    static public class CalendarType
+    [Obsolete("CalendarType is obsolete, please use Calendar instead")]
+    public static class CalendarType
     {
         /// <summary>
         /// Computes the start of week (previous Monday) of given date/time

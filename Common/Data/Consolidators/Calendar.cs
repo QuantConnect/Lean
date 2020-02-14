@@ -17,7 +17,10 @@ using System;
 
 namespace QuantConnect.Data.Consolidators
 {
-    static public class Calendar
+    /// <summary>
+    /// Helper class that provides <see cref="Func{DateTime,CalendarInfo}"/> used to define consolidation periods
+    /// </summary>
+    public static class Calendar
     {
         /// <summary>
         /// Computes the start of week (previous Monday) of given date/time
