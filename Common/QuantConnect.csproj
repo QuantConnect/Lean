@@ -239,6 +239,7 @@
     <Compile Include="Chart.cs" />
     <Compile Include="ChartPoint.cs" />
     <Compile Include="Data\Auxiliary\MappingExtensions.cs" />
+    <Compile Include="Data\Consolidators\Calendar.cs" />
     <Compile Include="Data\Consolidators\CalendarType.cs" />
     <Compile Include="Data\Consolidators\FilteredIdentityDataConsolidator.cs" />
     <Compile Include="Data\Custom\Benzinga\BenzingaNewsJsonConverter.cs" />
