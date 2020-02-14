@@ -1370,6 +1370,10 @@ namespace QuantConnect
         /// <summary>
         /// Tries to convert a <see cref="PyObject"/> into a managed object
         /// </summary>
+        /// <remarks>This method is not working correctly for a wrapped <see cref="TimeSpan"/> instance,
+        /// probably because it is a struct, using <see cref="PyObject.As{T}"/> is a valid work around.
+        /// Not used here because it caused errors
+        /// </remarks>
         /// <typeparam name="T">Target type of the resulting managed object</typeparam>
         /// <param name="pyObject">PyObject to be converted</param>
         /// <param name="result">Managed object </param>

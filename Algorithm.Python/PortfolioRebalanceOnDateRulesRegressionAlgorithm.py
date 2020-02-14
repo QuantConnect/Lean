@@ -22,13 +22,10 @@ from QuantConnect import *
 from QuantConnect.Orders import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Algorithm.Framework import *
+from QuantConnect.Algorithm.Framework.Alphas import *
+from QuantConnect.Algorithm.Framework.Execution import *
+from QuantConnect.Algorithm.Framework.Portfolio import *
 from QuantConnect.Algorithm.Framework.Selection import *
-
-# we load the python version of these models:
-from Alphas.ConstantAlphaModel import *
-from Execution.ImmediateExecutionModel import *
-from Portfolio.EqualWeightingPortfolioConstructionModel import *
-
 from datetime import timedelta
 
 ### <summary>

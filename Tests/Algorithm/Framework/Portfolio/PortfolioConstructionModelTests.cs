@@ -29,33 +29,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     [TestFixture]
     public class PortfolioConstructionModelTests
     {
-        [Test]
-        public void NoRebalanceFunction()
-        {
-            var constructionModel = new TestPortfolioConstructionModel
-            {
-                RebalanceOnSecurityChanges = false
-            };
-
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2019, 1, 1), new Insight[0]));
-
-            var security = new Security(Symbols.SPY,
-                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                new Cash(Currencies.USD, 1, 1),
-                SymbolProperties.GetDefault(Currencies.USD),
-                new IdentityCurrencyConverter(Currencies.USD),
-                new RegisteredSecurityDataTypesProvider(),
-                new SecurityCache());
-
-            constructionModel.OnSecuritiesChanged(null, SecurityChanges.Added(security));
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
-            constructionModel.OnSecuritiesChanged(null, SecurityChanges.None);
-            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
-
-            constructionModel.RebalanceOnSecurityChanges = true;
-        }
-
         [TestCase(Language.Python)]
         [TestCase(Language.CSharp)]
         public void RebalanceFunctionPeriodDue(Language language)
@@ -224,6 +197,19 @@ def RebalanceFunc():
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 2), new Insight[0]));
             Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 3), new Insight[0]));
+
+            var security = new Security(Symbols.SPY,
+                SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
+                new Cash(Currencies.USD, 1, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
+                new IdentityCurrencyConverter(Currencies.USD),
+                new RegisteredSecurityDataTypesProvider(),
+                new SecurityCache());
+
+            constructionModel.OnSecuritiesChanged(null, SecurityChanges.Added(security));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
+            constructionModel.OnSecuritiesChanged(null, SecurityChanges.None);
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 1, 1), new Insight[0]));
         }
 
         [TestCase(Language.Python)]
@@ -327,6 +313,51 @@ def RebalanceFunc(dateRules):
             Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2020, 10, 2), new Insight[0]));
         }
 
+        [TestCase(Language.Python, 1)]
+        [TestCase(Language.Python, 0)]
+        [TestCase(Language.CSharp, 0)]
+        public void RebalanceFunctionTimeSpan(Language language, int version)
+        {
+            TestPortfolioConstructionModel constructionModel;
+            if (language == Language.Python)
+            {
+                constructionModel = new TestPortfolioConstructionModel();
+                using (Py.GIL())
+                {
+                    if (version == 1)
+                    {
+                        dynamic func = PythonEngine.ModuleFromString("RebalanceFunc",
+                            @"
+from System import *
+
+def RebalanceFunc(timeSpan):
+    return timeSpan").GetAttr("RebalanceFunc");
+                        constructionModel.SetRebalancingFunc(func(TimeSpan.FromMinutes(20)));
+                    }
+                    else
+                    {
+                        dynamic func = PythonEngine.ModuleFromString("RebalanceFunc",
+                            @"
+from datetime import timedelta
+
+def RebalanceFunc():
+    return timedelta(minutes = 20)").GetAttr("RebalanceFunc");
+                        constructionModel.SetRebalancingFunc(func());
+                    }
+                }
+            }
+            else
+            {
+                constructionModel = new TestPortfolioConstructionModel(time => time.AddMinutes(20));
+            }
+
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 1), new Insight[0]));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 1, 0, 20, 0), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 1, 0, 22, 0), new Insight[0]));
+            Assert.IsFalse(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 1, 0, 21, 0), new Insight[0]));
+            Assert.IsTrue(constructionModel.IsRebalanceDueWrapper(new DateTime(2015, 1, 1, 0, 40, 0), new Insight[0]));
+        }
+
         class TestPortfolioConstructionModel : PortfolioConstructionModel
         {
             public TestPortfolioConstructionModel(IDateRule dateRule)
@@ -344,7 +375,7 @@ def RebalanceFunc(dateRules):
             {
             }
 
-            public void SetRebalancingFunc(PyObject rebalancingFunc)
+            public new void SetRebalancingFunc(PyObject rebalancingFunc)
             {
                 base.SetRebalancingFunc(rebalancingFunc);
             }

@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Scheduling;
 
@@ -41,6 +42,22 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         public InsightWeightingPortfolioConstructionModel(IDateRule rebalancingDateRules)
             : base(rebalancingDateRules)
         {
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="InsightWeightingPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingParam">Rebalancing func or if a date rule, timedelta will be converted into func.
+        /// For a given algorithm UTC DateTime the func returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance. If null will be ignored</param>
+        /// <remarks>This is required since python net can not convert python methods into func nor resolve the correct
+        /// constructor for the date rules parameter.
+        /// For performance we prefer python algorithms using the C# implementation</remarks>
+        public InsightWeightingPortfolioConstructionModel(PyObject rebalancingParam)
+            : this((Func<DateTime, DateTime?>)null)
+        {
+            SetRebalancingFunc(rebalancingParam);
         }
 
         /// <summary>

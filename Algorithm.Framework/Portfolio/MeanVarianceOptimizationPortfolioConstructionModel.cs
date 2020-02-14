@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Accord.Math;
+using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
@@ -97,6 +98,32 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             IPortfolioOptimizer optimizer = null)
             : this(dt => dt.Add(timeSpan), lookback, period, resolution, targetReturn, optimizer)
         {
+        }
+
+        /// <summary>
+        /// Initialize the model
+        /// </summary>
+        /// <param name="rebalancingParam">Rebalancing func or if a date rule, timedelta will be converted into func.
+        /// For a given algorithm UTC DateTime the func returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance. If null will be ignored</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="targetReturn">The target portfolio return</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
+        /// <remarks>This is required since python net can not convert python methods into func nor resolve the correct
+        /// constructor for the date rules parameter.
+        /// For performance we prefer python algorithms using the C# implementation</remarks>
+        public MeanVarianceOptimizationPortfolioConstructionModel(PyObject rebalancingParam,
+            int lookback = 1,
+            int period = 63,
+            Resolution resolution = Resolution.Daily,
+            double targetReturn = 0.02,
+            IPortfolioOptimizer optimizer = null)
+            : this((Func<DateTime, DateTime?>)null, lookback, period, resolution, targetReturn, optimizer)
+        {
+            SetRebalancingFunc(rebalancingParam);
         }
 
         /// <summary>
