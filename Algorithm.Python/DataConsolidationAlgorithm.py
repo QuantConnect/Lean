@@ -101,6 +101,14 @@ class DataConsolidationAlgorithm(QCAlgorithm):
         self.Consolidate("SPY", Calendar.Monthly, self.CalendarTradeBarHandler);
         self.Consolidate("EURUSD", Calendar.Monthly, self.CalendarQuoteBarHandler);
 
+        # API convenience method for easily receiving quarterly-consolidated data
+        self.Consolidate("SPY", Calendar.Quarterly, self.CalendarTradeBarHandler)
+        self.Consolidate("EURUSD", Calendar.Quarterly, self.CalendarQuoteBarHandler)
+
+        # API convenience method for easily receiving yearly-consolidated data
+        self.Consolidate("SPY", Calendar.Yearly, self.CalendarTradeBarHandler);
+        self.Consolidate("EURUSD", Calendar.Yearly, self.CalendarQuoteBarHandler);
+
         # some securities may have trade and quote data available, so we can choose it based on TickType:
         #self.Consolidate("BTCUSD", Resolution.Hour, TickType.Trade, self.HourBarHandler)   # to get TradeBar
         #self.Consolidate("BTCUSD", Resolution.Hour, TickType.Quote, self.HourBarHandler)   # to get QuoteBar (default)

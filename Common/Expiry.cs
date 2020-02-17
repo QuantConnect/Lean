@@ -29,6 +29,16 @@ namespace QuantConnect
         public static Func<DateTime, DateTime> OneMonth => dt => dt.AddMonths(1);
 
         /// <summary>
+        /// Computes a date/time one quarter after a given date/time (nth day to nth day)
+        /// </summary>
+        public static Func<DateTime, DateTime> OneQuarter => dt => dt.AddMonths(3);
+
+        /// <summary>
+        /// Computes a date/time one year after a given date/time (nth day to nth day)
+        /// </summary>
+        public static Func<DateTime, DateTime> OneYear => dt => dt.AddYears(1);
+
+        /// <summary>
         /// Computes the end of day (mid-night of the next day) of given date/time
         /// </summary>
         public static Func<DateTime, DateTime> EndOfDay => dt => dt.AddDays(1).Date;
@@ -60,6 +70,37 @@ namespace QuantConnect
                 {
                     var value = 1 - dt.Day;
                     return OneMonth(dt).AddDays(value).Date;
+                };
+            }
+        }
+
+        /// <summary>
+        /// Computes the end of quarter (1st of the starting month of next quarter) of given date/time
+        /// </summary>
+        public static Func<DateTime, DateTime> EndOfQuarter
+        {
+            get
+            {
+                return dt =>
+                {
+                    var nthQuarter = (dt.Month - 1) / 3;
+                    var firstMonthOfQuarter = nthQuarter * 3 + 1;
+                    return OneQuarter(new DateTime(dt.Year, firstMonthOfQuarter, 1));
+                };
+            }
+        }
+
+        /// <summary>
+        /// Computes the end of year (1st of the next year) of given date/time
+        /// </summary>
+        public static Func<DateTime, DateTime> EndOfYear
+        {
+            get
+            {
+                return dt =>
+                {
+                    var value = 1 - dt.DayOfYear;
+                    return OneYear(dt).AddDays(value).Date;
                 };
             }
         }
