@@ -264,12 +264,17 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="pycoarse">Defines an initial coarse selection</param>
         /// <param name="pyfine">Defines a more detailed selection with access to more data</param>
-        public void AddUniverse(PyObject pycoarse, PyObject pyfine)
+        public void AddUniverse(PyObject pyObject, PyObject pyfine)
         {
             Func<IEnumerable<CoarseFundamental>, object> coarseFunc;
-            Func<IEnumerable<FineFundamental>, object> fineFunc;
+            Func<IEnumerable<FineFundamental>, IEnumerable<Symbol>> fineFunc;
+            Universe universe;
 
-            if (pycoarse.TryConvertToDelegate(out coarseFunc) && pyfine.TryConvertToDelegate(out fineFunc))
+            if (pyObject.TryConvert(out universe) && pyfine.TryConvert(out fineFunc))
+            {
+                AddUniverse(universe, fineFunc);
+            }
+            else if (pyObject.TryConvertToDelegate(out coarseFunc) && pyfine.TryConvertToDelegate(out fineFunc))
             {
                 AddUniverse(coarseFunc.ConvertToUniverseSelectionSymbolDelegate(),
                     fineFunc.ConvertToUniverseSelectionSymbolDelegate());
@@ -278,7 +283,7 @@ namespace QuantConnect.Algorithm
             {
                 using (Py.GIL())
                 {
-                    throw new ArgumentException($"QCAlgorithm.AddUniverse: {pycoarse.Repr()} or {pyfine.Repr()} is not a valid argument.");
+                    throw new ArgumentException($"QCAlgorithm.AddUniverse: {pyObject.Repr()} or {pyfine.Repr()} is not a valid argument.");
                 }
             }
         }
