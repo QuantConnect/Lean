@@ -132,8 +132,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             var percentPerSymbol = new Dictionary<Symbol, double>();
 
-            foreach (var insight in InsightCollection
-                .Where(insight => insight.IsActive(_currentUtcTime))
+            foreach (var insight in InsightCollection.GetActiveInsights(_currentUtcTime)
                 .OrderBy(insight => insight.GeneratedTimeUtc))
             {
                 double targetPercent;

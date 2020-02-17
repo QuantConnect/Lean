@@ -48,7 +48,7 @@ class AccumulativeInsightPortfolioConstructionModel(EqualWeightingPortfolioConst
             activeInsights: The active insights to generate a target for'''
         percentPerSymbol = {}
 
-        insights = sorted([insight for insight in self.InsightCollection if insight.IsActive(self.currentUtcTime)], key=lambda insight: insight.GeneratedTimeUtc)
+        insights = sorted(self.InsightCollection.GetActiveInsights(self.currentUtcTime), key=lambda insight: insight.GeneratedTimeUtc)
 
         for insight in insights:
             targetPercent = 0
