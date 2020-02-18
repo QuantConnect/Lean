@@ -6,10 +6,10 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "live-paper", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "RabbitMQLive",
+  "algorithm-type-name": "RabbitMQTest",
 
   // Algorithm language selector - options CSharp, FSharp, VisualBasic, Python, Java
   "algorithm-language": "CSharp",
