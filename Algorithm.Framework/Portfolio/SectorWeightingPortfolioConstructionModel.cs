@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// the target percent holdings of each security is 1/N where N is the number of securities of each sector.
     /// For insights of direction <see cref="InsightDirection.Up"/>, long targets are returned and for insights of direction
     /// <see cref="InsightDirection.Down"/>, short targets are returned.
-    /// It will ignore <see cref="Insight"/> that have no <see cref="CompanyReference.IndustryTemplateCode"/> value.
+    /// It will ignore <see cref="Insight"/> for symbols that have no <see cref="CompanyReference.IndustryTemplateCode"/> value.
     /// </summary>
     public class SectorWeightingPortfolioConstructionModel : EqualWeightingPortfolioConstructionModel
     {
@@ -123,7 +123,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             var result = new Dictionary<Insight, double>();
 
             var insightBySectorCode = new Dictionary<string, List<Insight>>();
-            var sectorsCount = 0;
 
             foreach (var insight in activeInsights)
             {
@@ -142,12 +141,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 else
                 {
                     insightBySectorCode[sectorCode] = new List<Insight> { insight };
-                    sectorsCount++;
                 }
             }
 
             // give equal weighting to each sector
-            var sectorPercent = sectorsCount == 0 ? 0 : 1m / sectorsCount;
+            var sectorPercent = insightBySectorCode.Count == 0 ? 0 : 1m / insightBySectorCode.Count;
 
             foreach (var kvp in insightBySectorCode)
             {

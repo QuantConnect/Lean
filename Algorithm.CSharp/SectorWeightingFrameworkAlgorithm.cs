@@ -23,6 +23,7 @@ using QuantConnect.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -61,10 +62,16 @@ namespace QuantConnect.Algorithm.CSharp
             if (orderEvent.Status.IsFill())
             {
                 var symbol = orderEvent.Symbol;
-                var holdingValue = Portfolio[symbol].AbsoluteHoldingsValue;
-                var portfolioShare = Math.Round(holdingValue / Portfolio.TotalPortfolioValue, 2);
+                var security = Securities[symbol];
 
-                Debug($"Order event: {orderEvent}. Holding value: {holdingValue}");
+                var absoluteBuyingPower = security.BuyingPowerModel
+                    .GetReservedBuyingPowerForPosition(new ReservedBuyingPowerForPositionParameters(security))
+                    .AbsoluteUsedBuyingPower   // See GH issue 4107
+                    * security.BuyingPowerModel.GetLeverage(security);
+
+                var portfolioShare = absoluteBuyingPower / Portfolio.TotalPortfolioValue;
+
+                Debug($"Order event: {orderEvent}. Absolute buying power: {absoluteBuyingPower}");
 
                 // Checks whether the portfolio share of a given symbol matches its target
                 // Only considers the buy orders, because holding value is zero otherwise

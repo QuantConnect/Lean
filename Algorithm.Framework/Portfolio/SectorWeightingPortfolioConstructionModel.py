@@ -27,7 +27,7 @@ class SectorWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstruct
    the target percent holdings of each security is 1/N where N is the number of securities of each sector.
    For insights of direction InsightDirection.Up, long targets are returned and for insights of direction
    InsightDirection.Down, short targets are returned.
-   It will ignore Insight that have no CompanyReference.IndustryTemplateCode'''
+   It will ignore Insight for symbols that have no CompanyReference.IndustryTemplateCode'''
 
     def __init__(self, rebalancingParam = Resolution.Daily):
         '''Initialize a new instance of InsightWeightingPortfolioConstructionModel
@@ -54,7 +54,6 @@ class SectorWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstruct
         result = dict()
 
         insightBySectorCode = dict()
-        sectorsCount = 0
 
         for insight in activeInsights:
             if insight.Direction == InsightDirection.Flat:
@@ -64,15 +63,11 @@ class SectorWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstruct
             sectorCode = self.sectorCodeBySymbol.get(insight.Symbol)
             insights = insightBySectorCode.pop(sectorCode, list())
 
-            # Count sectors that any insight is not flat
-            if not insights:
-                sectorsCount += 1
-
             insights.append(insight)
             insightBySectorCode[sectorCode] = insights
 
         # give equal weighting to each sector
-        sectorPercent = 0 if sectorsCount == 0 else 1.0 / sectorsCount
+        sectorPercent = 0 if len(insightBySectorCode) == 0 else 1.0 / len(insightBySectorCode)
 
         for _, insights in insightBySectorCode.items():
             # give equal weighting to each security
