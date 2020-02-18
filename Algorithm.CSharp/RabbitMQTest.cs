@@ -56,7 +56,8 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug(symbolName);
             };
 
-            producer.SendObject("TSLA");
+            //producer.SendObject("SPY");
+
 
             producer.Disconnect();
             consumer.Disconnect();

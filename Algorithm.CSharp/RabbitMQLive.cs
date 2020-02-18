@@ -72,6 +72,21 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
+        /// New Bitcoin Data Event.
+        /// </summary>
+        /// <param name="data">Data.</param>
+        public void OnData(Bitcoin data)
+        {
+            if (_limitTicket == null)
+            {
+                MarketOrder(_ibm, 100, true, tag: "market order");
+                _limitTicket = LimitOrder(_ibm, 100, Securities["IBM"].Close * 0.9m, tag: "limit order");
+                _stopMarketTicket = StopMarketOrder(_ibm, -100, Securities["IBM"].Close * 0.95m, tag: "stop market");
+                _stopLimitTicket = StopLimitOrder(_ibm, 100, Securities["IBM"].Close * 0.90m, Securities["IBM"].Close * 0.80m, tag: "stop limit");
+            }
+        }
+
+        /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
