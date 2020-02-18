@@ -26,7 +26,7 @@ def callback(ch, method, properties, body):
 
 		# Gets each equity for each timeframe
 		for timeFrame in equityCall["timeFrames"]:
-			for ticker in timeFrame["equities"].split(" "):
+			for ticker in timeFrame["equities"]:
 				writeData(timeFrame, ticker)
 
 	except:
@@ -71,7 +71,7 @@ def writeData(equityCall, ticker):
 			"Adj. Volume"],
 			axis=1)
 
-	print(df)
+	# print(df)
 
 	# Write csvzip to path
 	df.to_csv(fullname, header=False)

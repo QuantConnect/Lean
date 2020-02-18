@@ -67,15 +67,15 @@
   "live-data-port": 8020,
 
   // interactive brokers configuration
-  "ib-account": "",
-  "ib-user-name": "",
-  "ib-password": "",
+  "ib-account": "U3493249",
+  "ib-user-name": "j0rdan123",
+  "ib-password": "ZjkHDNrxNAv9",
   "ib-host": "127.0.0.1",
   "ib-port": "4002",
   "ib-agent-description": "Individual",
   "ib-tws-dir": "C:\\Jts",
   "ib-trading-mode": "paper",
-  "ib-enable-delayed-streaming-data": false,
+  "ib-enable-delayed-streaming-data": true,
 
   // tradier configuration
   "tradier-account-id": "",

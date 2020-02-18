@@ -32,10 +32,10 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private static RabbitMQProducer<string> producer;
         private static RabbitMQConsumer<string> consumer;
-        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+        private Symbol _tsla = QuantConnect.Symbol.Create("TSLA", SecurityType.Equity, Market.USA);
         //private Symbol _aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
         private Symbol symbol;
-        private string symbolName = "SPY";
+        private string symbolName = "TSLA";
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug(symbolName);
             };
 
-            producer.SendObject("SPY");
+            producer.SendObject("TSLA");
 
             producer.Disconnect();
             consumer.Disconnect();
@@ -64,15 +64,15 @@ namespace QuantConnect.Algorithm.CSharp
             //symbol = QuantConnect.Symbol.Create(symbolName, SecurityType.Equity, Market.USA);
 
             Debug("this worked");
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
+            SetStartDate(2012, 10, 07);  //Set Start Date
+            SetEndDate(2019, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
-            AddEquity("SPY", Resolution.Minute);
+            AddEquity("TSLA", Resolution.Daily);
 
             // There are other assets with similar methods. See "Selecting Options" etc for more details.
             // AddFuture, AddForex, AddCfd, AddOption
@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings(_spy, 1);
+                SetHoldings(_tsla, 1);
                 Debug("Purchased Stock");
             }
         }

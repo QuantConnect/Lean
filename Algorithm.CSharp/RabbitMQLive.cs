@@ -13,184 +13,113 @@
  * limitations under the License.
 */
 
-using System;
-using System.Globalization;
-using Newtonsoft.Json;
+using System.Collections.Generic;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Live Trading Functionality Demonstration algorithm including SMS, Email and Web hook notifications.
+    /// Basic template algorithm simply initializes the date range and cash. This is a skeleton
+    /// framework you can use for designing an algorithm.
     /// </summary>
-    /// <meta name="tag" content="live trading" />
-    /// <meta name="tag" content="alerts" />
-    /// <meta name="tag" content="sms alerts" />
-    /// <meta name="tag" content="web hooks" />
-    /// <meta name="tag" content="email alerts" />
-    /// <meta name="tag" content="runtime statistics" />
-    public class RabbitMQLive : QCAlgorithm
+    /// <meta name="tag" content="using data" />
+    /// <meta name="tag" content="using quantconnect" />
+    /// <meta name="tag" content="trading and orders" />
+    public class RabbitMQLive : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+
         /// <summary>
-        /// Initialise the Algorithm and Prepare Required Data.
+        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 7);
-            SetEndDate(2013, 10, 11);
-            SetCash(25000);
+            SetStartDate(2013, 10, 07);  //Set Start Date
+            SetEndDate(2013, 10, 11);    //Set End Date
+            SetCash(100000);             //Set Strategy Cash
 
-            //Equity Data for US Markets:
-            AddSecurity(SecurityType.Equity, "IBM", Resolution.Second);
-
-            //FOREX Data for Weekends: 24/6
-            AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Minute);
-
-            //Custom/Bitcoin Live Data: 24/7
-            AddData<Bitcoin>("BTC", Resolution.Second, TimeZones.Utc);
-        }
-
-        /// <summary>
-        /// New Bitcoin Data Event.
-        /// </summary>
-        /// <param name="data">Data.</param>
-        public void OnData(Bitcoin data)
-        {
+            // Find more symbols here: http://quantconnect.com/data
+            // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
+            // Futures Resolution: Tick, Second, Minute
+            // Options Resolution: Minute Only.
             if (LiveMode) //Live Mode Property
             {
-                //Configurable title header statistics numbers
-                SetRuntimeStatistic("BTC", data.Close.ToStringInvariant("C"));
+                Debug("THIS IS LIVE");
             }
+                AddEquity("SPY", Resolution.Minute);
 
-            if (!Portfolio.HoldStock)
+            // There are other assets with similar methods. See "Selecting Options" etc for more details.
+            // AddFuture, AddForex, AddCfd, AddOption
+        }
+
+        /// <summary>
+        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// </summary>
+        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice data)
+        {
+            if (!Portfolio.Invested)
             {
-                Order("BTC", 100);
-
-                //Send a notification email/SMS/web request on events:
-                Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment");
-                Notify.Sms("+11233456789", Time.ToStringInvariant("u") + ">> Test message from live BTC server.");
-                Notify.Web("http://api.quantconnect.com", Time.ToStringInvariant("u") + ">> Test data packet posted from live BTC server.");
+                SetHoldings(_spy, 1);
+                Debug("Purchased Stock");
             }
         }
 
         /// <summary>
-        /// Raises the data event.
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        /// <param name="data">Data.</param>
-        public void OnData(TradeBars data)
-        {
-            if (!Portfolio["IBM"].HoldStock && data.ContainsKey("IBM"))
-            {
-                int quantity = (int)Math.Floor(Portfolio.MarginRemaining / data["IBM"].Close);
-                Order("IBM", quantity);
-                Debug("Purchased IBM on " + Time.ToShortDateString());
-                Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment");
-            }
-        }
+        public bool CanRunLocally { get; } = true;
 
         /// <summary>
-        /// Custom Data Type: Bitcoin data from Quandl - http://www.quandl.com/help/api-for-bitcoin-data
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public class Bitcoin : BaseData
+        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            [JsonProperty("timestamp")]
-            public int Timestamp = 0;
-            [JsonProperty("open")]
-            public decimal Open = 0;
-            [JsonProperty("high")]
-            public decimal High = 0;
-            [JsonProperty("low")]
-            public decimal Low = 0;
-            [JsonProperty("last")]
-            public decimal Close = 0;
-            [JsonProperty("bid")]
-            public decimal Bid = 0;
-            [JsonProperty("ask")]
-            public decimal Ask = 0;
-            [JsonProperty("vwap")]
-            public decimal WeightedPrice = 0;
-            [JsonProperty("volume")]
-            public decimal VolumeBTC = 0;
-            public decimal VolumeUSD = 0;
-
-            /// <summary>
-            /// 1. DEFAULT CONSTRUCTOR: Custom data types need a default constructor.
-            /// We search for a default constructor so please provide one here. It won't be used for data, just to generate the "Factory".
-            /// </summary>
-            public Bitcoin()
-            {
-                Symbol = "BTC";
-            }
-
-            /// <summary>
-            /// 2. RETURN THE STRING URL SOURCE LOCATION FOR YOUR DATA:
-            /// This is a powerful and dynamic select source file method. If you have a large dataset, 10+mb we recommend you break it into smaller files. E.g. One zip per year.
-            /// We can accept raw text or ZIP files. We read the file extension to determine if it is a zip file.
-            /// </summary>
-            /// <param name="config">Configuration object</param>
-            /// <param name="date">Date of this source file</param>
-            /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
-            /// <returns>String URL of source file.</returns>
-            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
-            {
-                if (isLiveMode)
-                {
-                    return new SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.Rest);
-                }
-
-                //return "http://my-ftp-server.com/futures-data-" + date.ToString("Ymd") + ".zip";
-                // OR simply return a fixed small data file. Large files will slow down your backtest
-                return new SubscriptionDataSource("https://www.quandl.com/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc", SubscriptionTransportMedium.RemoteFile);
-            }
-
-            /// <summary>
-            /// 3. READER METHOD: Read 1 line from data source and convert it into Object.
-            /// Each line of the CSV File is presented in here. The backend downloads your file, loads it into memory and then line by line
-            /// feeds it into your algorithm
-            /// </summary>
-            /// <param name="line">string line from the data source file submitted above</param>
-            /// <param name="config">Subscription data, symbol name, data type</param>
-            /// <param name="date">Current date we're requesting. This allows you to break up the data source into daily files.</param>
-            /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
-            /// <returns>New Bitcoin Object which extends BaseData.</returns>
-            public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
-            {
-                var coin = new Bitcoin();
-                if (isLiveMode)
-                {
-                    //Example Line Format:
-                    //{"high": "441.00", "last": "421.86", "timestamp": "1411606877", "bid": "421.96", "vwap": "428.58", "volume": "14120.40683975", "low": "418.83", "ask": "421.99"}
-                    try
-                    {
-                        coin = JsonConvert.DeserializeObject<Bitcoin>(line);
-                        coin.EndTime = DateTime.UtcNow.ConvertFromUtc(config.ExchangeTimeZone);
-                        coin.Value = coin.Close;
-                    }
-                    catch { /* Do nothing, possible error in json decoding */ }
-                    return coin;
-                }
-
-                //Example Line Format:
-                //Date      Open   High    Low     Close   Volume (BTC)    Volume (Currency)   Weighted Price
-                //2011-09-13 5.8    6.0     5.65    5.97    58.37138238,    346.0973893944      5.929230648356
-                try
-                {
-                    string[] data = line.Split(',');
-                    coin.Time = DateTime.Parse(data[0], CultureInfo.InvariantCulture);
-                    coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
-                    coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
-                    coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
-                    coin.Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
-                    coin.VolumeBTC = Convert.ToDecimal(data[5], CultureInfo.InvariantCulture);
-                    coin.VolumeUSD = Convert.ToDecimal(data[6], CultureInfo.InvariantCulture);
-                    coin.WeightedPrice = Convert.ToDecimal(data[7], CultureInfo.InvariantCulture);
-                    coin.Value = coin.Close;
-                }
-                catch { /* Do nothing, skip first title row */ }
-
-                return coin;
-            }
-        }
+            {"Total Trades", "1"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "263.153%"},
+            {"Drawdown", "2.200%"},
+            {"Expectancy", "0"},
+            {"Net Profit", "1.663%"},
+            {"Sharpe Ratio", "4.824"},
+            {"Probabilistic Sharpe Ratio", "66.954%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0.996"},
+            {"Annual Standard Deviation", "0.219"},
+            {"Annual Variance", "0.048"},
+            {"Information Ratio", "-4.864"},
+            {"Tracking Error", "0.001"},
+            {"Treynor Ratio", "1.061"},
+            {"Total Fees", "$3.26"},
+            {"Fitness Score", "0.248"},
+            {"Kelly Criterion Estimate", "0"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "79228162514264337593543950335"},
+            {"Return Over Maximum Drawdown", "94.3"},
+            {"Portfolio Turnover", "0.248"},
+            {"Total Insights Generated", "1"},
+            {"Total Insights Closed", "0"},
+            {"Total Insights Analysis Completed", "0"},
+            {"Long Insight Count", "1"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$0"},
+            {"Total Accumulated Estimated Alpha Value", "$0"},
+            {"Mean Population Estimated Insight Value", "$0"},
+            {"Mean Population Direction", "0%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "0%"},
+            {"Rolling Averaged Population Magnitude", "0%"}
+        };
     }
 }
