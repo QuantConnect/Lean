@@ -32,37 +32,56 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class SectorWeightingFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private readonly Dictionary<Symbol, decimal> _targets = new Dictionary<Symbol, decimal>();
+
         public override void Initialize()
         {
             // Set requested data resolution
             UniverseSettings.Resolution = Resolution.Daily;
 
-            SetStartDate(2014, 03, 25);
-            SetEndDate(2014, 04, 07);
+            SetStartDate(2014, 04, 03);
+            SetEndDate(2014, 04, 06);
             SetCash(100000);
 
             SetUniverseSelection(new FineFundamentalUniverseSelectionModel(SelectCoarse, SelectFine));
             SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, QuantConnect.Time.OneDay));
             SetPortfolioConstruction(new SectorWeightingPortfolioConstructionModel());
+
+            Func<string, Symbol> toSymbol = t => QuantConnect.Symbol.Create(t, SecurityType.Equity, Market.USA);
+            _targets.Add(toSymbol("AAPL"), .25m);
+            _targets.Add(toSymbol("AIG"), .5m);
+            _targets.Add(toSymbol("IBM"), .25m);
+            _targets.Add(toSymbol("GOOG"), .5m);
+            _targets.Add(toSymbol("BAC"), .5m);
+            _targets.Add(toSymbol("SPY"), 0);
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             if (orderEvent.Status.IsFill())
             {
-                Debug($"Order event: {orderEvent}. Holding value: {Securities[orderEvent.Symbol].Holdings.AbsoluteHoldingsValue}");
+                var symbol = orderEvent.Symbol;
+                var holdingValue = Portfolio[symbol].AbsoluteHoldingsValue;
+                var portfolioShare = Math.Round(holdingValue / Portfolio.TotalPortfolioValue, 2);
+
+                Debug($"Order event: {orderEvent}. Holding value: {holdingValue}");
+
+                // Checks whether the portfolio share of a given symbol matches its target
+                // Only considers the buy orders, because holding value is zero otherwise
+                if (Math.Abs(_targets[symbol] - portfolioShare) > 0.01m && orderEvent.Direction == OrderDirection.Buy)
+                {
+                    throw new Exception($"Target for {symbol}: expected {_targets[symbol]}, actual: {portfolioShare}");
+                }
             }
         }
 
         private IEnumerable<Symbol> SelectCoarse(IEnumerable<CoarseFundamental> coarse)
         {
-            var tickers = Time.Date < new DateTime(2014, 4, 1)
+            return Time.Date < new DateTime(2014, 4, 4)
                 // IndustryTemplateCode of AAPL and IBM is N and AIG is I 
-                ? new[] { "AAPL", "AIG", "IBM" }
+                ? _targets.Keys.Take(3)
                 // IndustryTemplateCode of GOOG is N and BAC is B. SPY have no fundamentals
-                : new[] { "GOOG", "BAC", "SPY" };
-
-            return tickers.Select(x => QuantConnect.Symbol.Create(x, SecurityType.Equity, Market.USA));
+                : _targets.Keys.Skip(3);
         }
 
         private IEnumerable<Symbol> SelectFine(IEnumerable<FineFundamental> fine) => fine.Select(f => f.Symbol);
@@ -82,43 +101,43 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "19"},
-            {"Average Win", "0.29%"},
-            {"Average Loss", "-0.05%"},
-            {"Compounding Annual Return", "-78.953%"},
-            {"Drawdown", "6.600%"},
-            {"Expectancy", "0.310"},
-            {"Net Profit", "-5.802%"},
-            {"Sharpe Ratio", "-5.76"},
-            {"Loss Rate", "82%"},
-            {"Win Rate", "18%"},
-            {"Profit-Loss Ratio", "6.21"},
-            {"Alpha", "-1.233"},
-            {"Beta", "-0.008"},
-            {"Annual Standard Deviation", "0.214"},
-            {"Annual Variance", "0.046"},
-            {"Information Ratio", "-4.235"},
-            {"Tracking Error", "0.237"},
-            {"Treynor Ratio", "147.325"},
-            {"Total Fees", "$73.27"},
-            {"Fitness Score", "0.022"},
-            {"Kelly Criterion Estimate", "-11.683"},
-            {"Kelly Criterion Probability Value", "0.792"},
-            {"Sortino Ratio", "-3.782"},
-            {"Return Over Maximum Drawdown", "-11.953"},
-            {"Portfolio Turnover", "0.337"},
-            {"Total Insights Generated", "24"},
-            {"Total Insights Closed", "22"},
-            {"Total Insights Analysis Completed", "22"},
-            {"Long Insight Count", "24"},
+            {"Total Trades", "8"},
+            {"Average Win", "0.41%"},
+            {"Average Loss", "-0.04%"},
+            {"Compounding Annual Return", "-99.951%"},
+            {"Drawdown", "4.100%"},
+            {"Expectancy", "2.547"},
+            {"Net Profit", "-4.088%"},
+            {"Sharpe Ratio", "-12.389"},
+            {"Loss Rate", "67%"},
+            {"Win Rate", "33%"},
+            {"Profit-Loss Ratio", "9.64"},
+            {"Alpha", "-9.835"},
+            {"Beta", "-3.125"},
+            {"Annual Standard Deviation", "0.416"},
+            {"Annual Variance", "0.173"},
+            {"Information Ratio", "-6.663"},
+            {"Tracking Error", "0.55"},
+            {"Treynor Ratio", "1.651"},
+            {"Total Fees", "$32.44"},
+            {"Fitness Score", "0.1"},
+            {"Kelly Criterion Estimate", "-44.746"},
+            {"Kelly Criterion Probability Value", "0.677"},
+            {"Sortino Ratio", "-2.399"},
+            {"Return Over Maximum Drawdown", "-24.452"},
+            {"Portfolio Turnover", "1.543"},
+            {"Total Insights Generated", "7"},
+            {"Total Insights Closed", "3"},
+            {"Total Insights Analysis Completed", "3"},
+            {"Long Insight Count", "7"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$-1906811"},
-            {"Total Accumulated Estimated Alpha Value", "$-900438.4"},
-            {"Mean Population Estimated Insight Value", "$-40929.02"},
-            {"Mean Population Direction", "27.2727%"},
+            {"Estimated Monthly Alpha Value", "$-443798.3"},
+            {"Total Accumulated Estimated Alpha Value", "$-32052.1"},
+            {"Mean Population Estimated Insight Value", "$-10684.03"},
+            {"Mean Population Direction", "33.3333%"},
             {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "57.4228%"},
+            {"Rolling Averaged Population Direction", "33.3333%"},
             {"Rolling Averaged Population Magnitude", "0%"}
         };
     }

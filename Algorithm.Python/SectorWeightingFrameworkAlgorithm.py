@@ -40,8 +40,8 @@ class SectorWeightingFrameworkAlgorithm(QCAlgorithm):
         # Set requested data resolution
         self.UniverseSettings.Resolution = Resolution.Daily
 
-        self.SetStartDate(2014, 3, 25)
-        self.SetEndDate(2014, 4, 7)
+        self.SetStartDate(2014, 4, 3)
+        self.SetEndDate(2014, 4, 6)
         self.SetCash(100000)
 
         # set algorithm framework models
@@ -55,7 +55,7 @@ class SectorWeightingFrameworkAlgorithm(QCAlgorithm):
 
     def SelectCoarse(self, coarse):
         # IndustryTemplateCode of AAPL, IBM and GOOG is N, AIG is I, BAC is B. SPY have no fundamentals
-        tickers = ["AAPL", "AIG", "IBM"] if self.Time.date() < date(2014, 4, 1) else [ "GOOG", "BAC", "SPY" ]
+        tickers = ["AAPL", "AIG", "IBM"] if self.Time.date() < date(2014, 4, 4) else [ "GOOG", "BAC", "SPY" ]
         return [Symbol.Create(x, SecurityType.Equity, Market.USA) for x in tickers]
 
     def SelectFine(self, fine):

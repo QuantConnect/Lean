@@ -16,9 +16,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
@@ -39,8 +41,20 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize a new instance of <see cref="SectorWeightingPortfolioConstructionModel"/>
         /// </summary>
-        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time</param>
-        public SectorWeightingPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc)
+        /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time
+        /// in UTC</param>
+        public SectorWeightingPortfolioConstructionModel(IDateRule rebalancingDateRules)
+            : base(rebalancingDateRules.ToFunc())
+        {
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="SectorWeightingPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance. If null will be ignored</param>
+        public SectorWeightingPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc)
             : base(rebalancingFunc)
         {
         }
@@ -48,9 +62,34 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Initialize a new instance of <see cref="SectorWeightingPortfolioConstructionModel"/>
         /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
+        /// Returning current time will trigger rebalance. If null will be ignored</param>
+        public SectorWeightingPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc)
+            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null)
+        {
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="SectorWeightingPortfolioConstructionModel"/>
+        /// <param name="rebalancingParam">Rebalancing func or if a date rule, timedelta will be converted into func.
+        /// For a given algorithm UTC DateTime the func returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance. If null will be ignored</param>
+        /// <remarks>This is required since python net can not convert python methods into func nor resolve the correct
+        /// constructor for the date rules parameter.
+        /// For performance we prefer python algorithms using the C# implementation</remarks>
+        public SectorWeightingPortfolioConstructionModel(PyObject rebalancingParam)
+            : this((Func<DateTime, DateTime?>)null)
+        {
+            SetRebalancingFunc(rebalancingParam);
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="SectorWeightingPortfolioConstructionModel"/>
+        /// </summary>
         /// <param name="timeSpan">Rebalancing frequency</param>
         public SectorWeightingPortfolioConstructionModel(TimeSpan timeSpan)
-            : base(timeSpan)
+            : this(dt => dt.Add(timeSpan))
         {
         }
 
@@ -59,7 +98,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="resolution">Rebalancing frequency</param>
         public SectorWeightingPortfolioConstructionModel(Resolution resolution = Resolution.Daily)
-            : base(resolution)
+            : this(resolution.ToTimeSpan())
         {
         }
 
@@ -69,7 +108,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="insight">The insight to create a target for</param>
         /// <returns>True if the portfolio should create a target for the insight</returns>
-        public override bool ShouldCreateTargetForInsight(Insight insight)
+        protected override bool ShouldCreateTargetForInsight(Insight insight)
         {
             return _sectorCodeBySymbol.ContainsKey(insight.Symbol);
         }
@@ -79,7 +118,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        public override Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
+        protected override Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
         {
             var result = new Dictionary<Insight, double>();
 
