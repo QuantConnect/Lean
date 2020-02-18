@@ -89,14 +89,6 @@ namespace QuantConnect.Packets
         public decimal Progress = 0;
 
         /// <summary>
-        /// Runmode for this backtest.
-        /// </summary>
-        /// <obsolete>The RunMode property has been made obsolete and all backtests will be run in series mode.</obsolete>
-        [Obsolete("The RunMode property has been made obsolete and all backtests will be run in series mode.")]
-        [JsonProperty(PropertyName = "eRunMode")]
-        public RunMode RunMode = RunMode.Series;
-
-        /// <summary>
         /// Name of this backtest.
         /// </summary>
         [JsonProperty(PropertyName = "sName")]
