@@ -24,7 +24,6 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Tests.Engine.DataFeeds;
@@ -109,20 +108,26 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             AssertTargets(expectedTargets, targets);
 
             // One minute later, emits short term insight to cancel long
-            SetUtcTime(_algorithm.UtcTime.AddMinutes(1));
+            SetUtcTime(_algorithm.Time.AddMinutes(1));
             insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Up, _algorithm.UtcTime, Time.OneMinute) };
             targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
             expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, 0) };
             AssertTargets(expectedTargets, targets);
 
-            // One minute later, emit empty insights array, should stay 0 after the long expires
-            SetUtcTime(_algorithm.UtcTime.AddMinutes(1.1));
+            // One minute later, emit empty insights array, short term insight expires but should stay -1 since long term insight is still valid
+            SetUtcTime(_algorithm.Time.AddMinutes(1.1));
+
+            expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, -1m * (decimal)DefaultPercent) };
+
+            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]);
+            AssertTargets(expectedTargets, actualTargets);
+
+            // should stay 0 *after* the long expires
+            SetUtcTime(_algorithm.Time.AddYears(1));
 
             expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, 0) };
 
-            // Create target from an empty insights array
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]);
-
+            actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]);
             AssertTargets(expectedTargets, actualTargets);
         }
 
@@ -191,8 +196,138 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, (int)direction * 1m * (decimal)DefaultPercent) };
 
             AssertTargets(expectedTargets, targets);
+
+            // now we should reach 0 percent
+            insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Flat, _algorithm.UtcTime) };
+            targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+
+            expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, 0) };
+
+            AssertTargets(expectedTargets, targets);
         }
 
+        [Test]
+        [TestCase(Language.Python, InsightDirection.Up)]
+        [TestCase(Language.Python, InsightDirection.Down)]
+        [TestCase(Language.CSharp, InsightDirection.Up)]
+        [TestCase(Language.CSharp, InsightDirection.Down)]
+        public void InsightExpirationUndoesAccumulationBySteps(Language language, InsightDirection direction)
+        {
+            SetPortfolioConstruction(language, _algorithm);
+
+            // First emit long term insight
+            SetUtcTime(_algorithm.Time);
+            var insights = new[] { GetInsight(Symbols.SPY, direction, _algorithm.UtcTime, TimeSpan.FromMinutes(10)) };
+            var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+            var expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, (int)direction * 1m * (decimal)DefaultPercent) };
+            AssertTargets(expectedTargets, targets);
+
+            // One minute later, emits insight to add to portfolio
+            SetUtcTime(_algorithm.Time.AddMinutes(1));
+            insights = new[] { GetInsight(Symbols.SPY, direction, _algorithm.UtcTime, TimeSpan.FromMinutes(10)) };
+            targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+
+            expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, (int)direction * 1m * 2 * (decimal)DefaultPercent) };
+            AssertTargets(expectedTargets, targets);
+
+            // the first insight should expire
+            SetUtcTime(_algorithm.Time.AddMinutes(10));
+            targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]).ToList();
+
+            expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, (int)direction * 1m * (decimal)DefaultPercent) };
+
+            AssertTargets(expectedTargets, targets);
+
+            // the second insight should expire
+            SetUtcTime(_algorithm.Time.AddMinutes(1));
+            targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]).ToList();
+
+            expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, 0) };
+
+            AssertTargets(expectedTargets, targets);
+        }
+
+        [TestCase(Language.Python, InsightDirection.Up)]
+        [TestCase(Language.Python, InsightDirection.Down)]
+        [TestCase(Language.CSharp, InsightDirection.Up)]
+        [TestCase(Language.CSharp, InsightDirection.Down)]
+        public void RespectsRebalancingPeriod(Language language, InsightDirection direction)
+        {
+            PortfolioConstructionModel model = new AccumulativeInsightPortfolioConstructionModel(Resolution.Daily);
+            if (language == Language.Python)
+            {
+                using (Py.GIL())
+                {
+                    var name = nameof(AccumulativeInsightPortfolioConstructionModel);
+                    dynamic instance = Py.Import(name).GetAttr(name);
+                    model = new PortfolioConstructionModelPythonWrapper(instance(Resolution.Daily));
+                }
+            }
+
+            model.RebalanceOnSecurityChanges = false;
+            model.RebalanceOnInsightChanges = false;
+
+            SetUtcTime(new DateTime(2018, 7, 31));
+            // First emit long term insight
+            var insights = new[] { GetInsight(Symbols.SPY, direction, _algorithm.UtcTime, TimeSpan.FromDays(10)) };
+            AssertTargets(new List<IPortfolioTarget>(), model.CreateTargets(_algorithm, insights).ToList());
+
+            // One minute later, emits insight to add to portfolio
+            SetUtcTime(_algorithm.Time.AddMinutes(1));
+            insights = new[] { GetInsight(Symbols.SPY, direction, _algorithm.UtcTime, TimeSpan.FromMinutes(10)) };
+            AssertTargets(new List<IPortfolioTarget>(), model.CreateTargets(_algorithm, insights));
+
+            // the second insight should expire
+            SetUtcTime(_algorithm.Time.AddMinutes(1));
+            AssertTargets(new List<IPortfolioTarget>(), model.CreateTargets(_algorithm, insights));
+
+            // the rebalancing period is due and the first insight is still valid
+            SetUtcTime(_algorithm.Time.AddDays(1));
+            var targets = model.CreateTargets(_algorithm, new Insight[0]);
+            var expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, (int)direction * 1m * (decimal)DefaultPercent) };
+            AssertTargets(expectedTargets, targets);
+
+            // the rebalancing period is due and no insight is valid
+            SetUtcTime(_algorithm.Time.AddDays(10));
+            AssertTargets(
+                new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, 0) },
+                model.CreateTargets(_algorithm, new Insight[0]));
+
+            AssertTargets(new List<IPortfolioTarget>(), model.CreateTargets(_algorithm, new Insight[0]));
+        }
+
+        [Test]
+        [TestCase(Language.Python, InsightDirection.Up)]
+        [TestCase(Language.Python, InsightDirection.Down)]
+        [TestCase(Language.CSharp, InsightDirection.Up)]
+        [TestCase(Language.CSharp, InsightDirection.Down)]
+        public void InsightExpirationUndoesAccumulation(Language language, InsightDirection direction)
+        {
+            SetPortfolioConstruction(language, _algorithm);
+
+            // First emit long term insight
+            SetUtcTime(_algorithm.Time);
+            var insights = new[]
+            {
+                GetInsight(Symbols.SPY, direction, _algorithm.UtcTime, TimeSpan.FromMinutes(10)),
+                GetInsight(Symbols.SPY, direction, _algorithm.UtcTime, TimeSpan.FromMinutes(10))
+            };
+            var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+            var expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, (int)direction * 1m * 2 * (decimal)DefaultPercent) };
+            AssertTargets(expectedTargets, targets);
+
+            // both insights should expire
+            SetUtcTime(_algorithm.Time.AddMinutes(11));
+            targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]).ToList();
+
+            expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, 0) };
+
+            AssertTargets(expectedTargets, targets);
+
+            // we expect no target
+            targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]).ToList();
+            AssertTargets(new List<IPortfolioTarget>(), targets);
+        }
 
         [Test]
         [TestCase(Language.Python)]
