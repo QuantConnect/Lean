@@ -80,11 +80,8 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new Exception("Securities must be marked as tradable until they're delisted or removed from the universe");
             }
-        }
 
-        public void OnData(Delistings data)
-        {
-            foreach (var kvp in data)
+            foreach (var kvp in data.Delistings)
             {
                 var symbol = kvp.Key;
                 var delisting = kvp.Value;
@@ -181,7 +178,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Direction", "0%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"}
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "1813677443"}
         };
     }
 }

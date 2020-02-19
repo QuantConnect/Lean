@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using QuantConnect.Configuration;
@@ -31,8 +32,6 @@ namespace QuantConnect.Messaging
     /// </summary>
     public class Messaging : IMessagingHandler
     {
-        // used to aid in generating regression tests via Cosole.WriteLine(...)
-        private static readonly TextWriter Console = System.Console.Out;
         private static readonly bool UpdateRegressionStatistics = Config.GetBool("regression-update-statistics", false);
 
         private AlgorithmNodePacket _job;
@@ -116,6 +115,9 @@ namespace QuantConnect.Messaging
                         var alphaStatistics = result.Results.AlphaRuntimeStatistics?.ToDictionary().ToList() ?? new List<KeyValuePair<string, string>>();
                         alphaStatistics.ForEach(kvp => result.Results.Statistics.Add(kvp));
 
+                        var orderHash = result.Results.Orders.GetHash();
+                        result.Results.Statistics.Add("OrderListHash", orderHash.ToString(CultureInfo.InvariantCulture));
+
                         if (UpdateRegressionStatistics && _job.Language == Language.CSharp)
                         {
                             UpdateRegressionStatisticsInSourceFile(result);
@@ -162,7 +164,6 @@ namespace QuantConnect.Messaging
             var algorithmSource = $"../../../Algorithm.CSharp/{_job.AlgorithmId}.cs";
             var file = File.ReadAllLines(algorithmSource).ToList().GetEnumerator();
             var lines = new List<string>();
-            var insideStats = false;
             while (file.MoveNext())
             {
                 var line = file.Current;
@@ -173,18 +174,9 @@ namespace QuantConnect.Messaging
 
                 if (line.Contains("public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>"))
                 {
-                    insideStats = true;
                     lines.Add(line);
                     lines.Add("        {");
-                }
 
-                if (!insideStats)
-                {
-                    lines.Add(line);
-                }
-                else
-                {
-                    insideStats = false;
                     foreach (var pair in result.Results.Statistics)
                     {
                         lines.Add($"            {{\"{pair.Key}\", \"{pair.Value}\"}},");
@@ -194,20 +186,20 @@ namespace QuantConnect.Messaging
                     var lastLine = lines[lines.Count - 1];
                     lines[lines.Count - 1] = lastLine.Substring(0, lastLine.Length - 1);
 
+                    // now we skip existing expected statistics in file
                     while (file.MoveNext())
                     {
                         line = file.Current;
-                        if (line == null)
-                        {
-                            continue;
-                        }
-
-                        if (line.Contains("};"))
+                        if (line != null && line.Contains("};"))
                         {
                             lines.Add(line);
                             break;
                         }
                     }
+                }
+                else
+                {
+                    lines.Add(line);
                 }
             }
 

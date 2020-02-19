@@ -53,6 +53,45 @@ namespace QuantConnect
             = new Dictionary<IntPtr, PythonActivator>();
 
         /// <summary>
+        /// Generates a hash code from a given collection of orders
+        /// </summary>
+        /// <param name="orders">The order collection</param>
+        /// <returns>The hash value</returns>
+        public static int GetHash(this IDictionary<int, Order> orders)
+        {
+            var joinedOrders = string.Join(
+                ",",
+                orders
+                    .OrderBy(pair => pair.Key)
+                    .Select(pair =>
+                        {
+                            // this is required to avoid any small differences between python and C#
+                            var order = pair.Value;
+                            order.Price = order.Price.SmartRounding();
+                            var limit = order as LimitOrder;
+                            if (limit != null)
+                            {
+                                limit.LimitPrice = limit.LimitPrice.SmartRounding();
+                            }
+                            var stopLimit = order as StopLimitOrder;
+                            if (stopLimit != null)
+                            {
+                                stopLimit.LimitPrice = stopLimit.LimitPrice.SmartRounding();
+                                stopLimit.StopPrice = stopLimit.StopPrice.SmartRounding();
+                            }
+                            var stopMarket = order as StopMarketOrder;
+                            if (stopMarket != null)
+                            {
+                                stopMarket.StopPrice = stopMarket.StopPrice.SmartRounding();
+                            }
+                            return JsonConvert.SerializeObject(pair.Value, Formatting.None);
+                        }
+                    )
+            );
+            return joinedOrders.GetHashCode();
+        }
+
+        /// <summary>
         /// Converts a date rule into a function that receives current time
         /// and returns the next date.
         /// </summary>

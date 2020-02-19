@@ -116,6 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Expectancy", "2.547"},
             {"Net Profit", "-4.088%"},
             {"Sharpe Ratio", "-12.389"},
+            {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "67%"},
             {"Win Rate", "33%"},
             {"Profit-Loss Ratio", "9.64"},
@@ -145,7 +146,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Direction", "33.3333%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "33.3333%"},
-            {"Rolling Averaged Population Magnitude", "0%"}
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-166671069"}
         };
     }
 }

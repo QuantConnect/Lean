@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Orders;
@@ -93,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     limitPrice = !isLong ? (1 + LimitPercentage) * data.Bars[symbol].High : (1 - LimitPercentage) * data.Bars[symbol].Low;
                 }
-                var request = new SubmitOrderRequest(orderType, SecType, symbol, Quantity, stopPrice, limitPrice, UtcTime, orderType.ToString());
+                var request = new SubmitOrderRequest(orderType, SecType, symbol, Quantity, stopPrice, limitPrice, UtcTime, ((int)orderType).ToString(CultureInfo.InvariantCulture));
                 var ticket = Transactions.AddOrder(request);
                 _tickets.Add(ticket);
             }
@@ -108,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
                         ticket.Update(new UpdateOrderFields
                         {
                             Quantity = ticket.Quantity + Math.Sign(Quantity)*DeltaQuantity,
-                            Tag = "Change quantity: " + Time
+                            Tag = "Change quantity: " + Time.Day
                         });
                         Log("UPDATE1:: " + ticket.UpdateRequests.Last());
                     }
@@ -122,7 +123,7 @@ namespace QuantConnect.Algorithm.CSharp
                         {
                             LimitPrice = Security.Price*(1 - Math.Sign(ticket.Quantity)*LimitPercentageDelta),
                             StopPrice = Security.Price*(1 + Math.Sign(ticket.Quantity)*StopPercentageDelta),
-                            Tag = "Change prices: " + Time
+                            Tag = "Change prices: " + Time.Day
                         });
                         Log("UPDATE2:: " + ticket.UpdateRequests.Last());
                     }
@@ -132,7 +133,7 @@ namespace QuantConnect.Algorithm.CSharp
                     if (ticket.UpdateRequests.Count == 2 && ticket.Status.IsOpen())
                     {
                         Log("TICKET:: " + ticket);
-                        ticket.Cancel(Time + " and is still open!");
+                        ticket.Cancel(Time.Day + " and is still open!");
                         Log("CANCELLED:: " + ticket.CancelRequest);
                     }
                 }
@@ -231,7 +232,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Direction", "16.3743%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "5.1168%"},
-            {"Rolling Averaged Population Magnitude", "0%"}
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-1054365761"}
         };
     }
 }
