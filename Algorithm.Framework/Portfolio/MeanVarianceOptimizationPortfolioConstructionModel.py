@@ -35,10 +35,11 @@ import pandas as pd
 ### </summary>
 class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionModel):
     def __init__(self,
-                 rebalancingParam = None,
+                 rebalancingParam = Resolution.Daily,
                  lookback = 1,
                  period = 63,
                  resolution = Resolution.Daily,
+                 targetReturn = 0.02,
                  optimizer = None):
         """Initialize the model
         Args:
@@ -54,10 +55,9 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         self.lookback = lookback
         self.period = period
         self.resolution = resolution
-        self.optimizer = MinimumVariancePortfolioOptimizer() if optimizer is None else optimizer
+        self.optimizer = MinimumVariancePortfolioOptimizer(-1, 1, targetReturn) if optimizer is None else optimizer
 
         self.symbolDataBySymbol = {}
-        self.pendingRemoval = []
 
         # If the argument is an instance of Resolution or Timedelta
         # Redefine rebalancingFunc
@@ -69,35 +69,25 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         if rebalancingFunc:
             self.SetRebalancingFunc(rebalancingFunc)
 
-    def CreateTargets(self, algorithm, insights):
+    def ShouldCreateTargetForInsight(self, insight):
+        if len(PortfolioConstructionModel.FilterInvalidInsightMagnitude(self.Algorithm, [insight])) == 0:
+            return False
+
+        symbolData = self.symbolDataBySymbol.get(insight.Symbol)
+        if insight.Magnitude is None:
+            self.algorithm.SetRunTimeError(ArgumentNullException('MeanVarianceOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please checkout the selected Alpha Model specifications.'))
+        symbolData.Add(self.Algorithm.Time, insight.Magnitude)
+
+        return True
+
+    def DetermineTargetPercent(self, activeInsights):
         """
-        Create portfolio targets from the specified insights
+         Will determine the target percent for each insight
         Args:
-            algorithm: The algorithm instance
-            insights: The insights to create portfolio targets from
         Returns:
-            An enumerable of portfolio targets to be sent to the execution model
         """
-
-        # Always add new insights
-        insights = PortfolioConstructionModel.FilterInvalidInsightMagnitude(algorithm, insights)
-        for insight in insights:
-            symbolData = self.symbolDataBySymbol.get(insight.Symbol)
-            if insight.Magnitude is None:
-                algorithm.SetRunTimeError(ArgumentNullException('MeanVarianceOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please checkout the selected Alpha Model specifications.'))
-            symbolData.Add(algorithm.Time, insight.Magnitude)
-
-        targets = []
-        if not self.IsRebalanceDue(insights, algorithm.UtcTime):
-            return targets
-
-        for symbol in self.pendingRemoval:
-            targets.append(PortfolioTarget.Percent(algorithm, symbol, 0))
-        self.pendingRemoval.clear()
-
-        symbols = [insight.Symbol for insight in insights]
-        if len(symbols) == 0:
-            return targets
+        targets = {}
+        symbols = [insight.Symbol for insight in activeInsights]
 
         # Create a dictionary keyed by the symbols in the insights with an pandas.Series as value to create a data frame
         returns = { str(symbol) : data.Return for symbol, data in self.symbolDataBySymbol.items() if symbol in symbols }
@@ -108,11 +98,9 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         weights = pd.Series(weights, index = returns.columns)
 
         # Create portfolio targets from the specified insights
-        for insight in insights:
+        for insight in activeInsights:
             weight = weights[str(insight.Symbol)]
-            target = PortfolioTarget.Percent(algorithm, insight.Symbol, weight)
-            if target is not None:
-                targets.append(target)
+            targets[insight] = weight
 
         return targets
 
@@ -125,7 +113,6 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         # clean up data for removed securities
         super().OnSecuritiesChanged(algorithm, changes)
         for removed in changes.RemovedSecurities:
-            self.pendingRemoval.append(removed.Symbol)
             symbolData = self.symbolDataBySymbol.pop(removed.Symbol, None)
             symbolData.Reset()
 

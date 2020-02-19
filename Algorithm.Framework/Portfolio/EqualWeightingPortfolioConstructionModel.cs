@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Scheduling;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
@@ -31,8 +30,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class EqualWeightingPortfolioConstructionModel : PortfolioConstructionModel
     {
-        private List<Symbol> _removedSymbols;
-
         /// <summary>
         /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
         /// </summary>
@@ -99,22 +96,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         }
 
         /// <summary>
-        /// Method that will determine if the portfolio construction model should create a
-        /// target for this insight
-        /// </summary>
-        /// <param name="insight">The insight to create a target for</param>
-        /// <returns>True if the portfolio should create a target for the insight</returns>
-        protected virtual bool ShouldCreateTargetForInsight(Insight insight)
-        {
-            return true;
-        }
-
-        /// <summary>
         /// Will determine the target percent for each insight
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        protected virtual Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
+        protected override Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
         {
             var result = new Dictionary<Insight, double>();
 
@@ -126,88 +112,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 result[insight] = (double)((int)insight.Direction * percent);
             }
             return result;
-        }
-
-        /// <summary>
-        /// Create portfolio targets from the specified insights
-        /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="insights">The insights to create portfolio targets from</param>
-        /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
-        public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
-        {
-            // always add new insights
-            if (insights.Length > 0)
-            {
-                // Validate we should create a target for this insight
-                InsightCollection.AddRange(insights.Where(ShouldCreateTargetForInsight));
-            }
-
-            if (!IsRebalanceDue(insights, algorithm.UtcTime))
-            {
-                return Enumerable.Empty<IPortfolioTarget>();
-            }
-
-            var targets = new List<IPortfolioTarget>();
-
-            // Create flatten target for each security that was removed from the universe
-            if (_removedSymbols != null)
-            {
-                var universeDeselectionTargets = _removedSymbols.Select(symbol => new PortfolioTarget(symbol, 0));
-                targets.AddRange(universeDeselectionTargets);
-                _removedSymbols = null;
-            }
-
-            // Get insight that haven't expired of each symbol that is still in the universe
-            var activeInsights = InsightCollection.GetActiveInsights(algorithm.UtcTime);
-
-            // Get the last generated active insight for each symbol
-            var lastActiveInsights = (from insight in activeInsights
-                                      group insight by insight.Symbol into g
-                                      select g.OrderBy(x => x.GeneratedTimeUtc).Last()).ToList();
-
-            var errorSymbols = new HashSet<Symbol>();
-
-            // Determine target percent for the given insights
-            var percents = DetermineTargetPercent(lastActiveInsights);
-
-            foreach (var insight in lastActiveInsights)
-            {
-                var target = PortfolioTarget.Percent(algorithm, insight.Symbol, percents[insight]);
-                if (target != null)
-                {
-                    targets.Add(target);
-                }
-                else
-                {
-                    errorSymbols.Add(insight.Symbol);
-                }
-            }
-
-            // Get expired insights and create flatten targets for each symbol
-            var expiredInsights = InsightCollection.RemoveExpiredInsights(algorithm.UtcTime);
-
-            var expiredTargets = from insight in expiredInsights
-                                 group insight.Symbol by insight.Symbol into g
-                                 where !InsightCollection.HasActiveInsights(g.Key, algorithm.UtcTime) && !errorSymbols.Contains(g.Key)
-                                 select new PortfolioTarget(g.Key, 0);
-
-            targets.AddRange(expiredTargets);
-
-            return targets;
-        }
-
-        /// <summary>
-        /// Event fired each time the we add/remove securities from the data feed
-        /// </summary>
-        /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
-        /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
-        {
-            base.OnSecuritiesChanged(algorithm, changes);
-            // Get removed symbol and invalidate them in the insight collection
-            _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol).ToList();
-            InsightCollection.Clear(_removedSymbols.ToArray());
         }
     }
 }
