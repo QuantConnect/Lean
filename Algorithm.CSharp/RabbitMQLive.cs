@@ -13,10 +13,16 @@
  * limitations under the License.
 */
 
+/*
+using System;
+using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Brokerages;
+using QuantConnect.Interfaces;
+
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -44,48 +50,10 @@ namespace QuantConnect.Algorithm.CSharp
         OrderTicket _stopMarketTicket;
         OrderTicket _stopLimitTicket;
 
-        public override void Initialize()
-        {
-            SetStartDate(2013, 10, 7);
-            SetEndDate(2013, 10, 11);
-            SetCash(25000);
+        private bool _submittedMarketOnCloseToday;
+        private Security _security;
 
-            //Equity Data for US Markets:
-            AddSecurity(SecurityType.Equity, "IBM", Resolution.Second);
-
-            //FOREX Data for Weekends: 24/6
-            AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Minute);
-
-            //Custom/Bitcoin Live Data: 24/7
-            AddData<Bitcoin>("BTC", Resolution.Second, TimeZones.Utc);
-        }
-
-        public override void OnData(Slice slice)
-        {
-            if (_limitTicket == null)
-            {
-                MarketOrder(_ibm, 100, true, tag: "market order");
-                _limitTicket = LimitOrder(_ibm, 100, Securities["IBM"].Close * 0.9m, tag: "limit order");
-                _stopMarketTicket = StopMarketOrder(_ibm, -100, Securities["IBM"].Close * 0.95m, tag: "stop market");
-                _stopLimitTicket = StopLimitOrder(_ibm, 100, Securities["IBM"].Close * 0.90m, Securities["IBM"].Close * 0.80m, tag: "stop limit");
-            }
-        }
-
-        /// <summary>
-        /// New Bitcoin Data Event.
-        /// </summary>
-        /// <param name="data">Data.</param>
-        public void OnData(Bitcoin data)
-        {
-            if (_limitTicket == null)
-            {
-                MarketOrder(_ibm, 100, true, tag: "market order");
-                _limitTicket = LimitOrder(_ibm, 100, Securities["IBM"].Close * 0.9m, tag: "limit order");
-                _stopMarketTicket = StopMarketOrder(_ibm, -100, Securities["IBM"].Close * 0.95m, tag: "stop market");
-                _stopLimitTicket = StopLimitOrder(_ibm, 100, Securities["IBM"].Close * 0.90m, Securities["IBM"].Close * 0.80m, tag: "stop limit");
-            }
-        }
-
+        
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -107,7 +75,16 @@ namespace QuantConnect.Algorithm.CSharp
 
             // There are other assets with similar methods. See "Selecting Options" etc for more details.
             // AddFuture, AddForex, AddCfd, AddOption
+            //Equity Data for US Markets:
+            AddSecurity(SecurityType.Equity, "IBM", Resolution.Second);
+
+            //FOREX Data for Weekends: 24/6
+            AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Minute);
+
+            //Custom/Bitcoin Live Data: 24/7
+            AddData<Bitcoin>("BTC", Resolution.Second, TimeZones.Utc);
         }
+
 
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -120,62 +97,102 @@ namespace QuantConnect.Algorithm.CSharp
                 SetHoldings(_spy, 1);
                 Debug("Purchased Stock");
             }
+
+            if (_limitTicket == null)
+            {
+                MarketOrder(_ibm, 100, true, tag: "market order");
+                _limitTicket = LimitOrder(_ibm, 100, Securities["IBM"].Close * 0.9m, tag: "limit order");
+                _stopMarketTicket = StopMarketOrder(_ibm, -100, Securities["IBM"].Close * 0.95m, tag: "stop market");
+                _stopLimitTicket = StopLimitOrder(_ibm, 100, Securities["IBM"].Close * 0.90m, Securities["IBM"].Close * 0.80m, tag: "stop limit");
+            }
+        }
+        
+}
+*/
+
+using System;
+using QuantConnect.Data.Market;
+using QuantConnect.Orders;
+using QuantConnect.Securities;
+using QuantConnect.Brokerages;
+using QuantConnect.Interfaces;
+
+namespace QuantConnect.Algorithm.CSharp
+{
+    /// <summary>
+    /// Algorithm demonstrating how to setup a custom brokerage message handler. Using the custom messaging
+    /// handler you can ensure your algorithm continues operation through connection failures.
+    /// </summary>
+    /// <meta name="tag" content="trading and orders" />
+    /// <meta name="tag" content="brokerage models" />
+    public class RabbitMQLive : QCAlgorithm
+    {
+        private bool _submittedMarketOnCloseToday;
+        private Security _security;
+        private DateTime last = DateTime.MinValue;
+
+        public override void Initialize()
+        {
+            SetStartDate(2013, 10, 7);
+            SetEndDate(2013, 10, 11);
+            SetCash(25000);
+
+            AddSecurity(SecurityType.Equity, "SPY", Resolution.Second, fillDataForward: true, extendedMarketHours: true);
+
+            _security = Securities["SPY"];
+
+            //Set the brokerage message handler:
+            SetBrokerageMessageHandler(new BrokerageMessageHandler(this));
         }
 
-        /// <summary>
-        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
-        /// </summary>
-        public bool CanRunLocally { get; } = true;
-
-        /// <summary>
-        /// This is used by the regression test system to indicate which languages this algorithm is written in.
-        /// </summary>
-        public Language[] Languages { get; } = { Language.CSharp, Language.Python };
-
-        /// <summary>
-        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
-        /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public void OnData(TradeBars data)
         {
-            {"Total Trades", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "263.153%"},
-            {"Drawdown", "2.200%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "1.663%"},
-            {"Sharpe Ratio", "4.824"},
-            {"Probabilistic Sharpe Ratio", "66.954%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0.996"},
-            {"Annual Standard Deviation", "0.219"},
-            {"Annual Variance", "0.048"},
-            {"Information Ratio", "-4.864"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "1.061"},
-            {"Total Fees", "$3.26"},
-            {"Fitness Score", "0.248"},
-            {"Kelly Criterion Estimate", "0"},
-            {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "94.3"},
-            {"Portfolio Turnover", "0.248"},
-            {"Total Insights Generated", "1"},
-            {"Total Insights Closed", "0"},
-            {"Total Insights Analysis Completed", "0"},
-            {"Long Insight Count", "1"},
-            {"Short Insight Count", "0"},
-            {"Long/Short Ratio", "100%"},
-            {"Estimated Monthly Alpha Value", "$0"},
-            {"Total Accumulated Estimated Alpha Value", "$0"},
-            {"Mean Population Estimated Insight Value", "$0"},
-            {"Mean Population Direction", "0%"},
-            {"Mean Population Magnitude", "0%"},
-            {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"}
-        };
+
+            if (Time.Date != last.Date) // each morning submit a market on open order
+            {
+                _submittedMarketOnCloseToday = false;
+                MarketOnOpenOrder("SPY", 100);
+                last = Time;
+
+                if (Portfolio.HoldStock) return;
+                Order("SPY", 100);
+                Debug("Purchased SPY on " + Time.ToShortDateString());
+
+                Sell("SPY", 50);
+                Debug("Sell SPY on " + Time.ToShortDateString());
+            }
+
+            if (!_submittedMarketOnCloseToday && _security.Exchange.ExchangeOpen) // once the exchange opens submit a market on close order
+            {
+                _submittedMarketOnCloseToday = true;
+                MarketOnCloseOrder("SPY", -100);
+            }
+        }
+
+        public override void OnOrderEvent(OrderEvent fill)
+        {
+            var order = Transactions.GetOrderById(fill.OrderId);
+            Console.WriteLine(Time + " - " + order.Type + " - " + fill.Status + ":: " + fill);
+        }
+    }
+
+    /// <summary>
+    /// Handle the error messages in a custom manner
+    /// </summary>
+    public class BrokerageMessageHandler : IBrokerageMessageHandler
+    {
+        private readonly IAlgorithm _algo;
+        public BrokerageMessageHandler(IAlgorithm algo) { _algo = algo; }
+
+        /// <summary>
+        /// Process the brokerage message event. Trigger any actions in the algorithm or notifications system required.
+        /// </summary>
+        /// <param name="message">Message object</param>
+        public void Handle(BrokerageMessageEvent message)
+        {
+            var toLog = $"{_algo.Time.ToStringInvariant("o")} Event: {message.Message}";
+            _algo.Debug(toLog);
+            _algo.Log(toLog);
+        }
     }
 }
