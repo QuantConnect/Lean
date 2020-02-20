@@ -192,6 +192,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Expectancy", "0.061"},
             {"Net Profit", "13.258%"},
             {"Sharpe Ratio", "0.897"},
+            {"Probabilistic Sharpe Ratio", "45.617%"},
             {"Loss Rate", "46%"},
             {"Win Rate", "54%"},
             {"Profit-Loss Ratio", "0.97"},
@@ -202,7 +203,27 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0.003"},
             {"Tracking Error", "0.173"},
             {"Treynor Ratio", "-1.367"},
-            {"Total Fees", "$8637.21"}
+            {"Total Fees", "$8637.21"},
+            {"Fitness Score", "0.675"},
+            {"Kelly Criterion Estimate", "5.042"},
+            {"Kelly Criterion Probability Value", "0"},
+            {"Sortino Ratio", "1.122"},
+            {"Return Over Maximum Drawdown", "1.242"},
+            {"Portfolio Turnover", "1.634"},
+            {"Total Insights Generated", "6417"},
+            {"Total Insights Closed", "6404"},
+            {"Total Insights Analysis Completed", "6404"},
+            {"Long Insight Count", "3215"},
+            {"Short Insight Count", "0"},
+            {"Long/Short Ratio", "100%"},
+            {"Estimated Monthly Alpha Value", "$3409340.3855"},
+            {"Total Accumulated Estimated Alpha Value", "$41499248.8040"},
+            {"Mean Population Estimated Insight Value", "$6480.2075"},
+            {"Mean Population Direction", "54.8756%"},
+            {"Mean Population Magnitude", "0%"},
+            {"Rolling Averaged Population Direction", "48.406%"},
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-1682658275"}
         };
     }
 }

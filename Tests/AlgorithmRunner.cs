@@ -53,8 +53,7 @@ namespace QuantConnect.Tests
             DateTime? startDate = null,
             DateTime? endDate = null,
             string setupHandler = "RegressionSetupHandlerWrapper",
-            decimal? initialCash = null,
-            bool storeResult = false)
+            decimal? initialCash = null)
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();

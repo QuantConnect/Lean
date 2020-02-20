@@ -48,8 +48,7 @@ namespace QuantConnect.Tests.Engine.Results
                 parameter.Language,
                 parameter.ExpectedFinalStatus,
                 startDate: algoStart,
-                endDate: algoEnd,
-                storeResult: true);
+                endDate: algoEnd);
 
             return backtestResults.Results;
         }
