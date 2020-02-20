@@ -25,7 +25,7 @@ from QuantConnect.Algorithm import *
 from QuantConnect.Logging import Log
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Framework.Alphas import InsightCollection, InsightDirection
-from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget
+from QuantConnect.Algorithm.Framework.Portfolio import PortfolioConstructionModel, PortfolioTarget, PortfolioBias
 from Portfolio.MaximumSharpeRatioPortfolioOptimizer import MaximumSharpeRatioPortfolioOptimizer
 from datetime import datetime, timedelta
 from itertools import groupby
@@ -46,6 +46,7 @@ from numpy.linalg import inv
 class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstructionModel):
     def __init__(self,
                  rebalancingParam = Resolution.Daily,
+                 portfolioBias = PortfolioBias.LongShort,
                  lookback = 1,
                  period = 63,
                  resolution = Resolution.Daily,
@@ -60,6 +61,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                               The function returns the next expected rebalance time for a given algorithm UTC DateTime.
                               The function returns null if unknown, in which case the function will be called again in the
                               next loop. Returning current time will trigger rebalance.
+            portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)
             lookback(int): Historical return lookback period
             period(int): The time interval of history price to calculate the weight
             resolution: The resolution of the history price
@@ -72,8 +74,13 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
         self.risk_free_rate = risk_free_rate
         self.delta = delta
         self.tau = tau
-        self.optimizer = MaximumSharpeRatioPortfolioOptimizer(risk_free_rate = risk_free_rate) if optimizer is None else optimizer
+        self.portfolioBias = portfolioBias
 
+        lower = 0 if portfolioBias == PortfolioBias.Long else -1
+        upper = 0 if portfolioBias == PortfolioBias.Short else 1
+        self.optimizer = MaximumSharpeRatioPortfolioOptimizer(lower, upper, risk_free_rate) if optimizer is None else optimizer
+
+        self.sign = lambda x: -1 if x < 0 else (1 if x > 0 else 0)
         self.symbolDataBySymbol = {}
 
         # If the argument is an instance of Resolution or Timedelta
@@ -103,6 +110,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                 symbolData = self.symbolDataBySymbol.get(symbol, self.BlackLittermanSymbolData(symbol, self.lookback, self.period))
                 if insight.Magnitude is None:
                     self.Algorithm.SetRunTimeError(ArgumentNullExceptionArgumentNullException('BlackLittermanOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please make sure your Alpha Model is generating Insights with the Magnitude property set.'))
+                    return targets
                 symbolData.Add(self.Algorithm.Time, insight.Magnitude)
                 returns[symbol] = symbolData.Return
 
@@ -121,6 +129,9 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
             for symbol, weight in weights.items():
                 for insight in lastActiveInsights:
                     if str(insight.Symbol) == str(symbol):
+                        # don't trust the optimizer
+                        if self.portfolioBias != PortfolioBias.LongShort and self.sign(weight) != self.sign(self.portfolioBias):
+                            weight = 0
                         targets[insight] = weight
                         break;
 

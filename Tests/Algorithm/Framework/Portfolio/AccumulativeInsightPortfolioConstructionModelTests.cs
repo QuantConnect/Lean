@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         private const decimal _startingCash = 100000;
         private const double DefaultPercent = 0.03;
 
-        [TestFixtureSetUp]
+        [SetUp]
         public void SetUp()
         {
             _algorithm = new QCAlgorithm();
@@ -394,6 +394,55 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             AssertTargets(expectedTargets, actualTargets);
         }
 
+        [TestCase(Language.CSharp, PortfolioBias.Long)]
+        [TestCase(Language.Python, PortfolioBias.Long)]
+        [TestCase(Language.CSharp, PortfolioBias.Short)]
+        [TestCase(Language.Python, PortfolioBias.Short)]
+        public void PortfolioBiasIsRespected(Language language, PortfolioBias bias)
+        {
+            SetPortfolioConstruction(language, _algorithm, bias);
+            var now = new DateTime(2018, 7, 31);
+            SetUtcTime(now.ConvertFromUtc(_algorithm.TimeZone));
+            var appl = _algorithm.AddEquity("AAPL");
+            appl.SetMarketPrice(new Tick(now, appl.Symbol, 10, 10));
+
+            var spy = _algorithm.AddEquity("SPY");
+            spy.SetMarketPrice(new Tick(now, spy.Symbol, 20, 20));
+
+            var ibm = _algorithm.AddEquity("IBM");
+            ibm.SetMarketPrice(new Tick(now, ibm.Symbol, 30, 30));
+
+            var aig = _algorithm.AddEquity("AIG");
+            aig.SetMarketPrice(new Tick(now, aig.Symbol, 30, 30));
+
+            var qqq = _algorithm.AddEquity("QQQ");
+            qqq.SetMarketPrice(new Tick(now, qqq.Symbol, 30, 30));
+
+            var insights = new[]
+            {
+                new Insight(now, appl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, 0.1d, null),
+                new Insight(now, spy.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, -0.1d, null),
+                new Insight(now, ibm.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, 0d, null),
+                new Insight(now, aig.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, -0.1d, null),
+                new Insight(now, qqq.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Up, 0.1d, null)
+            };
+            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, SecurityChanges.Added(appl, spy, ibm, aig, qqq));
+
+            var createdValidTarget = false;
+            foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
+            {
+                QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
+                if (target.Quantity == 0)
+                {
+                    continue;
+                }
+
+                createdValidTarget = true;
+                Assert.AreEqual(Math.Sign((int)bias), Math.Sign(target.Quantity));
+            }
+
+            Assert.IsTrue(createdValidTarget);
+        }
 
         private Security GetSecurity(Symbol symbol)
         {
@@ -418,15 +467,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return insight;
         }
 
-        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm)
+        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm, PortfolioBias bias= PortfolioBias.LongShort)
         {
-            algorithm.SetPortfolioConstruction(new AccumulativeInsightPortfolioConstructionModel());
+            algorithm.SetPortfolioConstruction(new AccumulativeInsightPortfolioConstructionModel((Func<DateTime,DateTime>)null, bias));
             if (language == Language.Python)
             {
                 using (Py.GIL())
                 {
                     var name = nameof(AccumulativeInsightPortfolioConstructionModel);
-                    var instance = Py.Import(name).GetAttr(name).Invoke();
+                    var instance = Py.Import(name).GetAttr(name).Invoke(((object)null).ToPython(), ((int)bias).ToPython());
                     var model = new PortfolioConstructionModelPythonWrapper(instance);
                     algorithm.SetPortfolioConstruction(model);
                 }

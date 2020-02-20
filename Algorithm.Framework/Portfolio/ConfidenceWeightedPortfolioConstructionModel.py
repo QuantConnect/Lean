@@ -16,8 +16,8 @@ AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm.Framework")
 
 from QuantConnect import *
-from QuantConnect.Algorithm.Framework.Portfolio import *
-from InsightWeightingPortfolioConstructionModel import *
+from QuantConnect.Algorithm.Framework.Portfolio import PortfolioBias
+from InsightWeightingPortfolioConstructionModel import InsightWeightingPortfolioConstructionModel
 
 class ConfidenceWeightedPortfolioConstructionModel(InsightWeightingPortfolioConstructionModel):
     '''Provides an implementation of IPortfolioConstructionModel that generates percent targets based on the

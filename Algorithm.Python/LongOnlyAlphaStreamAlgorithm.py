@@ -70,3 +70,9 @@ class LongOnlyAlphaStreamAlgorithm(QCAlgorithm):
                 Insight.Price("SPY", timedelta(1), InsightDirection.Up),
                 Insight.Price("IBM", timedelta(1), InsightDirection.Down)
             ])
+
+    def OnOrderEvent(self, orderEvent):
+        if orderEvent.Status == OrderStatus.Filled:
+            if self.Securities[orderEvent.Symbol].Holdings.IsShort:
+                raise ValueError("Invalid position, should not be short");
+            self.Debug(orderEvent)

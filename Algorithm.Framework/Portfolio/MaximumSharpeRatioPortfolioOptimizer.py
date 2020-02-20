@@ -74,7 +74,8 @@ class MaximumSharpeRatioPortfolioOptimizer:
                        constraints = constraints,                                 # Constraints definition
                        method='SLSQP')        # Optimization method:  Sequential Least SQuares Programming
         sharpe_ratio = expectedReturns.dot(opt['x']) / opt.fun
-        return opt['x']
+
+        return opt['x'] if opt['success'] else x0
 
     def portfolio_variance(self, weights, covariance):
         '''Computes the portfolio variance
@@ -83,7 +84,8 @@ class MaximumSharpeRatioPortfolioOptimizer:
             covariance: Covariance matrix of historical returns'''
         variance = np.dot(weights.T, np.dot(covariance, weights))
         if variance == 0:
-            raise ValueError(f'MaximumSharpeRatioPortfolioOptimizer.portfolio_variance: Volatility cannot be zero. Weights: {weights}')
+            # variance can't be zero, so we return max value
+            return np.finfo(np.float).max
         return variance
 
     def get_boundary_conditions(self, size):

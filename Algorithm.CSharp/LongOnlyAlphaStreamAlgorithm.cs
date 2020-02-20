@@ -75,7 +75,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Status.IsFill())
             {
-                Debug($"Purchased Stock: {orderEvent.Symbol}");
+                if (Securities[orderEvent.Symbol].Holdings.IsShort)
+                {
+                    throw new Exception("Invalid position, should not be short");
+                }
+                Debug($"Purchased Stock: {orderEvent}");
             }
         }
 
