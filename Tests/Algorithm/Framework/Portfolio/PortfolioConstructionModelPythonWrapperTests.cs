@@ -19,6 +19,7 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -77,15 +78,18 @@ class PyPCM(EqualWeightingPortfolioConstructionModel):
         return super().DetermineTargetPercent(activeInsights)
 "
                 ).GetAttr("PyPCM").Invoke();
-
+                var now = new DateTime(2020, 1, 10);
                 var wrappedModel = new PortfolioConstructionModelPythonWrapper(model);
                 var aapl = algorithm.AddEquity("AAPL");
+                aapl.SetMarketPrice(new Tick(now, aapl.Symbol, 10, 10));
+                algorithm.SetDateTime(now);
 
                 wrappedModel.OnSecuritiesChanged(algorithm, new SecurityChanges(SecurityChanges.Added(aapl)));
                 Assert.IsTrue((bool)model.OnSecuritiesChanged_WasCalled);
 
-                var result = wrappedModel.CreateTargets(algorithm,
-                    new[] { new Insight(aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down) }).ToList();
+                var insight = new Insight(now, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, null, null);
+                var result = wrappedModel.CreateTargets(algorithm, new[] { insight }).ToList();
+                Assert.AreEqual(1, result.Count);
                 Assert.IsTrue((bool)model.CreateTargets_WasCalled);
                 Assert.IsTrue((bool)model.GetTargetInsights_WasCalled);
                 Assert.IsTrue((bool)model.IsRebalanceDue_WasCalled);
@@ -140,14 +144,18 @@ class PyPCM(EqualWeightingPortfolioConstructionModel):
 "
                 ).GetAttr("PyPCM").Invoke();
 
+                var now = new DateTime(2020, 1, 10);
                 var wrappedModel = new PortfolioConstructionModelPythonWrapper(model);
                 var aapl = algorithm.AddEquity("AAPL");
+                aapl.SetMarketPrice(new Tick(now, aapl.Symbol, 10, 10));
+                algorithm.SetDateTime(now);
 
                 wrappedModel.OnSecuritiesChanged(algorithm, new SecurityChanges(SecurityChanges.Added(aapl)));
                 Assert.IsTrue((bool)model.OnSecuritiesChanged_WasCalled);
 
-                var result = wrappedModel.CreateTargets(algorithm,
-                    new[] { new Insight(aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down) }).ToList();
+                var insight = new Insight(now, aapl.Symbol, TimeSpan.FromDays(1), InsightType.Price, InsightDirection.Down, null, null);
+                var result = wrappedModel.CreateTargets(algorithm, new[] { insight }).ToList();
+                Assert.AreEqual(1, result.Count);
                 Assert.IsTrue((bool)model.CreateTargets_WasCalled);
                 Assert.IsTrue((bool)model.GetTargetInsights_WasCalled);
                 Assert.IsTrue((bool)model.IsRebalanceDue_WasCalled);

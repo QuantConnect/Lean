@@ -181,8 +181,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     return _model.DetermineTargetPercent(activeInsights);
                 }
 
-                var dic = new Dictionary<Insight, double>();
+                Dictionary<Insight, double> dic;
                 var result = _model.DetermineTargetPercent(activeInsights);
+                if ((result as PyObject).TryConvert(out dic))
+                {
+                    // this is required if the python implementation is actually returning a C# dic, not common,
+                    // but could happen if its actually calling a base C# implementation
+                    return dic;
+                }
+
+                dic = new Dictionary<Insight, double>();
                 foreach (var pyInsight in result)
                 {
                     var insight = (pyInsight as PyObject).As<Insight>();
