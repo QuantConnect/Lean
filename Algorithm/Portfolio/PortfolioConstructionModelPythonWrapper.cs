@@ -27,6 +27,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     public class PortfolioConstructionModelPythonWrapper : PortfolioConstructionModel
     {
         private readonly dynamic _model;
+        private readonly bool _implementsDetermineTargetPercent;
 
         /// <summary>
         /// True if should rebalance portfolio on security changes. True by default
@@ -88,6 +89,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
                 _model = model;
                 _model.SetPythonWrapper(this);
+
+                _implementsDetermineTargetPercent = model.GetPythonMethod("DetermineTargetPercent") != null;
             }
         }
 
@@ -168,10 +171,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        protected override Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
+        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
         {
             using (Py.GIL())
             {
+                if (!_implementsDetermineTargetPercent)
+                {
+                    // the implementation is in C#
+                    return _model.DetermineTargetPercent(activeInsights);
+                }
+
                 var dic = new Dictionary<Insight, double>();
                 var result = _model.DetermineTargetPercent(activeInsights);
                 foreach (var pyInsight in result)

@@ -39,7 +39,6 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.Resolution = Resolution.Minute;
 
             Settings.RebalancePortfolioOnInsightChanges = false;
-            Settings.RebalancePortfolioOnSecurityChanges = false;
 
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
@@ -84,32 +83,32 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "13"},
-            {"Average Win", "0.13%"},
-            {"Average Loss", "-0.69%"},
-            {"Compounding Annual Return", "574.998%"},
-            {"Drawdown", "1.200%"},
-            {"Expectancy", "-0.403"},
-            {"Net Profit", "2.650%"},
-            {"Sharpe Ratio", "7.204"},
-            {"Probabilistic Sharpe Ratio", "75.346%"},
+            {"Total Trades", "12"},
+            {"Average Win", "0.14%"},
+            {"Average Loss", "-0.68%"},
+            {"Compounding Annual Return", "594.079%"},
+            {"Drawdown", "1.700%"},
+            {"Expectancy", "-0.398"},
+            {"Net Profit", "2.690%"},
+            {"Sharpe Ratio", "7.315"},
+            {"Probabilistic Sharpe Ratio", "75.794%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
-            {"Profit-Loss Ratio", "0.19"},
-            {"Alpha", "0.649"},
-            {"Beta", "0.809"},
-            {"Annual Standard Deviation", "0.185"},
+            {"Profit-Loss Ratio", "0.20"},
+            {"Alpha", "0.666"},
+            {"Beta", "0.803"},
+            {"Annual Standard Deviation", "0.184"},
             {"Annual Variance", "0.034"},
-            {"Information Ratio", "4.551"},
+            {"Information Ratio", "4.675"},
             {"Tracking Error", "0.107"},
-            {"Treynor Ratio", "1.652"},
-            {"Total Fees", "$25.43"},
-            {"Fitness Score", "0.68"},
+            {"Treynor Ratio", "1.677"},
+            {"Total Fees", "$24.45"},
+            {"Fitness Score", "0.677"},
             {"Kelly Criterion Estimate", "13.755"},
             {"Kelly Criterion Probability Value", "0.225"},
             {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "478.325"},
-            {"Portfolio Turnover", "0.68"},
+            {"Return Over Maximum Drawdown", "503.181"},
+            {"Portfolio Turnover", "0.677"},
             {"Total Insights Generated", "17"},
             {"Total Insights Closed", "14"},
             {"Total Insights Analysis Completed", "14"},

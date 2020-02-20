@@ -288,6 +288,7 @@
     <Compile Include="Algorithm\Framework\Portfolio\AccumulativeInsightPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\ConfidenceWeightedPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\BaseWeightingPortfolioConstructionModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\PortfolioConstructionModelPythonWrapperTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\SectorWeightingPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\InsightWeightingPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioConstructionModelTests.cs" />

@@ -227,7 +227,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="lastActiveInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        protected override Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> lastActiveInsights)
+        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> lastActiveInsights)
         {
             var targets = new Dictionary<Insight, double>();
 

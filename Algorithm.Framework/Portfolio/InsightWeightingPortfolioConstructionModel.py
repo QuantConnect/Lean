@@ -52,8 +52,7 @@ class InsightWeightingPortfolioConstructionModel(EqualWeightingPortfolioConstruc
         Args:
             activeInsights: The active insights to generate a target for'''
         result = {}
-        if len(activeInsights) == 0:
-            return result
+
         # We will adjust weights proportionally in case the sum is > 1 so it sums to 1.
         weightSums = sum(self.GetValue(insight) for insight in activeInsights)
         weightFactor = 1.0
