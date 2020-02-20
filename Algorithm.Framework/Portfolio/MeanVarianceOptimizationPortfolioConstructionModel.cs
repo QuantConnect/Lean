@@ -22,7 +22,6 @@ using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Scheduling;
-using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -38,8 +37,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         private readonly int _period;
         private readonly Resolution _resolution;
         private readonly IPortfolioOptimizer _optimizer;
-
-        private readonly List<Symbol> _pendingRemoval;
         private readonly Dictionary<Symbol, ReturnsSymbolData> _symbolDataDict;
 
         /// <summary>
@@ -71,7 +68,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="targetReturn">The target portfolio return</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public MeanVarianceOptimizationPortfolioConstructionModel(Resolution rebalanceResolution,
+        public MeanVarianceOptimizationPortfolioConstructionModel(Resolution rebalanceResolution = Resolution.Daily,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
@@ -136,7 +133,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="resolution">The resolution of the history price</param>
         /// <param name="targetReturn">The target portfolio return</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If the algorithm is not provided then the default will be mean-variance optimization.</param>
-        public MeanVarianceOptimizationPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc = null,
+        public MeanVarianceOptimizationPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
@@ -176,84 +173,69 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             _optimizer = optimizer ?? new MinimumVariancePortfolioOptimizer(targetReturn: targetReturn);
 
-            _pendingRemoval = new List<Symbol>();
             _symbolDataDict = new Dictionary<Symbol, ReturnsSymbolData>();
         }
 
         /// <summary>
-        /// Create portfolio targets from the specified insights
+        /// Method that will determine if the portfolio construction model should create a
+        /// target for this insight
         /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="insights">The insights to create portfolio targets from</param>
-        /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
-        public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+        /// <param name="insight">The insight to create a target for</param>
+        /// <returns>True if the portfolio should create a target for the insight</returns>
+        protected override bool ShouldCreateTargetForInsight(Insight insight)
         {
-            // always add new insights
-            insights = FilterInvalidInsightMagnitude(algorithm, insights);
-            foreach (var insight in insights)
+            var filteredInsight = FilterInvalidInsightMagnitude(Algorithm, new[] { insight }).FirstOrDefault();
+            if (filteredInsight == null)
             {
-                ReturnsSymbolData data;
-                if (_symbolDataDict.TryGetValue(insight.Symbol, out data))
+                return false;
+            }
+
+            ReturnsSymbolData data;
+            if (_symbolDataDict.TryGetValue(insight.Symbol, out data))
+            {
+                if (!insight.Magnitude.HasValue)
                 {
-                    if (!insight.Magnitude.HasValue)
-                    {
-                        algorithm.SetRunTimeError(
-                            new ArgumentNullException(
-                                insight.Symbol.Value,
-                                "MeanVarianceOptimizationPortfolioConstructionModel does not accept 'null' as Insight.Magnitude. " +
-                                "Please checkout the selected Alpha Model specifications: " + insight.SourceModel));
-                        continue;
-                    }
-                    data.Add(algorithm.Time, insight.Magnitude.Value.SafeDecimalCast());
+                    Algorithm.SetRunTimeError(
+                        new ArgumentNullException(
+                            insight.Symbol.Value,
+                            "MeanVarianceOptimizationPortfolioConstructionModel does not accept 'null' as Insight.Magnitude. " +
+                            "Please checkout the selected Alpha Model specifications: " + insight.SourceModel));
                 }
+                data.Add(Algorithm.Time, insight.Magnitude.Value.SafeDecimalCast());
             }
 
-            if (!IsRebalanceDue(insights, algorithm.UtcTime))
-            {
-                return Enumerable.Empty<IPortfolioTarget>();
-            }
+            return true;
+        }
 
-            var targets = new List<IPortfolioTarget>();
+        /// <summary>
+        /// Will determine the target percent for each insight
+        /// </summary>
+        /// <param name="activeInsights">The active insights to generate a target for</param>
+        /// <returns>A target percent for each insight</returns>
+        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
+        {
+            var targets = new Dictionary<Insight, double>();
 
-            // remove pending
-            foreach (var symbol in _pendingRemoval)
-            {
-                targets.Add(new PortfolioTarget(symbol, 0));
-            }
-            _pendingRemoval.Clear();
-
-            var symbols = insights.Select(x => x.Symbol).ToHashSet();
-            if (symbols.Count == 0)
-            {
-                return targets;
-            }
+            var symbols = activeInsights.Select(x => x.Symbol).ToList();
 
             // Get symbols' returns
             var returns = _symbolDataDict.FormReturnsMatrix(symbols);
+
             // Calculate rate of returns
             var rreturns = returns.Apply(e => Math.Pow(1.0 + e, 252.0) - 1.0);
-            // Calculate geometric mean of rate of returns
-            var gmean = Enumerable.Range(0, rreturns.GetLength(1))
-                .Select(i => rreturns.GetColumn(i))
-                .Select(c => Math.Pow(Elementwise.Add(c, 1.0).Product(), 1.0 / c.Length) - 1.0)
-                .ToArray();
 
             // The optimization method processes the data frame
-            var W = _optimizer.Optimize(rreturns); //, gmean);
+            var w = _optimizer.Optimize(rreturns);
 
             // process results
-            if (W.Length > 0)
+            if (w.Length > 0)
             {
-                int sidx = 0;
+                var sidx = 0;
                 foreach (var symbol in symbols)
                 {
-                    var weight = W[sidx].SafeDecimalCast();
+                    var weight = w[sidx];
 
-                    var target = PortfolioTarget.Percent(algorithm, symbol, weight);
-                    if (target != null)
-                    {
-                        targets.Add(target);
-                    }
+                    targets[activeInsights.First(insight => insight.Symbol == symbol)] = weight;
 
                     sidx++;
                 }
@@ -273,31 +255,28 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // clean up data for removed securities
             foreach (var removed in changes.RemovedSecurities)
             {
-                _pendingRemoval.Add(removed.Symbol);
                 ReturnsSymbolData data;
                 if (_symbolDataDict.TryGetValue(removed.Symbol, out data))
                 {
                     _symbolDataDict.Remove(removed.Symbol);
-                    data.Reset();
                 }
             }
 
+            if (changes.AddedSecurities.Count == 0)
+                return;
+
             // initialize data for added securities
-            var addedSymbols = new List<Symbol>();
             foreach (var added in changes.AddedSecurities)
             {
                 if (!_symbolDataDict.ContainsKey(added.Symbol))
                 {
                     var symbolData = new ReturnsSymbolData(added.Symbol, _lookback, _period);
                     _symbolDataDict[added.Symbol] = symbolData;
-                    addedSymbols.Add(added.Symbol);
                 }
             }
-            if (addedSymbols.Count == 0)
-                return;
 
             // warmup our indicators by pushing history through the consolidators
-            algorithm.History(addedSymbols, _lookback * _period, _resolution)
+            algorithm.History(changes.AddedSecurities.Select(security => security.Symbol), _lookback * _period, _resolution)
                 .PushThrough(bar =>
                 {
                     ReturnsSymbolData symbolData;

@@ -19,6 +19,7 @@ using System.Linq;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Scheduling;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -34,10 +35,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     ///    3. On active Flat insight, move by percent towards 0
     ///    4. On expired insight, and no other active insight, emits a 0 target'''
     /// </summary>
-    public class AccumulativeInsightPortfolioConstructionModel : EqualWeightingPortfolioConstructionModel
+    public class AccumulativeInsightPortfolioConstructionModel : PortfolioConstructionModel
     {
         private readonly double _percent;
-        private DateTime _currentUtcTime;
 
         /// <summary>
         /// Initialize a new instance of <see cref="AccumulativeInsightPortfolioConstructionModel"/>
@@ -124,16 +124,26 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         }
 
         /// <summary>
+        /// Gets the target insights to calculate a portfolio target percent for
+        /// </summary>
+        /// <returns>An enumerable of the target insights</returns>
+        protected override List<Insight> GetTargetInsights()
+        {
+            return InsightCollection.GetActiveInsights(Algorithm.UtcTime)
+                .OrderBy(insight => insight.GeneratedTimeUtc)
+                .ToList();
+        }
+
+        /// <summary>
         /// Determines the target percent for each insight
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        protected override Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
+        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
         {
             var percentPerSymbol = new Dictionary<Symbol, double>();
 
-            foreach (var insight in InsightCollection.GetActiveInsights(_currentUtcTime)
-                .OrderBy(insight => insight.GeneratedTimeUtc))
+            foreach (var insight in activeInsights)
             {
                 double targetPercent;
                 if (percentPerSymbol.TryGetValue(insight.Symbol, out targetPercent))
@@ -158,20 +168,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 percentPerSymbol[insight.Symbol] = targetPercent;
             }
 
-            return activeInsights
+            return activeInsights.DistinctBy(insight => insight.Symbol)
                 .ToDictionary(insight => insight, insight => percentPerSymbol[insight.Symbol]);
-        }
-
-        /// <summary>
-        /// Create portfolio targets from the specified insights
-        /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="insights">The insights to create portfolio targets from</param>
-        /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
-        public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
-        {
-            _currentUtcTime = algorithm.UtcTime;
-            return base.CreateTargets(algorithm, insights);
         }
     }
 }

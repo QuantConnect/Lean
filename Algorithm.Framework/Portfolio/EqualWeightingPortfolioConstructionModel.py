@@ -47,13 +47,6 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         if rebalancingFunc:
             self.SetRebalancingFunc(rebalancingFunc)
 
-    def ShouldCreateTargetForInsight(self, insight):
-        '''Method that will determine if the portfolio construction model should create a
-        target for this insight
-        Args:
-            insight: The insight to create a target for'''
-        return True
-
     def DetermineTargetPercent(self, activeInsights):
         '''Will determine the target percent for each insight
         Args:
@@ -66,69 +59,3 @@ class EqualWeightingPortfolioConstructionModel(PortfolioConstructionModel):
         for insight in activeInsights:
             result[insight] = insight.Direction * percent
         return result
-
-    def CreateTargets(self, algorithm, insights):
-        '''Create portfolio targets from the specified insights
-        Args:
-            algorithm: The algorithm instance
-            insights: The insights to create portfolio targets from
-        Returns:
-            An enumerable of portfolio targets to be sent to the execution model'''
-        targets = []
-
-        # Always add new insights
-        for insight in insights:
-            if self.ShouldCreateTargetForInsight(insight):
-                self.InsightCollection.Add(insight)
-
-        if not self.IsRebalanceDue(insights, algorithm.UtcTime):
-            return targets
-
-        # Create flatten target for each security that was removed from the universe
-        if self.removedSymbols is not None:
-            universeDeselectionTargets = [ PortfolioTarget(symbol, 0) for symbol in self.removedSymbols ]
-            targets.extend(universeDeselectionTargets)
-            self.removedSymbols = None
-
-        # Get insight that haven't expired of each symbol that is still in the universe
-        activeInsights = self.InsightCollection.GetActiveInsights(algorithm.UtcTime)
-
-        # Get the last generated active insight for each symbol
-        lastActiveInsights = []
-        for symbol, g in groupby(activeInsights, lambda x: x.Symbol):
-            lastActiveInsights.append(sorted(g, key = lambda x: x.GeneratedTimeUtc)[-1])
-
-        # Determine target percent for the given insights
-        percents = self.DetermineTargetPercent(lastActiveInsights)
-
-        errorSymbols = {}
-        for insight in lastActiveInsights:
-            target = PortfolioTarget.Percent(algorithm, insight.Symbol, percents[insight])
-            if not target is None:
-                targets.append(target)
-            else:
-                errorSymbols[insight.Symbol] = insight.Symbol
-
-        # Get expired insights and create flatten targets for each symbol
-        expiredInsights = self.InsightCollection.RemoveExpiredInsights(algorithm.UtcTime)
-
-        expiredTargets = []
-        for symbol, f in groupby(expiredInsights, lambda x: x.Symbol):
-            if not self.InsightCollection.HasActiveInsights(symbol, algorithm.UtcTime) and not symbol in errorSymbols:
-                expiredTargets.append(PortfolioTarget(symbol, 0))
-                continue
-
-        targets.extend(expiredTargets)
-
-        return targets
-
-    def OnSecuritiesChanged(self, algorithm, changes):
-        '''Event fired each time the we add/remove securities from the data feed
-        Args:
-            algorithm: The algorithm instance that experienced the change in securities
-            changes: The security additions and removals from the algorithm'''
-
-        # Get removed symbol and invalidate them in the insight collection
-        super().OnSecuritiesChanged(algorithm, changes)
-        self.removedSymbols = [x.Symbol for x in changes.RemovedSecurities]
-        self.InsightCollection.Clear(self.removedSymbols)

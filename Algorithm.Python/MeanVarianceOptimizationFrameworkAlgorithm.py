@@ -46,6 +46,8 @@ class MeanVarianceOptimizationFrameworkAlgorithm(QCAlgorithm):
         # Set requested data resolution
         self.UniverseSettings.Resolution = Resolution.Minute
 
+        self.Settings.RebalancePortfolioOnInsightChanges = False
+
         self.SetStartDate(2013,10,7)   #Set Start Date
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash

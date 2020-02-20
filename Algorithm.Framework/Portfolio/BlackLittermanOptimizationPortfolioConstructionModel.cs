@@ -44,8 +44,6 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         private readonly double _delta;
         private readonly double _tau;
         private readonly IPortfolioOptimizer _optimizer;
-
-        private List<Symbol> _removedSymbols;
         private readonly Dictionary<Symbol, ReturnsSymbolData> _symbolDataDict;
 
         /// <summary>
@@ -214,43 +212,24 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         }
 
         /// <summary>
-        /// Create portfolio targets from the specified insights
+        /// Method that will determine if the portfolio construction model should create a
+        /// target for this insight
         /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="insights">The insights to create portfolio targets from</param>
-        /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
-        public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+        /// <param name="insight">The insight to create a target for</param>
+        /// <returns>True if the portfolio should create a target for the insight</returns>
+        protected override bool ShouldCreateTargetForInsight(Insight insight)
         {
-            // always add new insights
-            if (insights.Length > 0)
-            {
-                insights = FilterInvalidInsightMagnitude(algorithm, insights);
-                InsightCollection.AddRange(insights);
-            }
+            return FilterInvalidInsightMagnitude(Algorithm, new []{ insight }).Length != 0;
+        }
 
-            if (!IsRebalanceDue(insights, algorithm.UtcTime))
-            {
-                return Enumerable.Empty<IPortfolioTarget>();
-            }
-
-            var targets = new List<IPortfolioTarget>();
-
-            // Create flatten target for each security that was removed from the universe
-            if (_removedSymbols != null)
-            {
-                var universeDeselectionTargets = _removedSymbols.Select(symbol => new PortfolioTarget(symbol, 0));
-                targets.AddRange(universeDeselectionTargets);
-                _removedSymbols = null;
-            }
-
-            // Get insight that haven't expired of each symbol that is still in the universe
-            var activeInsights = InsightCollection.GetActiveInsights(algorithm.UtcTime);
-
-            // Get the last generated active insight for each symbol
-            var lastActiveInsights = (from insight in activeInsights
-                                      group insight by new { insight.Symbol, insight.SourceModel } into g
-                                      select g.OrderBy(x => x.GeneratedTimeUtc).Last())
-                                     .OrderBy(x => x.Symbol).ToArray();
+        /// <summary>
+        /// Will determine the target percent for each insight
+        /// </summary>
+        /// <param name="lastActiveInsights">The active insights to generate a target for</param>
+        /// <returns>A target percent for each insight</returns>
+        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> lastActiveInsights)
+        {
+            var targets = new Dictionary<Insight, double>();
 
             double[,] P;
             double[] Q;
@@ -264,9 +243,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     {
                         if (insight.Magnitude == null)
                         {
-                            algorithm.SetRunTimeError(new ArgumentNullException("BlackLittermanOptimizationPortfolioConstructionModel does not accept \'null\' as Insight.Magnitude. Please make sure your Alpha Model is generating Insights with the Magnitude property set."));
+                            Algorithm.SetRunTimeError(new ArgumentNullException("BlackLittermanOptimizationPortfolioConstructionModel does not accept \'null\' as Insight.Magnitude. Please make sure your Alpha Model is generating Insights with the Magnitude property set."));
                         }
-                        symbolData.Add(algorithm.Time, insight.Magnitude.Value.SafeDecimalCast());
+                        symbolData.Add(Algorithm.Time, insight.Magnitude.Value.SafeDecimalCast());
                     }
                 }
                 // Get symbols' returns
@@ -284,28 +263,31 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 var sidx = 0;
                 foreach (var symbol in symbols)
                 {
-                    var weight = W[sidx].SafeDecimalCast();
+                    var weight = W[sidx];
 
-                    var target = PortfolioTarget.Percent(algorithm, symbol, weight);
-                    if (target != null)
-                    {
-                        targets.Add(target);
-                    }
+                    targets[lastActiveInsights.First(insight => insight.Symbol == symbol)] = weight;
 
                     sidx++;
                 }
             }
-            // Get expired insights and create flatten targets for each symbol
-            var expiredInsights = InsightCollection.RemoveExpiredInsights(algorithm.UtcTime);
-
-            var expiredTargets = from insight in expiredInsights
-                                 group insight.Symbol by insight.Symbol into g
-                                 where !InsightCollection.HasActiveInsights(g.Key, algorithm.UtcTime)
-                                 select new PortfolioTarget(g.Key, 0);
-
-            targets.AddRange(expiredTargets);
 
             return targets;
+        }
+
+        /// <summary>
+        /// Gets the target insights to calculate a portfolio target percent for
+        /// </summary>
+        /// <returns>An enumerable of the target insights</returns>
+        protected override List<Insight> GetTargetInsights()
+        {
+            // Get insight that haven't expired of each symbol that is still in the universe
+            var activeInsights = InsightCollection.GetActiveInsights(Algorithm.UtcTime);
+
+            // Get the last generated active insight for each symbol
+            return (from insight in activeInsights
+                    group insight by new { insight.Symbol, insight.SourceModel } into g
+                    select g.OrderBy(x => x.GeneratedTimeUtc).Last())
+                    .OrderBy(x => x.Symbol).ToList();
         }
 
         /// <summary>
@@ -316,11 +298,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
             base.OnSecuritiesChanged(algorithm, changes);
-            // Get removed symbol and invalidate them in the insight collection
-            _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol).ToList();
-            InsightCollection.Clear(_removedSymbols.ToArray());
 
-            foreach (var symbol in _removedSymbols)
+            foreach (var symbol in changes.RemovedSecurities.Select(x => x.Symbol))
             {
                 if (_symbolDataDict.ContainsKey(symbol))
                 {
@@ -372,7 +351,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="insights">Array of insight that represent the investors' views</param>
         /// <param name="P">A matrix that identifies the assets involved in the views (size: K x N)</param>
         /// <param name="Q">A view vector (size: K x 1)</param>
-        private bool TryGetViews(Insight[] insights, out double[,] P, out double[] Q)
+        private bool TryGetViews(ICollection<Insight> insights, out double[,] P, out double[] Q)
         {
             try
             {
