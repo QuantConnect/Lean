@@ -431,6 +431,34 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
+        [TestCase(true, 1, 1)]
+        [TestCase(true, 1, -1)]
+        [TestCase(true, -1, -1)]
+        [TestCase(true, -1, 1)]
+        // reducing the position to target 0 is valid
+        [TestCase(false, 0, -1)]
+        [TestCase(false, 0, 1)]
+        public void NegativeMarginRemaining(bool isError, int target, int side)
+        {
+            var algo = GetAlgorithm();
+            var security = InitAndGetSecurity(algo, 5);
+            security.Holdings.SetHoldings(security.Price, 1000 * side);
+            algo.Portfolio.CashBook.Add(algo.AccountCurrency, -100000, 1);
+
+            Assert.IsTrue(algo.Portfolio.MarginRemaining < 0);
+
+            var actual = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
+                new GetMaximumOrderQuantityForTargetBuyingPowerParameters(algo.Portfolio,
+                    security,
+                    target * side));
+
+            Assert.AreEqual(isError, actual.IsError);
+            if (!isError)
+            {
+                Assert.AreEqual(1000 * side * -1, actual.Quantity);
+            }
+        }
+
         private static QCAlgorithm GetAlgorithm()
         {
             SymbolCache.Clear();

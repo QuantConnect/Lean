@@ -385,9 +385,10 @@ namespace QuantConnect.Securities
                 return new GetMaximumOrderQuantityResult(0, reason, false);
             }
 
-            // calculate the total margin available
-            var marginRemaining = GetMarginRemaining(parameters.Portfolio, parameters.Security, direction);
-            if (marginRemaining <= 0)
+            var increasingFinalMargin = Math.Abs(signedTargetFinalMarginValue) > Math.Abs(currentSignedUsedMargin);
+            // calculate the total margin available, only check if we are going to increase our margin usage
+            if (increasingFinalMargin
+                && GetMarginRemaining(parameters.Portfolio, parameters.Security, direction) <= 0)
             {
                 var reason = "The portfolio does not have enough margin available.";
                 return new GetMaximumOrderQuantityResult(0, reason);
