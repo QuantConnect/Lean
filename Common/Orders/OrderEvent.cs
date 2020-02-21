@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.ComponentModel;
+using Newtonsoft.Json;
 using QuantConnect.Orders.Fees;
 using static QuantConnect.StringExtensions;
 
@@ -78,6 +80,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Public Property Absolute Getter of Quantity -Filled
         /// </summary>
+        [JsonIgnore]
         public decimal AbsoluteFillQuantity => Math.Abs(FillQuantity);
 
         /// <summary>
@@ -88,6 +91,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Any message from the exchange.
         /// </summary>
+        [DefaultValue(""), JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Message { get; set; }
 
         /// <summary>

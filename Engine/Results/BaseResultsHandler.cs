@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,6 +26,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Statistics;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -33,6 +35,24 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public abstract class BaseResultsHandler
     {
+        private int _lastOrderEventCount;
+
+        /// <summary>
+        /// True when final packet storing has began
+        /// </summary>
+        /// <remarks>This is required to avoid any race conditions between the running update thread
+        /// and the main thread storing the final results. Guarantees the final packet wont be overwritten.
+        /// To be used with <see cref="StoringLock"/></remarks>
+        protected volatile bool ProcessingFinalPacket;
+
+        /// <summary>
+        /// Lock to be used when storing results
+        /// </summary>
+        /// <remarks>This is required to avoid any race conditions between the running update thread
+        /// and the main thread storing the final results. Guarantees the final packet wont be overwritten.
+        /// To be used with <see cref="ProcessingFinalPacket"/></remarks>
+        protected object StoringLock { get; }
+
         /// <summary>
         /// True if the exit has been triggered
         /// </summary>
@@ -42,6 +62,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// The log store instance
         /// </summary>
         protected List<LogEntry> LogStore { get; }
+
+        /// <summary>
+        /// The algorithms order events
+        /// </summary>
+        protected ConcurrentQueue<OrderEvent> OrderEvents { get; }
 
         /// <summary>
         /// Algorithms performance related chart names
@@ -126,7 +151,9 @@ namespace QuantConnect.Lean.Engine.Results
             CompileId = "";
             JobId = "";
             ChartLock = new object();
+            StoringLock = new object();;
             LogStore = new List<LogEntry>();
+            OrderEvents = new ConcurrentQueue<OrderEvent>();
         }
 
         /// <summary>
@@ -178,6 +205,57 @@ namespace QuantConnect.Lean.Engine.Results
             return StartingPortfolioValue > 0 ?
                 (Algorithm.Portfolio.TotalPortfolioValue - StartingPortfolioValue) / StartingPortfolioValue
                 : 0;
+        }
+
+        /// <summary>
+        /// New order event for the algorithm
+        /// </summary>
+        /// <param name="newEvent">New event details</param>
+        public virtual void OrderEvent(OrderEvent newEvent)
+        {
+            OrderEvents.Enqueue(newEvent);
+        }
+
+        /// <summary>
+        /// Gets the order events generated since the last call
+        /// </summary>
+        /// <returns>The delta order events</returns>
+        protected virtual List<OrderEvent> GetDeltaOrderEvents()
+        {
+            var deltaOrderEvents = OrderEvents.Skip(_lastOrderEventCount).Take(50).ToList();
+
+            // in the rare case we have generated more than 50 order events since the last update,
+            // lets jump to the end so that we don't fall behind in the next update
+            _lastOrderEventCount += (deltaOrderEvents.Count == 50) ? OrderEvents.Count : deltaOrderEvents.Count;
+            return deltaOrderEvents;
+        }
+
+        /// <summary>
+        /// Gets the orders generated since the last call based on the provided
+        /// order events
+        /// </summary>
+        /// <returns>The delta orders</returns>
+        protected virtual Dictionary<int, Order> GetDeltaOrders(List<OrderEvent> deltaOrderEvents)
+        {
+            var deltaOrders = new Dictionary<int, Order>(deltaOrderEvents.Count);
+
+            foreach (var orderEvent in deltaOrderEvents.DistinctBy(orderEvent => orderEvent.OrderId))
+            {
+                var order = Algorithm.Transactions.GetOrderById(orderEvent.OrderId);
+                if (order == null)
+                {
+                    continue;
+                }
+
+                var clone = order.Clone();
+
+                // for charting
+                clone.Price = clone.Price.SmartRounding();
+
+                deltaOrders[orderEvent.OrderId] = clone;
+            }
+
+            return deltaOrders;
         }
 
         /// <summary>
@@ -248,6 +326,24 @@ namespace QuantConnect.Lean.Engine.Results
         protected virtual void SampleBenchmark(DateTime time, decimal value)
         {
             Sample("Benchmark", "Benchmark", 0, SeriesType.Line, time, value);
+        }
+
+        /// <summary>
+        /// Stores the order events
+        /// </summary>
+        /// <param name="utcTime">The algorithms current utc time</param>
+        /// <param name="orderEvents">The order events to store</param>
+        protected virtual void StoreOrderEvents(DateTime utcTime, List<OrderEvent> orderEvents)
+        {
+            if (orderEvents.Count <= 0)
+            {
+                return;
+            }
+
+            var path = $"{JobId}-order-events.json";
+            var data = JsonConvert.SerializeObject(orderEvents, Formatting.None);
+
+            File.WriteAllText(path, data);
         }
 
         /// <summary>

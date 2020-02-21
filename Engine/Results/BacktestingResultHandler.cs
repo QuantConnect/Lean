@@ -47,11 +47,9 @@ namespace QuantConnect.Lean.Engine.Results
         private int _jobDays;
         private DateTime _nextUpdate;
         private DateTime _nextS3Update;
-        private DateTime _lastUpdate;
         private string _errorMessage;
         private double _daysProcessed;
         private double _daysProcessedFrontier;
-        private bool _processingFinalPacket;
         private readonly HashSet<string> _chartSeriesExceededDataPoints;
 
         //Processing Time:
@@ -185,7 +183,7 @@ namespace QuantConnect.Lean.Engine.Results
             try
             {
                 //Sometimes don't run the update, if not ready or we're ending.
-                if (Algorithm?.Transactions == null || _processingFinalPacket)
+                if (Algorithm?.Transactions == null || ProcessingFinalPacket)
                 {
                     return;
                 }
@@ -193,24 +191,12 @@ namespace QuantConnect.Lean.Engine.Results
                 if (DateTime.UtcNow <= _nextUpdate || _daysProcessed < _daysProcessedFrontier) return;
 
                 //Extract the orders since last update
-                var deltaOrders = new Dictionary<int, Order>();
-                try
-                {
-                    deltaOrders = (from order in TransactionHandler.Orders
-                        where (order.Value.Time.Date >= _lastUpdate
-                              || (order.Value.LastFillTime.HasValue && order.Value.LastFillTime.Value.Date >= _lastUpdate)
-                              || (order.Value.LastUpdateTime.HasValue && order.Value.LastUpdateTime.Value.Date >= _lastUpdate))
-                        select order).Take(50).ToDictionary(t => t.Key, t => t.Value);
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
-                }
+                var deltaOrderEvents = GetDeltaOrderEvents();
+                var deltaOrders = GetDeltaOrders(deltaOrderEvents);
 
                 //Reset loop variables:
                 try
                 {
-                    _lastUpdate = Algorithm.UtcTime.Date;
                     _daysProcessedFrontier = _daysProcessed + 1;
                     _nextUpdate = DateTime.UtcNow.AddSeconds(2);
                 }
@@ -272,15 +258,23 @@ namespace QuantConnect.Lean.Engine.Results
                         Algorithm.Transactions.TransactionRecord,
                         new Dictionary<string, string>(),
                         runtimeStatistics,
-                        new Dictionary<string, AlgorithmPerformance>());
+                        new Dictionary<string, AlgorithmPerformance>(),
+                        // we store the last 100 order events, the final packet will contain the full list
+                        OrderEvents.Reverse().Take(100).ToList());
 
-                    StoreResult(new BacktestResultPacket(_job, completeResult, Algorithm.EndDate, Algorithm.StartDate, progress));
+                    lock (StoringLock)
+                    {
+                        if (!ProcessingFinalPacket)
+                        {
+                            StoreResult(new BacktestResultPacket(_job, completeResult, Algorithm.EndDate, Algorithm.StartDate, progress));
+                        }
+                    }
 
                     _nextS3Update = DateTime.UtcNow.AddSeconds(30);
                 }
 
                 //2. Backtest Update -> Send the truncated packet to the backtester:
-                var splitPackets = SplitPackets(deltaCharts, deltaOrders, runtimeStatistics, progress);
+                var splitPackets = SplitPackets(deltaCharts, deltaOrders, runtimeStatistics, deltaOrderEvents, progress);
 
                 foreach (var backtestingPacket in splitPackets)
                 {
@@ -296,7 +290,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Run over all the data and break it into smaller packets to ensure they all arrive at the terminal
         /// </summary>
-        public IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts, Dictionary<int, Order> deltaOrders, Dictionary<string, string> runtimeStatistics, decimal progress)
+        public IEnumerable<BacktestResultPacket> SplitPackets(Dictionary<string, Chart> deltaCharts,
+            Dictionary<int, Order> deltaOrders,
+            Dictionary<string, string> runtimeStatistics,
+            List<OrderEvent> deltaOrderEvents,
+            decimal progress)
         {
             // break the charts into groups
             var splitPackets = new List<BacktestResultPacket>();
@@ -314,8 +312,8 @@ namespace QuantConnect.Lean.Engine.Results
             // Send alpha run time statistics
             splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { AlphaRuntimeStatistics = AlphaRuntimeStatistics }, Algorithm.EndDate, Algorithm.StartDate, progress));
 
-            // Add the orders into the charting packet:
-            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { Orders = deltaOrders }, Algorithm.EndDate, Algorithm.StartDate, progress));
+            // Add the orders and order events
+            splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { Orders = deltaOrders, OrderEvents = deltaOrderEvents }, Algorithm.EndDate, Algorithm.StartDate, progress));
 
             //Add any user runtime statistics into the backtest.
             splitPackets.Add(new BacktestResultPacket(_job, new BacktestResult { RuntimeStatistics = runtimeStatistics }, Algorithm.EndDate, Algorithm.StartDate, progress));
@@ -354,6 +352,7 @@ namespace QuantConnect.Lean.Engine.Results
                             result.Results.Statistics,
                             result.Results.RuntimeStatistics,
                             result.Results.RollingWindow,
+                            null, // null order events, we store them separately
                             result.Results.TotalPerformance
                         )
                         // Set Alpha Runtime Statistics
@@ -361,6 +360,9 @@ namespace QuantConnect.Lean.Engine.Results
                     }
                     // Save results
                     SaveResults(key, results);
+
+                    // Store Order Events in a separate file
+                    StoreOrderEvents(Algorithm.UtcTime, result.Results.OrderEvents);
                 }
                 else
                 {
@@ -378,46 +380,49 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public void SendFinalResult()
         {
-            try
+            lock (StoringLock)
             {
-                _processingFinalPacket = true;
-
-                //Convert local dictionary:
-                var charts = new Dictionary<string, Chart>(Charts);
-                var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
-                var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
-                var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
-
-                FinalStatistics = statisticsResults.Summary;
-
-                // clear the trades collection before placing inside the backtest result
-                foreach (var ap in statisticsResults.RollingPerformances.Values)
+                try
                 {
-                    ap.ClosedTrades.Clear();
+                    ProcessingFinalPacket = true;
+
+                    //Convert local dictionary:
+                    var charts = new Dictionary<string, Chart>(Charts);
+                    var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
+                    var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
+                    var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
+                    var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
+
+                    FinalStatistics = statisticsResults.Summary;
+
+                    // clear the trades collection before placing inside the backtest result
+                    foreach (var ap in statisticsResults.RollingPerformances.Values)
+                    {
+                        ap.ClosedTrades.Clear();
+                    }
+
+                    //Create a result packet to send to the browser.
+                    var result = new BacktestResultPacket(_job,
+                        new BacktestResult(charts, orders, profitLoss, statisticsResults.Summary, runtime, statisticsResults.RollingPerformances, OrderEvents.ToList(), statisticsResults.TotalPerformance)
+                        { AlphaRuntimeStatistics = AlphaRuntimeStatistics }, Algorithm.EndDate, Algorithm.StartDate)
+                    {
+                        ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds,
+                        DateFinished = DateTime.Now,
+                        Progress = 1
+                    };
+
+                    //Place result into storage.
+                    StoreResult(result);
+
+                    //Second, send the truncated packet:
+                    MessagingHandler.Send(result);
+
+                    Log.Trace("BacktestingResultHandler.SendAnalysisResult(): Processed final packet");
                 }
-
-                //Create a result packet to send to the browser.
-                var result = new BacktestResultPacket(_job,
-                    new BacktestResult(charts, orders, profitLoss, statisticsResults.Summary, runtime, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance)
-                    { AlphaRuntimeStatistics = AlphaRuntimeStatistics }, Algorithm.EndDate, Algorithm.StartDate)
+                catch (Exception err)
                 {
-                    ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds,
-                    DateFinished = DateTime.Now,
-                    Progress = 1
-                };
-
-                //Place result into storage.
-                StoreResult(result);
-
-                //Second, send the truncated packet:
-                MessagingHandler.Send(result);
-
-                Log.Trace("BacktestingResultHandler.SendAnalysisResult(): Processed final packet");
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
+                    Log.Error(err);
+                }
             }
         }
 
@@ -683,16 +688,6 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Set exit flag, and wait for the messages to send:
             ExitTriggered = true;
-        }
-
-        /// <summary>
-        /// Send a new order event to the browser.
-        /// </summary>
-        /// <remarks>In backtesting the order events are not sent because it would generate a high load of messaging.</remarks>
-        /// <param name="newEvent">New order event details</param>
-        public virtual void OrderEvent(OrderEvent newEvent)
-        {
-            // NOP. Don't do any order event processing for results in backtest mode.
         }
 
         /// <summary>
