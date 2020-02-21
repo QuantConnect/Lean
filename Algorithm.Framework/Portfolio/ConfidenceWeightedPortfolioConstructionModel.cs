@@ -37,8 +37,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time
         /// in UTC</param>
-        public ConfidenceWeightedPortfolioConstructionModel(IDateRule rebalancingDateRules)
-            : base(rebalancingDateRules)
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        public ConfidenceWeightedPortfolioConstructionModel(IDateRule rebalancingDateRules,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : base(rebalancingDateRules, portfolioBias)
         {
         }
 
@@ -49,13 +51,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// For a given algorithm UTC DateTime the func returns the next expected rebalance time
         /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
         /// will trigger rebalance. If null will be ignored</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
         /// <remarks>This is required since python net can not convert python methods into func nor resolve the correct
         /// constructor for the date rules parameter.
         /// For performance we prefer python algorithms using the C# implementation</remarks>
-        public ConfidenceWeightedPortfolioConstructionModel(PyObject rebalancingParam)
-            : this((Func<DateTime, DateTime?>)null)
+        public ConfidenceWeightedPortfolioConstructionModel(PyObject rebalancingParam,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : base(rebalancingParam, portfolioBias)
         {
-            SetRebalancingFunc(rebalancingParam);
         }
 
         /// <summary>
@@ -64,8 +67,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time
         /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
         /// will trigger rebalance. If null will be ignored</param>
-        public ConfidenceWeightedPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc)
-            : base(rebalancingFunc)
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        public ConfidenceWeightedPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : base(rebalancingFunc, portfolioBias)
         {
         }
 
@@ -74,8 +79,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
         /// Returning current time will trigger rebalance. If null will be ignored</param>
-        public ConfidenceWeightedPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc)
-            : base(rebalancingFunc)
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        public ConfidenceWeightedPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : base(rebalancingFunc, portfolioBias)
         {
         }
 
@@ -83,8 +90,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Initialize a new instance of <see cref="ConfidenceWeightedPortfolioConstructionModel"/>
         /// </summary>
         /// <param name="timeSpan">Rebalancing frequency</param>
-        public ConfidenceWeightedPortfolioConstructionModel(TimeSpan timeSpan)
-            : base(timeSpan)
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        public ConfidenceWeightedPortfolioConstructionModel(TimeSpan timeSpan,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : base(timeSpan, portfolioBias)
         {
         }
 
@@ -92,8 +101,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Initialize a new instance of <see cref="ConfidenceWeightedPortfolioConstructionModel"/>
         /// </summary>
         /// <param name="resolution">Rebalancing frequency</param>
-        public ConfidenceWeightedPortfolioConstructionModel(Resolution resolution = Resolution.Daily)
-            : base(resolution)
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        public ConfidenceWeightedPortfolioConstructionModel(Resolution resolution = Resolution.Daily,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : base(resolution, portfolioBias)
         {
         }
 

@@ -31,8 +31,6 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
     [TestFixture]
     public abstract class BaseWeightingPortfolioConstructionModelTests
     {
-        private const double _weight = 0.01;
-
         protected decimal StartingCash => 100000;
 
         protected QCAlgorithm Algorithm { get; set; }
@@ -190,7 +188,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
         public abstract IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, dynamic paramenter = null);
 
-        public abstract Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double? weight = _weight);
+        public abstract Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double? weight = 0.01);
 
         public void AssertTargets(IEnumerable<IPortfolioTarget> expectedTargets, IEnumerable<IPortfolioTarget> actualTargets)
         {

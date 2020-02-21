@@ -36,6 +36,7 @@ import pandas as pd
 class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionModel):
     def __init__(self,
                  rebalancingParam = Resolution.Daily,
+                 portfolioBias = PortfolioBias.LongShort,
                  lookback = 1,
                  period = 63,
                  resolution = Resolution.Daily,
@@ -48,6 +49,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
                               The function returns the next expected rebalance time for a given algorithm UTC DateTime.
                               The function returns null if unknown, in which case the function will be called again in the
                               next loop. Returning current time will trigger rebalance.
+            portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)
             lookback(int): Historical return lookback period
             period(int): The time interval of history price to calculate the weight
             resolution: The resolution of the history price
@@ -55,7 +57,12 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         self.lookback = lookback
         self.period = period
         self.resolution = resolution
-        self.optimizer = MinimumVariancePortfolioOptimizer(-1, 1, targetReturn) if optimizer is None else optimizer
+        self.portfolioBias = portfolioBias
+        self.sign = lambda x: -1 if x < 0 else (1 if x > 0 else 0)
+
+        lower = 0 if portfolioBias == PortfolioBias.Long else -1
+        upper = 0 if portfolioBias == PortfolioBias.Short else 1
+        self.optimizer = MinimumVariancePortfolioOptimizer(lower, upper, targetReturn) if optimizer is None else optimizer
 
         self.symbolDataBySymbol = {}
 
@@ -76,6 +83,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         symbolData = self.symbolDataBySymbol.get(insight.Symbol)
         if insight.Magnitude is None:
             self.algorithm.SetRunTimeError(ArgumentNullException('MeanVarianceOptimizationPortfolioConstructionModel does not accept \'None\' as Insight.Magnitude. Please checkout the selected Alpha Model specifications.'))
+            return False
         symbolData.Add(self.Algorithm.Time, insight.Magnitude)
 
         return True
@@ -100,6 +108,10 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         # Create portfolio targets from the specified insights
         for insight in activeInsights:
             weight = weights[str(insight.Symbol)]
+
+            # don't trust the optimizer
+            if self.portfolioBias != PortfolioBias.LongShort and self.sign(weight) != self.portfolioBias:
+                weight = 0
             targets[insight] = weight
 
         return targets

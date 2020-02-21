@@ -25,6 +25,7 @@ using QuantConnect.Securities;
 using System;
 using System.Linq;
 using QuantConnect.Algorithm;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -35,10 +36,12 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         private Insight[] _view1Insights;
         private Insight[] _view2Insights;
 
-        [TestFixtureSetUp]
+        [SetUp]
         public void SetUp()
         {
             _algorithm = new QCAlgorithm();
+            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+
             SetUtcTime(new DateTime(2018, 8, 7));
 
             // Germany will outperform the other European markets by 5%
@@ -197,6 +200,41 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             }
         }
 
+        [TestCase(Language.CSharp, PortfolioBias.Long)]
+        [TestCase(Language.Python, PortfolioBias.Long)]
+        [TestCase(Language.CSharp, PortfolioBias.Short)]
+        [TestCase(Language.Python, PortfolioBias.Short)]
+        public void PortfolioBiasIsRespected(Language language, PortfolioBias bias)
+        {
+            SetPortfolioConstruction(language, bias);
+
+            var insights = new[]
+            {
+                GetInsight("View 1", "AUS", -10.1),
+                GetInsight("View 1", "CAN", -0.1),
+                GetInsight("View 1", "FRA", 0.1),
+                GetInsight("View 1", "GER", -0.1),
+                GetInsight("View 1", "JAP", -0.1),
+                GetInsight("View 1", "UK" , 0.1),
+                GetInsight("View 1", "USA", -0.1)
+            };
+
+            var createdValidTarget = false;
+            foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
+            {
+                QuantConnect.Logging.Log.Trace($"{target.Symbol}: {target.Quantity}");
+                if (target.Quantity == 0)
+                {
+                    continue;
+                }
+
+                createdValidTarget = true;
+                Assert.AreEqual(Math.Sign((int)bias), Math.Sign(target.Quantity));
+            }
+
+            Assert.IsTrue(createdValidTarget);
+        }
+
         private Security GetSecurity(Symbol symbol, Resolution resolution)
         {
             var timezone = _algorithm.TimeZone;
@@ -225,9 +263,9 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             return insight;
         }
 
-        private void SetPortfolioConstruction(Language language)
+        private void SetPortfolioConstruction(Language language, PortfolioBias portfolioBias = PortfolioBias.LongShort)
         {
-            _algorithm.SetPortfolioConstruction(new BLOPCM(new UnconstrainedMeanVariancePortfolioOptimizer()));
+            _algorithm.SetPortfolioConstruction(new BLOPCM(new UnconstrainedMeanVariancePortfolioOptimizer(), portfolioBias));
             if (language == Language.Python)
             {
                 try
@@ -235,7 +273,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                     using (Py.GIL())
                     {
                         var name = nameof(BLOPCM);
-                        var instance = PythonEngine.ModuleFromString(name, GetPythonBLOPCM()).GetAttr(name).Invoke();
+                        var instance = PythonEngine.ModuleFromString(name, GetPythonBLOPCM()).GetAttr(name).Invoke(((int)portfolioBias).ToPython());
                         var model = new PortfolioConstructionModelPythonWrapper(instance);
                         _algorithm.SetPortfolioConstruction(model);
                     }
@@ -257,8 +295,8 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
         private class BLOPCM : BlackLittermanOptimizationPortfolioConstructionModel
         {
-            public BLOPCM(IPortfolioOptimizer optimizer)
-                : base(optimizer: optimizer)
+            public BLOPCM(IPortfolioOptimizer optimizer, PortfolioBias portfolioBias)
+                : base(optimizer: optimizer, portfolioBias: portfolioBias)
             {
             }
 
@@ -309,8 +347,8 @@ def GetSymbol(ticker):
 
 class BLOPCM(BlackLittermanOptimizationPortfolioConstructionModel):
 
-    def __init__(self):
-        super().__init__(optimizer = UnconstrainedMeanVariancePortfolioOptimizer())
+    def __init__(self, portfolioBias):
+        super().__init__(portfolioBias = portfolioBias, optimizer = UnconstrainedMeanVariancePortfolioOptimizer())
 
     def get_equilibrium_return(self, returns):
 
