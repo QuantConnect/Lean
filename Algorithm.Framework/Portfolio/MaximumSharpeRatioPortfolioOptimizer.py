@@ -83,9 +83,9 @@ class MaximumSharpeRatioPortfolioOptimizer:
             weighs: Portfolio weights
             covariance: Covariance matrix of historical returns'''
         variance = np.dot(weights.T, np.dot(covariance, weights))
-        if variance == 0:
-            # variance can't be zero, so we return max value
-            return np.finfo(np.float).max
+        if variance == 0 and np.any(weights):
+            # variance can't be zero, with non zero weights
+            raise ValueError(f'MaximumSharpeRatioPortfolioOptimizer.portfolio_variance: Volatility cannot be zero. Weights: {weights}')
         return variance
 
     def get_boundary_conditions(self, size):

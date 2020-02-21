@@ -130,7 +130,7 @@ class BlackLittermanOptimizationPortfolioConstructionModel(PortfolioConstruction
                 for insight in lastActiveInsights:
                     if str(insight.Symbol) == str(symbol):
                         # don't trust the optimizer
-                        if self.portfolioBias != PortfolioBias.LongShort and self.sign(weight) != self.sign(self.portfolioBias):
+                        if self.portfolioBias != PortfolioBias.LongShort and self.sign(weight) != self.portfolioBias:
                             weight = 0
                         targets[insight] = weight
                         break;

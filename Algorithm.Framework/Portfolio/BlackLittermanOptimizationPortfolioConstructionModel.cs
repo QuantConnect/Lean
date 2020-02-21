@@ -286,7 +286,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
                     // don't trust the optimizer
                     if (_portfolioBias != PortfolioBias.LongShort
-                        && Math.Sign(weight) != Math.Sign((int)_portfolioBias))
+                        && Math.Sign(weight) != (int)_portfolioBias)
                     {
                         weight = 0;
                     }

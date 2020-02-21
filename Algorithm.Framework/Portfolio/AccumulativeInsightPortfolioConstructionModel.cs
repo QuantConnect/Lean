@@ -191,7 +191,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
                 // adjust to respect portfolio bias
                 if (_portfolioBias != PortfolioBias.LongShort
-                    && Math.Sign(targetPercent) != Math.Sign((int)_portfolioBias))
+                    && Math.Sign(targetPercent) != (int)_portfolioBias)
                 {
                     targetPercent = 0;
                 }

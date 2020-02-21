@@ -68,7 +68,7 @@ class AccumulativeInsightPortfolioConstructionModel(EqualWeightingPortfolioConst
             targetPercent += self.percent * insight.Direction
 
             # adjust to respect portfolio bias
-            if self.portfolioBias != PortfolioBias.LongShort and self.sign(targetPercent) != self.sign(self.portfolioBias):
+            if self.portfolioBias != PortfolioBias.LongShort and self.sign(targetPercent) != self.portfolioBias:
                 targetPercent = 0
 
             percentPerSymbol[insight.Symbol] = targetPercent
