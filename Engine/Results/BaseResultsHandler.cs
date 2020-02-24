@@ -224,9 +224,16 @@ namespace QuantConnect.Lean.Engine.Results
         {
             var deltaOrderEvents = OrderEvents.Skip(_lastOrderEventCount).Take(50).ToList();
 
-            // in the rare case we have generated more than 50 order events since the last update,
-            // lets jump to the end so that we don't fall behind in the next update
-            _lastOrderEventCount += (deltaOrderEvents.Count == 50) ? OrderEvents.Count : deltaOrderEvents.Count;
+            if (deltaOrderEvents.Count == 50)
+            {
+                // in the rare case we have generated more than 50 order events since the last update,
+                // lets jump to the end so that we don't fall behind in the next update
+                _lastOrderEventCount = OrderEvents.Count;
+            }
+            else
+            {
+                _lastOrderEventCount += deltaOrderEvents.Count;
+            }
             return deltaOrderEvents;
         }
 
@@ -239,9 +246,12 @@ namespace QuantConnect.Lean.Engine.Results
         {
             var deltaOrders = new Dictionary<int, Order>(deltaOrderEvents.Count);
 
-            foreach (var orderEvent in deltaOrderEvents.DistinctBy(orderEvent => orderEvent.OrderId))
+            foreach (var orderEvent in deltaOrderEvents
+                // we can have more than 1 order event per order id
+                .DistinctBy(orderEvent => orderEvent.OrderId))
             {
                 var order = Algorithm.Transactions.GetOrderById(orderEvent.OrderId);
+                // this shouldn't happen but just in case
                 if (order == null)
                 {
                     continue;
