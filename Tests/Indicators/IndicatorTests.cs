@@ -89,6 +89,26 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void PassesOnDuplicateTimesForDateTimeValueUpdate()
+        {
+            var target = new TestIndicatorWithBase();
+
+            var time = DateTime.UtcNow;
+
+            const decimal value1 = 1m;
+            target.Update(time, value1);
+            Assert.AreEqual(value1, target.Current.Value);
+            Assert.AreEqual(1, target.Samples);
+
+            // this won't update because we told it to ignore duplicate
+            // data based on time
+            target.Update(time, value1);
+            Assert.AreEqual(value1, target.Current.Value);
+            Assert.AreEqual(1, target.Samples);
+        }
+
+
+        [Test]
         public void SortsTheSameAsDecimalDescending()
         {
             int count = 100;
@@ -260,6 +280,21 @@ namespace QuantConnect.Tests.Indicators
             /// </summary>
             /// <param name="input">The input given to the indicator</param>
             /// <returns>A new value for this indicator</returns>
+            protected override decimal ComputeNextValue(IndicatorDataPoint input)
+            {
+                return input;
+            }
+        }
+
+        private class TestIndicatorWithBase : IndicatorBase<IndicatorDataPoint>
+        {
+            public TestIndicatorWithBase()
+                : base("test")
+            {
+            }
+
+            public override bool IsReady { get; } = true;
+
             protected override decimal ComputeNextValue(IndicatorDataPoint input)
             {
                 return input;

@@ -116,6 +116,12 @@ namespace QuantConnect.Indicators
         {
             if (typeof(T) == typeof(IndicatorDataPoint))
             {
+                var previous = _previousInput as IndicatorDataPoint;
+                if (previous != null && previous.Time == time && previous.Value == value)
+                {
+                    return IsReady;
+                }
+
                 return Update((T)(object)new IndicatorDataPoint(time, value));
             }
 
