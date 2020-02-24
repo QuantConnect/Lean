@@ -712,6 +712,25 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void ZeroNonAccountCurrency_GetBuyingPower()
+        {
+            _algorithm.Portfolio.CashBook.Clear();
+            _algorithm.Portfolio.SetAccountCurrency("EUR");
+            _algorithm.Portfolio.SetCash(0);
+            _algorithm.Portfolio.SetCash(Currencies.USD, 10000, 0.88m);
+            Assert.AreEqual(8800m, _portfolio.TotalPortfolioValue);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
+            _algorithm.SetFinishedWarmingUp();
+
+            var quantity = _buyingPowerModel.GetBuyingPower(new BuyingPowerParameters(_portfolio, _btcusd, OrderDirection.Buy)).Value;
+
+            Assert.AreEqual(1m, quantity);
+        }
+
+        [Test]
         public void ZeroNonAccountCurrency_GetReservedBuyingPowerForPosition()
         {
             _algorithm.Portfolio.CashBook.Clear();
@@ -731,6 +750,44 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Always returns 0. Since we're purchasing currencies outright, the position doesn't consume buying power
             Assert.AreEqual(0m, res.AbsoluteUsedBuyingPower);
+        }
+
+        [Test]
+        public void NonAccountCurrency_GetBuyingPower()
+        {
+            _algorithm.Portfolio.CashBook.Clear();
+            _algorithm.Portfolio.SetAccountCurrency("EUR");
+            _algorithm.Portfolio.SetCash(10000);
+            _algorithm.Portfolio.SetCash(Currencies.USD, 10000, 0.88m);
+            Assert.AreEqual(18800m, _portfolio.TotalPortfolioValue);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
+            _algorithm.SetFinishedWarmingUp();
+
+            var quantity = _buyingPowerModel.GetBuyingPower(new BuyingPowerParameters(_portfolio, _btcusd, OrderDirection.Buy)).Value;
+
+            Assert.AreEqual(1m, quantity);
+        }
+
+        [Test]
+        public void NonAccountCurrency_ZeroQuoteCurrency_GetBuyingPower()
+        {
+            _algorithm.Portfolio.CashBook.Clear();
+            _algorithm.Portfolio.SetAccountCurrency("EUR");
+            _algorithm.Portfolio.SetCash(10000);
+            _algorithm.Portfolio.SetCash(Currencies.USD, 0, 0.88m);
+            Assert.AreEqual(10000, _portfolio.TotalPortfolioValue);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
+            _btcusd.SetMarketPrice(new Tick { Value = 10000m, BidPrice = 9950, AskPrice = 10050, TickType = TickType.Quote });
+            _algorithm.SetFinishedWarmingUp();
+
+            var quantity = _buyingPowerModel.GetBuyingPower(new BuyingPowerParameters(_portfolio, _btcusd, OrderDirection.Buy)).Value;
+
+            Assert.AreEqual(0m, quantity);
         }
 
         [TestCase("EUR")]

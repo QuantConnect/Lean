@@ -34,7 +34,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                foreach (var attributeName in new[] { "GetMaximumOrderQuantityForDeltaBuyingPower", "GetLeverage", "GetMaximumOrderQuantityForTargetBuyingPower", "GetReservedBuyingPowerForPosition", "HasSufficientBuyingPowerForOrder", "SetLeverage" })
+                foreach (var attributeName in new[] { "GetBuyingPower", "GetMaximumOrderQuantityForDeltaBuyingPower", "GetLeverage", "GetMaximumOrderQuantityForTargetBuyingPower", "GetReservedBuyingPowerForPosition", "HasSufficientBuyingPowerForOrder", "SetLeverage" })
                 {
                     if (!model.HasAttr(attributeName))
                     {
@@ -43,6 +43,19 @@ namespace QuantConnect.Python
                 }
             }
             _model = model;
+        }
+
+        /// <summary>
+        /// Gets the buying power available for a trade
+        /// </summary>
+        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
+        /// <returns>The buying power available for the trade</returns>
+        public BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
+        {
+            using (Py.GIL())
+            {
+                return (_model.GetBuyingPower(parameters) as PyObject).GetAndDispose<BuyingPower>();
+            }
         }
 
         /// <summary>

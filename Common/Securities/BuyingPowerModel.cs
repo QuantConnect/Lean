@@ -500,5 +500,16 @@ namespace QuantConnect.Securities
             var maintenanceMargin = GetMaintenanceMargin(parameters.Security);
             return parameters.ResultInAccountCurrency(maintenanceMargin);
         }
+
+        /// <summary>
+        /// Gets the buying power available for a trade
+        /// </summary>
+        /// <param name="parameters">A parameters object containing the algorithm's portfolio, security, and order direction</param>
+        /// <returns>The buying power available for the trade</returns>
+        public virtual BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
+        {
+            var marginRemaining = GetMarginRemaining(parameters.Portfolio, parameters.Security, parameters.Direction);
+            return parameters.ResultInAccountCurrency(marginRemaining);
+        }
     }
 }
