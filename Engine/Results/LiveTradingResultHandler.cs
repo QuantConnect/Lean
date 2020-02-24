@@ -55,6 +55,7 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextLogStoreUpdate;
         private DateTime _nextStatisticsUpdate;
         private DateTime _nextDailyUpdate;
+        private DateTime _orderEventStoringDate;
 
         //Log Message Store:
         private DateTime _nextSample;
@@ -124,9 +125,9 @@ namespace QuantConnect.Lean.Engine.Results
             TransactionHandler = transactionHandler;
             _job = (LiveNodePacket)job;
             if (_job == null) throw new Exception("LiveResultHandler.Constructor(): Submitted Job type invalid.");
-            JobId = _job.DeployId;
+            AlgorithmId = _job.DeployId;
             CompileId = _job.CompileId;
-            PreviousUtcSampleTime = DateTime.UtcNow;
+            _orderEventStoringDate = PreviousUtcSampleTime = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -372,12 +373,15 @@ namespace QuantConnect.Lean.Engine.Results
                                 var orderEvents = new List<OrderEvent>();
                                 OrderEvent orderEvent;
                                 while (OrderEvents.TryPeek(out orderEvent)
-                                       && orderEvent.UtcTime <= _nextDailyUpdate
+                                       // get all the order events of the previous day
+                                       && orderEvent.UtcTime < utcNow.Date
                                        && OrderEvents.TryDequeue(out orderEvent))
                                 {
                                     orderEvents.Add(orderEvent);
                                 }
-                                StoreOrderEvents(_nextDailyUpdate, orderEvents);
+                                StoreOrderEvents(_orderEventStoringDate, orderEvents);
+                                // start storing in a new date file
+                                _orderEventStoringDate = utcNow;
 
                                 SetNextDailyUpdate();
                             }
@@ -429,7 +433,7 @@ namespace QuantConnect.Lean.Engine.Results
                 return;
             }
 
-            var path = $"{JobId}-{utcTime:yyyy-MM-dd}-order-events.json";
+            var path = $"{AlgorithmId}-{utcTime:yyyy-MM-dd}-order-events.json";
             var data = JsonConvert.SerializeObject(orderEvents, Formatting.None);
 
             File.WriteAllText(path, data);
@@ -480,7 +484,7 @@ namespace QuantConnect.Lean.Engine.Results
                     AlphaRuntimeStatistics = AlphaRuntimeStatistics
                 };
 
-                SaveResults($"{JobId}.json", result);
+                SaveResults($"{AlgorithmId}.json", result);
                 Log.Debug("LiveTradingResultHandler.Update(): status update end.");
             }
             catch (Exception err)
@@ -561,7 +565,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void DebugMessage(string message)
         {
             if (Messages.Count > 500) return; //if too many in the queue already skip the logging.
-            Messages.Enqueue(new DebugPacket(_job.ProjectId, JobId, CompileId, message));
+            Messages.Enqueue(new DebugPacket(_job.ProjectId, AlgorithmId, CompileId, message));
             AddToLogStore(message);
         }
 
@@ -571,7 +575,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void SystemDebugMessage(string message)
         {
-            Messages.Enqueue(new SystemDebugPacket(_job.ProjectId, JobId, CompileId, message));
+            Messages.Enqueue(new SystemDebugPacket(_job.ProjectId, AlgorithmId, CompileId, message));
             AddToLogStore(message);
         }
 
@@ -585,7 +589,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             //Send the logging messages out immediately for live trading:
             if (Messages.Count > 500) return;
-            Messages.Enqueue(new LogPacket(JobId, message));
+            Messages.Enqueue(new LogPacket(AlgorithmId, message));
             AddToLogStore(message);
         }
 
@@ -611,7 +615,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void ErrorMessage(string message, string stacktrace = "")
         {
             if (Messages.Count > 500) return;
-            Messages.Enqueue(new HandledErrorPacket(JobId, message, stacktrace));
+            Messages.Enqueue(new HandledErrorPacket(AlgorithmId, message, stacktrace));
             AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
         }
 
@@ -632,7 +636,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Associated error stack trace.</param>
         public void RuntimeError(string message, string stacktrace = "")
         {
-            Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, JobId, message, stacktrace));
+            Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, AlgorithmId, message, stacktrace));
             AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
         }
 
@@ -908,7 +912,7 @@ namespace QuantConnect.Lean.Engine.Results
                     if (live.Results.OrderEvents != null)
                     {
                         // we store order events separately
-                        StoreOrderEvents(_nextDailyUpdate, live.Results.OrderEvents);
+                        StoreOrderEvents(_orderEventStoringDate, live.Results.OrderEvents);
                         // lets null the orders events so that they aren't stored again and generate a giant file
                         live.Results.OrderEvents = null;
                     }

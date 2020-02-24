@@ -126,7 +126,7 @@ namespace QuantConnect.Lean.Engine.Results
             TransactionHandler = transactionHandler;
             _job = (BacktestNodePacket)job;
             if (_job == null) throw new Exception("BacktestingResultHandler.Constructor(): Submitted Job type invalid.");
-            JobId = _job.BacktestId;
+            AlgorithmId = _job.BacktestId;
             CompileId = _job.CompileId;
         }
 
@@ -480,7 +480,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void DebugMessage(string message)
         {
-            Messages.Enqueue(new DebugPacket(_projectId, JobId, CompileId, message));
+            Messages.Enqueue(new DebugPacket(_projectId, AlgorithmId, CompileId, message));
             AddToLogStore(message);
         }
 
@@ -490,7 +490,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void SystemDebugMessage(string message)
         {
-            Messages.Enqueue(new SystemDebugPacket(_projectId, JobId, CompileId, message));
+            Messages.Enqueue(new SystemDebugPacket(_projectId, AlgorithmId, CompileId, message));
             AddToLogStore(message);
         }
 
@@ -500,7 +500,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd in the log.</param>
         public void LogMessage(string message)
         {
-            Messages.Enqueue(new LogPacket(JobId, message));
+            Messages.Enqueue(new LogPacket(AlgorithmId, message));
             AddToLogStore(message);
         }
 
@@ -537,7 +537,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (message == _errorMessage) return;
             if (Messages.Count > 500) return;
-            Messages.Enqueue(new HandledErrorPacket(JobId, message, stacktrace));
+            Messages.Enqueue(new HandledErrorPacket(AlgorithmId, message, stacktrace));
             _errorMessage = message;
         }
 
@@ -549,7 +549,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void RuntimeError(string message, string stacktrace = "")
         {
             PurgeQueue();
-            Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, JobId, message, stacktrace));
+            Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, AlgorithmId, message, stacktrace));
             _errorMessage = message;
         }
 

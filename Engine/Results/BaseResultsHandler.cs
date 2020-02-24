@@ -88,7 +88,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// The algorithm job id.
         /// This is the deploy id for live, backtesting id for backtesting
         /// </summary>
-        protected string JobId { get; set; }
+        protected string AlgorithmId { get; set; }
 
         /// <summary>
         /// The result handler start time
@@ -149,7 +149,7 @@ namespace QuantConnect.Lean.Engine.Results
             RuntimeStatistics = new Dictionary<string, string>();
             StartTime = DateTime.UtcNow;
             CompileId = "";
-            JobId = "";
+            AlgorithmId = "";
             ChartLock = new object();
             StoringLock = new object();;
             LogStore = new List<LogEntry>();
@@ -350,7 +350,7 @@ namespace QuantConnect.Lean.Engine.Results
                 return;
             }
 
-            var path = $"{JobId}-order-events.json";
+            var path = $"{AlgorithmId}-order-events.json";
             var data = JsonConvert.SerializeObject(orderEvents, Formatting.None);
 
             File.WriteAllText(path, data);
