@@ -16,13 +16,17 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
+using QuantConnect.Brokerages;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
+using Option = QuantConnect.Securities.Option.Option;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -358,6 +362,270 @@ namespace QuantConnect.Tests.Common.Securities
             // (100000 * -2.1 * 0.9975 setHoldingsBuffer) / 25 =  -8379m
             Assert.AreEqual(-8379m, actual);
             Assert.IsFalse(HasSufficientBuyingPowerForOrder(actual, security, algo));
+        }
+
+        [Test]
+        public void FreeBuyingPowerPercentDefault_Equity()
+        {
+            var algo = GetAlgorithm();
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Equity);
+            var model = security.BuyingPowerModel;
+
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
+            // (100000 * 2 * 0.9975) / 25 - 1 order due to fees
+            Assert.AreEqual(7979m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
+            Assert.AreEqual(algo.Portfolio.Cash, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
+        }
+
+        [Test]
+        public void FreeBuyingPowerPercentAppliesForCashAccount_Equity()
+        {
+            var algo = GetAlgorithm();
+            algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Cash);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Equity);
+            var requiredFreeBuyingPowerPercent = 0.05m;
+            var model = security.BuyingPowerModel = new SecurityMarginModel(1, requiredFreeBuyingPowerPercent);
+
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
+            // (100000 * 1 * 0.95 * 0.9975) / 25 - 1 order due to fees
+            Assert.AreEqual(3790m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual * 1.0025m, security, algo));
+            Assert.IsFalse(HasSufficientBuyingPowerForOrder(actual * 1.0025m + security.SymbolProperties.LotSize + 9, security, algo));
+            var expectedBuyingPower = algo.Portfolio.Cash * (1 - requiredFreeBuyingPowerPercent);
+            Assert.AreEqual(expectedBuyingPower, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
+        }
+
+        [Test]
+        public void FreeBuyingPowerPercentAppliesForMarginAccount_Equity()
+        {
+            var algo = GetAlgorithm();
+            algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Equity);
+            var requiredFreeBuyingPowerPercent = 0.05m;
+            var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
+
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
+            // (100000 * 2 * 0.95 * 0.9975) / 25 - 1 order due to fees
+            Assert.AreEqual(7580m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual * 1.0025m, security, algo));
+            Assert.IsFalse(HasSufficientBuyingPowerForOrder(actual * 1.0025m + security.SymbolProperties.LotSize + 9, security, algo));
+            var expectedBuyingPower = algo.Portfolio.Cash * (1 - requiredFreeBuyingPowerPercent);
+            Assert.AreEqual(expectedBuyingPower, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
+        }
+
+        [Test]
+        public void FreeBuyingPowerPercentCashAccountWithLongHoldings_Equity()
+        {
+            var algo = GetAlgorithm();
+            algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Cash);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Equity);
+            var requiredFreeBuyingPowerPercent = 0.05m;
+            var model = security.BuyingPowerModel = new SecurityMarginModel(1, requiredFreeBuyingPowerPercent);
+            security.Holdings.SetHoldings(25, 2000);
+            security.SettlementModel.ApplyFunds(
+                algo.Portfolio, security, DateTime.UtcNow.AddDays(-10), Currencies.USD, -2000 * 25);
+
+            // Margin remaining 50k + used 50k + initial margin 50k - 5k free buying power percent (5% of 100k)
+            Assert.AreEqual(145000, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Sell));
+            // Margin remaining 50k - 5k free buying power percent (5% of 100k)
+            Assert.AreEqual(45000, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
+
+            var actual = algo.CalculateOrderQuantity(_symbol, -1m * model.GetLeverage(security));
+            // ((100k - 5) * -1 * 0.95 * 0.9975 - (50k holdings)) / 25 - 1 order due to fees
+            Assert.AreEqual(-5790m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
+            Assert.IsFalse(HasSufficientBuyingPowerForOrder(actual * 1.0025m, security, algo));
+        }
+
+        [Test]
+        public void FreeBuyingPowerPercentMarginAccountWithLongHoldings_Equity()
+        {
+            var algo = GetAlgorithm();
+            algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Equity);
+            var requiredFreeBuyingPowerPercent = 0.05m;
+            var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
+            security.Holdings.SetHoldings(25, 2000);
+            security.SettlementModel.ApplyFunds(
+                algo.Portfolio, security, DateTime.UtcNow.AddDays(-10), Currencies.USD, -2000 * 25);
+
+            // Margin remaining 75k + used 25k + initial margin 25k - 5k free buying power percent (5% of 100k)
+            Assert.AreEqual(120000, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Sell));
+            // Margin remaining 75k - 5k free buying power percent
+            Assert.AreEqual(70000, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
+
+            var actual = algo.CalculateOrderQuantity(_symbol, -1m * model.GetLeverage(security));
+            // ((100k - 5) * -2 * 0.95 * 0.9975 - (50k holdings)) / 25 - 1 order due to fees
+            Assert.AreEqual(-9580m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
+            Assert.IsFalse(HasSufficientBuyingPowerForOrder(actual * 1.0025m, security, algo));
+        }
+
+        [Test]
+        public void FreeBuyingPowerPercentMarginAccountWithShortHoldings_Equity()
+        {
+            var algo = GetAlgorithm();
+            algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Equity);
+            var requiredFreeBuyingPowerPercent = 0.05m;
+            var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
+            security.Holdings.SetHoldings(25, -2000);
+            security.SettlementModel.ApplyFunds(
+                algo.Portfolio, security, DateTime.UtcNow.AddDays(-10), Currencies.USD, 2000 * 25);
+
+            // Margin remaining 75k + used 25k + initial margin 25k - 5k free buying power percent (5% of 100k)
+            Assert.AreEqual(120000, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
+            // Margin remaining 75k - 5k free buying power percent
+            Assert.AreEqual(70000, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Sell));
+
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
+            // ((100k - 5) * 2 * 0.95 * 0.9975 - (-50k holdings)) / 25 - 1 order due to fees
+            Assert.AreEqual(9580m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
+            Assert.IsFalse(HasSufficientBuyingPowerForOrder(actual * 1.0025m, security, algo));
+        }
+
+        [Test]
+        public void FreeBuyingPowerPercentDefault_Option()
+        {
+            const decimal price = 25m;
+            const decimal underlyingPrice = 25m;
+
+            var tz = TimeZones.NewYork;
+            var equity = new QuantConnect.Securities.Equity.Equity(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+
+            var optionPutSymbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, OptionRight.Put, 207m, new DateTime(2015, 02, 27));
+            var security = new Option(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), optionPutSymbol, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            security.SetMarketPrice(new Tick { Value = price });
+            security.Underlying = equity;
+
+            var algo = GetAlgorithm();
+            security.SetLocalTimeKeeper(algo.TimeKeeper.GetLocalTimeKeeper(tz));
+            var actual = security.BuyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(
+                new GetMaximumOrderQuantityForTargetBuyingPowerParameters(algo.Portfolio, security, 1)).Quantity;
+
+            // (100000 * 1) / (25 * 100 contract multiplier) - 1 order due to fees
+            Assert.AreEqual(39m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
+            Assert.AreEqual(algo.Portfolio.Cash, security.BuyingPowerModel.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
+        }
+
+        [Test]
+        public void FreeBuyingPowerPercentAppliesForCashAccount_Option()
+        {
+            var algo = GetAlgorithm();
+            algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Cash);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Option);
+            var requiredFreeBuyingPowerPercent = 0.05m;
+            var model = security.BuyingPowerModel = new SecurityMarginModel(1, requiredFreeBuyingPowerPercent);
+
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
+            // (100000 * 1 * 0.95) / (25 * 100 contract multiplier) - 1 order due to fees
+            Assert.AreEqual(37m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
+            var expectedBuyingPower = algo.Portfolio.Cash * (1 - requiredFreeBuyingPowerPercent);
+            Assert.AreEqual(expectedBuyingPower, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
+        }
+
+        [Test]
+        public void FreeBuyingPowerPercentAppliesForMarginAccount_Option()
+        {
+            var algo = GetAlgorithm();
+            algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Option);
+            var requiredFreeBuyingPowerPercent = 0.05m;
+            var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
+
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
+            // (100000 * 2 * 0.95) / (25 * 100 contract multiplier) - 1 order due to fees
+            Assert.AreEqual(75m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
+            var expectedBuyingPower = algo.Portfolio.Cash * (1 - requiredFreeBuyingPowerPercent);
+            Assert.AreEqual(expectedBuyingPower, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
+        }
+
+        [Test]
+        public void FreeBuyingPowerPercentDefault_Future()
+        {
+            var algo = GetAlgorithm();
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Future, "ES");
+            var model = security.BuyingPowerModel;
+
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
+            // (100000 * 1 * 0.9975 ) / 5200 - 1 order due to fees
+            Assert.AreEqual(18m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
+            Assert.AreEqual(algo.Portfolio.Cash, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
+        }
+
+        [Test]
+        public void FreeBuyingPowerPercentAppliesForCashAccount_Future()
+        {
+            var algo = GetAlgorithm();
+            algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Cash);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Future);
+            var requiredFreeBuyingPowerPercent = 0.05m;
+            var model = security.BuyingPowerModel = new SecurityMarginModel(1, requiredFreeBuyingPowerPercent);
+
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
+            // ((100000 - 5) * 1 * 0.95 * 0.9975 / (25)
+            Assert.AreEqual(3790m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
+            var expectedBuyingPower = algo.Portfolio.Cash * (1 - requiredFreeBuyingPowerPercent);
+            Assert.AreEqual(expectedBuyingPower, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
+        }
+
+        [Test]
+        public void FreeBuyingPowerPercentAppliesForMarginAccount_Future()
+        {
+            var algo = GetAlgorithm();
+            algo.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage, AccountType.Margin);
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Future);
+            var requiredFreeBuyingPowerPercent = 0.05m;
+            var model = security.BuyingPowerModel = new SecurityMarginModel(2, requiredFreeBuyingPowerPercent);
+
+            var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
+            // ((100000 - 5) * 2 * 0.95 * 0.9975 / (25)
+            Assert.AreEqual(7580m, actual);
+            Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
+            var expectedBuyingPower = algo.Portfolio.Cash * (1 - requiredFreeBuyingPowerPercent);
+            Assert.AreEqual(expectedBuyingPower, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
+        }
+
+        [TestCase(0)]
+        [TestCase(10000)]
+        public void NonAccountCurrency_GetBuyingPower(decimal nonAccountCurrencyCash)
+        {
+            var algo = GetAlgorithm();
+            algo.Portfolio.CashBook.Clear();
+            algo.Portfolio.SetAccountCurrency("EUR");
+            algo.Portfolio.SetCash(10000);
+            algo.Portfolio.SetCash(Currencies.USD, nonAccountCurrencyCash, 0.88m);
+            var security = InitAndGetSecurity(algo, 0);
+            Assert.AreEqual(10000m + algo.Portfolio.CashBook[Currencies.USD].ValueInAccountCurrency,
+                algo.Portfolio.TotalPortfolioValue);
+
+            var quantity = security.BuyingPowerModel.GetBuyingPower(
+                new BuyingPowerParameters(algo.Portfolio, security, OrderDirection.Buy)).Value;
+
+            Assert.AreEqual(10000m + algo.Portfolio.CashBook[Currencies.USD].ValueInAccountCurrency,
+                quantity);
         }
 
         [Test]

@@ -105,7 +105,7 @@ namespace QuantConnect.Securities.Option
                         * security.SymbolProperties.ContractMultiplier
                         * security.Price
                         * quantity;
-            return value * GetMarginRequirement(security, security.Holdings.HoldingsValue);
+            return value * GetMarginRequirement(security, value);
         }
 
         /// <summary>

@@ -320,6 +320,50 @@ namespace QuantConnect.Securities
             return parameters.ResultInAccountCurrency(0m);
         }
 
+        /// <summary>
+        /// Gets the buying power available for a trade
+        /// </summary>
+        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
+        /// <returns>The buying power available for the trade</returns>
+        public override BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
+        {
+            var security = parameters.Security;
+            var portfolio = parameters.Portfolio;
+            var direction = parameters.Direction;
+
+            var baseCurrency = security as IBaseCurrencySymbol;
+            if (baseCurrency == null)
+            {
+                return parameters.ResultInAccountCurrency(0m);
+            }
+
+            var baseCurrencyPosition = portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount;
+            var quoteCurrencyPosition = portfolio.CashBook[security.QuoteCurrency.Symbol].Amount;
+
+            // determine the unit price in terms of the quote currency
+            var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
+            var unitPrice = new MarketOrder(security.Symbol, 1, utcTime).GetValue(security) / security.QuoteCurrency.ConversionRate;
+            if (unitPrice == 0)
+            {
+                return parameters.ResultInAccountCurrency(0m);
+            }
+
+            // NOTE: This is returning in units of the BASE currency
+            if (direction == OrderDirection.Buy)
+            {
+                // invert units for math, 6500USD per BTC, currency pairs aren't real fractions
+                // (USD)/(BTC/USD) => 10kUSD/ (6500 USD/BTC) => 10kUSD * (1BTC/6500USD) => ~ 1.5BTC
+                return parameters.Result(quoteCurrencyPosition / unitPrice, baseCurrency.BaseCurrencySymbol);
+            }
+
+            if (direction == OrderDirection.Sell)
+            {
+                return parameters.Result(baseCurrencyPosition, baseCurrency.BaseCurrencySymbol);
+            }
+
+            return parameters.ResultInAccountCurrency(0m);
+        }
+
         private static decimal GetOrderPrice(Security security, Order order)
         {
             var orderPrice = 0m;
