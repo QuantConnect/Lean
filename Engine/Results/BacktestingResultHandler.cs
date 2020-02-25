@@ -60,31 +60,9 @@ namespace QuantConnect.Lean.Engine.Results
         private int _projectId;
 
         /// <summary>
-        /// Packeting message queue to temporarily store packets and then pull for processing.
-        /// </summary>
-        public ConcurrentQueue<Packet> Messages { get; set; }
-
-        /// <summary>
-        /// Charts collection for storing the master copy of user charting data.
-        /// </summary>
-        public ConcurrentDictionary<string, Chart> Charts { get; set; }
-
-        /// <summary>
         /// Boolean flag indicating the result handler thread is completely finished and ready to dispose.
         /// </summary>
         public bool IsActive { get; private set; }
-
-        /// <summary>
-        /// Sampling period for timespans between resamples of the charting equity.
-        /// </summary>
-        /// <remarks>Specifically critical for backtesting since with such long timeframes the sampled data can get extreme.</remarks>
-        public TimeSpan ResamplePeriod { get; private set; }
-
-        /// <summary>
-        /// How frequently the backtests push messages to the browser.
-        /// </summary>
-        /// <remarks>Update frequency of notification packets</remarks>
-        public TimeSpan NotificationPeriod { get; }
 
         /// <summary>
         /// A dictionary containing summary statistics
@@ -96,8 +74,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public BacktestingResultHandler()
         {
-            Messages = new ConcurrentQueue<Packet>();
-            Charts = new ConcurrentDictionary<string, Chart>();
             IsActive = true;
             ResamplePeriod = TimeSpan.FromMinutes(4);
             NotificationPeriod = TimeSpan.FromSeconds(2);
@@ -327,9 +303,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Save the snapshot of the total results to storage.
         /// </summary>
         /// <param name="packet">Packet to store.</param>
-        /// <param name="async">Store the packet asyncronously to speed up the thread.</param>
-        /// <remarks>Async creates crashes in Mono 3.10 if the thread disappears before the upload is complete so it is disabled for now.</remarks>
-        public void StoreResult(Packet packet, bool async = false)
+        protected override void StoreResult(Packet packet)
         {
             try
             {
@@ -704,14 +678,6 @@ namespace QuantConnect.Lean.Engine.Results
         {
             var statusPacket = new AlgorithmStatusPacket(_algorithmId, _projectId, status, message);
             MessagingHandler.Send(statusPacket);
-        }
-
-        /// <summary>
-        /// Purge/clear any outstanding messages in message queue.
-        /// </summary>
-        public void PurgeQueue()
-        {
-            Messages.Clear();
         }
 
         /// <summary>

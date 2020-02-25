@@ -164,7 +164,7 @@ namespace QuantConnect.Tests.Engine
         {
         }
 
-        public void StoreResult(Packet packet, bool async = false)
+        protected override void StoreResult(Packet packet)
         {
         }
 

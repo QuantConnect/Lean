@@ -66,35 +66,9 @@ namespace QuantConnect.Lean.Engine.Results
         private readonly int _streamedChartGroupSize;
 
         /// <summary>
-        /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
-        /// </summary>
-        public ConcurrentQueue<Packet> Messages { get; set; }
-
-        /// <summary>
-        /// Storage for the price and equity charts of the live results.
-        /// </summary>
-        /// <remarks>
-        ///     Potential memory leak when the algorithm has been running for a long time. Infinitely storing the results isn't wise.
-        ///     The results should be stored to disk daily, and then the caches reset.
-        /// </remarks>
-        public ConcurrentDictionary<string, Chart> Charts { get; set; }
-
-        /// <summary>
         /// Boolean flag indicating the thread is still active.
         /// </summary>
         public bool IsActive { get; private set; }
-
-        /// <summary>
-        /// Equity resampling period for the charting.
-        /// </summary>
-        /// <remarks>Live trading can resample at much higher frequencies (every 1-2 seconds)</remarks>
-        public TimeSpan ResamplePeriod { get; }
-
-        /// <summary>
-        /// Notification periods set how frequently we push updates to the browser.
-        /// </summary>
-        /// <remarks>Live trading resamples - sends updates at high frequencies(every 1-2 seconds)</remarks>
-        public TimeSpan NotificationPeriod { get; }
 
         /// <summary>
         /// Creates a new instance
@@ -104,8 +78,6 @@ namespace QuantConnect.Lean.Engine.Results
             _statusUpdateLock = new object();
             _orderEvents = new ConcurrentQueue<OrderEvent>();
             _cancellationTokenSource = new CancellationTokenSource();
-            Messages = new ConcurrentQueue<Packet>();
-            Charts = new ConcurrentDictionary<string, Chart>();
             IsActive = true;
             ResamplePeriod = TimeSpan.FromSeconds(2);
             NotificationPeriod = TimeSpan.FromSeconds(1);
@@ -803,7 +775,7 @@ namespace QuantConnect.Lean.Engine.Results
                 //Save the processing time:
 
                 //Store to S3:
-                StoreResult(result, false);
+                StoreResult(result);
                 Log.Trace("LiveTradingResultHandler.SendFinalResult(): Finished storing results. Start sending...");
                 //Truncate packet to fit within 32kb:
                 result.Results = new LiveResult();
@@ -843,12 +815,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// Save the snapshot of the total results to storage.
         /// </summary>
         /// <param name="packet">Packet to store.</param>
-        /// <param name="async">Store the packet asyncronously to speed up the thread.</param>
-        /// <remarks>
-        ///     Async creates crashes in Mono 3.10 if the thread disappears before the upload is complete so it is disabled for now.
-        ///     For live trading we're making assumption its a long running task and safe to async save large files.
-        /// </remarks>
-        public void StoreResult(Packet packet, bool async = true)
+        protected override void StoreResult(Packet packet)
         {
             try
             {
@@ -958,14 +925,6 @@ namespace QuantConnect.Lean.Engine.Results
                     LogStore.Clear();
                 }
             }
-        }
-
-        /// <summary>
-        /// Purge/clear any outstanding messages in message queue.
-        /// </summary>
-        public void PurgeQueue()
-        {
-            Messages.Clear();
         }
 
         /// <summary>

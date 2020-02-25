@@ -43,33 +43,6 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Charts collection for storing the master copy of user charting data.
-        /// </summary>
-        ConcurrentDictionary<string, Chart> Charts
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Sampling period for timespans between resamples of the charting equity.
-        /// </summary>
-        /// <remarks>Specifically critical for backtesting since with such long timeframes the sampled data can get extreme.</remarks>
-        TimeSpan ResamplePeriod
-        {
-            get;
-        }
-
-        /// <summary>
-        /// How frequently the backtests push messages to the browser.
-        /// </summary>
-        /// <remarks>Update frequency of notification packets</remarks>
-        TimeSpan NotificationPeriod
-        {
-            get;
-        }
-
-        /// <summary>
         /// Boolean flag indicating the result hander thread is busy.
         /// False means it has completely finished and ready to dispose.
         /// </summary>
@@ -151,14 +124,6 @@ namespace QuantConnect.Lean.Engine.Results
         void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics);
 
         /// <summary>
-        /// Save the snapshot of the total results to storage.
-        /// </summary>
-        /// <param name="packet">Packet to store.</param>
-        /// <param name="async">Store the packet asyncronously to speed up the thread.</param>
-        /// <remarks>Async creates crashes in Mono 3.10 if the thread disappears before the upload is complete so it is disabled for now.</remarks>
-        void StoreResult(Packet packet, bool async = false);
-
-        /// <summary>
         /// Post the final result back to the controller worker if backtesting, or to console if local.
         /// </summary>
         void SendFinalResult();
@@ -187,11 +152,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// Terminate the result thread and apply any required exit proceedures.
         /// </summary>
         void Exit();
-
-        /// <summary>
-        /// Purge/clear any outstanding messages in message queue.
-        /// </summary>
-        void PurgeQueue();
 
         /// <summary>
         /// Process any synchronous events in here that are primarily triggered from the algorithm loop
