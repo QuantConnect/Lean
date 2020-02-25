@@ -27,7 +27,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -36,8 +35,6 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public abstract class BaseResultsHandler
     {
-        private int _lastOrderEventCount;
-
         /// <summary>
         /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
         /// </summary>
@@ -47,22 +44,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// Storage for the price and equity charts of the live results.
         /// </summary>
         public ConcurrentDictionary<string, Chart> Charts { get; set; }
-
-        /// <summary>
-        /// True when final packet storing has began
-        /// </summary>
-        /// <remarks>This is required to avoid any race conditions between the running update thread
-        /// and the main thread storing the final results. Guarantees the final packet wont be overwritten.
-        /// To be used with <see cref="StoringLock"/></remarks>
-        protected volatile bool ProcessingFinalPacket;
-
-        /// <summary>
-        /// Lock to be used when storing results
-        /// </summary>
-        /// <remarks>This is required to avoid any race conditions between the running update thread
-        /// and the main thread storing the final results. Guarantees the final packet wont be overwritten.
-        /// To be used with <see cref="ProcessingFinalPacket"/></remarks>
-        protected object StoringLock { get; }
 
         /// <summary>
         /// True if the exit has been triggered
@@ -239,6 +220,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="packet">Packet to store.</param>
         protected abstract void StoreResult(Packet packet);
 
+        /// <summary>
         /// Samples portfolio equity, benchmark, and daily performance
         /// </summary>
         /// <param name="time">Current time in the AlgorithmManager loop</param>

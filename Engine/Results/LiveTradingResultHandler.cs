@@ -61,7 +61,6 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextSample;
         private IApi _api;
         private readonly CancellationTokenSource _cancellationTokenSource;
-        private readonly bool _debugMode;
         private readonly int _streamedChartLimit;
         private readonly int _streamedChartGroupSize;
 
@@ -82,7 +81,6 @@ namespace QuantConnect.Lean.Engine.Results
             ResamplePeriod = TimeSpan.FromSeconds(2);
             NotificationPeriod = TimeSpan.FromSeconds(1);
             SetNextStatusUpdate();
-            _debugMode = Config.GetBool("debug-mode");
             _streamedChartLimit = Config.GetInt("streamed-chart-limit", 12);
             _streamedChartGroupSize = Config.GetInt("streamed-chart-group-size", 3);
         }
