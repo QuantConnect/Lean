@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -242,13 +241,13 @@ namespace QuantConnect.Lean.Engine.Results
                     const int maxOrders = 100;
                     var orderCount = TransactionHandler.Orders.Count;
 
-                    var completeResult = new BacktestResult(
+                    var completeResult = new BacktestResult(new BacktestResultParameters(
                         Charts,
                         orderCount > maxOrders ? TransactionHandler.Orders.Skip(orderCount - maxOrders).ToDictionary() : TransactionHandler.Orders.ToDictionary(),
                         Algorithm.Transactions.TransactionRecord,
                         new Dictionary<string, string>(),
                         runtimeStatistics,
-                        new Dictionary<string, AlgorithmPerformance>());
+                        new Dictionary<string, AlgorithmPerformance>()));
 
                     StoreResult(new BacktestResultPacket(_job, completeResult, Algorithm.EndDate, Algorithm.StartDate, progress));
 
@@ -321,17 +320,15 @@ namespace QuantConnect.Lean.Engine.Results
                     BacktestResult results;
                     lock (ChartLock)
                     {
-                        results = new BacktestResult(
+                        results = new BacktestResult(new BacktestResultParameters(
                             result.Results.Charts.ToDictionary(x => x.Key, x => x.Value.Clone()),
                             result.Results.Orders,
                             result.Results.ProfitLoss,
                             result.Results.Statistics,
                             result.Results.RuntimeStatistics,
                             result.Results.RollingWindow,
-                            result.Results.TotalPerformance
-                        )
-                        // Set Alpha Runtime Statistics
-                        { AlphaRuntimeStatistics = result.Results.AlphaRuntimeStatistics };
+                            result.Results.TotalPerformance,
+                            result.Results.AlphaRuntimeStatistics));
                     }
                     // Save results
                     SaveResults(key, results);
@@ -373,8 +370,8 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Create a result packet to send to the browser.
                 var result = new BacktestResultPacket(_job,
-                    new BacktestResult(charts, orders, profitLoss, statisticsResults.Summary, runtime, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance)
-                    { AlphaRuntimeStatistics = AlphaRuntimeStatistics }, Algorithm.EndDate, Algorithm.StartDate)
+                    new BacktestResult(new BacktestResultParameters(charts, orders, profitLoss, statisticsResults.Summary, runtime, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance, AlphaRuntimeStatistics)),
+                    Algorithm.EndDate, Algorithm.StartDate)
                 {
                     ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds,
                     DateFinished = DateTime.Now,
