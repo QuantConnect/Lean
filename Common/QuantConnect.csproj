@@ -338,8 +338,11 @@
     <Compile Include="Orders\Fees\OrderFee.cs" />
     <Compile Include="Orders\Fees\OrderFeeParameters.cs" />
     <Compile Include="Orders\Slippage\AlphaStreamsSlippageModel.cs" />
+    <Compile Include="Packets\BacktestResultParameters.cs" />
+    <Compile Include="Packets\BaseResultParameters.cs" />
     <Compile Include="Packets\Breakpoint.cs" />
     <Compile Include="Packets\LeakyBucketControlParameters.cs" />
+    <Compile Include="Packets\LiveResultParameters.cs" />
     <Compile Include="Python\BrokerageMessageHandlerPythonWrapper.cs" />
     <Compile Include="Python\MarginCallModelPythonWrapper.cs" />
     <Compile Include="Python\PythonInitializer.cs" />

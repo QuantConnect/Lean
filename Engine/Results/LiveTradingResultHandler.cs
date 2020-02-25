@@ -266,7 +266,7 @@ namespace QuantConnect.Lean.Engine.Results
                             }
                         }
                         var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
-                        var complete = new LiveResultPacket(_job, new LiveResult(chartComplete, orders, Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, serverStatistics));
+                        var complete = new LiveResultPacket(_job, new LiveResult(new LiveResultParameters(chartComplete, orders, Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, serverStatistics)));
                         StoreResult(complete);
                         _nextChartsUpdate = DateTime.UtcNow.AddMinutes(1);
                         Log.Debug("LiveTradingResultHandler.Update(): End-store result");
@@ -400,17 +400,15 @@ namespace QuantConnect.Lean.Engine.Results
                     var dailySampler = new SeriesSampler(TimeSpan.FromHours(12));
                     chartComplete = dailySampler.SampleCharts(chartComplete, Time.BeginningOfTime, Time.EndOfTime);
 
-                    var result = new LiveResult(chartComplete,
+                    var result = new LiveResult(new LiveResultParameters(chartComplete,
                         new Dictionary<int, Order>(TransactionHandler.Orders),
                         Algorithm.Transactions.TransactionRecord,
                         holdings,
                         Algorithm.Portfolio.CashBook,
                         statistics: statistics.Summary,
-                        runtime: runtimeStatistics,
-                        serverStatistics: serverStatistics)
-                    {
-                        AlphaRuntimeStatistics = AlphaRuntimeStatistics
-                    };
+                        runtimeStatistics: runtimeStatistics,
+                        serverStatistics: serverStatistics,
+                        alphaRuntimeStatistics: AlphaRuntimeStatistics));
 
                     SaveResults($"{JobId}.json", result);
                     Log.Debug("LiveTradingResultHandler.Update(): status update end.");
@@ -765,7 +763,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                 //Create a packet:
                 var result = new LiveResultPacket(_job,
-                    new LiveResult(charts, orders, profitLoss, holdings, Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime))
+                    new LiveResult(new LiveResultParameters(charts, orders, profitLoss, holdings, Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime)))
                 {
                     ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds
                 };
