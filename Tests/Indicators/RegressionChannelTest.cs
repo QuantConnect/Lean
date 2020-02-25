@@ -40,8 +40,9 @@ namespace QuantConnect.Tests.Indicators
 
             for (var i = 0; i < prices.Length; i++)
             {
-                indicator.Update(time.AddMinutes(i), prices[i]);
-                stdDev.Update(time, prices[i]);
+                var t = time.AddMinutes(i);
+                indicator.Update(t, prices[i]);
+                stdDev.Update(t, prices[i]);
                 actual[i] = Math.Round(indicator.Current.Value, 4);
             }
             Assert.AreEqual(expected, actual);

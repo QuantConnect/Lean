@@ -344,7 +344,7 @@ namespace QuantConnect.Tests.Indicators
             // submitting another update to right won't cause an update without corresponding update to left
             right.Update(DateTime.Today, 1m);
             Assert.IsFalse(updatedEventFired);
-            left.Update(DateTime.Today, 1m);
+            left.Update(DateTime.Today, 0m);
             Assert.IsTrue(updatedEventFired);
         }
 
