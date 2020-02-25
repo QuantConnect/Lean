@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,6 +25,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Packets;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -33,6 +35,16 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public abstract class BaseResultsHandler
     {
+        /// <summary>
+        /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
+        /// </summary>
+        public ConcurrentQueue<Packet> Messages { get; set; }
+
+        /// <summary>
+        /// Storage for the price and equity charts of the live results.
+        /// </summary>
+        public ConcurrentDictionary<string, Chart> Charts { get; set; }
+
         /// <summary>
         /// True if the exit has been triggered
         /// </summary>
@@ -117,10 +129,24 @@ namespace QuantConnect.Lean.Engine.Results
         protected DateTime PreviousUtcSampleTime;
 
         /// <summary>
+        /// Sampling period for timespans between resamples of the charting equity.
+        /// </summary>
+        /// <remarks>Specifically critical for backtesting since with such long timeframes the sampled data can get extreme.</remarks>
+        protected TimeSpan ResamplePeriod { get; set; }
+
+        /// <summary>
+        /// How frequently the backtests push messages to the browser.
+        /// </summary>
+        /// <remarks>Update frequency of notification packets</remarks>
+        protected TimeSpan NotificationPeriod { get; set; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()
         {
+            Charts = new ConcurrentDictionary<string, Chart>();
+            Messages = new ConcurrentQueue<Packet>();
             RuntimeStatistics = new Dictionary<string, string>();
             StartTime = DateTime.UtcNow;
             CompileId = "";
@@ -170,6 +196,14 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Purge/clear any outstanding messages in message queue.
+        /// </summary>
+        protected void PurgeQueue()
+        {
+            Messages.Clear();
+        }
+
+        /// <summary>
         /// Gets the algorithm net return
         /// </summary>
         protected decimal GetNetReturn()
@@ -179,6 +213,12 @@ namespace QuantConnect.Lean.Engine.Results
                 (Algorithm.Portfolio.TotalPortfolioValue - StartingPortfolioValue) / StartingPortfolioValue
                 : 0;
         }
+
+        /// <summary>
+        /// Save the snapshot of the total results to storage.
+        /// </summary>
+        /// <param name="packet">Packet to store.</param>
+        protected abstract void StoreResult(Packet packet);
 
         /// <summary>
         /// Samples portfolio equity, benchmark, and daily performance
