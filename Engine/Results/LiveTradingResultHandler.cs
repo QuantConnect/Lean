@@ -54,7 +54,6 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextLogStoreUpdate;
         private DateTime _nextStatisticsUpdate;
         private DateTime _nextStatusUpdate;
-        private readonly object _statusUpdateLock;
         private int _lastOrderId;
 
         //Log Message Store:
@@ -74,7 +73,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public LiveTradingResultHandler()
         {
-            _statusUpdateLock = new object();
             _orderEvents = new ConcurrentQueue<OrderEvent>();
             _cancellationTokenSource = new CancellationTokenSource();
             IsActive = true;
@@ -267,7 +265,14 @@ namespace QuantConnect.Lean.Engine.Results
                         }
                         var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                         var complete = new LiveResultPacket(_job, new LiveResult(new LiveResultParameters(chartComplete, orders, Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics, runtimeStatistics, serverStatistics)));
-                        StoreResult(complete);
+                        lock (StoringLock)
+                        {
+                            // don't overwrite final packet
+                            if (!ProcessingFinalPacket)
+                            {
+                                StoreResult(complete);
+                            }
+                        }
                         _nextChartsUpdate = DateTime.UtcNow.AddMinutes(1);
                         Log.Debug("LiveTradingResultHandler.Update(): End-store result");
                     }
@@ -324,13 +329,21 @@ namespace QuantConnect.Lean.Engine.Results
                                 DictionarySafeAdd(chartComplete, safeName, chart.Value.Clone(), "chartComplete");
                             }
                         }
-                        StoreStatusFile(
-                            runtimeStatistics,
-                            holdings,
-                            chartComplete,
-                            new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord),
-                            serverStatistics);
-                        SetNextStatusUpdate();
+
+                        lock (StoringLock)
+                        {
+                            // don't overwrite final packet
+                            if (!ProcessingFinalPacket)
+                            {
+                                StoreStatusFile(
+                                    runtimeStatistics,
+                                    holdings,
+                                    chartComplete,
+                                    new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord),
+                                    serverStatistics);
+                                SetNextStatusUpdate();
+                            }
+                        }
                     }
 
                     if (utcNow > _nextChartTrimming)
@@ -385,39 +398,35 @@ namespace QuantConnect.Lean.Engine.Results
             Dictionary<string, string> serverStatistics = null,
             StatisticsResults statistics = null)
         {
-            if (Monitor.TryEnter(_statusUpdateLock))
+            try
             {
-                try
+                Log.Debug("LiveTradingResultHandler.Update(): status update start...");
+
+                if (statistics == null)
                 {
-                    Log.Debug("LiveTradingResultHandler.Update(): status update start...");
-
-                    if (statistics == null)
-                    {
-                        statistics = GenerateStatisticsResults(chartComplete, profitLoss);
-                    }
-
-                    // sample the entire charts with a 12 hours resolution
-                    var dailySampler = new SeriesSampler(TimeSpan.FromHours(12));
-                    chartComplete = dailySampler.SampleCharts(chartComplete, Time.BeginningOfTime, Time.EndOfTime);
-
-                    var result = new LiveResult(new LiveResultParameters(chartComplete,
-                        new Dictionary<int, Order>(TransactionHandler.Orders),
-                        Algorithm.Transactions.TransactionRecord,
-                        holdings,
-                        Algorithm.Portfolio.CashBook,
-                        statistics: statistics.Summary,
-                        runtimeStatistics: runtimeStatistics,
-                        serverStatistics: serverStatistics,
-                        alphaRuntimeStatistics: AlphaRuntimeStatistics));
-
-                    SaveResults($"{JobId}.json", result);
-                    Log.Debug("LiveTradingResultHandler.Update(): status update end.");
+                    statistics = GenerateStatisticsResults(chartComplete, profitLoss);
                 }
-                catch (Exception err)
-                {
-                    Log.Error(err, "Error storing status update");
-                }
-                Monitor.Exit(_statusUpdateLock);
+
+                // sample the entire charts with a 12 hours resolution
+                var dailySampler = new SeriesSampler(TimeSpan.FromHours(12));
+                chartComplete = dailySampler.SampleCharts(chartComplete, Time.BeginningOfTime, Time.EndOfTime);
+
+                var result = new LiveResult(new LiveResultParameters(chartComplete,
+                    new Dictionary<int, Order>(TransactionHandler.Orders),
+                    Algorithm.Transactions.TransactionRecord,
+                    holdings,
+                    Algorithm.Portfolio.CashBook,
+                    statistics: statistics.Summary,
+                    runtimeStatistics: runtimeStatistics,
+                    serverStatistics: serverStatistics,
+                    alphaRuntimeStatistics: AlphaRuntimeStatistics));
+
+                SaveResults($"{JobId}.json", result);
+                Log.Debug("LiveTradingResultHandler.Update(): status update end.");
+            }
+            catch (Exception err)
+            {
+                Log.Error(err, "Error storing status update");
             }
         }
 
@@ -740,50 +749,54 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public void SendFinalResult()
         {
-            Log.Trace("LiveTradingResultHandler.SendFinalResult(): Starting...");
-            try
+            lock (StoringLock)
             {
-                //Convert local dictionary:
-                var charts = new Dictionary<string, Chart>();
-                lock (ChartLock)
+                ProcessingFinalPacket = true;
+                Log.Trace("LiveTradingResultHandler.SendFinalResult(): Starting...");
+                try
                 {
-                    foreach (var kvp in Charts)
+                    //Convert local dictionary:
+                    var charts = new Dictionary<string, Chart>();
+                    lock (ChartLock)
                     {
-                        charts.Add(kvp.Key, kvp.Value.Clone());
+                        foreach (var kvp in Charts)
+                        {
+                            charts.Add(kvp.Key, kvp.Value.Clone());
+                        }
                     }
+
+                    var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
+                    var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
+                    var holdings = new Dictionary<string, Holding>();
+                    var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
+                    var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
+
+                    StoreStatusFile(runtime, holdings, charts, profitLoss, statistics: statisticsResults);
+
+                    //Create a packet:
+                    var result = new LiveResultPacket(_job,
+                        new LiveResult(new LiveResultParameters(charts, orders, profitLoss, holdings, Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime)))
+                    {
+                        ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds
+                    };
+
+                    //Save the processing time:
+
+                    //Store to S3:
+                    StoreResult(result);
+                    Log.Trace("LiveTradingResultHandler.SendFinalResult(): Finished storing results. Start sending...");
+                    //Truncate packet to fit within 32kb:
+                    result.Results = new LiveResult();
+
+                    //Send the truncated packet:
+                    MessagingHandler.Send(result);
                 }
-
-                var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
-                var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                var holdings = new Dictionary<string, Holding>();
-                var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
-                var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
-
-                StoreStatusFile(runtime, holdings, charts, profitLoss, statistics: statisticsResults);
-
-                //Create a packet:
-                var result = new LiveResultPacket(_job,
-                    new LiveResult(new LiveResultParameters(charts, orders, profitLoss, holdings, Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime)))
+                catch (Exception err)
                 {
-                    ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds
-                };
-
-                //Save the processing time:
-
-                //Store to S3:
-                StoreResult(result);
-                Log.Trace("LiveTradingResultHandler.SendFinalResult(): Finished storing results. Start sending...");
-                //Truncate packet to fit within 32kb:
-                result.Results = new LiveResult();
-
-                //Send the truncated packet:
-                MessagingHandler.Send(result);
+                    Log.Error(err);
+                }
+                Log.Trace("LiveTradingResultHandler.SendFinalResult(): Ended");
             }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-            Log.Trace("LiveTradingResultHandler.SendFinalResult(): Ended");
         }
 
         /// <summary>

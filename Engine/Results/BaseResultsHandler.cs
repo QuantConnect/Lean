@@ -36,6 +36,22 @@ namespace QuantConnect.Lean.Engine.Results
     public abstract class BaseResultsHandler
     {
         /// <summary>
+        /// True when final packet storing has began
+        /// </summary>
+        /// <remarks>This is required to avoid any race conditions between the running update thread
+        /// and the main thread storing the final results. Guarantees the final packet wont be overwritten.
+        /// To be used with <see cref="StoringLock"/></remarks>
+        protected volatile bool ProcessingFinalPacket;
+
+        /// <summary>
+        /// Lock to be used when storing results
+        /// </summary>
+        /// <remarks>This is required to avoid any race conditions between the running update thread
+        /// and the main thread storing the final results. Guarantees the final packet wont be overwritten.
+        /// To be used with <see cref="ProcessingFinalPacket"/></remarks>
+        protected object StoringLock { get; }
+
+        /// <summary>
         /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
         /// </summary>
         public ConcurrentQueue<Packet> Messages { get; set; }
@@ -153,6 +169,7 @@ namespace QuantConnect.Lean.Engine.Results
             JobId = "";
             ChartLock = new object();
             LogStore = new List<LogEntry>();
+            StoringLock = new object();
         }
 
         /// <summary>

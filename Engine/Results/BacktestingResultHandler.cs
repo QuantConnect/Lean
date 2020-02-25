@@ -50,7 +50,6 @@ namespace QuantConnect.Lean.Engine.Results
         private string _errorMessage;
         private double _daysProcessed;
         private double _daysProcessedFrontier;
-        private bool _processingFinalPacket;
         private readonly HashSet<string> _chartSeriesExceededDataPoints;
 
         //Processing Time:
@@ -160,7 +159,7 @@ namespace QuantConnect.Lean.Engine.Results
             try
             {
                 //Sometimes don't run the update, if not ready or we're ending.
-                if (Algorithm?.Transactions == null || _processingFinalPacket)
+                if (Algorithm?.Transactions == null || ProcessingFinalPacket)
                 {
                     return;
                 }
@@ -172,10 +171,10 @@ namespace QuantConnect.Lean.Engine.Results
                 try
                 {
                     deltaOrders = (from order in TransactionHandler.Orders
-                        where (order.Value.Time.Date >= _lastUpdate
-                              || (order.Value.LastFillTime.HasValue && order.Value.LastFillTime.Value.Date >= _lastUpdate)
-                              || (order.Value.LastUpdateTime.HasValue && order.Value.LastUpdateTime.Value.Date >= _lastUpdate))
-                        select order).Take(50).ToDictionary(t => t.Key, t => t.Value);
+                                   where (order.Value.Time.Date >= _lastUpdate
+                                         || (order.Value.LastFillTime.HasValue && order.Value.LastFillTime.Value.Date >= _lastUpdate)
+                                         || (order.Value.LastUpdateTime.HasValue && order.Value.LastUpdateTime.Value.Date >= _lastUpdate))
+                                   select order).Take(50).ToDictionary(t => t.Key, t => t.Value);
                 }
                 catch (Exception err)
                 {
@@ -249,7 +248,14 @@ namespace QuantConnect.Lean.Engine.Results
                         runtimeStatistics,
                         new Dictionary<string, AlgorithmPerformance>()));
 
-                    StoreResult(new BacktestResultPacket(_job, completeResult, Algorithm.EndDate, Algorithm.StartDate, progress));
+                    lock (StoringLock)
+                    {
+                        // don't overwrite final packet
+                        if (!ProcessingFinalPacket)
+                        {
+                            StoreResult(new BacktestResultPacket(_job, completeResult, Algorithm.EndDate, Algorithm.StartDate, progress));
+                        }
+                    }
 
                     _nextS3Update = DateTime.UtcNow.AddSeconds(30);
                 }
@@ -349,46 +355,48 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public void SendFinalResult()
         {
-            try
+            lock (StoringLock)
             {
-                _processingFinalPacket = true;
-
-                //Convert local dictionary:
-                var charts = new Dictionary<string, Chart>(Charts);
-                var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
-                var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
-                var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
-                var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
-
-                FinalStatistics = statisticsResults.Summary;
-
-                // clear the trades collection before placing inside the backtest result
-                foreach (var ap in statisticsResults.RollingPerformances.Values)
+                ProcessingFinalPacket = true;
+                try
                 {
-                    ap.ClosedTrades.Clear();
+                    //Convert local dictionary:
+                    var charts = new Dictionary<string, Chart>(Charts);
+                    var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
+                    var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
+                    var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
+                    var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
+
+                    FinalStatistics = statisticsResults.Summary;
+
+                    // clear the trades collection before placing inside the backtest result
+                    foreach (var ap in statisticsResults.RollingPerformances.Values)
+                    {
+                        ap.ClosedTrades.Clear();
+                    }
+
+                    //Create a result packet to send to the browser.
+                    var result = new BacktestResultPacket(_job,
+                        new BacktestResult(new BacktestResultParameters(charts, orders, profitLoss, statisticsResults.Summary, runtime, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance, AlphaRuntimeStatistics)),
+                        Algorithm.EndDate, Algorithm.StartDate)
+                    {
+                        ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds,
+                        DateFinished = DateTime.Now,
+                        Progress = 1
+                    };
+
+                    //Place result into storage.
+                    StoreResult(result);
+
+                    //Second, send the truncated packet:
+                    MessagingHandler.Send(result);
+
+                    Log.Trace("BacktestingResultHandler.SendAnalysisResult(): Processed final packet");
                 }
-
-                //Create a result packet to send to the browser.
-                var result = new BacktestResultPacket(_job,
-                    new BacktestResult(new BacktestResultParameters(charts, orders, profitLoss, statisticsResults.Summary, runtime, statisticsResults.RollingPerformances, statisticsResults.TotalPerformance, AlphaRuntimeStatistics)),
-                    Algorithm.EndDate, Algorithm.StartDate)
+                catch (Exception err)
                 {
-                    ProcessingTime = (DateTime.UtcNow - StartTime).TotalSeconds,
-                    DateFinished = DateTime.Now,
-                    Progress = 1
-                };
-
-                //Place result into storage.
-                StoreResult(result);
-
-                //Second, send the truncated packet:
-                MessagingHandler.Send(result);
-
-                Log.Trace("BacktestingResultHandler.SendAnalysisResult(): Processed final packet");
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
+                    Log.Error(err);
+                }
             }
         }
 

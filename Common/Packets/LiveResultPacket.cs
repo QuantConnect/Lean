@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Packets
