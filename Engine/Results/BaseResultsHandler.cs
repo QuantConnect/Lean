@@ -36,6 +36,11 @@ namespace QuantConnect.Lean.Engine.Results
     public abstract class BaseResultsHandler
     {
         /// <summary>
+        /// The algorithms order events
+        /// </summary>
+        protected ConcurrentQueue<OrderEvent> OrderEvents { get; }
+
+        /// <summary>
         /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
         /// </summary>
         public ConcurrentQueue<Packet> Messages { get; set; }
@@ -153,6 +158,47 @@ namespace QuantConnect.Lean.Engine.Results
             JobId = "";
             ChartLock = new object();
             LogStore = new List<LogEntry>();
+            OrderEvents = new ConcurrentQueue<OrderEvent>();
+        }
+
+        /// <summary>
+        /// New order event for the algorithm
+        /// </summary>
+        /// <param name="newEvent">New event details</param>
+        public virtual void OrderEvent(OrderEvent newEvent)
+        {
+            OrderEvents.Enqueue(newEvent);
+        }
+
+        /// <summary>
+        /// Gets the orders generated since the last call based on the provided
+        /// last order events
+        /// </summary>
+        /// <returns>The delta orders</returns>
+        protected virtual Dictionary<int, Order> GetDeltaOrders(Func<int, bool> shouldStop)
+        {
+            var deltaOrders = new Dictionary<int, Order>();
+
+            OrderEvent orderEvent;
+            while (!shouldStop(deltaOrders.Count)
+                   && OrderEvents.TryDequeue(out orderEvent)
+                   // we can have more than 1 order event per order id
+                   && !deltaOrders.ContainsKey(orderEvent.OrderId))
+            {
+                var order = Algorithm.Transactions.GetOrderById(orderEvent.OrderId);
+                if (order == null)
+                {
+                    // this shouldn't happen but just in case
+                    continue;
+                }
+
+                // for charting
+                order.Price = order.Price.SmartRounding();
+
+                deltaOrders[orderEvent.OrderId] = order;
+            }
+
+            return deltaOrders;
         }
 
         /// <summary>

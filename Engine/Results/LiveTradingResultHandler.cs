@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -45,7 +44,6 @@ namespace QuantConnect.Lean.Engine.Results
     {
         // Required properties for the cloud app.
         private LiveNodePacket _job;
-        private readonly ConcurrentQueue<OrderEvent> _orderEvents;
 
         //Update loop:
         private DateTime _nextUpdate;
@@ -55,7 +53,6 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextStatisticsUpdate;
         private DateTime _nextStatusUpdate;
         private readonly object _statusUpdateLock;
-        private int _lastOrderId;
 
         //Log Message Store:
         private DateTime _nextSample;
@@ -75,7 +72,6 @@ namespace QuantConnect.Lean.Engine.Results
         public LiveTradingResultHandler()
         {
             _statusUpdateLock = new object();
-            _orderEvents = new ConcurrentQueue<OrderEvent>();
             _cancellationTokenSource = new CancellationTokenSource();
             IsActive = true;
             ResamplePeriod = TimeSpan.FromSeconds(2);
@@ -158,28 +154,11 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 try
                 {
-                    //Extract the orders created since last update
-                    OrderEvent orderEvent;
-                    var deltaOrders = new Dictionary<int, Order>();
-
-                    var stopwatch = Stopwatch.StartNew();
-                    while (_orderEvents.TryDequeue(out orderEvent) && stopwatch.ElapsedMilliseconds < 15)
+                    Dictionary<int, Order> deltaOrders;
                     {
-                        var order = Algorithm.Transactions.GetOrderById(orderEvent.OrderId);
-                        deltaOrders[orderEvent.OrderId] = order.Clone();
+                        var stopwatch = Stopwatch.StartNew();
+                        deltaOrders = GetDeltaOrders(shouldStop: orderCount => stopwatch.ElapsedMilliseconds > 15);
                     }
-
-                    //For charting convert to UTC
-                    foreach (var order in deltaOrders)
-                    {
-                        order.Value.Price = order.Value.Price.SmartRounding();
-                    }
-
-                    //Reset loop variables:
-                    _lastOrderId = (from order in deltaOrders.Values select order.Id).DefaultIfEmpty(_lastOrderId).Max();
-
-                    //Limit length of orders we pass back dynamically to avoid flooding.
-                    //if (deltaOrders.Count > 50) deltaOrders.Clear();
 
                     //Create and send back the changes in chart since the algorithm started.
                     var deltaCharts = new Dictionary<string, Chart>();
@@ -303,7 +282,7 @@ namespace QuantConnect.Lean.Engine.Results
                                 Algorithm.Portfolio.TotalPortfolioValue,
                                 GetNetReturn(),
                                 Algorithm.Portfolio.TotalSaleVolume,
-                                _lastOrderId, 0);
+                                TransactionHandler.OrdersCount, 0);
                         }
                         catch (Exception err)
                         {
@@ -884,13 +863,12 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// New order event for the algorithm backtest: send event to browser.
+        /// New order event for the algorithm
         /// </summary>
         /// <param name="newEvent">New event details</param>
-        public void OrderEvent(OrderEvent newEvent)
+        public override void OrderEvent(OrderEvent newEvent)
         {
-            // we'll pull these out for the deltaOrders
-            _orderEvents.Enqueue(newEvent);
+            base.OrderEvent(newEvent);
 
             //Send the message to frontend as packet:
             Log.Trace("LiveTradingResultHandler.OrderEvent(): " + newEvent, true);
