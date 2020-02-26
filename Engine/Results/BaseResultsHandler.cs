@@ -171,8 +171,7 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Gets the orders generated since the last call based on the provided
-        /// last order events
+        /// Gets the orders generated since the last call based on the provided last order events
         /// </summary>
         /// <returns>The delta orders</returns>
         protected virtual Dictionary<int, Order> GetDeltaOrders(Func<int, bool> shouldStop)
