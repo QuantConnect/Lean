@@ -61,11 +61,6 @@ namespace QuantConnect.Lean.Engine.Results
         void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler);
 
         /// <summary>
-        /// Primary result thread entry point to process the result message queue and send it to whatever endpoint is set.
-        /// </summary>
-        void Run();
-
-        /// <summary>
         /// Process debug messages with the preconfigured settings.
         /// </summary>
         /// <param name="message">String debug message</param>

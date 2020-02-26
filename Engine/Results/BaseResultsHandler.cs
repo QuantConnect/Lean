@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -27,6 +28,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -39,6 +41,16 @@ namespace QuantConnect.Lean.Engine.Results
         /// The last position consumed from the <see cref="ITransactionHandler.OrderEvents"/> by <see cref="GetDeltaOrders"/>
         /// </summary>
         protected int LastDeltaOrderPosition;
+
+        /// <summary>
+        /// The task in charge of running the <see cref="Run"/> update method
+        /// </summary>
+        private Task _updateRunner;
+
+        /// <summary>
+        /// Boolean flag indicating the thread is still active.
+        /// </summary>
+        public bool IsActive => _updateRunner != null && !_updateRunner.IsCompleted && !_updateRunner.IsFaulted;
 
         /// <summary>
         /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
@@ -80,7 +92,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// The algorithm job id.
         /// This is the deploy id for live, backtesting id for backtesting
         /// </summary>
-        protected string JobId { get; set; }
+        protected string AlgorithmId { get; set; }
 
         /// <summary>
         /// The result handler start time
@@ -155,7 +167,7 @@ namespace QuantConnect.Lean.Engine.Results
             RuntimeStatistics = new Dictionary<string, string>();
             StartTime = DateTime.UtcNow;
             CompileId = "";
-            JobId = "";
+            AlgorithmId = "";
             ChartLock = new object();
             LogStore = new List<LogEntry>();
         }
@@ -207,6 +219,27 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Initialize the result handler with this result packet.
+        /// </summary>
+        /// <param name="job">Algorithm job packet for this result handler</param>
+        /// <param name="messagingHandler">The handler responsible for communicating messages to listeners</param>
+        /// <param name="api">The api instance used for handling logs</param>
+        /// <param name="transactionHandler">The transaction handler used to get the algorithms <see cref="Order"/> information</param>
+        public virtual void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
+        {
+            MessagingHandler = messagingHandler;
+            TransactionHandler = transactionHandler;
+            CompileId = job.CompileId;
+            AlgorithmId = job.AlgorithmId;
+            _updateRunner = Task.Factory.StartNew(Run);
+        }
+
+        /// <summary>
+        /// Result handler update method
+        /// </summary>
+        protected abstract void Run();
+
+        /// <summary>
         /// Returns the location of the logs
         /// </summary>
         /// <param name="id">Id that will be incorporated into the algorithm log name</param>
@@ -252,6 +285,33 @@ namespace QuantConnect.Lean.Engine.Results
         protected void PurgeQueue()
         {
             Messages.Clear();
+        }
+
+        /// <summary>
+        /// Stops the update runner task
+        /// </summary>
+        protected void StopUpdateRunner()
+        {
+            if (_updateRunner != null)
+            {
+                Log.Trace("BaseResultHandler.Exit(): waiting for update task to stop...");
+                try
+                {
+                    // just in case we add a time out
+                    if (!_updateRunner.Wait(TimeSpan.FromMinutes(10)))
+                    {
+                        Log.Error("BaseResultHandler.Exit(): Timeout waiting for update task to stop");
+                    }
+                }
+                catch (Exception exception)
+                {
+                    // just in case catch and exceptions thrown by the running task
+                    Log.Error(exception);
+                }
+
+                _updateRunner.DisposeSafely();
+                _updateRunner = null;
+            }
         }
 
         /// <summary>

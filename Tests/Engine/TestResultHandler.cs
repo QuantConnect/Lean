@@ -75,7 +75,7 @@ namespace QuantConnect.Tests.Engine
             }
         }
 
-        public void Initialize(AlgorithmNodePacket job,
+        public override void Initialize(AlgorithmNodePacket job,
             IMessagingHandler messagingHandler,
             IApi api,
             ITransactionHandler transactionHandler)
@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Engine
             _job = job;
         }
 
-        public void Run()
+        protected override void Run()
         {
         }
 
