@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using static QuantConnect.StringExtensions;
@@ -244,7 +243,6 @@ namespace QuantConnect.Securities
             if (ticket == null)
             {
                 var reason = $"Null order ticket for id: {parameters.Order.Id}";
-                Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): {reason}");
                 return new HasSufficientBuyingPowerForOrderResult(false, reason);
             }
 
@@ -297,7 +295,6 @@ namespace QuantConnect.Securities
                     Invariant($"Initial Margin: {initialMarginRequiredForRemainderOfOrder.Normalize()}, ") +
                     Invariant($"Free Margin: {freeMargin.Normalize()}");
 
-                Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): {reason}");
                 return new HasSufficientBuyingPowerForOrderResult(false, reason);
             }
 
