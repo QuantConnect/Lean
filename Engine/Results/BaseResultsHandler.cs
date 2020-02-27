@@ -36,10 +36,9 @@ namespace QuantConnect.Lean.Engine.Results
     public abstract class BaseResultsHandler
     {
         /// <summary>
-        /// The algorithms order id events
+        /// The last position consumed from the <see cref="ITransactionHandler.OrderEvents"/> by <see cref="GetDeltaOrders"/>
         /// </summary>
-        /// <returns>Used to fetch the delta order events since the last update <see cref="GetDeltaOrders"/></returns>
-        protected ConcurrentQueue<int> OrderIdEvents { get; }
+        protected int LastDeltaOrderPosition;
 
         /// <summary>
         /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
@@ -159,7 +158,6 @@ namespace QuantConnect.Lean.Engine.Results
             JobId = "";
             ChartLock = new object();
             LogStore = new List<LogEntry>();
-            OrderIdEvents = new ConcurrentQueue<int>();
         }
 
         /// <summary>
@@ -168,23 +166,25 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="newEvent">New event details</param>
         public virtual void OrderEvent(OrderEvent newEvent)
         {
-            OrderIdEvents.Enqueue(newEvent.OrderId);
         }
 
         /// <summary>
-        /// Gets the orders generated since the last call based on the provided last order events
+        /// Gets the orders generated starting from the provided <see cref="ITransactionHandler.OrderEvents"/> position
         /// </summary>
         /// <returns>The delta orders</returns>
-        protected virtual Dictionary<int, Order> GetDeltaOrders(Func<int, bool> shouldStop)
+        protected virtual Dictionary<int, Order> GetDeltaOrders(int orderEventsStartPosition, Func<int, bool> shouldStop)
         {
             var deltaOrders = new Dictionary<int, Order>();
 
-            int orderId;
-            while (!shouldStop(deltaOrders.Count)
-                   && OrderIdEvents.TryDequeue(out orderId)
-                   // we can have more than 1 order event per order id
-                   && !deltaOrders.ContainsKey(orderId))
+            foreach (var orderId in TransactionHandler.OrderEvents.Skip(orderEventsStartPosition).Select(orderEvent => orderEvent.OrderId))
             {
+                LastDeltaOrderPosition++;
+                if (deltaOrders.ContainsKey(orderId))
+                {
+                    // we can have more than 1 order event per order id
+                    continue;
+                }
+
                 var order = Algorithm.Transactions.GetOrderById(orderId);
                 if (order == null)
                 {
@@ -196,6 +196,11 @@ namespace QuantConnect.Lean.Engine.Results
                 order.Price = order.Price.SmartRounding();
 
                 deltaOrders[orderId] = order;
+
+                if (shouldStop(deltaOrders.Count))
+                {
+                    break;
+                }
             }
 
             return deltaOrders;

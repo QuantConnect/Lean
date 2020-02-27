@@ -157,7 +157,7 @@ namespace QuantConnect.Lean.Engine.Results
                     Dictionary<int, Order> deltaOrders;
                     {
                         var stopwatch = Stopwatch.StartNew();
-                        deltaOrders = GetDeltaOrders(shouldStop: orderCount => stopwatch.ElapsedMilliseconds > 15);
+                        deltaOrders = GetDeltaOrders(LastDeltaOrderPosition, shouldStop: orderCount => stopwatch.ElapsedMilliseconds > 15);
                     }
 
                     //Create and send back the changes in chart since the algorithm started.
@@ -868,8 +868,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="newEvent">New event details</param>
         public override void OrderEvent(OrderEvent newEvent)
         {
-            base.OrderEvent(newEvent);
-
             //Send the message to frontend as packet:
             Log.Trace("LiveTradingResultHandler.OrderEvent(): " + newEvent, true);
             Messages.Enqueue(new OrderEventPacket(JobId, newEvent));
