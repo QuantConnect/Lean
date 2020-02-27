@@ -36,9 +36,10 @@ namespace QuantConnect.Lean.Engine.Results
     public abstract class BaseResultsHandler
     {
         /// <summary>
-        /// The algorithms order events
+        /// The algorithms order id events
         /// </summary>
-        protected ConcurrentQueue<OrderEvent> OrderEvents { get; }
+        /// <returns>Used to fetch the delta order events since the last update <see cref="GetDeltaOrders"/></returns>
+        protected ConcurrentQueue<int> OrderIdEvents { get; }
 
         /// <summary>
         /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
@@ -158,7 +159,7 @@ namespace QuantConnect.Lean.Engine.Results
             JobId = "";
             ChartLock = new object();
             LogStore = new List<LogEntry>();
-            OrderEvents = new ConcurrentQueue<OrderEvent>();
+            OrderIdEvents = new ConcurrentQueue<int>();
         }
 
         /// <summary>
@@ -167,7 +168,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="newEvent">New event details</param>
         public virtual void OrderEvent(OrderEvent newEvent)
         {
-            OrderEvents.Enqueue(newEvent);
+            OrderIdEvents.Enqueue(newEvent.OrderId);
         }
 
         /// <summary>
@@ -178,13 +179,13 @@ namespace QuantConnect.Lean.Engine.Results
         {
             var deltaOrders = new Dictionary<int, Order>();
 
-            OrderEvent orderEvent;
+            int orderId;
             while (!shouldStop(deltaOrders.Count)
-                   && OrderEvents.TryDequeue(out orderEvent)
+                   && OrderIdEvents.TryDequeue(out orderId)
                    // we can have more than 1 order event per order id
-                   && !deltaOrders.ContainsKey(orderEvent.OrderId))
+                   && !deltaOrders.ContainsKey(orderId))
             {
-                var order = Algorithm.Transactions.GetOrderById(orderEvent.OrderId);
+                var order = Algorithm.Transactions.GetOrderById(orderId);
                 if (order == null)
                 {
                     // this shouldn't happen but just in case
@@ -194,7 +195,7 @@ namespace QuantConnect.Lean.Engine.Results
                 // for charting
                 order.Price = order.Price.SmartRounding();
 
-                deltaOrders[orderEvent.OrderId] = order;
+                deltaOrders[orderId] = order;
             }
 
             return deltaOrders;

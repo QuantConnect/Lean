@@ -168,6 +168,8 @@ namespace QuantConnect.Lean.Engine.Results
                 if (DateTime.UtcNow <= _nextUpdate || _daysProcessed < _daysProcessedFrontier) return;
 
                 var deltaOrders = GetDeltaOrders(shouldStop: orderCount => orderCount >= 50);
+                // we limit the amount of orders we send
+                OrderIdEvents.Clear();
 
                 //Reset loop variables:
                 try
