@@ -15,6 +15,7 @@
 */
 
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results;
@@ -46,6 +47,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             get;
         }
+
+        /// <summary>
+        /// Gets all order events
+        /// </summary>
+        IEnumerable<OrderEvent> OrderEvents { get; }
 
         /// <summary>
         /// Gets the permanent storage for all order tickets

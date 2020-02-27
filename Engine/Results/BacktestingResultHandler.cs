@@ -167,20 +167,9 @@ namespace QuantConnect.Lean.Engine.Results
 
                 if (DateTime.UtcNow <= _nextUpdate || _daysProcessed < _daysProcessedFrontier) return;
 
-                //Extract the orders since last update
-                var deltaOrders = new Dictionary<int, Order>();
-                try
-                {
-                    deltaOrders = (from order in TransactionHandler.Orders
-                        where (order.Value.Time.Date >= _lastUpdate
-                              || (order.Value.LastFillTime.HasValue && order.Value.LastFillTime.Value.Date >= _lastUpdate)
-                              || (order.Value.LastUpdateTime.HasValue && order.Value.LastUpdateTime.Value.Date >= _lastUpdate))
-                        select order).Take(50).ToDictionary(t => t.Key, t => t.Value);
-                }
-                catch (Exception err)
-                {
-                    Log.Error(err);
-                }
+                var deltaOrders = GetDeltaOrders(LastDeltaOrderPosition, shouldStop: orderCount => orderCount >= 50);
+                // Deliberately skip to the end of order event collection to prevent overloading backtesting UX
+                LastDeltaOrderPosition = TransactionHandler.OrderEvents.Count();
 
                 //Reset loop variables:
                 try
@@ -654,16 +643,6 @@ namespace QuantConnect.Lean.Engine.Results
 
             //Set exit flag, and wait for the messages to send:
             ExitTriggered = true;
-        }
-
-        /// <summary>
-        /// Send a new order event to the browser.
-        /// </summary>
-        /// <remarks>In backtesting the order events are not sent because it would generate a high load of messaging.</remarks>
-        /// <param name="newEvent">New order event details</param>
-        public virtual void OrderEvent(OrderEvent newEvent)
-        {
-            // NOP. Don't do any order event processing for results in backtest mode.
         }
 
         /// <summary>
