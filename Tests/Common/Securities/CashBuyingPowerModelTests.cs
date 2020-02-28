@@ -451,8 +451,12 @@ namespace QuantConnect.Tests.Common.Securities
             order = new MarketOrder(_ethusd.Symbol, getMaximumOrderQuantityForTargetValueResult, DateTime.UtcNow);
             Assert.IsTrue(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _ethusd, order).IsSufficient);
 
-            // no BTC in portfolio, cannot buy ETH with BTC
-            Assert.AreEqual(0m, _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _ethbtc, 1).Quantity);
+            // no BTC in portfolio, but GetMaximumOrderQuantityForTargetBuyingPower does not care
+            var quantity = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _ethbtc, 1).Quantity;
+            Assert.AreNotEqual(0m, quantity);
+            // HasSufficientBuyingPowerForOrder does check margin requirements
+            order = new MarketOrder(_ethbtc.Symbol, quantity, DateTime.UtcNow);
+            Assert.IsFalse(_buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _ethbtc, order).IsSufficient);
 
             // 0.83125519 * 12000 + fees <= 10000 EUR
             targetValue = 10000m * _portfolio.CashBook["EUR"].ConversionRate / _portfolio.TotalPortfolioValue;
@@ -675,10 +679,14 @@ namespace QuantConnect.Tests.Common.Securities
             _algorithm.Portfolio.CashBook[Currencies.USD].ConversionRate = 0.88m;
 
             // we don't have any USD ! cash model shouldn't let us trade
-            var res = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 1m);
-            Assert.AreEqual(0m, res.Quantity);
-            Assert.IsTrue(res.Reason.Contains("does not hold any USD"));
-            Assert.IsTrue(res.IsError);
+            var quantity = _buyingPowerModel.GetMaximumOrderQuantityForTargetBuyingPower(_portfolio, _btcusd, 1m).Quantity;
+            Assert.AreNotEqual(0m, quantity);
+
+            // HasSufficientBuyingPowerForOrder does check margin requirements
+            var order = new MarketOrder(_btcusd.Symbol, quantity, DateTime.UtcNow);
+            var result = _buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, order);
+            Assert.IsFalse(result.IsSufficient);
+            Assert.IsTrue(result.Reason.Contains("only a total value of 0 USD is available."));
         }
 
         [TestCase("EUR")]

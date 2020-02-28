@@ -195,11 +195,6 @@ namespace QuantConnect.Securities
                 parameters.Portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount,
                 baseCurrency.BaseCurrencySymbol);
 
-            // convert quote currency cash to account currency
-            var quoteCurrencyPosition = parameters.Portfolio.CashBook.ConvertToAccountCurrency(
-                parameters.Portfolio.CashBook[parameters.Security.QuoteCurrency.Symbol].Amount,
-                parameters.Security.QuoteCurrency.Symbol);
-
             // remove directionality, we'll work in the land of absolutes
             var targetOrderValue = Math.Abs(targetPortfolioValue - baseCurrencyPosition);
             var direction = targetPortfolioValue > baseCurrencyPosition ? OrderDirection.Buy : OrderDirection.Sell;
@@ -224,14 +219,6 @@ namespace QuantConnect.Securities
 
                 // security.Price == 0
                 return new GetMaximumOrderQuantityResult(0, $"The price of the {parameters.Security.Symbol.Value} security is zero because it does not have any market data yet. When the security price is set this security will be ready for trading.");
-            }
-
-            // calculate the total cash available
-            var cashRemaining = direction == OrderDirection.Buy ? quoteCurrencyPosition : baseCurrencyPosition;
-            var currency = direction == OrderDirection.Buy ? parameters.Security.QuoteCurrency.Symbol : baseCurrency.BaseCurrencySymbol;
-            if (cashRemaining <= 0)
-            {
-                return new GetMaximumOrderQuantityResult(0, $"The portfolio does not hold any {currency} for the order.");
             }
 
             // continue iterating while we do not have enough cash for the order

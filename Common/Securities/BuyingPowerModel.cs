@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using static QuantConnect.StringExtensions;
@@ -244,7 +243,6 @@ namespace QuantConnect.Securities
             if (ticket == null)
             {
                 var reason = $"Null order ticket for id: {parameters.Order.Id}";
-                Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): {reason}");
                 return new HasSufficientBuyingPowerForOrderResult(false, reason);
             }
 
@@ -297,7 +295,6 @@ namespace QuantConnect.Securities
                     Invariant($"Initial Margin: {initialMarginRequiredForRemainderOfOrder.Normalize()}, ") +
                     Invariant($"Free Margin: {freeMargin.Normalize()}");
 
-                Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): {reason}");
                 return new HasSufficientBuyingPowerForOrderResult(false, reason);
             }
 
@@ -383,15 +380,6 @@ namespace QuantConnect.Securities
                     reason = $"The target order margin {absFinalOrderMargin} is less than the minimum {minimumValue}.";
                 }
                 return new GetMaximumOrderQuantityResult(0, reason, false);
-            }
-
-            var increasingFinalMargin = Math.Abs(signedTargetFinalMarginValue) > Math.Abs(currentSignedUsedMargin);
-            // calculate the total margin available, only check if we are going to increase our margin usage
-            if (increasingFinalMargin
-                && GetMarginRemaining(parameters.Portfolio, parameters.Security, direction) <= 0)
-            {
-                var reason = "The portfolio does not have enough margin available.";
-                return new GetMaximumOrderQuantityResult(0, reason);
             }
 
             // continue iterating while we do not have enough margin for the order
