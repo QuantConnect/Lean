@@ -14,8 +14,6 @@
 */
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using QuantConnect.Scheduling;
 
 namespace QuantConnect
@@ -36,7 +34,8 @@ namespace QuantConnect
         public static void Consume(
             this IIsolatorLimitResultProvider isolatorLimitProvider,
             ScheduledEvent scheduledEvent,
-            DateTime scanTimeUtc
+            DateTime scanTimeUtc,
+            TimeMonitor timeMonitor
             )
         {
             // perform initial filtering to prevent starting a task when not necessary
@@ -46,7 +45,7 @@ namespace QuantConnect
             }
 
             var timeProvider = RealTimeProvider.Instance;
-            isolatorLimitProvider.Consume(timeProvider, () => scheduledEvent.Scan(scanTimeUtc));
+            isolatorLimitProvider.Consume(timeProvider, () => scheduledEvent.Scan(scanTimeUtc), timeMonitor);
         }
 
         /// <summary>
@@ -63,37 +62,18 @@ namespace QuantConnect
         public static void Consume(
             this IIsolatorLimitResultProvider isolatorLimitProvider,
             ITimeProvider timeProvider,
-            Action code
+            Action code,
+            TimeMonitor timeMonitor
             )
         {
-            var finished = 0L;
-            Task.Run(async () =>
+            var consumer = new TimeConsumer
             {
-                if (Interlocked.Read(ref finished) != 0L)
-                {
-                    // case when the code block has virtually no code in it and
-                    // was able to complete faster than the task was able to start
-                    return;
-                }
-
-                var next = timeProvider.GetUtcNow().AddMinutes(1);
-                while (Interlocked.Read(ref finished) == 0L)
-                {
-                    if (timeProvider.GetUtcNow() >= next)
-                    {
-                        // each minute request additional time from the isolator
-                        next = next.AddMinutes(1);
-
-                        // this will throw and notify the isolator that we've exceed the limits
-                        isolatorLimitProvider.RequestAdditionalTime(minutes: 1);
-                    }
-
-                    await Task.Delay(5).ConfigureAwait(false);
-                }
-            });
-
+                IsolatorLimitProvider = isolatorLimitProvider,
+                TimeProvider = timeProvider
+            };
+            timeMonitor.Add(consumer);
             code();
-            Interlocked.Increment(ref finished);
+            consumer.Finished = true;
         }
 
 

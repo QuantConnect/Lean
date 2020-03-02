@@ -378,6 +378,7 @@
     <Compile Include="Common\Util\SeriesJsonConverterTests.cs" />
     <Compile Include="Common\Util\StreamReaderEnumerableTests.cs" />
     <Compile Include="Common\Util\ValidateTests.cs" />
+    <Compile Include="Engine\AlgorithmTimeLimitManagerTests.cs" />
     <Compile Include="Engine\Alphas\InsightAnalysisContextTests.cs" />
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BacktestingTransactionHandlerTests.cs" />
     <Compile Include="Engine\DataFeeds\BacktestingFutureChainProviderTests.cs" />

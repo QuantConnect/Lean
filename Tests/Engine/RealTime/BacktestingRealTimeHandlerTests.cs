@@ -24,6 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.RealTime;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
@@ -38,6 +39,11 @@ namespace QuantConnect.Tests.Engine.RealTime
         public void TriggersScheduledEventsSameTimeInOrder()
         {
             var realTimeHandler = new BacktestingRealTimeHandler();
+            realTimeHandler.Setup(new AlgorithmStub(new NullDataFeed()),
+                new AlgorithmNodePacket(PacketType.AlgorithmNode),
+                new BacktestingResultHandler(),
+                null,
+                null);
             var eventTime = DateTime.UtcNow;
 
             var count = 0;
@@ -61,6 +67,11 @@ namespace QuantConnect.Tests.Engine.RealTime
         public void SetTime(bool oneStep)
         {
             var realTimeHandler = new BacktestingRealTimeHandler();
+            realTimeHandler.Setup(new AlgorithmStub(new NullDataFeed()),
+                new AlgorithmNodePacket(PacketType.AlgorithmNode),
+                new BacktestingResultHandler(),
+                null,
+                null);
             var date = new DateTime(2020, 1, 1);
 
             var count = 0;

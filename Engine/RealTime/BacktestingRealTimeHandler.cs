@@ -31,6 +31,7 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class BacktestingRealTimeHandler : BaseRealTimeHandler, IRealTimeHandler
     {
+        private TimeMonitor _timeMonitor;
         private bool _sortingScheduledEventsRequired;
         private IIsolatorLimitResultProvider _isolatorLimitProvider;
         private List<ScheduledEvent> _scheduledEventsSortedByTime = new List<ScheduledEvent>();
@@ -62,6 +63,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                 // set logging accordingly
                 scheduledEvent.IsLoggingEnabled = Log.DebuggingEnabled;
             }
+
+            _timeMonitor = new TimeMonitor();
         }
 
         /// <summary>
@@ -116,7 +119,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             // the first element is always the next
             while (scheduledEvents.Count > 1 && scheduledEvents[0].NextEventUtcTime <= time)
             {
-                _isolatorLimitProvider.Consume(scheduledEvents[0], time);
+                _isolatorLimitProvider.Consume(scheduledEvents[0], time, _timeMonitor);
 
                 SortFirstElement(scheduledEvents);
             }
@@ -140,7 +143,7 @@ namespace QuantConnect.Lean.Engine.RealTime
 
                 try
                 {
-                    _isolatorLimitProvider.Consume(scheduledEvent, nextEventUtcTime);
+                    _isolatorLimitProvider.Consume(scheduledEvent, nextEventUtcTime, _timeMonitor);
                 }
                 catch (ScheduledEventException scheduledEventException)
                 {
