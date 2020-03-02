@@ -387,8 +387,6 @@ namespace QuantConnect.Lean.Engine
                             var kps = dataPoints / (double) 1000 / totalSeconds;
                             AlgorithmHandlers.Results.DebugMessage($"Algorithm Id:({job.AlgorithmId}) completed in {totalSeconds:F2} seconds at {kps:F0}k data points per second. Processing total of {dataPoints:N0} data points.");
                         }
-
-                        AlgorithmHandlers.Results.SendFinalResult();
                     }
                     catch (Exception err)
                     {

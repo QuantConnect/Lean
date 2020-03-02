@@ -323,9 +323,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Send a final analysis result back to the IDE.
         /// </summary>
-        public void SendFinalResult()
+        protected void SendFinalResult()
         {
-            Exit();
             try
             {
                 //Convert local dictionary:
@@ -610,7 +609,7 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Terminate the result thread and apply any required exit procedures.
+        /// Terminate the result task and apply any required exit procedures like sending final results.
         /// </summary>
         public virtual void Exit()
         {
@@ -630,6 +629,8 @@ namespace QuantConnect.Lean.Engine.Results
                 ExitTriggered = true;
 
                 StopUpdateRunner();
+
+                SendFinalResult();
             }
         }
 
