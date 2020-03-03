@@ -33,6 +33,7 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class LiveTradingRealTimeHandler : BaseRealTimeHandler, IRealTimeHandler
     {
+        private Thread _realTimeThread;
         private TimeMonitor _timeMonitor;
         private static MarketHoursDatabase _marketHoursDatabase;
 
@@ -83,13 +84,16 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
 
             _timeMonitor = new TimeMonitor();
+
+            _realTimeThread = new Thread(Run) { IsBackground = true, Name = "RealTime Thread" };
+            _realTimeThread.Start(); // RealTime scan time for time based events
         }
 
         /// <summary>
         /// Execute the live realtime event thread montioring.
         /// It scans every second monitoring for an event trigger.
         /// </summary>
-        public void Run()
+        private void Run()
         {
             IsActive = true;
 
@@ -199,7 +203,25 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void Exit()
         {
-            _cancellationTokenSource.Cancel();
+            if (_realTimeThread != null)
+            {
+                _cancellationTokenSource.Cancel();
+                try
+                {
+                    if (!_realTimeThread.Join(TimeSpan.FromMinutes(5)))
+                    {
+                        Log.Error("LiveTradingRealTimeHandler.Exit(): Timeout waiting for update thread to stop");
+                        _realTimeThread.Abort();
+                    }
+                }
+                catch (Exception exception)
+                {
+                    // just in case catch any exceptions thrown
+                    Log.Error(exception);
+                }
+
+                _realTimeThread = null;
+            }
         }
 
         /// <summary>
