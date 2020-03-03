@@ -292,26 +292,8 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         protected void StopUpdateRunner()
         {
-            if (_updateRunner != null)
-            {
-                Log.Trace("BaseResultHandler.Exit(): waiting for update task to stop...");
-                try
-                {
-                    // just in case we add a time out
-                    if (!_updateRunner.Join(TimeSpan.FromMinutes(10)))
-                    {
-                        Log.Error("BaseResultHandler.Exit(): Timeout waiting for update task to stop");
-                        _updateRunner.Abort();
-                    }
-                }
-                catch (Exception exception)
-                {
-                    // just in case catch and exceptions thrown by the running task
-                    Log.Error(exception);
-                }
-
-                _updateRunner = null;
-            }
+            _updateRunner.StopSafely(TimeSpan.FromMinutes(10));
+            _updateRunner = null;
         }
 
         /// <summary>
