@@ -36,6 +36,85 @@ namespace QuantConnect.Tests.Engine.RealTime
     public class BacktestingRealTimeHandlerTests
     {
         [Test]
+        public void SortsEventsAfterSetup()
+        {
+            var realTimeHandler = new BacktestingRealTimeHandler();
+            var algo = new TestAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
+            algo.AddEquity("SPY");
+            var startDate = new DateTime(2019, 1, 1);
+            algo.SetStartDate(startDate);
+            algo.SetDateTime(startDate);
+            algo.SetEndDate(2020, 1, 1);
+
+            var firstCalled = false;
+            var secondCalled = false;
+            var events = new List<ScheduledEvent>
+            {
+                new ScheduledEvent("1", new List<DateTime> { startDate.AddMinutes(-10), startDate.AddMinutes(5)},
+                    (s, time) => { firstCalled = true; }),
+                new ScheduledEvent("2", new List<DateTime> { startDate.AddMinutes(1)},
+                    (s, time) => { secondCalled = true; }),
+                new ScheduledEvent("3", new List<DateTime> { startDate.AddMinutes(10)}, (s, time) => { })
+            };
+            foreach (var scheduledEvent in events)
+            {
+                realTimeHandler.Add(scheduledEvent);
+            }
+
+            realTimeHandler.Setup(algo,
+                new AlgorithmNodePacket(PacketType.AlgorithmNode),
+                new BacktestingResultHandler(),
+                null,
+                null);
+
+            realTimeHandler.SetTime(startDate.AddMinutes(1));
+            Assert.IsTrue(secondCalled);
+            // 'first' should of been called and should be moved behind 'second' after setup
+            Assert.IsFalse(firstCalled);
+        }
+
+        [Test]
+        public void SingleScheduledEventFires_SetTime()
+        {
+            var realTimeHandler = new BacktestingRealTimeHandler();
+            var algo = new TestAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
+            algo.AddEquity("SPY");
+            algo.SetStartDate(2019, 1, 1);
+            algo.SetDateTime(new DateTime(2019, 1, 1));
+            algo.SetEndDate(2020, 1, 1);
+            realTimeHandler.Setup(algo,
+                new AlgorithmNodePacket(PacketType.AlgorithmNode),
+                new BacktestingResultHandler(),
+                null,
+                null);
+
+            realTimeHandler.SetTime(DateTime.UtcNow);
+            Assert.IsTrue(algo.OnEndOfDayFired);
+        }
+
+        [Test]
+        public void SingleScheduledEventFires_ScanPastEvents()
+        {
+            var realTimeHandler = new BacktestingRealTimeHandler();
+            var algo = new TestAlgorithm();
+            algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
+            algo.AddEquity("SPY");
+            algo.SetStartDate(2019, 1, 1);
+            algo.SetDateTime(new DateTime(2019, 1, 1));
+            algo.SetEndDate(2020, 1, 1);
+            realTimeHandler.Setup(algo,
+                new AlgorithmNodePacket(PacketType.AlgorithmNode),
+                new BacktestingResultHandler(),
+                null,
+                null);
+
+            realTimeHandler.ScanPastEvents(DateTime.UtcNow);
+            Assert.IsTrue(algo.OnEndOfDayFired);
+        }
+
+        [Test]
         public void TriggersScheduledEventsSameTimeInOrder()
         {
             var realTimeHandler = new BacktestingRealTimeHandler();
@@ -368,9 +447,15 @@ namespace QuantConnect.Tests.Engine.RealTime
 
         private class TestAlgorithm : AlgorithmStub
         {
+            public bool OnEndOfDayFired { get; set; }
+
+            public override void OnEndOfDay()
+            {
+                OnEndOfDayFired = true;
+            }
+
             public override void OnEndOfDay(Symbol symbol)
             {
-
             }
         }
     }
