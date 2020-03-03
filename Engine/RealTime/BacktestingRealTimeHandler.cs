@@ -63,6 +63,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                 // set logging accordingly
                 scheduledEvent.IsLoggingEnabled = Log.DebuggingEnabled;
             }
+            // after skipping events we should re order
+            _sortingScheduledEventsRequired = true;
 
             _timeMonitor = new TimeMonitor();
         }
@@ -117,7 +119,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             var scheduledEvents = GetScheduledEventsSortedByTime();
 
             // the first element is always the next
-            while (scheduledEvents.Count > 1 && scheduledEvents[0].NextEventUtcTime <= time)
+            while (scheduledEvents.Count > 0 && scheduledEvents[0].NextEventUtcTime <= time)
             {
                 _isolatorLimitProvider.Consume(scheduledEvents[0], time, _timeMonitor);
 
@@ -134,7 +136,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             var scheduledEvents = GetScheduledEventsSortedByTime();
 
             // the first element is always the next
-            while (scheduledEvents.Count > 1 && scheduledEvents[0].NextEventUtcTime < time)
+            while (scheduledEvents.Count > 0 && scheduledEvents[0].NextEventUtcTime < time)
             {
                 var scheduledEvent = scheduledEvents[0];
                 var nextEventUtcTime = scheduledEvent.NextEventUtcTime;
