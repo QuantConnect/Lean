@@ -1,0 +1,15 @@
+date,initial,maintenance
+# https://www.cmegroup.com/notices/clearing/2016/09/Chadv16-389.html
+20160930,26400,24000
+# https://www.cmegroup.com/notices/clearing/2017/05/Chadv17-173.html
+20170505,22000,20000
+# https://www.cmegroup.com/notices/clearing/2017/08/Chadv17-306.html
+20170804,19800,18000
+# https://www.cmegroup.com/notices/clearing/2018/05/Chadv18-218.html
+20180601,23650,21500
+# https://www.cmegroup.com/notices/clearing/2018/07/Chadv18-292.html
+20180718,33000,30000
+# https://www.cmegroup.com/notices/clearing/2019/07/Chadv19-223.html
+20190712,32725,29750
+# https://www.cmegroup.com/notices/clearing/2019/08/19-246/Chadv19-249.html
+20190802,40700,37000

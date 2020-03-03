@@ -1,0 +1,52 @@
+date,initial,maintenance
+# Values are converted from JPY to USD
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-019.html
+20120117,10969,8125
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-380.html
+20120907,7392,6720
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-452.html
+20121023,6463,5875
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-014.html
+20130115,3729,3390
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-182.html
+20130416,6732,6120
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-265.html
+20130607,7293,6630
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-540.html
+20131122,6371,5792
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-161.html
+20140421,5602,5093
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-211.html
+20140530,5121,4655
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-348.html
+20140905,3960,3800
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-424.html
+20141031,3427,3115
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-480.html
+20141212,3465,3150
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-007.html
+20150109,4020,3654
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-019.html
+20150120,4389,3990
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-023.html
+20150123,5143,4675
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-030.html
+20150130,5377,4888
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-153.html
+20150605,4620,4200
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-256.html
+20150828,5187,4715
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv16-075.html
+20160212,6292,5720
+# https://www.cmegroup.com/notices/clearing/2016/06/Chadv16-247.html
+20160627,9433,8575
+# https://www.cmegroup.com/notices/clearing/2016/10/Chadv16-4051.html
+20161007,8536,7760
+# https://www.cmegroup.com/notices/clearing/2017/01/Chadv17-028.html
+20170113,6508,5916
+# https://www.cmegroup.com/notices/clearing/2017/02/Chadv17-054.html
+20170206,5385,4895
+# https://www.cmegroup.com/notices/clearing/2017/05/Chadv17-167.html
+20170512,4598,4180
+# https://www.cmegroup.com/notices/clearing/2017/12/Chadv17-474.html
+20171208,3872,3520
