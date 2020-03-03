@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Common
                 provider.Consume(timeProvider, code, _timeMonitor);
                 consumeCompleted.Set();
             });
-            if (!consumeStarted.WaitOne(35))
+            if (!consumeStarted.WaitOne(50))
             {
                 Assert.Fail("Consume should have started.");
             }
@@ -82,7 +82,7 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(1, provider.Invocations[0]);
 
             // give time to the monitor to register the time consumer ended
-            Thread.Sleep(20);
+            Thread.Sleep(50);
             Assert.AreEqual(0, _timeMonitor.Count);
         }
 
@@ -102,7 +102,7 @@ namespace QuantConnect.Tests.Common
             Assert.IsEmpty(provider.Invocations);
 
             // give time to the monitor to register the time consumer ended
-            Thread.Sleep(20);
+            Thread.Sleep(50);
             Assert.AreEqual(0, _timeMonitor.Count);
         }
 
@@ -114,7 +114,7 @@ namespace QuantConnect.Tests.Common
             Action code = () =>
             {
                 // lets give the monitor time to register the initial time
-                Thread.Sleep(25);
+                Thread.Sleep(50);
                 for (int i = 0; i < 4; i++)
                 {
                     timeProvider.AdvanceSeconds(45);
@@ -129,7 +129,7 @@ namespace QuantConnect.Tests.Common
             Assert.IsTrue(provider.Invocations.TrueForAll(invoc => invoc == 1));
 
             // give time to the monitor to register the time consumer ended
-            Thread.Sleep(20);
+            Thread.Sleep(50);
             Assert.AreEqual(0, _timeMonitor.Count);
         }
 

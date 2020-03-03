@@ -54,6 +54,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                     (s, time) =>
                     {
                         Assert.AreEqual(id, count);
+                        Assert.AreEqual(s, $"{id}");
                         count++;
                     }));
             }
@@ -126,7 +127,7 @@ namespace QuantConnect.Tests.Engine.RealTime
         }
 
         [Test]
-        public void LazySortRespectsOriginalOrder()
+        public void SortRespectsOriginalOrderSameTime()
         {
             var date = new DateTime(2020, 1, 1);
             var events = new List<ScheduledEvent>
@@ -138,9 +139,10 @@ namespace QuantConnect.Tests.Engine.RealTime
             BacktestingRealTimeHandler.SortFirstElement(events);
             Assert.AreEqual(date.AddMinutes(1), events[0].NextEventUtcTime);
             Assert.AreEqual(date.AddMinutes(10), events[1].NextEventUtcTime);
-            Assert.AreEqual("1", events[1].Name);
+            // scheduled event 3 and 1 have the same time, 3 should still be next else it would mean 1 executed twice when 3 once
+            Assert.AreEqual("3", events[1].Name);
             Assert.AreEqual(date.AddMinutes(10), events[2].NextEventUtcTime);
-            Assert.AreEqual("3", events[2].Name);
+            Assert.AreEqual("1", events[2].Name);
 
             events = new List<ScheduledEvent>
             {
@@ -154,14 +156,15 @@ namespace QuantConnect.Tests.Engine.RealTime
             Assert.AreEqual(date.AddMinutes(1), events[0].NextEventUtcTime);
             Assert.AreEqual(date.AddMinutes(3), events[1].NextEventUtcTime);
             Assert.AreEqual(date.AddMinutes(10), events[2].NextEventUtcTime);
-            Assert.AreEqual("1", events[2].Name);
+            // scheduled event 4 and 1 have the same time, 4 should still be next else it would mean 1 executed twice when 4 once
+            Assert.AreEqual("4", events[2].Name);
             Assert.AreEqual(date.AddMinutes(10), events[3].NextEventUtcTime);
-            Assert.AreEqual("4", events[3].Name);
+            Assert.AreEqual("1", events[3].Name);
             Assert.AreEqual(date.AddMinutes(50), events[4].NextEventUtcTime);
         }
 
         [Test]
-        public void LazySort()
+        public void Sort()
         {
             var date = new DateTime(2020, 1, 1);
             var events = new List<ScheduledEvent>

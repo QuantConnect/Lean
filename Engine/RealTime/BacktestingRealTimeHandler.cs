@@ -207,9 +207,19 @@ namespace QuantConnect.Lean.Engine.RealTime
                     (time, orderEvent) => time.CompareTo(orderEvent.NextEventUtcTime));
                 if (position >= 0)
                 {
-                    // Calling insert isn't that performance but note that we are doing it once
-                    // and has better performance than sorting the entire collection
-                    scheduledEvents.Insert(position, scheduledEvent);
+                    // we have to insert after existing position to respect existing order, see ScheduledEventsOrderRegressionAlgorithm
+                    var finalPosition = position + 1;
+                    if (finalPosition == scheduledEvents.Count)
+                    {
+                        // bigger than all of them add at the end
+                        scheduledEvents.Add(scheduledEvent);
+                    }
+                    else
+                    {
+                        // Calling insert isn't that performant but note that we are doing it once
+                        // and has better performance than sorting the entire collection
+                        scheduledEvents.Insert(finalPosition, scheduledEvent);
+                    }
                 }
                 else
                 {
@@ -221,6 +231,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                     }
                     else
                     {
+                        // index + 1 is bigger than us so insert before
                         scheduledEvents.Insert(index, scheduledEvent);
                     }
                 }

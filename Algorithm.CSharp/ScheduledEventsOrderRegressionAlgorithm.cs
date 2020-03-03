@@ -26,6 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class ScheduledEventsOrderRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private int _scheduledEventCount;
         private Symbol _spy;
         private DateTime _lastTime = DateTime.MinValue;
 
@@ -42,21 +43,54 @@ namespace QuantConnect.Algorithm.CSharp
             var test = 0;
             var dateRule = DateRules.EveryDay(_spy);
 
-            Schedule.On(dateRule, TimeRules.At(9, 25), () =>
+            var aEventCount = 0;
+            var bEventCount = 0;
+            var cEventCount = 0;
+
+            // we add each twice and assert the order in which they are added is also respected for events at the same time
+            for (var i = 0; i < 2; i++)
             {
-                AssertScheduledEventTime();
-                Debug($"{Time} :: Test: {test}"); test++;
-            });
-            Schedule.On(dateRule, TimeRules.BeforeMarketClose(_spy, 5), () =>
-            {
-                AssertScheduledEventTime();
-                Debug($"{Time} :: Test: {test}"); test++;
-            });
-            Schedule.On(dateRule, TimeRules.At(16, 5), () =>
-            {
-                AssertScheduledEventTime();
-                Debug($"{Time} :: Test: {test}"); test = 0;
-            });
+                var id = i;
+                Schedule.On(dateRule, TimeRules.At(9, 25), (name, time) =>
+                {
+                    // for id 0 event count should always be 0, for id 1 should be 1
+                    if (aEventCount != id)
+                    {
+                        throw new Exception($"Scheduled event triggered out of order: {Time} expected id {id} but was {aEventCount}");
+                    }
+                    aEventCount++;
+                    // goes from 0 to 1
+                    aEventCount %= 2;
+                    AssertScheduledEventTime();
+                    Debug($"{Time} :: Test: {test}"); test++;
+                });
+                Schedule.On(dateRule, TimeRules.BeforeMarketClose(_spy, 5), (name, time) =>
+                {
+                    // for id 0 event count should always be 0, for id 1 should be 1
+                    if (bEventCount != id)
+                    {
+                        throw new Exception($"Scheduled event triggered out of order: {Time} expected id {id} but was {bEventCount}");
+                    }
+                    bEventCount++;
+                    // goes from 0 to 1
+                    bEventCount %= 2;
+                    AssertScheduledEventTime();
+                    Debug($"{Time} :: Test: {test}"); test++;
+                });
+                Schedule.On(dateRule, TimeRules.At(16, 5), (name, time) =>
+                {
+                    // for id 0 event count should always be 0, for id 1 should be 1
+                    if (cEventCount != id)
+                    {
+                        throw new Exception($"Scheduled event triggered out of order: {Time} expected id {id} but was {cEventCount}");
+                    }
+                    cEventCount++;
+                    // goes from 0 to 1
+                    cEventCount %= 2;
+                    AssertScheduledEventTime();
+                    Debug($"{Time} :: Test: {test}"); test = 0;
+                });
+            }
         }
 
         private void AssertScheduledEventTime()
@@ -66,6 +100,15 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Scheduled event time shouldn't go backwards, last time {_lastTime}, current {Time}");
             }
             _lastTime = Time;
+            _scheduledEventCount++;
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (_scheduledEventCount != 28)
+            {
+                throw new Exception($"OnEndOfAlgorithm expected scheduled events but was {_scheduledEventCount}");
+            }
         }
 
         /// <summary>
