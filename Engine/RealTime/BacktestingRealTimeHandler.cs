@@ -161,7 +161,8 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void Exit()
         {
-            // this doesn't run as it's own thread, so nothing to exit
+            _timeMonitor.DisposeSafely();
+            _timeMonitor = null;
         }
 
         private List<ScheduledEvent> GetScheduledEventsSortedByTime()

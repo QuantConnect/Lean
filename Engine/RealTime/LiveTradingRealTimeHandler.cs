@@ -25,6 +25,7 @@ using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -203,6 +204,8 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void Exit()
         {
+            _timeMonitor.DisposeSafely();
+            _timeMonitor = null;
             if (_realTimeThread != null)
             {
                 _cancellationTokenSource.Cancel();
