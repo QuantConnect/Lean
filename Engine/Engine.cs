@@ -94,7 +94,6 @@ namespace QuantConnect.Lean.Engine
 
                 //Reset thread holders.
                 var initializeComplete = false;
-                Thread threadResults = null;
                 Thread threadRealTime = null;
                 Thread threadAlphas = null;
 
@@ -103,9 +102,6 @@ namespace QuantConnect.Lean.Engine
 
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
                 AlgorithmHandlers.Results.Initialize(job, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions);
-
-                threadResults = new Thread(AlgorithmHandlers.Results.Run, 0) { IsBackground = true, Name = "Result Thread" };
-                threadResults.Start();
 
                 IBrokerage brokerage = null;
                 DataManager dataManager = null;
@@ -391,8 +387,6 @@ namespace QuantConnect.Lean.Engine
                             var kps = dataPoints / (double) 1000 / totalSeconds;
                             AlgorithmHandlers.Results.DebugMessage($"Algorithm Id:({job.AlgorithmId}) completed in {totalSeconds:F2} seconds at {kps:F0}k data points per second. Processing total of {dataPoints:N0} data points.");
                         }
-
-                        AlgorithmHandlers.Results.SendFinalResult();
                     }
                     catch (Exception err)
                     {
@@ -430,7 +424,6 @@ namespace QuantConnect.Lean.Engine
                 }
 
                 //Terminate threads still in active state.
-                if (threadResults != null && threadResults.IsAlive) threadResults.Abort();
                 if (threadAlphas != null && threadAlphas.IsAlive) threadAlphas.Abort();
 
                 if (brokerage != null)

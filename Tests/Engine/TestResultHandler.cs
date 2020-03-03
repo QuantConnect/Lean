@@ -41,8 +41,6 @@ namespace QuantConnect.Tests.Engine
 
         public ConcurrentQueue<Packet> Messages { get; set; }
         public ConcurrentDictionary<string, Chart> Charts { get; set; }
-        public TimeSpan ResamplePeriod { get; private set; }
-        public TimeSpan NotificationPeriod { get; private set; }
         public bool IsActive { get; private set; }
 
         public TestResultHandler(Action<Packet> packetHandler = null)
@@ -75,7 +73,7 @@ namespace QuantConnect.Tests.Engine
             }
         }
 
-        public void Initialize(AlgorithmNodePacket job,
+        public override void Initialize(AlgorithmNodePacket job,
             IMessagingHandler messagingHandler,
             IApi api,
             ITransactionHandler transactionHandler)
@@ -83,7 +81,7 @@ namespace QuantConnect.Tests.Engine
             _job = job;
         }
 
-        public void Run()
+        protected override void Run()
         {
         }
 
@@ -168,15 +166,7 @@ namespace QuantConnect.Tests.Engine
         {
         }
 
-        public void SendFinalResult()
-        {
-        }
-
         public void SendStatusUpdate(AlgorithmStatus status, string message = "")
-        {
-        }
-
-        public void SetChartSubscription(string symbol)
         {
         }
 
@@ -191,11 +181,6 @@ namespace QuantConnect.Tests.Engine
         public void Exit()
         {
             _cancellationTokenSource.Cancel();
-        }
-
-        public void PurgeQueue()
-        {
-            Messages.Clear();
         }
 
         public void ProcessSynchronousEvents(bool forceProcess = false)

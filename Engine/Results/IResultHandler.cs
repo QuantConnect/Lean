@@ -61,11 +61,6 @@ namespace QuantConnect.Lean.Engine.Results
         void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler);
 
         /// <summary>
-        /// Primary result thread entry point to process the result message queue and send it to whatever endpoint is set.
-        /// </summary>
-        void Run();
-
-        /// <summary>
         /// Process debug messages with the preconfigured settings.
         /// </summary>
         /// <param name="message">String debug message</param>
@@ -124,11 +119,6 @@ namespace QuantConnect.Lean.Engine.Results
         void SetAlphaRuntimeStatistics(AlphaRuntimeStatistics statistics);
 
         /// <summary>
-        /// Post the final result back to the controller worker if backtesting, or to console if local.
-        /// </summary>
-        void SendFinalResult();
-
-        /// <summary>
         /// Send a algorithm status update to the user of the algorithms running state.
         /// </summary>
         /// <param name="status">Status enum of the algorithm.</param>
@@ -149,7 +139,7 @@ namespace QuantConnect.Lean.Engine.Results
         void OrderEvent(OrderEvent newEvent);
 
         /// <summary>
-        /// Terminate the result thread and apply any required exit proceedures.
+        /// Terminate the result thread and apply any required exit procedures like sending final results.
         /// </summary>
         void Exit();
 

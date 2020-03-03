@@ -152,19 +152,12 @@ namespace QuantConnect.Tests.Engine
         class NullResultHandler : IResultHandler
         {
             public ConcurrentQueue<Packet> Messages { get; set; }
-            public ConcurrentDictionary<string, Chart> Charts { get; set; }
-            public TimeSpan ResamplePeriod { get; }
-            public TimeSpan NotificationPeriod { get; }
             public bool IsActive { get; }
 
             public void Initialize(AlgorithmNodePacket job,
                 IMessagingHandler messagingHandler,
                 IApi api,
                 ITransactionHandler transactionHandler)
-            {
-            }
-
-            public void Run()
             {
             }
 
@@ -196,30 +189,6 @@ namespace QuantConnect.Tests.Engine
             {
             }
 
-            protected void Sample(string chartName, string seriesName, int seriesIndex, SeriesType seriesType, DateTime time, decimal value, string unit = "$")
-            {
-            }
-
-            protected void SampleEquity(DateTime time, decimal value)
-            {
-            }
-
-            protected void SamplePerformance(DateTime time, decimal value)
-            {
-            }
-
-            protected void SampleBenchmark(DateTime time, decimal value)
-            {
-            }
-
-            protected void SampleAssetPrices(Symbol symbol, DateTime time, decimal value)
-            {
-            }
-
-            protected void SampleRange(List<Chart> samples)
-            {
-            }
-
             public void SetAlgorithm(IAlgorithm algorithm, decimal startingPortfolioValue)
             {
             }
@@ -228,19 +197,7 @@ namespace QuantConnect.Tests.Engine
             {
             }
 
-            public void StoreResult(Packet packet, bool async = false)
-            {
-            }
-
-            public void SendFinalResult()
-            {
-            }
-
             public void SendStatusUpdate(AlgorithmStatus status, string message = "")
-            {
-            }
-
-            public void SetChartSubscription(string symbol)
             {
             }
 
@@ -256,17 +213,8 @@ namespace QuantConnect.Tests.Engine
             {
             }
 
-            public void PurgeQueue()
-            {
-            }
-
             public void ProcessSynchronousEvents(bool forceProcess = false)
             {
-            }
-
-            public string SaveLogs(string id, IEnumerable<string> logs)
-            {
-                return id;
             }
 
             public void SaveResults(string name, Result result)
