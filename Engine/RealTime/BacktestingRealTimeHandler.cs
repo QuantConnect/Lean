@@ -22,6 +22,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Scheduling;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -30,6 +31,7 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class BacktestingRealTimeHandler : BaseRealTimeHandler, IRealTimeHandler
     {
+        private TimeMonitor _timeMonitor;
         private bool _sortingScheduledEventsRequired;
         private IIsolatorLimitResultProvider _isolatorLimitProvider;
         private List<ScheduledEvent> _scheduledEventsSortedByTime = new List<ScheduledEvent>();
@@ -47,7 +49,7 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             //Initialize:
             Algorithm = algorithm;
-            ResultHandler =  resultHandler;
+            ResultHandler = resultHandler;
             _isolatorLimitProvider = isolatorLimitProvider;
 
             // create events for algorithm's end of tradeable dates
@@ -61,6 +63,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                 // set logging accordingly
                 scheduledEvent.IsLoggingEnabled = Log.DebuggingEnabled;
             }
+
+            _timeMonitor = new TimeMonitor();
         }
 
         /// <summary>
@@ -110,10 +114,14 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <param name="time">Current time.</param>
         public void SetTime(DateTime time)
         {
-            // poke each event to see if it has fired, be sure to invoke these in time order
-            foreach (var scheduledEvent in GetScheduledEventsSortedByTime())
+            var scheduledEvents = GetScheduledEventsSortedByTime();
+
+            // the first element is always the next
+            while (scheduledEvents.Count > 1 && scheduledEvents[0].NextEventUtcTime <= time)
             {
-                _isolatorLimitProvider.Consume(scheduledEvent, time);
+                _isolatorLimitProvider.Consume(scheduledEvents[0], time, _timeMonitor);
+
+                SortFirstElement(scheduledEvents);
             }
         }
 
@@ -123,29 +131,34 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// <param name="time">Current time.</param>
         public void ScanPastEvents(DateTime time)
         {
-            foreach (var scheduledEvent in GetScheduledEventsSortedByTime())
+            var scheduledEvents = GetScheduledEventsSortedByTime();
+
+            // the first element is always the next
+            while (scheduledEvents.Count > 1 && scheduledEvents[0].NextEventUtcTime < time)
             {
-                while (scheduledEvent.NextEventUtcTime < time)
+                var scheduledEvent = scheduledEvents[0];
+                var nextEventUtcTime = scheduledEvent.NextEventUtcTime;
+
+                Algorithm.SetDateTime(nextEventUtcTime);
+
+                try
                 {
-                    Algorithm.SetDateTime(scheduledEvent.NextEventUtcTime);
-
-                    try
-                    {
-                        _isolatorLimitProvider.Consume(scheduledEvent, scheduledEvent.NextEventUtcTime);
-                    }
-                    catch (ScheduledEventException scheduledEventException)
-                    {
-                        var errorMessage = $"BacktestingRealTimeHandler.Run(): There was an error in a scheduled event {scheduledEvent.Name}. The error was {scheduledEventException.Message}";
-
-                        Log.Error(scheduledEventException, errorMessage);
-
-                        ResultHandler.RuntimeError(errorMessage);
-
-                        // Errors in scheduled event should be treated as runtime error
-                        // Runtime errors should end Lean execution
-                        Algorithm.RunTimeError = scheduledEventException;
-                    }
+                    _isolatorLimitProvider.Consume(scheduledEvent, nextEventUtcTime, _timeMonitor);
                 }
+                catch (ScheduledEventException scheduledEventException)
+                {
+                    var errorMessage = $"BacktestingRealTimeHandler.Run(): There was an error in a scheduled event {scheduledEvent.Name}. The error was {scheduledEventException.Message}";
+
+                    Log.Error(scheduledEventException, errorMessage);
+
+                    ResultHandler.RuntimeError(errorMessage);
+
+                    // Errors in scheduled event should be treated as runtime error
+                    // Runtime errors should end Lean execution
+                    Algorithm.RunTimeError = scheduledEventException;
+                }
+
+                SortFirstElement(scheduledEvents);
             }
         }
 
@@ -163,7 +176,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             {
                 _sortingScheduledEventsRequired = false;
                 _scheduledEventsSortedByTime = ScheduledEvents
-                     // we order by next event time
+                    // we order by next event time
                     .OrderBy(x => x.Key.NextEventUtcTime)
                     // then by unique id so that for scheduled events in the same time
                     // respect their creation order, so its deterministic
@@ -172,6 +185,57 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
 
             return _scheduledEventsSortedByTime;
+        }
+
+        /// <summary>
+        /// Sorts the first element of the provided list and supposes the rest of the collection is sorted.
+        /// Supposes the collection has at least 1 element
+        /// </summary>
+        public static void SortFirstElement(IList<ScheduledEvent> scheduledEvents)
+        {
+            var scheduledEvent = scheduledEvents[0];
+            var nextEventUtcTime = scheduledEvent.NextEventUtcTime;
+
+            if (scheduledEvents.Count > 1
+                // if our NextEventUtcTime is after the next event we sort our selves
+                && nextEventUtcTime > scheduledEvents[1].NextEventUtcTime)
+            {
+                // remove ourselves and re insert at the correct position, the rest of the items are sorted!
+                scheduledEvents.RemoveAt(0);
+
+                var position = scheduledEvents.BinarySearch(nextEventUtcTime,
+                    (time, orderEvent) => time.CompareTo(orderEvent.NextEventUtcTime));
+                if (position >= 0)
+                {
+                    // we have to insert after existing position to respect existing order, see ScheduledEventsOrderRegressionAlgorithm
+                    var finalPosition = position + 1;
+                    if (finalPosition == scheduledEvents.Count)
+                    {
+                        // bigger than all of them add at the end
+                        scheduledEvents.Add(scheduledEvent);
+                    }
+                    else
+                    {
+                        // Calling insert isn't that performant but note that we are doing it once
+                        // and has better performance than sorting the entire collection
+                        scheduledEvents.Insert(finalPosition, scheduledEvent);
+                    }
+                }
+                else
+                {
+                    var index = ~position;
+                    if (index == scheduledEvents.Count)
+                    {
+                        // bigger than all of them insert in the end
+                        scheduledEvents.Add(scheduledEvent);
+                    }
+                    else
+                    {
+                        // index + 1 is bigger than us so insert before
+                        scheduledEvents.Insert(index, scheduledEvent);
+                    }
+                }
+            }
         }
     }
 }

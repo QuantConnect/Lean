@@ -33,6 +33,7 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class LiveTradingRealTimeHandler : BaseRealTimeHandler, IRealTimeHandler
     {
+        private TimeMonitor _timeMonitor;
         private static MarketHoursDatabase _marketHoursDatabase;
 
         private IIsolatorLimitResultProvider _isolatorLimitProvider;
@@ -80,6 +81,8 @@ namespace QuantConnect.Lean.Engine.RealTime
                 // set logging accordingly
                 scheduledEvent.Key.IsLoggingEnabled = Log.DebuggingEnabled;
             }
+
+            _timeMonitor = new TimeMonitor();
         }
 
         /// <summary>
@@ -106,7 +109,7 @@ namespace QuantConnect.Lean.Engine.RealTime
                     var scheduledEvent = kvp.Key;
                     try
                     {
-                        _isolatorLimitProvider.Consume(scheduledEvent, time);
+                        _isolatorLimitProvider.Consume(scheduledEvent, time, _timeMonitor);
                     }
                     catch (ScheduledEventException scheduledEventException)
                     {
