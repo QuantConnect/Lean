@@ -866,7 +866,7 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Terminate the result task and apply any required exit procedures like sending final results
+        /// Terminate the result thread and apply any required exit procedures like sending final results
         /// </summary>
         public void Exit()
         {

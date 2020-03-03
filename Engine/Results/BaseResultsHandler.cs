@@ -19,7 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -28,7 +28,6 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
-using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -45,12 +44,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// The task in charge of running the <see cref="Run"/> update method
         /// </summary>
-        private Task _updateRunner;
+        private Thread _updateRunner;
 
         /// <summary>
         /// Boolean flag indicating the thread is still active.
         /// </summary>
-        public bool IsActive => _updateRunner != null && !_updateRunner.IsCompleted && !_updateRunner.IsFaulted;
+        public bool IsActive => _updateRunner != null && _updateRunner.IsAlive;
 
         /// <summary>
         /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
@@ -231,7 +230,8 @@ namespace QuantConnect.Lean.Engine.Results
             TransactionHandler = transactionHandler;
             CompileId = job.CompileId;
             AlgorithmId = job.AlgorithmId;
-            _updateRunner = Task.Factory.StartNew(Run);
+            _updateRunner = new Thread(Run, 0) { IsBackground = true, Name = "Result Thread" };
+            _updateRunner.Start();
         }
 
         /// <summary>
@@ -298,9 +298,10 @@ namespace QuantConnect.Lean.Engine.Results
                 try
                 {
                     // just in case we add a time out
-                    if (!_updateRunner.Wait(TimeSpan.FromMinutes(10)))
+                    if (!_updateRunner.Join(TimeSpan.FromMinutes(10)))
                     {
                         Log.Error("BaseResultHandler.Exit(): Timeout waiting for update task to stop");
+                        _updateRunner.Abort();
                     }
                 }
                 catch (Exception exception)
@@ -309,7 +310,6 @@ namespace QuantConnect.Lean.Engine.Results
                     Log.Error(exception);
                 }
 
-                _updateRunner.DisposeSafely();
                 _updateRunner = null;
             }
         }

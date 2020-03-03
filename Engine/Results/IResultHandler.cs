@@ -139,7 +139,7 @@ namespace QuantConnect.Lean.Engine.Results
         void OrderEvent(OrderEvent newEvent);
 
         /// <summary>
-        /// Terminate the result task and apply any required exit procedures like sending final results.
+        /// Terminate the result thread and apply any required exit procedures like sending final results.
         /// </summary>
         void Exit();
 
