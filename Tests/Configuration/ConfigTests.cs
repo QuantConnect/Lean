@@ -46,6 +46,11 @@ namespace QuantConnect.Tests.Configuration
             Assert.True(File.Exists(tempFile));
             Assert.True(File.ReadAllText(tempFile).Length > 0);
             File.Delete(tempFile);
+
+            var defaultFile = "config.json";
+            Config.SetConfigurationFile(defaultFile);
+            Assert.True(File.Exists(defaultFile));
+            Assert.True(File.ReadAllText(defaultFile).Length > 0);
         }
         
         [Test]
