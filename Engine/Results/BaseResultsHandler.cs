@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.TransactionHandlers;
@@ -157,6 +158,17 @@ namespace QuantConnect.Lean.Engine.Results
         protected TimeSpan NotificationPeriod { get; set; }
 
         /// <summary>
+        /// Directory location to store results
+        /// </summary>
+        protected string ResultsDestinationFolder;
+
+        /// <summary>
+        /// Root filename to store results
+        /// </summary>
+        /// <remarks>Should not include the file extension here</remarks>
+        protected string ResultsDestinationFilePrefix => Config.Get("results-destination-file-prefix", AlgorithmId);
+        
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()
@@ -169,6 +181,7 @@ namespace QuantConnect.Lean.Engine.Results
             AlgorithmId = "";
             ChartLock = new object();
             LogStore = new List<LogEntry>();
+            ResultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
         }
 
         /// <summary>
@@ -240,6 +253,16 @@ namespace QuantConnect.Lean.Engine.Results
         protected abstract void Run();
 
         /// <summary>
+        /// Gets the full path for a results file
+        /// </summary>
+        /// <param name="filename">The filename to add to the path</param>
+        /// <returns>The full path, including the filename</returns>
+        protected string GetResultsPath(string filename)
+        {
+            return Path.Combine(ResultsDestinationFolder, filename);
+        }
+        
+        /// <summary>
         /// Returns the location of the logs
         /// </summary>
         /// <param name="id">Id that will be incorporated into the algorithm log name</param>
@@ -247,9 +270,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// <returns>The path to the logs</returns>
         public virtual string SaveLogs(string id, List<LogEntry> logs)
         {
-            var path = $"{id}-log.txt";
-            File.WriteAllLines(path, logs.Select(x => x.Message));
-            return Path.Combine(Directory.GetCurrentDirectory(), path);
+            var filename = $"{id}-log.txt";
+            var path = GetResultsPath(filename);
+            var logLines = logs.Select(x => x.Message);
+            File.WriteAllLines(path, logLines);
+            return path;
         }
 
         /// <summary>
@@ -259,7 +284,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="result">The results to save</param>
         public virtual void SaveResults(string name, Result result)
         {
-            File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), name), JsonConvert.SerializeObject(result, Formatting.Indented));
+            File.WriteAllText(GetResultsPath(name), JsonConvert.SerializeObject(result, Formatting.Indented));
         }
 
         /// <summary>

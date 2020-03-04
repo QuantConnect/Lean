@@ -30,7 +30,8 @@ namespace QuantConnect.Configuration
         private static readonly List<CommandLineOption> Options = new List<CommandLineOption>
             {
                 new CommandLineOption("config", CommandOptionType.SingleValue),
-                new CommandLineOption("output", CommandOptionType.SingleValue),
+                new CommandLineOption("results-destination-folder", CommandOptionType.SingleValue),
+                new CommandLineOption("results-destination-file-prefix", CommandOptionType.SingleValue),
                 new CommandLineOption("insights-destination-folder", CommandOptionType.SingleValue),
 
                 // Options grabbed from json file
