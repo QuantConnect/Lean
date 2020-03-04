@@ -24,6 +24,7 @@ using Newtonsoft.Json;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alpha;
 using QuantConnect.Logging;
@@ -64,7 +65,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Gets the algorithm's unique identifier
         /// </summary>
-        protected string AlgorithmId => Job.AlgorithmId;
+        protected virtual string AlgorithmId => Job.AlgorithmId;
 
         /// <summary>
         /// Gets whether or not the job is a live job
@@ -89,7 +90,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Gets the insight manager instance used to manage the analysis of algorithm insights
         /// </summary>
-        protected InsightManager InsightManager { get; private set; }
+        protected virtual IInsightManager InsightManager { get; private set; }
 
         /// <summary>
         /// Initializes this alpha handler to accept insights from the specified algorithm
@@ -212,7 +213,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             // persist insights at exit
             StoreInsights();
 
-            InsightManager.DisposeSafely();
+            (InsightManager as IDisposable)?.DisposeSafely();
 
             Log.Trace("DefaultAlphaHandler.Run(): Ending Thread...");
             IsActive = false;
@@ -251,9 +252,10 @@ namespace QuantConnect.Lean.Engine.Alphas
                     var insights = InsightManager.AllInsights.OrderBy(insight => insight.GeneratedTimeUtc).ToList();
                     if (insights.Count > 0)
                     {
-                        var directory = Path.Combine(Directory.GetCurrentDirectory(), AlgorithmId);
-                        var path = Path.Combine(directory, "alpha-results.json");
+                        var baseDirectory = Config.Get("insights-destination-folder", Directory.GetCurrentDirectory());
+                        var directory = Path.Combine(baseDirectory, AlgorithmId);
                         Directory.CreateDirectory(directory);
+                        var path = Path.Combine(directory, "alpha-results.json");
                         File.WriteAllText(path, JsonConvert.SerializeObject(insights, Formatting.Indented));
                     }
                 }
@@ -268,7 +270,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// Creates the <see cref="InsightManager"/> to manage the analysis of generated insights
         /// </summary>
         /// <returns>A new insight manager instance</returns>
-        protected virtual InsightManager CreateInsightManager()
+        protected virtual IInsightManager CreateInsightManager()
         {
             var scoreFunctionProvider = new DefaultInsightScoreFunctionProvider();
             return new InsightManager(scoreFunctionProvider, 0);
