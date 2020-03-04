@@ -43,6 +43,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected int LastDeltaOrderPosition;
 
         /// <summary>
+        /// The last position consumed from the <see cref="ITransactionHandler.OrderEvents"/> while determining delta order events
+        /// </summary>
+        protected int LastDeltaOrderEventsPosition;
+
+        /// <summary>
         /// The task in charge of running the <see cref="Run"/> update method
         /// </summary>
         private Thread _updateRunner;
@@ -184,6 +189,24 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="newEvent">New event details</param>
         public virtual void OrderEvent(OrderEvent newEvent)
         {
+        }
+
+        /// <summary>
+        /// Stores the order events
+        /// </summary>
+        /// <param name="utcTime">The utc date associated with these order events</param>
+        /// <param name="orderEvents">The order events to store</param>
+        protected virtual void StoreOrderEvents(DateTime utcTime, List<OrderEvent> orderEvents)
+        {
+            if (orderEvents.Count <= 0)
+            {
+                return;
+            }
+
+            var path = $"{AlgorithmId}-order-events.json";
+            var data = JsonConvert.SerializeObject(orderEvents, Formatting.None);
+
+            File.WriteAllText(path, data);
         }
 
         /// <summary>

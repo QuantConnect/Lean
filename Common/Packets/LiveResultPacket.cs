@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using QuantConnect.Logging;
-using QuantConnect.Orders;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Packets
@@ -169,6 +168,7 @@ namespace QuantConnect.Packets
             Holdings = parameters.Holdings;
             Cash = parameters.CashBook;
             RuntimeStatistics = parameters.RuntimeStatistics;
+            OrderEvents = parameters.OrderEvents;
             ServerStatistics = parameters.ServerStatistics;
             AlphaRuntimeStatistics = parameters.AlphaRuntimeStatistics;
         }

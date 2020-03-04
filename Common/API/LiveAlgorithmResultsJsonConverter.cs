@@ -129,7 +129,8 @@ namespace QuantConnect.API
                 new Dictionary<string, Holding>(),
                 new CashBook(),
                 new Dictionary<string, string>(),
-                new Dictionary<string, string>())
+                new Dictionary<string, string>(),
+                new List<OrderEvent>())
             );
 
             return liveAlgoResults;
