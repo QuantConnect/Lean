@@ -31,7 +31,7 @@ namespace QuantConnect.Algorithm
     {
         private readonly ISecurityValuesProvider _securityValuesProvider;
         private IAlphaModel _alpha;
-        private bool _isEmitWamrupInsightWarningSent;
+        private bool _isEmitWarmupInsightWarningSent;
 
         /// <summary>
         /// Enables additional logging of framework models including:
@@ -382,10 +382,10 @@ namespace QuantConnect.Algorithm
         {
             if (IsWarmingUp)
             {
-                if (!_isEmitWamrupInsightWarningSent)
+                if (!_isEmitWarmupInsightWarningSent)
                 {
                     Error("Warning: insights emitted during algorithm warmup are ignored.");
-                    _isEmitWamrupInsightWarningSent = true;
+                    _isEmitWarmupInsightWarningSent = true;
                 }
                 return;
             }
