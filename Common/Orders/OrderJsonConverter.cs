@@ -107,7 +107,15 @@ namespace QuantConnect.Orders
             {
                 order.LastUpdateTime = lastUpdateTime.Value<DateTime>();
             }
-            order.Tag = jObject["Tag"].Value<string>();
+            var tag = jObject["Tag"];
+            if (tag != null && tag.Type != JTokenType.Null)
+            {
+                order.Tag = tag.Value<string>();
+            }
+            else
+            {
+                order.Tag = "";
+            }
 
             order.Quantity = jObject["Quantity"].Value<decimal>();
 
@@ -116,7 +124,7 @@ namespace QuantConnect.Orders
             order.BrokerId = jObject["BrokerId"].Select(x => x.Value<string>()).ToList();
             order.ContingentId = jObject["ContingentId"].Value<int>();
 
-            var timeInForce = jObject["TimeInForce"] ?? jObject["Duration"];
+            var timeInForce = jObject["Properties"]?["TimeInForce"] ?? jObject["TimeInForce"] ?? jObject["Duration"];
             order.Properties.TimeInForce = timeInForce != null
                 ? CreateTimeInForce(timeInForce, jObject)
                 : TimeInForce.GoodTilCanceled;

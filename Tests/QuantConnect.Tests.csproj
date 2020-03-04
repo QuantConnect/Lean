@@ -319,6 +319,7 @@
     <Compile Include="Common\Data\Auxiliary\MapFileTests.cs" />
     <Compile Include="Common\Data\Custom\TradingEconomicsTests.cs" />
     <Compile Include="Common\Data\Fundamental\FineFundamentalTests.cs" />
+    <Compile Include="Common\Orders\OrderEventTests.cs" />
     <Compile Include="Common\Orders\OrderSizingTests.cs" />
     <Compile Include="Common\Securities\TestDefaultMarginCallModel.cs" />
     <Compile Include="Common\Statistics\AnnualPerformanceTests.cs" />
