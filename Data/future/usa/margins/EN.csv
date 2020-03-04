@@ -17,8 +17,6 @@ date,initial,maintenance
 20150220,3300,3000
 # https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-104.html
 20150410,4180,3800
-# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-126.html
-20150508,1650,1500
 # https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-165.html
 20150612,3355,3050
 # https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-388.html

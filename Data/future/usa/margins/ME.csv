@@ -19,10 +19,10 @@ date,initial,maintenance
 20180221,1100,1000
 # https://www.cmegroup.com/notices/clearing/2018/04/Chadv18-159.html
 20180420,550,500
-# https://www.cmegroup.com/notices/clearing/2019/07/Chadv19-223.html
-20190712,880,800
 # https://www.cmegroup.com/notices/clearing/2018/08/Chadv18-344.html
 20180830,990,900
+# https://www.cmegroup.com/notices/clearing/2019/07/Chadv19-223.html
+20190712,880,800
 # https://www.cmegroup.com/notices/clearing/2019/09/Chadv19-314.html
 20190920,880,800
 # https://www.cmegroup.com/notices/clearing/2019/11/Chadv19-373.html
