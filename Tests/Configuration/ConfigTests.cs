@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.IO;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Configuration;
@@ -36,6 +37,17 @@ namespace QuantConnect.Tests.Configuration
             Assert.AreNotEqual(betaMode, betaMode2);
         }
 
+        [Test]
+        public void ChangeConfigurationFileNameWrites()
+        {
+            var tempFile = Path.GetTempFileName();
+            Config.SetConfigurationFile(tempFile);
+            Config.Write();
+            Assert.True(File.Exists(tempFile));
+            Assert.True(File.ReadAllText(tempFile).Length > 0);
+            File.Delete(tempFile);
+        }
+        
         [Test]
         public void FlattenTest()
         {
