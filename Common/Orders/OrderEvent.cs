@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.ComponentModel;
+using Newtonsoft.Json;
 using QuantConnect.Orders.Fees;
 using static QuantConnect.StringExtensions;
 
@@ -24,8 +26,8 @@ namespace QuantConnect.Orders
     /// </summary>
     public class OrderEvent
     {
-        private decimal fillPrice;
-        private decimal fillQuantity;
+        private decimal _fillPrice;
+        private decimal _fillQuantity;
 
         /// <summary>
         /// Id of the order this event comes from.
@@ -57,8 +59,8 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal FillPrice
         {
-            get { return fillPrice; }
-            set { fillPrice = value.Normalize(); }
+            get { return _fillPrice; }
+            set { _fillPrice = value.Normalize(); }
         }
 
         /// <summary>
@@ -71,13 +73,14 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal FillQuantity
         {
-            get { return fillQuantity; }
-            set { fillQuantity = value.Normalize(); }
+            get { return _fillQuantity; }
+            set { _fillQuantity = value.Normalize(); }
         }
 
         /// <summary>
         /// Public Property Absolute Getter of Quantity -Filled
         /// </summary>
+        [JsonIgnore]
         public decimal AbsoluteFillQuantity => Math.Abs(FillQuantity);
 
         /// <summary>
@@ -88,6 +91,7 @@ namespace QuantConnect.Orders
         /// <summary>
         /// Any message from the exchange.
         /// </summary>
+        [DefaultValue(""), JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Message { get; set; }
 
         /// <summary>
