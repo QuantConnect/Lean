@@ -567,12 +567,12 @@ namespace QuantConnect.Tests.Common.Securities
         public void FreeBuyingPowerPercentDefault_Future()
         {
             var algo = GetAlgorithm();
-            var security = InitAndGetSecurity(algo, 5, SecurityType.Future, "ES");
+            var security = InitAndGetSecurity(algo, 5, SecurityType.Future, "ES", time: new DateTime(2020, 1, 27));
             var model = security.BuyingPowerModel;
 
             var actual = algo.CalculateOrderQuantity(_symbol, 1m * model.GetLeverage(security));
-            // (100000 * 1 * 0.9975 ) / 5200 - 1 order due to fees
-            Assert.AreEqual(18m, actual);
+            // (100000 * 1 * 0.9975 ) / 6600 - 1 order due to fees
+            Assert.AreEqual(13m, actual);
             Assert.IsTrue(HasSufficientBuyingPowerForOrder(actual, security, algo));
             Assert.AreEqual(algo.Portfolio.Cash, model.GetBuyingPower(algo.Portfolio, security, OrderDirection.Buy));
         }
@@ -754,7 +754,7 @@ namespace QuantConnect.Tests.Common.Securities
             return algo;
         }
 
-        private static Security InitAndGetSecurity(QCAlgorithm algo, decimal fee, SecurityType securityType = SecurityType.Equity, string symbol = "SPY")
+        private static Security InitAndGetSecurity(QCAlgorithm algo, decimal fee, SecurityType securityType = SecurityType.Equity, string symbol = "SPY", DateTime? time = null)
         {
             algo.SubscriptionManager.SetDataManager(new DataManagerStub(algo));
             Security security;
@@ -779,15 +779,15 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             security.FeeModel = new ConstantFeeModel(fee);
-            Update(security, 25);
+            Update(security, 25, time);
             return security;
         }
 
-        private static void Update(Security security, decimal close)
+        private static void Update(Security security, decimal close, DateTime? time = null)
         {
             security.SetMarketPrice(new TradeBar
             {
-                Time = DateTime.Now,
+                Time = time ?? DateTime.Now,
                 Symbol = security.Symbol,
                 Open = close,
                 High = close,

@@ -1,0 +1,40 @@
+date,initial,maintenance
+# Values are converted from CAD to USD
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv11-437.html
+20111205,3651,2705
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-270.html
+20120629,2989,2214
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-318.html
+20120727,3702,2742
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-328.html
+20120806,2639,2399
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-380.html
+20120907,3091,2810
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-069.html
+20130208,2525,2295
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-126.html
+20130319,2143,1948
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-053.html
+20140131,2768,2517
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-211.html
+20140530,2536,2306
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-354.html
+20140912,2819,2563
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-016.html
+20150116,3442,3129
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-019.html
+20150120,3905,3550
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-023.html
+20150123,4074,3704
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-153.html
+20150605,3624,3295
+# https://www.cmegroup.com/notices/clearing/2016/04/Chadv16-165.html
+20160415,3775,3432
+# https://www.cmegroup.com/notices/clearing/2016/12/Chadv16-516.html
+20161209,3340,3036
+# https://www.cmegroup.com/notices/clearing/2017/01/Chadv17-028.html
+20170113,3020,2745
+# https://www.cmegroup.com/notices/clearing/2017/05/Chadv17-194.html
+20170601,2687,2443
+# https://www.cmegroup.com/notices/clearing/2019/07/Chadv19-230.html
+20190719,2359,2144
