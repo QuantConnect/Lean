@@ -1,5 +1,5 @@
 #
-#   LEAN Foundation Docker Container 20191113
+#   LEAN Foundation Docker Container 20200306
 #   Cross platform deployment for multiple brokerages
 #   Intended to be used in conjunction with Dockerfile. This is just the foundation common OS+Dependencies required.
 #
