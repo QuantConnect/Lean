@@ -43,13 +43,8 @@ namespace QuantConnect.Lean.Engine.Alphas
         private ISecurityValuesProvider _securityValuesProvider;
         private FitnessScoreManager _fitnessScore;
         private DateTime _lastFitnessScoreCalculation;
+        private Timer _storeTimer;
         private readonly object _lock = new object();
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-
-        /// <summary>
-        /// The cancellation token that will be cancelled when requested to exit
-        /// </summary>
-        protected CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
         /// <summary>
         /// Gets a flag indicating if this handler's thread is still running and processing messages
@@ -148,6 +143,15 @@ namespace QuantConnect.Lean.Engine.Alphas
             // send date ranges to extensions for initialization -- this data wasn't available when the handler was
             // initialzied, so we need to invoke it here
             InsightManager.InitializeExtensionsForRange(algorithm.StartDate, algorithm.EndDate, algorithm.UtcTime);
+
+            if (LiveMode)
+            {
+                _storeTimer = new Timer(_ => StoreInsights(),
+                    null,
+                    TimeSpan.FromMinutes(10),
+                    TimeSpan.FromMinutes(10));
+            }
+            IsActive = true;
         }
 
         /// <summary>
@@ -181,64 +185,28 @@ namespace QuantConnect.Lean.Engine.Alphas
         }
 
         /// <summary>
-        /// Thread entry point for asynchronous processing
+        /// Stops processing and stores insights
         /// </summary>
-        public virtual void Run()
+        public void Exit()
         {
-            IsActive = true;
+            Log.Trace("DefaultAlphaHandler.Exit(): Exiting...");
 
-            using (LiveMode ? new Timer(_ => StoreInsights(),
-                null,
-                TimeSpan.FromMinutes(10),
-                TimeSpan.FromMinutes(10)) : null)
-            {
-                // run main loop until canceled, will clean out work queues separately
-                while (!CancellationToken.IsCancellationRequested)
-                {
-                    try
-                    {
-                        ProcessAsynchronousEvents();
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Error(err);
-                        throw;
-                    }
-
-                    Thread.Sleep(1);
-                }
-            }
+            _storeTimer.DisposeSafely();
+            _storeTimer = null;
 
             // persist insights at exit
             StoreInsights();
 
             InsightManager.DisposeSafely();
 
-            Log.Trace("DefaultAlphaHandler.Run(): Ending Thread...");
             IsActive = false;
-        }
-
-        /// <summary>
-        /// Stops processing in the <see cref="IAlphaHandler.Run"/> method
-        /// </summary>
-        public void Exit()
-        {
-            Log.Trace("DefaultAlphaHandler.Exit(): Exiting Thread...");
-
-            _cancellationTokenSource.Cancel(false);
-        }
-
-        /// <summary>
-        /// Performs asynchronous processing, including broadcasting of insights to messaging handler
-        /// </summary>
-        protected void ProcessAsynchronousEvents()
-        {
+            Log.Trace("DefaultAlphaHandler.Exit(): Ended");
         }
 
         /// <summary>
         /// Save insight results to persistent storage
         /// </summary>
-        /// <remarks>Method called by <see cref="Run"/></remarks>
+        /// <remarks>Method called by the storing timer and on exit</remarks>
         protected virtual void StoreInsights()
         {
             // avoid reentrancy
