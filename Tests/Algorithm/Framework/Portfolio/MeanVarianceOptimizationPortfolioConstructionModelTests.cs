@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 new BacktestNodePacket(),
                 new Api.Api(),
                 new DefaultDataProvider(),
-                new ZipDataCacheProvider(new DefaultDataProvider()),
+                new SingleEntryDataCacheProvider(new DefaultDataProvider()),
                 new LocalDiskMapFileProvider(),
                 new LocalDiskFactorFileProvider(new LocalDiskMapFileProvider()),
                 i => { },
