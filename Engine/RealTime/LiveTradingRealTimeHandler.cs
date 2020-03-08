@@ -25,6 +25,7 @@ using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.RealTime
 {
@@ -33,6 +34,7 @@ namespace QuantConnect.Lean.Engine.RealTime
     /// </summary>
     public class LiveTradingRealTimeHandler : BaseRealTimeHandler, IRealTimeHandler
     {
+        private Thread _realTimeThread;
         private TimeMonitor _timeMonitor;
         private static MarketHoursDatabase _marketHoursDatabase;
 
@@ -83,13 +85,16 @@ namespace QuantConnect.Lean.Engine.RealTime
             }
 
             _timeMonitor = new TimeMonitor();
+
+            _realTimeThread = new Thread(Run) { IsBackground = true, Name = "RealTime Thread" };
+            _realTimeThread.Start(); // RealTime scan time for time based events
         }
 
         /// <summary>
         /// Execute the live realtime event thread montioring.
         /// It scans every second monitoring for an event trigger.
         /// </summary>
-        public void Run()
+        private void Run()
         {
             IsActive = true;
 
@@ -199,7 +204,10 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void Exit()
         {
-            _cancellationTokenSource.Cancel();
+            _timeMonitor.DisposeSafely();
+            _timeMonitor = null;
+            _realTimeThread.StopSafely(TimeSpan.FromMinutes(5), _cancellationTokenSource);
+            _realTimeThread = null;
         }
 
         /// <summary>

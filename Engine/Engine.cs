@@ -94,8 +94,6 @@ namespace QuantConnect.Lean.Engine
 
                 //Reset thread holders.
                 var initializeComplete = false;
-                Thread threadRealTime = null;
-                Thread threadAlphas = null;
 
                 //-> Initialize messaging system
                 SystemHandlers.Notify.SetAuthentication(job);
@@ -307,14 +305,6 @@ namespace QuantConnect.Lean.Engine
                     //Send status to user the algorithm is now executing.
                     AlgorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.Running);
 
-                    //Launch the data, transaction and realtime handlers into dedicated threads
-                    threadRealTime = new Thread(AlgorithmHandlers.RealTime.Run) { IsBackground = true, Name = "RealTime Thread" };
-                    threadAlphas = new Thread(() => AlgorithmHandlers.Alphas.Run()) {IsBackground = true, Name = "Alpha Thread" };
-
-                    //Launch the data feed, result sending, and transaction models/handlers in separate threads.
-                    threadRealTime.Start(); // RealTime scan time for time based events:
-                    threadAlphas.Start(); // Alpha thread for processing algorithm alpha insights
-
                     // Result manager scanning message queue: (started earlier)
                     AlgorithmHandlers.Results.DebugMessage(
                         $"Launching analysis for {job.AlgorithmId} with LEAN Engine v{Globals.Version}");
@@ -395,12 +385,13 @@ namespace QuantConnect.Lean.Engine
 
                     //Before we return, send terminate commands to close up the threads
                     AlgorithmHandlers.Transactions.Exit();
-                    AlgorithmHandlers.DataFeed.Exit();
                     AlgorithmHandlers.RealTime.Exit();
-                    AlgorithmHandlers.Alphas.Exit();
                     dataManager?.RemoveAllSubscriptions();
                     workerThread?.Dispose();
                 }
+                // Close data feed, alphas. Could be running even if algorithm initialization failed
+                AlgorithmHandlers.DataFeed.Exit();
+                AlgorithmHandlers.Alphas.Exit();
 
                 //Close result handler:
                 AlgorithmHandlers.Results.Exit();
@@ -422,9 +413,6 @@ namespace QuantConnect.Lean.Engine
                     }
                     millisecondTotalWait += millisecondInterval;
                 }
-
-                //Terminate threads still in active state.
-                if (threadAlphas != null && threadAlphas.IsAlive) threadAlphas.Abort();
 
                 if (brokerage != null)
                 {

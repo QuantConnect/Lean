@@ -70,14 +70,6 @@ namespace QuantConnect.Lean.Engine.RealTime
         }
 
         /// <summary>
-        /// Normally this would run the realtime event monitoring. Backtesting is in fastforward so the realtime is linked to the backtest clock.
-        /// This thread does nothing. Wait until the job is over.
-        /// </summary>
-        public void Run()
-        {
-        }
-
-        /// <summary>
         /// Adds the specified event to the schedule
         /// </summary>
         /// <param name="scheduledEvent">The event to be scheduled, including the date/times the event fires and the callback</param>
@@ -169,7 +161,8 @@ namespace QuantConnect.Lean.Engine.RealTime
         /// </summary>
         public void Exit()
         {
-            // this doesn't run as it's own thread, so nothing to exit
+            _timeMonitor.DisposeSafely();
+            _timeMonitor = null;
         }
 
         private List<ScheduledEvent> GetScheduledEventsSortedByTime()
