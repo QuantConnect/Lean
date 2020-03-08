@@ -39,13 +39,6 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         IEnumerable<Insight> AllInsights { get; }
 
         /// <summary>
-        /// Gets the unique set of symbols from analysis contexts that will
-        /// </summary>
-        /// <param name="frontierTimeUtc"></param>
-        /// <returns></returns>
-        IEnumerable<InsightAnalysisContext> ContextsOpenAt(DateTime frontierTimeUtc);
-
-        /// <summary>
         /// Add an extension to this manager
         /// </summary>
         /// <param name="extension">The extension to be added</param>
@@ -72,13 +65,5 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
         /// </summary>
         /// <param name="insightIds">The insights ids to be removed</param>
         void RemoveInsights(IEnumerable<Guid> insightIds);
-
-        /// <summary>
-        /// Gets all insight analysis contexts that have been updated since this method's last invocation.
-        /// Contexts are marked as not updated during the enumeration, so in order to remove a context from
-        /// the updated set, the enumerable must be enumerated.
-        /// </summary>
-        /// <returns></returns>
-        IEnumerable<InsightAnalysisContext> GetUpdatedContexts();
     }
 }
