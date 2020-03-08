@@ -32,7 +32,6 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("config", CommandOptionType.SingleValue),
                 new CommandLineOption("results-destination-folder", CommandOptionType.SingleValue),
                 new CommandLineOption("results-destination-file-prefix", CommandOptionType.SingleValue),
-                new CommandLineOption("insights-destination-folder", CommandOptionType.SingleValue),
 
                 // Options grabbed from json file
                 new CommandLineOption("environment", CommandOptionType.SingleValue),

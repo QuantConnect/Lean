@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Engine.Alphas
         private Mock<IInsightManager> _insightManager;
         private const string AlgorithmId = "MyAlgorithm";
         private const string InsightFileName = "alpha-results.json";
-        private const string InsightsDestinationFolderKey = "insights-destination-folder";
+        private const string ResultsDestinationFolderKey = "results-destination-folder";
         
         [SetUp]
         public void SetUp()
@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Engine.Alphas
 
             if (!useDefaultDirectory)
             {
-                Config.Set(InsightsDestinationFolderKey, alternateDirectory);
+                Config.Set(ResultsDestinationFolderKey, alternateDirectory);
             }
             
             _defaultAlphaHandler.ExecuteStoreInsights();
