@@ -213,7 +213,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             // persist insights at exit
             StoreInsights();
 
-            (InsightManager as IDisposable)?.DisposeSafely();
+            InsightManager?.DisposeSafely();
 
             Log.Trace("DefaultAlphaHandler.Run(): Ending Thread...");
             IsActive = false;

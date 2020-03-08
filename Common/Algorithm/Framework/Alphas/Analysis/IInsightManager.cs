@@ -21,7 +21,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
     /// <summary>
     /// Encapsulates the storage and on-line scoring of insights.
     /// </summary>b
-    public interface IInsightManager
+    public interface IInsightManager : IDisposable
     {
         /// <summary>
         /// Enumerable of insights still under analysis
