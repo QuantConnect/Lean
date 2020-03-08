@@ -23,7 +23,9 @@ using NUnit.Framework;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Configuration;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alphas;
+using QuantConnect.Packets;
 
 namespace QuantConnect.Tests.Engine.Alphas
 {
@@ -48,12 +50,14 @@ namespace QuantConnect.Tests.Engine.Alphas
         [Test]
         public void TestStoreInsightsWithDifferentDirectories(bool useDefaultDirectory, string alternateDirectory)
         {
+            // Arrange
             var insights = new []
             {
                 Insight.Price(Symbol.Create("ES", SecurityType.Future, Market.USA), DateTime.Now.AddMinutes(1), InsightDirection.Down),
                 Insight.Price(Symbol.Create("GC", SecurityType.Future, Market.USA), DateTime.Now.AddMinutes(5), InsightDirection.Up)
             };
             _insightManager.Setup(x => x.AllInsights).Returns(insights);
+            
             var topDirectory = useDefaultDirectory
                 ? Directory.GetCurrentDirectory()
                 : Path.Combine(Directory.GetCurrentDirectory(), alternateDirectory);
@@ -69,9 +73,18 @@ namespace QuantConnect.Tests.Engine.Alphas
             {
                 Config.Set(ResultsDestinationFolderKey, alternateDirectory);
             }
+
+            var packet = new AlgorithmNodePacket(PacketType.LiveNode);
+            var algorithm = new Mock<IAlgorithm>();
+            var messagingHandler = new Mock<IMessagingHandler>();
+            var api = new Mock<IApi>();
+
+            _defaultAlphaHandler.Initialize(packet, algorithm.Object, messagingHandler.Object, api.Object);
             
+            // Act
             _defaultAlphaHandler.ExecuteStoreInsights();
             
+            // Assert
             var fullPath = Path.Combine(insightDirectory, InsightFileName);
             Assert.True(File.Exists(fullPath));
 
@@ -80,6 +93,8 @@ namespace QuantConnect.Tests.Engine.Alphas
             
             // There are no comparators implemented for Insights, so ToString() comparison is sufficient
             CollectionAssert.AreEquivalent(insights.Select(x => x.ToString()), deserializedInsights.Select(x => x.ToString()));
+            
+            Directory.Delete(insightDirectory, true);
         }
         
         private class DefaultAlphaHandlerTestable : DefaultAlphaHandler
