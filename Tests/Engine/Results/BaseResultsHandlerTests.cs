@@ -29,7 +29,6 @@ namespace QuantConnect.Tests.Engine.Results
     {
         private BaseResultsHandlerTestable _baseResultsHandler;
         private const string ResultsDestinationFolderKey = "results-destination-folder";
-        private const string ResultsDestinationFilePrefixKey = "results-destination-file-prefix";
         private const string AlgorithmId = "MyAlgorithm";
         
         [TestCase(true, "./temp")]
@@ -48,24 +47,6 @@ namespace QuantConnect.Tests.Engine.Results
             var expectedValue = overrideDefault ? overrideValue : Directory.GetCurrentDirectory();
             
             Assert.AreEqual(expectedValue, _baseResultsHandler.GetResultsDestinationFolder);
-        }
-
-        [TestCase(true, "MyFilePrefix")]
-        [TestCase(false, "IGNORED")]
-        [Test]
-        public void ResultsDestinationFilePrefixIsCorrect(bool overrideDefault, string overrideValue)
-        {
-            Config.Reset();
-            if (overrideDefault)
-            {
-                Config.Set(ResultsDestinationFilePrefixKey, overrideValue);
-            }
-            
-            _baseResultsHandler = new BaseResultsHandlerTestable(AlgorithmId);
-
-            var expectedValue = overrideDefault ? overrideValue : AlgorithmId;
-            
-            Assert.AreEqual(expectedValue, _baseResultsHandler.GetResultsDestinationFilePrefix);
         }
 
         [Test]
@@ -103,10 +84,6 @@ namespace QuantConnect.Tests.Engine.Results
                 ResultsDestinationFolder = folder;
             }
             public string GetResultsDestinationFolder => ResultsDestinationFolder;
-            public string GetResultsDestinationFilePrefix => ResultsDestinationFilePrefix;
-
-            public new string GetResultsPath(string filename) => base.GetResultsPath(filename);
-            
             protected override void Run()
             {
                 throw new NotImplementedException();

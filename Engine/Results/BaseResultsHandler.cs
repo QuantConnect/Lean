@@ -161,12 +161,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// Directory location to store results
         /// </summary>
         protected string ResultsDestinationFolder;
-
-        /// <summary>
-        /// Root filename to store results
-        /// </summary>
-        /// <remarks>Should not include the file extension here</remarks>
-        protected string ResultsDestinationFilePrefix => Config.Get("results-destination-file-prefix", AlgorithmId);
         
         /// <summary>
         /// Creates a new instance

@@ -291,7 +291,7 @@ namespace QuantConnect.Lean.Engine.Results
                 if (result != null)
                 {
                     // Get Storage Location:
-                    var key = ResultsDestinationFilePrefix + ".json";
+                    var key = $"{AlgorithmId}.json";
 
                     BacktestResult results;
                     lock (ChartLock)

@@ -255,7 +255,7 @@ namespace QuantConnect.Lean.Engine.Results
                             logs = new List<LogEntry>(LogStore);
                             LogStore.Clear();
                         }
-                        SaveLogs(ResultsDestinationFilePrefix, logs);
+                        SaveLogs(AlgorithmId, logs);
 
                         _nextLogStoreUpdate = DateTime.UtcNow.AddMinutes(2);
                         Log.Debug("LiveTradingResultHandler.Update(): Finished storing log");
@@ -887,7 +887,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                 lock (LogStore)
                 {
-                    SaveLogs(ResultsDestinationFilePrefix, LogStore);
+                    SaveLogs(AlgorithmId, LogStore);
                     LogStore.Clear();
                 }
 
@@ -933,7 +933,7 @@ namespace QuantConnect.Lean.Engine.Results
 
         private string CreateKey(string suffix, string dateFormat = "yyyy-MM-dd")
         {
-            return $"{ResultsDestinationFilePrefix}-{DateTime.UtcNow.ToStringInvariant(dateFormat)}_{suffix}.json";
+            return $"{AlgorithmId}-{DateTime.UtcNow.ToStringInvariant(dateFormat)}_{suffix}.json";
         }
 
         /// <summary>
