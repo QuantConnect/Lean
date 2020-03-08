@@ -46,6 +46,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         private DateTime _lastFitnessScoreCalculation;
         private readonly object _lock = new object();
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private string _alphaResultsPath;
 
         /// <summary>
         /// The cancellation token that will be cancelled when requested to exit
@@ -118,6 +119,14 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             AddInsightManagerCustomExtensions(statistics);
 
+            var baseDirectory = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
+            var directory = Path.Combine(baseDirectory, AlgorithmId);
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+            _alphaResultsPath = Path.Combine(directory, "alpha-results.json");
+            
             // when insight is generated, take snapshot of securities and place in queue for insight manager to process on alpha thread
             algorithm.InsightsGenerated += (algo, collection) =>
             {
@@ -252,11 +261,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                     var insights = InsightManager.AllInsights.OrderBy(insight => insight.GeneratedTimeUtc).ToList();
                     if (insights.Count > 0)
                     {
-                        var baseDirectory = Config.Get("insights-destination-folder", Directory.GetCurrentDirectory());
-                        var directory = Path.Combine(baseDirectory, AlgorithmId);
-                        Directory.CreateDirectory(directory);
-                        var path = Path.Combine(directory, "alpha-results.json");
-                        File.WriteAllText(path, JsonConvert.SerializeObject(insights, Formatting.Indented));
+                        File.WriteAllText(_alphaResultsPath, JsonConvert.SerializeObject(insights, Formatting.Indented));
                     }
                 }
                 finally
