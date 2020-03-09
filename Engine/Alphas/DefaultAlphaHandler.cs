@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -24,6 +24,7 @@ using Newtonsoft.Json;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis.Providers;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Alpha;
 using QuantConnect.Logging;
@@ -45,6 +46,13 @@ namespace QuantConnect.Lean.Engine.Alphas
         private DateTime _lastFitnessScoreCalculation;
         private Timer _storeTimer;
         private readonly object _lock = new object();
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private string _alphaResultsPath;
+
+        /// <summary>
+        /// The cancellation token that will be cancelled when requested to exit
+        /// </summary>
+        protected CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
         /// <summary>
         /// Gets a flag indicating if this handler's thread is still running and processing messages
@@ -59,7 +67,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Gets the algorithm's unique identifier
         /// </summary>
-        protected string AlgorithmId => Job.AlgorithmId;
+        protected virtual string AlgorithmId => Job.AlgorithmId;
 
         /// <summary>
         /// Gets whether or not the job is a live job
@@ -84,7 +92,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// <summary>
         /// Gets the insight manager instance used to manage the analysis of algorithm insights
         /// </summary>
-        protected InsightManager InsightManager { get; private set; }
+        protected virtual IInsightManager InsightManager { get; private set; }
 
         /// <summary>
         /// Initializes this alpha handler to accept insights from the specified algorithm
@@ -112,6 +120,14 @@ namespace QuantConnect.Lean.Engine.Alphas
 
             AddInsightManagerCustomExtensions(statistics);
 
+            var baseDirectory = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
+            var directory = Path.Combine(baseDirectory, AlgorithmId);
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+            _alphaResultsPath = Path.Combine(directory, "alpha-results.json");
+            
             // when insight is generated, take snapshot of securities and place in queue for insight manager to process on alpha thread
             algorithm.InsightsGenerated += (algo, collection) =>
             {
@@ -197,7 +213,7 @@ namespace QuantConnect.Lean.Engine.Alphas
             // persist insights at exit
             StoreInsights();
 
-            InsightManager.DisposeSafely();
+            InsightManager?.DisposeSafely();
 
             IsActive = false;
             Log.Trace("DefaultAlphaHandler.Exit(): Ended");
@@ -219,10 +235,7 @@ namespace QuantConnect.Lean.Engine.Alphas
                     var insights = InsightManager.AllInsights.OrderBy(insight => insight.GeneratedTimeUtc).ToList();
                     if (insights.Count > 0)
                     {
-                        var directory = Path.Combine(Directory.GetCurrentDirectory(), AlgorithmId);
-                        var path = Path.Combine(directory, "alpha-results.json");
-                        Directory.CreateDirectory(directory);
-                        File.WriteAllText(path, JsonConvert.SerializeObject(insights, Formatting.Indented));
+                        File.WriteAllText(_alphaResultsPath, JsonConvert.SerializeObject(insights, Formatting.Indented));
                     }
                 }
                 finally
@@ -236,7 +249,7 @@ namespace QuantConnect.Lean.Engine.Alphas
         /// Creates the <see cref="InsightManager"/> to manage the analysis of generated insights
         /// </summary>
         /// <returns>A new insight manager instance</returns>
-        protected virtual InsightManager CreateInsightManager()
+        protected virtual IInsightManager CreateInsightManager()
         {
             var scoreFunctionProvider = new DefaultInsightScoreFunctionProvider();
             return new InsightManager(scoreFunctionProvider, 0);

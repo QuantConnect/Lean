@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas.Analysis
     /// are potentially at different frontiers. In fact, it is the common case where the openInsightContexts
     /// collection is ahead of everything else.
     /// </remarks>
-    public class InsightManager : IDisposable
+    public class InsightManager : IInsightManager, IDisposable
     {
         /// <summary>
         /// Gets all insight score types

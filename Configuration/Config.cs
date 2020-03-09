@@ -335,7 +335,7 @@ namespace QuantConnect.Configuration
         {
             if (!Settings.IsValueCreated) return;
             var serialized = JsonConvert.SerializeObject(Settings.Value, Formatting.Indented);
-            File.WriteAllText("config.json", serialized);
+            File.WriteAllText(ConfigurationFileName, serialized);
         }
 
         /// <summary>
