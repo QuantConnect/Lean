@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -505,6 +506,448 @@ def Test(slice):
             Assert.AreEqual(1, quoteBarData.Count);
             Assert.AreEqual(3100, quoteBarData[Symbols.BTCUSD].Bid.Close);
             Assert.AreEqual(3101, quoteBarData[Symbols.BTCUSD].Ask.Close);
+        }
+
+        [Test]
+        public void PythonSlice_clear()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice):
+    slice.clear()").GetAttr("Test");
+
+                Assert.Throws<PythonException>(() => test(GetPythonSlice()), "Slice is read-only: cannot clear the collection");
+            }
+        }
+
+        [Test]
+        public void PythonSlice_popitem()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice):
+    slice.popitem()").GetAttr("Test");
+
+                Assert.Throws<PythonException>(() => test(GetPythonSlice()), "Slice is read-only: cannot pop an item from the collection");
+            }
+        }
+
+        [Test]
+        public void PythonSlice_pop()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice, symbol):
+    slice.pop(symbol)").GetAttr("Test");
+
+                Assert.Throws<PythonException>(() => test(GetPythonSlice(), Symbols.SPY), $"Slice is read-only: cannot pop the value for {Symbols.SPY} from the collection");
+            }
+        }
+
+        [Test]
+        public void PythonSlice_pop_default()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice, symbol, default_value):
+    slice.pop(symbol, default_value)").GetAttr("Test");
+
+                Assert.Throws<PythonException>(() => test(GetPythonSlice(), Symbols.SPY, null), $"Slice is read-only: cannot pop the value for {Symbols.SPY} from the collection");
+            }
+        }
+
+        [Test]
+        public void PythonSlice_update()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice, symbol):
+    item = {symbol, 1 }
+    slice.update(item)").GetAttr("Test");
+
+                Assert.Throws<PythonException>(() => test(GetPythonSlice(), Symbols.SPY), "Slice is read-only: cannot update the collection");
+            }
+        }
+
+        [Test]
+        public void PythonSlice_contains()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Tests"")
+AddReference(""QuantConnect.Common"")
+AddReference(""System"")
+from QuantConnect import *
+from QuantConnect.Data.Market import Tick
+from QuantConnect.Tests.Common.Data import PublicArrayTest
+
+def Test(slice, symbol):
+    return symbol in slice").GetAttr("Test");
+
+                bool result = false;
+                Assert.DoesNotThrow(() => result = test(GetSlice(), Symbols.SPY));
+                Assert.IsTrue(result);
+
+                result = false;
+                Assert.DoesNotThrow(() => result = test(GetPythonSlice(), Symbols.SPY));
+                Assert.IsTrue(result);
+            }
+        }
+
+        [Test]
+        public void PythonSlice_len()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Tests"")
+AddReference(""QuantConnect.Common"")
+AddReference(""System"")
+from QuantConnect import *
+from QuantConnect.Data.Market import Tick
+from QuantConnect.Tests.Common.Data import PublicArrayTest
+
+def Test(slice, symbol):
+    return len(slice)").GetAttr("Test");
+
+                var result = -1;
+                Assert.DoesNotThrow(() => result = test(GetSlice(), Symbols.SPY));
+                Assert.AreEqual(2, result);
+
+                result = -1;
+                Assert.DoesNotThrow(() => result = test(GetPythonSlice(), Symbols.SPY));
+                Assert.AreEqual(2, result);
+            }
+        }
+
+        [Test]
+        public void PythonSlice_copy()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice, symbol):
+    copy = slice.copy()
+    return ', '.join([f'{k}: {v.Value}' for k,v in copy.items()])").GetAttr("Test");
+
+                var result = string.Empty;
+                Assert.DoesNotThrow(() => result = test(GetPythonSlice(), Symbols.SPY));
+                Assert.AreEqual("SPY R735QTJ8XC9X: 10.0, AAPL R735QTJ8XC9X: 11.0", result);
+            }
+        }
+
+        [Test]
+        public void PythonSlice_items()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice):
+    return ', '.join([f'{k}: {v.Value}' for k,v in slice.items()])").GetAttr("Test");
+
+                var result = string.Empty;
+                Assert.DoesNotThrow(() => result = test(GetPythonSlice()));
+                Assert.AreEqual("SPY R735QTJ8XC9X: 10.0, AAPL R735QTJ8XC9X: 11.0", result);
+            }
+        }
+
+
+        [Test]
+        public void PythonSlice_keys()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice):
+    return slice.keys()").GetAttr("Test");
+
+                var slice = GetPythonSlice();
+                var result = new List<Symbol>();
+                Assert.DoesNotThrow(() => result = test(slice));
+                foreach (var key in slice.Keys)
+                {
+                    Assert.IsTrue(result.Contains(key));
+                }
+            }
+        }
+
+        [Test]
+        public void PythonSlice_values()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice):
+    return slice.values()").GetAttr("Test");
+
+                var slice = GetPythonSlice();
+                var result = new List<BaseData>();
+                Assert.DoesNotThrow(() => result = test(slice));
+                foreach (var value in slice.Values)
+                {
+                    Assert.IsTrue(result.Contains(value));
+                }
+            }
+        }
+
+        [Test]
+        public void PythonSlice_fromkeys()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice, keys):
+    newDict = slice.fromkeys(keys)
+    return ', '.join([f'{k}: {v.Value}' for k,v in newDict.items()])").GetAttr("Test");
+
+                var result = string.Empty;
+                Assert.DoesNotThrow(() => result = test(GetPythonSlice(), new[] { Symbols.SPY }));
+                Assert.AreEqual("SPY R735QTJ8XC9X: 10.0", result);
+            }
+        }
+
+        [Test]
+        public void PythonSlice_fromkeys_default()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice, keys, default_value):
+    newDict = slice.fromkeys(keys, default_value)
+    return ', '.join([f'{k}: {v.Value}' for k,v in newDict.items()])").GetAttr("Test");
+
+                var result = string.Empty;
+                Assert.DoesNotThrow(() => result = test(GetPythonSlice(), new[] { Symbols.EURUSD }, new Tick()));
+                Assert.AreEqual("EURUSD 5O: 0.0", result);
+            }
+        }
+
+        [Test]
+        public void PythonSlice_get_success()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice, symbol):
+    return slice.get(symbol)").GetAttr("Test");
+
+                var pythonSlice = GetPythonSlice();
+                dynamic expected = pythonSlice[Symbols.SPY];
+                PyObject result = null;
+                Assert.DoesNotThrow(() => result = test(GetPythonSlice(), Symbols.SPY ));
+                BaseData actual;
+                Assert.IsTrue(result.TryConvert(out actual));
+                Assert.AreEqual(expected.Symbol, actual.Symbol);
+                Assert.AreEqual(expected.Value, actual.Value);
+            }
+        }
+
+        [Test]
+        public void PythonSlice_get_default()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice, symbol, default_value):
+    return slice.get(symbol, default_value)").GetAttr("Test");
+
+                var pythonSlice = GetPythonSlice();
+                var expected = new QuoteBar { Symbol = Symbols.EURUSD, Time = DateTime.Now, Value = 9 };
+                PyObject result = null;
+                Assert.DoesNotThrow(() => result = test(GetPythonSlice(), Symbols.EURUSD, expected));
+                BaseData actual;
+                Assert.IsTrue(result.TryConvert(out actual));
+                Assert.AreEqual(expected.Symbol, actual.Symbol);
+                Assert.AreEqual(expected.Value, actual.Value);
+            }
+        }
+
+        [Test]
+        public void PythonSlice_get_keynotfound()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice, symbol):
+    return slice.get(symbol)").GetAttr("Test");
+
+                var symbol = Symbols.EURUSD;
+                Assert.Throws<PythonException>(() => test(GetPythonSlice(), symbol),
+                    $"'{symbol}' wasn't found in the Slice object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\")");
+            }
+        }
+
+        [Test]
+        public void PythonSlice_setdefault_success()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice, symbol):
+    return slice.setdefault(symbol)").GetAttr("Test");
+
+                var pythonSlice = GetPythonSlice();
+                dynamic expected = pythonSlice[Symbols.SPY];
+                PyObject result = null;
+                Assert.DoesNotThrow(() => result = test(GetPythonSlice(), Symbols.SPY));
+                BaseData actual;
+                Assert.IsTrue(result.TryConvert(out actual));
+                Assert.AreEqual(expected.Symbol, actual.Symbol);
+                Assert.AreEqual(expected.Value, actual.Value);
+            }
+        }
+
+        [Test]
+        public void PythonSlice_setdefault_default_success()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice, symbol, default_value):
+    return slice.setdefault(symbol, default_value)").GetAttr("Test");
+
+                var value = new Tick();
+                var pythonSlice = GetPythonSlice();
+                dynamic expected = pythonSlice[Symbols.SPY];
+                PyObject result = null;
+
+                // Since SPY is found, no need to set the default. Therefore it does not throw.
+                Assert.DoesNotThrow(() => result = test(GetPythonSlice(), Symbols.SPY, value));
+                BaseData actual;
+                Assert.IsTrue(result.TryConvert(out actual));
+                Assert.AreEqual(expected.Symbol, actual.Symbol);
+                Assert.AreEqual(expected.Value, actual.Value);
+            }
+        }
+
+        [Test]
+        public void PythonSlice_setdefault_keynotfound()
+        {
+            using (Py.GIL())
+            {
+                dynamic test = PythonEngine.ModuleFromString("testModule",
+                    @"
+from clr import AddReference
+AddReference(""QuantConnect.Common"")
+from QuantConnect import *
+
+def Test(slice, symbol):
+    return slice.setdefault(symbol)").GetAttr("Test");
+
+                var symbol = Symbols.EURUSD;
+                Assert.Throws<PythonException>(() => test(GetPythonSlice(), symbol),
+                    $"Slice is read-only: cannot set default value to  for {symbol}");
+            }
+        }
+
+        private Slice GetSlice()
+        {
+            var quandlSpy = new TiingoNews { Symbol = Symbols.SPY, Time = DateTime.Now, Value = 10 };
+            var tradeBarAapl = new TradeBar { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 9 };
+            var quandlAapl = new TiingoNews { Symbol = Symbols.AAPL, Time = DateTime.Now, Value = 11 };
+            return new Slice(DateTime.Now, new BaseData[] { quandlSpy, tradeBarAapl, quandlAapl });
+        }
+
+        private PythonSlice GetPythonSlice() => new PythonSlice(GetSlice());
+    }
+
+    public class PublicArrayTest
+    {
+        public int[] items;
+
+        public PublicArrayTest()
+        {
+            items = new int[5] { 0, 1, 2, 3, 4 };
         }
     }
 }
