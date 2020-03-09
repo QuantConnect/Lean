@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
@@ -53,15 +54,19 @@ namespace QuantConnect.Report
 
             // Parse content from source files into result objects
             Log.Trace($"QuantConnect.Report.Main(): Parsing source files...{backtestDataFile}, {liveDataFile}");
-            var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(backtestDataFile));
+            var backtestConverter = new NullResultValueTypeJsonConverter<BacktestResult>();
+            var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(backtestDataFile), backtestConverter);
 
             LiveResult live = null;
             if (liveDataFile != string.Empty)
             {
-                live = JsonConvert.DeserializeObject<LiveResult>(File.ReadAllText(liveDataFile), new JsonSerializerSettings
+                var settings = new JsonSerializerSettings
                 {
-                    NullValueHandling = NullValueHandling.Ignore
-                });
+                    NullValueHandling = NullValueHandling.Ignore,
+                    Converters = new List<JsonConverter> { new NullResultValueTypeJsonConverter<LiveResult>() }
+                };
+
+                live = JsonConvert.DeserializeObject<LiveResult>(File.ReadAllText(liveDataFile), settings);
             }
 
             //Create a new report

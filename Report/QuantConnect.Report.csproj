@@ -121,6 +121,7 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="NullResultValueTypeJsonConverter.cs" />
     <Compile Include="PortfolioLooper\MockDataFeed.cs" />
     <Compile Include="PortfolioLooper\PortfolioLooperAlgorithm.cs" />
     <Compile Include="ResultsUtil.cs" />
