@@ -119,7 +119,7 @@ namespace QuantConnect.Lean.Engine
                     SystemHandlers.LeanManager.SetAlgorithm(algorithm);
 
                     // initialize the alphas handler with the algorithm instance
-                    AlgorithmHandlers.Alphas.Initialize(job, algorithm, SystemHandlers.Notify, SystemHandlers.Api);
+                    AlgorithmHandlers.Alphas.Initialize(job, algorithm, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions);
 
                     // initialize the object store
                     AlgorithmHandlers.ObjectStore.Initialize(algorithm.Name, job.UserId, job.ProjectId, job.UserToken, job.Controls);

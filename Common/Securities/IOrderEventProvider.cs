@@ -24,7 +24,7 @@ namespace QuantConnect.Securities
     public interface IOrderEventProvider
     {
         /// <summary>
-        /// Event fired when there is a new <see cref="QuantConnect.Orders.OrderEvent"/>
+        /// Event fired when there is a new <see cref="OrderEvent"/>
         /// </summary>
         /// <remarks>Will be called before the <see cref="SecurityPortfolioManager"/></remarks>
         event EventHandler<OrderEvent> NewOrderEvent;
