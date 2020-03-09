@@ -646,6 +646,7 @@
     <Compile Include="Python\PandasConverterTests.cs" />
     <Compile Include="RegressionTests.cs" />
     <Compile Include="Report\CalculationTests.cs" />
+    <Compile Include="Report\ResultDeserializationTests.cs" />
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />

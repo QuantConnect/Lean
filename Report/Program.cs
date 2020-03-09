@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
-using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Python;
 
@@ -45,12 +45,6 @@ namespace QuantConnect.Report
             var backtestDataFile = Config.Get("backtest-data-source-file");
             var liveDataFile = Config.Get("live-data-source-file");
             var destination = Config.Get("report-destination");
-
-            //Set the Order Parser For JSON:
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
-            {
-                Converters = { new OrderJsonConverter() }
-            };
 
             // Parse content from source files into result objects
             Log.Trace($"QuantConnect.Report.Main(): Parsing source files...{backtestDataFile}, {liveDataFile}");
