@@ -942,6 +942,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // set the status of our order object based on the fill event
                 order.Status = fill.Status;
 
+                fill.Id = order.GetNewId();
 
                 // set the modified time of the order to the fill's timestamp
                 switch (fill.Status)

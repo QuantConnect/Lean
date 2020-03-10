@@ -33,6 +33,11 @@ namespace QuantConnect.Orders
         public int OrderId { get; set; }
 
         /// <summary>
+        /// The unique order event id for each order
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
         /// Easy access to the order symbol associated with this event.
         /// </summary>
         public Symbol Symbol { get; set; }
@@ -166,8 +171,8 @@ namespace QuantConnect.Orders
         public override string ToString()
         {
             var message = FillQuantity == 0
-                ? Invariant($"Time: {UtcTime} OrderID: {OrderId} Symbol: {Symbol.Value} Status: {Status}")
-                : Invariant($"Time: {UtcTime} OrderID: {OrderId} Symbol: {Symbol.Value} Status: {Status} ")+
+                ? Invariant($"Time: {UtcTime} OrderID: {OrderId} EventID: {Id} Symbol: {Symbol.Value} Status: {Status}")
+                : Invariant($"Time: {UtcTime} OrderID: {OrderId} EventID: {Id} Symbol: {Symbol.Value} Status: {Status} ")+
                   Invariant($"Quantity: {FillQuantity} FillPrice: {FillPrice.SmartRounding()} {FillPriceCurrency}");
 
             // attach the order fee so it ends up in logs properly.
