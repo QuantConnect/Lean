@@ -164,7 +164,8 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                         if (Directory.Exists(tickerFineFundamentalFolder))
                         {
                             fineAvailableDates = Directory.GetFiles(tickerFineFundamentalFolder, "*.zip")
-                                .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture));
+                                .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture))
+                                .ToList();
                         }
 
                         // Get daily data only for the time the ticker was
