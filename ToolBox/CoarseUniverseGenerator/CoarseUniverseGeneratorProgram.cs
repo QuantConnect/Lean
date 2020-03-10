@@ -36,13 +36,12 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
     /// </summary>
     public class CoarseUniverseGeneratorProgram
     {
-        private DirectoryInfo _dailyDataFolder;
-        private DirectoryInfo _destinationFolder;
-        private string _reservedWordsPrefix;
-        private IMapFileProvider _mapFileProvider;
-        private IFactorFileProvider _factorFileProvider;
-        private string _market;
-        private FileInfo _blackListedTickersFile;
+        private readonly DirectoryInfo _dailyDataFolder;
+        private readonly DirectoryInfo _destinationFolder;
+        private readonly IMapFileProvider _mapFileProvider;
+        private readonly IFactorFileProvider _factorFileProvider;
+        private readonly string _market;
+        private readonly FileInfo _blackListedTickersFile;
 
         /// <summary>
         /// Runs the Coarse universe generator with default values.
@@ -78,7 +77,6 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
             _market = market;
             _factorFileProvider = factorFileProvider;
             _mapFileProvider = mapFileProvider;
-            _reservedWordsPrefix = reservedWordsPrefix;
             _destinationFolder = destinationFolder;
             _dailyDataFolder = dailyDataFolder;
             Log.DebuggingEnabled = debugEnabled;
@@ -166,8 +164,7 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                         if (Directory.Exists(tickerFineFundamentalFolder))
                         {
                             fineAvailableDates = Directory.GetFiles(tickerFineFundamentalFolder, "*.zip")
-                                .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture))
-                                .ToList();
+                                .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture));
                         }
 
                         // Get daily data only for the time the ticker was
