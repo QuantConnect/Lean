@@ -42,6 +42,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly RateGate _restRateLimiter = new RateGate(8, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
         private readonly BitfinexSubscriptionManager _subscriptionManager;
+        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
@@ -61,6 +62,7 @@ namespace QuantConnect.Brokerages.Bitfinex
             : base(wssUrl, new WebSocketWrapper(), new RestClient(restUrl), apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
         {
             _subscriptionManager = new BitfinexSubscriptionManager(this, wssUrl, _symbolMapper);
+            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _algorithm = algorithm;
 
             WebSocket.Open += (sender, args) =>
