@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Market;
+using QuantConnect.ToolBox.CoarseUniverseGenerator;
 
 namespace QuantConnect.ToolBox.RandomDataGenerator
 {
@@ -55,15 +56,8 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
             if (settings.IncludeCoarse && settings.SecurityType == SecurityType.Equity)
             {
                 output.Info.WriteLine("Launching coarse data generator...");
-                var coarseFiles = CoarseUniverseGenerator.CoarseUniverseGeneratorProgram.ProcessEquityDirectories(
-                    Globals.DataFolder,
-                    false
-                );
-                output.Info.WriteLine("Coarse data generation completed. Produced the following files:");
-                foreach (var coarseFile in coarseFiles)
-                {
-                    output.Info.WriteLine($"Generated coarse file: {coarseFile}");
-                }
+
+                CoarseUniverseGeneratorProgram.CoarseUniverseGenerator();
             }
 
             output.Info.WriteLine("Press any key to exit...");
