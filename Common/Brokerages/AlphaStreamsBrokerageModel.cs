@@ -53,15 +53,6 @@ namespace QuantConnect.Brokerages
         public override ISlippageModel GetSlippageModel(Security security) => new AlphaStreamsSlippageModel();
 
         /// <summary>
-        /// Force all security types to be restricted to 1.1x leverage
-        ///     - Current restriction to 1.1x is for the AS competition
-        ///     - Will be update in the future
-        /// </summary>
-        /// <param name="security"></param>
-        /// <returns>The leverage for the specified security</returns>
-        public override decimal GetLeverage(Security security) => 1.1m;
-
-        /// <summary>
         /// Gets a new settlement model for the security
         /// </summary>
         /// <param name="security">The security to get a settlement model for</param>
