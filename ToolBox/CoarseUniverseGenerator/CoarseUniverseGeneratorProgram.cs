@@ -13,327 +13,263 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Util;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Ionic.Zip;
-using Newtonsoft.Json.Linq;
-using QuantConnect.Data.Auxiliary;
-using QuantConnect.Interfaces;
-using QuantConnect.Util;
+using System.Threading.Tasks;
+using DateTime = System.DateTime;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.ToolBox.CoarseUniverseGenerator
 {
-    public static class CoarseUniverseGeneratorProgram
+    internal class SecurityIdentifierContext
     {
-        private const string ExclusionsFile = "exclusions.txt";
+        private string _market;
 
-        /// <summary>
-        /// This program generates the coarse files requires by lean for universe selection.
-        /// Universe selection is planned to happen in two stages, the first stage, the 'coarse'
-        /// stage serves to cull the set using coarse filters, such as price, market, and dollar volume.
-        /// Later we'll support full fundamental data such as ratios and financial statements, and these
-        /// would be run AFTER the initial coarse filter
-        ///
-        /// The files are generated from LEAN formatted daily trade bar equity files
-        /// </summary>
-        public static void CoarseUniverseGenerator()
+        public SecurityIdentifierContext(MapFile mapFile, string market)
         {
-            // read out the configuration file
-            JToken jtoken;
-            var config = JObject.Parse(File.ReadAllText("CoarseUniverseGenerator/config.json"));
-
-            var ignoreMaplessSymbols = false;
-            var updateMode = false;
-            var updateTime = TimeSpan.Zero;
-            DateTime? startDate = null;
-            if (config.TryGetValue("update-mode", out jtoken))
-            {
-                updateMode = jtoken.Value<bool>();
-                if (config.TryGetValue("update-time-of-day", out jtoken))
-                {
-                    updateTime = Parse.TimeSpan(jtoken.Value<string>());
-                }
-            }
-
-            var dataDirectory = Globals.DataFolder;
-            if (config.TryGetValue("data-directory", out jtoken))
-            {
-                dataDirectory = jtoken.Value<string>();
-            }
-
-            //Ignore symbols without a map file:
-            // Typically these are nothing symbols (NASDAQ test symbols, or symbols listed for a few days who aren't actually ever traded).
-            if (config.TryGetValue("ignore-mapless", out jtoken))
-            {
-                ignoreMaplessSymbols = jtoken.Value<bool>();
-            }
-
-            do
-            {
-                ProcessEquityDirectories(dataDirectory, ignoreMaplessSymbols).ToList();
-            }
-            while (WaitUntilTimeInUpdateMode(updateMode, updateTime));
+            _market = market;
+            MapFile = mapFile;
         }
 
-        /// <summary>
-        /// If we're in update mode, pause the thread until the next update time
-        /// </summary>
-        /// <param name="updateMode">True for update mode, false for run-once</param>
-        /// <param name="updateTime">The time of day updates should be performed</param>
-        /// <returns>True if in update mode, otherwise false</returns>
-        private static bool WaitUntilTimeInUpdateMode(bool updateMode, TimeSpan updateTime)
-        {
-            if (!updateMode) return false;
+        public SecurityIdentifier SID => SecurityIdentifier.GenerateEquity(MapFile.FirstDate, MapFile.FirstTicker, _market);
+        public MapFile MapFile { get; }
+        public Tuple<DateTime, string>[] MapFileRows => MapFile.Select(mfr => new Tuple<DateTime, string>(mfr.Date, mfr.MappedSymbol)).ToArray();
+        public string[] Tickers => MapFile.Select(mfr => mfr.MappedSymbol.ToLowerInvariant()).Distinct().ToArray();
+        public string LastTicker => MapFile.Last().MappedSymbol.ToLowerInvariant();
+    }
 
-            var now = DateTime.Now;
-            var timeUntilNextProcess = (now.Date.AddDays(1).Add(updateTime) - now);
-            Thread.Sleep((int)timeUntilNextProcess.TotalMilliseconds);
+    public class CoarseUniverseGeneratorProgram
+    {
+        private DirectoryInfo _dailyDataFolder;
+        private DirectoryInfo _destinationFolder;
+        private string _reservedWordsPrefix;
+        private IMapFileProvider _mapFileProvider;
+        private IFactorFileProvider _factorFileProvider;
+        private string _market;
+        private FileInfo _blackListedTickersFile;
+
+        public static bool CoarseUniverseGenerator()
+        {
+            throw new NotImplementedException();
+        }
+
+        public CoarseUniverseGeneratorProgram(DirectoryInfo dailyDataFolder, DirectoryInfo destinationFolder, string market, FileInfo blackListedTickersFile, string reservedWordsPrefix,
+            IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, bool debugEnabled =false)
+        {
+            _blackListedTickersFile = blackListedTickersFile;
+            _market = market;
+            _factorFileProvider = factorFileProvider;
+            _mapFileProvider = mapFileProvider;
+            _reservedWordsPrefix = reservedWordsPrefix;
+            _destinationFolder = destinationFolder;
+            _dailyDataFolder = dailyDataFolder;
+            Log.DebuggingEnabled = debugEnabled;
+        }
+
+        public bool Run()
+        {
+            Log.Trace($"CoarseUniverseGeneratorProgram.ProcessDailyFolder(): Processing: {_dailyDataFolder.FullName}");
+
+            var startTime = DateTime.UtcNow;
+
+            var symbolsProcessed = 0;
+            var filesRead = 0;
+            var dailyFilesNotFound = 0;
+            var coarseFilesGenerated = 0;
+
+            var mapFileResolver = _mapFileProvider.Get(_market);
+            var blackListedTickers = File.ReadAllLines(_blackListedTickersFile.FullName).ToHashSet();
+
+            var marketFolder = _dailyDataFolder.Parent;
+            var fineFundamentalFolder = new DirectoryInfo(Path.Combine(marketFolder.FullName, "fundamental", "fine"));
+            if (!fineFundamentalFolder.Exists)
+            {
+                Log.Error($"CoarseUniverseGenerator.Run(): FAIL, Fine Fundamental folder not found at {fineFundamentalFolder}! ");
+                return false;
+            }
+
+            var securityIdentifierContexts = PopulateSidContex(mapFileResolver, blackListedTickers);
+            var dailyPricesByTicker = new ConcurrentDictionary<string, List<TradeBar>>();
+            var outputCoarseContent = new ConcurrentDictionary<DateTime, List<string>>();
+
+            Parallel.ForEach(securityIdentifierContexts, sidContext =>
+            {
+                var symbol = new Symbol(sidContext.SID, sidContext.LastTicker);
+                var symbolCount = Interlocked.Increment(ref symbolsProcessed);
+                Log.Debug($"CoarseUniverseGeneratorProgram.Run(): Processing {symbol}");
+                var factorFile = _factorFileProvider.Get(symbol);
+
+                // Populate dailyPricesByTicker with all daily data by ticker for all tickers of this security.
+                foreach (var ticker in sidContext.Tickers)
+                {
+                    var dailyFile = new FileInfo(Path.Combine(_dailyDataFolder.FullName, $"{ticker}.zip"));
+                    if (!dailyFile.Exists)
+                    {
+                        Log.Error($"CoarseUniverseGeneratorProgram.Run(): {dailyFile} not found!");
+                        Interlocked.Increment(ref dailyFilesNotFound);
+                        continue;
+                    }
+
+                    if (!dailyPricesByTicker.ContainsKey(ticker))
+                    {
+                        dailyPricesByTicker.AddOrUpdate(ticker, ParseDailyFile(dailyFile));
+                        Interlocked.Increment(ref filesRead);
+                    }
+                }
+
+                // Look for daily data for each ticker of the actual security
+                for (int mapFileRowIndex = sidContext.MapFileRows.Length - 1; mapFileRowIndex >= 1; mapFileRowIndex--)
+                {
+                    var ticker = sidContext.MapFileRows[mapFileRowIndex].Item2.ToLowerInvariant();
+                    var endDate = sidContext.MapFileRows[mapFileRowIndex].Item1;
+                    var startDate = sidContext.MapFileRows[mapFileRowIndex - 1].Item1;
+                    List<TradeBar> tickerDailyData;
+                    if (!dailyPricesByTicker.TryGetValue(ticker, out tickerDailyData))
+                    {
+                        Log.Error($"CoarseUniverseGeneratorProgram.Run(): Daily data for ticker {ticker.ToUpperInvariant()} not found!");
+                        continue;
+                    }
+
+                    // Get daily data only for the time the ticker was 
+                    tickerDailyData = tickerDailyData.Where(tb => tb.Time >= startDate && tb.Time <= endDate).ToList();
+
+                    foreach (var tradeBar in tickerDailyData)
+                    {
+                        var coarseRow = GenerateFactorFileRow(ticker, sidContext, factorFile, tradeBar, fineFundamentalFolder);
+                        List<string> tempList;
+                        if (outputCoarseContent.TryGetValue(tradeBar.Time, out tempList))
+                        {
+                            tempList.Add(coarseRow);
+                        }
+                        else
+                        {
+                            outputCoarseContent.AddOrUpdate(tradeBar.Time, new List<string> {coarseRow});
+                        }
+                    }
+                }
+
+                if (symbolCount % 1000 == 0)
+                {
+                    var elapsed = DateTime.UtcNow - startTime;
+                    Log.Trace($"CoarseUniverseGeneratorProgram.Run(): Processed {symbolCount} in {elapsed} at {symbolCount / elapsed.TotalMinutes} symbols/minute ");
+                }
+
+            });
+
+            foreach (var coarseByDate in outputCoarseContent)
+            {
+                var filename = $"{coarseByDate.Key.ToString(DateFormat.EightCharacter, CultureInfo.InvariantCulture)}.csv";
+                var filePath = Path.Combine(_destinationFolder.FullName, filename);
+                Log.Trace($"CoarseUniverseGeneratorProgram.Run(): Saving {filename} with {coarseByDate.Value.Count} entries.");
+                File.WriteAllLines(filePath, coarseByDate.Value.OrderBy(cr => cr));
+            }
+
             return true;
         }
 
-        /// <summary>
-        /// Iterates over each equity directory and aggregates the data into the coarse file
-        /// </summary>
-        /// <param name="dataDirectory">The Lean /Data directory</param>
-        /// <param name="ignoreMaplessSymbols">Ignore symbols without a QuantQuote map file.</param>
-        public static IEnumerable<string> ProcessEquityDirectories(string dataDirectory, bool ignoreMaplessSymbols)
+        private static string GenerateFactorFileRow(string ticker, SecurityIdentifierContext sidContext, FactorFile factorFile, TradeBar tradeBar, DirectoryInfo fineFundamentalFolder)
         {
-            var exclusions = ReadExclusionsFile(ExclusionsFile);
+            var date = tradeBar.Time;
+            var factorFileRow = factorFile?.GetScalingFactors(date);
+            var dollarVolume = Math.Truncate(tradeBar.Close * tradeBar.Volume);
+            var priceFactor = factorFileRow?.PriceFactor ?? 1m;
+            var splitFactor = factorFileRow?.SplitFactor ?? 1m;
+            bool hasFundamentalData = CheckFundamentalData(ticker, date, sidContext.MapFile, fineFundamentalFolder);
 
-            var equity = Path.Combine(dataDirectory, "equity");
-            foreach (var directory in Directory.EnumerateDirectories(equity))
-            {
-                var dailyFolder = Path.Combine(directory, "daily");
-                var mapFileFolder = Path.Combine(directory, "map_files");
-                var coarseFolder = Path.Combine(directory, "fundamental", "coarse");
-                if (!Directory.Exists(coarseFolder))
-                {
-                    Directory.CreateDirectory(coarseFolder);
-                }
-
-                var factorFileProvider = new LocalDiskFactorFileProvider();
-                var files = ProcessDailyFolder(dailyFolder, coarseFolder, MapFileResolver.Create(mapFileFolder), factorFileProvider, exclusions, ignoreMaplessSymbols);
-                foreach (var file in files)
-                {
-                    yield return file;
-                }
-            }
+            // sid,symbol,close,volume,dollar volume,has fundamental data,price factor,split factor
+            var coarseFileLine = $"{sidContext.SID},{ticker},{tradeBar.Close},{tradeBar.Volume},{Math.Truncate(dollarVolume)},{hasFundamentalData},{priceFactor},{splitFactor}";
+            return coarseFileLine;
         }
 
-        /// <summary>
-        /// Iterates each daily file in the specified <paramref name="dailyFolder"/> and adds a line for each
-        /// day to the appropriate coarse file
-        /// </summary>
-        /// <param name="dailyFolder">The folder with daily data.</param>
-        /// <param name="coarseFolder">The coarse output folder.</param>
-        /// <param name="mapFileResolver">The map file resolver.</param>
-        /// <param name="factorFileProvider">The factor file provider.</param>
-        /// <param name="exclusions">The symbols to be excluded from processing.</param>
-        /// <param name="ignoreMapless">Ignore the symbols without a map file.</param>
-        /// <param name="symbolResolver">Function used to provide symbol resolution. Default resolution uses the zip file name to resolve
-        /// the symbol, specify null for this behavior.</param>
-        /// <returns>Collection with the names of the newly generated coarse files.</returns>
-        /// <exception cref="Exception">
-        /// Unable to resolve market for daily folder: " + dailyFolder
-        /// or
-        /// Unable to resolve fundamental path for coarse folder: " + coarseFolder
-        /// </exception>
-        public static ICollection<string> ProcessDailyFolder(string dailyFolder, string coarseFolder, MapFileResolver mapFileResolver, IFactorFileProvider factorFileProvider,
-            HashSet<string> exclusions, bool ignoreMapless, Func<string, string> symbolResolver = null)
+        private static bool CheckFundamentalData(string ticker, DateTime date, MapFile mapFile, DirectoryInfo fineFundamentalFolder)
         {
-            const decimal scaleFactor = 10000m;
-
-            Log.Trace("Processing: {0}", dailyFolder);
-
-            var start = DateTime.UtcNow;
-
-            // load map files into memory
-
-            var symbols = 0;
-            var maplessCount = 0;
-            var dates = new HashSet<DateTime>();
-
-            // instead of opening/closing these constantly, open them once and dispose at the end (~3x speed improvement)
-            var writers = new Dictionary<string, StreamWriter>();
-
-            var marketDirectoryInfo = new DirectoryInfo(dailyFolder).Parent;
-            if (marketDirectoryInfo == null)
+            var tickerFineFundamentalFolder = Path.Combine(fineFundamentalFolder.FullName, ticker);
+            var fineAvailableDates = Enumerable.Empty<DateTime>();
+            if (Directory.Exists(tickerFineFundamentalFolder))
             {
-                throw new Exception($"Unable to resolve market for daily folder: {dailyFolder}");
+                fineAvailableDates = Directory.GetFiles(tickerFineFundamentalFolder, "*.zip")
+                    .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture))
+                    .ToList();
             }
-            var market = marketDirectoryInfo.Name.ToLowerInvariant();
 
-            var fundamentalDirectoryInfo = new DirectoryInfo(coarseFolder).Parent;
-            if (fundamentalDirectoryInfo == null)
+            // Check if security has fine file within a trailing month for a date-ticker set.
+            // There are tricky cases where a folder named by a ticker can have data for multiple securities.
+            // e.g  GOOG -> GOOGL (GOOG T1AZ164W5VTX) / GOOCV -> GOOG (GOOCV VP83T1ZUHROL) case.
+            // The fine data in the 'fundamental/fine/goog' folder will be for 'GOOG T1AZ164W5VTX' up to the 2014-04-02 and for 'GOOCV VP83T1ZUHROL' afterward.
+            // Therefore, date before checking if the security has fundamental data for a date, we need to filter the fine files the map's first date.
+            var firstDate = mapFile?.FirstDate ?? DateTime.MinValue;
+            var hasFundamentalDataForDate = fineAvailableDates.Where(d => d >= firstDate).Any(d => date.AddMonths(-1) <= d && d <= date);
+
+            // The following section handles mergers and acquisitions cases.
+            // e.g. YHOO -> AABA (YHOO R735QTJ8XC9X)
+            // The dates right after the acquisition, valid fine fundamental data for AABA are still under the former ticker folder.
+            // Therefore if no fine fundamental data is found in the 'fundamental/fine/aaba' folder, it searches into the 'yhoo' folder.
+            if (mapFile != null && mapFile.Count() > 2 && !hasFundamentalDataForDate)
             {
-                throw new Exception($"Unable to resolve fundamental path for coarse folder: {coarseFolder}");
-            }
-            var fineFundamentalFolder = Path.Combine(marketDirectoryInfo.FullName, "fundamental", "fine");
-
-            // open up each daily file to get the values and append to the daily coarse files
-            foreach (var file in Directory.EnumerateFiles(dailyFolder, "*.zip"))
-            {
-                try
+                var previousTicker = mapFile.LastOrDefault(m => m.Date < date)?.MappedSymbol;
+                if (previousTicker != null)
                 {
-                    var ticker = Path.GetFileNameWithoutExtension(file);
-                    var fineAvailableDates = Enumerable.Empty<DateTime>();
-
-                    var tickerFineFundamentalFolder = Path.Combine(fineFundamentalFolder, ticker);
-                    if (Directory.Exists(tickerFineFundamentalFolder))
+                    var previousTickerFineFundamentalFolder = Path.Combine(fineFundamentalFolder.FullName, previousTicker);
+                    if (Directory.Exists(previousTickerFineFundamentalFolder))
                     {
-                        fineAvailableDates = Directory.GetFiles(tickerFineFundamentalFolder, "*.zip")
-                        .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture))
-                        .ToList();
+                        var previousTickerFineAvailableDates = Directory.GetFiles(previousTickerFineFundamentalFolder, "*.zip")
+                            .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture))
+                            .ToList();
+                        hasFundamentalDataForDate = previousTickerFineAvailableDates.Where(d => d >= firstDate).Any(d => date.AddMonths(-1) <= d && d <= date);
                     }
-
-                    if (ticker == null)
-                    {
-                        Log.Trace("CoarseGenerator.ProcessDailyFolder(): Unable to resolve symbol from file: {0}", file);
-                        continue;
-                    }
-
-                    if (symbolResolver != null)
-                    {
-                        ticker = symbolResolver(ticker);
-                    }
-
-                    ticker = ticker.ToUpperInvariant();
-
-                    if (exclusions != null && exclusions.Contains(ticker))
-                    {
-                        Log.Trace("Excluded symbol: {0}", ticker);
-                        continue;
-                    }
-
-                    ZipFile zip;
-                    using (var reader = Compression.Unzip(file, out zip))
-                    {
-                        var checkedForMapFile = false;
-
-                        symbols++;
-                        string line;
-                        while ((line = reader.ReadLine()) != null)
-                        {
-                            //20150625.csv
-                            var csv = line.Split(',');
-                            var date = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture);
-
-                            if (ignoreMapless && !checkedForMapFile)
-                            {
-                                checkedForMapFile = true;
-                                if (!mapFileResolver.ResolveMapFile(ticker, date).Any())
-                                {
-                                    // if the resolved map file has zero entries then it's a mapless symbol
-                                    maplessCount++;
-                                    break;
-                                }
-                            }
-
-                            var close = Parse.Decimal(csv[4]) / scaleFactor;
-                            var volume = Parse.Long(csv[5]);
-
-                            var dollarVolume = close * volume;
-
-                            var coarseFile = Path.Combine(coarseFolder, date.ToStringInvariant("yyyyMMdd") + ".csv");
-                            dates.Add(date);
-
-                            // try to resolve a map file and if found, regen the sid
-                            var sid = SecurityIdentifier.GenerateEquity(SecurityIdentifier.DefaultDate, ticker, market);
-                            var mapFile = mapFileResolver.ResolveMapFile(ticker, date);
-                            if (!mapFile.IsNullOrEmpty())
-                            {
-                                // if available, us the permtick in the coarse files, because of this, we need
-                                // to update the coarse files each time new map files are added/permticks change
-                                sid = SecurityIdentifier.GenerateEquity(mapFile.FirstDate, mapFile.OrderBy(x => x.Date).First().MappedSymbol, market);
-                            }
-
-                            if (mapFile == null && ignoreMapless)
-                            {
-                                // if we're ignoring mapless files then we should always be able to resolve this
-                                Log.Error($"CoarseGenerator.ProcessDailyFolder(): Unable to resolve map file for {ticker} as of {date.ToStringInvariant("d")}");
-                                continue;
-                            }
-
-                            // get price and split factors from factor files
-                            var symbol = new Symbol(sid, ticker);
-                            var factorFile = factorFileProvider.Get(symbol);
-                            var factorFileRow = factorFile?.GetScalingFactors(date);
-                            var priceFactor = factorFileRow?.PriceFactor ?? 1m;
-                            var splitFactor = factorFileRow?.SplitFactor ?? 1m;
-
-
-                            // Check if security has fine file within a trailing month for a date-ticker set.
-                            // There are tricky cases where a folder named by a ticker can have data for multiple securities.
-                            // e.g  GOOG -> GOOGL (GOOG T1AZ164W5VTX) / GOOCV -> GOOG (GOOCV VP83T1ZUHROL) case.
-                            // The fine data in the 'fundamental/fine/goog' folder will be for 'GOOG T1AZ164W5VTX' up to the 2014-04-02 and for 'GOOCV VP83T1ZUHROL' afterward.
-                            // Therefore, date before checking if the security has fundamental data for a date, we need to filter the fine files the map's first date.
-                            var firstDate = mapFile?.FirstDate ?? DateTime.MinValue;
-                            var hasFundamentalDataForDate = fineAvailableDates.Where(d => d >= firstDate).Any(d => date.AddMonths(-1) <= d && d <= date);
-
-                            // The following section handles mergers and acquisitions cases.
-                            // e.g. YHOO -> AABA (YHOO R735QTJ8XC9X)
-                            // The dates right after the acquisition, valid fine fundamental data for AABA are still under the former ticker folder.
-                            // Therefore if no fine fundamental data is found in the 'fundamental/fine/aaba' folder, it searches into the 'yhoo' folder.
-                            if (mapFile != null && mapFile.Count() > 2 && !hasFundamentalDataForDate)
-                            {
-                                var previousTicker = mapFile.LastOrDefault(m => m.Date < date)?.MappedSymbol;
-                                if (previousTicker != null)
-                                {
-                                    var previousTickerFineFundamentalFolder = Path.Combine(fineFundamentalFolder, previousTicker);
-                                    if (Directory.Exists(previousTickerFineFundamentalFolder))
-                                    {
-                                        var previousTickerFineAvailableDates = Directory.GetFiles(previousTickerFineFundamentalFolder, "*.zip")
-                                            .Select(f => DateTime.ParseExact(Path.GetFileNameWithoutExtension(f), DateFormat.EightCharacter, CultureInfo.InvariantCulture))
-                                            .ToList();
-                                        hasFundamentalDataForDate = previousTickerFineAvailableDates.Where(d => d >= firstDate).Any(d => date.AddMonths(-1) <= d && d <= date);
-                                    }
-                                }
-                            }
-
-                            // sid,symbol,close,volume,dollar volume,has fundamental data,price factor,split factor
-                            var coarseFileLine = $"{sid},{ticker},{close},{volume},{Math.Truncate(dollarVolume)},{hasFundamentalDataForDate},{priceFactor},{splitFactor}";
-
-                            StreamWriter writer;
-                            if (!writers.TryGetValue(coarseFile, out writer))
-                            {
-                                writer = new StreamWriter(new FileStream(coarseFile, FileMode.Create, FileAccess.Write, FileShare.Write));
-                                writers[coarseFile] = writer;
-                            }
-                            writer.WriteLine(coarseFileLine);
-                        }
-                    }
-
-                    if (symbols % 1000 == 0)
-                    {
-                        Log.Trace($"CoarseGenerator.ProcessDailyFolder(): Completed processing {symbols} symbols. Current elapsed: {(DateTime.UtcNow - start).TotalSeconds.ToStringInvariant("0.00")} seconds");
-                    }
-                }
-                catch (Exception err)
-                {
-                    // log the error and continue with the process
-                    Log.Error(err.ToString());
                 }
             }
 
-            Log.Trace("CoarseGenerator.ProcessDailyFolder(): Saving {0} coarse files to disk", dates.Count);
+            return hasFundamentalDataForDate;
+        }
 
-            // dispose all the writers at the end of processing
-            foreach (var writer in writers)
+        private static List<TradeBar> ParseDailyFile(FileInfo dailyFile)
+        {
+            var scaleFactor = 1 / 10000m;
+
+            var output = new List<TradeBar>();
+            using (var fileStream = dailyFile.OpenRead())
+            using (var stream = Compression.UnzipStreamToStreamReader(fileStream))
             {
-                writer.Value.Dispose();
+                while (!stream.EndOfStream)
+                {
+                    var tradeBar = new TradeBar
+                    {
+                        Time = stream.GetDateTime(),
+                        Open = stream.GetDecimal() * scaleFactor,
+                        High = stream.GetDecimal() * scaleFactor,
+                        Low = stream.GetDecimal() * scaleFactor,
+                        Close = stream.GetDecimal() * scaleFactor,
+                        Volume = stream.GetDecimal()
+                    };
+                    output.Add(tradeBar);
+                }
             }
 
-            var stop = DateTime.UtcNow;
+            return output;
+        }
 
-            Log.Trace($"CoarseGenerator.ProcessDailyFolder(): Processed {symbols} symbols into {dates.Count} coarse files in {(stop - start).TotalSeconds.ToStringInvariant("0.00")} seconds");
-            Log.Trace($"CoarseGenerator.ProcessDailyFolder(): Excluded {maplessCount} mapless symbols.");
+        private IEnumerable<SecurityIdentifierContext> PopulateSidContex(MapFileResolver mapFileResolver, HashSet<string> exclusions)
+        {
+            Log.Trace($"CoarseUniverseGeneratorProgram.PopulateSidContex(): Generating SID context from QuantQuote's map files.");
+            foreach (var mapFile in mapFileResolver)
+            {
+                if (exclusions.Contains(mapFile.Last().MappedSymbol))
+                {
+                    continue;
+                }
 
-            return writers.Keys;
+                yield return new SecurityIdentifierContext(mapFile, _market);
+            }
         }
 
         /// <summary>
@@ -350,38 +286,6 @@ namespace QuantConnect.ToolBox.CoarseUniverseGenerator
                 Log.Trace("CoarseGenerator.ReadExclusionsFile(): Loaded {0} symbols into the exclusion set", exclusions.Count);
             }
             return exclusions;
-        }
-
-        /// <summary>
-        /// Resolves the start date that should be used in the <see cref="ProcessDailyFolder"/>. This will
-        /// be equal to the latest file date (20150101.csv) plus one day
-        /// </summary>
-        /// <param name="coarseDirectory">The directory containing the coarse files</param>
-        /// <returns>The last coarse file date plus one day if exists, else DateTime.MinValue</returns>
-        public static DateTime GetLastProcessedDate(string coarseDirectory)
-        {
-            var lastProcessedDate = (
-                from coarseFile in Directory.EnumerateFiles(coarseDirectory)
-                let date = TryParseCoarseFileDate(coarseFile)
-                where date != null
-                // we'll start on the following day
-                select date.Value.AddDays(1)
-                ).DefaultIfEmpty(DateTime.MinValue).Max();
-
-            return lastProcessedDate;
-        }
-
-        private static DateTime? TryParseCoarseFileDate(string coarseFile)
-        {
-            try
-            {
-                var dateString = Path.GetFileNameWithoutExtension(coarseFile);
-                return DateTime.ParseExact(dateString, "yyyyMMdd", null);
-            }
-            catch
-            {
-                return null;
-            }
         }
     }
 }
