@@ -59,7 +59,22 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         public BitfinexBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
-            : base(wssUrl, new WebSocketWrapper(), new RestClient(restUrl), apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
+            : this(wssUrl, new WebSocketWrapper(), new RestClient(restUrl), apiKey, apiSecret, algorithm, priceProvider)
+        {
+        }
+
+        /// <summary>
+        /// Constructor for brokerage
+        /// </summary>
+        /// <param name="wssUrl">websockets url</param>
+        /// <param name="websocket">instance of websockets client</param>
+        /// <param name="restClient">instance of rest client</param>
+        /// <param name="apiKey">api key</param>
+        /// <param name="apiSecret">api secret</param>
+        /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
+        /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
+        public BitfinexBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
         {
             _subscriptionManager = new BitfinexSubscriptionManager(this, wssUrl, _symbolMapper);
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
