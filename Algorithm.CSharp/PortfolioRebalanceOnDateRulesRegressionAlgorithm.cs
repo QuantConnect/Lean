@@ -79,26 +79,26 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "292"},
+            {"Total Trades", "291"},
             {"Average Win", "0.06%"},
             {"Average Loss", "-0.04%"},
-            {"Compounding Annual Return", "11.483%"},
+            {"Compounding Annual Return", "11.487%"},
             {"Drawdown", "18.200%"},
-            {"Expectancy", "1.143"},
-            {"Net Profit", "24.285%"},
-            {"Sharpe Ratio", "0.658"},
-            {"Probabilistic Sharpe Ratio", "29.792%"},
+            {"Expectancy", "1.108"},
+            {"Net Profit", "24.293%"},
+            {"Sharpe Ratio", "0.659"},
+            {"Probabilistic Sharpe Ratio", "29.822%"},
             {"Loss Rate", "19%"},
             {"Win Rate", "81%"},
-            {"Profit-Loss Ratio", "1.66"},
+            {"Profit-Loss Ratio", "1.59"},
             {"Alpha", "0.101"},
-            {"Beta", "0.007"},
+            {"Beta", "0.006"},
             {"Annual Standard Deviation", "0.154"},
             {"Annual Variance", "0.024"},
             {"Information Ratio", "0.205"},
             {"Tracking Error", "0.201"},
-            {"Treynor Ratio", "15.467"},
-            {"Total Fees", "$292.88"},
+            {"Treynor Ratio", "15.653"},
+            {"Total Fees", "$291.88"},
             {"Fitness Score", "0.002"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "1"},
@@ -118,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-370700992"}
+            {"OrderListHash", "-845591474"}
         };
     }
 }

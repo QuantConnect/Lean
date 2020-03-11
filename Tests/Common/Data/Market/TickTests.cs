@@ -79,5 +79,43 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual("", tick.SaleCondition);
             Assert.AreEqual(false, tick.Suspicious);
         }
+
+        [TestCase("14400135,0,0,1680000,400,NASDAQ,00000001,0", 0, 0, 168, 400)]
+        [TestCase("14400135,10000,10,0,0,NASDAQ,00000001,0", 1, 10, 0, 0)]
+        [TestCase("14400135,10000,10,20000,20,NASDAQ,00000001,0", 1, 10, 2, 20)]
+        public void EquityQuoteTick(string line, decimal bidPrice, decimal bidSize, decimal askPrice, decimal askSize)
+        {
+            var baseDate = new DateTime(2013, 10, 08);
+            var config = new SubscriptionDataConfig(typeof(Tick),
+                Symbols.SPY,
+                Resolution.Tick,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false,
+                false,
+                TickType.Quote);
+            var tick = new Tick(config, line, baseDate);
+
+            var expectedValue = (askPrice + bidPrice) / 2;
+            if (askPrice == 0 || bidPrice == 0)
+            {
+                expectedValue = askPrice + bidPrice;
+            }
+
+            var ms = (tick.Time - baseDate).TotalMilliseconds;
+            Assert.AreEqual(14400135, ms);
+            Assert.AreEqual(expectedValue, tick.Value);
+            Assert.AreEqual(expectedValue, tick.LastPrice);
+            Assert.AreEqual(0, tick.Quantity);
+            Assert.AreEqual(askPrice, tick.AskPrice);
+            Assert.AreEqual(askSize, tick.AskSize);
+            Assert.AreEqual(bidPrice, tick.BidPrice);
+            Assert.AreEqual(bidSize, tick.BidSize);
+            Assert.AreEqual("NASDAQ", tick.Exchange);
+            Assert.AreEqual("00000001", tick.SaleCondition);
+            Assert.IsFalse(tick.Suspicious);
+        }
     }
 }

@@ -156,34 +156,38 @@ namespace QuantConnect.Tests.Engine.Results
             // | 10/12/2013 12:00:00 AM -> 0                    0.00638415728187288  0            |
             // ====================================================================================
             //
-            // With some fixes applied, we get the following series:
+            // With some fixes applied + equities taq, we get the following series:
             // ====================================================================================
             // |                           equity               bench                perf         |
-            // | 10/7/2013 12:00:00 PM  -> <missing>            <missing>            2.6942700-05 |
-            // | 10/8/2013 12:00:00 AM  -> -0.0117197546154655  -0.0117645982503731  -0.01171975  |
-            // | 10/9/2013 12:00:00 AM  -> 0.000602640205305941 0.000604391026446548 0.0006019659 |
-            // | 10/10/2013 12:00:00 AM -> 0.0215615143841935   0.0216206928455305   0.02153741   |
-            // | 10/11/2013 12:00:00 AM -> 0.0063673015777644   0.00638464683264607  0.006360335  |
+            // | 2013-10-07 20:00:00 -> <missing>            <missing>            -9.20427E-05    |
+            // | 2013-10-08 00:00:00 -> -0.0116913921108040  -0.0116470501350577  <missing>       |
+            // | 2013-10-08 20:00:00 -> <missing>            <missing>            -0.01169139     |
+            // | 2013-10-09 00:00:00 -> 0.000602020218337738 0.000604391026446547 <missing>       |
+            // | 2013-10-09 20:00:00 -> <missing>            <missing>            0.0006020202    |
+            // | 2013-10-10 00:00:00 -> 0.02156944065055612  0.0216814919573348   <missing>       |
+            // | 2013-10-10 20:00:00 -> <missing>            <missing>            0.02156944      |
+            // | 2013-10-11 00:00:00 -> 0.00641960569172269  0.00644312892467460  <missing>       |
+            // | 2013-10-11 20:00:00 -> <missing>            <missing>            0.006419605     |
             // ===================================================================================|
 
             Assert.AreEqual(new DateTime(2013, 10, 8), benchmarkPerformance.DropMissing().FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 11), benchmarkPerformance.LastKey().Date);
             Assert.AreEqual(5, benchmarkPerformance.KeyCount);
             Assert.AreEqual(4, benchmarkPerformance.ValueCount);
-            Assert.AreEqual(Math.Round(-0.01176459825037310, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(0), 6));
+            Assert.AreEqual(Math.Round(-0.011646999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(0), 6));
             Assert.AreEqual(Math.Round(0.000604391026446548, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(1), 6));
-            Assert.AreEqual(Math.Round(0.021620692845530500, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.006384646832646070, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(3), 6));
+            Assert.AreEqual(Math.Round(0.021680999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(2), 6));
+            Assert.AreEqual(Math.Round(0.006442999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(3), 6));
 
             Assert.AreEqual(new DateTime(2013, 10, 7), performance.FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 11), performance.LastKey().Date);
             Assert.AreEqual(5, performance.ValueCount);
             Assert.AreEqual(5, performance.KeyCount);
-            Assert.AreEqual(Math.Round(2.69427E-05, 6), Math.Round(performance.GetAt(0), 6));
-            Assert.AreEqual(Math.Round(-0.011719750, 6), Math.Round(performance.GetAt(1), 6));
-            Assert.AreEqual(Math.Round(0.0006019659, 6), Math.Round(performance.GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.02153741, 6), Math.Round(performance.GetAt(3), 6));
-            Assert.AreEqual(Math.Round(0.006360335, 6), Math.Round(performance.GetAt(4), 6));
+            Assert.AreEqual(Math.Round(-9.20427E-05, 6), Math.Round(performance.GetAt(0), 6));
+            Assert.AreEqual(Math.Round(-0.01169139, 6), Math.Round(performance.GetAt(1), 6));
+            Assert.AreEqual(Math.Round(0.0006020202, 6), Math.Round(performance.GetAt(2), 6));
+            Assert.AreEqual(Math.Round(0.02156944, 6), Math.Round(performance.GetAt(3), 6));
+            Assert.AreEqual(Math.Round(0.006419605, 6), Math.Round(performance.GetAt(4), 6));
 
             // This is a side-effect of how we calculate performance from the equity series in this test.
             Assert.AreEqual(4, equityPerformance.ValueCount);
@@ -226,10 +230,10 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(new DateTime(2013, 10, 12), benchmarkPerformance.LastKey().Date);
             Assert.AreEqual(6, benchmarkPerformance.KeyCount);
             Assert.AreEqual(5, benchmarkPerformance.ValueCount);
-            Assert.AreEqual(Math.Round(-0.01176459825037310, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(0), 6));
+            Assert.AreEqual(Math.Round(-0.01164699999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(0), 6));
             Assert.AreEqual(Math.Round(0.000604391026446548, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(1), 6));
-            Assert.AreEqual(Math.Round(0.021620692845530500, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.006384646832646070, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(3), 6));
+            Assert.AreEqual(Math.Round(0.021680999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(2), 6));
+            Assert.AreEqual(Math.Round(0.0064429999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(3), 6));
 
             Assert.AreEqual(new DateTime(2013, 10, 7), performance.FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 12), performance.LastKey().Date);
@@ -239,8 +243,8 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(0.0, performance.GetAt(1));
             Assert.AreEqual(Math.Round(-0.011455150, 6), Math.Round(performance.GetAt(2), 6));
             Assert.AreEqual(Math.Round(0.0006018210, 6), Math.Round(performance.GetAt(3), 6));
-            Assert.AreEqual(Math.Round(0.0215322300, 6), Math.Round(performance.GetAt(4), 6));
-            Assert.AreEqual(Math.Round(0.0063588370, 6), Math.Round(performance.GetAt(5), 6));
+            Assert.AreEqual(Math.Round(0.021592, 6), Math.Round(performance.GetAt(4), 6));
+            Assert.AreEqual(Math.Round(0.006417, 6), Math.Round(performance.GetAt(5), 6));
 
             // This is a side-effect of how we calculate performance from the equity series in this test.
             Assert.AreEqual(5, equityPerformance.ValueCount);
@@ -282,20 +286,20 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(new DateTime(2013, 10, 11), benchmarkPerformance.LastKey().Date);
             Assert.AreEqual(5, benchmarkPerformance.KeyCount);
             Assert.AreEqual(4, benchmarkPerformance.ValueCount);
-            Assert.AreEqual(Math.Round(-0.01176459825037310, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(0), 6));
+            Assert.AreEqual(Math.Round(-0.01164699999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(0), 6));
             Assert.AreEqual(Math.Round(0.000604391026446548, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(1), 6));
-            Assert.AreEqual(Math.Round(0.021620692845530500, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.006384646832646070, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(3), 6));
+            Assert.AreEqual(Math.Round(0.021680999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(2), 6));
+            Assert.AreEqual(Math.Round(0.006442999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(3), 6));
 
             Assert.AreEqual(new DateTime(2013, 10, 7), performance.FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 11), performance.LastKey().Date);
             Assert.AreEqual(5, performance.ValueCount);
             Assert.AreEqual(5, performance.KeyCount);
-            Assert.AreEqual(Math.Round(2.69427E-05, 6), Math.Round(performance.GetAt(0), 6));
-            Assert.AreEqual(Math.Round(-0.012379760, 6), Math.Round(performance.GetAt(1), 6));
-            Assert.AreEqual(Math.Round(0.0006023682, 6), Math.Round(performance.GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.0215518000, 6), Math.Round(performance.GetAt(3), 6));
-            Assert.AreEqual(Math.Round(0.0063644940, 6), Math.Round(performance.GetAt(4), 6));
+            Assert.AreEqual(Math.Round(-9.20427E-05, 6), Math.Round(performance.GetAt(0), 6));
+            Assert.AreEqual(Math.Round(-0.0120539884852621, 6), Math.Round(performance.GetAt(1), 6));
+            Assert.AreEqual(Math.Round(0.000602241172059734, 6), Math.Round(performance.GetAt(2), 6));
+            Assert.AreEqual(Math.Round(0.0215773523113088, 6), Math.Round(performance.GetAt(3), 6));
+            Assert.AreEqual(Math.Round(0.0064219096745568, 6), Math.Round(performance.GetAt(4), 6));
 
             // This is a side-effect of how we calculate performance from the equity series in this test.
             Assert.AreEqual(4, equityPerformance.ValueCount);
@@ -334,15 +338,16 @@ namespace QuantConnect.Tests.Engine.Results
             //
             // On 2013-10-10, we switch from Daily Resolution to Minute. From here onwards, our performance values
             // are shifted backwards by 1 with the exception of the value on 10/10/2013 12:00:00 AM.
+            Frame.CreateEmpty<DateTime, string>().Join("equity", equityPerformance).Join("bench", benchmarkPerformance).Join("perf", performance).Print();
 
             Assert.AreEqual(new DateTime(2013, 10, 8), benchmarkPerformance.DropMissing().FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 11), benchmarkPerformance.LastKey().Date);
             Assert.AreEqual(5, benchmarkPerformance.KeyCount);
             Assert.AreEqual(4, benchmarkPerformance.ValueCount);
-            Assert.AreEqual(Math.Round(-0.01176459825037310, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(0), 6));
+            Assert.AreEqual(Math.Round(-0.011646999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(0), 6));
             Assert.AreEqual(Math.Round(0.000604391026446548, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(1), 6));
-            Assert.AreEqual(Math.Round(0.021620692845530500, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(2), 6));
-            Assert.AreEqual(Math.Round(0.006384646832646070, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(3), 6));
+            Assert.AreEqual(Math.Round(0.021680999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(2), 6));
+            Assert.AreEqual(Math.Round(0.006442999999999999, 6), Math.Round(benchmarkPerformance.DropMissing().GetAt(3), 6));
 
             Assert.AreEqual(new DateTime(2013, 10, 7), performance.FirstKey().Date);
             Assert.AreEqual(new DateTime(2013, 10, 11), performance.LastKey().Date);
@@ -352,7 +357,7 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(0.0, performance.GetAt(1));
             Assert.AreEqual(Math.Round(-0.01148770, 6), Math.Round(performance.GetAt(2), 6));
             Assert.AreEqual(Math.Round(0.011161310, 6), Math.Round(performance.GetAt(3), 6));
-            Assert.AreEqual(Math.Round(0.006428134, 6), Math.Round(performance.GetAt(4), 6));
+            Assert.AreEqual(Math.Round(0.006487654, 6), Math.Round(performance.GetAt(4), 6));
 
             Assert.AreEqual(4, equityPerformance.ValueCount);
             Assert.AreEqual(new DateTime(2013, 10, 8), equityPerformance.DropMissing().FirstKey().Date);
