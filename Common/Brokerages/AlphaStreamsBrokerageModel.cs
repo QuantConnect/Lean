@@ -53,6 +53,39 @@ namespace QuantConnect.Brokerages
         public override ISlippageModel GetSlippageModel(Security security) => new AlphaStreamsSlippageModel();
 
         /// <summary>
+        /// Gets the brokerage's leverage for the specified security
+        /// </summary>
+        /// <param name="security">The security's whose leverage we seek</param>
+        /// <returns>The leverage for the specified security</returns>
+        public override decimal GetLeverage(Security security)
+        {
+            if (AccountType == AccountType.Cash)
+            {
+                return 1m;
+            }
+
+            switch (security.Type)
+            {
+                case SecurityType.Equity:
+                    return 2m;
+
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    return 10m;
+
+                case SecurityType.Crypto:
+                    return 1m;
+
+                case SecurityType.Base:
+                case SecurityType.Commodity:
+                case SecurityType.Option:
+                case SecurityType.Future:
+                default:
+                    return 1m;
+            }
+        }
+
+        /// <summary>
         /// Gets a new settlement model for the security
         /// </summary>
         /// <param name="security">The security to get a settlement model for</param>
