@@ -293,9 +293,9 @@ namespace QuantConnect.Data
                         var dataDictionaryCache = GenericDataDictionary.Get(type);
                         var dic = Activator.CreateInstance(dataDictionaryCache.GenericType);
 
-                        foreach (var data in instance._data.Value.Values.Select(x => x.GetData()).Where(o => o != null && (Type)o.GetType() == type))
+                        foreach (var data in instance._data.Value.Values.Select(x => x.Custom).Where(o => o != null && (Type)o.GetType() == type))
                         {
-                            dataDictionaryCache.MethodInfo.Invoke(dic, new[] { data.Symbol, data });
+                            dataDictionaryCache.MethodInfo.Invoke(dic, new object[] { data.Symbol, data });
                         }
                         return dic;
                     }
@@ -365,26 +365,27 @@ namespace QuantConnect.Data
                 switch (datum.DataType)
                 {
                     case MarketDataType.Base:
-                        symbolData.Type = SubscriptionType.Custom;
+                        symbolData.Type.Add(SubscriptionType.Custom);
                         symbolData.Custom = datum;
                         break;
 
                     case MarketDataType.TradeBar:
-                        symbolData.Type = SubscriptionType.TradeBar;
+                        symbolData.Type.Add(SubscriptionType.TradeBar);
                         symbolData.TradeBar = (TradeBar)datum;
                         break;
 
                     case MarketDataType.QuoteBar:
-                        symbolData.Type = SubscriptionType.QuoteBar;
+                        symbolData.Type.Add(SubscriptionType.QuoteBar);
                         symbolData.QuoteBar = (QuoteBar)datum;
                         break;
 
                     case MarketDataType.Tick:
-                        symbolData.Type = SubscriptionType.Tick;
+                        symbolData.Type.Add(SubscriptionType.Tick);
                         symbolData.Ticks.Add((Tick)datum);
                         break;
 
                     case MarketDataType.Auxiliary:
+                        symbolData.Type.Add(SubscriptionType.AuxilliaryData);
                         symbolData.AuxilliaryData.Add(datum);
                         break;
 
@@ -479,10 +480,10 @@ namespace QuantConnect.Data
             }
         }
 
-        private enum SubscriptionType { TradeBar, QuoteBar, Tick, Custom };
+        private enum SubscriptionType { TradeBar, QuoteBar, Tick, Custom, AuxilliaryData };
         private class SymbolData
         {
-            public SubscriptionType Type;
+            public readonly HashSet<SubscriptionType> Type;
             public readonly Symbol Symbol;
 
             // data
@@ -497,11 +498,13 @@ namespace QuantConnect.Data
                 Symbol = symbol;
                 Ticks = new List<Tick>();
                 AuxilliaryData = new List<BaseData>();
+                Type = new HashSet<SubscriptionType>();
             }
 
             public dynamic GetData()
             {
-                switch (Type)
+                var defaultType = Type.OrderBy(type => type).First();
+                switch (defaultType)
                 {
                     case SubscriptionType.TradeBar:
                         return TradeBar;
@@ -511,6 +514,9 @@ namespace QuantConnect.Data
                         return Ticks;
                     case SubscriptionType.Custom:
                         return Custom;
+                    case SubscriptionType.AuxilliaryData:
+                        // backwards compatible behavior, example is ConvertToFrameworkAlgorithm
+                        return null;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
