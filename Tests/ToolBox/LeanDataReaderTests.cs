@@ -347,7 +347,7 @@ namespace QuantConnect.Tests.ToolBox
         public static object[] SpotMarketCases =
         {
             //TODO: generate Low resolution sample data for equities
-            new object[] {"equity", "usa", "daily", "aig", "aig.zip", 3294, 149251.7001},
+            new object[] {"equity", "usa", "daily", "aig", "aig.zip", 5580, 331752.9901},
             new object[] {"equity", "usa", "minute", "aapl", "20140605_trade.zip", 658, 425067.37},
             new object[] {"equity", "usa", "minute", "ibm", "20131010_quote.zip", 584, 107061.28},
             new object[] {"equity", "usa", "second", "ibm", "20131010_trade.zip", 2878, 528701.39},
