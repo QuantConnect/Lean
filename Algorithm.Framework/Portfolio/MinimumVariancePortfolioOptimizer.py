@@ -61,7 +61,8 @@ class MinimumVariancePortfolioOptimizer:
                        x0,                                                        # Initial guess
                        bounds = self.get_boundary_conditions(size),               # Bounds for variables
                        constraints = constraints,                                 # Constraints definition
-                       method='SLSQP')        # Optimization method:  Sequential Least SQuares Programming
+                       method='SLSQP',        # Optimization method:  Sequential Least SQuares Programming
+                       options={'ftol': 1e-04}) # Precision goal for the value of f in the stopping criterion.
 
         return opt['x'] if opt['success'] else x0
 

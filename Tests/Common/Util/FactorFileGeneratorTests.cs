@@ -80,8 +80,19 @@ namespace QuantConnect.Tests.Common.Util
 
             var originalFactorFileInstance = FactorFile.Read(PermTick, Market);
 
+            // remove any value before 2007, CreateFactorFile uses daily data and we have starting from 2007
+            while (originalFactorFileInstance.SortedFactorFileData.Any()
+                   && originalFactorFileInstance.SortedFactorFileData.First().Key.Year < 2007)
+            {
+                originalFactorFileInstance.SortedFactorFileData.RemoveAt(0);
+            }
+            // we limit events to the penultimate time in our factor file (last one is 2050)
+            var lastValidRow = originalFactorFileInstance.SortedFactorFileData.Reverse().Skip(1).First();
+
             // Act
-            var newFactorFileInstance = _factorFileGenerator.CreateFactorFile(yahooEvents.ToList());
+            var newFactorFileInstance = _factorFileGenerator.CreateFactorFile(yahooEvents.Where(data => data.Time.AddDays(-1) <= lastValidRow.Key).ToList());
+            // CreateFactorFile will use last data point in daily zip file to create first row, which is 2007, not a valid point so we remove it
+            newFactorFileInstance.SortedFactorFileData.RemoveAt(0);
 
             var earliestDate = originalFactorFileInstance.SortedFactorFileData.First().Key;
             var latestDate = originalFactorFileInstance.SortedFactorFileData.Last().Key;
