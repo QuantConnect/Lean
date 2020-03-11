@@ -99,7 +99,13 @@ namespace QuantConnect.Indicators
             }
 
             var rs = AverageGain / AverageLoss;
-            return 100m - (100m / (1 + rs));
+            if (rs == -1m)
+            {
+                // prevent division by zero
+                return 100m;
+            }
+
+            return 100m - 100m / (1 + rs);
         }
 
         /// <summary>
