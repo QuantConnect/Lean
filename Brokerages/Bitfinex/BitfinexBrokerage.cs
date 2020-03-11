@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities.Crypto;
 
 namespace QuantConnect.Brokerages.Bitfinex
 {
@@ -233,7 +234,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         public override List<CashAmount> GetCashBalance()
         {
             var list = new List<CashAmount>();
-            var endpoint = GetEndpoint("balances"); ;
+            var endpoint = GetEndpoint("balances");
             var request = new RestRequest(endpoint, Method.POST);
 
             JsonObject payload = new JsonObject();
@@ -260,7 +261,40 @@ namespace QuantConnect.Brokerages.Bitfinex
                 }
             }
 
-            return list;
+            var balances = list.ToDictionary(x => x.Currency);
+
+            if (_algorithm.BrokerageModel.AccountType == AccountType.Margin)
+            {
+                // include cash balances from currency swaps for open Crypto positions
+                foreach (var holding in GetAccountHoldings().Where(x => x.Symbol.SecurityType == SecurityType.Crypto))
+                {
+                    var defaultQuoteCurrency = _algorithm.Portfolio.CashBook.AccountCurrency;
+
+                    var symbolProperties = _symbolPropertiesDatabase.GetSymbolProperties(
+                        holding.Symbol.ID.Market,
+                        holding.Symbol,
+                        holding.Symbol.SecurityType,
+                        defaultQuoteCurrency);
+
+                    string baseCurrency;
+                    string quoteCurrency;
+                    Crypto.DecomposeCurrencyPair(holding.Symbol, symbolProperties, out baseCurrency, out quoteCurrency);
+
+                    var baseQuantity = holding.Quantity;
+                    CashAmount baseCurrencyAmount;
+                    balances[baseCurrency] = balances.TryGetValue(baseCurrency, out baseCurrencyAmount)
+                        ? new CashAmount(baseQuantity + baseCurrencyAmount.Amount, baseCurrency)
+                        : new CashAmount(baseQuantity, baseCurrency);
+
+                    var quoteQuantity = -holding.Quantity * holding.AveragePrice;
+                    CashAmount quoteCurrencyAmount;
+                    balances[quoteCurrency] = balances.TryGetValue(quoteCurrency, out quoteCurrencyAmount)
+                        ? new CashAmount(quoteQuantity + quoteCurrencyAmount.Amount, quoteCurrency)
+                        : new CashAmount(quoteQuantity, quoteCurrency);
+                }
+            }
+
+            return balances.Values.ToList();
         }
 
         /// <summary>
