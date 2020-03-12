@@ -33,7 +33,6 @@ namespace QuantConnect.Algorithm.CSharp
         private decimal _previousSecurityValue;
         private bool _universeSelected;
         private bool _onDataWasCalled;
-        private int _benchmarkPriceDidNotChange;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -122,22 +121,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else
             {
-                if (data.Time.Minute == 0)
+                if (currentValue == _previousBenchmarkValue && data.Time.Minute == 0)
                 {
-                    if (currentValue == _previousBenchmarkValue)
-                    {
-                        _benchmarkPriceDidNotChange++;
-                        // there are two consecutive equal data points so we give it some room
-                        if (_benchmarkPriceDidNotChange > 1)
-                        {
-                            throw new Exception($"Benchmark value error - expected a new value, current {currentValue} {data.Time}" +
-                                                "Benchmark value should change when there is a change in hours");
-                        }
-                    }
-                    else
-                    {
-                        _benchmarkPriceDidNotChange = 0;
-                    }
+                    throw new Exception($"Benchmark value error - expected a new value, current {currentValue} {data.Time}" +
+                                        "Benchmark value should change when there is a change in hours");
                 }
             }
             _previousBenchmarkValue = currentValue;

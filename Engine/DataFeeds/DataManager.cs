@@ -518,16 +518,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(typeof(ZipEntryName), TickType.Quote) };
             }
 
-            IEnumerable<TickType> availableDataType = AvailableDataTypes[symbolSecurityType];
-            // Securities with trades and quotes available (crypto and equities so far) will only look for trades in case of low resolutions.
-            if ((symbolSecurityType == SecurityType.Crypto || symbolSecurityType == SecurityType.Equity)
-                && (resolution == Resolution.Daily || resolution == Resolution.Hour))
-            {
-                // we filter out quote tick type
-                availableDataType = availableDataType.Where(t => t != TickType.Quote);
-            }
-
-            return availableDataType
+            return AvailableDataTypes[symbolSecurityType]
                 .Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();
         }
 
