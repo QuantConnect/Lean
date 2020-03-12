@@ -162,9 +162,9 @@ namespace QuantConnect.Brokerages.Alpaca
             }
         }
 
-        private static void OnNatsClientError(string error)
+        private static void OnPolygonStreamingClientError(Exception exception)
         {
-            Log.Error($"NatsClient error: {error}");
+            Log.Error(exception, $"PolygonStreamingClient error");
         }
 
         private static void OnSockClientError(Exception exception)
