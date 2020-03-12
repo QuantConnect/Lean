@@ -135,8 +135,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0"},
             {"Total Fees", "$778.00"},
             {"Fitness Score", "0"},
-            {"Kelly Criterion Estimate", "-2.196"},
-            {"Kelly Criterion Probability Value", "0.584"},
+            {"Kelly Criterion Estimate", "-2.958"},
+            {"Kelly Criterion Probability Value", "0.613"},
             {"Sortino Ratio", "0"},
             {"Return Over Maximum Drawdown", "0"},
             {"Portfolio Turnover", "0"},
@@ -149,11 +149,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Monthly Alpha Value", "$-0.2742857"},
             {"Total Accumulated Estimated Alpha Value", "$-0.008"},
             {"Mean Population Estimated Insight Value", "$-0.00001033592"},
-            {"Mean Population Direction", "23.0526%"},
+            {"Mean Population Direction", "22.6169%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0.5865%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "730513303"}
+            {"OrderListHash", "-1881861672"}
         };
     }
 }

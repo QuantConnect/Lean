@@ -373,12 +373,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     currentSubscriptionCount = dataQueueHandler.Subscriptions.Count;
                     Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.SPY));
                     Assert.IsTrue(dataQueueHandler.Subscriptions.Contains(Symbols.EURUSD));
-                    var subscriptions = _dataManager.DataFeedSubscriptions
-                        .Where(subscription => !subscription.Configuration.IsInternalFeed && subscription.Configuration.Symbol == Symbols.SPY);
-                    foreach (var subscription in subscriptions)
-                    {
-                        _dataManager.RemoveSubscription(subscription.Configuration);
-                    }
+                    _dataManager.RemoveSubscription(_dataManager.DataFeedSubscriptions
+                        .Where(subscription => !subscription.Configuration.IsInternalFeed)
+                        .Single(sub => sub.Configuration.Symbol == Symbols.SPY).Configuration);
                     emittedData = true;
                 }
                 else
@@ -429,7 +426,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             });
 
             Assert.IsTrue(emittedData);
-            Assert.AreEqual(4, changes.Aggregate(0, (i, securityChanges) => i + securityChanges.Count));
+            Assert.AreEqual(4, changes.Aggregate(0, (i, securityChanges) => i+securityChanges.Count));
             Assert.AreEqual(Symbols.SPY, changes[1].RemovedSecurities.Single().Symbol);
         }
 
@@ -927,7 +924,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                 }
             }, secondsTimeStep: 60 * 60 * 6, // 6 hour time step
-                alwaysInvoke: true,
+                alwaysInvoke:true,
                 endDate: endDate);
 
             Assert.IsTrue(yieldedSymbols, "Did not yielded Symbols");
@@ -1304,13 +1301,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             // Equity - Minute resolution
             // We expect 30 minute bars for 0.5 hours in open market hours
-            new TestCaseData(Symbols.SPY, Resolution.Minute, 1, 0, (int)(0.5 * 60), (int)(0.5 * 60), 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.SPY, Resolution.Minute, 1, 0, (int)(0.5 * 60), 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Equity - Tick resolution
             // In this test we only emit ticks once per hour
-            // We expect only 6 ticks -- the 4 PM tick is not received because it's outside market hours -> times 2 (quote/trade bar)
+            // We expect only 6 ticks -- the 4 PM tick is not received because it's outside market hours
             // We expect only 1 dividend at midnight
-            new TestCaseData(Symbols.SPY, Resolution.Tick, 1, (7 - 1) * 2, 0, 0, 1, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.SPY, Resolution.Tick, 1, 7 - 1, 0, 0, 1, 0, false, _instances[typeof(BaseData)]),
 
             // Forex - FXCM
             new TestCaseData(Symbols.EURUSD, Resolution.Hour, 1, 0, 0, 24, 0, 0, false, _instances[typeof(BaseData)]),
@@ -1333,8 +1330,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda), Resolution.Tick, 1, 14, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Crypto
-            // Low resolution crypto only receives trades
-            new TestCaseData(Symbols.BTCUSD, Resolution.Hour, 1, 0, 24, 0, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.BTCUSD, Resolution.Hour, 1, 0, 24, 24, 0, 0, false, _instances[typeof(BaseData)]),
             new TestCaseData(Symbols.BTCUSD, Resolution.Minute, 1, 0, 1 * 60, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
             // x2 because counting trades and quotes
             new TestCaseData(Symbols.BTCUSD, Resolution.Tick, 1, 24 * 2, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
@@ -1450,41 +1446,40 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     else
                     {
-                        var tickType = TickType.Quote;
+                        var tickType = symbol.SecurityType == SecurityType.Equity ? TickType.Trade : TickType.Quote;
+
                         var dataPoint = new Tick
                         {
                             Symbol = symbol,
                             Time = exchangeTime,
                             EndTime = exchangeTime,
                             TickType = tickType,
-                            Value = actualPricePointsEnqueued
-                        };
-
-                        if (symbol.SecurityType != SecurityType.Equity
-                            || resolution != Resolution.Daily
-                            || resolution != Resolution.Hour)
-                        {
-                            actualPricePointsEnqueued++;
-                            // equity has minute/second/tick quote data
-                            dataPoints.Add(dataPoint);
-                        }
-
-                        ConsoleWriteLine(
-                            $"{algorithmTime} - FuncDataQueueHandler emitted {tickType} tick: {dataPoint}");
-
-                        dataPoint = new Tick
-                        {
-                            Symbol = symbol,
-                            Time = exchangeTime,
-                            EndTime = exchangeTime,
-                            TickType = TickType.Trade,
                             Value = actualPricePointsEnqueued++
                         };
 
                         dataPoints.Add(dataPoint);
 
                         ConsoleWriteLine(
-                            $"{algorithmTime} - FuncDataQueueHandler emitted Trade tick: {dataPoint}");
+                            $"{algorithmTime} - FuncDataQueueHandler emitted {tickType} tick: {dataPoint}");
+
+                        if (symbol.SecurityType == SecurityType.Crypto ||
+                            symbol.SecurityType == SecurityType.Option ||
+                            symbol.SecurityType == SecurityType.Future)
+                        {
+                            dataPoint = new Tick
+                            {
+                                Symbol = symbol,
+                                Time = exchangeTime,
+                                EndTime = exchangeTime,
+                                TickType = TickType.Trade,
+                                Value = actualPricePointsEnqueued++
+                            };
+
+                            dataPoints.Add(dataPoint);
+
+                            ConsoleWriteLine(
+                                $"{algorithmTime} - FuncDataQueueHandler emitted Trade tick: {dataPoint}");
+                        }
                     }
                 }
 
@@ -1732,18 +1727,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     switch (symbol.SecurityType)
                     {
-                        case SecurityType.Crypto:
                         case SecurityType.Equity:
                             Assert.IsTrue(actualTradeBarsReceived > 0);
-                            if (resolution == Resolution.Daily || resolution == Resolution.Hour)
-                            {
-                                Assert.IsTrue(actualQuoteBarsReceived == 0);
-                            }
-                            else
-                            {
-                                Assert.IsTrue(actualQuoteBarsReceived > 0);
-
-                            }
                             break;
 
                         case SecurityType.Forex:
@@ -1751,6 +1736,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             Assert.IsTrue(actualQuoteBarsReceived > 0);
                             break;
 
+                        case SecurityType.Crypto:
                         case SecurityType.Option:
                         case SecurityType.Future:
                             Assert.IsTrue(actualTradeBarsReceived > 0);

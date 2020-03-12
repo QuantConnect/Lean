@@ -87,31 +87,31 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "83"},
-            {"Average Win", "0.15%"},
+            {"Total Trades", "82"},
+            {"Average Win", "0.16%"},
             {"Average Loss", "-0.05%"},
-            {"Compounding Annual Return", "9.870%"},
+            {"Compounding Annual Return", "9.913%"},
             {"Drawdown", "18.200%"},
-            {"Expectancy", "2.432"},
-            {"Net Profit", "20.715%"},
-            {"Sharpe Ratio", "0.578"},
-            {"Probabilistic Sharpe Ratio", "25.624%"},
+            {"Expectancy", "2.470"},
+            {"Net Profit", "20.808%"},
+            {"Sharpe Ratio", "0.58"},
+            {"Probabilistic Sharpe Ratio", "25.710%"},
             {"Loss Rate", "18%"},
             {"Win Rate", "82%"},
-            {"Profit-Loss Ratio", "3.17"},
+            {"Profit-Loss Ratio", "3.21"},
             {"Alpha", "0.089"},
             {"Beta", "0.012"},
             {"Annual Standard Deviation", "0.155"},
             {"Annual Variance", "0.024"},
-            {"Information Ratio", "0.145"},
+            {"Information Ratio", "0.147"},
             {"Tracking Error", "0.201"},
-            {"Treynor Ratio", "7.765"},
-            {"Total Fees", "$83.80"},
+            {"Treynor Ratio", "7.756"},
+            {"Total Fees", "$82.80"},
             {"Fitness Score", "0.001"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "1"},
-            {"Sortino Ratio", "0.818"},
-            {"Return Over Maximum Drawdown", "0.543"},
+            {"Sortino Ratio", "0.822"},
+            {"Return Over Maximum Drawdown", "0.546"},
             {"Portfolio Turnover", "0.002"},
             {"Total Insights Generated", "2028"},
             {"Total Insights Closed", "2024"},
@@ -126,7 +126,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "15053999"}
+            {"OrderListHash", "-1303973430"}
         };
     }
 }

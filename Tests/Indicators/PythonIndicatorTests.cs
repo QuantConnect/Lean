@@ -199,9 +199,7 @@ class BadCustomIndicator(PythonIndicator):
                 var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
                 Assert.DoesNotThrow(() => algorithm.RegisterIndicator(spy, goodIndicator, Resolution.Minute));
 
-                var actual = algorithm.SubscriptionManager.Subscriptions
-                    .FirstOrDefault(config => config.TickType == TickType.Trade)
-                    .Consolidators.Count;
+                var actual = algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
                 Assert.AreEqual(1, actual);
 
                 var badIndicator = module.GetAttr("BadCustomIndicator").Invoke();

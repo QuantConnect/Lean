@@ -99,8 +99,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             var result = historyProvider.GetHistory(
                 new[]
                 {
-                    new HistoryRequest(new DateTime(2008, 01,01),
-                        new DateTime(2008, 01,05),
+                    new HistoryRequest(new DateTime(2000, 01,01),
+                        new DateTime(2000, 01,05),
                         typeof(TradeBar),
                         symbol,
                         Resolution.Daily,
@@ -115,10 +115,8 @@ namespace QuantConnect.Tests.Engine.HistoricalData
                 TimeZones.NewYork).ToList();
 
             var firstBar = result.First().Values.Single();
-            Assert.AreEqual("WMI", firstBar.Symbol.Value);
+            Assert.IsTrue(firstBar.Symbol.Value.Contains("WMI"));
             Assert.IsNotEmpty(result);
-            // the symbol we sent in did not get updated
-            Assert.AreEqual("WM", symbol.Value);
         }
     }
 }

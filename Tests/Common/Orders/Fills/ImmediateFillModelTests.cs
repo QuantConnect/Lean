@@ -757,70 +757,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.IsTrue(fill.Message.Contains("Warning: fill at stale price"));
         }
 
-        [TestCase(OrderDirection.Sell, 11)]
-        [TestCase(OrderDirection.Buy, 21)]
-        // 16 is the average between ask and bid
-        [TestCase(OrderDirection.Hold, 16)]
-        public void PriceReturnsQuoteBarsIfPresent(OrderDirection orderDirection, decimal expected)
-        {
-            var time = new DateTime(2018, 9, 24, 9, 30, 0);
-            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
-            var symbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-
-            var configTradeBar = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
-            var configQuoteBar = new SubscriptionDataConfig(configTradeBar, typeof(QuoteBar));
-            var security = new Security(
-                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
-                configQuoteBar,
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-
-            var tradeBar = new TradeBar(time, symbol, 290m, 292m, 289m, 291m, 12345);
-            security.SetMarketPrice(tradeBar);
-
-            var quoteBar = new QuoteBar(time, symbol,
-                new Bar(10, 15, 5, 11),
-                100,
-                new Bar(20, 25, 15, 21),
-                100);
-            security.SetMarketPrice(quoteBar);
-
-            var configProvider = new MockSubscriptionDataConfigProvider(configQuoteBar);
-            configProvider.SubscriptionDataConfigs.Add(configTradeBar);
-
-            var testFillModel = new TestFillModel();
-            testFillModel.SetParameters(new FillModelParameters(security,
-                null,
-                configProvider,
-                TimeSpan.FromDays(1)));
-
-            var result = testFillModel.GetPricesPublic(security, orderDirection);
-
-            Assert.AreEqual(expected, result.Close);
-        }
-
-
         private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
-        }
-
-        private class TestFillModel : FillModel
-        {
-            public void SetParameters(FillModelParameters parameters)
-            {
-                Parameters = parameters;
-            }
-
-            public Prices GetPricesPublic(Security asset, OrderDirection direction)
-            {
-                return base.GetPrices(asset, direction);
-            }
         }
     }
 }

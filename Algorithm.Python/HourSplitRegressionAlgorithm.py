@@ -29,8 +29,8 @@ from QuantConnect.Algorithm import *
 class HourSplitRegressionAlgorithm(QCAlgorithm):
 
     def Initialize(self):
-        self.SetStartDate(2014, 6, 6)
-        self. SetEndDate(2014, 6, 9)
+        self.SetStartDate(2005, 2, 25)
+        self. SetEndDate(2005, 2, 28)
         self.SetCash(100000)
         self.SetBenchmark(lambda x: 0)
 

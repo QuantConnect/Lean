@@ -66,7 +66,3 @@ class MeanVarianceOptimizationFrameworkAlgorithm(QCAlgorithm):
         last = 3 if self.Time.day > 8 else len(self.symbols)
 
         return self.symbols[0:last]
-
-    def OnOrderEvent(self,  orderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            self.Log(str(orderEvent))

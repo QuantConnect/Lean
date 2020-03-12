@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -206,7 +206,7 @@ namespace QuantConnect.Data
             {
                 {SecurityType.Base, new List<TickType> {TickType.Trade}},
                 {SecurityType.Forex, new List<TickType> {TickType.Quote}},
-                {SecurityType.Equity, new List<TickType> {TickType.Trade, TickType.Quote}},
+                {SecurityType.Equity, new List<TickType> {TickType.Trade}},
                 {SecurityType.Option, new List<TickType> {TickType.Quote, TickType.Trade, TickType.OpenInterest}},
                 {SecurityType.Cfd, new List<TickType> {TickType.Quote}},
                 {SecurityType.Future, new List<TickType> {TickType.Quote, TickType.Trade, TickType.OpenInterest}},
