@@ -1175,12 +1175,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 lastTime = time;
                 var tickTime = lastTime.AddMinutes(-1).ConvertFromUtc(TimeZones.NewYork);
                 return fdqh.Subscriptions.Where(symbol => !_algorithm.UniverseManager.ContainsKey(symbol)) // its not a universe
-                    .Select(symbol => new Tick(tickTime, symbol, 1, 2)
-                    {
-                        Quantity = 1,
-                        // Symbol could not be in the Securities collections for the custom Universe tests. AlgorithmManager is in charge of adding them, and we are not executing that code here.
-                        TickType = _algorithm.Securities.ContainsKey(symbol) ? _algorithm.Securities[symbol].SubscriptionDataConfig.TickType : TickType.Trade
-                    }).ToList();
+                    .SelectMany(symbol =>
+                        {
+                            var ticks = new List<Tick>();
+                            foreach (var tickType in _algorithm.SubscriptionManager.GetDataTypesForSecurity(symbol.SecurityType))
+                            {
+                                ticks.Add(new Tick(tickTime, symbol, 1, 2)
+                                {
+                                    Quantity = 1,
+                                    // Symbol could not be in the Securities collections for the custom Universe tests. AlgorithmManager is in charge of adding them, and we are not executing that code here.
+                                    TickType = tickType
+                                });
+                            }
+                            return ticks;
+                        }
+                    ).ToList();
             });
 
             // job is used to send into DataQueueHandler
@@ -1333,8 +1342,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             new TestCaseData(Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda), Resolution.Tick, 1, 14, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
 
             // Crypto
-            // Low resolution crypto only receives trades
-            new TestCaseData(Symbols.BTCUSD, Resolution.Hour, 1, 0, 24, 0, 0, 0, false, _instances[typeof(BaseData)]),
+            new TestCaseData(Symbols.BTCUSD, Resolution.Hour, 1, 0, 24, 24, 0, 0, false, _instances[typeof(BaseData)]),
             new TestCaseData(Symbols.BTCUSD, Resolution.Minute, 1, 0, 1 * 60, 1 * 60, 0, 0, false, _instances[typeof(BaseData)]),
             // x2 because counting trades and quotes
             new TestCaseData(Symbols.BTCUSD, Resolution.Tick, 1, 24 * 2, 0, 0, 0, 0, false, _instances[typeof(BaseData)]),
@@ -1732,7 +1740,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     switch (symbol.SecurityType)
                     {
-                        case SecurityType.Crypto:
                         case SecurityType.Equity:
                             Assert.IsTrue(actualTradeBarsReceived > 0);
                             if (resolution == Resolution.Daily || resolution == Resolution.Hour)
@@ -1751,6 +1758,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             Assert.IsTrue(actualQuoteBarsReceived > 0);
                             break;
 
+                        case SecurityType.Crypto:
                         case SecurityType.Option:
                         case SecurityType.Future:
                             Assert.IsTrue(actualTradeBarsReceived > 0);

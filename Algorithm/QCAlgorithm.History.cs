@@ -660,9 +660,9 @@ namespace QuantConnect.Algorithm
 
                 if (resolution.HasValue
                     && (resolution == Resolution.Daily || resolution == Resolution.Hour)
-                    && (symbol.SecurityType == SecurityType.Equity || symbol.SecurityType == SecurityType.Crypto))
+                    && symbol.SecurityType == SecurityType.Equity)
                 {
-                    // for Daily and Hour resolution, for equities and crypto, we have to
+                    // for Daily and Hour resolution, for equities, we have to
                     // filter out any existing subscriptions that could be of Quote type
                     // This could happen if they were Resolution.Minute/Second/Tick
                     matchingSubscriptions = matchingSubscriptions.Where(s => s.TickType != TickType.Quote);

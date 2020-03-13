@@ -117,8 +117,9 @@ namespace QuantConnect.Tests.Algorithm
 
             // Crypto low resolution
             var cryptoHourly = algo.AddSecurity(SecurityType.Crypto, "btcusd", Resolution.Hour);
-            Assert.IsTrue(cryptoHourly.Subscriptions.Count() == 1);
+            Assert.IsTrue(cryptoHourly.Subscriptions.Count() == 2);
             Assert.IsTrue(GetMatchingSubscription(cryptoHourly, typeof(TradeBar)) != null);
+            Assert.IsTrue(GetMatchingSubscription(cryptoHourly, typeof(QuoteBar)) != null);
         }
 
 

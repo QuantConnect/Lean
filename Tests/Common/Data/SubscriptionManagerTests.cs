@@ -31,20 +31,23 @@ namespace QuantConnect.Tests.Common.Data
     [TestFixture]
     public class SubscriptionManagerTests
     {
-        [TestCase(SecurityType.Forex, Resolution.Daily, TickType.Quote)]
-        [TestCase(SecurityType.Forex, Resolution.Hour, TickType.Quote)]
-        [TestCase(SecurityType.Cfd, Resolution.Daily, TickType.Quote)]
-        [TestCase(SecurityType.Cfd, Resolution.Hour, TickType.Quote)]
-        [TestCase(SecurityType.Crypto, Resolution.Daily, TickType.Trade)]
-        [TestCase(SecurityType.Crypto, Resolution.Hour, TickType.Trade)]
-        [TestCase(SecurityType.Equity, Resolution.Daily, TickType.Trade)]
-        [TestCase(SecurityType.Equity, Resolution.Hour, TickType.Trade)]
-        public void GetsSubscriptionDataTypesLowResolution(SecurityType securityType, Resolution resolution, TickType expectedTickType)
+        [TestCase(SecurityType.Forex, Resolution.Daily, 1, TickType.Quote)]
+        [TestCase(SecurityType.Forex, Resolution.Hour, 1, TickType.Quote)]
+        [TestCase(SecurityType.Cfd, Resolution.Daily, 1, TickType.Quote)]
+        [TestCase(SecurityType.Cfd, Resolution.Hour, 1, TickType.Quote)]
+        [TestCase(SecurityType.Crypto, Resolution.Daily, 2, TickType.Trade, TickType.Quote)]
+        [TestCase(SecurityType.Crypto, Resolution.Hour, 2, TickType.Trade, TickType.Quote)]
+        [TestCase(SecurityType.Equity, Resolution.Daily, 1, TickType.Trade)]
+        [TestCase(SecurityType.Equity, Resolution.Hour, 1, TickType.Trade)]
+        public void GetsSubscriptionDataTypesLowResolution(SecurityType securityType, Resolution resolution, int count, params TickType [] expectedTickTypes)
         {
             var types = GetSubscriptionDataTypes(securityType, resolution);
 
-            Assert.AreEqual(1, types.Count);
-            Assert.IsTrue(types[0].Item2 == expectedTickType);
+            Assert.AreEqual(count, types.Count);
+            for (var i = 0; i < expectedTickTypes.Length; i++)
+            {
+                Assert.IsTrue(types[i].Item2 == expectedTickTypes[i]);
+            }
         }
 
         [Test]
