@@ -58,7 +58,7 @@ class ConvertToFrameworkAlgorithm(QCAlgorithm):
         Args:
             data: Slice object with your stock data'''
         # wait for our indicator to be ready
-        if not self.macd.IsReady or data[self.symbol] is None: return
+        if not self.macd.IsReady or not data.ContainsKey(self.symbol) or data[self.symbol] is None: return
 
         holding = self.Portfolio[self.symbol]
 

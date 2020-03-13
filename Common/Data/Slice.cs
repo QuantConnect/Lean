@@ -443,6 +443,11 @@ namespace QuantConnect.Data
             var allData = new DataDictionary<SymbolData>();
             foreach (var datum in data)
             {
+                if (datum.Symbol.ID.SecurityType == SecurityType.Equity &&
+                    (datum.DataType == MarketDataType.QuoteBar || datum.DataType == MarketDataType.Tick && (datum as Tick).TickType == TickType.Quote))
+                {
+                    continue;
+                }
                 SymbolData symbolData;
                 if (!allData.TryGetValue(datum.Symbol, out symbolData))
                 {
