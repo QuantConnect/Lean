@@ -20,9 +20,7 @@ using QuantConnect.Data.Custom.TradingEconomics;
 using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace QuantConnect.Tests.Common.Data.Custom
 {
@@ -53,7 +51,6 @@ namespace QuantConnect.Tests.Common.Data.Custom
   ""IsPercentage"": true,
   ""DataType"": 0,
   ""IsFillForward"": false,
-  ""Time"": ""0001-01-01T00:00:00"",
   ""Value"": 0.0,
   ""Price"": 0.0
 }]";
@@ -82,7 +79,6 @@ namespace QuantConnect.Tests.Common.Data.Custom
   ""Symbol"": ""US"",
   ""DataType"": 0,
   ""IsFillForward"": false,
-  ""Time"": ""0001-01-01T00:00:00"",
   ""Value"": 0.0,
   ""Price"": 0.0
 }]";
@@ -131,6 +127,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var calendar = (TradingEconomicsCalendar)result;
 
             Assert.AreEqual("0", calendar.CalendarId);
+            Assert.AreEqual(new DateTime(2019, 1, 1), calendar.Time.Date);
             Assert.AreEqual(new DateTime(2019, 1, 1), calendar.EndTime.Date);
             Assert.AreEqual("United States", calendar.Country);
             Assert.AreEqual("PPI PCE", calendar.Category);
@@ -176,6 +173,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var calendar = (TradingEconomicsCalendar)((BaseDataCollection)result).Data.Single();
 
             Assert.AreEqual("0", calendar.CalendarId);
+            Assert.AreEqual(new DateTime(2019, 1, 1), calendar.Time.Date);
             Assert.AreEqual(new DateTime(2019, 1, 1), calendar.EndTime.Date);
             Assert.AreEqual("United States", calendar.Country);
             Assert.AreEqual("PPI PCE", calendar.Category);
@@ -241,6 +239,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var calendarLive = (TradingEconomicsCalendar)((BaseDataCollection)resultLive).Data.Single();
 
             Assert.AreEqual(calendarBacktest.CalendarId, calendarLive.CalendarId);
+            Assert.AreEqual(calendarBacktest.Time.Date, calendarLive.Time.Date);
             Assert.AreEqual(calendarBacktest.EndTime.Date, calendarLive.EndTime.Date);
             Assert.AreEqual(calendarBacktest.Country, calendarLive.Country);
             Assert.AreEqual(calendarBacktest.Category, calendarLive.Category);
@@ -336,6 +335,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
                     false
                 );
                 Assert.AreEqual("0", calendar.CalendarId);
+                Assert.AreEqual(new DateTime(2019, 1, 1), calendar.Time.Date);
                 Assert.AreEqual(new DateTime(2019, 1, 1), calendar.EndTime.Date);
                 Assert.AreEqual("United States", calendar.Country);
                 Assert.AreEqual("PPI PCE", calendar.Category);
