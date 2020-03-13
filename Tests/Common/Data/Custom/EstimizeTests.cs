@@ -75,6 +75,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(data.ConsensusWeightedRevenueEstimate, 31966.6230263867);
             Assert.AreEqual(data.ReleaseDate, new DateTime(2019, 10, 23, 20, 0, 0).ToLocalTime());
             Assert.AreEqual(data.ReleaseDate, data.EndTime);
+            Assert.AreEqual(data.ReleaseDate, data.Time);
 
             content = content.Replace("\"eps\":null,", "\"eps\":1.2,");
             data = JsonConvert.DeserializeObject<EstimizeRelease>(content);
@@ -151,7 +152,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
         }
 
         [Test]
-        public void DeserializeEstimateReleaseSuccessfully()
+        public void DeserializeEstimizeEstimateSuccessfully()
         {
             var content = "{" +
                           "\"ticker\":\"AAPL\"," +
@@ -174,6 +175,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(data.FiscalQuarter, 2);
             Assert.AreEqual(data.CreatedAt, new DateTime(2019, 6, 7, 14, 40, 36).ToLocalTime());
             Assert.AreEqual(data.CreatedAt, data.EndTime);
+            Assert.AreEqual(data.CreatedAt, data.Time);
             Assert.AreEqual(data.Eps, 2.81);
             Assert.AreEqual(data.Revenue, 61413.0);
             Assert.AreEqual(data.UserName, "Dominantstock");

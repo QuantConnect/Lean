@@ -84,7 +84,11 @@ namespace QuantConnect.Data.Custom.Estimize
         /// The timestamp of this consensus (UTC)
         /// </summary>
         [JsonProperty(PropertyName = "updated_at")]
-        public DateTime UpdatedAt { get; set; }
+        public DateTime UpdatedAt
+        {
+            get { return Time; }
+            set { Time = value; }
+        }
 
         /// <summary>
         /// The fiscal year for the release
@@ -120,7 +124,6 @@ namespace QuantConnect.Data.Custom.Estimize
             var csv = csvLine.Split(',');
 
             UpdatedAt = Parse.DateTimeExact(csv[0], "yyyyMMdd HH:mm:ss");
-            Time = UpdatedAt;
             Id = csv[1];
             Source = (Source)Enum.Parse(typeof(Source), csv[2]);
             Type = csv[3].IfNotNullOrEmpty(s => (Type)Enum.Parse(typeof(Type), s));
