@@ -41,6 +41,11 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
         /// </summary>
         public RateGate IndexGate { get; }
 
+        protected readonly JsonSerializerSettings JsonSerializerSettings = new JsonSerializerSettings
+        {
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc
+        };
+
         protected EstimizeDataDownloader()
         {
             _clientKey = Config.Get("estimize-economics-auth-token");
