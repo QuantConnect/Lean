@@ -36,8 +36,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2005, 2, 25);
-            SetEndDate(2005, 2, 28);
+            SetStartDate(2014, 6, 6);
+            SetEndDate(2014, 6, 9);
             SetCash(100000);
             SetBenchmark(x => 0);
 
@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
                 else if (slice.Splits.Single().Value.Type == SplitType.SplitOccurred)
                 {
                     _receivedOccurredEvent = true;
-                    if (slice.Splits.Single().Value.Price != 88.9700m || slice.Splits.Single().Value.ReferencePrice != 88.9700m)
+                    if (slice.Splits.Single().Value.Price != 645.5700m || slice.Splits.Single().Value.ReferencePrice != 645.5700m)
                     {
                         throw new Exception("Did not receive expected price values");
                     }
@@ -147,7 +147,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "-949772904"}
+            {"OrderListHash", "1221624625"}
         };
     }
 }

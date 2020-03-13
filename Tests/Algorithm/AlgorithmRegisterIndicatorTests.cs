@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -80,7 +81,9 @@ namespace QuantConnect.Tests.Algorithm
                 {
                     throw new NotSupportedException($"RegistersIndicatorProperlyPython(): Unsupported indicator data type: {indicatorTest.GetType()}");
                 }
-                var actual = _algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
+                var actual = _algorithm.SubscriptionManager.Subscriptions
+                    .Single(s => s.TickType == LeanData.GetCommonTickType(SecurityType.Equity))
+                    .Consolidators.Count;
                 Assert.AreEqual(expected, actual);
             }
         }
@@ -114,7 +117,9 @@ namespace QuantConnect.Tests.Algorithm
                 Assert.DoesNotThrow(() => _algorithm.Plot(_spy.Value, indicator));
                 expected++;
 
-                var actual = _algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
+                var actual = _algorithm.SubscriptionManager.Subscriptions
+                    .Single(s => s.TickType == LeanData.GetCommonTickType(SecurityType.Equity))
+                    .Consolidators.Count;
                 Assert.AreEqual(expected, actual);
             }
         }
@@ -145,7 +150,9 @@ class BadCustomIndicator:
                 var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
                 Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_spy, goodIndicator, Resolution.Minute));
 
-                var actual = _algorithm.SubscriptionManager.Subscriptions.FirstOrDefault().Consolidators.Count;
+                var actual = _algorithm.SubscriptionManager.Subscriptions
+                    .Single(s => s.TickType == LeanData.GetCommonTickType(SecurityType.Equity))
+                    .Consolidators.Count;
                 Assert.AreEqual(1, actual);
 
                 var badIndicator = module.GetAttr("BadCustomIndicator").Invoke();

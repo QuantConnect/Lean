@@ -218,6 +218,7 @@ namespace QuantConnect.Data.Market
             try
             {
                 DataType = MarketDataType.Tick;
+                Symbol = config.Symbol;
 
                 // Which security type is this data feed:
                 var scaleFactor = GetScaleFactor(config.SecurityType);
@@ -226,17 +227,41 @@ namespace QuantConnect.Data.Market
                 {
                     case SecurityType.Equity:
                     {
-                        var csv = line.ToCsv(6);
-                        Symbol = config.Symbol;
-                        Time = date.Date.AddMilliseconds(csv[0].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
-                        Value = csv[1].ToDecimal() / scaleFactor;
-                        TickType = TickType.Trade;
-                        Quantity = csv[2].ToDecimal();
-                        if (csv.Count > 3)
+                        var index = 0;
+                        TickType = config.TickType;
+                        var csv = line.ToCsv(TickType == TickType.Trade ? 6 : 8);
+                        Time = date.Date.AddMilliseconds(csv[index++].ToInt64()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+
+                        if (TickType == TickType.Trade)
                         {
-                            Exchange = csv[3];
-                            SaleCondition = csv[4];
-                            Suspicious = (csv[5] == "1");
+                            Value = csv[index++].ToDecimal() / scaleFactor;
+                            Quantity = csv[index++].ToDecimal();
+                            if (csv.Count > index)
+                            {
+                                Exchange = csv[index++];
+                                SaleCondition = csv[index++];
+                                Suspicious = (csv[index++] == "1");
+                            }
+                        }
+                        else if (TickType == TickType.Quote)
+                        {
+                            BidPrice = csv[index++].ToDecimal() / scaleFactor;
+                            BidSize = csv[index++].ToDecimal();
+                            AskPrice = csv[index++].ToDecimal() / scaleFactor;
+                            AskSize = csv[index++].ToDecimal();
+
+                            SetValue();
+
+                            if (csv.Count > index)
+                            {
+                                Exchange = csv[index++];
+                                SaleCondition = csv[index++];
+                                Suspicious = (csv[index++] == "1");
+                            }
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"Tick(): Unexpected tick type {TickType}");
                         }
                         break;
                     }
@@ -245,21 +270,20 @@ namespace QuantConnect.Data.Market
                     case SecurityType.Cfd:
                     {
                         var csv = line.ToCsv(3);
-                        Symbol = config.Symbol;
                         TickType = TickType.Quote;
                         var ticks = (long)(csv[0].ToDecimal() * TimeSpan.TicksPerMillisecond);
                         Time = date.Date.AddTicks(ticks)
                             .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
                         BidPrice = csv[1].ToDecimal();
                         AskPrice = csv[2].ToDecimal();
-                        Value = (BidPrice + AskPrice) / 2;
+
+                        SetValue();
                         break;
                     }
 
                     case SecurityType.Crypto:
                     {
                         TickType = config.TickType;
-                        Symbol = config.Symbol;
                         Exchange = config.Market;
 
                         if (TickType == TickType.Trade)
@@ -280,7 +304,8 @@ namespace QuantConnect.Data.Market
                             BidSize = csv[2].ToDecimal();
                             AskPrice = csv[3].ToDecimal();
                             AskSize = csv[4].ToDecimal();
-                            Value = (BidPrice + AskPrice) / 2;
+
+                            SetValue();
                         }
                         break;
                     }
@@ -291,7 +316,6 @@ namespace QuantConnect.Data.Market
                         TickType = config.TickType;
                         Time = date.Date.AddMilliseconds(csv[0].ToInt64())
                             .ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
-                        Symbol = config.Symbol;
 
                         if (TickType == TickType.Trade)
                         {
@@ -320,21 +344,7 @@ namespace QuantConnect.Data.Market
                             Exchange = csv[5];
                             Suspicious = csv[6] == "1";
 
-                            if (BidPrice != 0)
-                            {
-                                if (AskPrice != 0)
-                                {
-                                    Value = (BidPrice + AskPrice)/2m;
-                                }
-                                else
-                                {
-                                    Value = BidPrice;
-                                }
-                            }
-                            else
-                            {
-                                Value = AskPrice;
-                            }
+                            SetValue();
                         }
 
                         break;
@@ -451,9 +461,22 @@ namespace QuantConnect.Data.Market
             }
         }
 
+        /// <summary>
+        /// Sets the tick Value based on ask and bid price
+        /// </summary>
+        private void SetValue()
+        {
+            Value = BidPrice + AskPrice;
+            if (BidPrice * AskPrice != 0)
+            {
+                Value /= 2m;
+            }
+        }
+
         private static decimal GetScaleFactor(SecurityType securityType)
         {
             return securityType == SecurityType.Equity || securityType == SecurityType.Option ? 10000m : 1;
         }
+
     }
 }

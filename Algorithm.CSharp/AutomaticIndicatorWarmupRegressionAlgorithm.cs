@@ -110,32 +110,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "1"},
-            {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "263.153%"},
-            {"Drawdown", "2.200%"},
-            {"Expectancy", "0"},
-            {"Net Profit", "1.663%"},
-            {"Sharpe Ratio", "8.542"},
-            {"Probabilistic Sharpe Ratio", "66.954%"},
-            {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
-            {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.005"},
-            {"Beta", "0.996"},
-            {"Annual Standard Deviation", "0.219"},
-            {"Annual Variance", "0.048"},
-            {"Information Ratio", "-13.938"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "1.879"},
-            {"Total Fees", "$3.26"},
-            {"Fitness Score", "0.248"},
+            {"Fitness Score", "0"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "0"},
-            {"Sortino Ratio", "79228162514264337593543950335"},
-            {"Return Over Maximum Drawdown", "94.3"},
-            {"Portfolio Turnover", "0.248"},
+            {"Sortino Ratio", "0"},
+            {"Return Over Maximum Drawdown", "0"},
+            {"Portfolio Turnover", "0"},
             {"Total Insights Generated", "0"},
             {"Total Insights Closed", "0"},
             {"Total Insights Analysis Completed", "0"},
@@ -149,7 +129,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
             {"Rolling Averaged Population Magnitude", "0%"},
-            {"OrderListHash", "710753227"}
+            {"OrderListHash", "371857150"}
         };
     }
 }
