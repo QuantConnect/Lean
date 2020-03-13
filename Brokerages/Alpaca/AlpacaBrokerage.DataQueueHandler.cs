@@ -66,8 +66,8 @@ namespace QuantConnect.Brokerages.Alpaca
             {
                 Log.Trace($"AlpacaBrokerage.Subscribe(): {symbol}");
 
-                _natsClient.SubscribeQuote(symbol.Value);
-                _natsClient.SubscribeTrade(symbol.Value);
+                _polygonStreamingClient.SubscribeQuote(symbol.Value);
+                _polygonStreamingClient.SubscribeTrade(symbol.Value);
 
                 _subscribedSymbols.TryAdd(symbol.Value, symbol);
             }
@@ -86,8 +86,8 @@ namespace QuantConnect.Brokerages.Alpaca
             {
                 Log.Trace($"AlpacaBrokerage.Unsubscribe(): {symbol}");
 
-                _natsClient.UnsubscribeQuote(symbol.Value);
-                _natsClient.UnsubscribeTrade(symbol.Value);
+                _polygonStreamingClient.UnsubscribeQuote(symbol.Value);
+                _polygonStreamingClient.UnsubscribeTrade(symbol.Value);
 
                 Symbol removed;
                 _subscribedSymbols.TryRemove(symbol.Value, out removed);
