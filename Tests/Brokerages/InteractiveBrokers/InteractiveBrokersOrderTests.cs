@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
         {
         }
 
-        [TestFixtureTearDown]
+        [TearDown]
         public void DisposeBrokerage()
         {
         }
