@@ -20,7 +20,7 @@ using QuantConnect.Logging;
 [SetUpFixture]
 public class AssemblyInitialize
 {
-    [SetUp]
+    [OneTimeSetUp]
     public void SetLogHandler()
     {
         // save output to file as well

@@ -20,7 +20,7 @@ namespace QuantConnect.Tests.ToolBox
         private List<Tick> _ticks;
         private DateTime _date;
 
-        [OneTimeSetUp]
+        [SetUp]
         public void Setup()
         {
             _forex = Symbol.Create("EURUSD", SecurityType.Forex, Market.FXCM);

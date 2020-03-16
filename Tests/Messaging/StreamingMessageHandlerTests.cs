@@ -16,7 +16,7 @@ namespace QuantConnect.Tests.Messaging
         private readonly string _port = "1234";
         private StreamingMessageHandler _messageHandler;
 
-        [OneTimeSetUp]
+        [SetUp]
         public void SetUp()
         {
             Config.Set("desktop-http-port", _port);
