@@ -24,11 +24,13 @@ namespace QuantConnect.Tests.Common.Data
     public class IdentityDataConsolidatorTests
     {
         [Test]
-        [ExpectedException(typeof (ArgumentNullException))]
         public void ThrowsOnDataOfWrongType()
         {
-            var identity = new IdentityDataConsolidator<Tick>();
-            identity.Update(new TradeBar());
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                var identity = new IdentityDataConsolidator<Tick>();
+                identity.Update(new TradeBar());
+            });
         }
 
         [Test]
