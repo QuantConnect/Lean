@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Util
         readonly Symbol _symbol = new Symbol(SecurityIdentifier.GenerateEquity(PermTick, Market), PermTick);
 
         private YahooDataDownloader _yahooDataDownloader;
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             _yahooDataDownloader = new YahooDataDownloader();

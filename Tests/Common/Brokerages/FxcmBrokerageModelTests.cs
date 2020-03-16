@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common.Brokerages
     {
         private SymbolPropertiesDatabase _symbolPropertiesDatabase;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();

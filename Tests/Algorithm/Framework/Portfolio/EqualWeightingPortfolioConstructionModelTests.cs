@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
         public virtual PortfolioBias PortfolioBias => PortfolioBias.LongShort;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public override void SetUp()
         {
             base.SetUp();
