@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
                 ""stocks"": [
                     {
                         ""name"": ""AAPL""
-                    },
+                    }
                 ],
                 ""tags"": [
                     {
@@ -57,7 +57,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
             }";
 
             // Put in a single line to avoid potential failure due to platform-specific behavior (\r\n vs. \n)
-            var expectedSerialized = @"{""id"":1,""author"":""Gerardo"",""created"":""2018-01-25T12:00:00Z"",""updated"":""2018-01-26T12:00:00Z"",""title"":""Unit Test Beats Expectations"",""teaser"":""The unit test beat reviewer's expectations, reporters say"",""body"":"" The unit test beat reviewer's expectations, reporters say - 'This is the best test I've ever seen' says Martin "",""channels"":[{""name"":""earnings""}],""stocks"":[{""name"":""AAPL""}],""tags"":[{""name"":""unit test""},{""name"":""testing""}]}";
+            var expectedSerialized = @"{""id"":1,""author"":""Gerardo"",""created"":""2018-01-25T12:00:00Z"",""updated"":""2018-01-26T12:00:00Z"",""title"":""Unit Test Beats Expectations"",""teaser"":""The unit test beat reviewer's expectations, reporters say"",""body"":"" The unit test beat reviewer's expectations, reporters say - 'This is the best test I've ever seen' says Martin "",""channels"":[{""name"":""earnings""}],""stocks"":[{""name"":""AAPL""}],""tags"":[{""name"":""unit test""},{""name"":""testing""}],""EndTime"":""2018-01-26T12:00:00Z"",""DataType"":0,""IsFillForward"":false,""Time"":""2018-01-26T12:00:00Z"",""Symbol"":{""Value"":""AAPL"",""ID"":""AAPL.BenzingaNews R735QTJ8XC9W"",""Permtick"":""AAPL""},""Value"":0.0,""Price"":0.0}";
             var expectedSymbol = new Symbol(
                 SecurityIdentifier.GenerateEquity(
                     "AAPL",
@@ -94,6 +94,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
                 result.UpdatedAt);
 
             Assert.AreEqual(result.UpdatedAt, result.EndTime);
+            Assert.AreEqual(result.UpdatedAt, result.Time);
 
             Assert.AreEqual("Gerardo", result.Author);
             Assert.AreEqual("Unit Test Beats Expectations", result.Title);

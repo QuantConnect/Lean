@@ -24,7 +24,6 @@ namespace QuantConnect.Data.Custom.Benzinga
     /// <summary>
     /// News data powered by Benzinga - https://docs.benzinga.io/benzinga/newsfeed-v2.html
     /// </summary>
-    [JsonObject(MemberSerialization.OptIn)]
     public class BenzingaNews : IndexedBaseData
     {
         /// <summary>
@@ -49,7 +48,11 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// Date that the article was revised on
         /// </summary>
         [JsonProperty("updated")]
-        public DateTime UpdatedAt { get; set; }
+        public DateTime UpdatedAt
+        {
+            get { return Time; }
+            set { Time = value; }
+        }
 
         /// <summary>
         /// Title of the article published
@@ -89,6 +92,11 @@ namespace QuantConnect.Data.Custom.Benzinga
         /// </summary>
         [JsonProperty("tags")]
         public List<string> Tags { get; set; }
+
+        /// <summary>
+        /// Date that the article was revised on
+        /// </summary>
+        public override DateTime EndTime => UpdatedAt;
 
         /// <summary>
         /// Determines the actual source from an index contained within a ticker folder
