@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
     [TestFixture]
     public class EstimizeTests
     {
-        [Test, Ignore]
+        [Test, Ignore("TODO: Why is this ignored")]
         public void EstimizeDownloadDoesNotThrow()
         {
             var tickers = new List<EstimizeDataDownloader.Company>();
