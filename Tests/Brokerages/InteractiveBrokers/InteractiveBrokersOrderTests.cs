@@ -24,7 +24,7 @@ namespace QuantConnect.Tests.Brokerages.InteractiveBrokers
     [Ignore("These tests require the IBGateway to be installed.")]
     public class InteractiveBrokersForexOrderTests : BrokerageTests
     {
-        [OneTimeSetUp]
+        [SetUp]
         public void InitializeBrokerage()
         {
         }

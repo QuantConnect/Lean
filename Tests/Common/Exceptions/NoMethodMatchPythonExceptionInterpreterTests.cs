@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Common.Exceptions
     {
         private PythonException _pythonException;
 
-        [OneTimeSetUp]
+        [SetUp]
         public void Setup()
         {
             using (Py.GIL())

@@ -32,7 +32,7 @@ namespace QuantConnect.Tests.Common.Storage
 
         private ObjectStore _store;
 
-        [OneTimeSetUp]
+        [SetUp]
         public void Setup()
         {
             Config.Set("object-store-root", TestStorageRoot);
