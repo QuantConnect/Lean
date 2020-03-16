@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Messaging
             _messageHandler.Initialize();
         }
 
-        [TestFixtureTearDown]
+        [TearDown]
         public void TearDown()
         {
             //

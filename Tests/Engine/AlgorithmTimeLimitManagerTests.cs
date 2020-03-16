@@ -31,7 +31,7 @@ namespace QuantConnect.Tests.Engine
             Config.Reset();
         }
 
-        [TestFixtureTearDown]
+        [TearDown]
         public void TearDown()
         {
             // clear the config

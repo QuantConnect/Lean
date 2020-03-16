@@ -95,7 +95,7 @@ namespace QuantConnect.Tests.Engine
         }
 
 
-        [TestFixtureTearDown]
+        [TearDown]
         public void TearDown()
         {
             _liveTradingDataFeed.Exit();
