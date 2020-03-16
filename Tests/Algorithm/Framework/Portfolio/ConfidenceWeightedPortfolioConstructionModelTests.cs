@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         private const decimal _startingCash = 100000;
         private const double Confidence = 0.01;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void SetUp()
         {
             _algorithm = new QCAlgorithm();

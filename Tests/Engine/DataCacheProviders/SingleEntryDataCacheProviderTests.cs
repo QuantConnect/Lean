@@ -14,7 +14,7 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
     {
         private SingleEntryDataCacheProvider _singleEntryDataCacheProvider;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Setup()
         {
             _singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(new DefaultDataProvider());
