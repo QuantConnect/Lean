@@ -63,6 +63,9 @@ namespace QuantConnect.Tests.Indicators
             for (var i = 0; i < 500; i++)
             {
                 rsi.Update(DateTime.UtcNow, 102m);
+
+                // validate the expected range
+                Assert.That(rsi >= 0 && rsi <= 100);
             }
         }
     }
