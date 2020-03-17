@@ -20,6 +20,7 @@ using System.Linq;
 using System.Reflection;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
+using QuantConnect.Python;
 
 namespace QuantConnect.Data
 {
@@ -44,7 +45,7 @@ namespace QuantConnect.Data
         // string -> list{data} for tick data
         private readonly Lazy<DataDictionary<SymbolData>> _data;
         // Quandl -> DataDictonary<Quandl>
-        private readonly Dictionary<Type, Lazy<object>> _dataByType;
+        private readonly Dictionary<Type, object> _dataByType;
 
         /// <summary>
         /// Gets the timestamp for this slice of data
@@ -174,8 +175,56 @@ namespace QuantConnect.Data
         /// <param name="time">The timestamp for this slice of data</param>
         /// <param name="data">The raw data in this slice</param>
         public Slice(DateTime time, IEnumerable<BaseData> data)
-            : this(time, data, null, null, null, null, null, null, null, null, null)
+            : this(time, data.ToList())
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Slice"/> class, lazily
+        /// instantiating the <see cref="Slice.Bars"/> and <see cref="Slice.Ticks"/>
+        /// collections on demand
+        /// </summary>
+        /// <param name="time">The timestamp for this slice of data</param>
+        /// <param name="data">The raw data in this slice</param>
+        public Slice(DateTime time, List<BaseData> data)
+            : this(time, data, CreateCollection<TradeBars, TradeBar>(time, data),
+                CreateCollection<QuoteBars, QuoteBar>(time, data),
+                CreateTicksCollection(time, data),
+                CreateCollection<OptionChains, OptionChain>(time, data),
+                CreateCollection<FuturesChains, FuturesChain>(time, data),
+                CreateCollection<Splits, Split>(time, data),
+                CreateCollection<Dividends, Dividend>(time, data),
+                CreateCollection<Delistings, Delisting>(time, data),
+                CreateCollection<SymbolChangedEvents, SymbolChangedEvent>(time, data))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance used by the <see cref="PythonSlice"/>
+        /// </summary>
+        /// <param name="slice">slice object to wrap</param>
+        /// <remarks>This is required so that python slice enumeration works correctly since it relies on the private <see cref="_data"/> collection</remarks>
+        protected Slice(Slice slice)
+        {
+            Time = slice.Time;
+
+            _dataByType = slice._dataByType;
+
+            _data = slice._data;
+
+            HasData = slice.HasData;
+
+            _ticks = slice._ticks;
+            _bars = slice._bars;
+            _quoteBars = slice._quoteBars;
+            _optionChains = slice._optionChains;
+            _futuresChains = slice._futuresChains;
+
+            // auxiliary data
+            _splits = slice._splits;
+            _dividends = slice._dividends;
+            _delistings = slice._delistings;
+            _symbolChangedEvents = slice._symbolChangedEvents;
         }
 
         /// <summary>
@@ -197,24 +246,24 @@ namespace QuantConnect.Data
         {
             Time = time;
 
-            _dataByType = new Dictionary<Type, Lazy<object>>();
+            _dataByType = new Dictionary<Type, object>();
 
             // market data
             _data = new Lazy<DataDictionary<SymbolData>>(() => CreateDynamicDataDictionary(data));
 
             HasData = hasData ?? _data.Value.Count > 0;
 
-            _ticks = CreateTicksCollection(ticks);
-            _bars = CreateCollection<TradeBars, TradeBar>(tradeBars);
-            _quoteBars = CreateCollection<QuoteBars, QuoteBar>(quoteBars);
-            _optionChains = CreateCollection<OptionChains, OptionChain>(optionChains);
-            _futuresChains = CreateCollection<FuturesChains, FuturesChain>(futuresChains);
+            _ticks = ticks;
+            _bars = tradeBars;
+            _quoteBars = quoteBars;
+            _optionChains = optionChains;
+            _futuresChains = futuresChains;
 
             // auxiliary data
-            _splits = CreateCollection<Splits, Split>(splits);
-            _dividends = CreateCollection<Dividends, Dividend>(dividends);
-            _delistings = CreateCollection<Delistings, Delisting>(delistings);
-            _symbolChangedEvents = CreateCollection<SymbolChangedEvents, SymbolChangedEvent>(symbolChanges);
+            _splits = splits;
+            _dividends = dividends;
+            _delistings = delistings;
+            _symbolChangedEvents = symbolChanges;
         }
 
         /// <summary>
@@ -260,61 +309,74 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Gets the data of the specified symbol and type.
+        /// Gets the data of the specified type.
         /// </summary>
         /// <remarks>Supports both C# and Python use cases</remarks>
         protected static dynamic GetImpl(Type type, Slice instance)
         {
-            Lazy<object> dictionary;
+            object dictionary;
             if (!instance._dataByType.TryGetValue(type, out dictionary))
             {
                 if (type == typeof(Tick))
                 {
-                    dictionary = new Lazy<object>(() =>
-                    {
-                        var dataDictionaryCache = GenericDataDictionary.Get(type);
-                        var dic = Activator.CreateInstance(dataDictionaryCache.GenericType);
+                    var dataDictionaryCache = GenericDataDictionary.Get(type);
+                    dictionary = Activator.CreateInstance(dataDictionaryCache.GenericType);
 
-                        foreach (var data in
-                            instance._data.Value.Values.SelectMany<dynamic, dynamic>(x => x.GetData()).Where(o => o != null && (Type)o.GetType() == type))
-                        {
-                            dataDictionaryCache.MethodInfo.Invoke(dic, new[] { data.Symbol, data });
-                        }
-                        return dic;
+                    foreach (var data in instance.Ticks)
+                    {
+                        var symbol = data.Key;
+                        var listOfTicks = data.Value;
+                        // preserving existing behavior we will return the last data point, users expect a 'DataDictionary<Tick> : IDictionary<Symbol, Tick>'
+                        var lastDataPoint = listOfTicks[listOfTicks.Count - 1];
+                        dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { symbol, lastDataPoint });
                     }
-                    );
                 }
                 else if (type == typeof(TradeBar))
                 {
-                    dictionary = new Lazy<object>(() => new DataDictionary<TradeBar>(
-                        instance._data.Value.Values.Where(x => x.TradeBar != null).Select(x => x.TradeBar),
-                        x => x.Symbol));
+                    dictionary = instance.Bars;
                 }
                 else if (type == typeof(QuoteBar))
                 {
-                    dictionary = new Lazy<object>(() => new DataDictionary<QuoteBar>(
-                        instance._data.Value.Values.Where(x => x.QuoteBar != null).Select(x => x.QuoteBar),
-                        x => x.Symbol));
+                    dictionary = instance.QuoteBars;
+                }
+                else if (type == typeof(Delisting))
+                {
+                    dictionary = instance.Delistings;
+                }
+                else if (type == typeof(Split))
+                {
+                    dictionary = instance.Splits;
+                }
+                else if (type == typeof(OptionChain))
+                {
+                    dictionary = instance.OptionChains;
+                }
+                else if (type == typeof(FuturesChain))
+                {
+                    dictionary = instance.FuturesChains;
+                }
+                else if (type == typeof(Dividend))
+                {
+                    dictionary = instance.Dividends;
+                }
+                else if (type == typeof(SymbolChangedEvent))
+                {
+                    dictionary = instance.SymbolChangedEvents;
                 }
                 else
                 {
-                    dictionary = new Lazy<object>(() =>
-                    {
-                        var dataDictionaryCache = GenericDataDictionary.Get(type);
-                        var dic = Activator.CreateInstance(dataDictionaryCache.GenericType);
+                    var dataDictionaryCache = GenericDataDictionary.Get(type);
+                    dictionary = Activator.CreateInstance(dataDictionaryCache.GenericType);
 
-                        foreach (var data in instance._data.Value.Values.Select(x => x.GetData()).Where(o => o != null && (Type)o.GetType() == type))
-                        {
-                            dataDictionaryCache.MethodInfo.Invoke(dic, new[] { data.Symbol, data });
-                        }
-                        return dic;
+                    foreach (var data in instance._data.Value.Values.Select(x => x.Custom).Where(o => o != null && o.GetType() == type))
+                    {
+                        dataDictionaryCache.MethodInfo.Invoke(dictionary, new object[] { data.Symbol, data });
                     }
-                    );
                 }
 
                 instance._dataByType[type] = dictionary;
             }
-            return dictionary.Value;
+            return dictionary;
         }
 
         /// <summary>
@@ -406,36 +468,42 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Returns the input ticks if non-null, otherwise produces one fom the dynamic data dictionary
+        /// Dynamically produces a <see cref="Ticks"/> data dictionary using the provided data
         /// </summary>
-        private Ticks CreateTicksCollection(Ticks ticks)
+        private static Ticks CreateTicksCollection(DateTime time, IEnumerable<BaseData> data)
         {
-            if (ticks != null) return ticks;
-            ticks = new Ticks(Time);
-            foreach (var listTicks in _data.Value.Values.Select(x => x.GetData()).OfType<List<Tick>>().Where(x => x.Count != 0))
+            var ticks = new Ticks(time);
+            foreach (var tick in data.OfType<Tick>())
             {
-                ticks[listTicks[0].Symbol] = listTicks;
+                List<Tick> listTicks;
+                if (!ticks.TryGetValue(tick.Symbol, out listTicks))
+                {
+                    ticks[tick.Symbol] = listTicks = new List<Tick>();
+                }
+                listTicks.Add(tick);
             }
             return ticks;
         }
 
         /// <summary>
-        /// Returns the input collection if onon-null, otherwise produces one from the dynamic data dictionary
+        /// Dynamically produces a data dictionary for the requested type using the provided data
         /// </summary>
         /// <typeparam name="T">The data dictionary type</typeparam>
         /// <typeparam name="TItem">The item type of the data dictionary</typeparam>
-        /// <param name="collection">The input collection, if non-null, returned immediately</param>
+        /// <param name="time">The current slice time</param>
+        /// <param name="data">The data to create the collection</param>
         /// <returns>The data dictionary of <typeparamref name="TItem"/> containing all the data of that type in this slice</returns>
-        private T CreateCollection<T, TItem>(T collection)
+        private static T CreateCollection<T, TItem>(DateTime time, IEnumerable<BaseData> data)
             where T : DataDictionary<TItem>, new()
             where TItem : BaseData
         {
-            if (collection != null) return collection;
-            collection = new T();
+            var collection = new T
+            {
 #pragma warning disable 618 // This assignment is left here until the Time property is removed.
-            collection.Time = Time;
+                Time = time
 #pragma warning restore 618
-            foreach (var item in _data.Value.Values.Select(x => x.GetData()).OfType<TItem>())
+            };
+            foreach (var item in data.OfType<TItem>())
             {
                 collection[item.Symbol] = item;
             }
