@@ -92,14 +92,21 @@ namespace QuantConnect.Indicators
             }
 
             _previousInput = input;
-            if (AverageLoss == 0m)
+
+            // make sure the difference averages are not negative
+            // (can happen with some types of moving averages -- e.g. DEMA)
+            var averageLoss = AverageLoss < 0 ? 0 : AverageLoss.Current.Value;
+            var averageGain = AverageGain < 0 ? 0 : AverageGain.Current.Value;
+
+            if (averageLoss == 0m)
             {
                 // all up days is 100
                 return 100m;
             }
 
-            var rs = AverageGain / AverageLoss;
-            return 100m - (100m / (1 + rs));
+            var rs = averageGain / averageLoss;
+
+            return 100m - 100m / (1 + rs);
         }
 
         /// <summary>

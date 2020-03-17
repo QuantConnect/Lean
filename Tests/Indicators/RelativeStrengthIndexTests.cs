@@ -51,5 +51,22 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.AssertIndicatorIsInDefaultState(rsi.AverageGain);
             TestHelper.AssertIndicatorIsInDefaultState(rsi.AverageLoss);
         }
+
+        [Test]
+        public void DoesNotThrowDivisionByZero()
+        {
+            var rsi = new RelativeStrengthIndex(14, MovingAverageType.DoubleExponential);
+
+            rsi.Update(DateTime.UtcNow, 101m);
+            rsi.Update(DateTime.UtcNow, 103m);
+
+            for (var i = 0; i < 500; i++)
+            {
+                rsi.Update(DateTime.UtcNow, 102m);
+
+                // validate the expected range
+                Assert.That(rsi >= 0 && rsi <= 100);
+            }
+        }
     }
 }
