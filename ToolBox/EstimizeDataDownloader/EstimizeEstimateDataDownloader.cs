@@ -115,7 +115,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                                         return;
                                     }
 
-                                    var estimates = JsonConvert.DeserializeObject<List<EstimizeEstimate>>(result)
+                                    var estimates = JsonConvert.DeserializeObject<List<EstimizeEstimate>>(result, JsonSerializerSettings)
                                         .GroupBy(estimate =>
                                         {
                                             var oldTicker = ticker;

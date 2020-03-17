@@ -164,9 +164,9 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
             var consensuses = revisionsJToken == null
                 ? new List<EstimizeConsensus>()
-                : JsonConvert.DeserializeObject<List<EstimizeConsensus>>(revisionsJToken.ToString());
+                : JsonConvert.DeserializeObject<List<EstimizeConsensus>>(revisionsJToken.ToString(), JsonSerializerSettings);
 
-            consensuses.Add(JsonConvert.DeserializeObject<EstimizeConsensus>(jToken.ToString()));
+            consensuses.Add(JsonConvert.DeserializeObject<EstimizeConsensus>(jToken.ToString(), JsonSerializerSettings));
 
             foreach (var consensus in consensuses)
             {

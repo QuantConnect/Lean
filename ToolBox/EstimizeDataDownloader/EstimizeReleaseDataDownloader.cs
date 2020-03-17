@@ -117,7 +117,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                                     // instead of having "forecasts" that will change in the future taint our
                                     // data and make backtests non-deterministic. We want to have
                                     // consistency with our data in live trading historical requests as well
-                                    var releases = JsonConvert.DeserializeObject<List<EstimizeRelease>>(result)
+                                    var releases = JsonConvert.DeserializeObject<List<EstimizeRelease>>(result, JsonSerializerSettings)
                                         .Where(x => x.Eps != null)
                                         .GroupBy(x =>
                                         {
