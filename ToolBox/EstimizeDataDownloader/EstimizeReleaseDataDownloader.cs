@@ -70,20 +70,14 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
 
                 foreach (var company in companies)
                 {
+                    // Makes sure we don't overrun Estimize rate limits accidentally
+                    IndexGate.WaitToProceed();
 
-                    try
-                    {
-                        // Makes sure we don't overrun Estimize rate limits accidentally
-                        IndexGate.WaitToProceed();
-                    }
-                    // This is super super rare, but it failures in RateGate (RG) can still happen nonetheless. Let's not
-                    // rely on RG operating successfully all the time so that if RG fails, our download process doesn't fail
-                    catch (ArgumentOutOfRangeException e)
-                    {
-                        Log.Error(e, $"EstimizeReleaseDataDownloader.Run(): RateGate failed. Sleeping for 110 milliseconds with Thread.Sleep()");
-                        Thread.Sleep(110);
-                    }
-
+                    // Include tickers that are "defunct".
+                    // Remove the tag because it cannot be part of the API endpoint.
+                    // This is separate from the NormalizeTicker(...) method since
+                    // we don't convert tickers with `-`s into the format we can successfully
+                    // index mapfiles with.
                     var ticker = company.Ticker;
                     if (ticker.IndexOf("defunct", StringComparison.OrdinalIgnoreCase) > 0)
                     {
@@ -121,13 +115,14 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                                         .Where(x => x.Eps != null)
                                         .GroupBy(x =>
                                         {
+                                            var normalizedTicker = NormalizeTicker(ticker);
                                             var releaseDate = x.ReleaseDate;
 
                                             try
                                             {
-                                                var mapFile = _mapFileResolver.ResolveMapFile(ticker, releaseDate);
-                                                var oldTicker = ticker;
-                                                var newTicker = ticker;
+                                                var mapFile = _mapFileResolver.ResolveMapFile(normalizedTicker, releaseDate);
+                                                var oldTicker = normalizedTicker;
+                                                var newTicker = normalizedTicker;
 
                                                 // Ensure we're writing to the correct historical ticker
                                                 if (!mapFile.Any())
@@ -154,7 +149,7 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
                                             // to access the last element of an empty list. Maybe this is a bug?
                                             catch (InvalidOperationException e)
                                             {
-                                                Log.Error(e, $"EstimizeReleaseDataDownloader.Run(): Failed to load map file for: {ticker} - on: {releaseDate}");
+                                                Log.Error(e, $"EstimizeReleaseDataDownloader.Run(): Failed to load map file for: {normalizedTicker} - on: {releaseDate}");
                                                 return string.Empty;
                                             }
                                         })
