@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -43,8 +43,8 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2015, 1, 1);
             SetEndDate(2017, 1, 1);
 
-            PortfolioConstructionModel.RebalanceOnSecurityChanges = false;
-            PortfolioConstructionModel.RebalanceOnInsightChanges = false;
+            Settings.RebalancePortfolioOnSecurityChanges = false;
+            Settings.RebalancePortfolioOnInsightChanges = false;
 
             SetUniverseSelection(new CustomUniverseSelectionModel("CustomUniverseSelectionModel",
                 time =>
@@ -66,12 +66,12 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (orderEvent.Status.IsFill())
+            if (orderEvent.Status == OrderStatus.Submitted)
             {
                 DateTime lastOrderFilled;
                 if (_lastOrderFilled.TryGetValue(orderEvent.Symbol, out lastOrderFilled))
                 {
-                    if (UtcTime - lastOrderFilled < TimeSpan.FromDays(30 - 1))
+                    if (UtcTime - lastOrderFilled < TimeSpan.FromDays(30))
                     {
                         throw new Exception($"{UtcTime} {orderEvent.Symbol} {UtcTime - lastOrderFilled}");
                     }
@@ -97,36 +97,36 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Trades", "82"},
-            {"Average Win", "2.31%"},
-            {"Average Loss", "-2.13%"},
-            {"Compounding Annual Return", "12.925%"},
-            {"Drawdown", "18.500%"},
-            {"Expectancy", "0.248"},
-            {"Net Profit", "27.522%"},
-            {"Sharpe Ratio", "0.684"},
-            {"Probabilistic Sharpe Ratio", "31.015%"},
-            {"Loss Rate", "40%"},
-            {"Win Rate", "60%"},
-            {"Profit-Loss Ratio", "1.08"},
-            {"Alpha", "0.111"},
-            {"Beta", "0.045"},
-            {"Annual Standard Deviation", "0.167"},
-            {"Annual Variance", "0.028"},
-            {"Information Ratio", "0.258"},
+            {"Total Trades", "74"},
+            {"Average Win", "2.44%"},
+            {"Average Loss", "-2.29%"},
+            {"Compounding Annual Return", "-4.559%"},
+            {"Drawdown", "30.400%"},
+            {"Expectancy", "-0.081"},
+            {"Net Profit", "-8.910%"},
+            {"Sharpe Ratio", "-0.15"},
+            {"Probabilistic Sharpe Ratio", "3.646%"},
+            {"Loss Rate", "56%"},
+            {"Win Rate", "44%"},
+            {"Profit-Loss Ratio", "1.07"},
+            {"Alpha", "-0.027"},
+            {"Beta", "0.029"},
+            {"Annual Standard Deviation", "0.165"},
+            {"Annual Variance", "0.027"},
+            {"Information Ratio", "-0.41"},
             {"Tracking Error", "0.208"},
-            {"Treynor Ratio", "2.556"},
-            {"Total Fees", "$178.65"},
-            {"Fitness Score", "0.041"},
+            {"Treynor Ratio", "-0.841"},
+            {"Total Fees", "$136.86"},
+            {"Fitness Score", "0.027"},
             {"Kelly Criterion Estimate", "0"},
             {"Kelly Criterion Probability Value", "1"},
-            {"Sortino Ratio", "1.006"},
-            {"Return Over Maximum Drawdown", "0.698"},
-            {"Portfolio Turnover", "0.066"},
-            {"Total Insights Generated", "580"},
-            {"Total Insights Closed", "578"},
-            {"Total Insights Analysis Completed", "578"},
-            {"Long Insight Count", "580"},
+            {"Sortino Ratio", "-0.322"},
+            {"Return Over Maximum Drawdown", "-0.15"},
+            {"Portfolio Turnover", "0.06"},
+            {"Total Insights Generated", "534"},
+            {"Total Insights Closed", "534"},
+            {"Total Insights Analysis Completed", "534"},
+            {"Long Insight Count", "534"},
             {"Short Insight Count", "0"},
             {"Long/Short Ratio", "100%"},
             {"Estimated Monthly Alpha Value", "$0"},
@@ -135,7 +135,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Direction", "0%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"}
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "-914174289"}
         };
     }
 }

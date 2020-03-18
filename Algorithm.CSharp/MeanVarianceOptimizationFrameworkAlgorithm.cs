@@ -22,12 +22,13 @@ using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Interfaces;
 using System.Linq;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     public class MeanVarianceOptimizationFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private IEnumerable<Symbol> _symbols = (new string[] { "AIG", "BAC", "IBM", "SPY" }).Select(s => QuantConnect.Symbol.Create(s, SecurityType.Equity, Market.USA));
+        private IEnumerable<Symbol> _symbols = (new[] { "AIG", "BAC", "IBM", "SPY" }).Select(s => QuantConnect.Symbol.Create(s, SecurityType.Equity, Market.USA));
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -36,6 +37,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             // Set requested data resolution
             UniverseSettings.Resolution = Resolution.Minute;
+
+            Settings.RebalancePortfolioOnInsightChanges = false;
 
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
@@ -58,6 +61,14 @@ namespace QuantConnect.Algorithm.CSharp
         {
             int last = Time.Day > 8 ? 3 : _symbols.Count();
             return _symbols.Take(last);
+        }
+
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            if (orderEvent.Status == OrderStatus.Filled)
+            {
+                Log($"{orderEvent}");
+            }
         }
 
         public bool CanRunLocally => true;
@@ -110,7 +121,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Direction", "50%"},
             {"Mean Population Magnitude", "50%"},
             {"Rolling Averaged Population Direction", "12.6429%"},
-            {"Rolling Averaged Population Magnitude", "12.6429%"}
+            {"Rolling Averaged Population Magnitude", "12.6429%"},
+            {"OrderListHash", "-1982816242"}
         };
     }
 }

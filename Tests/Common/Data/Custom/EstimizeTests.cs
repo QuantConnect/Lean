@@ -30,6 +30,11 @@ namespace QuantConnect.Tests.Common.Data.Custom
     [TestFixture]
     public class EstimizeTests
     {
+        private readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
+        {
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc
+        };
+
         [Test, Ignore]
         public void EstimizeDownloadDoesNotThrow()
         {
@@ -59,28 +64,29 @@ namespace QuantConnect.Tests.Common.Data.Custom
                           "\"release_date\":\"2019-10-23T16:00:00-04:00\"," +
                           "\"id\":\"155842\"}";
 
-            var data = JsonConvert.DeserializeObject<EstimizeRelease>(content);
+            var data = JsonConvert.DeserializeObject<EstimizeRelease>(content, _jsonSerializerSettings);
 
             Assert.NotNull(data);
-            Assert.AreEqual(data.Id, "155842");
-            Assert.AreEqual(data.FiscalYear, 2020);
-            Assert.AreEqual(data.FiscalQuarter, 1);
+            Assert.AreEqual("155842", data.Id);
+            Assert.AreEqual(2020, data.FiscalYear);
+            Assert.AreEqual(1, data.FiscalQuarter);
             Assert.IsFalse(data.Eps.HasValue);
-            Assert.AreEqual(data.WallStreetEpsEstimate, 1.188);
-            Assert.AreEqual(data.ConsensusEpsEstimate, 1.20507936507937);
-            Assert.AreEqual(data.ConsensusWeightedEpsEstimate, 1.21545656570188);
+            Assert.AreEqual(1.188, data.WallStreetEpsEstimate);
+            Assert.AreEqual(1.20507936507937, data.ConsensusEpsEstimate);
+            Assert.AreEqual(1.21545656570188, data.ConsensusWeightedEpsEstimate);
             Assert.IsFalse(data.Revenue.HasValue);
-            Assert.AreEqual(data.WallStreetRevenueEstimate, 31966.964);
-            Assert.AreEqual(data.ConsensusRevenueEstimate, 31872.2258064516);
-            Assert.AreEqual(data.ConsensusWeightedRevenueEstimate, 31966.6230263867);
-            Assert.AreEqual(data.ReleaseDate, new DateTime(2019, 10, 23, 20, 0, 0).ToLocalTime());
+            Assert.AreEqual(31966.964, data.WallStreetRevenueEstimate);
+            Assert.AreEqual(31872.2258064516, data.ConsensusRevenueEstimate);
+            Assert.AreEqual(31966.6230263867, data.ConsensusWeightedRevenueEstimate);
+            Assert.AreEqual(new DateTime(2019, 10, 23, 20, 0, 0), data.ReleaseDate);
             Assert.AreEqual(data.ReleaseDate, data.EndTime);
+            Assert.AreEqual(data.ReleaseDate, data.Time);
 
             content = content.Replace("\"eps\":null,", "\"eps\":1.2,");
-            data = JsonConvert.DeserializeObject<EstimizeRelease>(content);
+            data = JsonConvert.DeserializeObject<EstimizeRelease>(content, _jsonSerializerSettings);
             Assert.NotNull(data);
-            Assert.AreEqual(data.Eps, 1.2);
-            Assert.AreEqual(data.Value, 1.2);
+            Assert.AreEqual(1.2, data.Eps);
+            Assert.AreEqual(1.2, data.Value);
         }
 
         [Test]
@@ -92,14 +98,14 @@ namespace QuantConnect.Tests.Common.Data.Custom
                 ReleaseDate = new DateTime(2019,6,10)
             };
 
-            var content = JsonConvert.SerializeObject(data);
+            var content = JsonConvert.SerializeObject(data, _jsonSerializerSettings);
 
             Assert.IsTrue(content.Contains("\"id\":\"0\""));
-            Assert.IsTrue(content.Contains("\"release_date\":\"2019-06-10T00:00:00\""));
+            Assert.IsTrue(content.Contains("\"release_date\":\"2019-06-10T00:00:00Z\""));
             Assert.IsTrue(content.Contains("\"eps\":null"));
 
             data.Eps = 1.2m;
-            content = JsonConvert.SerializeObject(data);
+            content = JsonConvert.SerializeObject(data, _jsonSerializerSettings);
             Assert.IsTrue(content.Contains("\"eps\":1.2"));
         }
 
@@ -151,7 +157,7 @@ namespace QuantConnect.Tests.Common.Data.Custom
         }
 
         [Test]
-        public void DeserializeEstimateReleaseSuccessfully()
+        public void DeserializeEstimizeEstimateSuccessfully()
         {
             var content = "{" +
                           "\"ticker\":\"AAPL\"," +
@@ -165,25 +171,26 @@ namespace QuantConnect.Tests.Common.Data.Custom
                           "\"analyst_id\":\"657836\"," +
                           "\"flagged\":false}";
 
-            var data = JsonConvert.DeserializeObject<EstimizeEstimate>(content);
+            var data = JsonConvert.DeserializeObject<EstimizeEstimate>(content, _jsonSerializerSettings);
 
             Assert.NotNull(data);
-            Assert.AreEqual(data.Id, "2857028");
-            Assert.AreEqual(data.Ticker, "AAPL");
-            Assert.AreEqual(data.FiscalYear, 2020);
-            Assert.AreEqual(data.FiscalQuarter, 2);
-            Assert.AreEqual(data.CreatedAt, new DateTime(2019, 6, 7, 14, 40, 36).ToLocalTime());
-            Assert.AreEqual(data.CreatedAt, data.EndTime);
-            Assert.AreEqual(data.Eps, 2.81);
-            Assert.AreEqual(data.Revenue, 61413.0);
-            Assert.AreEqual(data.UserName, "Dominantstock");
-            Assert.AreEqual(data.AnalystId, "657836");
+            Assert.AreEqual("2857028", data.Id);
+            Assert.AreEqual("AAPL", data.Ticker);
+            Assert.AreEqual(2020, data.FiscalYear);
+            Assert.AreEqual(2, data.FiscalQuarter);
+            Assert.AreEqual(new DateTime(2019, 6, 7, 14, 40, 36), data.CreatedAt);
+            Assert.AreEqual(data.EndTime, data.CreatedAt);
+            Assert.AreEqual(data.Time, data.CreatedAt);
+            Assert.AreEqual(2.81, data.Eps);
+            Assert.AreEqual(61413.0, data.Revenue);
+            Assert.AreEqual("Dominantstock", data.UserName);
+            Assert.AreEqual("657836", data.AnalystId);
             Assert.IsFalse(data.Flagged);
             content = content.Replace("\"eps\":2.81,", "\"eps\":null,");
-            data = JsonConvert.DeserializeObject<EstimizeEstimate>(content);
+            data = JsonConvert.DeserializeObject<EstimizeEstimate>(content, _jsonSerializerSettings);
             Assert.NotNull(data);
             Assert.IsFalse(data.Eps.HasValue);
-            Assert.AreEqual(data.Value, 0);
+            Assert.AreEqual(0, data.Value);
         }
 
         [Test]
@@ -195,14 +202,14 @@ namespace QuantConnect.Tests.Common.Data.Custom
                 CreatedAt = new DateTime(2019, 6, 10)
             };
 
-            var content = JsonConvert.SerializeObject(data);
+            var content = JsonConvert.SerializeObject(data, _jsonSerializerSettings);
 
             Assert.IsTrue(content.Contains("\"id\":\"0\""));
-            Assert.IsTrue(content.Contains("\"created_at\":\"2019-06-10T00:00:00\""));
+            Assert.IsTrue(content.Contains("\"created_at\":\"2019-06-10T00:00:00Z\""));
             Assert.IsTrue(content.Contains("\"eps\":null"));
 
             data.Eps = 1.2m;
-            content = JsonConvert.SerializeObject(data);
+            content = JsonConvert.SerializeObject(data, _jsonSerializerSettings);
             Assert.IsTrue(content.Contains("\"eps\":1.2"));
         }
 
@@ -232,7 +239,6 @@ namespace QuantConnect.Tests.Common.Data.Custom
 
             Assert.IsTrue(rows.Count > 0);
         }
-
 
         [Test, Ignore("Requires Estimize data")]
         public void EstimizeConsensusReaderTest()

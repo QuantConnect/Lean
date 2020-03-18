@@ -163,6 +163,7 @@
     <Compile Include="DefaultResolutionRegressionAlgorithm.cs" />
     <Compile Include="BasicPythonIntegrationTemplateAlgorithm.cs" />
     <Compile Include="BasicSetAccountCurrencyAlgorithm.cs" />
+    <Compile Include="LongOnlyAlphaStreamAlgorithm.cs" />
     <Compile Include="Benchmarks\SECReportBenchmarkAlgorithm.cs" />
     <Compile Include="Benchmarks\SmartInsiderEventBenchmarkAlgorithm.cs" />
     <Compile Include="CustomBenchmarkRegressionAlgorithm.cs" />
@@ -180,7 +181,11 @@
     <Compile Include="MarginRemainingRegressionAlgorithm.cs" />
     <Compile Include="NoMarginCallExpectedRegressionAlgorithm.cs" />
     <Compile Include="ObjectStoreExampleAlgorithm.cs" />
+    <Compile Include="ScheduledEventsOrderRegressionAlgorithm.cs" />
+    <Compile Include="SectorWeightingFrameworkAlgorithm.cs" />
     <Compile Include="OnEndOfDayAddDataRegressionAlgorithm.cs" />
+    <Compile Include="PortfolioRebalanceOnCustomFuncRegressionAlgorithm.cs" />
+    <Compile Include="PortfolioRebalanceOnDateRulesRegressionAlgorithm.cs" />
     <Compile Include="PortfolioRebalanceOnInsightChangesRegressionAlgorithm.cs" />
     <Compile Include="PortfolioRebalanceOnSecurityChangesRegressionAlgorithm.cs" />
     <Compile Include="ResolutionSwitchingAlgorithm.cs" />

@@ -125,6 +125,7 @@
     <Compile Include="NotifiedSecurityChanges.cs" />
     <Compile Include="Portfolio\BlackLittermanOptimizationPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\ConfidenceWeightedPortfolioConstructionModel.cs" />
+    <Compile Include="Portfolio\SectorWeightingPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\InsightWeightingPortfolioConstructionModel.cs" />
     <Compile Include="Portfolio\UnconstrainedMeanVariancePortfolioOptimizer.cs" />
     <Compile Include="Portfolio\MaximumSharpeRatioPortfolioOptimizer.cs" />
@@ -182,6 +183,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Portfolio\AccumulativeInsightPortfolioConstructionModel.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Portfolio\SectorWeightingPortfolioConstructionModel.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Portfolio\InsightWeightingPortfolioConstructionModel.py">

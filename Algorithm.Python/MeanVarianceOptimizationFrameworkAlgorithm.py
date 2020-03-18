@@ -46,6 +46,8 @@ class MeanVarianceOptimizationFrameworkAlgorithm(QCAlgorithm):
         # Set requested data resolution
         self.UniverseSettings.Resolution = Resolution.Minute
 
+        self.Settings.RebalancePortfolioOnInsightChanges = False
+
         self.SetStartDate(2013,10,7)   #Set Start Date
         self.SetEndDate(2013,10,11)    #Set End Date
         self.SetCash(100000)           #Set Strategy Cash
@@ -64,7 +66,3 @@ class MeanVarianceOptimizationFrameworkAlgorithm(QCAlgorithm):
         last = 3 if self.Time.day > 8 else len(self.symbols)
 
         return self.symbols[0:last]
-
-    def OnOrderEvent(self, orderEvent):
-        if orderEvent.Status == OrderStatus.Filled:
-            self.Debug(orderEvent)

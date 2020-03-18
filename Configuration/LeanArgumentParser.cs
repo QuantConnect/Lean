@@ -30,7 +30,8 @@ namespace QuantConnect.Configuration
         private static readonly List<CommandLineOption> Options = new List<CommandLineOption>
             {
                 new CommandLineOption("config", CommandOptionType.SingleValue),
-                new CommandLineOption("output", CommandOptionType.SingleValue),
+                new CommandLineOption("results-destination-folder", CommandOptionType.SingleValue),
+                new CommandLineOption("algorithm-id", CommandOptionType.SingleValue),
 
                 // Options grabbed from json file
                 new CommandLineOption("environment", CommandOptionType.SingleValue),

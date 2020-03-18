@@ -123,13 +123,13 @@ namespace QuantConnect.API
             }
 
             // Live Results - At this time only that charting data can be returned from the api (9/30/2016)
-            liveAlgoResults.LiveResults.Results = new LiveResult(chartDictionary,
+            liveAlgoResults.LiveResults.Results = new LiveResult(new LiveResultParameters(chartDictionary,
                 new Dictionary<int, Order>(),
                 new Dictionary<DateTime, decimal>(),
                 new Dictionary<string, Holding>(),
                 new CashBook(),
                 new Dictionary<string, string>(),
-                new Dictionary<string, string>()
+                new Dictionary<string, string>())
             );
 
             return liveAlgoResults;

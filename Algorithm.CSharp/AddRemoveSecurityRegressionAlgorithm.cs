@@ -74,8 +74,8 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else if (Time.DayOfWeek == DayOfWeek.Thursday)
             {
-                RemoveSecurity(_bac);
                 RemoveSecurity(_aig);
+                RemoveSecurity(_bac);
                 lastAction = Time;
             }
         }
@@ -149,7 +149,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Direction", "100%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "100%"},
-            {"Rolling Averaged Population Magnitude", "0%"}
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "1843884872"}
         };
     }
 }

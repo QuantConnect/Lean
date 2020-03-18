@@ -48,7 +48,11 @@ namespace QuantConnect.Data.Custom.Estimize
         /// The date of the release
         /// </summary>
         [JsonProperty(PropertyName = "release_date")]
-        public DateTime ReleaseDate { get; set; }
+        public DateTime ReleaseDate
+        {
+            get { return Time; }
+            set { Time = value; }
+        }
 
         /// <summary>
         /// The date of the release
@@ -126,7 +130,6 @@ namespace QuantConnect.Data.Custom.Estimize
             var csv = csvLine.Split(',');
 
             ReleaseDate = Parse.DateTimeExact(csv[0].Trim(), "yyyyMMdd HH:mm:ss");
-            Time = ReleaseDate;
             Id = csv[1];
             FiscalYear = Parse.Int(csv[2]);
             FiscalQuarter = Parse.Int(csv[3]);

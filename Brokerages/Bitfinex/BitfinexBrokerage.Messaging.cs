@@ -42,6 +42,7 @@ namespace QuantConnect.Brokerages.Bitfinex
         private readonly RateGate _restRateLimiter = new RateGate(8, TimeSpan.FromMinutes(1));
         private readonly ConcurrentDictionary<int, decimal> _fills = new ConcurrentDictionary<int, decimal>();
         private readonly BitfinexSubscriptionManager _subscriptionManager;
+        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase;
 
         /// <summary>
         /// Locking object for the Ticks list in the data queue handler
@@ -58,9 +59,25 @@ namespace QuantConnect.Brokerages.Bitfinex
         /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
         /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
         public BitfinexBrokerage(string wssUrl, string restUrl, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
-            : base(wssUrl, new WebSocketWrapper(), new RestClient(restUrl), apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
+            : this(wssUrl, new WebSocketWrapper(), new RestClient(restUrl), apiKey, apiSecret, algorithm, priceProvider)
+        {
+        }
+
+        /// <summary>
+        /// Constructor for brokerage
+        /// </summary>
+        /// <param name="wssUrl">websockets url</param>
+        /// <param name="websocket">instance of websockets client</param>
+        /// <param name="restClient">instance of rest client</param>
+        /// <param name="apiKey">api key</param>
+        /// <param name="apiSecret">api secret</param>
+        /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
+        /// <param name="priceProvider">The price provider for missing FX conversion rates</param>
+        public BitfinexBrokerage(string wssUrl, IWebSocket websocket, IRestClient restClient, string apiKey, string apiSecret, IAlgorithm algorithm, IPriceProvider priceProvider)
+            : base(wssUrl, websocket, restClient, apiKey, apiSecret, Market.Bitfinex, "Bitfinex")
         {
             _subscriptionManager = new BitfinexSubscriptionManager(this, wssUrl, _symbolMapper);
+            _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             _algorithm = algorithm;
 
             WebSocket.Open += (sender, args) =>

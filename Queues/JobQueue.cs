@@ -101,6 +101,8 @@ namespace QuantConnect.Queues
                 PythonInitializer.SetPythonPathEnvironmentVariable(new string[] { pythonFile.Directory.FullName });
             }
 
+            var algorithmId = Config.Get("algorithm-id", AlgorithmTypeName);
+
             //If this isn't a backtesting mode/request, attempt a live job.
             if (_liveMode)
             {
@@ -117,7 +119,7 @@ namespace QuantConnect.Queues
                     UserId = UserId,
                     ProjectId = ProjectId,
                     Version = Globals.Version,
-                    DeployId = AlgorithmTypeName,
+                    DeployId = algorithmId,
                     Parameters = parameters,
                     Language = Language,
                     Controls = controls
@@ -148,7 +150,7 @@ namespace QuantConnect.Queues
                 UserId = UserId,
                 ProjectId = ProjectId,
                 Version = Globals.Version,
-                BacktestId = AlgorithmTypeName,
+                BacktestId = algorithmId,
                 Language = Language,
                 Parameters = parameters,
                 Controls = controls

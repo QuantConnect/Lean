@@ -287,12 +287,19 @@
     <Compile Include="Algorithm\Framework\Portfolio\BlackLittermanOptimizationPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\AccumulativeInsightPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\ConfidenceWeightedPortfolioConstructionModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\BaseWeightingPortfolioConstructionModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\MeanVarianceOptimizationPortfolioConstructionModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\PortfolioConstructionModelPythonWrapperTests.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\SectorWeightingPortfolioConstructionModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\LongOnlyInsightWeightingPortfolioConstructionModelTests.cs" />
+    <Compile Include="Algorithm\Framework\Portfolio\LongOnlyEqualWeightingPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\InsightWeightingPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetCollectionTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\EqualWeightingPortfolioConstructionModelTests.cs" />
     <Compile Include="Algorithm\Framework\Portfolio\PortfolioTargetTests.cs" />
     <Compile Include="Algorithm\Framework\Selection\QC500UniverseSelectionModelTests.cs" />
+    <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageAdditionalTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexFeeModelTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexSymbolMapperTests.cs" />
     <Compile Include="Brokerages\Bitfinex\BitfinexBrokerageHistoryProviderTests.cs" />
@@ -372,6 +379,8 @@
     <Compile Include="Common\Util\SeriesJsonConverterTests.cs" />
     <Compile Include="Common\Util\StreamReaderEnumerableTests.cs" />
     <Compile Include="Common\Util\ValidateTests.cs" />
+    <Compile Include="Engine\AlgorithmTimeLimitManagerTests.cs" />
+    <Compile Include="Engine\Alphas\DefaultAlphaHandlerTests.cs" />
     <Compile Include="Engine\Alphas\InsightAnalysisContextTests.cs" />
     <Compile Include="Engine\BrokerageTransactionHandlerTests\BacktestingTransactionHandlerTests.cs" />
     <Compile Include="Engine\DataFeeds\BacktestingFutureChainProviderTests.cs" />
@@ -399,6 +408,7 @@
     <Compile Include="Engine\HistoricalData\SubscriptionDataReaderHistoryProviderTests.cs" />
     <Compile Include="Engine\RealTime\BacktestingRealTimeHandlerTests.cs" />
     <Compile Include="Engine\Results\BacktestingResultHandlerTests.cs" />
+    <Compile Include="Engine\Results\BaseResultsHandlerTests.cs" />
     <Compile Include="Indicators\PythonIndicatorNoinheritanceTestsLegacy.cs" />
     <Compile Include="Indicators\PythonIndicatorNoinheritanceTests.cs" />
     <Compile Include="Indicators\PythonIndicatorTests.cs" />
@@ -647,6 +657,7 @@
     <Compile Include="RegressionTests.cs" />
     <Compile Include="Report\CalculationTests.cs" />
     <Compile Include="Report\ResultDeserializationTests.cs" />
+    <Compile Include="Report\PortfolioLooperAlgorithmTests.cs" />
     <Compile Include="Symbols.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Indicators\LinearWeightedMovingAverageTests.cs" />

@@ -67,5 +67,12 @@ namespace QuantConnect.Securities
         /// <param name="parameters">A parameters object containing the security</param>
         /// <returns>The reserved buying power in account currency</returns>
         ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionParameters parameters);
+
+        /// <summary>
+        /// Gets the buying power available for a trade
+        /// </summary>
+        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
+        /// <returns>The buying power available for the trade</returns>
+        BuyingPower GetBuyingPower(BuyingPowerParameters parameters);
     }
 }

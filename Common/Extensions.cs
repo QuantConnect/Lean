@@ -37,6 +37,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Python;
+using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using Timer = System.Timers.Timer;
@@ -51,6 +52,117 @@ namespace QuantConnect
     {
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
+
+        /// <summary>
+        /// Helper method to safely stop a running thread
+        /// </summary>
+        /// <param name="thread">The thread to stop</param>
+        /// <param name="timeout">The timeout to wait till the thread ends after which abort will be called</param>
+        /// <param name="token">Cancellation token source to use if any</param>
+        public static void StopSafely(this Thread thread, TimeSpan timeout, CancellationTokenSource token = null)
+        {
+            if (thread != null)
+            {
+                try
+                {
+                    if (token != null && !token.IsCancellationRequested)
+                    {
+                        token.Cancel(false);
+                    }
+                    Log.Trace($"StopSafely(): waiting for '{thread.Name}' thread to stop...");
+                    // just in case we add a time out
+                    if (!thread.Join(timeout))
+                    {
+                        Log.Error($"StopSafely(): Timeout waiting for '{thread.Name}' thread to stop");
+                        thread.Abort();
+                    }
+                }
+                catch (Exception exception)
+                {
+                    // just in case catch any exceptions
+                    Log.Error(exception);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Generates a hash code from a given collection of orders
+        /// </summary>
+        /// <param name="orders">The order collection</param>
+        /// <returns>The hash value</returns>
+        public static int GetHash(this IDictionary<int, Order> orders)
+        {
+            var joinedOrders = string.Join(
+                ",",
+                orders
+                    .OrderBy(pair => pair.Key)
+                    .Select(pair =>
+                        {
+                            // this is required to avoid any small differences between python and C#
+                            var order = pair.Value;
+                            order.Price = order.Price.SmartRounding();
+                            var limit = order as LimitOrder;
+                            if (limit != null)
+                            {
+                                limit.LimitPrice = limit.LimitPrice.SmartRounding();
+                            }
+                            var stopLimit = order as StopLimitOrder;
+                            if (stopLimit != null)
+                            {
+                                stopLimit.LimitPrice = stopLimit.LimitPrice.SmartRounding();
+                                stopLimit.StopPrice = stopLimit.StopPrice.SmartRounding();
+                            }
+                            var stopMarket = order as StopMarketOrder;
+                            if (stopMarket != null)
+                            {
+                                stopMarket.StopPrice = stopMarket.StopPrice.SmartRounding();
+                            }
+                            return JsonConvert.SerializeObject(pair.Value, Formatting.None);
+                        }
+                    )
+            );
+            return joinedOrders.GetHashCode();
+        }
+
+        /// <summary>
+        /// Converts a date rule into a function that receives current time
+        /// and returns the next date.
+        /// </summary>
+        /// <param name="dateRule">The date rule to convert</param>
+        /// <returns>A function that will enumerate the provided date rules</returns>
+        public static Func<DateTime, DateTime?> ToFunc(this IDateRule dateRule)
+        {
+            IEnumerator<DateTime> dates = null;
+            return timeUtc =>
+            {
+                if (dates == null)
+                {
+                    dates = dateRule.GetDates(timeUtc, Time.EndOfTime).GetEnumerator();
+                    if (!dates.MoveNext())
+                    {
+                        return Time.EndOfTime;
+                    }
+                }
+
+                try
+                {
+                    // only advance enumerator if provided time is past or at our current
+                    if (timeUtc >= dates.Current)
+                    {
+                        if (!dates.MoveNext())
+                        {
+                            return Time.EndOfTime;
+                        }
+                    }
+                    return dates.Current;
+                }
+                catch (InvalidOperationException)
+                {
+                    // enumeration ended
+                    return Time.EndOfTime;
+                }
+            };
+        }
 
         /// <summary>
         /// Returns true if the specified <see cref="Series"/> instance holds no <see cref="ChartPoint"/>
@@ -1330,6 +1442,10 @@ namespace QuantConnect
         /// <summary>
         /// Tries to convert a <see cref="PyObject"/> into a managed object
         /// </summary>
+        /// <remarks>This method is not working correctly for a wrapped <see cref="TimeSpan"/> instance,
+        /// probably because it is a struct, using <see cref="PyObject.As{T}"/> is a valid work around.
+        /// Not used here because it caused errors
+        /// </remarks>
         /// <typeparam name="T">Target type of the resulting managed object</typeparam>
         /// <param name="pyObject">PyObject to be converted</param>
         /// <param name="result">Managed object </param>

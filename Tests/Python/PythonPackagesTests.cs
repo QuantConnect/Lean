@@ -646,6 +646,11 @@ def RunTest():
         [TestCase("pymc3", "3.7", "__version__")]
         [TestCase("pypfopt", "pypfopt", "__name__")]
         [TestCase("wrapt", "1.11.2", "__version__")]
+        [TestCase("tslearn", "0.3.0", "__version__")]
+        [TestCase("tweepy", "3.8.0", "__version__")]
+        [TestCase("pywt", "1.1.1", "__version__")]
+        [TestCase("umap", "0.3.10", "__version__")]
+        [TestCase("dtw", "1.0.4", "__version__")]
         public void ModuleVersionTest(string module, string value, string attribute)
         {
             AssetCode(

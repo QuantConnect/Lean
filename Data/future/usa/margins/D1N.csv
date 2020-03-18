@@ -1,0 +1,21 @@
+date,initial,maintenance
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-001.html
+20120105,7700,7000
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-328.html
+20120806,4400,4000
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-498.html
+20121120,2420,2200
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-198.html
+20130430,3080,2800
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-479.html
+20131015,2200,2000
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-318.html
+20140815,1870,1700
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-195.html
+20150710,2151,1955
+# https://www.cmegroup.com/notices/clearing/2017/08/Chadv17-334.html
+20170901,1925,1750
+# https://www.cmegroup.com/notices/clearing/2017/10/Chadv17-404.html
+20171020,1760,1600
+# https://www.cmegroup.com/notices/clearing/2017/12/Chadv17-503.html
+20171221,1540,1400

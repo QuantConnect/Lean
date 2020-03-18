@@ -159,20 +159,6 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Processing runmode of the backtest.
-    /// </summary>
-    /// <obsolete>The runmode enum is now obsolete and all tasks are run in series mode. This was done to ensure algorithms have memory of the day before.</obsolete>
-    public enum RunMode
-    {
-        /// Automatically detect the runmode of the algorithm: series for minute data, parallel for second-tick
-        Automatic,
-        /// Series runmode for the algorithm
-        Series,
-        /// Parallel runmode for the algorithm
-        Parallel
-    }
-
-    /// <summary>
     /// Represents the types of environments supported by brokerages for trading
     /// </summary>
     [JsonConverter(typeof(StringEnumConverter))]

@@ -1,6 +1,10 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
  * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
+ * Updated from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.5.5
+ *
+ * Changes made in update:
+ *   - Extended Enum definitions to include PolygonAuthenticate, PolygonSubscribe, PolygonUnsubscribe
 */
 
 using System.Runtime.Serialization;
@@ -16,6 +20,15 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         Authenticate,
 
         [EnumMember(Value = "listen")]
-        Listen
+        Listen,
+
+        [EnumMember(Value = "auth")]
+        PolygonAuthenticate,
+
+        [EnumMember(Value = "subscribe")]
+        PolygonSubscribe,
+
+        [EnumMember(Value = "unsubscribe")]
+        PolygonUnsubscribe,
     }
 }

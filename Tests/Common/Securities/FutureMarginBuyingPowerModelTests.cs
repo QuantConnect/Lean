@@ -14,6 +14,11 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
@@ -23,6 +28,7 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -678,6 +684,178 @@ namespace QuantConnect.Tests.Common.Securities
                 new HasSufficientBuyingPowerForOrderParameters(algorithm.Portfolio,
                     futureSecurity,
                     new MarketOrder(futureSecurity.Symbol, quantity, DateTime.UtcNow))).IsSufficient);
+        }
+
+        [Test]
+        public void FutureMarginModel_MarginEntriesValid()
+        {
+            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", Market.USA, "margins"));
+            var minimumDate = new DateTime(1990, 1, 1);
+
+            foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
+            {
+                var lineNumber = 0;
+                var errorMessageTemplate = $"Error encountered in file {marginFile.Name} on line ";
+                var csv = File.ReadLines(marginFile.FullName).Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x)).Skip(1).Select(x =>
+                {
+                    lineNumber++;
+
+                    var data = x.Split(',');
+
+                    if (data.Length < 3)
+                    {
+                        var errorMessage = errorMessageTemplate + lineNumber.ToStringInvariant();
+                        Assert.Fail(errorMessage);
+                    }
+
+                    DateTime date;
+                    decimal initial;
+                    decimal maintenance;
+
+                    var dateValid = Parse.TryParseExact(data[0], DateFormat.EightCharacter, DateTimeStyles.None, out date);
+                    var initialValid = Parse.TryParse(data[1], NumberStyles.Any, out initial);
+                    var maintenanceValid = Parse.TryParse(data[2], NumberStyles.Any, out maintenance);
+
+                    if (!dateValid || !initialValid || !maintenanceValid)
+                    {
+                        var errorMessage = errorMessageTemplate + lineNumber.ToStringInvariant();
+                        Assert.Fail(errorMessage);
+                    }
+
+                    return new Tuple<DateTime, decimal, decimal>(date, initial, maintenance);
+                });
+
+                lineNumber = 0;
+                foreach (var line in csv)
+                {
+                    lineNumber++;
+                    var dateInvalid = $"Date is less than 1998-01-01 in {marginFile.Name} on line {lineNumber}";
+                    var initialInvalid = $"Initial is <= 0 in {marginFile.Name} on line {lineNumber}";
+                    var maintenanceInvalid = $"Maintenance is <= 0 in {marginFile.Name} on line {lineNumber}";
+
+                    Assert.GreaterOrEqual(line.Item1, minimumDate, dateInvalid);
+                    Assert.Greater(line.Item2, 0m, initialInvalid);
+                    Assert.Greater(line.Item3, 0m, maintenanceInvalid);
+                }
+            }
+        }
+
+        [Test]
+        public void FutureMarginModel_MarginEntriesHaveIncrementingDates()
+        {
+            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", Market.USA, "margins"));
+
+            foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
+            {
+                var csv = File.ReadLines(marginFile.FullName).Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x)).Skip(1).Select(x =>
+                {
+                    var data = x.Split(',');
+                    DateTime date;
+                    Parse.TryParseExact(data[0], DateFormat.EightCharacter, DateTimeStyles.None, out date);
+                    var initial = Parse.Decimal(data[1]);
+                    var maintenance = Parse.Decimal(data[2]);
+
+                    return new Tuple<DateTime, decimal, decimal>(date, initial, maintenance);
+                });
+
+                var previous = DateTime.MinValue;
+
+                foreach (var line in csv)
+                {
+                    Assert.Greater(line.Item1, previous, marginFile.Name);
+                    previous = line.Item1;
+                }
+            }
+        }
+
+        [Test]
+        public void FutureMarginModel_MarginEntriesAreContinuous()
+        {
+            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", Market.USA, "margins"));
+            var exclusions = new Dictionary<string, int>
+            {
+                { "6E.csv", 1 },
+                { "6S.csv", 2 },
+                { "A8K.csv", 1 },
+                { "AJY.csv", 1 },
+                { "ANL.csv", 2 },
+                { "EVC.csv", 1 },
+                { "EWG.csv", 1 },
+                { "EWN.csv", 2 },
+                { "FRC.csv", 1 },
+                { "GE.csv", 3 },
+                { "GF.csv", 2 },
+                { "HO.csv", 1 },
+                { "ME.csv", 1 },
+                { "NKN.csv", 2 },
+                { "PL.csv", 1 },
+                { "RB.csv", 1 },
+                { "ZC.csv", 2 },
+                { "ZW.csv", 2 }
+            };
+
+            var lines = new List<string>();
+            foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
+            {
+                var greaterMessage = $"A jump less than -80% was encountered in {marginFile.Name}";
+                var lessMessage = $"A jump greater than +80% was encountered in {marginFile.Name}";
+                var maxExclusions = exclusions.ContainsKey(marginFile.Name) ? exclusions[marginFile.Name] : 0;
+
+                var csv = File.ReadLines(marginFile.FullName).Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x)).Skip(1).Select(x =>
+                {
+                    var data = x.Split(',');
+                    DateTime date;
+                    Parse.TryParseExact(data[0], DateFormat.EightCharacter, DateTimeStyles.None, out date);
+                    var initial = Parse.Decimal(data[1]);
+                    var maintenance = Parse.Decimal(data[2]);
+
+                    return new Tuple<DateTime, decimal, decimal>(date, initial, maintenance);
+                }).ToList();
+
+                var errorsEncountered = 0;
+                for (var i = 1; i < csv.Count; i++)
+                {
+                    var previous = csv[i - 1].Item2;
+                    var current = csv[i].Item2;
+                    var percentChange = (current - previous) / previous;
+                    var lessThan = percentChange < -0.8m;
+                    var greaterThan = percentChange > 0.8m;
+
+                    if (lessThan || greaterThan)
+                    {
+                        errorsEncountered++;
+                        if (errorsEncountered > maxExclusions)
+                        {
+                            Assert.Fail(lessThan ? lessMessage : greaterMessage);
+                        }
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void FutureMarginModel_InitialMarginGreaterThanMaintenance()
+        {
+            var marginsDirectory = new DirectoryInfo(Path.Combine(Globals.DataFolder, "future", Market.USA, "margins"));
+
+            foreach (var marginFile in marginsDirectory.GetFiles("*.csv", SearchOption.TopDirectoryOnly))
+            {
+                var errorMessage = $"Initial value greater than maintenance value in {marginFile.Name}";
+                var csv = File.ReadLines(marginFile.FullName).Where(x => !x.StartsWithInvariant("#") && !string.IsNullOrWhiteSpace(x)).Skip(1).Select(x =>
+                {
+                    var data = x.Split(',');
+                    DateTime date;
+                    Parse.TryParseExact(data[0], DateFormat.EightCharacter, DateTimeStyles.None, out date);
+                    var initial = Parse.Decimal(data[1]);
+                    var maintenance = Parse.Decimal(data[2]);
+
+                    return new Tuple<DateTime, decimal, decimal>(date, initial, maintenance);
+                });
+
+                // Having an initial margin equal to the maintenance is a valid case.
+                // Using '>' and not '>=' here is intentional.
+                Assert.IsFalse(csv.Where(x => x.Item3 > x.Item2).Any(), errorMessage);
+            }
         }
 
         private static void Update(Security security, decimal close, QCAlgorithm algorithm, DateTime? time = null)

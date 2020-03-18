@@ -141,11 +141,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_indicators.BB.IsReady || !_indicators.RSI.IsReady) return;
 
-            _price = data["SPY"].Close;
+            _price = data[_symbol].Close;
 
             if (!Portfolio.HoldStock)
             {
-                int quantity = (int)Math.Floor(Portfolio.Cash / data[_symbol].Close);
+                int quantity = (int)Math.Floor(Portfolio.Cash / _price);
 
                 //Order function places trades: enter the string symbol and the quantity you want:
                 Order(_symbol, quantity);
@@ -279,7 +279,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Mean Population Direction", "0%"},
             {"Mean Population Magnitude", "0%"},
             {"Rolling Averaged Population Direction", "0%"},
-            {"Rolling Averaged Population Magnitude", "0%"}
+            {"Rolling Averaged Population Magnitude", "0%"},
+            {"OrderListHash", "473990592"}
         };
     }
 }

@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using static QuantConnect.StringExtensions;
@@ -244,7 +243,6 @@ namespace QuantConnect.Securities
             if (ticket == null)
             {
                 var reason = $"Null order ticket for id: {parameters.Order.Id}";
-                Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): {reason}");
                 return new HasSufficientBuyingPowerForOrderResult(false, reason);
             }
 
@@ -297,7 +295,6 @@ namespace QuantConnect.Securities
                     Invariant($"Initial Margin: {initialMarginRequiredForRemainderOfOrder.Normalize()}, ") +
                     Invariant($"Free Margin: {freeMargin.Normalize()}");
 
-                Log.Error($"SecurityMarginModel.HasSufficientBuyingPowerForOrder(): {reason}");
                 return new HasSufficientBuyingPowerForOrderResult(false, reason);
             }
 
@@ -383,14 +380,6 @@ namespace QuantConnect.Securities
                     reason = $"The target order margin {absFinalOrderMargin} is less than the minimum {minimumValue}.";
                 }
                 return new GetMaximumOrderQuantityResult(0, reason, false);
-            }
-
-            // calculate the total margin available
-            var marginRemaining = GetMarginRemaining(parameters.Portfolio, parameters.Security, direction);
-            if (marginRemaining <= 0)
-            {
-                var reason = "The portfolio does not have enough margin available.";
-                return new GetMaximumOrderQuantityResult(0, reason);
             }
 
             // continue iterating while we do not have enough margin for the order
@@ -498,6 +487,17 @@ namespace QuantConnect.Securities
         {
             var maintenanceMargin = GetMaintenanceMargin(parameters.Security);
             return parameters.ResultInAccountCurrency(maintenanceMargin);
+        }
+
+        /// <summary>
+        /// Gets the buying power available for a trade
+        /// </summary>
+        /// <param name="parameters">A parameters object containing the algorithm's portfolio, security, and order direction</param>
+        /// <returns>The buying power available for the trade</returns>
+        public virtual BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
+        {
+            var marginRemaining = GetMarginRemaining(parameters.Portfolio, parameters.Security, parameters.Direction);
+            return parameters.ResultInAccountCurrency(marginRemaining);
         }
     }
 }

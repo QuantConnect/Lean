@@ -183,6 +183,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AlgorithmSettings.cs" />
+    <Compile Include="Algorithm\Framework\Alphas\Analysis\IInsightManager.cs" />
     <Compile Include="Algorithm\Framework\Alphas\Analysis\ReadOnlySecurityValuesCollection.cs" />
     <Compile Include="Algorithm\Framework\Alphas\OrderBasedInsightGenerator.cs" />
     <Compile Include="Algorithm\Framework\Alphas\IInsightManagerExtension.cs" />
@@ -239,6 +240,7 @@
     <Compile Include="Chart.cs" />
     <Compile Include="ChartPoint.cs" />
     <Compile Include="Data\Auxiliary\MappingExtensions.cs" />
+    <Compile Include="Data\Consolidators\Calendar.cs" />
     <Compile Include="Data\Consolidators\CalendarType.cs" />
     <Compile Include="Data\Consolidators\FilteredIdentityDataConsolidator.cs" />
     <Compile Include="Data\Custom\Benzinga\BenzingaNewsJsonConverter.cs" />
@@ -337,16 +339,23 @@
     <Compile Include="Orders\Fees\OrderFee.cs" />
     <Compile Include="Orders\Fees\OrderFeeParameters.cs" />
     <Compile Include="Orders\Slippage\AlphaStreamsSlippageModel.cs" />
+    <Compile Include="Packets\BacktestResultParameters.cs" />
+    <Compile Include="Packets\BaseResultParameters.cs" />
     <Compile Include="Packets\Breakpoint.cs" />
     <Compile Include="Packets\LeakyBucketControlParameters.cs" />
+    <Compile Include="Packets\LiveResultParameters.cs" />
     <Compile Include="Python\BrokerageMessageHandlerPythonWrapper.cs" />
     <Compile Include="Python\MarginCallModelPythonWrapper.cs" />
     <Compile Include="Python\PythonInitializer.cs" />
     <Compile Include="Python\PythonWrapper.cs" />
     <Compile Include="RealTimeProvider.cs" />
     <Compile Include="Scheduling\ScheduledEventException.cs" />
+    <Compile Include="Scheduling\TimeConsumer.cs" />
+    <Compile Include="Scheduling\TimeMonitor.cs" />
+    <Compile Include="Securities\BuyingPower.cs" />
     <Compile Include="Securities\BuyingPowerModel.cs" />
     <Compile Include="Securities\BuyingPowerModelExtensions.cs" />
+    <Compile Include="Securities\BuyingPowerParameters.cs" />
     <Compile Include="Securities\GetMaximumOrderQuantityForDeltaBuyingPowerParameters.cs" />
     <Compile Include="Securities\RegisteredSecurityDataTypesProvider.cs" />
     <Compile Include="Securities\ErrorCurrencyConverter.cs" />

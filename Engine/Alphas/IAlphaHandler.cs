@@ -58,11 +58,6 @@ namespace QuantConnect.Lean.Engine.Alpha
         void ProcessSynchronousEvents();
 
         /// <summary>
-        /// Thread entry point for asynchronous processing
-        /// </summary>
-        void Run();
-
-        /// <summary>
         /// Stops processing in the <see cref="Run"/> method
         /// </summary>
         void Exit();

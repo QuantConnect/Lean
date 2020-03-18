@@ -54,7 +54,11 @@ namespace QuantConnect.Data.Custom.Estimize
         /// The time that the estimate was created (UTC)
         /// </summary>
         [JsonProperty(PropertyName = "created_at")]
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt
+        {
+            get { return Time; }
+            set { Time = value; }
+        }
 
         /// <summary>
         /// The time that the estimate was created (UTC)

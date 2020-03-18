@@ -15,7 +15,8 @@ from clr import AddReference
 AddReference("QuantConnect.Common")
 AddReference("QuantConnect.Algorithm.Framework")
 
-from QuantConnect import Resolution
+from QuantConnect import *
+from QuantConnect.Algorithm.Framework.Portfolio import PortfolioBias
 from InsightWeightingPortfolioConstructionModel import InsightWeightingPortfolioConstructionModel
 
 class ConfidenceWeightedPortfolioConstructionModel(InsightWeightingPortfolioConstructionModel):
@@ -28,12 +29,16 @@ class ConfidenceWeightedPortfolioConstructionModel(InsightWeightingPortfolioCons
     percent holdings proportionally so the sum is 1.
     It will ignore Insight that have no Insight.Confidence value.'''
 
-    def __init__(self, rebalancingParam = Resolution.Daily):
+    def __init__(self, rebalancingParam = Resolution.Daily, portfolioBias = PortfolioBias.LongShort):
         '''Initialize a new instance of ConfidenceWeightedPortfolioConstructionModel
         Args:
-            rebalancingParam: Rebalancing parameter. If it is a timedelta or Resolution, it will be converted into a function.
-                              The function returns the next expected rebalance time for a given algorithm UTC DateTime'''
-        super().__init__(rebalancingParam)
+            rebalancingParam: Rebalancing parameter. If it is a timedelta, date rules or Resolution, it will be converted into a function.
+                              If None will be ignored.
+                              The function returns the next expected rebalance time for a given algorithm UTC DateTime.
+                              The function returns null if unknown, in which case the function will be called again in the
+                              next loop. Returning current time will trigger rebalance.
+            portfolioBias: Specifies the bias of the portfolio (Short, Long/Short, Long)'''
+        super().__init__(rebalancingParam, portfolioBias)
 
     def ShouldCreateTargetForInsight(self, insight):
         '''Method that will determine if the portfolio construction model should create a

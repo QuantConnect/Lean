@@ -95,6 +95,9 @@ class CustomBuyingPowerModel:
     def __init__(self):
         self.margin = 1.0
 
+    def GetBuyingPower(self, context):
+        return BuyingPower(context.Portfolio.MarginRemaining)
+
     def GetMaximumOrderQuantityForDeltaBuyingPower(self, context):
         return GetMaximumOrderQuantityResult(200)
 

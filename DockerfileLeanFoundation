@@ -1,5 +1,5 @@
 #
-#   LEAN Foundation Docker Container 20191113
+#   LEAN Foundation Docker Container 20200306
 #   Cross platform deployment for multiple brokerages
 #   Intended to be used in conjunction with Dockerfile. This is just the foundation common OS+Dependencies required.
 #
@@ -94,7 +94,11 @@ RUN conda install -y -c conda-forge \
     scikit-multiflow=0.4.1          \
     scikit-optimize=0.5.2           \
     theano=1.0.4                    \
-    tsfresh=0.12.0
+    tsfresh=0.12.0                  \
+    tslearn=0.3.0                   \
+    tweepy=3.8.0                    \
+    pywavelets=1.1.1                \
+    umap-learn=0.3.10
 
 # Install math/ML from pytorch
 RUN conda install -y -c pytorch     \
@@ -134,9 +138,10 @@ RUN pip install sklearn==0.0        \
     statistics==1.0.3.5             \
     tensorforce==0.4.3              \
     QuantLib-Python==1.15           \
-    xgboost==0.90
+    xgboost==0.90                   \
+    dtw-python==1.0.4
 
-RUN pip install --upgrade hmmlearn==0.2.2
+RUN pip install --upgrade hmmlearn==0.2.3
 RUN python -m nltk.downloader -d /usr/share/nltk_data punkt
 RUN conda clean -y --all
 

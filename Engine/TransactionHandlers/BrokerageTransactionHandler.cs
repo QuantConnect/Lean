@@ -59,6 +59,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private Thread _processingThread;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
+        private readonly ConcurrentQueue<OrderEvent> _orderEvents = new ConcurrentQueue<OrderEvent>();
+
         /// <summary>
         /// The _completeOrders dictionary holds all orders.
         /// Once the transaction thread has worked on them they get put here while witing for fill updates.
@@ -110,6 +112,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return _completeOrders;
             }
         }
+
+        /// <summary>
+        /// Gets all order events
+        /// </summary>
+        public IEnumerable<OrderEvent> OrderEvents => _orderEvents;
 
         /// <summary>
         /// Gets the permanent storage for all order tickets
@@ -440,11 +447,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Get the order by its id
         /// </summary>
         /// <param name="orderId">Order id to fetch</param>
-        /// <returns>The order with the specified id, or null if no match is found</returns>
+        /// <returns>A clone of the order with the specified id, or null if no match is found</returns>
         public Order GetOrderById(int orderId)
         {
             Order order = GetOrderByIdInternal(orderId);
-            return order != null ? order.Clone() : null;
+            return order?.Clone();
         }
 
         private Order GetOrderByIdInternal(int orderId)
@@ -1023,6 +1030,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             //We have an event! :) Order filled, send it in to be handled by algorithm portfolio.
             if (fill.Status != OrderStatus.None) //order.Status != OrderStatus.Submitted
             {
+                _orderEvents.Enqueue(fill);
+
                 //Create new order event:
                 _resultHandler.OrderEvent(fill);
                 try

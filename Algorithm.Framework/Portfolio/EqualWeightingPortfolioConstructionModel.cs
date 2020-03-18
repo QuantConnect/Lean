@@ -16,8 +16,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
-using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -29,23 +30,72 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class EqualWeightingPortfolioConstructionModel : PortfolioConstructionModel
     {
-        private List<Symbol> _removedSymbols;
+        private readonly PortfolioBias _portfolioBias;
 
         /// <summary>
         /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
         /// </summary>
-        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time</param>
-        public EqualWeightingPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc)
-            : base(time => rebalancingFunc(time))
+        /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time
+        /// in UTC</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        public EqualWeightingPortfolioConstructionModel(IDateRule rebalancingDateRules,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : this(rebalancingDateRules.ToFunc(), portfolioBias)
         {
         }
 
         /// <summary>
         /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
         /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance. If null will be ignored</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        public EqualWeightingPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : base(rebalancingFunc)
+        {
+            _portfolioBias = portfolioBias;
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
+        /// Returning current time will trigger rebalance. If null will be ignored</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        public EqualWeightingPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null, portfolioBias)
+        {
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
+        /// </summary>
+        /// <param name="rebalancingParam">Rebalancing func or if a date rule, timedelta will be converted into func.
+        /// For a given algorithm UTC DateTime the func returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance. If null will be ignored</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        /// <remarks>This is required since python net can not convert python methods into func nor resolve the correct
+        /// constructor for the date rules parameter.
+        /// For performance we prefer python algorithms using the C# implementation</remarks>
+        public EqualWeightingPortfolioConstructionModel(PyObject rebalancingParam,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : this((Func<DateTime, DateTime?>)null, portfolioBias)
+        {
+            SetRebalancingFunc(rebalancingParam);
+        }
+
+        /// <summary>
+        /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
+        /// </summary>
         /// <param name="timeSpan">Rebalancing frequency</param>
-        public EqualWeightingPortfolioConstructionModel(TimeSpan timeSpan)
-            : this(dt => dt.Add(timeSpan))
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        public EqualWeightingPortfolioConstructionModel(TimeSpan timeSpan,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : this(dt => dt.Add(timeSpan), portfolioBias)
         {
         }
 
@@ -53,20 +103,11 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Initialize a new instance of <see cref="EqualWeightingPortfolioConstructionModel"/>
         /// </summary>
         /// <param name="resolution">Rebalancing frequency</param>
-        public EqualWeightingPortfolioConstructionModel(Resolution resolution = Resolution.Daily)
-            : this(resolution.ToTimeSpan())
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        public EqualWeightingPortfolioConstructionModel(Resolution resolution = Resolution.Daily,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort)
+            : this(resolution.ToTimeSpan(), portfolioBias)
         {
-        }
-
-        /// <summary>
-        /// Method that will determine if the portfolio construction model should create a
-        /// target for this insight
-        /// </summary>
-        /// <param name="insight">The insight to create a target for</param>
-        /// <returns>True if the portfolio should create a target for the insight</returns>
-        protected virtual bool ShouldCreateTargetForInsight(Insight insight)
-        {
-            return true;
         }
 
         /// <summary>
@@ -74,100 +115,30 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        protected virtual Dictionary<Insight, double> DetermineTargetPercent(ICollection<Insight> activeInsights)
+        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
         {
             var result = new Dictionary<Insight, double>();
 
             // give equal weighting to each security
-            var count = activeInsights.Count(x => x.Direction != InsightDirection.Flat);
+            var count = activeInsights.Count(x => x.Direction != InsightDirection.Flat && RespectPortfolioBias(x));
             var percent = count == 0 ? 0 : 1m / count;
             foreach (var insight in activeInsights)
             {
-                result[insight] = (double)((int)insight.Direction * percent);
+                result[insight] =
+                    (double)((int)(RespectPortfolioBias(insight) ? insight.Direction : InsightDirection.Flat)
+                             * percent);
             }
             return result;
         }
 
         /// <summary>
-        /// Create portfolio targets from the specified insights
+        /// Method that will determine if a given insight respects the portfolio bias
         /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="insights">The insights to create portfolio targets from</param>
-        /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
-        public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+        /// <param name="insight">The insight to create a target for</param>
+        /// <returns>True if the insight respects the portfolio bias</returns>
+        protected bool RespectPortfolioBias(Insight insight)
         {
-            // always add new insights
-            if (insights.Length > 0)
-            {
-                // Validate we should create a target for this insight
-                InsightCollection.AddRange(insights.Where(ShouldCreateTargetForInsight));
-            }
-
-            if (!IsRebalanceDue(insights, algorithm.UtcTime))
-            {
-                return Enumerable.Empty<IPortfolioTarget>();
-            }
-
-            var targets = new List<IPortfolioTarget>();
-
-            // Create flatten target for each security that was removed from the universe
-            if (_removedSymbols != null)
-            {
-                var universeDeselectionTargets = _removedSymbols.Select(symbol => new PortfolioTarget(symbol, 0));
-                targets.AddRange(universeDeselectionTargets);
-                _removedSymbols = null;
-            }
-
-            // Get insight that haven't expired of each symbol that is still in the universe
-            var activeInsights = InsightCollection.GetActiveInsights(algorithm.UtcTime);
-
-            // Get the last generated active insight for each symbol
-            var lastActiveInsights = (from insight in activeInsights
-                                      group insight by insight.Symbol into g
-                                      select g.OrderBy(x => x.GeneratedTimeUtc).Last()).ToList();
-
-            var errorSymbols = new HashSet<Symbol>();
-
-            // Determine target percent for the given insights
-            var percents = DetermineTargetPercent(lastActiveInsights);
-
-            foreach (var insight in lastActiveInsights)
-            {
-                var target = PortfolioTarget.Percent(algorithm, insight.Symbol, percents[insight]);
-                if (target != null)
-                {
-                    targets.Add(target);
-                }
-                else
-                {
-                    errorSymbols.Add(insight.Symbol);
-                }
-            }
-
-            // Get expired insights and create flatten targets for each symbol
-            var expiredInsights = InsightCollection.RemoveExpiredInsights(algorithm.UtcTime);
-
-            var expiredTargets = from insight in expiredInsights
-                                 group insight.Symbol by insight.Symbol into g
-                                 where !InsightCollection.HasActiveInsights(g.Key, algorithm.UtcTime) && !errorSymbols.Contains(g.Key)
-                                 select new PortfolioTarget(g.Key, 0);
-
-            targets.AddRange(expiredTargets);
-
-            return targets;
-        }
-
-        /// <summary>
-        /// Event fired each time the we add/remove securities from the data feed
-        /// </summary>
-        /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
-        /// <param name="changes">The security additions and removals from the algorithm</param>
-        public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
-        {
-            base.OnSecuritiesChanged(algorithm, changes);
-            // Get removed symbol and invalidate them in the insight collection
-            _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol).ToList();
-            InsightCollection.Clear(_removedSymbols.ToArray());
+            return _portfolioBias == PortfolioBias.LongShort || (int)insight.Direction == (int)_portfolioBias;
         }
     }
 }

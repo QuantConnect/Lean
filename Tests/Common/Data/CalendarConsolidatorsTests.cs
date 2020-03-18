@@ -35,13 +35,13 @@ namespace QuantConnect.Tests.Common.Data
         public void SetUp()
         {
             _dailyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, TimeSpan.FromDays(1) } };
-            _weeklyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, CalendarType.Weekly } };
-            _monthlyFuncDictionary = new Dictionary<Language, dynamic> {{Language.CSharp, CalendarType.Monthly}};
+            _weeklyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, Calendar.Weekly } };
+            _monthlyFuncDictionary = new Dictionary<Language, dynamic> { { Language.CSharp, Calendar.Monthly } };
 
             using (Py.GIL())
             {
                 var module = PythonEngine.ModuleFromString(
-                    "PythonCalendarType",
+                    "PythonCalendar",
                     @"
 from datetime import timedelta
 from clr import AddReference
@@ -442,6 +442,84 @@ def Monthly(dt):
         {
             CalendarConsolidatesWithRegisterIndicator(_weeklyFuncDictionary[language]);
             CalendarConsolidatesWithRegisterIndicator(_monthlyFuncDictionary[language]);
+        }
+
+        [Test]
+        public void Weekly()
+        {
+            var quarterly = Calendar.Weekly;
+
+            var calendarInfo = quarterly(new DateTime(2020, 2, 20));
+
+            Assert.AreEqual(new DateTime(2020, 2, 17), calendarInfo.Start);
+            Assert.AreEqual(TimeSpan.FromDays(7), calendarInfo.Period);
+
+            calendarInfo = quarterly(new DateTime(2018, 11, 2));
+
+            Assert.AreEqual(new DateTime(2018, 10, 29), calendarInfo.Start);
+            Assert.AreEqual(TimeSpan.FromDays(7), calendarInfo.Period);
+
+            calendarInfo = quarterly(new DateTime(2018, 12, 31));
+
+            Assert.AreEqual(new DateTime(2018, 12, 31), calendarInfo.Start);
+            Assert.AreEqual(TimeSpan.FromDays(7), calendarInfo.Period);
+        }
+
+        [Test]
+        public void Monthly()
+        {
+            var quarterly = Calendar.Monthly;
+
+            var calendarInfo = quarterly(new DateTime(2020, 5, 11));
+
+            Assert.AreEqual(new DateTime(2020, 5, 1), calendarInfo.Start);
+            Assert.AreEqual(TimeSpan.FromDays(31), calendarInfo.Period);
+
+            calendarInfo = quarterly(new DateTime(2018, 11, 13));
+
+            Assert.AreEqual(new DateTime(2018, 11, 1), calendarInfo.Start);
+            Assert.AreEqual(TimeSpan.FromDays(30), calendarInfo.Period);
+
+            calendarInfo = quarterly(new DateTime(2018, 12, 31));
+
+            Assert.AreEqual(new DateTime(2018, 12, 1), calendarInfo.Start);
+            Assert.AreEqual(TimeSpan.FromDays(31), calendarInfo.Period);
+        }
+
+        [Test]
+        public void Quarterly()
+        {
+            var quarterly = Calendar.Quarterly;
+
+            var calendarInfo = quarterly(new DateTime(2020, 5, 1));
+
+            Assert.AreEqual(new DateTime(2020, 4, 1), calendarInfo.Start);
+            Assert.AreEqual(TimeSpan.FromDays(91), calendarInfo.Period);
+
+            calendarInfo = quarterly(new DateTime(2018, 11, 13));
+
+            Assert.AreEqual(new DateTime(2018, 10, 1), calendarInfo.Start);
+            Assert.AreEqual(TimeSpan.FromDays(92), calendarInfo.Period);
+
+            calendarInfo = quarterly(new DateTime(2018, 12, 31));
+
+            Assert.AreEqual(new DateTime(2018, 10, 1), calendarInfo.Start);
+            Assert.AreEqual(TimeSpan.FromDays(92), calendarInfo.Period);
+        }
+
+        [Test]
+        public void Yearly()
+        {
+            var quarterly = Calendar.Yearly;
+            var calendarInfo = quarterly(new DateTime(2020, 5, 1));
+
+            Assert.AreEqual(new DateTime(2020, 1, 1), calendarInfo.Start);
+            Assert.AreEqual(TimeSpan.FromDays(365), calendarInfo.Period);
+
+            calendarInfo = quarterly(new DateTime(2021, 11, 1));
+
+            Assert.AreEqual(new DateTime(2021, 1, 1), calendarInfo.Start);
+            Assert.AreEqual(TimeSpan.FromDays(365), calendarInfo.Period);
         }
 
         private void CalendarConsolidatesWithRegisterIndicator(dynamic calendarType)

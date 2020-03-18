@@ -46,7 +46,7 @@ namespace QuantConnect.Brokerages.Alpaca
 
         private readonly RestClient _restClient;
         private readonly SockClient _sockClient;
-        private readonly NatsClient _natsClient;
+        private readonly PolygonStreamingClient _polygonStreamingClient;
         private readonly bool _handlesMarketData;
 
         /// <summary>
@@ -85,9 +85,12 @@ namespace QuantConnect.Brokerages.Alpaca
         {
             _handlesMarketData = handlesMarketData;
 
-            var baseUrl = "api.alpaca.markets";
-            if (tradingMode.Equals("paper")) baseUrl = "paper-" + baseUrl;
-            baseUrl = "https://" + baseUrl;
+            var httpScheme = "https://";
+            var alpacaBaseUrl = "api.alpaca.markets";
+
+            if (tradingMode.Equals("paper")) alpacaBaseUrl = "paper-" + alpacaBaseUrl;
+
+            var httpAlpacaBaseUrl = httpScheme + alpacaBaseUrl;
 
             _orderProvider = orderProvider;
             _securityProvider = securityProvider;
@@ -95,18 +98,23 @@ namespace QuantConnect.Brokerages.Alpaca
             _marketHours = MarketHoursDatabase.FromDataFolder();
 
             // api client for alpaca
-            _restClient = new RestClient(accountKeyId, secretKey, baseUrl);
+            _restClient = new RestClient(accountKeyId, secretKey, httpAlpacaBaseUrl);
 
             // websocket client for alpaca
-            _sockClient = new SockClient(accountKeyId, secretKey, baseUrl);
+            _sockClient = new SockClient(accountKeyId, secretKey, httpAlpacaBaseUrl);
             _sockClient.OnTradeUpdate += OnTradeUpdate;
             _sockClient.OnError += OnSockClientError;
 
-            // polygon client for alpaca
-            _natsClient = new NatsClient(accountKeyId, baseUrl.Contains("staging"));
-            _natsClient.QuoteReceived += OnQuoteReceived;
-            _natsClient.TradeReceived += OnTradeReceived;
-            _natsClient.OnError += OnNatsClientError;
+            // Polygon Streaming client for Alpaca (streams trade and quote data)
+            _polygonStreamingClient = new PolygonStreamingClient(new PolygonStreamingClientConfiguration
+            {
+                ApiEndpoint = Environments.Live.PolygonStreamingApi,
+                KeyId = accountKeyId,
+                WebSocketFactory = new WebSocketSharpFactory()
+            });
+            _polygonStreamingClient.QuoteReceived += OnQuoteReceived;
+            _polygonStreamingClient.TradeReceived += OnTradeReceived;
+            _polygonStreamingClient.OnError += OnPolygonStreamingClientError;
         }
 
         #region IBrokerage implementation
@@ -127,7 +135,7 @@ namespace QuantConnect.Brokerages.Alpaca
 
             if (_handlesMarketData)
             {
-                _natsClient.Open();
+                _polygonStreamingClient.ConnectAndAuthenticateAsync().SynchronouslyAwaitTask();
             }
 
             _isConnected = true;
@@ -218,7 +226,7 @@ namespace QuantConnect.Brokerages.Alpaca
 
             if (_handlesMarketData)
             {
-                _natsClient.Close();
+                _polygonStreamingClient.DisconnectAsync().SynchronouslyAwaitTask();
             }
 
             _isConnected = false;
@@ -234,7 +242,7 @@ namespace QuantConnect.Brokerages.Alpaca
 
             _cancellationTokenSource.Dispose();
             _sockClient?.Dispose();
-            _natsClient?.Dispose();
+            _polygonStreamingClient?.Dispose();
 
             _messagingRateLimiter.Dispose();
         }

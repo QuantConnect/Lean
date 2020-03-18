@@ -21,6 +21,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Accord.Statistics;
 using Accord.Math;
+using Python.Runtime;
+using QuantConnect.Scheduling;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -35,21 +37,22 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// </summary>
     public class BlackLittermanOptimizationPortfolioConstructionModel : PortfolioConstructionModel
     {
-        private readonly int _lookback;
-        private readonly int _period;
+        private readonly IPortfolioOptimizer _optimizer;
+        private readonly PortfolioBias _portfolioBias;
         private readonly Resolution _resolution;
         private readonly double _riskFreeRate;
         private readonly double _delta;
+        private readonly int _lookback;
         private readonly double _tau;
-        private readonly IPortfolioOptimizer _optimizer;
+        private readonly int _period;
 
-        private List<Symbol> _removedSymbols;
         private readonly Dictionary<Symbol, ReturnsSymbolData> _symbolDataDict;
 
         /// <summary>
         /// Initialize the model
         /// </summary>
         /// <param name="timeSpan">Rebalancing frequency</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
         /// <param name="lookback">Historical return lookback period</param>
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
@@ -58,6 +61,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
         public BlackLittermanOptimizationPortfolioConstructionModel(TimeSpan timeSpan,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
@@ -65,7 +69,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             double delta = 2.5,
             double tau = 0.05,
             IPortfolioOptimizer optimizer = null)
-            : this(dt => dt.Add(timeSpan), lookback, period, resolution, riskFreeRate, delta, tau, optimizer)
+            : this(dt => dt.Add(timeSpan), portfolioBias, lookback, period, resolution, riskFreeRate, delta, tau, optimizer)
         {
         }
 
@@ -73,6 +77,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Initialize the model
         /// </summary>
         /// <param name="rebalanceResolution">Rebalancing frequency</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
         /// <param name="lookback">Historical return lookback period</param>
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
@@ -81,6 +86,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
         public BlackLittermanOptimizationPortfolioConstructionModel(Resolution rebalanceResolution = Resolution.Daily,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
@@ -88,14 +94,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             double delta = 2.5,
             double tau = 0.05,
             IPortfolioOptimizer optimizer = null)
-            : this(rebalanceResolution.ToTimeSpan(), lookback, period, resolution, riskFreeRate, delta, tau, optimizer)
+            : this(rebalanceResolution.ToTimeSpan(), portfolioBias, lookback, period, resolution, riskFreeRate, delta, tau, optimizer)
         {
         }
 
         /// <summary>
         /// Initialize the model
         /// </summary>
-        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time</param>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance UTC time.
+        /// Returning current time will trigger rebalance. If null will be ignored</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
         /// <param name="lookback">Historical return lookback period</param>
         /// <param name="period">The time interval of history price to calculate the weight</param>
         /// <param name="resolution">The resolution of the history price</param>
@@ -104,6 +112,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
         /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
         public BlackLittermanOptimizationPortfolioConstructionModel(Func<DateTime, DateTime> rebalancingFunc,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort,
             int lookback = 1,
             int period = 63,
             Resolution resolution = Resolution.Daily,
@@ -111,7 +120,100 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             double delta = 2.5,
             double tau = 0.05,
             IPortfolioOptimizer optimizer = null)
-            : base(time => rebalancingFunc?.Invoke(time) ?? time)
+            : this(rebalancingFunc != null ? (Func<DateTime, DateTime?>)(timeUtc => rebalancingFunc(timeUtc)) : null,
+                portfolioBias,
+                lookback,
+                period,
+                resolution,
+                riskFreeRate,
+                delta,
+                tau,
+                optimizer)
+        {
+        }
+
+        /// <summary>
+        /// Initialize the model
+        /// </summary>
+        /// <param name="rebalancingDateRules">The date rules used to define the next expected rebalance time
+        /// in UTC</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="delta">The risk aversion coeffficient of the market portfolio</param>
+        /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
+        public BlackLittermanOptimizationPortfolioConstructionModel(IDateRule rebalancingDateRules,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort,
+            int lookback = 1,
+            int period = 63,
+            Resolution resolution = Resolution.Daily,
+            double riskFreeRate = 0.0,
+            double delta = 2.5,
+            double tau = 0.05,
+            IPortfolioOptimizer optimizer = null)
+            : this(rebalancingDateRules.ToFunc(), portfolioBias, lookback, period, resolution, riskFreeRate, delta, tau, optimizer)
+        {
+        }
+
+        /// <summary>
+        /// Initialize the model
+        /// </summary>
+        /// <param name="rebalancingParam">Rebalancing func or if a date rule, timedelta will be converted into func.
+        /// For a given algorithm UTC DateTime the func returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance. If null will be ignored</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="delta">The risk aversion coeffficient of the market portfolio</param>
+        /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
+        /// <remarks>This is required since python net can not convert python methods into func nor resolve the correct
+        /// constructor for the date rules parameter.
+        /// For performance we prefer python algorithms using the C# implementation</remarks>
+        public BlackLittermanOptimizationPortfolioConstructionModel(PyObject rebalancingParam,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort,
+            int lookback = 1,
+            int period = 63,
+            Resolution resolution = Resolution.Daily,
+            double riskFreeRate = 0.0,
+            double delta = 2.5,
+            double tau = 0.05,
+            IPortfolioOptimizer optimizer = null)
+            : this((Func<DateTime, DateTime?>)null, portfolioBias, lookback, period, resolution, riskFreeRate, delta, tau, optimizer)
+        {
+            SetRebalancingFunc(rebalancingParam);
+        }
+
+        /// <summary>
+        /// Initialize the model
+        /// </summary>
+        /// <param name="rebalancingFunc">For a given algorithm UTC DateTime returns the next expected rebalance time
+        /// or null if unknown, in which case the function will be called again in the next loop. Returning current time
+        /// will trigger rebalance.</param>
+        /// <param name="portfolioBias">Specifies the bias of the portfolio (Short, Long/Short, Long)</param>
+        /// <param name="lookback">Historical return lookback period</param>
+        /// <param name="period">The time interval of history price to calculate the weight</param>
+        /// <param name="resolution">The resolution of the history price</param>
+        /// <param name="riskFreeRate">The risk free rate</param>
+        /// <param name="delta">The risk aversion coeffficient of the market portfolio</param>
+        /// <param name="tau">The model parameter indicating the uncertainty of the CAPM prior</param>
+        /// <param name="optimizer">The portfolio optimization algorithm. If no algorithm is explicitly provided then the default will be max Sharpe ratio optimization.</param>
+        public BlackLittermanOptimizationPortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc,
+            PortfolioBias portfolioBias = PortfolioBias.LongShort,
+            int lookback = 1,
+            int period = 63,
+            Resolution resolution = Resolution.Daily,
+            double riskFreeRate = 0.0,
+            double delta = 2.5,
+            double tau = 0.05,
+            IPortfolioOptimizer optimizer = null)
+            : base(rebalancingFunc)
         {
             _lookback = lookback;
             _period = period;
@@ -119,49 +221,33 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             _riskFreeRate = riskFreeRate;
             _delta = delta;
             _tau = tau;
-            _optimizer = optimizer ?? new MaximumSharpeRatioPortfolioOptimizer(riskFreeRate: riskFreeRate);
 
+            var lower = portfolioBias == PortfolioBias.Long ? 0 : -1;
+            var upper = portfolioBias == PortfolioBias.Short ? 0 : 1;
+            _optimizer = optimizer ?? new MaximumSharpeRatioPortfolioOptimizer(lower, upper, riskFreeRate);
+            _portfolioBias = portfolioBias;
             _symbolDataDict = new Dictionary<Symbol, ReturnsSymbolData>();
         }
 
         /// <summary>
-        /// Create portfolio targets from the specified insights
+        /// Method that will determine if the portfolio construction model should create a
+        /// target for this insight
         /// </summary>
-        /// <param name="algorithm">The algorithm instance</param>
-        /// <param name="insights">The insights to create portfolio targets from</param>
-        /// <returns>An enumerable of portfolio targets to be sent to the execution model</returns>
-        public override IEnumerable<IPortfolioTarget> CreateTargets(QCAlgorithm algorithm, Insight[] insights)
+        /// <param name="insight">The insight to create a target for</param>
+        /// <returns>True if the portfolio should create a target for the insight</returns>
+        protected override bool ShouldCreateTargetForInsight(Insight insight)
         {
-            // always add new insights
-            if (insights.Length > 0)
-            {
-                insights = FilterInvalidInsightMagnitude(algorithm, insights);
-                InsightCollection.AddRange(insights);
-            }
+            return FilterInvalidInsightMagnitude(Algorithm, new []{ insight }).Length != 0;
+        }
 
-            if (!IsRebalanceDue(insights, algorithm.UtcTime))
-            {
-                return Enumerable.Empty<IPortfolioTarget>();
-            }
-
-            var targets = new List<IPortfolioTarget>();
-
-            // Create flatten target for each security that was removed from the universe
-            if (_removedSymbols != null)
-            {
-                var universeDeselectionTargets = _removedSymbols.Select(symbol => new PortfolioTarget(symbol, 0));
-                targets.AddRange(universeDeselectionTargets);
-                _removedSymbols = null;
-            }
-
-            // Get insight that haven't expired of each symbol that is still in the universe
-            var activeInsights = InsightCollection.GetActiveInsights(algorithm.UtcTime);
-
-            // Get the last generated active insight for each symbol
-            var lastActiveInsights = (from insight in activeInsights
-                                      group insight by new { insight.Symbol, insight.SourceModel } into g
-                                      select g.OrderBy(x => x.GeneratedTimeUtc).Last())
-                                     .OrderBy(x => x.Symbol).ToArray();
+        /// <summary>
+        /// Will determine the target percent for each insight
+        /// </summary>
+        /// <param name="lastActiveInsights">The active insights to generate a target for</param>
+        /// <returns>A target percent for each insight</returns>
+        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> lastActiveInsights)
+        {
+            var targets = new Dictionary<Insight, double>();
 
             double[,] P;
             double[] Q;
@@ -175,9 +261,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     {
                         if (insight.Magnitude == null)
                         {
-                            algorithm.SetRunTimeError(new ArgumentNullException("BlackLittermanOptimizationPortfolioConstructionModel does not accept \'null\' as Insight.Magnitude. Please make sure your Alpha Model is generating Insights with the Magnitude property set."));
+                            Algorithm.SetRunTimeError(new ArgumentNullException("BlackLittermanOptimizationPortfolioConstructionModel does not accept \'null\' as Insight.Magnitude. Please make sure your Alpha Model is generating Insights with the Magnitude property set."));
+                            return targets;
                         }
-                        symbolData.Add(algorithm.Time, insight.Magnitude.Value.SafeDecimalCast());
+                        symbolData.Add(Algorithm.Time, insight.Magnitude.Value.SafeDecimalCast());
                     }
                 }
                 // Get symbols' returns
@@ -195,28 +282,37 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 var sidx = 0;
                 foreach (var symbol in symbols)
                 {
-                    var weight = W[sidx].SafeDecimalCast();
+                    var weight = W[sidx];
 
-                    var target = PortfolioTarget.Percent(algorithm, symbol, weight);
-                    if (target != null)
+                    // don't trust the optimizer
+                    if (_portfolioBias != PortfolioBias.LongShort
+                        && Math.Sign(weight) != (int)_portfolioBias)
                     {
-                        targets.Add(target);
+                        weight = 0;
                     }
+                    targets[lastActiveInsights.First(insight => insight.Symbol == symbol)] = weight;
 
                     sidx++;
                 }
             }
-            // Get expired insights and create flatten targets for each symbol
-            var expiredInsights = InsightCollection.RemoveExpiredInsights(algorithm.UtcTime);
-
-            var expiredTargets = from insight in expiredInsights
-                                 group insight.Symbol by insight.Symbol into g
-                                 where !InsightCollection.HasActiveInsights(g.Key, algorithm.UtcTime)
-                                 select new PortfolioTarget(g.Key, 0);
-
-            targets.AddRange(expiredTargets);
 
             return targets;
+        }
+
+        /// <summary>
+        /// Gets the target insights to calculate a portfolio target percent for
+        /// </summary>
+        /// <returns>An enumerable of the target insights</returns>
+        protected override List<Insight> GetTargetInsights()
+        {
+            // Get insight that haven't expired of each symbol that is still in the universe
+            var activeInsights = InsightCollection.GetActiveInsights(Algorithm.UtcTime);
+
+            // Get the last generated active insight for each symbol
+            return (from insight in activeInsights
+                    group insight by new { insight.Symbol, insight.SourceModel } into g
+                    select g.OrderBy(x => x.GeneratedTimeUtc).Last())
+                    .OrderBy(x => x.Symbol).ToList();
         }
 
         /// <summary>
@@ -227,11 +323,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         public override void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
         {
             base.OnSecuritiesChanged(algorithm, changes);
-            // Get removed symbol and invalidate them in the insight collection
-            _removedSymbols = changes.RemovedSecurities.Select(x => x.Symbol).ToList();
-            InsightCollection.Clear(_removedSymbols.ToArray());
 
-            foreach (var symbol in _removedSymbols)
+            foreach (var symbol in changes.RemovedSecurities.Select(x => x.Symbol))
             {
                 if (_symbolDataDict.ContainsKey(symbol))
                 {
@@ -283,7 +376,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <param name="insights">Array of insight that represent the investors' views</param>
         /// <param name="P">A matrix that identifies the assets involved in the views (size: K x N)</param>
         /// <param name="Q">A view vector (size: K x 1)</param>
-        private bool TryGetViews(Insight[] insights, out double[,] P, out double[] Q)
+        private bool TryGetViews(ICollection<Insight> insights, out double[,] P, out double[] Q)
         {
             try
             {

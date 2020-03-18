@@ -15,6 +15,7 @@
 
 using QuantConnect.Algorithm;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -39,8 +40,16 @@ namespace QuantConnect.Report
         {
             foreach (var symbol in orders.Select(x => x.Symbol).Distinct())
             {
-                var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, Resolution.Daily, false, false);
-                var security = Securities.CreateSecurity(symbol, configs, 10000m);
+                var resolution = symbol.SecurityType == SecurityType.Option ? Resolution.Minute : Resolution.Daily;
+                var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, false, false);
+                var security = Securities.CreateSecurity(symbol, configs, 0m);
+                if (symbol.SecurityType == SecurityType.Crypto)
+                {
+                    security.BuyingPowerModel = new SecurityMarginModel();
+                }
+
+                // Set leverage to 10000 to account for unknown leverage values in user algorithms
+                security.SetLeverage(10000m);
 
                 var method = typeof(QCAlgorithm).GetMethod("AddToUserDefinedUniverse", BindingFlags.NonPublic | BindingFlags.Instance);
                 method.Invoke(this, new object[] { security, configs });

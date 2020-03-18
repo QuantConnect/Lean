@@ -52,7 +52,7 @@ class BasicTemplateOptionsAlgorithm(QCAlgorithm):
         self.SetBenchmark(equity.Symbol)
 
     def OnData(self,slice):
-        if self.Portfolio.Invested: return
+        if self.Portfolio.Invested or not self.IsMarketOpen(self.option_symbol): return
 
         chain = slice.OptionChains.GetValue(self.option_symbol)
         if chain is None:

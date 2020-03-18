@@ -22,7 +22,6 @@ using System.Threading.Tasks;
 using NodaTime;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
-using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -54,8 +53,7 @@ namespace QuantConnect.Tests
             DateTime? startDate = null,
             DateTime? endDate = null,
             string setupHandler = "RegressionSetupHandlerWrapper",
-            decimal? initialCash = null,
-            bool storeResult = false)
+            decimal? initialCash = null)
         {
             AlgorithmManager algorithmManager = null;
             var statistics = new Dictionary<string, string>();
@@ -64,8 +62,6 @@ namespace QuantConnect.Tests
 
             Composer.Instance.Reset();
             SymbolCache.Clear();
-            PortfolioConstructionModel.RebalanceOnSecurityChanges = true;
-            PortfolioConstructionModel.RebalanceOnInsightChanges = true;
 
             var ordersLogFile = string.Empty;
             var logFile = $"./regression/{algorithm}.{language.ToLower()}.log";

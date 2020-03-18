@@ -89,14 +89,6 @@ namespace QuantConnect.Packets
         public decimal Progress = 0;
 
         /// <summary>
-        /// Runmode for this backtest.
-        /// </summary>
-        /// <obsolete>The RunMode property has been made obsolete and all backtests will be run in series mode.</obsolete>
-        [Obsolete("The RunMode property has been made obsolete and all backtests will be run in series mode.")]
-        [JsonProperty(PropertyName = "eRunMode")]
-        public RunMode RunMode = RunMode.Series;
-
-        /// <summary>
         /// Name of this backtest.
         /// </summary>
         [JsonProperty(PropertyName = "sName")]
@@ -224,16 +216,16 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Constructor for the result class using dictionary objects.
         /// </summary>
-        public BacktestResult(IDictionary<string, Chart> charts, IDictionary<int, Order> orders, IDictionary<DateTime, decimal> profitLoss, IDictionary<string, string> statistics, IDictionary<string, string> runtimeStatistics, Dictionary<string, AlgorithmPerformance> rollingWindow, AlgorithmPerformance totalPerformance = null)
+        public BacktestResult(BacktestResultParameters parameters)
         {
-            Charts = charts;
-            Orders = orders;
-            ProfitLoss = profitLoss;
-            Statistics = statistics;
-            RuntimeStatistics = runtimeStatistics;
-            RollingWindow = rollingWindow;
-            TotalPerformance = totalPerformance;
+            Charts = parameters.Charts;
+            Orders = parameters.Orders;
+            ProfitLoss = parameters.ProfitLoss;
+            Statistics = parameters.Statistics;
+            RuntimeStatistics = parameters.RuntimeStatistics;
+            RollingWindow = parameters.RollingWindow;
+            TotalPerformance = parameters.TotalPerformance;
+            AlphaRuntimeStatistics = parameters.AlphaRuntimeStatistics;
         }
     }
-
 } // End of Namespace:

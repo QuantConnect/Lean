@@ -15,15 +15,19 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Newtonsoft.Json;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Packets;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -33,6 +37,31 @@ namespace QuantConnect.Lean.Engine.Results
     /// </summary>
     public abstract class BaseResultsHandler
     {
+        /// <summary>
+        /// The last position consumed from the <see cref="ITransactionHandler.OrderEvents"/> by <see cref="GetDeltaOrders"/>
+        /// </summary>
+        protected int LastDeltaOrderPosition;
+
+        /// <summary>
+        /// The task in charge of running the <see cref="Run"/> update method
+        /// </summary>
+        private Thread _updateRunner;
+
+        /// <summary>
+        /// Boolean flag indicating the thread is still active.
+        /// </summary>
+        public bool IsActive => _updateRunner != null && _updateRunner.IsAlive;
+
+        /// <summary>
+        /// Live packet messaging queue. Queue the messages here and send when the result queue is ready.
+        /// </summary>
+        public ConcurrentQueue<Packet> Messages { get; set; }
+
+        /// <summary>
+        /// Storage for the price and equity charts of the live results.
+        /// </summary>
+        public ConcurrentDictionary<string, Chart> Charts { get; set; }
+
         /// <summary>
         /// True if the exit has been triggered
         /// </summary>
@@ -63,7 +92,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// The algorithm job id.
         /// This is the deploy id for live, backtesting id for backtesting
         /// </summary>
-        protected string JobId { get; set; }
+        protected string AlgorithmId { get; set; }
 
         /// <summary>
         /// The result handler start time
@@ -117,18 +146,116 @@ namespace QuantConnect.Lean.Engine.Results
         protected DateTime PreviousUtcSampleTime;
 
         /// <summary>
+        /// Sampling period for timespans between resamples of the charting equity.
+        /// </summary>
+        /// <remarks>Specifically critical for backtesting since with such long timeframes the sampled data can get extreme.</remarks>
+        protected TimeSpan ResamplePeriod { get; set; }
+
+        /// <summary>
+        /// How frequently the backtests push messages to the browser.
+        /// </summary>
+        /// <remarks>Update frequency of notification packets</remarks>
+        protected TimeSpan NotificationPeriod { get; set; }
+
+        /// <summary>
+        /// Directory location to store results
+        /// </summary>
+        protected string ResultsDestinationFolder;
+        
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()
         {
+            Charts = new ConcurrentDictionary<string, Chart>();
+            Messages = new ConcurrentQueue<Packet>();
             RuntimeStatistics = new Dictionary<string, string>();
             StartTime = DateTime.UtcNow;
             CompileId = "";
-            JobId = "";
+            AlgorithmId = "";
             ChartLock = new object();
             LogStore = new List<LogEntry>();
+            ResultsDestinationFolder = Config.Get("results-destination-folder", Directory.GetCurrentDirectory());
         }
 
+        /// <summary>
+        /// New order event for the algorithm
+        /// </summary>
+        /// <param name="newEvent">New event details</param>
+        public virtual void OrderEvent(OrderEvent newEvent)
+        {
+        }
+
+        /// <summary>
+        /// Gets the orders generated starting from the provided <see cref="ITransactionHandler.OrderEvents"/> position
+        /// </summary>
+        /// <returns>The delta orders</returns>
+        protected virtual Dictionary<int, Order> GetDeltaOrders(int orderEventsStartPosition, Func<int, bool> shouldStop)
+        {
+            var deltaOrders = new Dictionary<int, Order>();
+
+            foreach (var orderId in TransactionHandler.OrderEvents.Skip(orderEventsStartPosition).Select(orderEvent => orderEvent.OrderId))
+            {
+                LastDeltaOrderPosition++;
+                if (deltaOrders.ContainsKey(orderId))
+                {
+                    // we can have more than 1 order event per order id
+                    continue;
+                }
+
+                var order = Algorithm.Transactions.GetOrderById(orderId);
+                if (order == null)
+                {
+                    // this shouldn't happen but just in case
+                    continue;
+                }
+
+                // for charting
+                order.Price = order.Price.SmartRounding();
+
+                deltaOrders[orderId] = order;
+
+                if (shouldStop(deltaOrders.Count))
+                {
+                    break;
+                }
+            }
+
+            return deltaOrders;
+        }
+
+        /// <summary>
+        /// Initialize the result handler with this result packet.
+        /// </summary>
+        /// <param name="job">Algorithm job packet for this result handler</param>
+        /// <param name="messagingHandler">The handler responsible for communicating messages to listeners</param>
+        /// <param name="api">The api instance used for handling logs</param>
+        /// <param name="transactionHandler">The transaction handler used to get the algorithms <see cref="Order"/> information</param>
+        public virtual void Initialize(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler)
+        {
+            MessagingHandler = messagingHandler;
+            TransactionHandler = transactionHandler;
+            CompileId = job.CompileId;
+            AlgorithmId = job.AlgorithmId;
+            _updateRunner = new Thread(Run, 0) { IsBackground = true, Name = "Result Thread" };
+            _updateRunner.Start();
+        }
+
+        /// <summary>
+        /// Result handler update method
+        /// </summary>
+        protected abstract void Run();
+
+        /// <summary>
+        /// Gets the full path for a results file
+        /// </summary>
+        /// <param name="filename">The filename to add to the path</param>
+        /// <returns>The full path, including the filename</returns>
+        protected string GetResultsPath(string filename)
+        {
+            return Path.Combine(ResultsDestinationFolder, filename);
+        }
+        
         /// <summary>
         /// Returns the location of the logs
         /// </summary>
@@ -137,9 +264,11 @@ namespace QuantConnect.Lean.Engine.Results
         /// <returns>The path to the logs</returns>
         public virtual string SaveLogs(string id, List<LogEntry> logs)
         {
-            var path = $"{id}-log.txt";
-            File.WriteAllLines(path, logs.Select(x => x.Message));
-            return Path.Combine(Directory.GetCurrentDirectory(), path);
+            var filename = $"{id}-log.txt";
+            var path = GetResultsPath(filename);
+            var logLines = logs.Select(x => x.Message);
+            File.WriteAllLines(path, logLines);
+            return path;
         }
 
         /// <summary>
@@ -149,7 +278,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="result">The results to save</param>
         public virtual void SaveResults(string name, Result result)
         {
-            File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), name), JsonConvert.SerializeObject(result, Formatting.Indented));
+            File.WriteAllText(GetResultsPath(name), JsonConvert.SerializeObject(result, Formatting.Indented));
         }
 
         /// <summary>
@@ -170,6 +299,23 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Purge/clear any outstanding messages in message queue.
+        /// </summary>
+        protected void PurgeQueue()
+        {
+            Messages.Clear();
+        }
+
+        /// <summary>
+        /// Stops the update runner task
+        /// </summary>
+        protected void StopUpdateRunner()
+        {
+            _updateRunner.StopSafely(TimeSpan.FromMinutes(10));
+            _updateRunner = null;
+        }
+
+        /// <summary>
         /// Gets the algorithm net return
         /// </summary>
         protected decimal GetNetReturn()
@@ -179,6 +325,12 @@ namespace QuantConnect.Lean.Engine.Results
                 (Algorithm.Portfolio.TotalPortfolioValue - StartingPortfolioValue) / StartingPortfolioValue
                 : 0;
         }
+
+        /// <summary>
+        /// Save the snapshot of the total results to storage.
+        /// </summary>
+        /// <param name="packet">Packet to store.</param>
+        protected abstract void StoreResult(Packet packet);
 
         /// <summary>
         /// Samples portfolio equity, benchmark, and daily performance

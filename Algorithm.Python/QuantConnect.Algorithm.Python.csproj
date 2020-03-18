@@ -77,6 +77,7 @@
     <None Include="PandasDataFrameHistoryAlgorithm.py" />
     <None Include="CustomDataAddDataRegressionAlgorithm.py" />
     <None Include="TrainingExampleAlgorithm.py" />
+    <None Include="LongOnlyAlphaStreamAlgorithm.py" />
     <Content Include="BasicTemplateConstituentUniverseAlgorithm.py" />
     <Content Include="BasicTemplateOptionsConsolidationAlgorithm.py" />
     <Content Include="Benchmarks\SECReportBenchmarkAlgorithm.py" />
@@ -90,6 +91,9 @@
     <Content Include="CustomDataUsingMapFileRegressionAlgorithm.py" />
     <Content Include="LiquidETFUniverseFrameworkAlgorithm.py" />
     <Content Include="LiveFeaturesAlgorithm.py" />
+    <Content Include="PortfolioRebalanceOnCustomFuncRegressionAlgorithm.py" />
+    <Content Include="PortfolioRebalanceOnDateRulesRegressionAlgorithm.py" />
+    <Content Include="SectorWeightingFrameworkAlgorithm.py" />
     <Content Include="SetHoldingsMultipleTargetsRegressionAlgorithm.py" />
     <Content Include="TradingEconomicsCalendarIndicatorAlgorithm.py" />
     <Content Include="OnEndOfDayRegressionAlgorithm.py" />

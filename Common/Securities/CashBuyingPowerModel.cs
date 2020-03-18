@@ -195,11 +195,6 @@ namespace QuantConnect.Securities
                 parameters.Portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount,
                 baseCurrency.BaseCurrencySymbol);
 
-            // convert quote currency cash to account currency
-            var quoteCurrencyPosition = parameters.Portfolio.CashBook.ConvertToAccountCurrency(
-                parameters.Portfolio.CashBook[parameters.Security.QuoteCurrency.Symbol].Amount,
-                parameters.Security.QuoteCurrency.Symbol);
-
             // remove directionality, we'll work in the land of absolutes
             var targetOrderValue = Math.Abs(targetPortfolioValue - baseCurrencyPosition);
             var direction = targetPortfolioValue > baseCurrencyPosition ? OrderDirection.Buy : OrderDirection.Sell;
@@ -224,14 +219,6 @@ namespace QuantConnect.Securities
 
                 // security.Price == 0
                 return new GetMaximumOrderQuantityResult(0, $"The price of the {parameters.Security.Symbol.Value} security is zero because it does not have any market data yet. When the security price is set this security will be ready for trading.");
-            }
-
-            // calculate the total cash available
-            var cashRemaining = direction == OrderDirection.Buy ? quoteCurrencyPosition : baseCurrencyPosition;
-            var currency = direction == OrderDirection.Buy ? parameters.Security.QuoteCurrency.Symbol : baseCurrency.BaseCurrencySymbol;
-            if (cashRemaining <= 0)
-            {
-                return new GetMaximumOrderQuantityResult(0, $"The portfolio does not hold any {currency} for the order.");
             }
 
             // continue iterating while we do not have enough cash for the order
@@ -317,6 +304,50 @@ namespace QuantConnect.Securities
         public override ReservedBuyingPowerForPosition GetReservedBuyingPowerForPosition(ReservedBuyingPowerForPositionParameters parameters)
         {
             // Always returns 0. Since we're purchasing currencies outright, the position doesn't consume buying power
+            return parameters.ResultInAccountCurrency(0m);
+        }
+
+        /// <summary>
+        /// Gets the buying power available for a trade
+        /// </summary>
+        /// <param name="parameters">A parameters object containing the algorithm's potrfolio, security, and order direction</param>
+        /// <returns>The buying power available for the trade</returns>
+        public override BuyingPower GetBuyingPower(BuyingPowerParameters parameters)
+        {
+            var security = parameters.Security;
+            var portfolio = parameters.Portfolio;
+            var direction = parameters.Direction;
+
+            var baseCurrency = security as IBaseCurrencySymbol;
+            if (baseCurrency == null)
+            {
+                return parameters.ResultInAccountCurrency(0m);
+            }
+
+            var baseCurrencyPosition = portfolio.CashBook[baseCurrency.BaseCurrencySymbol].Amount;
+            var quoteCurrencyPosition = portfolio.CashBook[security.QuoteCurrency.Symbol].Amount;
+
+            // determine the unit price in terms of the quote currency
+            var utcTime = parameters.Security.LocalTime.ConvertToUtc(parameters.Security.Exchange.TimeZone);
+            var unitPrice = new MarketOrder(security.Symbol, 1, utcTime).GetValue(security) / security.QuoteCurrency.ConversionRate;
+            if (unitPrice == 0)
+            {
+                return parameters.ResultInAccountCurrency(0m);
+            }
+
+            // NOTE: This is returning in units of the BASE currency
+            if (direction == OrderDirection.Buy)
+            {
+                // invert units for math, 6500USD per BTC, currency pairs aren't real fractions
+                // (USD)/(BTC/USD) => 10kUSD/ (6500 USD/BTC) => 10kUSD * (1BTC/6500USD) => ~ 1.5BTC
+                return parameters.Result(quoteCurrencyPosition / unitPrice, baseCurrency.BaseCurrencySymbol);
+            }
+
+            if (direction == OrderDirection.Sell)
+            {
+                return parameters.Result(baseCurrencyPosition, baseCurrency.BaseCurrencySymbol);
+            }
+
             return parameters.ResultInAccountCurrency(0m);
         }
 

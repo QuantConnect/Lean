@@ -63,14 +63,6 @@ namespace QuantConnect.Packets
         public int TradeableDates = 0;
 
         /// <summary>
-        /// Series or parallel runmode for the backtest
-        /// </summary>
-        /// <obsolete>The RunMode property is now obsolete and will always default to Series mode.</obsolete>
-        [Obsolete("This property is no longer in use and will always default to series mode.")]
-        [JsonProperty(PropertyName = "eRunMode")]
-        public RunMode RunMode = RunMode.Series;
-
-        /// <summary>
         /// The initial breakpoints for debugging, if any
         /// </summary>
         [JsonProperty(PropertyName = "aBreakpoints")]

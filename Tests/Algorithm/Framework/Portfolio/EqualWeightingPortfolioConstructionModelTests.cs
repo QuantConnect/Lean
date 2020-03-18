@@ -13,35 +13,29 @@
  * limitations under the License.
 */
 
-using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
-using QuantConnect.Securities.Equity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Algorithm;
-using QuantConnect.Orders.Fees;
-using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
     [TestFixture]
-    public class EqualWeightingPortfolioConstructionModelTests
+    public class EqualWeightingPortfolioConstructionModelTests : BaseWeightingPortfolioConstructionModelTests
     {
-        private QCAlgorithm _algorithm;
-        private const decimal _startingCash = 100000;
+        public override double? Weight => Algorithm.Securities.Count == 0 ? default(double) : 1d / Algorithm.Securities.Count;
+
+        public virtual PortfolioBias PortfolioBias => PortfolioBias.LongShort;
 
         [TestFixtureSetUp]
-        public void SetUp()
+        public override void SetUp()
         {
-            _algorithm = new QCAlgorithm();
-            _algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(_algorithm));
+            base.SetUp();
 
             var prices = new Dictionary<Symbol, decimal>
             {
@@ -54,203 +48,53 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             {
                 var symbol = kvp.Key;
                 var security = GetSecurity(symbol);
-                security.SetMarketPrice(new Tick(_algorithm.Time, symbol, kvp.Value, kvp.Value));
-                _algorithm.Securities.Add(symbol, security);
+                security.SetMarketPrice(new Tick(Algorithm.Time, symbol, kvp.Value, kvp.Value));
+                Algorithm.Securities.Add(symbol, security);
             }
         }
 
         [Test]
-        [TestCase(Language.CSharp)]
-        [TestCase(Language.Python)]
-        public void EmptyInsightsReturnsEmptyTargets(Language language)
-        {
-            SetPortfolioConstruction(language, _algorithm);
-
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]);
-
-            Assert.AreEqual(0, actualTargets.Count());
-        }
-
-        [Test]
         [TestCase(Language.CSharp, InsightDirection.Up)]
         [TestCase(Language.CSharp, InsightDirection.Down)]
         [TestCase(Language.CSharp, InsightDirection.Flat)]
         [TestCase(Language.Python, InsightDirection.Up)]
         [TestCase(Language.Python, InsightDirection.Down)]
         [TestCase(Language.Python, InsightDirection.Flat)]
-        public void InsightsReturnsTargetsConsistentWithDirection(Language language, InsightDirection direction)
+        public override void AutomaticallyRemoveInvestedWithNewInsights(Language language, InsightDirection direction)
         {
-            SetPortfolioConstruction(language, _algorithm);
+            SetPortfolioConstruction(language);
 
-            // Equity will be divided by all securities
-            var amount = _algorithm.Portfolio.TotalPortfolioValue / _algorithm.Securities.Count;
-            var expectedTargets = _algorithm.Securities
-                .Select(x => new PortfolioTarget(x.Key, (int)direction
-                                                        * Math.Floor(amount * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
-                                                                     / x.Value.Price)));
-
-            var insights = _algorithm.Securities.Keys.Select(x => GetInsight(x, direction, _algorithm.UtcTime));
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights.ToArray());
-
-            AssertTargets(expectedTargets, actualTargets);
-        }
-
-        [TestCase(Language.CSharp, InsightDirection.Up)]
-        [TestCase(Language.CSharp, InsightDirection.Down)]
-        [TestCase(Language.CSharp, InsightDirection.Flat)]
-        [TestCase(Language.Python, InsightDirection.Up)]
-        [TestCase(Language.Python, InsightDirection.Down)]
-        [TestCase(Language.Python, InsightDirection.Flat)]
-        public void FlatDirectionNotAccountedToAllocation(Language language, InsightDirection direction)
-        {
-            SetPortfolioConstruction(language, _algorithm);
-
-            // Modifying fee model for a constant one so numbers are simplified
-            foreach (var security in _algorithm.Securities)
+            if (PortfolioBias != PortfolioBias.LongShort && (int)direction != (int)PortfolioBias)
             {
-                security.Value.FeeModel = new ConstantFeeModel(1);
+                direction = InsightDirection.Flat;
             }
-
-            // Equity, minus $1 for fees, will be divided by all securities minus 1, since its insight will have flat direction
-            var amount = (_algorithm.Portfolio.TotalPortfolioValue - 1 * (_algorithm.Securities.Count - 1))
-                         / (_algorithm.Securities.Count - 1);
-            var expectedTargets = _algorithm.Securities.Select(x =>
-            {
-                // Expected target quantity for SPY is zero, since its insight will have flat direction
-                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction
-                                                          * Math.Floor(amount * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
-                                                                       / x.Value.Price);
-                return new PortfolioTarget(x.Key, quantity);
-            });
-
-            var insights = _algorithm.Securities.Keys.Select(x =>
-            {
-                // SPY insight direction is flat
-                var actualDirection = x.Value == "SPY" ? InsightDirection.Flat : direction;
-                return GetInsight(x, actualDirection, _algorithm.UtcTime);
-            });
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights.ToArray());
-
-            AssertTargets(expectedTargets, actualTargets);
-        }
-
-        [Test]
-        [TestCase(Language.CSharp, InsightDirection.Up)]
-        [TestCase(Language.CSharp, InsightDirection.Down)]
-        [TestCase(Language.CSharp, InsightDirection.Flat)]
-        [TestCase(Language.Python, InsightDirection.Up)]
-        [TestCase(Language.Python, InsightDirection.Down)]
-        [TestCase(Language.Python, InsightDirection.Flat)]
-        public void AutomaticallyRemoveInvestedWithNewInsights(Language language, InsightDirection direction)
-        {
-            SetPortfolioConstruction(language, _algorithm);
 
             // Let's create a position for SPY
-            var insights = new[] { GetInsight(Symbols.SPY, direction, _algorithm.UtcTime) };
+            var insights = new[] { GetInsight(Symbols.SPY, direction, Algorithm.UtcTime) };
 
-            foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
+            foreach (var target in Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights))
             {
-                var holding = _algorithm.Portfolio[target.Symbol];
+                var holding = Algorithm.Portfolio[target.Symbol];
                 holding.SetHoldings(holding.Price, target.Quantity);
-                _algorithm.Portfolio.SetCash(_startingCash - holding.HoldingsValue);
+                Algorithm.Portfolio.SetCash(StartingCash - holding.HoldingsValue);
             }
-
-            SetUtcTime(_algorithm.UtcTime.AddDays(2));
+            SetUtcTime(Algorithm.UtcTime.AddDays(2));
 
             // Equity will be divided by all securities minus 1, since SPY is already invested and we want to remove it
-            var amount = _algorithm.Portfolio.TotalPortfolioValue / (_algorithm.Securities.Count - 1);
-            var expectedTargets = _algorithm.Securities.Select(x =>
+            var amount = Algorithm.Portfolio.TotalPortfolioValue / (decimal)(1 / Weight - 1) *
+                         (1 - Algorithm.Settings.FreePortfolioValuePercentage);
+            var expectedTargets = Algorithm.Securities.Select(x =>
             {
                 // Expected target quantity for SPY is zero, since it will be removed
-                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction
-                                                          * Math.Floor(amount * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
-                                                                       / x.Value.Price);
+                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction * Math.Floor(amount / x.Value.Price);
                 return new PortfolioTarget(x.Key, quantity);
             });
 
             // Do no include SPY in the insights
-            insights = _algorithm.Securities.Keys.Where(x=> x.Value != "SPY")
-                .Select(x => GetInsight(x, direction, _algorithm.UtcTime)).ToArray();
+            insights = Algorithm.Securities.Keys.Where(x => x.Value != "SPY")
+                .Select(x => GetInsight(x, direction, Algorithm.UtcTime)).ToArray();
 
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
-
-            AssertTargets(expectedTargets, actualTargets);
-        }
-
-        [Test]
-        [TestCase(Language.CSharp)]
-        [TestCase(Language.Python)]
-        public void AutomaticallyRemoveInvestedWithoutNewInsights(Language language)
-        {
-            SetPortfolioConstruction(language, _algorithm);
-
-            // Let's create a position for SPY
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Up, _algorithm.UtcTime) };
-
-            foreach (var target in _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights))
-            {
-                var holding = _algorithm.Portfolio[target.Symbol];
-                holding.SetHoldings(holding.Price, target.Quantity);
-                _algorithm.Portfolio.SetCash(_startingCash - holding.HoldingsValue);
-            }
-
-            SetUtcTime(_algorithm.UtcTime.AddDays(2));
-
-            var expectedTargets = new List<IPortfolioTarget> { new PortfolioTarget(Symbols.SPY, 0) };
-
-            // Create target from an empty insights array
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]);
-
-            AssertTargets(expectedTargets, actualTargets);
-        }
-
-        [Test]
-        [TestCase(Language.CSharp)]
-        [TestCase(Language.Python)]
-        public void LongTermInsightPreservesPosition(Language language)
-        {
-            SetPortfolioConstruction(language, _algorithm);
-
-            // First emit long term insight
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime) };
-            var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
-            Assert.AreEqual(1, targets.Count);
-
-            // One minute later, emits short term insight
-            SetUtcTime(_algorithm.UtcTime.AddMinutes(1));
-            insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Up, _algorithm.UtcTime, Time.OneMinute) };
-            targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
-            Assert.AreEqual(1, targets.Count);
-
-            // One minute later, emit empty insights array
-            SetUtcTime(_algorithm.UtcTime.AddMinutes(1.1));
-
-            var expectedTargets = new List<IPortfolioTarget> { PortfolioTarget.Percent(_algorithm, Symbols.SPY, -1m) };
-
-            // Create target from an empty insights array
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]);
-
-            AssertTargets(expectedTargets, actualTargets);
-        }
-
-        [Test]
-        [TestCase(Language.CSharp)]
-        [TestCase(Language.Python)]
-        public void DelistedSecurityEmitsFlatTargetWithoutNewInsights(Language language)
-        {
-            SetPortfolioConstruction(language, _algorithm);
-
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime) };
-            var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
-            Assert.AreEqual(1, targets.Count);
-
-            var changes = SecurityChanges.Removed(_algorithm.Securities[Symbols.SPY]);
-            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
-
-            var expectedTargets = new List<IPortfolioTarget> { new PortfolioTarget(Symbols.SPY, 0) };
-
-            // Create target from an empty insights array
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, new Insight[0]);
+            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights);
 
             AssertTargets(expectedTargets, actualTargets);
         }
@@ -262,132 +106,130 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(Language.Python, InsightDirection.Up)]
         [TestCase(Language.Python, InsightDirection.Down)]
         [TestCase(Language.Python, InsightDirection.Flat)]
-        public void DelistedSecurityEmitsFlatTargetWithNewInsights(Language language, InsightDirection direction)
+        public override void DelistedSecurityEmitsFlatTargetWithNewInsights(Language language, InsightDirection direction)
         {
-            SetPortfolioConstruction(language, _algorithm);
+            SetPortfolioConstruction(language);
 
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Down, _algorithm.UtcTime) };
-            var targets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights).ToList();
+            if (PortfolioBias != PortfolioBias.LongShort && (int)direction != (int)PortfolioBias)
+            {
+                direction = InsightDirection.Flat;
+            }
+
+            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Down, Algorithm.UtcTime) };
+            var targets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights).ToList();
             Assert.AreEqual(1, targets.Count);
 
             // Removing SPY should clear the key in the insight collection
-            var changes = SecurityChanges.Removed(_algorithm.Securities[Symbols.SPY]);
-            _algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
+            var changes = SecurityChanges.Removed(Algorithm.Securities[Symbols.SPY]);
+            Algorithm.PortfolioConstruction.OnSecuritiesChanged(Algorithm, changes);
 
             // Equity will be divided by all securities minus 1, since SPY is already invested and we want to remove it
-            var amount = _algorithm.Portfolio.TotalPortfolioValue / (_algorithm.Securities.Count - 1);
-            var expectedTargets = _algorithm.Securities.Select(x =>
+            var amount = Algorithm.Portfolio.TotalPortfolioValue / (decimal)(1 / Weight - 1) *
+                (1 - Algorithm.Settings.FreePortfolioValuePercentage);
+
+            var expectedTargets = Algorithm.Securities.Select(x =>
             {
                 // Expected target quantity for SPY is zero, since it will be removed
-                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction
-                                                          * Math.Floor(amount * (1 - _algorithm.Settings.FreePortfolioValuePercentage)
-                                                                       / x.Value.Price);
+                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction * Math.Floor(amount / x.Value.Price);
                 return new PortfolioTarget(x.Key, quantity);
             });
 
             // Do no include SPY in the insights
-            insights = _algorithm.Securities.Keys.Where(x => x.Value != "SPY")
-                .Select(x => GetInsight(x, direction, _algorithm.UtcTime)).ToArray();
+            insights = Algorithm.Securities.Keys.Where(x => x.Value != "SPY")
+                .Select(x => GetInsight(x, direction, Algorithm.UtcTime)).ToArray();
 
             // Create target from an empty insights array
-            var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
+            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights);
 
             AssertTargets(expectedTargets, actualTargets);
         }
 
-        private void AssertTargets(IEnumerable<IPortfolioTarget> expectedTargets, IEnumerable<IPortfolioTarget> actualTargets)
+        [TestCase(Language.CSharp, InsightDirection.Up)]
+        [TestCase(Language.CSharp, InsightDirection.Down)]
+        [TestCase(Language.CSharp, InsightDirection.Flat)]
+        [TestCase(Language.Python, InsightDirection.Up)]
+        [TestCase(Language.Python, InsightDirection.Down)]
+        [TestCase(Language.Python, InsightDirection.Flat)]
+        public override void FlatDirectionNotAccountedToAllocation(Language language, InsightDirection direction)
         {
-            var list = actualTargets.ToList();
-            Assert.AreEqual(expectedTargets.Count(), list.Count);
+            SetPortfolioConstruction(language);
 
-            foreach (var expected in expectedTargets)
+            if (PortfolioBias != PortfolioBias.LongShort && (int)direction != (int)PortfolioBias)
             {
-                var actual = list.FirstOrDefault(x => x.Symbol == expected.Symbol);
-                Assert.IsNotNull(actual);
-                Assert.AreEqual(expected.Quantity, actual.Quantity);
+                direction = InsightDirection.Flat;
             }
+
+            // Equity, minus $1 for fees, will be divided by all securities minus 1, since its insight will have flat direction
+            var amount = (Algorithm.Portfolio.TotalPortfolioValue - 1 * (Algorithm.Securities.Count - 1)) * 1 /
+                         (decimal)((1 / Weight) - 1) * (1 - Algorithm.Settings.FreePortfolioValuePercentage);
+
+            var expectedTargets = Algorithm.Securities.Select(x =>
+            {
+                // Expected target quantity for SPY is zero, since its insight will have flat direction
+                var quantity = x.Key.Value == "SPY" ? 0 : (int)direction * Math.Floor(amount / x.Value.Price);
+                return new PortfolioTarget(x.Key, quantity);
+            });
+
+            var insights = Algorithm.Securities.Keys.Select(x =>
+            {
+                // SPY insight direction is flat
+                var actualDirection = x.Value == "SPY" ? InsightDirection.Flat : direction;
+                return GetInsight(x, actualDirection, Algorithm.UtcTime);
+            });
+            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights.ToArray());
+
+            AssertTargets(expectedTargets, actualTargets);
         }
 
         [Test]
-        [TestCase(Language.CSharp)]
-        [TestCase(Language.Python)]
-        public void DoesNotReturnTargetsIfSecurityPriceIsZero(Language language)
+        [TestCase(Language.CSharp, InsightDirection.Up)]
+        [TestCase(Language.CSharp, InsightDirection.Down)]
+        [TestCase(Language.CSharp, InsightDirection.Flat)]
+        [TestCase(Language.Python, InsightDirection.Up)]
+        [TestCase(Language.Python, InsightDirection.Down)]
+        [TestCase(Language.Python, InsightDirection.Flat)]
+        public virtual void InsightsReturnsTargetsConsistentWithDirection(Language language, InsightDirection direction)
         {
-            var algorithm = new QCAlgorithm();
-            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
-            algorithm.AddEquity(Symbols.SPY.Value);
-            algorithm.SetDateTime(DateTime.MinValue.ConvertToUtc(_algorithm.TimeZone));
+            SetPortfolioConstruction(language);
 
-            SetPortfolioConstruction(language, algorithm);
+            if (PortfolioBias != PortfolioBias.LongShort && (int)direction != (int)PortfolioBias)
+            {
+                direction = InsightDirection.Flat;
+            }
+            // Equity will be divided by all securities
+            var amount = Algorithm.Portfolio.TotalPortfolioValue * (decimal)Weight *
+                (1 - Algorithm.Settings.FreePortfolioValuePercentage);
+            var expectedTargets = Algorithm.Securities
+                .Select(x => new PortfolioTarget(x.Key, (int)direction * Math.Floor(amount / x.Value.Price)));
 
-            var insights = new[] { GetInsight(Symbols.SPY, InsightDirection.Up, algorithm.UtcTime) };
-            var actualTargets = algorithm.PortfolioConstruction.CreateTargets(algorithm, insights);
+            var insights = Algorithm.Securities.Keys.Select(x => GetInsight(x, direction, Algorithm.UtcTime));
+            var actualTargets = Algorithm.PortfolioConstruction.CreateTargets(Algorithm, insights.ToArray());
 
-            Assert.AreEqual(0, actualTargets.Count());
+            AssertTargets(expectedTargets, actualTargets);
         }
 
-        [Test]
-        [TestCase(Language.CSharp)]
-        [TestCase(Language.Python)]
-        public void DoesNotThrowWithAlternativeOverloads(Language language)
-        {
-            Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, Resolution.Minute));
-            Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, TimeSpan.FromDays(1)));
-            Assert.DoesNotThrow(() => SetPortfolioConstruction(language, _algorithm, Expiry.EndOfWeek));
-        }
-
-        private Security GetSecurity(Symbol symbol)
-        {
-            var config = SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc);
-            return new Equity(
-                symbol,
-                config,
-                new Cash(Currencies.USD, 0, 1),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache()
-            );
-        }
-
-        private Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null)
+        public override Insight GetInsight(Symbol symbol, InsightDirection direction, DateTime generatedTimeUtc, TimeSpan? period = null, double? weight = 0.01)
         {
             period = period ?? TimeSpan.FromDays(1);
-            var insight = Insight.Price(symbol, period.Value, direction);
+            var insight = Insight.Price(symbol, period.Value, direction, weight: Math.Max(0.01, Algorithm.Securities.Count));
             insight.GeneratedTimeUtc = generatedTimeUtc;
             insight.CloseTimeUtc = generatedTimeUtc.Add(period.Value);
             return insight;
         }
 
-        private void SetPortfolioConstruction(Language language, QCAlgorithm algorithm, dynamic paramenter = null)
+        public override IPortfolioConstructionModel GetPortfolioConstructionModel(Language language, dynamic paramenter = null)
         {
-            paramenter = paramenter ?? Resolution.Daily;
-            algorithm.SetPortfolioConstruction(new EqualWeightingPortfolioConstructionModel(paramenter));
-            if (language == Language.Python)
+            if (language == Language.CSharp)
             {
-                using (Py.GIL())
-                {
-                    var name = nameof(EqualWeightingPortfolioConstructionModel);
-                    var instance = Py.Import(name).GetAttr(name).Invoke(((object) paramenter).ToPython());
-                    var model = new PortfolioConstructionModelPythonWrapper(instance);
-                    algorithm.SetPortfolioConstruction(model);
-                }
+                return new EqualWeightingPortfolioConstructionModel(paramenter);
             }
 
-            foreach (var kvp in _algorithm.Portfolio)
+            using (Py.GIL())
             {
-                kvp.Value.SetHoldings(kvp.Value.Price, 0);
+                const string name = nameof(EqualWeightingPortfolioConstructionModel);
+                var instance = Py.Import(name).GetAttr(name).Invoke(((object)paramenter).ToPython());
+                return new PortfolioConstructionModelPythonWrapper(instance);
             }
-            _algorithm.Portfolio.SetCash(_startingCash);
-            SetUtcTime(new DateTime(2018, 7, 31));
-
-            var changes = SecurityChanges.Added(_algorithm.Securities.Values.ToArray());
-            algorithm.PortfolioConstruction.OnSecuritiesChanged(_algorithm, changes);
-        }
-
-        private void SetUtcTime(DateTime dateTime)
-        {
-            _algorithm.SetDateTime(dateTime.ConvertToUtc(_algorithm.TimeZone));
         }
     }
 }

@@ -16,9 +16,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Configuration;
 using QuantConnect.Logging;
-using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -62,7 +60,11 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         /// Release time and date in UTC
         /// </summary>
         [JsonProperty(PropertyName = "Date"), JsonConverter(typeof(TradingEconomicsDateTimeConverter))]
-        public override DateTime EndTime { get; set; }
+        public override DateTime EndTime
+        {
+            get { return Time; }
+            set { Time = value; }
+        }
 
         /// <summary>
         /// Country name

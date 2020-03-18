@@ -160,17 +160,17 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Constructor for the result class for dictionary objects
         /// </summary>
-        public LiveResult(IDictionary<string, Chart> charts, IDictionary<int, Order> orders, IDictionary<DateTime, decimal> profitLoss, IDictionary<string, Holding> holdings, CashBook cashbook, IDictionary<string, string> statistics, IDictionary<string, string> runtime, IDictionary<string, string> serverStatistics = null)
+        public LiveResult(LiveResultParameters parameters)
         {
-            Charts = charts;
-            Orders = orders;
-            ProfitLoss = profitLoss;
-            Statistics = statistics;
-            Holdings = holdings;
-            Cash = cashbook;
-            RuntimeStatistics = runtime;
-            ServerStatistics = serverStatistics ?? OS.GetServerStatistics();
+            Charts = parameters.Charts;
+            Orders = parameters.Orders;
+            ProfitLoss = parameters.ProfitLoss;
+            Statistics = parameters.Statistics;
+            Holdings = parameters.Holdings;
+            Cash = parameters.CashBook;
+            RuntimeStatistics = parameters.RuntimeStatistics;
+            ServerStatistics = parameters.ServerStatistics;
+            AlphaRuntimeStatistics = parameters.AlphaRuntimeStatistics;
         }
     }
-
 } // End of Namespace:
