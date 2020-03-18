@@ -12,12 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Logging;
-using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Python;
 
@@ -45,23 +46,21 @@ namespace QuantConnect.Report
             var liveDataFile = Config.Get("live-data-source-file");
             var destination = Config.Get("report-destination");
 
-            //Set the Order Parser For JSON:
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
-            {
-                Converters = { new OrderJsonConverter() }
-            };
-
             // Parse content from source files into result objects
             Log.Trace($"QuantConnect.Report.Main(): Parsing source files...{backtestDataFile}, {liveDataFile}");
-            var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(backtestDataFile));
+            var backtestConverter = new NullResultValueTypeJsonConverter<BacktestResult>();
+            var backtest = JsonConvert.DeserializeObject<BacktestResult>(File.ReadAllText(backtestDataFile), backtestConverter);
 
             LiveResult live = null;
             if (liveDataFile != string.Empty)
             {
-                live = JsonConvert.DeserializeObject<LiveResult>(File.ReadAllText(liveDataFile), new JsonSerializerSettings
+                var settings = new JsonSerializerSettings
                 {
-                    NullValueHandling = NullValueHandling.Ignore
-                });
+                    NullValueHandling = NullValueHandling.Ignore,
+                    Converters = new List<JsonConverter> { new NullResultValueTypeJsonConverter<LiveResult>() }
+                };
+
+                live = JsonConvert.DeserializeObject<LiveResult>(File.ReadAllText(liveDataFile), settings);
             }
 
             //Create a new report
