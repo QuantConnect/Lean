@@ -154,6 +154,21 @@ namespace QuantConnect.ToolBox.EstimizeDataDownloader
             File.WriteAllLines(finalPath, finalLines);
         }
 
+        /// <summary>
+        /// Normalizes Estimize tickers to a format usable by the <see cref="Data.Auxiliary.MapFileResolver"/>
+        /// </summary>
+        /// <param name="ticker">Ticker to normalize</param>
+        /// <returns>Normalized ticker</returns>
+        public static string NormalizeTicker(string ticker)
+        {
+            return ticker.ToLowerInvariant()
+                .Replace("- defunct", string.Empty)
+                .Replace("-defunct", string.Empty)
+                .Replace(" ", string.Empty)
+                .Replace("|", string.Empty)
+                .Replace("-", ".");
+        }
+
         public class Company
         {
             /// <summary>
