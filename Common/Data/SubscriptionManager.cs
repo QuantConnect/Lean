@@ -188,7 +188,7 @@ namespace QuantConnect.Data
         public void RemoveConsolidator(Symbol symbol, IDataConsolidator consolidator)
         {
             // remove consolidator from each subscription
-            foreach (var subscription in Subscriptions.Where(x => x.Symbol == symbol))
+            foreach (var subscription in _subscriptionManager.GetSubscriptionDataConfigs(symbol))
             {
                 subscription.Consolidators.Remove(consolidator);
             }
