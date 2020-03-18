@@ -1,18 +1,26 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
  * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
+ * Updated from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.5.5
 */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
 {
+    [SuppressMessage(
+        "Microsoft.Performance", "CA1812:Avoid uninstantiated internal classes",
+        Justification = "Object instances of this class will be created by Newtonsoft.JSON library.")]
     internal sealed class JsonAccount : IAccount
     {
         [JsonProperty(PropertyName = "id", Required = Required.Always)]
         public Guid AccountId { get; set; }
+
+        [JsonProperty(PropertyName = "account_number", Required = Required.Default)]
+        public String AccountNumber { get; set; }
 
         [JsonProperty(PropertyName = "status", Required = Required.Always)]
         public AccountStatus Status { get; set; }
@@ -25,9 +33,6 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
 
         [JsonProperty(PropertyName = "cash_withdrawable", Required = Required.Default)]
         public Decimal WithdrawableCash { get; set; }
-
-        [JsonProperty(PropertyName = "portfolio_value", Required = Required.Always)]
-        public Decimal PortfolioValue { get; set; }
 
         [JsonProperty(PropertyName = "pattern_day_trader", Required = Required.Always)]
         public Boolean IsDayPatternTrader { get; set; }
@@ -53,6 +58,12 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         [JsonProperty(PropertyName = "buying_power", Required = Required.Always)]
         public Decimal BuyingPower { get; set; }
 
+        [JsonProperty(PropertyName = "daytrading_buying_power", Required = Required.Default)]
+        public Decimal DayTradingBuyingPower { get; set; }
+
+        [JsonProperty(PropertyName = "regt_buying_power", Required = Required.Default)]
+        public Decimal RegulationBuyingPower { get; set; }
+
         [JsonProperty(PropertyName = "long_market_value", Required = Required.Default)]
         public Decimal LongMarketValue { get; set; }
 
@@ -71,8 +82,11 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         [JsonProperty(PropertyName = "maintenance_margin", Required = Required.Default)]
         public Decimal MaintenanceMargin { get; set; }
 
+        [JsonProperty(PropertyName = "last_maintenance_margin", Required = Required.Default)]
+        public Decimal LastMaintenanceMargin { get; set; }
+
         [JsonProperty(PropertyName = "daytrade_count", Required = Required.Default)]
-        public Int64 DaytradeCount { get; set; }
+        public Int64 DayTradeCount { get; set; }
 
         [JsonProperty(PropertyName = "sma", Required = Required.Default)]
         public Decimal Sma { get; set; }
@@ -86,7 +100,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         {
             if (String.IsNullOrEmpty(Currency))
             {
-                Currency = Currencies.USD;
+                Currency = "USD";
             }
         }
     }

@@ -1,6 +1,7 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
  * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
+ * Updates from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.5.5
 */
 
 using System;
@@ -8,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -124,7 +126,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 ClientOrderId = clientOrderId
             };
 
-            await _alpacaRestApiThrottler.WaitToProceed();
+            await _alpacaRestApiThrottler.WaitToProceed(default(CancellationToken));
 
             var serializer = new JsonSerializer();
             using (var stringWriter = new StringWriter())
@@ -187,7 +189,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         public async Task<Boolean> DeleteOrderAsync(
             Guid orderId)
         {
-            await _alpacaRestApiThrottler.WaitToProceed();
+            await _alpacaRestApiThrottler.WaitToProceed(default(CancellationToken));
 
             using (var response = await _alpacaHttpClient.DeleteAsync($"orders/{orderId:D}"))
             {

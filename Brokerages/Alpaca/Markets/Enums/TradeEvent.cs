@@ -91,6 +91,24 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// Order cancellation was rejected.
         /// </summary>
         [EnumMember(Value = "order_cancel_rejected")]
-        OrderCancelRejected
+        OrderCancelRejected,
+
+        /// <summary>
+        /// Requested replacement of an order was processed.
+        /// </summary>
+        [EnumMember(Value = "replaced")]
+        Replaced,
+
+        /// <summary>
+        /// The order is awaiting replacement.
+        /// </summary>
+        [EnumMember(Value = "pending_replace")]
+        PendingReplace,
+
+        /// <summary>
+        /// The order replace has been rejected.
+        /// </summary>
+        [EnumMember(Value = "order_replace_rejected")]
+        ReplaceRejected
     }
 }

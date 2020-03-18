@@ -1,6 +1,9 @@
 ﻿﻿/*
  * The official C# API client for alpaca brokerage
  * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
+ * Updates from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.5.5
+ * Changes:
+ *     * Made class public instead of internal
 */
 
 using System;
@@ -12,7 +15,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     /// <summary>
     /// Helper class for storing parameters required for initializing rate throttler in <see cref="RestClient"/> class.
     /// </summary>
-    internal sealed class ThrottleParameters
+    public sealed class ThrottleParameters
     {
         private const Int32 DEFAULT_OCCURRENCES = 200;
 

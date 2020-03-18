@@ -1,6 +1,7 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
  * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
+ * Updates from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.5.5
 */
 
 using System;
@@ -9,6 +10,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -20,7 +22,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
     internal sealed partial class RestClient : IDisposable
     {
         private const Int32 DEFAULT_API_VERSION_NUMBER = 1;
-        
+
         private static readonly HashSet<Int32> _supportedApiVersions = new HashSet<Int32> { 1, 2 };
 
         private readonly HttpClient _alpacaHttpClient = new HttpClient();
@@ -147,7 +149,7 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
 
             for(var attempts = 0; attempts < throttler.MaxRetryAttempts; ++attempts)
             {
-                await throttler.WaitToProceed();
+                await throttler.WaitToProceed(default(CancellationToken));
                 try
                 {
                     using (var response = await httpClient.GetAsync(endpointUri, HttpCompletionOption.ResponseHeadersRead))

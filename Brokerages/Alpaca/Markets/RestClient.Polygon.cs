@@ -107,34 +107,35 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
                 _polygonHttpClient, FakeThrottler.Instance, builder);
         }
 
-        /// <summary>
-        /// Gets list of historical daily bars for single asset from Polygon REST API endpoint.
-        /// </summary>
-        /// <param name="symbol">>Asset name for data retrieval.</param>
-        /// <param name="dateFromInclusive">Start time for filtering (inclusive).</param>
-        /// <param name="dateIntoInclusive">End time for filtering (inclusive).</param>
-        /// <param name="limit">Maximal number of daily bars in data response.</param>
-        /// <returns>Read-only list of daily bars for specified asset.</returns>
-        public Task<IAggHistoricalItems<IAgg>> ListDayAggregatesAsync(
-            String symbol,
-            DateTime? dateFromInclusive = null,
-            DateTime? dateIntoInclusive = null,
-            Int32? limit = null)
-        {
-            var builder = new UriBuilder(_polygonHttpClient.BaseAddress)
-            {
-                Path = $"v1/historic/agg/day/{symbol}",
-                Query = getDefaultPolygonApiQueryBuilder()
-                    .AddParameter("from", dateFromInclusive, "yyyy-MM-dd")
-                    .AddParameter("to", dateIntoInclusive, "yyyy-MM-dd")
-                    .AddParameter("limit", limit)
-            };
+        // Commented out because JsonDayAgg doesn't exist anymore
+        // /// <summary>
+        // /// Gets list of historical daily bars for single asset from Polygon REST API endpoint.
+        // /// </summary>
+        // /// <param name="symbol">>Asset name for data retrieval.</param>
+        // /// <param name="dateFromInclusive">Start time for filtering (inclusive).</param>
+        // /// <param name="dateIntoInclusive">End time for filtering (inclusive).</param>
+        // /// <param name="limit">Maximal number of daily bars in data response.</param>
+        // /// <returns>Read-only list of daily bars for specified asset.</returns>
+        // public Task<IAggHistoricalItems<IAgg>> ListDayAggregatesAsync(
+        //     String symbol,
+        //     DateTime? dateFromInclusive = null,
+        //     DateTime? dateIntoInclusive = null,
+        //     Int32? limit = null)
+        // {
+        //     var builder = new UriBuilder(_polygonHttpClient.BaseAddress)
+        //     {
+        //         Path = $"v1/historic/agg/day/{symbol}",
+        //         Query = getDefaultPolygonApiQueryBuilder()
+        //             .AddParameter("from", dateFromInclusive, "yyyy-MM-dd")
+        //             .AddParameter("to", dateIntoInclusive, "yyyy-MM-dd")
+        //             .AddParameter("limit", limit)
+        //     };
 
-            return getSingleObjectAsync
-                <IAggHistoricalItems<IAgg>,
-                    JsonAggHistoricalItems<IAgg, JsonDayAgg>>(
-                _polygonHttpClient, FakeThrottler.Instance, builder);
-        }
+        //     return getSingleObjectAsync
+        //         <IAggHistoricalItems<IAgg>,
+        //             JsonAggHistoricalItems<IAgg, JsonDayAgg>>(
+        //         _polygonHttpClient, FakeThrottler.Instance, builder);
+        // }
 
         /// <summary>
         /// Gets list of historical minute bars for single asset from Polygon REST API endpoint.

@@ -1,10 +1,13 @@
 ﻿/*
  * The official C# API client for alpaca brokerage
  * Sourced from: https://github.com/alpacahq/alpaca-trade-api-csharp/tree/v3.0.2
+ * Changes:
+ *   * Added CancellationToken to WaitToProceed
 */
 
 using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Alpaca.Markets
@@ -19,10 +22,11 @@ namespace QuantConnect.Brokerages.Alpaca.Markets
         /// <summary>
         /// Blocks the current thread indefinitely until allowed to proceed.
         /// </summary>
-        Task WaitToProceed();
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        Task WaitToProceed(CancellationToken cancellationToken);
 
         /// <summary>
-        /// Evaluates the StatusCode of <paramref name="response"/>, initiates any server requested delays, 
+        /// Evaluates the StatusCode of <paramref name="response"/>, initiates any server requested delays,
         /// and returns false to indicate when a client should retry a request
         /// </summary>
         /// <param name="response">Server response to an Http request</param>
