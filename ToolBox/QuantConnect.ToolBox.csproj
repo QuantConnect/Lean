@@ -245,6 +245,7 @@
     <Compile Include="Benzinga\BenzingaNewsDataDownloader.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDataDownloader.cs" />
     <Compile Include="BitfinexDownloader\BitfinexDownloaderProgram.cs" />
+    <Compile Include="CoarseUniverseGenerator\SecurityIdentifierContext.cs" />
     <Compile Include="CoinApiDataConverter\CoinApiDataConverterProgram.cs" />
     <Compile Include="CoinApiDataConverter\CoinApiDataConverter.cs" />
     <Compile Include="CoinApiDataConverter\CoinApiDataReader.cs" />
@@ -383,9 +384,6 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="CoarseUniverseGenerator\config.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="IQFeed\IQFeed-symbol-map.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -393,6 +391,9 @@
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="CoarseUniverseGenerator\blacklisted-tickers.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Visualizer\QuantConnect.Visualizer.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -437,9 +438,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="CoarseUniverseGenerator\exclusions.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="instruments_fxcm.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
