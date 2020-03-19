@@ -264,7 +264,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                             Algorithm.SetRunTimeError(new ArgumentNullException("BlackLittermanOptimizationPortfolioConstructionModel does not accept \'null\' as Insight.Magnitude. Please make sure your Alpha Model is generating Insights with the Magnitude property set."));
                             return targets;
                         }
-                        symbolData.Add(Algorithm.Time, insight.Magnitude.Value.SafeDecimalCast());
+                        symbolData.Add(insight.GeneratedTimeUtc, insight.Magnitude.Value.SafeDecimalCast());
                     }
                 }
                 // Get symbols' returns
@@ -334,8 +334,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             }
 
             // initialize data for added securities
-            var addedSymbols = changes.AddedSecurities.Select(x => x.Symbol).ToList();
-            algorithm.History(addedSymbols, _lookback * _period, _resolution)
+            var addedSymbols = changes.AddedSecurities.ToDictionary(x => x.Symbol, x => x.Exchange.TimeZone);
+            algorithm.History(addedSymbols.Keys, _lookback * _period, _resolution)
                 .PushThrough(bar =>
                 {
                     ReturnsSymbolData symbolData;
@@ -344,7 +344,9 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                         symbolData = new ReturnsSymbolData(bar.Symbol, _lookback, _period);
                         _symbolDataDict.Add(bar.Symbol, symbolData);
                     }
-                    symbolData.Update(bar.EndTime, bar.Value);
+                    // Convert the data timestamp to UTC
+                    var utcTime = bar.EndTime.ConvertToUtc(addedSymbols[bar.Symbol]);
+                    symbolData.Update(utcTime, bar.Value);
                 });
         }
 

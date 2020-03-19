@@ -116,13 +116,26 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             var returnsByDate = from s in symbols join sd in symbolData on s equals sd.Key select sd.Value.Returns;
 
             // Consolidate by date
-            var alldates = returnsByDate.SelectMany(r => r.Keys).Distinct();
-            var returns = Accord.Math.Matrix.Create(alldates
-                .Select(d => returnsByDate.Select(s => s.GetValueOrDefault(d, double.NaN)).ToArray())
+            var alldates = returnsByDate.SelectMany(r => r.Keys).Distinct().ToList();
+
+            var max = symbolData.Count == 0 ? 0 : symbolData.Max(kvp => kvp.Value.Returns.Count);
+
+            // Perfect match between the dates in the ReturnsSymbolData objects
+            if (max == alldates.Count)
+            {
+                return Accord.Math.Matrix.Create(alldates
+                    .Select(d => returnsByDate.Select(s => s.GetValueOrDefault(d, double.NaN)).ToArray())
+                    .Where(r => !r.Select(Math.Abs).Sum().IsNaNOrZero()) // remove empty rows
+                    .ToArray());
+            }
+
+            // If it is not a match, we assume that each index correspond to the same point in time
+            var returnsByIndex = from s in symbols join sd in symbolData on s equals sd.Key select sd.Value.Returns.Values.ToArray();
+
+            return Accord.Math.Matrix.Create(Enumerable.Range(0, max)
+                .Select(d => returnsByIndex.Select(s => s[d]).ToArray())
                 .Where(r => !r.Select(Math.Abs).Sum().IsNaNOrZero()) // remove empty rows
                 .ToArray());
-
-            return returns;
         }
     }
 }
