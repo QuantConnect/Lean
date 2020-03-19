@@ -107,5 +107,12 @@ namespace QuantConnect.Messaging
                     "Please choose a new port or open the port in the firewall.");
             }
         }
+
+        /// <summary>
+        /// Dispose any resources used before destruction
+        /// </summary>
+        public void Dispose()
+        {
+        }
     }
 }

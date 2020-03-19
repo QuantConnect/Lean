@@ -206,5 +206,12 @@ namespace QuantConnect.Messaging
             file.DisposeSafely();
             File.WriteAllLines(algorithmSource, lines);
         }
+
+        /// <summary>
+        /// Dispose of any resources
+        /// </summary>
+        public void Dispose()
+        {
+        }
     }
 }
