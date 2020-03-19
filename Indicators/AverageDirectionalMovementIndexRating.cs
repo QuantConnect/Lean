@@ -49,6 +49,9 @@ namespace QuantConnect.Indicators
         {
         }
 
+        /// <summary>
+        /// The Average Directional Index indicator instance being used
+        /// </summary>
         public AverageDirectionalIndex ADX { get; }
 
         /// <summary>
