@@ -25,7 +25,6 @@ namespace QuantConnect.Indicators
     public class AverageDirectionalMovementIndexRating : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly int _period;
-        private readonly AverageDirectionalIndex _adx;
         private readonly RollingWindow<decimal> _adxHistory;
 
         /// <summary>
@@ -37,7 +36,7 @@ namespace QuantConnect.Indicators
             : base(name)
         {
             _period = period;
-            _adx = new AverageDirectionalIndex(name + "_ADX", period);
+            ADX = new AverageDirectionalIndex(name + "_ADX", period);
             _adxHistory = new RollingWindow<decimal>(period);
         }
 
@@ -49,6 +48,11 @@ namespace QuantConnect.Indicators
             : this($"ADXR({period})", period)
         {
         }
+
+        /// <summary>
+        /// The Average Directional Index indicator instance being used
+        /// </summary>
+        public AverageDirectionalIndex ADX { get; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -67,14 +71,14 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            _adx.Update(input);
+            ADX.Update(input);
 
-            if (_adx.IsReady)
+            if (ADX.IsReady)
             {
-                _adxHistory.Add(_adx);
+                _adxHistory.Add(ADX);
             }
 
-            return IsReady ? (_adx + _adxHistory[_period - 1]) / 2 : 50m;
+            return IsReady ? (ADX + _adxHistory[_period - 1]) / 2 : 50m;
         }
 
         /// <summary>
@@ -82,7 +86,7 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _adx.Reset();
+            ADX.Reset();
             _adxHistory.Reset();
             base.Reset();
         }
