@@ -117,5 +117,34 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(result.Symbols, resultFromSerialized.Symbols);
             Assert.AreEqual(result.Tags, resultFromSerialized.Tags);
         }
+
+        [Test]
+        public void SerializeRoundTrip()
+        {
+            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+
+            var createdAt = new DateTime(2020, 3, 19, 10, 0, 0);
+            var updatedAt = new DateTime(2020, 3, 19, 10, 15, 0);
+
+            var item = new BenzingaNews
+            {
+                Id = 1,
+                Symbol = Symbols.SPY,
+                Title = "title",
+                CreatedAt = createdAt,
+                UpdatedAt = updatedAt,
+            };
+
+            var serialized = JsonConvert.SerializeObject(item, settings);
+            var deserialized = JsonConvert.DeserializeObject<BenzingaNews>(serialized, settings);
+
+            Assert.AreEqual(1, deserialized.Id);
+            Assert.AreEqual(Symbols.SPY, deserialized.Symbol);
+            Assert.AreEqual("title", deserialized.Title);
+            Assert.AreEqual(createdAt, deserialized.CreatedAt);
+            Assert.AreEqual(updatedAt, deserialized.UpdatedAt);
+            Assert.AreEqual(updatedAt, deserialized.Time);
+            Assert.AreEqual(updatedAt, deserialized.EndTime);
+        }
     }
 }
