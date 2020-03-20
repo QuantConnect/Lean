@@ -105,7 +105,7 @@ namespace QuantConnect.Data.Custom.Benzinga
         {
             var article = value as BenzingaNews;
 
-            var token = JToken.FromObject(article);
+            var token = JToken.FromObject(article, new JsonSerializer { NullValueHandling = NullValueHandling.Ignore });
             var categoryTokens = new List<JObject>(article.Categories.Count);
             var symbolTokens = new List<JObject>(article.Symbols.Count);
             var tagTokens = new List<JObject>(article.Tags.Count);

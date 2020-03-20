@@ -16,8 +16,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using QuantConnect.Data;
 using QuantConnect.Data.Custom.Benzinga;
 
 namespace QuantConnect.Tests.Common.Data.Custom
@@ -145,6 +147,102 @@ namespace QuantConnect.Tests.Common.Data.Custom
             Assert.AreEqual(updatedAt, deserialized.UpdatedAt);
             Assert.AreEqual(updatedAt, deserialized.Time);
             Assert.AreEqual(updatedAt, deserialized.EndTime);
+        }
+
+        [Test]
+        public void SerializeWithConverterNullValuesIgnored()
+        {
+            var date = new DateTime(2020, 3, 19);
+
+            var converter = new BenzingaNewsJsonConverter();
+            var instance = new BenzingaNews
+            {
+                Author = "",
+                Categories = new List<string>(),
+                Contents = "",
+                CreatedAt = date,
+                Id = default(int),
+                Symbol = null,
+                Symbols = new List<Symbol>
+                {
+                    Symbol.Create("AAPL", SecurityType.Equity, QuantConnect.Market.USA),
+                    Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA)
+                },
+                Tags = new List<string>
+                {
+                    "Politics"
+                },
+                Teaser = "",
+                Time = date,
+                Title = "",
+                UpdatedAt = date,
+            };
+
+            var expectedSerialized = @"{""id"":0,""author"":"""",""created"":""2020-03-19T00:00:00Z"",""updated"":""2020-03-19T00:00:00Z"",""title"":"""",""teaser"":"""",""body"":"""",""channels"":[],""stocks"":[{""name"":""AAPL""},{""name"":""SPY""}],""tags"":[{""name"":""Politics""}],""EndTime"":""2020-03-19T00:00:00Z"",""DataType"":0,""IsFillForward"":false,""Time"":""2020-03-19T00:00:00Z"",""Value"":0.0,""Price"":0.0}";
+            var actualSerialized = JsonConvert.SerializeObject(instance, new JsonSerializerSettings
+            {
+                Converters = new[] { converter },
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                Formatting = Formatting.None
+            });
+
+            Assert.AreEqual(expectedSerialized, actualSerialized);
+
+            var instanceRoundTripActual = JsonConvert.DeserializeObject<BenzingaNews>(actualSerialized, converter);
+
+            Assert.AreEqual(instance.Author, instanceRoundTripActual.Author);            Assert.IsTrue(instance.Categories.SequenceEqual(instanceRoundTripActual.Categories));            Assert.AreEqual(instance.Contents, instanceRoundTripActual.Contents);            Assert.AreEqual(instance.CreatedAt, instanceRoundTripActual.CreatedAt);            Assert.AreEqual(instance.Id, instanceRoundTripActual.Id);            Assert.AreEqual(instance.Symbol, instanceRoundTripActual.Symbol);            Assert.IsTrue(instance.Symbols.SequenceEqual(instanceRoundTripActual.Symbols));            Assert.IsTrue(instance.Tags.SequenceEqual(instanceRoundTripActual.Tags));            Assert.AreEqual(instance.Teaser, instanceRoundTripActual.Teaser);            Assert.AreEqual(instance.Time, instanceRoundTripActual.Time);            Assert.AreEqual(instance.Title, instanceRoundTripActual.Title);            Assert.AreEqual(instance.UpdatedAt, instanceRoundTripActual.UpdatedAt);        }
+
+        [Test]
+        public void ReaderDeserializesInUtc()
+        {
+            var date = new DateTime(2020, 3, 19);
+            var spy = Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA);
+
+            var converter = new BenzingaNewsJsonConverter();
+            var instance = new BenzingaNews
+            {
+                Author = "",
+                Categories = new List<string>(),
+                Contents = "",
+                CreatedAt = date,
+                Id = default(int),
+                Symbol = spy,
+                Symbols = new List<Symbol>
+                {
+                    Symbol.Create("AAPL", SecurityType.Equity, QuantConnect.Market.USA),
+                    Symbol.Create("SPY", SecurityType.Equity, QuantConnect.Market.USA)
+                },
+                Tags = new List<string>
+                {
+                    "Politics"
+                },
+                Teaser = "",
+                Time = date,
+                Title = "",
+                UpdatedAt = date,
+            };
+
+            var serialized = JsonConvert.SerializeObject(instance, new JsonSerializerSettings
+            {
+                Converters = new[] { converter },
+                Formatting = Formatting.None,
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc
+            });
+
+            var config = new SubscriptionDataConfig(
+                typeof(BenzingaNews),
+                spy,
+                Resolution.Minute,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                true,
+                false,
+                false);
+
+            var news = new BenzingaNews();
+            var instanceRoundTripActual = (BenzingaNews)news.Reader(config, serialized, default(DateTime), false);
+
+            Assert.AreEqual(instance.Author, instanceRoundTripActual.Author);            Assert.IsTrue(instance.Categories.SequenceEqual(instanceRoundTripActual.Categories));            Assert.AreEqual(instance.Contents, instanceRoundTripActual.Contents);            Assert.AreEqual(instance.CreatedAt, instanceRoundTripActual.CreatedAt);            Assert.AreEqual(instance.Id, instanceRoundTripActual.Id);            Assert.AreEqual(instance.Symbol, instanceRoundTripActual.Symbol);            Assert.IsTrue(instance.Symbols.SequenceEqual(instanceRoundTripActual.Symbols));            Assert.IsTrue(instance.Tags.SequenceEqual(instanceRoundTripActual.Tags));            Assert.AreEqual(instance.Teaser, instanceRoundTripActual.Teaser);            Assert.AreEqual(instance.Time, instanceRoundTripActual.Time);            Assert.AreEqual(instance.Title, instanceRoundTripActual.Title);            Assert.AreEqual(instance.UpdatedAt, instanceRoundTripActual.UpdatedAt);
         }
     }
 }
