@@ -47,7 +47,6 @@ namespace QuantConnect.Tests.Common.Data.Custom
   ""OCountry"": ""United States"",
   ""OCategory"": ""PPI PCE"",
   ""Ticker"": ""US"",
-  ""Symbol"": ""US"",
   ""IsPercentage"": true,
   ""DataType"": 0,
   ""IsFillForward"": false,
@@ -392,13 +391,12 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
             var time = new DateTime(2020, 3, 20, 14, 0, 0);
-            var symbol = Symbol.CreateBase(
-                typeof(TradingEconomicsCalendar),
-                Symbol.Create(
-                    TradingEconomics.Calendar.UnitedStates.ExistingHomeSales,
-                    SecurityType.Base,
-                    QuantConnect.Market.USA),
-                QuantConnect.Market.USA);
+            var symbol = Symbol.Create(
+                TradingEconomics.Calendar.UnitedStates.ExistingHomeSales,
+                SecurityType.Base,
+                QuantConnect.Market.USA,
+                baseDataType: typeof(TradingEconomicsCalendar)
+            );
 
             var item = new TradingEconomicsCalendar
             {

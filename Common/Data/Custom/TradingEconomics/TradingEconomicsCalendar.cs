@@ -185,12 +185,6 @@ namespace QuantConnect.Data.Custom.TradingEconomics
         public string Ticker { get; set; }
 
         /// <summary>
-        /// The LEAN symbol
-        /// </summary>
-        [JsonProperty(PropertyName = "Symbol"), JsonConverter(typeof(TradingEconomicsSymbolJsonConverter))]
-        public new Symbol Symbol { get; set; }
-
-        /// <summary>
         /// Indicates whether the Actual, Previous, Forecast, TradingEconomicsForecast fields are reported as percent values
         /// </summary>
         public bool IsPercentage { get; set; }
@@ -405,6 +399,8 @@ namespace QuantConnect.Data.Custom.TradingEconomics
                 rawData["Forecast"] = ParseDecimal(rawData["Forecast"].Value<string>(), inPercentage);
                 rawData["TEForecast"] = ParseDecimal(rawData["TEForecast"].Value<string>(), inPercentage);
                 rawData["Revised"] = ParseDecimal(rawData["Revised"].Value<string>(), inPercentage);
+
+                ((JObject)rawData).Remove("Symbol");
             }
 
             return rawCollection.ToObject<List<TradingEconomicsCalendar>>();
