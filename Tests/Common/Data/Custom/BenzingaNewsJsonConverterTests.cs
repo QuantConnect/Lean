@@ -190,7 +190,19 @@ namespace QuantConnect.Tests.Common.Data.Custom
 
             var instanceRoundTripActual = JsonConvert.DeserializeObject<BenzingaNews>(actualSerialized, converter);
 
-            Assert.AreEqual(instance.Author, instanceRoundTripActual.Author);            Assert.IsTrue(instance.Categories.SequenceEqual(instanceRoundTripActual.Categories));            Assert.AreEqual(instance.Contents, instanceRoundTripActual.Contents);            Assert.AreEqual(instance.CreatedAt, instanceRoundTripActual.CreatedAt);            Assert.AreEqual(instance.Id, instanceRoundTripActual.Id);            Assert.AreEqual(instance.Symbol, instanceRoundTripActual.Symbol);            Assert.IsTrue(instance.Symbols.SequenceEqual(instanceRoundTripActual.Symbols));            Assert.IsTrue(instance.Tags.SequenceEqual(instanceRoundTripActual.Tags));            Assert.AreEqual(instance.Teaser, instanceRoundTripActual.Teaser);            Assert.AreEqual(instance.Time, instanceRoundTripActual.Time);            Assert.AreEqual(instance.Title, instanceRoundTripActual.Title);            Assert.AreEqual(instance.UpdatedAt, instanceRoundTripActual.UpdatedAt);        }
+            Assert.AreEqual(instance.Author, instanceRoundTripActual.Author);
+            Assert.IsTrue(instance.Categories.SequenceEqual(instanceRoundTripActual.Categories));
+            Assert.AreEqual(instance.Contents, instanceRoundTripActual.Contents);
+            Assert.AreEqual(instance.CreatedAt, instanceRoundTripActual.CreatedAt);
+            Assert.AreEqual(instance.Id, instanceRoundTripActual.Id);
+            Assert.AreEqual(instance.Symbol, instanceRoundTripActual.Symbol);
+            Assert.IsTrue(instance.Symbols.SequenceEqual(instanceRoundTripActual.Symbols));
+            Assert.IsTrue(instance.Tags.SequenceEqual(instanceRoundTripActual.Tags));
+            Assert.AreEqual(instance.Teaser, instanceRoundTripActual.Teaser);
+            Assert.AreEqual(instance.Time, instanceRoundTripActual.Time);
+            Assert.AreEqual(instance.Title, instanceRoundTripActual.Title);
+            Assert.AreEqual(instance.UpdatedAt, instanceRoundTripActual.UpdatedAt);
+        }
 
         [Test]
         public void ReaderDeserializesInUtc()
@@ -242,7 +254,19 @@ namespace QuantConnect.Tests.Common.Data.Custom
             var news = new BenzingaNews();
             var instanceRoundTripActual = (BenzingaNews)news.Reader(config, serialized, default(DateTime), false);
 
-            Assert.AreEqual(instance.Author, instanceRoundTripActual.Author);            Assert.IsTrue(instance.Categories.SequenceEqual(instanceRoundTripActual.Categories));            Assert.AreEqual(instance.Contents, instanceRoundTripActual.Contents);            Assert.AreEqual(instance.CreatedAt, instanceRoundTripActual.CreatedAt);            Assert.AreEqual(instance.Id, instanceRoundTripActual.Id);            Assert.AreEqual(instance.Symbol, instanceRoundTripActual.Symbol);            Assert.IsTrue(instance.Symbols.SequenceEqual(instanceRoundTripActual.Symbols));            Assert.IsTrue(instance.Tags.SequenceEqual(instanceRoundTripActual.Tags));            Assert.AreEqual(instance.Teaser, instanceRoundTripActual.Teaser);            Assert.AreEqual(instance.Time, instanceRoundTripActual.Time);            Assert.AreEqual(instance.Title, instanceRoundTripActual.Title);            Assert.AreEqual(instance.UpdatedAt, instanceRoundTripActual.UpdatedAt);
+            Assert.AreEqual(instance.Author, instanceRoundTripActual.Author);
+            Assert.IsTrue(instance.Categories.SequenceEqual(instanceRoundTripActual.Categories));
+            Assert.AreEqual(instance.Contents, instanceRoundTripActual.Contents);
+            Assert.AreEqual(instance.CreatedAt, instanceRoundTripActual.CreatedAt);
+            Assert.AreEqual(instance.Id, instanceRoundTripActual.Id);
+            Assert.AreEqual(instance.Symbol, instanceRoundTripActual.Symbol);
+            Assert.IsTrue(instance.Symbols.SequenceEqual(instanceRoundTripActual.Symbols));
+            Assert.IsTrue(instance.Tags.SequenceEqual(instanceRoundTripActual.Tags));
+            Assert.AreEqual(instance.Teaser, instanceRoundTripActual.Teaser);
+            Assert.AreEqual(instance.Time, instanceRoundTripActual.Time);
+            Assert.AreEqual(instance.Title, instanceRoundTripActual.Title);
+            Assert.AreEqual(instance.UpdatedAt, instanceRoundTripActual.UpdatedAt);
+
         }
     }
 }
