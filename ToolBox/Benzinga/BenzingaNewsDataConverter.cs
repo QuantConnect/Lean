@@ -152,6 +152,12 @@ namespace QuantConnect.ToolBox.Benzinga
             // We will write files from memory to disk without the need of temporary files.
             var filteredCollection = new Dictionary<DateTime, BenzingaNewsFiltered>();
             var contentsZip = new Dictionary<DateTime, Dictionary<string, string>>();
+            var serializerSettings = new JsonSerializerSettings
+            {
+                Converters = new[] { new BenzingaNewsJsonConverter() },
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                Formatting = Formatting.None
+            };
 
             foreach (var article in news)
             {
@@ -252,7 +258,7 @@ namespace QuantConnect.ToolBox.Benzinga
                 }
 
                 // Batch all the articles so that we can write it all in one shot
-                filtered.ArticleContents[$"{article.Id}.json"] = JsonConvert.SerializeObject(article, Formatting.None, new BenzingaNewsJsonConverter());
+                filtered.ArticleContents[$"{article.Id}.json"] = JsonConvert.SerializeObject(article, serializerSettings);
             }
 
             return filteredCollection;
